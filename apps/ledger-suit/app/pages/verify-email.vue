@@ -77,19 +77,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <BsAuthLayout :product-name="t('app.name')" :home-label="t('marketing.home')" :title="t('onboarding.otpTitle')" :description="t('onboarding.otpDescription')">
-    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" class="h-auto w-56" /></template>
-    <BsVerificationForm
-      v-model="otp" :eyebrow="t('onboarding.otpEyebrow')" :title="t('onboarding.otpTitle')"
-      :description="t('onboarding.otpDescription')" :email="email" :code-label="t('onboarding.otpLabel')"
-      :pending="pending" :error="errorMessage" :expired="verification.expired.value" :verified="verified"
-      :expiry-label="t('onboarding.otpExpiresIn', { time: verification.format(verification.expiresIn.value) })"
-      :expired-label="t('onboarding.otpExpired')" :attempts-label="t('onboarding.otpAttemptsHint')"
-      :submit-label="verified ? t('billing.startTrial') : t('onboarding.otpVerify')" :pending-label="t('onboarding.otpVerifying')"
-      :resend-prompt="t('onboarding.otpMissing')"
-      :resend-label="verification.resendIn.value > 0 ? t('onboarding.otpResendIn', { time: verification.format(verification.resendIn.value) }) : t('onboarding.otpResend')"
-      :resend-disabled="verification.resendIn.value > 0" :security-title="t('onboarding.otpSecurityTitle')" :security-body="t('onboarding.otpSecurityBody')"
-      @submit="verify" @resend="resend"
-    />
-  </BsAuthLayout>
+  <BsEmailVerificationPage
+    v-model="otp" :product="{ name: t('app.name'), assetPrefix: '/brand/ledger-suit', homeLabel: t('marketing.home') }" :email="email"
+    :copy="{ eyebrow: t('onboarding.otpEyebrow'), title: t('onboarding.otpTitle'), description: t('onboarding.otpDescription'), code: t('onboarding.otpLabel'), expiry: t('onboarding.otpExpiresIn', { time: verification.format(verification.expiresIn.value) }), expired: t('onboarding.otpExpired'), attempts: t('onboarding.otpAttemptsHint'), submit: verified ? t('billing.startTrial') : t('onboarding.otpVerify'), pending: t('onboarding.otpVerifying'), resendPrompt: t('onboarding.otpMissing'), resend: verification.resendIn.value > 0 ? t('onboarding.otpResendIn', { time: verification.format(verification.resendIn.value) }) : t('onboarding.otpResend'), securityTitle: t('onboarding.otpSecurityTitle'), securityBody: t('onboarding.otpSecurityBody') }"
+    :pending="pending" :error="errorMessage" :expired="verification.expired.value" :verified="verified" :resend-disabled="verification.resendIn.value > 0" @submit="verify" @resend="resend"
+  />
 </template>

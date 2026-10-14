@@ -1,3 +1,4 @@
+import { initialSupervisorLeaseSql } from '../runner/supervisor-lease.mjs'
 import assert from 'node:assert/strict'
 import { spawn, spawnSync } from 'node:child_process'
 import { readdirSync } from 'node:fs'
@@ -57,11 +58,11 @@ test('migration 001..028 and upgrade 027->028 preserve authoritative full lifecy
   psql(adminUrl, ['-c', `CREATE DATABASE ${database}`])
   try {
     const migrations = readdirSync(path.join(root, 'tooling/control-plane/sql'))
-      .filter(file => /^\d{3}_.+\.sql$/.test(file))
+      .filter(file => /^\d{3}_.+\.sql$/.test(file) && Number(file.slice(0,3)) <= 28)
       .sort()
-    assert.equal(psql(databaseUrl.href, ['-Atqc', "SELECT current_setting('server_version_num')::integer / 10000"]), '17')
+    assert.ok(['17', '18'].includes(psql(databaseUrl.href, ['-Atqc', "SELECT current_setting('server_version_num')::integer / 10000"])))
     assert.equal(psql(databaseUrl.href, ['-Atqc', "SELECT current_setting('check_function_bodies')"]), 'on')
-    assert.equal(psql(databaseUrl.href, ['-Atqc', "SELECT current_setting('plpgsql.variable_conflict')"]), 'error')
+    assert.equal(psql(databaseUrl.href, ['-Atqc', "LOAD 'plpgsql'; SELECT current_setting('plpgsql.variable_conflict')"]), 'error')
     const upgrade = migrations.at(-1)
     assert.equal(upgrade, '028_batch_admission_safe_resume.sql')
     for (const migration of migrations.slice(0, -1)) {
@@ -71,6 +72,36 @@ test('migration 001..028 and upgrade 027->028 preserve authoritative full lifecy
     assert.equal(psql(databaseUrl.href, ['-Atqc', "SELECT NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='control' AND table_name='workflow_runs' AND column_name='admitted_repair_id')"]), 't')
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql', upgrade)])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/batch-readiness-postgres-smoke.sql')])
+    // Reproduce a resolved recovery whose old initial key exists in the journal.
+    // Each supervisor invocation must atomically create its own active lease.
+    const resumeIdentity = 'test:supervisor-lease-replay'
+    const record = (key, token, status = 'active') => `control.record_recovery_condition(
+      p_resume_identity => '${resumeIdentity}', p_idempotency_key => '${key}',
+      p_failure_class => 'transient-infrastructure', p_error_code => 'implementation_failed',
+      p_next_action => 'retry', p_recoverable => true, p_source => 'unit-test',
+      p_heartbeat_at => now(), p_lease_owner => 'test-owner', p_lease_token => '${token}',
+      p_lease_expires_at => now() + interval '5 minutes', p_status => '${status}')`
+    psql(databaseUrl.href, ['-c', `SELECT ${record('old-decision', 'old-token')}`])
+    psql(databaseUrl.href, ['-c', `SELECT ${record('resolved-stop', 'old-token', 'resolved')}`])
+    const leaseSql = (key, token) => initialSupervisorLeaseSql(record(key, token))
+      .replaceAll(":'resume_identity'", `'${resumeIdentity}'`)
+      .replaceAll(":'lease_token'", `'${token}'`)
+    const jsonLine = output => JSON.parse(output.split('\n').find(line => line.startsWith('{')))
+    const fresh = jsonLine(psql(databaseUrl.href, ['-At'], { input: leaseSql('new-invocation:initial', 'new-token') }))
+    assert.equal(fresh.acquired, true)
+    assert.equal(fresh.recorded.recovery.status, 'active')
+    assert.equal(fresh.recorded.recovery.lease_token, 'new-token')
+    const contended = jsonLine(psql(databaseUrl.href, ['-At'], { input: leaseSql('contender:initial', 'contender-token') }))
+    assert.equal(contended.acquired, false)
+    assert.equal(contended.recovery.lease_token, 'new-token')
+    psql(databaseUrl.href, ['-c', `SELECT ${record('resolved-before-race', 'new-token', 'resolved')}`])
+    const raced = await Promise.all([
+      concurrentPsql(databaseUrl.href, leaseSql('race-a:initial', 'race-a')),
+      concurrentPsql(databaseUrl.href, leaseSql('race-b:initial', 'race-b')),
+    ])
+    assert.ok(raced.every(result => result.code === 0), JSON.stringify(raced))
+    assert.deepEqual(raced.map(result => jsonLine(result.stdout).acquired).sort(), [false, true])
+
 
     const taskId = 'BS-UI-ZN-PATTERNS-001'
     const update = concurrentPsql(databaseUrl.href,
@@ -94,6 +125,27 @@ test('migration 001..028 and upgrade 027->028 preserve authoritative full lifecy
 
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/batch-readiness-authority-smoke.sql')])
     psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/batch-readiness-real-graph-lifecycle-smoke.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/029_selfhealing_runtime_operations.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/selfhealing-postgres-smoke.sql')])
+    psql(databaseUrl.href, ['-c', "DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='bs_control_app') THEN CREATE ROLE bs_control_app; END IF; END $$; ALTER DEFAULT PRIVILEGES IN SCHEMA control GRANT ALL ON TABLES TO bs_control_app;"])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/031_bounded_ordinary_publication.sql')])
+    assert.equal(psql(databaseUrl.href, ['-Atqc', "SELECT has_table_privilege('bs_control_app','control.run_task_publication_authorities','SELECT') AND NOT has_table_privilege('bs_control_app','control.run_task_publication_authorities','INSERT,UPDATE,DELETE,TRUNCATE')"]), 't')
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/bounded-publication-smoke.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/032_dot_watchdog.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/030_verifier_only_reacceptance.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/033_dot_same_attempt_reacceptance.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/034_dot_admission_refresh.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/035_dot_event_backpressure.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/036_dot_future_retry_escalation.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/037_dot_future_scope_capture.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-future-scope-smoke.sql')])
+    assert.equal(psql(databaseUrl.href, ['-Atqc', "SELECT attempt_profiles->>1 FROM control.retry_policies WHERE policy_id='standard-five'"]), 'deep')
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/dot-postgres-smoke.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/shared-retry-five-seed.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/038_shared_product_retry_accounting.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/sql/039_dot_reviewed_verifier_reacceptance.sql')])
+    psql(databaseUrl.href, ['-f', path.join(root, 'tooling/control-plane/tests/shared-retry-five-smoke.sql')])
+
   }
   finally {
     parsed.pathname = '/postgres'

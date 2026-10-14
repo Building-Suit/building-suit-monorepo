@@ -95,52 +95,18 @@ const formFields = [
 ]
 
 const bs20 = {
-  id: 'pg0BEkbP9E4H4RqB',
-  name: 'BS-20 — Continue Suit',
-  active: false,
-  nodes: [
-    node('bs20-form', 'Continue Workstream', 'n8n-nodes-base.formTrigger', { authentication: 'n8nUserAuth', formTitle: 'Continue Building Suit Workstream', formFields: { values: formFields }, responseMode: 'lastNode', options: { path: 'building-suit-continue' } }, [0, 0]),
-    runner('bs20-resolve', 'Validate Active Workstream', "={{ 'bs-agent workstream-resolve ' + $('Continue Workstream').first().json.workstream_ref }}", [220, 0]),
-    node('bs20-resolved', 'Workstream Valid?', 'n8n-nodes-base.if', { conditions: { conditions: [{ leftValue: '={{ $json.runner_ok }}', operator: { type: 'boolean', operation: 'true', singleValue: true } }] } }, [440, 0]),
-    runner('bs20-start', 'Start Bounded Run', "={{ 'bs-agent run-start ' + $('Validate Active Workstream').first().json.payload.suit_slug + ' ' + $('Continue Workstream').first().json.max_tasks }}", [660, -80]),
-    runner('bs20-gate', 'Check Graceful Run Gate', "={{ 'bs-agent run-check ' + $('Start Bounded Run').first().json.payload.run.run_id }}", [880, -80]),
-    node('bs20-gate-route', 'Route Run Gate', 'n8n-nodes-base.code', { jsCode: "const run=$json.payload?.run??{}; const state=run.reason==='maintenance_requested'?'maintenance-wait':run.reason==='stop_requested'?'stop-requested':run.reason==='limit_reached'?'task-limit':run.should_continue===true?'continue':'safety-stop'; return [{json:{...$json,state,run}}];" }, [1100, -80]),
-    node('bs20-gate-switch', 'Run Gate State', 'n8n-nodes-base.switch', { rules: { values: ['continue', 'maintenance-wait', 'stop-requested', 'task-limit', 'safety-stop'].map(value => ({ conditions: { conditions: [{ leftValue: '={{ $json.state }}', rightValue: value, operator: { type: 'string', operation: 'equals' } }] } })) } }, [1320, -80]),
-    runner('bs20-acquire', 'Acquire or Resume Admitted Task', "={{ 'bs-agent run-acquire-task ' + $('Start Bounded Run').first().json.payload.run.run_id + ' cp-batch-v2 ' + $env.BS_BATCH_CONTROLLER_FINGERPRINT + ' ' + $execution.id }}", [1540, -240]),
-    node('bs20-acquire-route', 'Route Acquired Task', 'n8n-nodes-base.code', { jsCode: "const acquisition=$json.payload?.acquisition??{}; const state=acquisition.action==='credit_completion'?'credit-completion':acquisition.acquired===true&&['execute','resume'].includes(acquisition.action)?'execute':['wait','wait_for_owner'].includes(acquisition.action)?'wait':'safety-stop'; return [{json:{...$json,state,acquisition}}];" }, [1760, -240]),
-    node('bs20-acquire-switch', 'Acquired Task State', 'n8n-nodes-base.switch', { rules: { values: ['execute', 'credit-completion', 'wait', 'safety-stop'].map(value => ({ conditions: { conditions: [{ leftValue: '={{ $json.state }}', rightValue: value, operator: { type: 'string', operation: 'equals' } }] } })) } }, [1980, -240]),
-    node('bs20-engine', 'Delegate Claimed Task to Supervisor', 'n8n-nodes-base.executeWorkflow', { workflowId: { __rl: true, value: taskEngineId, mode: 'list', cachedResultName: 'BS-10 — Task Engine' }, workflowInputs: { mappingMode: 'defineBelow', value: { task_id: "={{ $('Acquire or Resume Admitted Task').first().json.payload.acquisition.packet.task.task_id }}" }, matchingColumns: ['task_id'], schema: [{ id: 'task_id', displayName: 'task_id', type: 'string', canBeUsedToMatch: true }] }, options: { waitForSubWorkflow: true } }, [2200, -320]),
-    node('bs20-outcome', 'Supervisor State', 'n8n-nodes-base.switch', { rules: { values: ['success', 'wait', 'safety-stop'].map(value => ({ conditions: { conditions: [{ leftValue: '={{ $json.status }}', rightValue: value, operator: { type: 'string', operation: 'equals' } }] } })) } }, [2420, -320]),
-    runner('bs20-complete', 'Record Task Success', "={{ 'bs-agent run-complete-task ' + $('Start Bounded Run').first().json.payload.run.run_id + ' ' + $('Acquire or Resume Admitted Task').first().json.payload.acquisition.packet.task.task_id + ' ' + $('Start Bounded Run').first().json.payload.run.run_id + ':' + $('Acquire or Resume Admitted Task').first().json.payload.acquisition.packet.task.task_id }}", [2640, -400]),
-    node('bs20-finish-empty', 'Wait Without Admitted Task', 'n8n-nodes-base.code', { jsCode: "return [{json:{...$json,status:'wait',reason:$json.payload?.reason??'no-admitted-task',run_preserved:true}}];" }, [1980, -120]),
-    runner('bs20-finish-failed', 'Finish Safety Stop', "={{ 'bs-agent run-finish ' + $('Start Bounded Run').first().json.payload.run.run_id + ' failed' }}", [2640, -160]),
-    node('bs20-success', 'success', 'n8n-nodes-base.code', { jsCode: "return [{json:{...$json,status:'success'}}];" }, [2860, -400]),
-    node('bs20-wait', 'wait', 'n8n-nodes-base.code', { jsCode: "return [{json:{...$json,status:'wait',run_preserved:true}}];" }, [2640, -280]),
-    node('bs20-empty', 'no-ready-task', 'n8n-nodes-base.code', { jsCode: "return [{json:{...$json,status:'no-ready-task'}}];" }, [2200, -120]),
-    node('bs20-stopped', 'stop-requested', 'n8n-nodes-base.code', { jsCode: "return [{json:{...$json,status:'stop-requested'}}];" }, [1540, -40]),
-    node('bs20-limit', 'task-limit', 'n8n-nodes-base.code', { jsCode: "return [{json:{...$json,status:'task-limit'}}];" }, [1540, 80]),
-    node('bs20-maintenance', 'maintenance-wait', 'n8n-nodes-base.code', { jsCode: "return [{json:{...$json,ok:true,status:'maintenance-wait',run_preserved:true,requires_explicit_resume:true}}];" }, [1540, 20]),
-    node('bs20-stop', 'safety-stop', 'n8n-nodes-base.code', { jsCode: "return [{json:{...$json,ok:false,status:'safety-stop'}}];" }, [2860, -160]),
-    node('bs20-invalid', 'Rejected Workstream', 'n8n-nodes-base.code', { jsCode: "return [{json:{ok:false,status:'safety-stop',reason:$json.payload?.error??'unknown_or_inactive_workstream'}}];" }, [660, 100]),
+  id:'pg0BEkbP9E4H4RqB',name:'BS-20 — Continue Suit',active:false,
+  nodes:[
+    node('bs20-form','Continue Workstream','n8n-nodes-base.formTrigger',{authentication:'n8nUserAuth',formTitle:'Continue Building Suit Workstream',formFields:{values:formFields},responseMode:'lastNode',options:{path:'building-suit-continue'}},[0,0]),
+    runner('bs20-resolve','Validate Active Workstream',"={{ 'bs-agent workstream-resolve ' + $('Continue Workstream').first().json.workstream_ref }}",[220,0]),
+    node('bs20-valid','Workstream Valid?','n8n-nodes-base.if',{conditions:{conditions:[{leftValue:'={{ $json.runner_ok }}',operator:{type:'boolean',operation:'true',singleValue:true}}]}},[440,0]),
+    runner('bs20-start','Start Bounded Run',"={{ 'bs-agent run-start ' + $('Validate Active Workstream').first().json.payload.suit_slug + ' ' + $('Continue Workstream').first().json.max_tasks }}",[660,0]),
+    runner('bs20-supervisor','Delegate Run to Supervisor',"={{ 'bs-agent run-supervise ' + $('Start Bounded Run').first().json.payload.run.run_id }}",[880,0]),
+    node('bs20-result','Run Result','n8n-nodes-base.code',{jsCode:"const r=$json.payload??$json;return [{json:{...r,lifecycle_owner:'Supervisor',run_preserved:true}}];"},[1100,0]),
+    node('bs20-rejected','Rejected Workstream','n8n-nodes-base.code',{jsCode:"return [{json:{ok:false,status:'safety-stop',reason:$json.payload?.error??'unknown_or_inactive_workstream'}}];"},[660,180]),
   ],
-  connections: {
-    'Continue Workstream': connection('Validate Active Workstream'),
-    'Validate Active Workstream': connection('Workstream Valid?'),
-    'Workstream Valid?': branches('Start Bounded Run', 'Rejected Workstream'),
-    'Start Bounded Run': connection('Check Graceful Run Gate'),
-    'Check Graceful Run Gate': connection('Route Run Gate'),
-    'Route Run Gate': connection('Run Gate State'),
-    'Run Gate State': branches('Acquire or Resume Admitted Task', 'maintenance-wait', 'stop-requested', 'task-limit', 'Finish Safety Stop'),
-    'Acquire or Resume Admitted Task': connection('Route Acquired Task'),
-    'Route Acquired Task': connection('Acquired Task State'),
-    'Acquired Task State': branches('Delegate Claimed Task to Supervisor', 'Record Task Success', 'Wait Without Admitted Task', 'Finish Safety Stop'),
-    'Delegate Claimed Task to Supervisor': connection('Supervisor State'),
-    'Supervisor State': branches('Record Task Success', 'wait', 'Finish Safety Stop'),
-    'Record Task Success': connection('Check Graceful Run Gate'),
-    'Wait Without Admitted Task': connection('no-ready-task'),
-    'Finish Safety Stop': connection('safety-stop'),
-  },
-  settings: { executionOrder: 'v1' },
+  connections:{'Continue Workstream':connection('Validate Active Workstream'),'Validate Active Workstream':connection('Workstream Valid?'),'Workstream Valid?':branches('Start Bounded Run','Rejected Workstream'),'Start Bounded Run':connection('Delegate Run to Supervisor'),'Delegate Run to Supervisor':connection('Run Result')},
+  settings:{executionOrder:'v1'},meta:{lifecycle_owner:'Supervisor',protocol:'cp-lifecycle-v1'},
 }
 
 const bs21 = {
@@ -164,7 +130,22 @@ const bs21 = {
   settings: { executionOrder: 'v1' },
 }
 
-const workflows = [bs10, bs20, bs21]
+const bs30 = {
+  id: 'BS31SelfHealingRecovery', name: 'BS-31 — Persisted Recovery Watchdog', active: false,
+  nodes: [
+    node('bs30-cadence','Recovery Cadence','n8n-nodes-base.scheduleTrigger',{rule:{interval:[{field:'minutes',minutesInterval:2}]}},[0,0]),
+    node('dot-event','Control State Changed','n8n-nodes-base.webhook',{httpMethod:'POST',path:'building-suit-dot-wake',responseMode:'onReceived',options:{}},[0,160]),
+    runner('bs30-watch','Wake Eligible Existing Runs','bs-agent recovery-watch',[240,0]),
+    node('bs30-status','Recovery Status','n8n-nodes-base.code',{jsCode:"return [{json:{...$json,component:'persisted-recovery-watchdog',no_new_runs:true}}];"},[480,0]),
+  ],
+  connections: {'Control State Changed':connection('Wake Eligible Existing Runs'),'Recovery Cadence':connection('Wake Eligible Existing Runs'),'Wake Eligible Existing Runs':connection('Recovery Status')},
+  settings:{executionOrder:'v1'},
+}
+const workflows = [bs10, bs20, bs21, bs30]
+// Preserve the published production form identity across regeneration/import.
+bs20.nodes.find(node => node.id === 'bs20-form').webhookId = '64a5715c-5c8f-5729-a2b2-5f11cc1afae7'
+bs30.nodes.find(node => node.id === 'dot-event').webhookId = 'f0317b2d-2770-4b2f-93f7-c275d7946384'
+
 const validation = validateControllerReplacements(workflows)
 if (!validation.valid) throw new Error(`generated_workflow_validation_failed:${validation.errors.join(',')}`)
 

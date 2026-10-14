@@ -87,3 +87,14 @@ test('origin parsing supports GitHub remotes and rejects embedded credentials or
   assert.throws(() => repositoryFromRemote('https://token@github.com/owner/repo.git'))
   assert.throws(() => repositoryFromRemote('https://other.example/owner/repo'))
 })
+
+test('the explicitly named Shop release retains stack and repository protections', () => {
+  const release = pr(501, 'integration/shop-suit-release', 'stg')
+  assert.equal(stackKey(release.head.ref), 'shop-suit')
+  assert.equal(stackKey('integration/unapproved-release'), null)
+  assert.deepEqual(checkPullRequestPolicy([release], 501), [])
+  assert.match(checkPullRequestPolicy([release, pr(502, 'codex/shop-suit/root', 'stg')], 501).join(' '), /one active stg root/i)
+  assert.match(checkPullRequestPolicy([release, pr(503, 'codex/shared/child', release.head.ref)], 503).join(' '), /Cross-stack parent/)
+  release.head.repo = { full_name: 'outside/fork' }
+  assert.match(checkPullRequestPolicy([release], 501).join(' '), /fork-based feature stacks/)
+})

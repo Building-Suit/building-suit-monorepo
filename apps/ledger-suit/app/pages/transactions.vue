@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
+import type { BsJournalWorkspaceChoices, BsJournalWorkspaceCopy, BsJournalWorkspaceFilters, BsJournalWorkspaceView } from '@building-suit/ui/types/journalWorkspacePresentation'
 definePageMeta({ layout: 'default' })
 const { can } = useTenant()
 const { writesAllowed } = useBilling()
@@ -46,7 +48,7 @@ async function openImportFromRoute() {
   await router.replace({ query })
 }
 watch(() => route.query.import, () => void openImportFromRoute())
-function ariaSort(column: string) { return sort.column === column ? sort.direction === 'asc' ? 'ascending' : 'descending' : 'none' }
+function ariaSort(column: string): 'none' | 'ascending' | 'descending' { return sort.column === column ? sort.direction === 'asc' ? 'ascending' : 'descending' : 'none' }
 function applySavedView() {
   const view = savedViews.value.find(item => item.id === savedViewId.value)
   if (view) applySnapshot(view)
@@ -71,160 +73,29 @@ async function deleteSavedView() {
   finally { savingView.value = false }
 }
 useHead({ title: () => `${t('transactions.title')} · ${t('app.name')}` })
+const ledgerPresentation = useLedgerPresentation()
+
+const journalPresentation = useLedgerJournalDetailPresentation(reactive({ get transactionId() { return selectedId.value } }), { close: () => { selectedId.value = null }, changed: refresh, navigate: id => { selectedId.value = id } })
+const importPresentation = useLedgerJournalImportPresentation(reactive({ get visible() { return importOpen.value } }), () => { importOpen.value = false })
+const journalForm = journalPresentation.form
+const importForm = importPresentation.form
+const extractionForm = importPresentation.extractionForm
+const presentationFilters = computed<BsJournalWorkspaceFilters>({
+  get: () => ({ search: filters.search, type: filters.type, status: filters.status, source: filters.source, from: filters.from, to: filters.to, account: filters.accountId, tag: filters.tagId, category: filters.categoryId, min: filters.minAmount, max: filters.maxAmount, savedView: savedViewId.value, savedName: savedViewName.value, density: tableDensity.value, expanded: filtersOpen.value }),
+  set: value => { Object.assign(filters, { search: value.search, type: value.type as typeof filters.type, status: value.status as typeof filters.status, source: value.source as typeof filters.source, from: value.from, to: value.to, accountId: value.account, tagId: value.tag, categoryId: value.category, minAmount: value.min, maxAmount: value.max }); savedViewId.value = value.savedView; savedViewName.value = value.savedName; tableDensity.value = value.density; filtersOpen.value = value.expanded },
+})
+const presentationCopy = computed<BsJournalWorkspaceCopy>(() => ({
+  title: t('transactions.title'), subtitle: t('transactionWorkspace.subtitle'), context: t('pageContext.label'), import: t('imports.entryPoint'), create: t('transactionWorkspace.new'), type: t('transactions.type'), status: t('transactions.status'), source: t('journalCenter.source'), search: t('transactions.searchLabel'), searchPlaceholder: t('transactions.searchPlaceholder'), from: t('transactions.fromDate'), to: t('transactions.toDate'), account: t('transactions.account'), tag: t('tagsGuide.filter'), category: t('transactions.category'), min: t('transactions.minAmount'), max: t('transactions.maxAmount'), moreFilters: t('transactionWorkspace.moreFilters'), clearFilters: t('transactionWorkspace.clearFilters', { count: activeFilterCount.value }), count: t('transactions.count', total.value), savedViews: t('journalCenter.savedViews'), viewName: t('journalCenter.viewName'), saveView: t('journalCenter.saveView'), removeView: t('journalCenter.removeView'), savedError: t('journalCenter.savedViewsError'), tagError: t('tagsGuide.loadError'), retry: t('accounts.retry'), denied: t('transactionWorkspace.noRead'), failed: t('transactionWorkspace.loadError'), retryHint: t('transactionWorkspace.retryHint'), empty: t('transactions.emptyTitle'), emptyHint: t('transactions.emptyHint'), noMatch: t('transactions.noMatchTitle'), noMatchHint: t('transactions.noMatchHint'), noMatchAction: t('transactions.noMatchAction'), scroll: t('accountingTable.journalScroll'), density: t('accountingTable.density'), compact: t('accountingTable.compact'), comfortable: t('accountingTable.comfortable'), reference: t('journalCenter.journalReference'), date: t('journalCenter.accountingDate'), description: t('transactions.description'), debit: t('detail.debit'), credit: t('detail.credit'), previous: t('common.previous'), next: t('common.next'),
+}))
+const presentationChoices = computed<BsJournalWorkspaceChoices>(() => ({
+  quickTypes: QUICK_TYPES.map(value => ({ value, label: value ? t(`types.${value}`) : t('transactionWorkspace.all') })), types: [{ value: '', label: t('transactionWorkspace.allTypes') }, ...TRANSACTION_TYPES.map(value => ({ value, label: t(`types.${value}`) }))], statuses: [{ value: '', label: t('transactionWorkspace.allStatuses') }, ...TRANSACTION_STATUSES.map(value => ({ value, label: t(`status.${value}`) }))], sources: [{ value: '', label: t('journalCenter.allSources') }, ...TRANSACTION_SOURCES.map(value => ({ value, label: t(`journalSources.${value}`) }))], accounts: [{ value: '', label: t('transactionWorkspace.allAccounts') }, ...accounts.value.map(account => ({ value: account.id, label: account.name }))], tags: [{ value: '', label: t('tagsGuide.all') }, ...(filters.tagId && !tags.value.some(tag => tag.id === filters.tagId) ? [{ value: filters.tagId, label: t('tagsGuide.selectedUnavailable') }] : []), ...tags.value.map(tag => ({ value: tag.id, label: tag.name }))], categories: [{ value: '', label: t('common.any') }, ...categories.value.map(category => ({ value: category.id, label: category.name }))], savedViews: [{ value: '', label: t('journalCenter.chooseView') }, ...savedViews.value.map(view => ({ value: view.id, label: view.name }))],
+}))
+const presentationView = computed<BsJournalWorkspaceView>(() => ({
+  context: ledgerPresentation.context(filters.from, filters.to, undefined), canImport: can('imports.create') && writesAllowed.value, canCreate: canCreate.value, canRead: can('transactions.read'), canReadTags: can('tags.read'), ready: hydrated.value, preferenceReady: tablePreferenceHydrated.value, tagsFailed: !!tagsError.value, savedPending: savedViewsPending.value, saving: savingView.value, savedFailed: !!savedViewsError.value, hasFilters: !!activeFilterCount.value, loading: pending.value, failed: !!error.value, validation: validation.value ? t(`transactionWorkspace.validation.${validation.value}`) : '', empty: rows.value.length === 0 && !activeFilterCount.value && !filters.search, noMatch: rows.value.length === 0,
+  rows: rows.value.map(row => ({ id: row.id, reference: row.journal_reference, date: formatDate(row.transaction_date, locale.value), description: row.description || t('common.dash'), source: t(`journalSources.${row.source}`), type: t(`types.${row.type}`), status: row.status, debit: formatPresentationMoney(row.debit_minor, { currency: ledgerPresentation.currency(row.currency_code), locale: locale.value, unit: 'minor', numberingSystem: 'latn' }), credit: formatPresentationMoney(row.credit_minor, { currency: ledgerPresentation.currency(row.currency_code), locale: locale.value, unit: 'minor', numberingSystem: 'latn' }), tags: row.tags ?? [] })), showing: t('transactions.showing', { from: rangeStart.value, to: rangeEnd.value, total: total.value }), pageLabel: t('transactions.page', { page: page.value, pages: pageCount.value }), previousDisabled: page.value <= 1, nextDisabled: page.value >= pageCount.value, sorts: ['journal_reference', 'transaction_date', 'source', 'type', 'status', 'debit', 'credit'].map(key => ({ key, direction: ariaSort(key) })), journal: { copy: journalPresentation.copy.value, view: journalPresentation.view.value }, import: { copy: importPresentation.copy.value, view: importPresentation.view.value },
+}))
+function changePage(direction: number) { page.value = Math.max(1, Math.min(pageCount.value, page.value + direction)) }
 </script>
-
 <template>
-  <div class="space-y-4">
-    <LedgerPageHeader :title="t('transactions.title')" :subtitle="t('transactionWorkspace.subtitle')" :from="filters.from" :to="filters.to">
-      <template #actions>
-        <BsButton v-if="can('imports.create') && writesAllowed" type="button" class="ls-btn" :disabled="!hydrated" @click="importOpen = true">{{ t('imports.entryPoint') }}</BsButton>
-        <BsButton v-if="canCreate" type="button" class="ls-btn ls-btn-primary" :disabled="!hydrated" @click="addTransaction"><AppIcon name="add" :size="18" />{{ t('transactionWorkspace.new') }}</BsButton>
-      </template>
-    </LedgerPageHeader>
-
-    <div v-if="can('transactions.read')" class="ls-card space-y-4 p-4 sm:p-5">
-      <div class="flex flex-wrap gap-2" role="group" :aria-label="t('transactions.type')">
-        <BsButton variant="chip" v-for="type in QUICK_TYPES" :key="type" type="button" :aria-pressed="filters.type === type" :disabled="!hydrated" @click="filters.type = type">{{ type ? t(`types.${type}`) : t('transactionWorkspace.all') }}</BsButton>
-      </div>
-      <div class="grid items-end gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <FloatingField class="min-w-0 sm:col-span-2" :label="t('transactions.searchLabel')"><input id="search" v-model="filters.search" type="search" class="ls-input" :placeholder="t('transactions.searchPlaceholder')" :disabled="!hydrated"></FloatingField>
-        <FloatingField :label="t('transactions.type')"><select id="type" v-model="filters.type" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allTypes') }}</option><option v-for="type in TRANSACTION_TYPES" :key="type" :value="type">{{ t(`types.${type}`) }}</option></select></FloatingField>
-        <FloatingField :label="t('transactions.status')"><select id="status" v-model="filters.status" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allStatuses') }}</option><option v-for="status in TRANSACTION_STATUSES" :key="status" :value="status">{{ t(`status.${status}`) }}</option></select></FloatingField>
-        <FloatingField :label="t('journalCenter.source')"><select id="source" v-model="filters.source" class="ls-input" :disabled="!hydrated"><option value="">{{ t('journalCenter.allSources') }}</option><option v-for="source in TRANSACTION_SOURCES" :key="source" :value="source">{{ t(`journalSources.${source}`) }}</option></select></FloatingField>
-        <FloatingField :label="t('transactions.fromDate')"><input id="from" v-model="filters.from" type="date" class="ls-input" :disabled="!hydrated"></FloatingField>
-        <FloatingField :label="t('transactions.toDate')"><input id="to" v-model="filters.to" type="date" :min="filters.from" class="ls-input" :disabled="!hydrated"></FloatingField>
-        <FloatingField :label="t('transactions.account')"><select id="account" v-model="filters.accountId" class="ls-input" :disabled="!hydrated"><option value="">{{ t('transactionWorkspace.allAccounts') }}</option><option v-for="account in accounts" :key="account.id" :value="account.id">{{ account.name }}</option></select></FloatingField>
-        <div v-if="can('tags.read')">
-          <FloatingField :label="t('tagsGuide.filter')"><select id="tag" v-model="filters.tagId" class="ls-input" :disabled="!hydrated || !!tagsError"><option value="">{{ t('tagsGuide.all') }}</option><option v-if="filters.tagId && !tags.some(tag => tag.id === filters.tagId)" :value="filters.tagId">{{ t('tagsGuide.selectedUnavailable') }}</option><option v-for="tag in tags" :key="tag.id" :value="tag.id">{{ tag.name }}</option></select></FloatingField>
-          <p v-if="tagsError" role="alert" class="mt-2 text-sm text-fg-muted">{{ t('tagsGuide.loadError') }} <BsButton variant="link" type="button" class="text-link underline" @click="refreshTags()">{{ t('accounts.retry') }}</BsButton></p>
-        </div>
-      </div>
-      <div class="flex flex-wrap items-center gap-3">
-        <BsButton type="button" class="ls-btn ls-btn-sm" :aria-expanded="filtersOpen" aria-controls="transaction-more-filters" :disabled="!hydrated" @click="filtersOpen = !filtersOpen">{{ t('transactionWorkspace.moreFilters') }}<AppIcon name="arrowDown" :size="16" /></BsButton>
-        <BsButton v-if="activeFilterCount" type="button" class="ls-btn ls-btn-sm" :disabled="!hydrated" @click="clearFilters">{{ t('transactionWorkspace.clearFilters', { count: activeFilterCount }) }}</BsButton>
-        <p v-if="!pending && !error && !validation" role="status" class="ms-auto text-sm text-fg-muted">{{ t('transactions.count', total) }}</p>
-      </div>
-      <div v-if="filtersOpen" id="transaction-more-filters" class="grid gap-3 border-t border-line pt-4 sm:grid-cols-3">
-        <FloatingField :label="t('transactions.category')"><select id="category" v-model="filters.categoryId" class="ls-input"><option value="">{{ t('common.any') }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></FloatingField>
-        <FloatingField :label="t('transactions.minAmount')"><input id="min" v-model="filters.minAmount" class="ls-input" inputmode="decimal" placeholder="0.00"></FloatingField>
-        <FloatingField :label="t('transactions.maxAmount')"><input id="max" v-model="filters.maxAmount" class="ls-input" inputmode="decimal" placeholder="0.00"></FloatingField>
-      </div>
-      <div class="grid items-end gap-3 border-t border-line pt-4 sm:grid-cols-[minmax(12rem,1fr)_minmax(12rem,1fr)_auto_auto]">
-        <FloatingField :label="t('journalCenter.savedViews')"><select id="saved-view" v-model="savedViewId" class="ls-input" :disabled="savedViewsPending || savingView"><option value="">{{ t('journalCenter.chooseView') }}</option><option v-for="view in savedViews" :key="view.id" :value="view.id">{{ view.name }}</option></select></FloatingField>
-        <FloatingField :label="t('journalCenter.viewName')"><input id="saved-view-name" v-model="savedViewName" class="ls-input" maxlength="120" :disabled="savingView" @keyup.enter="createSavedView"></FloatingField>
-        <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="savingView || !savedViewName.trim()" @click="createSavedView">{{ t('journalCenter.saveView') }}</BsButton>
-        <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="savingView || !savedViewId" @click="deleteSavedView">{{ t('journalCenter.removeView') }}</BsButton>
-        <p v-if="savedViewsError" role="alert" class="text-sm text-danger sm:col-span-4">{{ t('journalCenter.savedViewsError') }}</p>
-      </div>
-    </div>
-
-    <p v-if="!can('transactions.read')" role="status" class="ls-card p-6 text-fg-muted">{{ t('transactionWorkspace.noRead') }}</p>
-    <p v-else-if="validation" role="alert" class="ls-error">{{ t(`transactionWorkspace.validation.${validation}`) }}</p>
-    <div v-else-if="error" role="alert" class="ls-card space-y-3 p-6"><h2 class="font-bold">{{ t('transactionWorkspace.loadError') }}</h2><p class="text-sm text-fg-muted">{{ t('transactionWorkspace.retryHint') }}</p><BsButton type="button" class="ls-btn" @click="refresh()">{{ t('accounts.retry') }}</BsButton></div>
-    <SectionSkeleton v-else-if="pending" variant="table" :rows="8" />
-
-    <EmptyState
-      v-else-if="rows.length === 0 && !activeFilterCount && !filters.search"
-      :title="t('transactions.emptyTitle')"
-      :description="t('transactions.emptyHint')"
-      :action-label="canCreate ? t('transactionWorkspace.new') : undefined"
-      @action="addTransaction"
-    />
-
-    <EmptyState
-      v-else-if="rows.length === 0"
-      :title="t('transactions.noMatchTitle')"
-      :description="t('transactions.noMatchHint')"
-      :action-label="t('transactions.noMatchAction')"
-      @action="clearFilters"
-    />
-
-    <div v-else class="ls-card overflow-hidden">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
-        <AccountingTableDensity v-model="tableDensity" :disabled="!tablePreferenceHydrated" />
-        <p role="status" class="text-sm text-fg-muted">{{ t('transactions.showing', { from: rangeStart, to: rangeEnd, total }) }}</p>
-      </div>
-      <!-- Wide financial table on desktop -->
-      <div class="hidden md:block">
-        <BsDataTable :value="rows" data-key="id" :label="t('transactions.caption')" :density="tableDensity" sticky-header max-height="38rem" :scroll-label="t('accountingTable.journalScroll')" :row-class="() => 'cursor-pointer hover:bg-surface-muted'" @row-click="event => selectedId = event.data.id">
-  <Column header-class="ls-sticky-start" body-class="ls-sticky-start whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('journal_reference') } }">
-    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('journal_reference')">{{ t('journalCenter.journalReference') }}</BsButton></template>
-    <template #body="{ data: row }">
-      <BsButton variant="link" type="button" class="font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.journal_reference }}</BsButton>
-      <p class="mt-1 max-w-48 truncate text-xs text-fg-muted" :title="row.from_account_name || undefined">{{ row.from_account_name || t('common.dash') }}</p>
-      <p class="max-w-48 truncate text-xs text-fg-muted" :title="row.to_account_name || undefined"><AppIcon name="arrowRight" :size="14" directional class="inline-block" /> {{ row.to_account_name || t('common.dash') }}</p>
-    </template>
-  </Column>
-  <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('transaction_date') } }">
-    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('transaction_date')">{{ t('transactions.date') }}</BsButton></template>
-    <template #body="{ data: row }">{{ formatDate(row.transaction_date, locale) }}</template>
-  </Column>
-  <Column body-class="max-w-64">
-    <template #header>{{ t('transactions.description') }}</template>
-    <template #body="{ data: row }"><BsButton variant="link" type="button" class="block max-w-56 truncate text-start font-semibold text-link hover:underline" @click.stop="selectedId = row.id">{{ row.description || t('common.dash') }}</BsButton>
-                <span v-if="row.reference || row.category_name || row.counterparty_name" class="block max-w-56 truncate text-xs text-fg-muted">{{ [row.reference, row.category_name, row.counterparty_name].filter(Boolean).join(' · ') }}</span>
-                <ul v-if="row.tags?.length" class="mt-2 flex flex-wrap gap-1" :aria-label="t('operations.tabs.tags')"><li v-for="tag in row.tags" :key="tag" class="rounded-control border border-line bg-surface-muted px-2 py-1 text-xs break-words">{{ tag }}</li></ul></template>
-  </Column>
-  <Column body-class="whitespace-nowrap" :pt="{ headerCell: { 'aria-sort': ariaSort('source') } }">
-    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('source')">{{ t('journalCenter.source') }}</BsButton></template>
-    <template #body="{ data: row }"><span>{{ t(`journalSources.${row.source}`) }}</span><span class="block text-xs text-fg-muted">{{ t(`types.${row.type}`) }}</span></template>
-  </Column>
-  <Column  :pt="{ headerCell: { 'aria-sort': ariaSort('status') } }">
-    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('status')">{{ t('transactions.status') }}</BsButton></template>
-    <template #body="{ data: row }"><StatusBadge :status="row.status" /></template>
-  </Column>
-  <Column header-class="ls-sticky-end-offset text-end" body-class="ls-sticky-end-offset ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('debit') } }">
-    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('debit')">{{ t('detail.debit') }}</BsButton></template>
-    <template #body="{ data: row }"><MoneyText :amount-minor="row.debit_minor" :currency="row.currency_code" /></template>
-  </Column>
-  <Column header-class="ls-sticky-end text-end" body-class="ls-sticky-end ls-num font-semibold" :pt="{ headerCell: { 'aria-sort': ariaSort('credit') } }">
-    <template #header><BsButton variant="link" type="button" class="hover:underline" @click="toggleSort('credit')">{{ t('detail.credit') }}</BsButton></template>
-    <template #body="{ data: row }"><MoneyText :amount-minor="row.credit_minor" :currency="row.currency_code" /></template>
-  </Column>
-</BsDataTable>
-      </div>
-
-      <!-- Compact rows on small screens: a wide table is unusable on a phone -->
-      <ul class="divide-y divide-[var(--bs-border)] md:hidden">
-        <li v-for="row in rows" :key="row.id">
-          <BsButton type="button" class="w-full px-4 py-3 text-start" @click="selectedId = row.id">
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <p class="truncate text-xs font-semibold text-link">{{ row.journal_reference }}</p>
-                <p class="truncate text-sm font-semibold">{{ row.description || t('common.dash') }}</p>
-                <p class="mt-0.5 text-xs text-fg-muted">
-                  {{ formatDate(row.transaction_date, locale) }} · {{ t(`journalSources.${row.source}`) }} · {{ t(`types.${row.type}`) }}
-                </p>
-              </div>
-              <div class="shrink-0 text-end text-sm">
-                <p><span class="text-xs text-fg-muted">{{ t('detail.debit') }}</span> <MoneyText class="font-semibold" :amount-minor="row.debit_minor" :currency="row.currency_code" /></p>
-                <p><span class="text-xs text-fg-muted">{{ t('detail.credit') }}</span> <MoneyText class="font-semibold" :amount-minor="row.credit_minor" :currency="row.currency_code" /></p>
-                <StatusBadge class="mt-1 block" :status="row.status" />
-              </div>
-            </div>
-            <span v-if="row.tags?.length" class="mt-2 flex flex-wrap gap-1"><span v-for="tag in row.tags" :key="tag" class="rounded-control border border-line bg-surface-muted px-2 py-1 text-xs break-words">{{ tag }}</span></span>
-          </BsButton>
-        </li>
-      </ul>
-
-      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--bs-border)] px-4 py-3">
-        <p class="text-sm text-fg-muted">
-          {{ t('transactions.showing', { from: rangeStart, to: rangeEnd, total }) }}
-        </p>
-        <div class="flex items-center gap-2">
-          <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="page <= 1" @click="page--">{{ t('common.previous') }}</BsButton>
-          <span class="text-sm text-fg-muted">{{ t('transactions.page', { page, pages: pageCount }) }}</span>
-          <BsButton type="button" class="ls-btn ls-btn-sm" :disabled="page >= pageCount" @click="page++">{{ t('common.next') }}</BsButton>
-        </div>
-      </div>
-    </div>
-
-    <CsvImportDialog v-model:visible="importOpen" />
-    <TransactionDetailDialog
-      :transaction-id="selectedId"
-      @close="selectedId = null"
-      @changed="refresh()"
-      @navigate="id => selectedId = id"
-    />
-  </div>
+  <BsJournalWorkspacePage v-model:filters="presentationFilters" v-model:journal="journalForm" v-model:import-form="importForm" v-model:extraction="extractionForm" :copy="presentationCopy" :view="presentationView" :choices="presentationChoices" @create="addTransaction" @open-import="importOpen = true" @clear-filters="clearFilters" @retry="refresh" @retry-tags="refreshTags" @save-view="createSavedView" @remove-view="deleteSavedView" @sort="toggleSort" @page="changePage" @open-journal="selectedId = $event" @close-journal="selectedId = null" @retry-journal="journalPresentation.retry" @retry-journal-tags="journalPresentation.retryTags" @assign-tag="journalPresentation.assignTag" @remove-tag="journalPresentation.removeTag" @upload="journalPresentation.upload" @download="journalPresentation.download" @delete-attachment="journalPresentation.deleteAttachment" @reverse="journalPresentation.reverse" @close-import="importOpen = false" @import-file="importPresentation.file" @import-template="importPresentation.template" @import-paste="importPresentation.paste" @import-validate="importPresentation.validate" @import-reset="importPresentation.reset" @import-confirm="importPresentation.confirm" @import-page="importPresentation.page" @extraction-document="importPresentation.document" @extraction-proposal="importPresentation.proposal" @extraction-reject="importPresentation.reject" @extraction-accept="importPresentation.accept"/>
 </template>

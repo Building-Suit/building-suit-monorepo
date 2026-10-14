@@ -1,3 +1,4 @@
+import { executionPreflightFixture } from './fixtures/execution-preflight.mjs'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFile } from 'node:fs/promises'
@@ -42,7 +43,6 @@ import {
 } from '../runner/external-state-watcher.mjs'
 import {
   evaluateExecutionPreflight,
-  fingerprint,
 } from '../runner/task-preflight.mjs'
 import {
   acceptanceCriteriaDigest,
@@ -729,7 +729,8 @@ test('restricted n8n runner exposes only validated supervisor and registry comma
   assert.match(runner, /invalid_workstream_reference/)
   const supervisor = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
   assert.match(supervisor, /recovery\.heartbeat_at/)
-  assert.match(supervisor, /lease_expires_at <= now\(\)/)
+  const leaseSql = await readFile(new URL('../runner/supervisor-lease.mjs', import.meta.url), 'utf8')
+  assert.match(leaseSql, /r\.lease_expires_at > clock_timestamp\(\)/)
   assert.match(supervisor, /recovery: \{ \.\.\.plan, \.\.\.persistedRecovery \}/)
 })
 
@@ -1325,7 +1326,7 @@ function supervisorFixture({
           metadata: verificationFailureClass ? { failure_class: verificationFailureClass } : {},
         }]
       : [],
-    verification_results: [],
+    verification_results: verificationStatus === 'passed' ? [{verification_run_id:71,status:'pass',metadata:{required:true},trusted_receipt:{version:2},trusted_registration:{version:1}}] : [],
     failures,
     publications: publication ? [{ pull_request_id: 91, state: 'open', ...publication }] : [],
     recovery,
@@ -1357,7 +1358,7 @@ test('supervisor resumes completed stages instead of restarting them', () => {
     'task-verify',
   )
   assert.equal(
-    planSupervisorStep(supervisorFixture({ taskStatus: 'failed', executionStatus: 'succeeded', verificationStatus: 'failed' })).command,
+    planSupervisorStep(supervisorFixture({ taskStatus: 'failed', executionStatus: 'succeeded', verificationStatus: 'failed', verificationFailureClass: 'verification-product-defect' })).command,
     'task-retry',
   )
   assert.equal(
@@ -1439,11 +1440,15 @@ test('supervisor decisions are idempotent for identical persisted state', () => 
 })
 
 test('supervisor respects retry exhaustion and explicit wait or safety routing', () => {
-  const exhausted = planSupervisorStep(supervisorFixture({
-    taskStatus: 'failed', executionStatus: 'failed', attempt: 5, maxAttempts: 5,
-  }))
-  assert.equal(exhausted.next_action, 'safety-stop')
-  assert.equal(exhausted.kind, 'terminal')
+  const exhaustedSnapshot=supervisorFixture({
+    taskStatus:'failed',executionStatus:'failed',attempt:5,maxAttempts:5,
+    failures:[{execution_id:41,failure_id:1,failure_class:'verification-product-defect'}],
+  })
+  exhaustedSnapshot.exhaustion_audit={action:'product-exhausted',entries:[{execution_id:41,classification:'PRODUCT_DEFECT'}]}
+  exhaustedSnapshot.retry_accounting={consumed:5,all_product:true}
+  const exhausted=planSupervisorStep(exhaustedSnapshot)
+  assert.equal(exhausted.next_action, 'wait-operator')
+  assert.equal(exhausted.kind, 'wait')
 
   const inFlight = planSupervisorStep(supervisorFixture({ executionStatus: 'running' }))
   assert.equal(inFlight.next_action, 'wait-external')
@@ -1633,106 +1638,6 @@ test('supervisor records satisfaction before completion and can resume without i
   assert.match(supervisor, /parent-satisfaction:\$\{plan\.parent_satisfaction\.fingerprint\}/)
   assert.ok(supervisor.indexOf('recordSupervisorRecovery(snapshot, plan') < supervisor.indexOf('completeParentSatisfied(taskId'))
 })
-
-function executionPreflightFixture() {
-  const identity = {
-    database: 'control_test',
-    user: 'control_runner',
-    server_address: '127.0.0.1',
-    server_port: 5432,
-    server_version_num: '170000',
-    control_schema: 'control',
-    task_packet_contract: 'control.generic_task_packet(text)',
-  }
-  const identityFingerprint = fingerprint(identity)
-  return {
-    packet: {
-      task: {
-        task_id: 'CP-TEST-001',
-        title: 'Ready task',
-        description: 'Exercise deterministic readiness.',
-        model_profile: 'standard',
-        status: 'in_progress',
-        acceptance_criteria: ['Preflight passes.'],
-        verification_plan: ['control-plane-tests'],
-      },
-      suit: { slug: 'control-plane', status: 'active', stack_key: 'control-plane', app_path: 'tooling/control-plane' },
-      project: {
-        active: true,
-        allowed_publication_paths: ['tooling/'],
-      },
-      workstream: {
-        active: true,
-        application_path: 'tooling/control-plane',
-        concurrency_policy: { serialized: true },
-        publication_config: {
-          merge_authorized: false,
-          deployment_authorized: false,
-          hosted_database_changes_authorized: false,
-          review_required_before_integration: true,
-        },
-        verification_config: {
-          commands: [{
-            name: 'control-plane-tests',
-            program: 'node',
-            args: ['--test', 'tooling/control-plane/tests/generic-control-plane.test.mjs'],
-            required: true,
-          }],
-        },
-      },
-      dependencies: [{ task_id: 'CP-TEST-000', dependency_type: 'hard', status: 'complete' }],
-      decisions: [{ id: 'CP-D01', blocking: true, status: 'approved' }],
-      retry_policy: {
-        policy_id: 'critical-five',
-        max_attempts: 5,
-        attempt_profiles: ['standard', 'standard', 'deep', 'deep', 'deep'],
-      },
-      publication_contract: {
-        contract_id: 1,
-        contract_version: 1,
-        source: 'unit-fixture',
-        required_paths: [],
-        unresolved_scopes: [],
-        contract_fingerprint: 'fixture',
-        task_paths: [],
-        source_paths: [],
-        workstream_paths: ['tooling/control-plane/'],
-        project_paths: ['tooling/'],
-      },
-      publication_authorizations: { ordinary: [], protected: [] },
-      execution_admission: {
-        ready: true,
-        reason: 'admitted',
-        publication_current: true,
-        publication_authority_current: true,
-        maintenance_requested: false,
-        run_id: null,
-        run_owned: false,
-      },
-    },
-    runtime: {
-      control_database: {
-        identity,
-        actual_fingerprint: identityFingerprint,
-        expected_fingerprint: identityFingerprint,
-      },
-      repository: {
-        root_valid: true,
-        integration_sha: '1'.repeat(40),
-        integration_commit_present: true,
-        parent: { parent_branch: 'stg', parent_sha: '1'.repeat(40), parent_pr: null },
-        parent_commit_present: true,
-        parent_consistent: true,
-        worktree_target: { status: 'ready', path: '/tmp/control-plane-cp-test-001' },
-        dependencies_ready: true,
-      },
-      executables: { node: true, git: true, gh: true, psql: true, pnpm: true, codex: true },
-      environment: { valid: true, missing: [] },
-    },
-    executions: [],
-    serializationConflicts: [],
-  }
-}
 
 test('execution preflight accepts a coherent ready task deterministically', () => {
   const fixture = executionPreflightFixture()
@@ -2011,27 +1916,6 @@ test('execution preflight enforces attempt budget without consuming an attempt',
   assert.deepEqual(fixture.executions, before)
 })
 
-test('supervisor lease SQL returns the UPDATE target alias safely', async () => {
-  const runner = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
-  const leaseSql = runner.slice(
-    runner.indexOf('function acquireSupervisorLease'),
-    runner.indexOf('function activeSupervisorLease'),
-  )
-
-  assert.match(
-    leaseSql,
-    /UPDATE control\.recovery_states AS recovery_state/,
-  )
-  assert.match(
-    leaseSql,
-    /RETURNING to_jsonb\(recovery_state\) AS recovery/,
-  )
-  assert.doesNotMatch(
-    leaseSql,
-    /to_jsonb\(control\.recovery_states\)/,
-  )
-})
-
 test('supervisor self-heals fresh worktrees, dependencies, and dead local leases', async () => {
   const runner = await readFile(new URL('../runner/bs-agent.mjs', import.meta.url), 'utf8')
   const supervisor = runner.slice(
@@ -2041,7 +1925,7 @@ test('supervisor self-heals fresh worktrees, dependencies, and dead local leases
 
   assert.match(runner, /function reclaimDeadLocalSupervisorLease/)
   assert.match(runner, /process\.kill\(pid, 0\)/)
-  assert.match(runner, /dead_local_lease_reclaimed_at/)
+  assert.match(runner, /control\.reclaim_local_supervisor_lease/)
   assert.match(supervisor, /preflightReconciliationAction\(preflight\)/)
   assert.match(supervisor, /invokeTaskAction\('task-prepare', taskId\)/)
   assert.match(supervisor, /prepareTaskDependencies/)
@@ -2059,5 +1943,5 @@ test('supervisor gates token-bearing implementation actions with audited preflig
   const supervisor = runner.slice(runner.indexOf('function taskSupervisor()'), runner.indexOf('function taskEngine()'))
   assert.match(supervisor, /\['task-run', 'task-retry'\]\.includes\(plan\.command\)/)
   assert.ok(supervisor.indexOf('runExecutionPreflight(') < supervisor.indexOf('invokeTaskAction(plan.command, taskId)'))
-  assert.match(supervisor, /idempotencyKey: `preflight:\$\{preflight\.fingerprint\}`/)
+  assert.match(supervisor, /idempotencyKey: `\$\{token\}:preflight:\$\{step\}:\$\{preflight\.fingerprint\}`/)
 })

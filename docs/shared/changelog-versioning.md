@@ -1,0 +1,28 @@
+# Shared versioned changelog
+
+BS-CHANGELOG-VERSION-001 implements BS-LAUNCH-R15. Approved decisions from the task contract: BS-VERSION-D01 uses semantic MAJOR.MINOR.PATCH versions with explicit prerelease labels; BS-CHANGELOG-NEW-D01 uses exactly 48 hours from authoritative publication; BS-LAUNCH-D02 replaces the unexecuted Shop-only SS-WEB-CHANGELOG-001 scope. No historical implementation or task lifecycle record is rewritten here. Do not add a second Shop-only feed. Control-plane task supersession remains owned by that system.
+
+`packages/contracts/src/changelog.ts` defines and validates the reusable feed. Suit identities are registered in `suits`, with bilingual names; entries must reference that registry. Shop, Ledger, Inventory, Automation and future registered Suits use the same schema. Versions use strict SemVer, including optional prerelease and build labels. Released entries require `version` and `releasedAt`; Coming Soon requires `targetVersion` (a SemVer target, optionally explicitly prereleased), and forbids released-version/release-time fields. A target is an intention rather than a release claim. Each entry requires English and Arabic title, summary and plain-text details, explicit visibility and UTC `publishedAt`. Links are optional; when provided they require bilingual labels and absolute HTTPS URLs without credentials.
+
+A publishing service supplies immutable first-publication timestamps, release timestamps and `serverNow` from its trusted clock. Editing copy must not reset publication or extend New. Public services must authorize and remove internal entries before delivery, validate curated copy, and avoid publishing credentials, security details, raw commits or internal task IDs. The parser projects only approved fields; this cannot recognize sensitive text embedded in an otherwise valid title. Customer content needs editorial review, never automatic commit/task conversion. Public filtering additionally excludes internal and future-publication entries and sorts newest publication first, with deterministic ID ties.
+
+`createChangelogClient` in `packages/data-access` receives a product-owned authorized transport and validates each response before filtering by Suit, status or bilingual search. It forwards cancellation and owns no cache, tenant selection, credentials or product schema. Private adapters must keep environment/session/tenant scope in their own query keys and clear sensitive state on session changes. No hosted schema or publishing endpoint is introduced by this task.
+
+`BsChangelogTimeline` owns timeline, card and native accessible Suit/status controls. Pass validated `feed`, `locale`, translated `copy`, optional fixed `suit` and `state` (`ready`, `loading`, `error`, `denied`). A fixed Suit removes the cross-Suit selector. Error retry emits `retry` for the owning adapter. `BsChangelogCard` displays identity, version or target version, explicit release state, publication/release dates, plain-text detail and optional links. Components do not fetch data or authorize access. The catalogue at `/components#changelog` uses synthetic examples, including a future registered Suit; they are not actual release announcements.
+
+New applies only to released public timeline entries with `0 <= authoritativeNow - publishedAt < 48h`. The UI starts from `serverNow` and advances by monotonic elapsed time, never the browser wall clock. It resets this baseline when a new authoritative snapshot arrives and cleans up the timer on unmount. Feed owners should refresh authoritative snapshots after resume/navigation; publication corrections require a refreshed feed. Locale direction, version bidi isolation, responsive wrapping and semantic tokens preserve shared presentation.
+
+Verification commands:
+
+- `node --test packages/contracts/tests/bs-changelog-version-001-1.test.mjs`
+- `pnpm --filter @building-suit/docs build` (catalogue browser prerequisite)
+- `pnpm exec playwright test --config packages/contracts/tests/e2e/bs-changelog-version-001-2.config.ts --workers=1 --retries=0`
+- `pnpm check`
+- `pnpm --filter @building-suit/ledger-suit build`
+- `pnpm --filter @building-suit/shop-suit build`
+
+Browser output captures desktop/mobile EN/AR in both themes. This local verification does not establish a deployed publishing service or hosted authorization policy.
+
+## Local verification record
+
+In the task worktree, the declared unit executable passed, as did shared UI/UX tests, `pnpm check`, catalogue typecheck, targeted ESLint and the Ledger, Shop and catalogue builds. The required Playwright executable was attempted with one worker and zero retries; it failed before tests ran. Direct catalogue server startup identified `listen EPERM` for `127.0.0.1:4392` in the managed sandbox. EN/AR, theme, mobile, keyboard and state assertions exist in the task-owned spec, but rendered acceptance and screenshot review remain unverified. Re-run the browser command in an environment permitted to listen on loopback. `pnpm agent:preflight` also failed because the linked Git worktree's `FETCH_HEAD` is outside writable roots; live upstream/PR state is unverified. No publication action was taken.

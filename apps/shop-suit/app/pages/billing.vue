@@ -1,35 +1,88 @@
 <script setup lang="ts">
-import type { BillingPlanOption, BillingSubmission, ShopBilling } from '~/types/billing'
+import type { BsBillingCopy, BsBillingView, BsBillingForm } from '@building-suit/ui/types/billingPresentation'
+import type { BillingPlanOption, BillingSubmission, PrivateOfferPreview, ShopBilling } from '~/types/billing'
 import type { PlanResourceKey, PlanUsageResource, ShopPlanInterval, ShopPlanOffer } from '~/types/plans'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+import { parsePrivateOfferLink } from '~/utils/private-offer'
+import type { PrivateOfferEntry } from '~/utils/private-offer'
+import { checkoutSnapshot, checkoutDialogPhase } from '~/utils/checkout-state.mjs'
+import type { XPayOrder } from '~/utils/xpay-checkout.mjs'
+import { checkoutFailureCode, checkoutAttempt, checkoutAttemptKey, isXPayOrderId, parseXPayDatabaseOrders, parseXPayOrder, xpayHostedUrl } from '~/utils/xpay-checkout.mjs'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const client = useSupabaseClient<ShopRpcDatabase>()
+const rpc = client.schema('public')
 const { locale } = useI18n()
 const ui = useUiCopy()
-const { current, currentId, isOwner } = useShop()
-const { push: pushToast } = useToasts()
-const confirmation = useConfirmation()
-const { data: publicPlans, isLoading: catalogPending, error: catalogError, refresh: refreshCatalog } = usePlans()
+const { current, currentId, isOwner, reload: reloadShop } = useShop()
+const { data: publicPlans, isLoading: catalogPending, error: catalogError, refresh: refreshCatalog, ready: catalogReady } = usePlans()
+await catalogReady
 const isArabic = computed(() => locale.value === 'ar')
 const copy = computed(() => isArabic.value ? ar : en)
 const form = reactive({ catalogTermsId: '', paidAmount: 0, transferDate: '', transferReference: '' })
-const submitPending = ref(false)
-const submitError = ref('')
-const submitRequestId = ref<string | null>(null)
+const privateLink = ref('')
+const privatePreview = shallowRef<PrivateOfferPreview | null>(null)
+const privateEntry = shallowRef<PrivateOfferEntry | null>(null)
+const privatePending = ref(false)
+const privateError = ref('')
+const user = useSupabaseUser()
+let privateGeneration = 0
+function clearPrivateOffer() {
+  ++privateGeneration
+  privateLink.value = ''; privatePreview.value = null; privateEntry.value = null
+  privatePending.value = false; privateError.value = ''
+}
+async function previewPrivateOffer() {
+  if (!currentId.value || !isOwner.value || privatePending.value) return
+  const generation = ++privateGeneration
+  privateError.value = ''; privatePreview.value = null; privateEntry.value = null
+  const value = privateLink.value
+  privateLink.value = ''
+  privatePending.value = true
+  try {
+    const entry = parsePrivateOfferLink(value, window.location.origin)
+    const shopId = currentId.value
+    const { data, error: readError } = await rpc.rpc('shop_private_offer_read', {
+      p_shop_id: shopId, p_offer_id: entry.offerId, p_offer_version: entry.offerVersion,
+      p_target_binding_id: entry.targetBindingId, p_target_environment_id: entry.targetEnvironmentId,
+      p_redemption_token: entry.redemptionToken,
+    })
+    if (readError) throw readError
+    if (generation !== privateGeneration || shopId !== currentId.value || !isOwner.value) return
+    const offer = data as PrivateOfferPreview
+    if (!offer || offer.offerId !== entry.offerId || offer.offerVersion !== entry.offerVersion || offer.shopId !== shopId
+      || offer.targetBindingId !== entry.targetBindingId || offer.targetEnvironmentId !== entry.targetEnvironmentId) throw new Error('offer_response_mismatch')
+    privatePreview.value = offer
+    privateEntry.value = entry
+    explicitSelection.value = true
+    form.paidAmount = offer.priceAmount
+  } catch {
+    if (generation === privateGeneration) privateError.value = copy.value.privateUnavailable
+  } finally {
+    if (generation === privateGeneration) privatePending.value = false
+  }
+}
+onMounted(() => {
+  if (!window.location.hash) return
+  const link = window.location.href
+  window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+  privateLink.value = link
+  void previewPrivateOffer()
+})
+watch([currentId, isOwner, user], clearPrivateOffer, { flush: 'sync' })
 
 const { data: billing, pending, error, refresh } = await useAsyncData(
   'shop-data:billing',
   async (): Promise<ShopBilling | null> => {
     if (!currentId.value || !isOwner.value) return null
-    const requestedShopId = currentId.value
+    const requestedShopId = currentId.value, requestedUserId = user.value?.id
     const { data, error: readError } = await rpc.rpc('shop_billing_read', { p_shop_id: requestedShopId })
     if (readError) throw readError
-    if (requestedShopId !== currentId.value) return null
+    if (requestedShopId !== currentId.value || requestedUserId !== user.value?.id) return null
     return data as ShopBilling
   },
-  { watch: [currentId, isOwner] },
+  { watch: [currentId, isOwner, () => user.value?.id] },
 )
 
 const publicCatalogTerms = computed(() => new Set((publicPlans.value ?? [])
@@ -39,11 +92,222 @@ const purchasablePlans = computed(() => (billing.value?.availablePlans ?? [])
   .filter((plan): plan is BillingPlanOption & { billingInterval: ShopPlanInterval } => publicCatalogTerms.value.has(plan.catalogTermsId)
     && (plan.billingInterval === 'monthly' || plan.billingInterval === 'annual')))
 const selectedPlan = computed(() => purchasablePlans.value.find(plan => plan.catalogTermsId === form.catalogTermsId) ?? null)
-const currentCatalogTermsId = computed(() => purchasablePlans.value.find(plan => plan.planSlug === billing.value?.subscription.planSlug
+const noticeQuote = computed(() => privatePreview.value ? { planName: privatePreview.value.displayName, effectivePriceAmount: privatePreview.value.priceAmount, currency: privatePreview.value.currency, billingInterval: privatePreview.value.billingInterval, priceSource: 'private_offer', planVariant: 'private_offer', variantName: privatePreview.value.displayName, listPriceAmount: privatePreview.value.priceAmount, resourceLimits: privatePreview.value.resourceLimits, entitlements: privatePreview.value.entitlements, blockers: privatePreview.value.blockers } : selectedPlan.value)
+const currentCatalogTermsId = computed(() => billing.value?.subscription.accessState === 'active' ? purchasablePlans.value.find(plan => plan.planSlug === billing.value?.subscription.planSlug
   && plan.planVariant === billing.value?.subscription.planVariant
-  && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '')
+  && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '' : '')
+const trialCatalogTermsId = computed(() => billing.value?.subscription.accessState === 'trialing' ? purchasablePlans.value.find(plan => plan.planSlug === billing.value?.subscription.planSlug
+  && plan.planVariant === billing.value?.subscription.planVariant
+  && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '' : '')
 const latestSubmission = computed(() => billing.value?.submissions?.[0] ?? null)
-const hasOpenRequest = computed(() => billing.value?.submissions?.some(item => ['submitted', 'under_review'].includes(item.status)) ?? false)
+const checkoutVisible = ref(false)
+const prorationEnabled = ref(false)
+const checkoutReady = ref(false)
+const checkoutMode = ref<'test' | 'live' | null>(null)
+const checkoutChecking = ref(false)
+const checkoutPending = ref(false)
+const checkoutError = ref('')
+const checkoutErrorCode = ref('')
+const checkoutOrders = shallowRef<XPayOrder[]>([])
+const checkoutCurrent = shallowRef<XPayOrder | null>(null)
+const confirmation = useConfirmation()
+let checkoutGeneration = 0
+const checkoutHistoryKnown = ref(false)
+const explicitSelection = ref(false)
+let recovery: Promise<void> | null = null
+let recoveryQueued = false
+let returnedCheckoutId: string | undefined
+const paymentState = computed(() => checkoutSnapshot({ orders: checkoutOrders.value, current: checkoutCurrent.value,
+  historyKnown: checkoutHistoryKnown.value, accessState: billing.value?.subscription.accessState,
+  checking: checkoutChecking.value || checkoutPending.value, error: !!checkoutError.value, periodEnd: billing.value?.subscription.periodEnd }))
+const newPlanReview = computed(() => explicitSelection.value && paymentState.value.phase === 'confirmed'
+  && (privateEntry.value || form.catalogTermsId !== currentCatalogTermsId.value))
+const canChangePlan = computed(() => newPlanReview.value && prorationEnabled.value)
+const planReviewBlocked = computed(() => !!newPlanReview.value && (checkoutErrorCode.value === 'checkout_period_unsupported' || !prorationEnabled.value))
+const openCheckout = computed(() => checkoutOrders.value.find(order => ['creating', 'open', 'pending', 'requires_review'].includes(order.state)) ?? null)
+const activeCheckout = computed(() => openCheckout.value?.orderId !== checkoutCurrent.value?.orderId && openCheckout.value ? openCheckout.value : checkoutCurrent.value ?? openCheckout.value)
+function checkoutContext() { return { generation: checkoutGeneration, shop: currentId.value, user: user.value?.id } }
+function sameCheckoutContext(value: ReturnType<typeof checkoutContext>) { return value.generation === checkoutGeneration && value.shop === currentId.value && value.user === user.value?.id && isOwner.value }
+function checkoutTarget() { const entry = privateEntry.value; return { selection: entry ? `offer:${entry.offerId}:${entry.offerVersion}` : `terms:${form.catalogTermsId}`,
+  catalogTermsId: entry ? null : form.catalogTermsId, privateOffer: entry ? { offerId: entry.offerId, offerVersion: entry.offerVersion, targetBindingId: entry.targetBindingId, targetEnvironmentId: entry.targetEnvironmentId, redemptionToken: entry.redemptionToken } : null } }
+const proration = useShopProrationCheckout({ context: checkoutContext, sameContext: sameCheckoutContext,
+  locale: () => isArabic.value ? 'ar' : 'en', invoke: body => client.functions.invoke('shop-xpay-checkout', { body }), target: checkoutTarget })
+const scheduled = useShopScheduledBilling({context:checkoutContext,sameContext:sameCheckoutContext,target:checkoutTarget,
+  invoke:async(name,args)=>{const shop=String(args.p_shop_id),terms=args.p_catalog_terms_id==null?null:String(args.p_catalog_terms_id)
+    const offer=(args.p_private_offer??null) as Record<string,string|number>|null
+    if(name==='preview')return await rpc.rpc('shop_billing_change_preview',{p_shop_id:shop,p_catalog_terms_id:terms,p_private_offer:offer})
+    if(name==='schedule')return await rpc.rpc('shop_billing_change_schedule',{p_request_id:String(args.p_request_id),p_shop_id:shop,p_catalog_terms_id:terms,p_private_offer:offer})
+    if(name==='cancel')return await rpc.rpc('shop_billing_change_cancel',{p_shop_id:shop,p_change_id:String(args.p_change_id)})
+    return await rpc.rpc('shop_billing_change_read',{p_shop_id:shop})
+  }})
+const deferredChange = computed(()=>!!newPlanReview.value&&scheduled.preview.value?.timing==='term_end')
+watch([()=>form.catalogTermsId,privateEntry,prorationEnabled],()=>{if(import.meta.client&&isOwner.value&&prorationEnabled.value)void scheduled.review()})
+function checkoutErrorMessage(error: unknown) {
+  const code = typeof error === 'object' && error !== null && 'checkoutCode' in error ? String(error.checkoutCode) : ''
+  const messages: Record<string, string> = { checkout_historical_review_pending: copy.value.checkoutHistoricalReview, checkout_quote_stale: copy.value.quoteStale,
+    checkout_active_period_exists: copy.value.checkoutActivePeriod,
+    checkout_quote_open: copy.value.quoteOpen, checkout_payment_unresolved: copy.value.quotePaymentUnresolved, checkout_proration_unavailable: copy.value.quoteUnavailable,
+    checkout_change_at_period_end: copy.value.scheduleHelp, checkout_currency_unsupported: copy.value.quoteCurrency, checkout_period_unsupported: copy.value.quotePeriodUnsupported, checkout_offer_expiring: copy.value.quoteOfferExpiring, checkout_plan_change_blocked: planPresentation.copy.blockers,
+    checkout_quote_required: copy.value.quoteRequired, checkout_payment_method_unsupported: copy.value.quoteCardUnsupported }
+  return messages[code] ?? copy.value.checkoutFailed
+}
+function recordCheckoutError(error: unknown) {
+  checkoutErrorCode.value = typeof error === 'object' && error !== null && 'checkoutCode' in error ? String(error.checkoutCode) : ''
+  checkoutError.value = checkoutErrorMessage(error)
+  if(checkoutErrorCode.value==='checkout_change_at_period_end')void scheduled.review()
+}
+async function restartCheckoutQuote() {
+  const context = checkoutContext()
+  if (!context.shop || !context.user || checkoutPending.value || !isOwner.value) return
+  checkoutPending.value = true; checkoutError.value = ''; checkoutErrorCode.value = ''
+  try { await proration.abandon(); if (sameCheckoutContext(context)) await proration.prepare() }
+  catch (error) { if (sameCheckoutContext(context)) recordCheckoutError(error) }
+  finally { if (sameCheckoutContext(context)) checkoutPending.value = false }
+}
+
+async function loadCheckoutStatus() {
+  const context = checkoutContext()
+  if (!import.meta.client || !context.shop || !context.user || !isOwner.value || checkoutChecking.value) return
+  checkoutChecking.value = true
+  try {
+    // History remains readable even when the provider is unavailable/unconfigured.
+    const { data, error } = await rpc.rpc('shop_xpay_order_read', { p_shop_id: context.shop, p_order_id: null })
+    if (sameCheckoutContext(context) && !error) { checkoutOrders.value = parseXPayDatabaseOrders(data); checkoutHistoryKnown.value = true }
+    const result = await client.functions.invoke('shop-xpay-checkout', { body: { action: 'status', shopId: context.shop, locale: isArabic.value ? 'ar' : 'en' } })
+    if (!sameCheckoutContext(context)) return
+    checkoutReady.value = !result.error && result.data?.ready === true && ['test', 'live'].includes(result.data?.mode)
+    checkoutMode.value = checkoutReady.value ? result.data.mode : null
+    prorationEnabled.value = !result.error && result.data?.prorationEnabled === true
+    const core=await rpc.rpc('shop_xpay_proration_status',{p_shop_id:context.shop})
+    if(!sameCheckoutContext(context))return
+    if(!core.error&&typeof(core.data as {enabled?:unknown})?.enabled==='boolean')prorationEnabled.value=(core.data as {enabled:boolean}).enabled
+    if(prorationEnabled.value)await scheduled.read()
+    if (checkoutReady.value && Array.isArray(result.data?.orders) && result.data.orders.length <= 20) { checkoutOrders.value = result.data.orders.map(parseXPayOrder); checkoutHistoryKnown.value = true }
+    const restored = await proration.restore(openCheckout.value?.quoteId)
+    if (sameCheckoutContext(context) && restored?.state === 'settled') await reloadShop()
+  } catch {
+    if (sameCheckoutContext(context)) checkoutReady.value = false
+  } finally {
+    if (sameCheckoutContext(context)) checkoutChecking.value = false
+  }
+}
+async function refreshCheckout(orderId = activeCheckout.value?.orderId) {
+  const context = checkoutContext()
+  if (!context.shop || !context.user || !isOwner.value || checkoutPending.value) return
+  checkoutError.value = ''; checkoutPending.value = true
+  try {
+    if (orderId) {
+      const result = await client.functions.invoke('shop-xpay-checkout', { body: { orderId, shopId: context.shop, locale: isArabic.value ? 'ar' : 'en' } })
+      if (result.error) throw result.error
+      if (!sameCheckoutContext(context)) return
+      checkoutCurrent.value = parseXPayOrder(result.data)
+      if (['expired', 'failed', 'paid'].includes(checkoutCurrent.value.state)) {
+        try { sessionStorage.removeItem(checkoutAttemptKey(context.user, context.shop)) } catch { /* No payment authority in storage. */ }
+        if (checkoutCurrent.value.state === 'paid') { proration.clear(context); await reloadShop() } else await refresh()
+      }
+    }
+    await loadCheckoutStatus()
+  } catch { if (sameCheckoutContext(context)) checkoutError.value = copy.value.checkoutFailed; recoveryQueued = true }
+  finally { if (sameCheckoutContext(context)) checkoutPending.value = false }
+}
+async function startCheckout(intent: 'subscribe' | 'renew' | 'change' = canChangePlan.value ? 'change' : 'subscribe', priorPaidOrderId = paymentState.value.latestPaid?.orderId ?? null) {
+  const context = checkoutContext(), quote = noticeQuote.value
+  if (!context.shop || !context.user || !isOwner.value || !checkoutReady.value || checkoutPending.value || checkoutChecking.value
+    || (!paymentState.value.canStart && paymentState.value.phase !== 'resume' && !(intent !== 'subscribe' && paymentState.value.phase === 'confirmed'))
+    || (!proration.quote.value && !openCheckout.value && (!quote || quote.blockers.length)) || billing.value?.subscription.accessState === 'suspended') return
+  checkoutPending.value = true; checkoutError.value = ''; checkoutErrorCode.value = ''
+  try {
+    const existing = openCheckout.value
+    const frozen = proration.quote.value
+    if (!existing && prorationEnabled.value && !frozen) { await proration.prepare(); return }
+    if (!existing && frozen && !prorationEnabled.value) throw Object.assign(new Error('checkout_failed'), { checkoutCode: 'checkout_proration_unavailable' })
+    if (!existing && frozen && proration.expired.value) throw Object.assign(new Error('checkout_failed'), { checkoutCode: 'checkout_quote_stale' })
+    if (!existing && frozen?.calculation.amountDueMinor === 0) {
+      const approved = await confirmation.ask(copy.value.quoteCreditConfirm(frozen.planName, money(frozen.calculation.creditAfterMinor / 100, 'EGP')))
+      if (!approved || !sameCheckoutContext(context)) return
+      const settled = await proration.confirmCredit()
+      if (settled?.state === 'settled' && sameCheckoutContext(context)) { checkoutVisible.value = false; await reloadShop(); await loadCheckoutStatus() }
+      return
+    }
+    const entry = privateEntry.value
+    const selection = `${intent}:${priorPaidOrderId ?? 'initial'}:${entry ? `offer:${entry.offerId}:${entry.offerVersion}` : `terms:${form.catalogTermsId}`}`
+    const requestId = checkoutAttempt(sessionStorage, checkoutAttemptKey(context.user, context.shop), selection, () => crypto.randomUUID())
+    const body = existing ? { orderId: existing.orderId, shopId: context.shop, locale: isArabic.value ? 'ar' : 'en' }
+      : frozen ? { action: 'pay_quote', quoteId: frozen.quoteId, shopId: context.shop, locale: isArabic.value ? 'ar' : 'en' } : { requestId, shopId: context.shop, locale: isArabic.value ? 'ar' : 'en', catalogTermsId: entry ? null : form.catalogTermsId,
+          privateOffer: entry ? { offerId: entry.offerId, offerVersion: entry.offerVersion, targetBindingId: entry.targetBindingId, targetEnvironmentId: entry.targetEnvironmentId, redemptionToken: entry.redemptionToken } : null, purchaseIntent: intent, priorPaidOrderId }
+    const result = await client.functions.invoke('shop-xpay-checkout', { body })
+    const failure = await checkoutFailureCode(result.data, result.error)
+    if (failure) throw Object.assign(new Error('checkout_failed'), { checkoutCode: failure })
+    if (result.error) throw result.error
+    if (!sameCheckoutContext(context)) return
+    const order = parseXPayOrder(result.data)
+    if (!existing && frozen && (order.quoteId !== frozen.quoteId || order.amountMinor !== frozen.calculation.amountDueMinor)) throw new Error('invalid_frozen_order')
+    checkoutCurrent.value = order
+    if (order.state !== 'open' || !order.url) {
+      if (['expired', 'failed', 'paid'].includes(order.state)) { try { sessionStorage.removeItem(checkoutAttemptKey(context.user, context.shop)) } catch { /* No payment authority in storage. */ } }
+      await refresh(); await loadCheckoutStatus(); return
+    }
+    const approved = await confirmation.ask(copy.value.checkoutConfirm(order.planName, money(order.amountMinor / 100, order.currency)))
+    if (!approved || !sameCheckoutContext(context)) { await loadCheckoutStatus(); return }
+    window.location.assign(xpayHostedUrl(order.url, order.sessionId))
+  } catch (error) { if (sameCheckoutContext(context)) recordCheckoutError(error); recoveryQueued = true }
+  finally { if (sameCheckoutContext(context)) checkoutPending.value = false }
+}
+watch([currentId, isOwner, () => user.value?.id], () => {
+  checkoutVisible.value = false; proration.reset(); scheduled.reset(); prorationEnabled.value = false
+  ++checkoutGeneration; returnedCheckoutId = undefined; recovery = null; recoveryQueued = false; explicitSelection.value = false; checkoutHistoryKnown.value = false; checkoutReady.value = false; checkoutChecking.value = false
+  checkoutPending.value = false; checkoutError.value = ''; checkoutErrorCode.value = ''; checkoutOrders.value = []; checkoutCurrent.value = null; checkoutMode.value = null
+  if (import.meta.client) void recoverCheckout()
+}, { flush: 'sync' })
+onMounted(async () => {
+  const params = new URLSearchParams(window.location.search)
+  const returned = params.get('xpayOrder')
+  params.delete('xpayOrder'); params.delete('cancelled')
+  window.history.replaceState(window.history.state, '', window.location.pathname + (params.size ? `?${params}` : '') + window.location.hash)
+  await recoverCheckout(isXPayOrderId(returned) ? returned : undefined)
+})
+async function recoverCheckout(returned?: string) {
+  if (returned) returnedCheckoutId = returned
+  if (recovery) return recovery
+  if (checkoutPending.value) { recoveryQueued = true; return }
+  const context = checkoutContext()
+  if (!context.shop || !context.user || !isOwner.value) return
+  const task = (async () => {
+    await loadCheckoutStatus()
+    if (!sameCheckoutContext(context)) return
+    const saved = paymentState.value.order
+    const target = returnedCheckoutId ?? (saved && ['open', 'pending'].includes(saved.state) && saved.sessionId ? saved.orderId : undefined)
+    if (target) { await refreshCheckout(target); if (sameCheckoutContext(context)) { returnedCheckoutId = undefined; checkoutVisible.value = !['confirmed','ready','failed'].includes(paymentState.value.phase) } }
+    else if (saved?.state === 'paid') await refresh()
+  })().finally(() => { if (recovery === task) recovery = null })
+  recovery = task
+  return task
+}
+function selectPaymentPlan(id: string) { planPresentation.choose(id); explicitSelection.value = true }
+function selectPaymentVariant(id: string, value: string) { planPresentation.chooseVariant(id, value); explicitSelection.value = true }
+async function submitBillingChoice(){
+  if(!deferredChange.value){if(newPlanReview.value&&!scheduled.preview.value)return;await startCheckout();return}
+  const effective=scheduled.preview.value?.effectiveAt
+  if(!effective||!await confirmation.ask(copy.value.scheduleConfirm(date(effective))))return
+  const result=await scheduled.schedule();if(result){checkoutVisible.value=false;await scheduled.read()}
+}
+async function cancelScheduledChange(){if(await confirmation.ask(copy.value.scheduleCancelConfirm))await scheduled.cancel()}
+async function payScheduledChange(){const change=scheduled.current.value;if(!change?.canPayNow)return
+  if(change.privateOfferId){if(privateEntry.value?.offerId!==change.privateOfferId){scheduled.error.value='offer_link';return}}
+  else if(change.catalogTermsId)form.catalogTermsId=change.catalogTermsId
+  explicitSelection.value=true;checkoutError.value='';checkoutErrorCode.value='';await scheduled.review();checkoutVisible.value=true
+}
+watch(checkoutPending, value => { if (!value && recoveryQueued) { recoveryQueued = false; void recoverCheckout() } })
+// Existing authenticated, tenant-scoped version events recover late webhooks.
+useShopRealtime('billing', () => checkoutPending.value)
+watch(() => billing.value, value => { if (value && !checkoutPending.value && !recovery) void loadCheckoutStatus() })
+let removeCheckoutListeners = () => {}
+onMounted(() => {
+  const recover = () => { if (document.visibilityState === 'visible' && navigator.onLine) void recoverCheckout() }
+  window.addEventListener('focus', recover); window.addEventListener('online', recover); document.addEventListener('visibilitychange', recover)
+  removeCheckoutListeners = () => { window.removeEventListener('focus', recover); window.removeEventListener('online', recover); document.removeEventListener('visibilitychange', recover) }
+})
+onBeforeUnmount(() => { removeCheckoutListeners(); ++checkoutGeneration; recovery = null; recoveryQueued = false })
 const usageResources = computed<PlanUsageResource[]>(() => {
   if (!billing.value) return []
   if (billing.value.usage.resources?.length) return billing.value.usage.resources
@@ -62,7 +326,8 @@ const usageResources = computed<PlanUsageResource[]>(() => {
 watch([billing, purchasablePlans], () => {
   const plans = purchasablePlans.value
   if (!plans.length) { form.catalogTermsId = ''; return }
-  if (!plans.some(plan => plan.catalogTermsId === form.catalogTermsId)) {
+  if (!explicitSelection.value && billing.value?.subscription.accessState === 'active' && currentCatalogTermsId.value) form.catalogTermsId = currentCatalogTermsId.value
+  else if (!plans.some(plan => plan.catalogTermsId === form.catalogTermsId)) {
     form.catalogTermsId = plans.find(plan => plan.planSlug === billing.value?.subscription.planSlug
       && plan.planVariant === billing.value?.subscription.planVariant
       && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId
@@ -71,12 +336,10 @@ watch([billing, purchasablePlans], () => {
 }, { immediate: true })
 
 watch(selectedPlan, value => {
-  if (value) form.paidAmount = value.effectivePriceAmount
+  if (value && !privatePreview.value) form.paidAmount = value.effectivePriceAmount
 }, { immediate: true })
 
 watch(currentId, () => {
-  submitRequestId.value = null
-  submitError.value = ''
   Object.assign(form, { catalogTermsId: '', paidAmount: 0, transferDate: '', transferReference: '' })
 }, { flush: 'sync' })
 
@@ -101,129 +364,196 @@ function submissionMessage(submission: BillingSubmission) {
   return copy.value.submissionMessages[submission.status]
 }
 
-function choosePlan(plan: ShopPlanOffer) {
+function choosePlan(plan: ShopPlanOffer, intent: 'choose' | 'preview') {
+  clearPrivateOffer()
+  checkoutError.value = ''; checkoutErrorCode.value = ''
   form.catalogTermsId = plan.catalogTermsId
-}
-
-async function submitNotice() {
-  if (!currentId.value || !isOwner.value || submitPending.value) return
-  submitError.value = ''
-  const plan = selectedPlan.value
-  if (!plan || !(form.paidAmount > 0) || !form.transferDate || form.transferReference.trim().length < 2) {
-    submitError.value = copy.value.invalid
-    return
-  }
-  const confirmed = await confirmation.ask(copy.value.confirmNotice(plan.planName, money(plan.effectivePriceAmount, plan.currency), money(form.paidAmount, plan.currency)))
-  if (!confirmed) return
-  submitPending.value = true
-  const requestId = submitRequestId.value ?? globalThis.crypto.randomUUID()
-  submitRequestId.value = requestId
-  try {
-    const { error: commandError } = await rpc.rpc('submit_shop_billing_notice', {
-      p_request_id: requestId,
-      p_shop_id: currentId.value,
-      p_requested_plan_slug: plan.planSlug,
-      p_requested_catalog_terms_id: plan.catalogTermsId,
-      p_paid_amount: form.paidAmount,
-      p_transfer_date: form.transferDate,
-      p_transfer_reference: form.transferReference.trim(),
-    })
-    if (commandError) throw commandError
-    submitRequestId.value = null
-    Object.assign(form, { paidAmount: plan.effectivePriceAmount, transferDate: '', transferReference: '' })
-    await refresh()
-    pushToast({ tone: 'success', title: copy.value.submitted })
-  }
-  catch {
-    submitError.value = copy.value.failed
-  }
-  finally {
-    submitPending.value = false
-  }
+  if (intent === 'choose') checkoutVisible.value = true
 }
 
 const en = {
-  title: 'Subscription and billing', subtitle: 'Understand your plan, usage, and manually reviewed InstaPay requests.',
-  ownerOnly: 'Ask the Shop owner to review billing or submit a transfer notice. Only the owner can access these details.',
+  scheduleTitle: 'Change at paid-term end', scheduleAction: 'Schedule change', scheduleHelp: 'Keep your current paid access until its end date. No payment is taken now. Review the current price and pay manually when the next term becomes due; scheduling does not activate the new plan or automatically charge your card.',
+  scheduleConfirm: (end: string) => `Schedule this change for ${end}? No payment is due now and your paid access stays unchanged.`, scheduleCancelConfirm: 'Cancel this scheduled change? Your current paid access stays unchanged.',
+  scheduleStatus: { scheduled: 'Scheduled; awaiting next-term confirmation', cancelled: 'Cancelled', completed: 'Next term confirmed' }, scheduleCancel: 'Cancel scheduled change', schedulePay: 'Review next-term payment', scheduleError: 'Could not confirm the scheduled change. Refresh before trying again.', scheduleOfferLink: 'Open the valid private offer link to review this payment.', schedulePrice: 'Indicative next-term price; reviewed again before payment', manageTeam: 'Manage team', manageLocations: 'Manage branches',
+
+  checkoutActivePeriod: 'Your current subscription is active. Another prepaid period cannot be purchased. Review a supported plan change, or renew after this period ends.',
+  quoteReviewHelp: 'Review this plan change before confirming. Your existing paid access remains unchanged until an accepted change completes.', quotePlanRate: 'Plan price per billing term',
+  checkoutChecking: 'Confirming your payment…', checkoutResume: 'Resume checkout', checkoutFailed: 'Payment confirmation is taking longer. Contact us if you need help. Please wait before starting another payment.',
+  checkoutConfirmedTitle: 'Payment confirmed', checkoutConfirmed: 'Your subscription is active.', checkoutContinue: 'Continue to your shop', checkoutContact: 'Contact us',
+  checkoutConfirm: (plan: string, amount: string) => `Continue to X-Pay for ${plan} at ${amount}? Review the hosted checkout before paying.`,
+  quoteCreditTitle: 'Confirm credited plan change', quoteCreditHelp: 'Your prepaid value and credits cover this change. No new payment is due.',
+  quotePrepare: 'Review plan change', quoteCreditAction: 'Apply credited plan change', quoteNoChange: 'Keep current plan', quoteBreakdown: 'Plan change details',
+  quoteRate: 'Full plan rate', quoteService: 'Cost for the quoted period', quoteUnused: 'Unused prepaid value', quoteExistingCredit: 'Existing carryforward credit', quoteDue: 'Amount due now', quoteAfter: 'Carryforward credit after change',
+  quoteRenewal: (end: string) => `Your renewal date stays ${end}. Access changes only after verified payment or explicit credit confirmation.`,
+  quoteNoChangePolicy: 'Your current plan and renewal date stay unchanged. Existing carryforward credit is preserved.',
+  quoteNewPeriod: 'A new full billing term starts only after verified payment or explicit credit confirmation. Your current access stays unchanged until then.',
+  quotePrecision: 'Your total includes available prepaid value and account credit.', quoteCardOnly: 'Pay this change by card.',
+  quoteExpires: (remaining: string) => `Start payment or confirm the credit change within ${remaining}.`, quoteSaved: 'Your checkout is saved. Do not start another payment while its result is pending.',
+  quoteRestart: 'Review a new price', quoteStale: 'This price expired or your subscription changed. Review a new price before confirming. If a payment is in progress, wait for its result.',
+  quoteOpen: 'A saved plan-change quote is unresolved. Resume it or discard an unstarted quote before choosing another plan.', quotePaymentUnresolved: 'The payment result has not been confirmed. Do not pay again. Contact support if the delay continues.',
+  quoteUnavailable: 'Prorated changes are currently unavailable. Your saved access and credit stay unchanged.', quoteCurrency: 'This change does not support currency conversion. Contact support to review the existing prepaid value.',
+  quotePeriodUnsupported: 'Your current access spans multiple or custom billing terms. This remaining-period change needs support; no new price or checkout was accepted.',
+  quoteOfferExpiring: 'This private offer expires too soon to start a hosted payment. Request a fresh offer before paying.', quoteRequired: 'Review the price before confirming this plan change.', quoteCardUnsupported: 'This merchant cannot accept card payments for prorated changes. No checkout was created.',
+  quoteCreditConfirm: (plan: string, credit: string) => `Confirm ${plan} using your prepaid value and credits? No new payment is due. Your remaining credit will be ${credit}.`,
+  checkoutHistoricalReview: 'An earlier manual payment notice is still awaiting review. No new X-Pay checkout was created. Ask support to resolve that notice before paying again; do not send another payment while its status is unresolved.',
+  checkoutHistory: 'Payment history', checkoutEmpty: 'No X-Pay checkouts yet.',
+  checkoutStates: { creating: 'Preparing your payment…', open: 'Your payment is ready to continue.', pending: 'Confirming your payment…', paid: 'Payment confirmed.', requires_review: 'Your payment needs our attention. Contact us for help.', expired: 'This payment session expired. You can start again.', failed: 'Payment was not completed. You can try again.' },
+  checkoutTitle: 'Pay with X-Pay', checkoutHelp: 'Use secure hosted checkout for your selected plan. Payment details stay with X-Pay; no receipt image is needed.',
+  checkoutConsequences: 'Your current access stays unchanged until payment is verified. The chosen plan’s limits apply after activation; your saved data is preserved.',
+  checkoutSavedOrder: 'A saved checkout is already open. This payment resumes that saved order and its quoted amount, rather than creating another charge for the newly chosen card.',
+  checkoutTrial: 'You may pay from day one of your trial. You do not need to wait seven days. Paid access starts after verified payment, with trial history preserved.',
+  checkoutUnavailable: 'X-Pay checkout is not available yet. Contact support or check again later. Your current access remains unchanged.', checkoutAction: 'Continue to X-Pay',
+  privateTitle: 'Private offer', privateHelp: 'Sign in to the intended owner account, then open or paste the private offer link to review its terms. Previewing does not activate access.', privateLink: 'Private offer link', privatePreview: 'Review private terms', privateUnavailable: 'This offer is unavailable for this owner or shop. Check the link, expiry and recipient.', privateClear: 'Clear private offer', privateRedeemed: 'These private terms already have a recorded payment or credited activation. Review your current access and history before paying again.',
+  title: 'Subscription and billing', subtitle: 'Review your plan, usage and X-Pay checkout. Previous payment requests remain in your history.',
+  ownerOnly: 'Ask the Shop owner to review billing. Only the owner can access these details.',
   noBilling: 'No subscription information is available. Contact Building Suit support to review this shop’s billing.', loadFailed: 'Could not load billing information.', retry: 'Retry', plan: 'Current plan', access: 'Access state',
   days: 'days', periodEnd: 'Current access ends', trialEnd: 'Trial ends', currentPrice: 'Effective price', listPrice: 'List price', negotiated: 'Negotiated price applies', usage: 'Plan usage', usageHelp: 'Near-limit and full resources are highlighted before a write is rejected.',
-  readOnly: 'Your business history remains available, but subscription-gated writes are disabled until an operator approves payment or adjusts access.',
+  readOnly: 'Your business history remains available. Subscription-gated writes resume only after verified paid activation or an authorized access adjustment.',
   compare: 'Compare plans', compareHelp: 'Only plans currently approved for purchase are shown. Limits are enforced by resource, not by business type.', current: 'Current', choose: 'Choose plan', chosen: 'Selected',
-  blocked: 'Approval blocked by current usage', blockers: 'You can select this plan and submit its payment notice now, but it cannot be activated until every excess below is resolved.', preservation: 'All resources and data stay saved. Nothing is automatically deleted or archived. Resources above the chosen plan limits are unavailable for new or active use until you reduce usage or upgrade the plan.', used: 'used', limitLabel: 'limit', over: 'over',
-  instructions: 'Pay with InstaPay / instant bank transfer', instructionsHelp: 'Transfer using the operator-configured details below, then submit the notice for manual review. This is not automatic bank verification.',
-  recipient: 'Recipient alias', paymentLink: 'Payment link', qr: 'Payment QR', unavailable: 'Payment instructions have not been configured yet. Contact Building Suit support before transferring.',
-  notice: 'Submit payment notice', noticeHelp: 'A notice starts manual review. It does not change your plan or access until a platform operator approves it.', requestedPlan: 'Requested plan', interval: 'Commercial term', expected: 'Quoted plan price', paid: 'Amount transferred', transferDate: 'Transfer date', reference: 'Transfer reference',
-  submit: 'Submit for review', submitting: 'Submitting…', invalid: 'Choose an available plan and enter a positive amount, transfer date, and reference.', submitted: 'Payment notice submitted for manual review.', failed: 'Could not submit the payment notice. You can retry safely.', confirmNotice: (plan: string, quote: string, paid: string) => `Submit a manual payment notice for ${plan}? The quoted price is ${quote} and you entered ${paid}. Your access will not change until an operator approves it.`,
+  blocked: 'Approval blocked by current usage', blockers: 'Resolve the excess usage below before paying for this plan.', preservation: 'All resources and data stay saved. Nothing is automatically deleted or archived. Resources above the chosen plan limits are unavailable for new or active use until you reduce usage or upgrade the plan.', used: 'used', limitLabel: 'limit', over: 'over',
+  requestedPlan: 'Requested plan', interval: 'Commercial term', expected: 'Quoted plan price', paid: 'Amount transferred', transferDate: 'Transfer date', reference: 'Transfer reference',
   policyPrefix: 'By submitting, you acknowledge the', terms: 'Terms & Conditions', privacy: 'Privacy Policy', refund: 'Refund & Cancellation Policy',
   latest: 'Latest request', history: 'Payment notice history', empty: 'No payment notices have been submitted.', reviewReason: 'Review note', manual: 'Manual verification', catalogFailed: 'Could not load the purchasable plan catalog.', noPurchasable: 'No plans are currently available to request. Your current subscription remains unchanged.',
   statuses: { trialing: 'Trialing', active: 'Active', read_only: 'Read-only', suspended: 'Suspended', submitted: 'Submitted', under_review: 'Under review', approved: 'Approved', rejected: 'Rejected' },
-  submissionMessages: { submitted: 'Submitted for manual review. Your current plan and access have not changed.', under_review: 'An operator is reviewing this transfer. Your current plan and access have not changed.', approved: 'This request was approved. The current-plan summary above is the authoritative active access.', rejected: 'This request was rejected. Review the note, correct the transfer details, and submit a new notice if needed.' },
+  submissionMessages: { submitted: 'Submitted for manual review. Your current plan and access have not changed.', under_review: 'An operator is reviewing this transfer. Your current plan and access have not changed.', approved: 'This request was approved. The current-plan summary above is the authoritative active access.', rejected: 'This historical request was rejected. Review the note and contact support if needed.' },
   resources: { active_locations: 'Active locations', active_members: 'Team members', active_products: 'Active products', active_services: 'Active services', active_customers: 'Active customers', active_suppliers: 'Active suppliers' },
   intervals: { monthly: 'Monthly', quarterly: 'Quarterly', annual: 'Annual' },
 }
 
 const ar = {
-  title: 'الاشتراك والدفع', subtitle: 'شوف خطتك واستخدامك، وتابع طلبات InstaPay اللي بنراجعها يدويًا.',
-  ownerOnly: 'اطلب من مالك المتجر مراجعة الفوترة أو إرسال إشعار التحويل. هذه التفاصيل متاحة للمالك فقط.',
+  scheduleTitle: 'التغيير عند انتهاء الفترة المدفوعة', scheduleAction: 'جدولة التغيير', scheduleHelp: 'يستمر وصولك المدفوع الحالي حتى تاريخ انتهائه. لا تُحصّل دفعة الآن. راجع السعر الحالي وادفع يدويًا عند استحقاق الفترة التالية؛ الجدولة لا تفعّل الخطة الجديدة ولا تخصم من بطاقتك تلقائيًا.',
+  scheduleConfirm: (end: string) => `هل تريد جدولة التغيير في ${end}؟ لا توجد دفعة مستحقة الآن ويظل وصولك المدفوع كما هو.`, scheduleCancelConfirm: 'هل تريد إلغاء التغيير المجدول؟ يظل وصولك المدفوع الحالي كما هو.',
+  scheduleStatus: { scheduled: 'مجدول؛ بانتظار تأكيد الفترة التالية', cancelled: 'ملغي', completed: 'تم تأكيد الفترة التالية' }, scheduleCancel: 'إلغاء التغيير المجدول', schedulePay: 'مراجعة دفع الفترة التالية', scheduleError: 'تعذّر تأكيد التغيير المجدول. حدّث الصفحة قبل إعادة المحاولة.', scheduleOfferLink: 'افتح رابط العرض الخاص الصالح لمراجعة هذا الدفع.', schedulePrice: 'سعر استرشادي للفترة التالية؛ يُراجع مجددًا قبل الدفع', manageTeam: 'إدارة الفريق', manageLocations: 'إدارة الفروع',
+
+  checkoutActivePeriod: 'اشتراكك الحالي نشط. لا يمكن شراء فترة مدفوعة إضافية مقدمًا. راجع تغييرًا مدعومًا للخطة أو جدّد بعد انتهاء الفترة الحالية.',
+  quoteReviewHelp: 'راجع تغيير الخطة قبل التأكيد. تظل فترة الوصول المدفوعة الحالية كما هي حتى اكتمال تغيير معتمد.', quotePlanRate: 'سعر الخطة لكل فترة فوترة',
+  checkoutChecking: 'جارٍ تأكيد الدفع…', checkoutResume: 'استكمال الدفع', checkoutFailed: 'لم نتمكن من تأكيد الدفع بعد. دفعتك الحالية محفوظة. تواصل معنا إذا احتجت للمساعدة.',
+  checkoutConfirmedTitle: 'تم تأكيد الدفع', checkoutConfirmed: 'اشتراكك فعّال.', checkoutContinue: 'المتابعة إلى متجرك', checkoutContact: 'تواصل معنا',
+  checkoutConfirm: (plan: string, amount: string) => `تتابع إلى X-Pay لخطة ${plan} بمبلغ ${amount}؟ راجع صفحة الدفع قبل السداد.`,
+  quoteCreditTitle: 'تأكيد تغيير الخطة بالرصيد', quoteCreditHelp: 'تغطي القيمة المدفوعة والرصيد المعتمد هذا التغيير. أكد التغيير دون إنشاء دفعة جديدة.',
+  quotePrepare: 'مراجعة تغيير الخطة', quoteCreditAction: 'تطبيق تغيير الخطة بالرصيد', quoteNoChange: 'الإبقاء على الخطة الحالية', quoteBreakdown: 'تفاصيل تغيير الخطة',
+  quoteRate: 'سعر الخطة الكامل', quoteService: 'تكلفة الفترة المعروضة', quoteUnused: 'القيمة المدفوعة غير المستخدمة', quoteExistingCredit: 'الرصيد المرحّل الحالي', quoteDue: 'المبلغ المطلوب الآن', quoteAfter: 'الرصيد المرحّل بعد التغيير',
+  quoteRenewal: (end: string) => `يظل تاريخ التجديد ${end}. يتغير الوصول فقط بعد تأكيد الدفع أو تأكيد استخدام الرصيد.`,
+  quoteNoChangePolicy: 'تظل الخطة الحالية وتاريخ التجديد كما هما، مع الحفاظ على الرصيد المرحّل الحالي.',
+  quoteNewPeriod: 'تبدأ فترة فوترة كاملة جديدة فقط بعد تأكيد الدفع أو تأكيد استخدام الرصيد. يظل الوصول الحالي كما هو حتى ذلك الوقت.',
+  quotePrecision: 'يشمل المبلغ الإجمالي القيمة المدفوعة غير المستخدمة ورصيد حسابك المتاح.', quoteCardOnly: 'ادفع قيمة هذا التغيير بالبطاقة.',
+  quoteExpires: (remaining: string) => `ابدأ الدفع أو أكد استخدام الرصيد خلال ${remaining}.`, quoteSaved: 'عملية الدفع محفوظة. لا تبدأ دفعة أخرى ما دامت نتيجتها قيد الانتظار.',
+  quoteRestart: 'مراجعة سعر جديد', quoteStale: 'انتهت صلاحية السعر أو تغيّر اشتراكك. راجع سعرًا جديدًا قبل التأكيد. إذا كانت دفعة قيد المعالجة، فانتظر نتيجتها.',
+  quoteOpen: 'يوجد عرض تغيير خطة محفوظ لم تُحسم حالته. استأنفه أو تجاهل العرض الذي لم يبدأ قبل اختيار خطة أخرى.', quotePaymentUnresolved: 'لم تتأكد نتيجة الدفع بعد. لا تدفع مجددًا. تواصل مع الدعم إذا استمر التأخير.',
+  quoteUnavailable: 'تغيير الخطة بحسب المدة غير متاح حاليًا. يظل الوصول والرصيد المحفوظ كما هو.', quoteCurrency: 'هذا التغيير لا يدعم تحويل العملات. تواصل مع الدعم لمراجعة القيمة المدفوعة الحالية.',
+  quotePeriodUnsupported: 'تغطي فترة الوصول الحالية عدة دورات أو مدة فوترة مخصصة. يتطلب تغيير الفترة المتبقية مراجعة الدعم؛ لم يُعتمد سعر أو دفع جديد.',
+  quoteOfferExpiring: 'سينتهي العرض الخاص قريبًا جدًا لبدء دفع مستضاف. اطلب عرضًا جديدًا قبل الدفع.', quoteRequired: 'راجع السعر قبل تأكيد تغيير الخطة.', quoteCardUnsupported: 'لا يستطيع هذا التاجر قبول الدفع بالبطاقة لتغيير الخطة بحسب المدة. لم يتم إنشاء دفع.',
+  quoteCreditConfirm: (plan: string, credit: string) => `هل تريد تأكيد ${plan} باستخدام القيمة المدفوعة ورصيدك؟ لا توجد دفعة جديدة مستحقة. سيكون رصيدك المتبقي ${credit}.`,
+  checkoutHistoricalReview: 'يوجد إشعار دفع يدوي سابق ما زال بانتظار المراجعة. لم يتم إنشاء دفع جديد عبر X-Pay. اطلب من الدعم معالجة الإشعار قبل الدفع مجددًا؛ لا ترسل دفعة أخرى حتى تتضح حالته.',
+  checkoutHistory: 'سجل الدفع عبر X-Pay', checkoutEmpty: 'لا توجد عمليات دفع عبر X-Pay بعد.',
+  checkoutStates: { creating: 'بنجهّز صفحة الدفع. تقدر تعيد المحاولة لنفس الطلب بأمان.', open: 'طلب الدفع مفتوح. تابع إلى X-Pay لإكمال الدفع.', pending: 'الدفع معلّق. سيظل الوصول دون تغيير حتى يؤكد الخادم الدفع.', paid: 'تم تأكيد الدفع. ملخص الاشتراك يعرض وصولك الحالي.', requires_review: 'تم استلام الدفع ويحتاج الوصول إلى مراجعة. تواصل مع الدعم قبل الدفع مرة أخرى.', expired: 'انتهت صلاحية الطلب دون دفع مؤكد. يمكنك بدء طلب جديد.', failed: 'لم يكتمل الدفع. يمكنك إعادة المحاولة بطلب جديد.' },
+  checkoutTitle: 'الدفع بـ X-Pay', checkoutHelp: 'استخدم صفحة الدفع الآمنة للخطة المختارة. تظل بيانات الدفع لدى X-Pay ولا تحتاج إلى رفع صورة إيصال.',
+  checkoutConsequences: 'يظل الوصول الحالي كما هو حتى تأكيد الدفع. تسري حدود الخطة المختارة بعد التفعيل مع الحفاظ على البيانات المحفوظة.',
+  checkoutSavedOrder: 'يوجد دفع محفوظ مفتوح بالفعل. ستستأنف هذه العملية الطلب المحفوظ ومبلغه المعروض دون إنشاء دفعة أخرى للخطة المختارة حديثًا.',
+  checkoutTrial: 'يمكنك الدفع من أول يوم في التجربة، ولا يلزم انتظار السبعة أيام. يبدأ الوصول المدفوع بعد تأكيد الدفع مع الاحتفاظ بسجل التجربة.',
+  checkoutUnavailable: 'الدفع عبر X-Pay غير متاح بعد. تواصل مع الدعم أو حاول لاحقًا. سيظل وصولك الحالي دون تغيير.', checkoutAction: 'المتابعة إلى X-Pay',
+  privateTitle: 'عرض خاص', privateHelp: 'سجّل الدخول بحساب المالك المقصود، ثم افتح رابط العرض الخاص أو الصقه لمراجعة شروطه. المعاينة لا تفعّل الوصول.', privateLink: 'رابط العرض الخاص', privatePreview: 'مراجعة شروط العرض', privateUnavailable: 'هذا العرض غير متاح لهذا المالك أو المتجر. راجع الرابط والصلاحية والمستلم.', privateClear: 'مسح العرض الخاص', privateRedeemed: 'تم تسجيل دفع أو تفعيل بالرصيد لهذه الشروط الخاصة. راجع الوصول الحالي والسجل قبل الدفع مجددًا.',
+  title: 'الاشتراك والدفع', subtitle: 'راجع خطتك واستخدامك والدفع عبر X-Pay. تظل طلبات الدفع السابقة محفوظة في سجلك.',
+  ownerOnly: 'اطلب من مالك المتجر مراجعة الفوترة. هذه التفاصيل متاحة للمالك فقط.',
   noBilling: 'مفيش معلومات اشتراك متاحة. كلّم دعم Building Suit عشان يراجع اشتراك المتجر.', loadFailed: 'مقدرناش نحمّل معلومات الاشتراك.', retry: 'حاول تاني', plan: 'الخطة الحالية', access: 'حالة الاستخدام',
   days: 'يوم', periodEnd: 'ينتهي الوصول الحالي', trialEnd: 'تنتهي التجربة', currentPrice: 'السعر الفعلي', listPrice: 'السعر المعلن', negotiated: 'يُطبق سعر تفاوضي', usage: 'استخدام الخطة', usageHelp: 'نوضح الموارد القريبة من الحد أو المكتملة قبل رفض عملية جديدة.',
-  readOnly: 'سجل شغلك هيفضل متاح للقراية، بس مش هتقدر تعمل عمليات جديدة لحد ما مسؤول المنصة يعتمد الدفعة أو يعدّل الاستخدام.',
+  readOnly: 'يظل سجل شغلك متاحًا للقراءة. تُستأنف العمليات التي تتطلب اشتراكًا بعد تفعيل دفع مؤكّد أو تعديل وصول مصرح به.',
   compare: 'مقارنة الخطط', compareHelp: 'تظهر فقط الخطط المعتمدة والمتاحة للشراء الآن. تُطبّق الحدود حسب المورد وليس نوع النشاط.', current: 'الحالية', choose: 'اختيار الخطة', chosen: 'تم الاختيار',
-  blocked: 'التفعيل متوقف بسبب الاستخدام الحالي', blockers: 'يمكنك اختيار هذه الخطة وإرسال إشعار الدفع الآن، لكن لا يمكن تفعيلها حتى تعالج كل تجاوز موضح أدناه.', preservation: 'تظل كل الموارد والبيانات محفوظة. لن يُحذف أو يُؤرشف أي شيء تلقائيًا. الموارد التي تتجاوز حدود الخطة المختارة لن تكون متاحة للاستخدام الجديد أو النشط حتى تخفّض الاستخدام أو ترقي الخطة.', used: 'مستخدم', limitLabel: 'الحد', over: 'فوق الحد',
-  instructions: 'الدفع بـ InstaPay أو تحويل بنكي فوري', instructionsHelp: 'حوّل على البيانات الظاهرة، وبعدها ابعت إشعار الدفع للمراجعة. التحويل بيتراجع يدويًا، مش بيتطابق تلقائيًا.',
-  recipient: 'عنوان المستلم', paymentLink: 'رابط الدفع', qr: 'رمز QR للدفع', unavailable: 'لم يضبط مسؤول المنصة تعليمات الدفع بعد. تواصل مع دعم Building Suit قبل التحويل.',
-  notice: 'ابعت إشعار الدفع', noticeHelp: 'إشعار الدفع بيبدأ المراجعة اليدوية، بس خطتك واستخدامك مش هيتغيّروا غير بعد الاعتماد.', requestedPlan: 'الخطة المطلوبة', interval: 'مدة الاشتراك', expected: 'سعر الخطة المثبت', paid: 'المبلغ المحوّل', transferDate: 'تاريخ التحويل', reference: 'مرجع التحويل',
-  submit: 'ابعت للمراجعة', submitting: 'بنبعت…', invalid: 'اختار خطة متاحة، واكتب المبلغ وتاريخ ومرجع التحويل.', submitted: 'اتبعت إشعار الدفع للمراجعة اليدوية.', failed: 'مقدرناش نبعت إشعار الدفع. تقدر تحاول تاني من غير ما التحويل يتكرر.', confirmNotice: (plan: string, quote: string, paid: string) => `تبعت إشعار دفع لخطة ${plan}؟ سعر الخطة ${quote} والمبلغ اللي كتبته ${paid}. لن يتغير الوصول إلا بعد اعتماد مسؤول المنصة.`,
+  blocked: 'التفعيل متوقف بسبب الاستخدام الحالي', blockers: 'عالج تجاوزات الاستخدام الموضحة أدناه قبل الدفع لهذه الخطة.', preservation: 'تظل كل الموارد والبيانات محفوظة. لن يُحذف أو يُؤرشف أي شيء تلقائيًا. الموارد التي تتجاوز حدود الخطة المختارة لن تكون متاحة للاستخدام الجديد أو النشط حتى تخفّض الاستخدام أو ترقي الخطة.', used: 'مستخدم', limitLabel: 'الحد', over: 'فوق الحد',
+  requestedPlan: 'الخطة المطلوبة', interval: 'مدة الاشتراك', expected: 'سعر الخطة المثبت', paid: 'المبلغ المحوّل', transferDate: 'تاريخ التحويل', reference: 'مرجع التحويل',
   policyPrefix: 'بإرسال الطلب، أنت تقر بالاطلاع على', terms: 'الشروط والأحكام', privacy: 'سياسة الخصوصية', refund: 'سياسة الاسترداد والإلغاء',
   latest: 'أحدث طلب', history: 'سجل إشعارات الدفع', empty: 'لم تُرسل إشعارات دفع بعد.', reviewReason: 'ملاحظة المراجعة', manual: 'تحقق يدوي', catalogFailed: 'تعذّر تحميل كتالوج الخطط المتاحة للشراء.', noPurchasable: 'لا توجد خطط متاحة للطلب حاليًا. سيظل اشتراكك الحالي دون تغيير.',
   statuses: { trialing: 'فترة تجريبية', active: 'نشط', read_only: 'قراءة فقط', suspended: 'موقوف', submitted: 'مُرسل', under_review: 'قيد المراجعة', approved: 'معتمد', rejected: 'مرفوض' },
-  submissionMessages: { submitted: 'تم الإرسال للمراجعة اليدوية. لم تتغير خطتك الحالية أو صلاحية الوصول.', under_review: 'يراجع مسؤول المنصة التحويل الآن. لم تتغير خطتك الحالية أو صلاحية الوصول.', approved: 'تم اعتماد هذا الطلب. ملخص الخطة الحالية بالأعلى هو المرجع الفعلي لصلاحية الوصول.', rejected: 'تم رفض الطلب. راجع الملاحظة وصحح بيانات التحويل ثم أرسل إشعارًا جديدًا عند الحاجة.' },
+  submissionMessages: { submitted: 'تم الإرسال للمراجعة اليدوية. لم تتغير خطتك الحالية أو صلاحية الوصول.', under_review: 'يراجع مسؤول المنصة التحويل الآن. لم تتغير خطتك الحالية أو صلاحية الوصول.', approved: 'تم اعتماد هذا الطلب. ملخص الخطة الحالية بالأعلى هو المرجع الفعلي لصلاحية الوصول.', rejected: 'تم رفض هذا الطلب السابق. راجع الملاحظة وتواصل مع الدعم عند الحاجة.' },
   resources: { active_locations: 'الفروع النشطة', active_members: 'أعضاء الفريق', active_products: 'المنتجات النشطة', active_services: 'الخدمات النشطة', active_customers: 'العملاء النشطون', active_suppliers: 'الموردون النشطون' },
   intervals: { monthly: 'شهريًا', quarterly: 'كل ثلاثة أشهر', annual: 'سنويًا' },
 }
+const planPresentation = reactive(useShopPlanPresentation({ get offers() { return purchasablePlans.value }, get selectedCatalogTermsId() { return form.catalogTermsId }, get currentCatalogTermsId() { return currentCatalogTermsId.value }, get trialCatalogTermsId() { return trialCatalogTermsId.value }, action: 'select' }, choosePlan))
+const usagePresentation = useShopUsagePresentation()
+
+useShopRealtime('billing', () => privatePending.value || !!privateLink.value || !!privatePreview.value)
+
+const billingForm = computed<BsBillingForm>({ get: () => ({ paidAmount: form.paidAmount, transferDate: form.transferDate, transferReference: form.transferReference, privateLink: privateLink.value, reason: '' }), set: value => { form.paidAmount = value.paidAmount; form.transferDate = value.transferDate; form.transferReference = value.transferReference; privateLink.value = value.privateLink } })
+const billingCopy = computed<BsBillingCopy>(() => ({
+  instructions: copy.value.checkoutTitle, instructionsHelp: copy.value.checkoutHelp, manual: '', recipient: '', paymentLink: '', qr: '', instructionsUnavailable: copy.value.checkoutUnavailable,
+  evidenceTitle: '', evidenceHelp: '', evidenceSelect: '', evidenceUpload: '', evidenceUploading: '', evidenceFirst: '', evidenceSaved: '', evidenceAttached: '',
+  current: copy.value.plan, payment: isArabic.value ? 'الدفع بـ X-Pay' : 'X-Pay payment',
+  title: copy.value.title, subtitle: copy.value.subtitle, loading: ui('loading'), retry: copy.value.retry, cancel: ui('cancel'), denied: copy.value.ownerOnly, failed: copy.value.loadFailed, unavailable: copy.value.noBilling,
+  usage: copy.value.usage, usageHelp: copy.value.usageHelp, usageLoading: ui('loading'), usageError: copy.value.loadFailed, compare: copy.value.compare, compareHelp: copy.value.compareHelp,
+  privateTitle: copy.value.privateTitle, privateHelp: copy.value.privateHelp, privateLink: copy.value.privateLink, privatePreview: copy.value.privatePreview, privateClear: copy.value.privateClear,
+  notice: '', noticeHelp: '', submit: '', requestedPlan: copy.value.requestedPlan, expected: copy.value.expected, interval: copy.value.interval, paid: copy.value.paid, transferDate: copy.value.transferDate, reference: copy.value.reference,
+  policyPrefix: copy.value.policyPrefix, terms: copy.value.terms, privacy: copy.value.privacy, refund: copy.value.refund, noPurchasable: copy.value.noPurchasable,
+  history: copy.value.history, empty: copy.value.empty, access: copy.value.access, reviewReason: copy.value.reviewReason, reason: copy.value.reviewReason, refresh: copy.value.retry, requests: copy.value.history, inspect: copy.value.history, openSubscription: copy.value.title, cancelRequest: ui('cancel'),
+}))
+const billingView = computed<BsBillingView>(() => {
+  const value = billing.value
+  const sub = value?.subscription
+  const quote = noticeQuote.value
+  const preview = privatePreview.value
+  const latest = latestSubmission.value
+  const payment = activeCheckout.value
+  const frozen = proration.quote.value
+  const dialogPhase = checkoutDialogPhase({ paymentPhase: paymentState.value.phase, newPlanReview: !!newPlanReview.value,
+    quoteState: frozen?.state, blocked: !!planReviewBlocked.value, pending: checkoutPending.value })
+  const frozenVariant = frozen?.details ? ({ solo_1: planPresentation.copy.oneMember, solo_2: planPresentation.copy.twoMembers, multi_2: planPresentation.copy.twoBranches, multi_3: planPresentation.copy.threeBranches } as Record<string, string>)[frozen.details.planVariant] ?? '' : ''
+  const intermediateMoney = (minor: string) => new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(Number(minor) / 100)
+  const change = scheduled.current.value
+  const isDeferred = deferredChange.value
+  const paymentHeld = payment?.state === 'requires_review' || payment?.state === 'pending'
+  const paymentMessage = checkoutChecking.value ? copy.value.checkoutChecking : payment ? copy.value.checkoutStates[payment.state] : ''
+  return {
+    workspace: current.value?.name ?? '', loading: pending.value && !billing.value, failed: !!error.value, denied: !isOwner.value, available: !!value,
+    summary: sub ? [
+      { id: 'plan', label: copy.value.plan, value: sub.planName },
+      { id: 'access', label: copy.value.access, value: statusLabel(sub.accessState), status: sub.accessState },
+      { id: 'ends', label: sub.accessState === 'trialing' ? copy.value.trialEnd : copy.value.periodEnd, value: date(sub.accessState === 'trialing' ? sub.trialEndAt : sub.periodEnd), note: sub.accessState === 'trialing' ? `${sub.trialDaysRemaining} ${copy.value.days}` : '' },
+      { id: 'price', label: copy.value.currentPrice, value: money(sub.effectivePriceAmount ?? sub.priceAmount, sub.currency), note: [sub.priceSource === 'override' ? copy.value.negotiated : '', sub.listPriceAmount !== sub.effectivePriceAmount ? `${copy.value.listPrice}: ${money(sub.listPriceAmount, sub.currency)}` : ''].filter(Boolean).join(' · ') },
+    ] : [],
+    notice: sub && ['read_only', 'suspended'].includes(sub.accessState) ? copy.value.readOnly : '', details: [], providerNotice: '',
+    latest: latest ? { title: copy.value.latest, status: latest.status, statusLabel: statusLabel(latest.status), summary: `${latest.requestedPlanName} · ${money(latest.effectivePriceAmount, latest.currency)}`, message: submissionMessage(latest), reason: latest.reviewReason ?? '' } : null,
+    usage: { items: usageResources.value.map(usagePresentation), loading: false, failed: false },
+    pricing: { variant: 'shop', interval: planPresentation.interval, plans: planPresentation.pricingPlans.map(plan => ({ ...plan, notice: undefined })), intervalOptions: [{ value: 'monthly', label: planPresentation.copy.monthly }, { value: 'annual', label: planPresentation.copy.yearly }], copy: { cycleLabel: planPresentation.copy.cycle, loading: planPresentation.copy.loading, empty: copy.value.noPurchasable, retry: planPresentation.copy.retry, included: planPresentation.copy.included, notIncluded: planPresentation.copy.notIncluded }, annualSaving: planPresentation.annualDiscount === null ? null : planPresentation.copy.annualSaving(planPresentation.annualDiscount), columns: 3, loading: catalogPending.value, error: catalogError.value ? copy.value.catalogFailed : null, testId: 'shop-plan-cards' },
+    pendingChange: change ? { title: copy.value.scheduleTitle, status: copy.value.scheduleStatus[change.state], message: copy.value.scheduleHelp,
+      details: [{label:copy.value.requestedPlan,value:change.planName},{label:copy.value.periodEnd,value:date(change.effectiveAt)},{label:copy.value.schedulePrice,value:`${money(change.indicativePriceAmount,change.currency)} · ${intervalLabel(change.billingInterval)}`}],
+      blockers: change.blockers.map(item=>`${copy.value.resources[item.resource as PlanResourceKey]}: ${item.used} / ${item.limit}`),
+      links: change.blockers.length ? [{label:copy.value.manageTeam,to:'/team'},{label:copy.value.manageLocations,to:'/settings'}] : [], pending:scheduled.pending.value,
+      error: scheduled.error.value === 'offer_link' ? copy.value.scheduleOfferLink : scheduled.error.value ? copy.value.scheduleError : '', cancelLabel:copy.value.scheduleCancel,payLabel:copy.value.schedulePay,canCancel:change.canCancel,canPay:change.canPayNow } : undefined,
+    instructions: null,
+    privateOffer: { pending: privatePending.value, error: privateError.value, title: preview?.displayName ?? '', summary: preview ? `${money(preview.priceAmount, preview.currency)} · ${intervalLabel(preview.billingInterval)} · ${date(preview.expiresAt)}` : '', limits: preview ? Object.entries(preview.resourceLimits).map(([key, limit]) => ({ key, label: copy.value.resources[key as PlanResourceKey], value: limit == null ? '∞' : String(limit) })) : [], notice: preview?.blockers.length ? copy.value.preservation : '', redeemed: preview && (preview.submissionId || preview.xpayOrderId || preview.settledQuoteId) ? copy.value.privateRedeemed : '' },
+    checkout: { title: isDeferred ? copy.value.scheduleTitle : newPlanReview.value && dialogPhase !== 'confirmed' ? copy.value.quotePrepare : frozen?.calculation.amountDueMinor === 0 ? copy.value.quoteCreditTitle : dialogPhase === 'confirmed' ? (paymentState.value.order?.state === 'paid' ? copy.value.checkoutConfirmedTitle : copy.value.checkoutConfirmed) : copy.value.checkoutTitle, description: isDeferred ? copy.value.scheduleHelp : newPlanReview.value && dialogPhase !== 'confirmed' ? copy.value.quoteReviewHelp : frozen?.calculation.amountDueMinor === 0 ? copy.value.quoteCreditHelp : copy.value.checkoutHelp, showProviderLogo: !isDeferred && frozen?.calculation.amountDueMinor !== 0, logoLight: '/payments/xpay-light.svg', logoDark: '/payments/xpay-dark.svg', logoAlt: 'X-Pay',
+      breakdown: frozen ? { title: copy.value.quoteBreakdown, items: [
+        { label: copy.value.requestedPlan, value: [frozen.planName, frozenVariant].filter(Boolean).join(' · ') },
+        ...(frozen.details ? Object.entries(frozen.details.resourceLimits).map(([key, limit]) => ({ label: copy.value.resources[key as PlanResourceKey], value: limit == null ? '∞' : String(limit) })) : []),
+        ...(frozen.details ? Object.entries(frozen.details.entitlements).map(([key]) => ({ label: key === 'appointments' ? isArabic.value ? 'المواعيد' : 'Appointments' : isArabic.value ? 'التقارير' : 'Reports', value: isArabic.value ? 'مشمول' : 'Included' })) : []),
+        ...(frozen.details && frozen.details.listPriceAmount > frozen.details.effectivePriceAmount ? [{ label: isArabic.value ? 'خصم سعر الخطة' : 'Plan rate discount', value: money(frozen.details.listPriceAmount - frozen.details.effectivePriceAmount, 'EGP') }] : []),
+        { label: copy.value.quoteRate, value: `${money(frozen.calculation.newTermMinor / 100, 'EGP')} · ${intervalLabel(frozen.calculation.newBillingInterval)}` },
+        { label: copy.value.quoteService, value: intermediateMoney(frozen.calculation.serviceValueMinor) }, { label: copy.value.quoteUnused, value: intermediateMoney(frozen.calculation.unusedPrepaidMinor) },
+        { label: copy.value.quoteExistingCredit, value: money(frozen.calculation.creditBeforeMinor / 100, 'EGP') }, { label: copy.value.quoteDue, value: money(frozen.calculation.amountDueMinor / 100, 'EGP') },
+        { label: copy.value.quoteAfter, value: money(frozen.calculation.creditAfterMinor / 100, 'EGP') }], policy: `${frozen.calculation.mode === 'no_change' ? copy.value.quoteNoChangePolicy : frozen.calculation.mode === 'remaining_period' ? copy.value.quoteRenewal(date(frozen.calculation.periodEnd)) : copy.value.quoteNewPeriod} ${copy.value.quotePrecision}`, expiry: openCheckout.value ? copy.value.quoteSaved : copy.value.quoteExpires(proration.deadline.format(proration.deadline.expiresIn.value)) } : quote && !openCheckout.value ? { title: copy.value.requestedPlan, items: [
+        { label: copy.value.requestedPlan, value: [quote.planName, quote.variantName !== quote.planName ? quote.variantName : ''].filter(Boolean).join(' · ') },
+        { label: copy.value.interval, value: intervalLabel(quote.billingInterval) },
+        ...(isDeferred ? [{label:copy.value.periodEnd,value:date(scheduled.preview.value?.effectiveAt)},{label:copy.value.quoteDue,value:money(0,'EGP')}] : []),
+        ...Object.entries(quote.resourceLimits).map(([key, limit]) => ({ label: copy.value.resources[key as PlanResourceKey], value: limit == null ? '∞' : String(limit) })),
+        ...(quote.listPriceAmount > quote.effectivePriceAmount ? [{ label: isArabic.value ? 'خصم سعر الخطة' : 'Plan rate discount', value: money(quote.listPriceAmount - quote.effectivePriceAmount, quote.currency) }] : []),
+        { label: prorationEnabled.value ? copy.value.quotePlanRate : copy.value.quoteDue, value: money(quote.effectivePriceAmount, quote.currency) }], policy: isDeferred ? copy.value.scheduleHelp : copy.value.checkoutConsequences, expiry: '' } : undefined,
+      restartLabel: frozen ? copy.value.quoteRestart : undefined, restartDisabled: checkoutPending.value || !!openCheckout.value,
+      quote: frozen ? `${frozen.planName} · ${money(frozen.calculation.amountDueMinor / 100, 'EGP')}` : openCheckout.value ? `${openCheckout.value.planName} · ${money(openCheckout.value.amountMinor / 100, openCheckout.value.currency)}` : quote ? `${quote.planName} · ${money(quote.effectivePriceAmount, quote.currency)} · ${intervalLabel(quote.billingInterval)}` : copy.value.noPurchasable,
+      restrictions: !preview ? planPresentation.pricingPlans.find(plan => plan.id === selectedPlan.value?.planSlug)?.notice : preview.blockers.length ? { title: planPresentation.copy.blocked, body: planPresentation.copy.blockers, items: preview.blockers.map(blocker => `${planPresentation.copy.resources[blocker.resource as PlanResourceKey]}: ${blocker.used} / ${blocker.limit}`), footer: copy.value.preservation } : undefined,
+      consequences: isDeferred ? [copy.value.scheduleHelp] : [copy.value.checkoutConsequences, ...((prorationEnabled.value || frozen) && frozen?.calculation.amountDueMinor !== 0 ? [copy.value.quoteCardOnly] : []), ...(openCheckout.value ? [copy.value.checkoutSavedOrder] : [])],
+      notice: [quote?.blockers.length ? copy.value.preservation : sub?.accessState === 'trialing' ? copy.value.checkoutTrial : ''].filter(Boolean).join(' '),
+      unavailable: isDeferred ? '' : quote && quote.currency !== 'EGP' ? copy.value.quoteCurrency : !checkoutReady.value && !checkoutChecking.value ? copy.value.checkoutUnavailable : '', action: isDeferred ? copy.value.scheduleAction : openCheckout.value ? copy.value.checkoutResume : prorationEnabled.value && !frozen ? copy.value.quotePrepare : frozen?.calculation.mode === 'no_change' ? copy.value.quoteNoChange : frozen?.calculation.amountDueMinor === 0 ? copy.value.quoteCreditAction : copy.value.checkoutAction,
+      pending: checkoutPending.value || scheduled.pending.value || scheduled.checking.value, disabled: isDeferred ? scheduled.pending.value || scheduled.checking.value || !!scheduled.error.value || !!openCheckout.value || !!privatePreview.value?.settledQuoteId || billing.value?.subscription.accessState === 'suspended' : (!openCheckout.value && !!quote && quote.currency !== 'EGP') || (!openCheckout.value && !!frozen && (proration.expired.value || !prorationEnabled.value)) || !checkoutReady.value || checkoutChecking.value || checkoutPending.value || paymentHeld || (!paymentState.value.canStart && paymentState.value.phase !== 'resume' && !canChangePlan.value) || !quote || !!quote.blockers.length
+        || (!!newPlanReview.value && prorationEnabled.value && !frozen && (!scheduled.preview.value || scheduled.checking.value || !!scheduled.error.value)) || !!planReviewBlocked.value || !!privatePreview.value?.submissionId || !!privatePreview.value?.xpayOrderId || !!privatePreview.value?.settledQuoteId || billing.value?.subscription.accessState === 'suspended', error: scheduled.error.value ? copy.value.scheduleError : checkoutError.value || (newPlanReview.value && !prorationEnabled.value ? copy.value.quoteUnavailable : ''),
+      statusMessage: newPlanReview.value && dialogPhase !== 'confirmed' ? '' : dialogPhase === 'confirmed' ? copy.value.checkoutConfirmed : dialogPhase === 'confirming' || dialogPhase === 'checking' ? copy.value.checkoutChecking : paymentMessage, phase: dialogPhase, actionVisible: isDeferred || !planReviewBlocked.value && (paymentState.value.canStart || paymentState.value.phase === 'resume' || !!canChangePlan.value), continueLabel: dialogPhase === 'confirmed' ? copy.value.checkoutContinue : '', helpLabel: copy.value.checkoutContact, helpTo: '/contact', renewLabel: '' },
+    checkoutHistory: { title: copy.value.checkoutHistory, status: copy.value.access, plan: copy.value.requestedPlan, amount: copy.value.expected, date: copy.value.transferDate, empty: copy.value.checkoutEmpty,
+      rows: checkoutOrders.value.map(order => ({ id: order.orderId, status: copy.value.checkoutStates[order.state], plan: order.planName, amount: money(order.amountMinor / 100, order.currency), date: date(order.createdAt) })) },
+    transfer: null, evidence: null, showEvidence: false, showHistory: true,
+    history: (value?.submissions ?? []).map(item => ({ id: item.id, status: item.status, statusLabel: statusLabel(item.status), plan: item.requestedPlanName, expected: money(item.effectivePriceAmount, item.currency), paid: money(item.paidAmount, item.currency), reference: item.transferReference, date: date(item.transferDate), reason: item.reviewReason ?? '' })),
+    trial: null, policy: null, paymentNotice: '', paymentRequired: '', compatibilityNotice: '', pricingError: '', canRequests: false,
+  }
+})
+function chooseBillingInterval(value: string) { if (value === 'monthly' || value === 'annual') { explicitSelection.value = true; planPresentation.interval = value } }
 </script>
-
 <template>
-  <div class="mx-auto max-w-6xl space-y-6">
-    <header><p class="text-xs font-bold uppercase tracking-[0.16em] text-[var(--bs-link)]">{{ current?.name }}</p><h1 class="mt-1 text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></header>
-    <p v-if="!isOwner" role="alert" class="rounded-2xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-5">{{ copy.ownerOnly }}</p>
-    <div v-else-if="pending" role="status" :aria-label="ui('loading')" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div v-for="item in 4" :key="item" class="h-28 animate-pulse rounded-2xl bg-muted" /></div>
-    <div v-else-if="error" role="alert" class="ls-error"><p>{{ copy.loadFailed }}</p><BsButton class="mt-3" @click="refresh()">{{ copy.retry }}</BsButton></div>
-    <template v-else-if="billing">
-      <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Current subscription">
-        <BsKpiCard :title="copy.plan"><span class="text-xl font-extrabold">{{ billing.subscription.planName }}</span></BsKpiCard>
-        <BsKpiCard :title="copy.access"><StatusBadge :status="billing.subscription.accessState" /> <span class="ms-2 text-sm font-bold">{{ statusLabel(billing.subscription.accessState) }}</span></BsKpiCard>
-        <BsKpiCard :title="billing.subscription.accessState === 'trialing' ? copy.trialEnd : copy.periodEnd"><span class="text-sm font-bold">{{ date(billing.subscription.accessState === 'trialing' ? billing.subscription.trialEndAt : billing.subscription.periodEnd) }}</span><p v-if="billing.subscription.accessState === 'trialing'" class="mt-1 text-xs text-muted-foreground">{{ billing.subscription.trialDaysRemaining }} {{ copy.days }}</p></BsKpiCard>
-        <BsKpiCard :title="copy.currentPrice"><span class="text-lg font-extrabold">{{ money(billing.subscription.effectivePriceAmount ?? billing.subscription.priceAmount, billing.subscription.currency) }}</span><p v-if="billing.subscription.priceSource === 'override'" class="mt-1 text-xs font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</p><p v-if="billing.subscription.listPriceAmount !== billing.subscription.effectivePriceAmount" class="mt-1 text-xs text-muted-foreground">{{ copy.listPrice }}: {{ money(billing.subscription.listPriceAmount, billing.subscription.currency) }}</p></BsKpiCard>
-      </section>
-
-      <p v-if="['read_only', 'suspended'].includes(billing.subscription.accessState)" role="status" class="rounded-2xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.readOnly }}</p>
-
-      <section v-if="latestSubmission" class="ls-card p-5" aria-live="polite">
-        <div class="flex flex-wrap items-center gap-3"><h2 class="font-extrabold">{{ copy.latest }}</h2><StatusBadge :status="latestSubmission.status" /><strong class="text-sm">{{ statusLabel(latestSubmission.status) }}</strong><span class="text-sm text-muted-foreground">{{ latestSubmission.requestedPlanName }} · {{ money(latestSubmission.effectivePriceAmount, latestSubmission.currency) }}</span></div>
-        <p class="mt-2 text-sm leading-6">{{ submissionMessage(latestSubmission) }}</p><p v-if="latestSubmission.reviewReason" class="mt-2 text-sm text-muted-foreground">{{ copy.reviewReason }}: {{ latestSubmission.reviewReason }}</p>
-      </section>
-
-      <section class="ls-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.usage }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.usageHelp }}</p><div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3"><PlanUsageMeter v-for="resource in usageResources" :key="resource.resource" :usage="resource" /></div></section>
-
-      <section class="ls-card p-5 sm:p-6">
-        <h2 class="text-lg font-extrabold">{{ copy.compare }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.compareHelp }}</p>
-        <div v-if="catalogPending" role="status" class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3"><div v-for="item in 3" :key="item" class="h-72 animate-pulse rounded-2xl bg-muted" /></div>
-        <div v-else-if="catalogError" role="alert" class="ls-error mt-5"><p>{{ copy.catalogFailed }}</p><BsButton class="mt-3" severity="secondary" @click="refreshCatalog()">{{ copy.retry }}</BsButton></div>
-        <p v-else-if="!purchasablePlans.length" role="status" class="mt-5 rounded-xl border border-border p-4 text-sm">{{ copy.noPurchasable }}</p>
-        <ShopPlanCards v-else class="mt-5" :offers="purchasablePlans" :selected-catalog-terms-id="form.catalogTermsId" :current-catalog-terms-id="currentCatalogTermsId" action="select" @select="choosePlan" />
-      </section>
-
-      <section class="ls-card p-5 sm:p-6"><div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="text-lg font-extrabold">{{ copy.instructions }}</h2><p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{{ copy.instructionsHelp }}</p></div><span class="rounded-full bg-muted px-3 py-1 text-xs font-bold">{{ copy.manual }}</span></div>
-        <div v-if="billing.instructions.recipientAlias || billing.instructions.paymentLink || billing.instructions.qrImageUrl || (isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn)" class="mt-5 grid gap-4 md:grid-cols-2"><p v-if="billing.instructions.recipientAlias" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.recipient }}</span><strong dir="ltr" class="break-all">{{ billing.instructions.recipientAlias }}</strong></p><p v-if="billing.instructions.paymentLink" class="rounded-xl border border-border p-4"><span class="block text-xs text-muted-foreground">{{ copy.paymentLink }}</span><a class="break-all font-bold text-[var(--bs-link)] underline" :href="billing.instructions.paymentLink" target="_blank" rel="noopener noreferrer">{{ billing.instructions.paymentLink }}</a></p><div v-if="billing.instructions.qrImageUrl" class="rounded-xl border border-border p-4"><span class="mb-3 block text-xs text-muted-foreground">{{ copy.qr }}</span><img :src="billing.instructions.qrImageUrl" :alt="copy.qr" class="h-40 w-40 rounded-lg object-contain"></div><p v-if="isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn" class="whitespace-pre-line rounded-xl border border-border p-4 text-sm leading-6">{{ isArabic ? billing.instructions.instructionsAr : billing.instructions.instructionsEn }}</p></div><p v-else class="mt-5 text-sm text-muted-foreground">{{ copy.unavailable }}</p>
-      </section>
-
-      <section class="ls-card p-5 sm:p-6"><h2 class="text-lg font-extrabold">{{ copy.notice }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ copy.noticeHelp }}</p>
-        <BsForm class="mt-5 grid gap-4 sm:grid-cols-2" :pending="submitPending" :error="submitError" @submit="submitNotice"><div v-if="selectedPlan" class="rounded-xl border border-border p-4 text-sm sm:col-span-2"><p>{{ copy.requestedPlan }}: <strong>{{ selectedPlan.planName }}</strong> · {{ copy.expected }}: <strong>{{ money(selectedPlan.effectivePriceAmount, selectedPlan.currency) }}</strong> · {{ copy.interval }}: <strong>{{ intervalLabel(selectedPlan.billingInterval) }}</strong></p><p v-if="selectedPlan.priceSource === 'override'" class="mt-2 font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</p><p v-if="selectedPlan.blockers.length" class="mt-3 rounded-lg bg-[var(--bs-status-warning-bg)] p-3 font-semibold leading-5">{{ copy.preservation }}</p></div><p v-else role="status" class="rounded-xl border border-border p-4 text-sm sm:col-span-2">{{ copy.noPurchasable }}</p><label class="grid gap-2 text-sm font-bold">{{ copy.paid }}<input v-model.number="form.paidAmount" class="ls-input min-h-11 min-w-0" type="number" min="0.01" step="0.01" :disabled="!selectedPlan" required></label><label class="grid gap-2 text-sm font-bold">{{ copy.transferDate }}<input v-model="form.transferDate" class="ls-input min-h-11 min-w-0" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!selectedPlan" required></label><label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.reference }}<input v-model="form.transferReference" class="ls-input min-h-11 min-w-0" dir="ltr" minlength="2" maxlength="200" :disabled="!selectedPlan" required></label><p class="text-sm leading-6 text-muted-foreground sm:col-span-2">{{ copy.policyPrefix }} <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/terms">{{ copy.terms }}</NuxtLink> · <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/privacy">{{ copy.privacy }}</NuxtLink> · <NuxtLink class="font-bold text-[var(--bs-link)] underline" to="/refund-cancellation">{{ copy.refund }}</NuxtLink>.</p><div class="sm:col-span-2"><BsButton type="submit" variant="primary" :pending="submitPending" :disabled="!selectedPlan || hasOpenRequest">{{ submitPending ? copy.submitting : copy.submit }}</BsButton></div></BsForm>
-      </section>
-
-      <section class="overflow-hidden ls-card"><div class="p-5"><h2 class="text-lg font-extrabold">{{ copy.history }}</h2></div><div class="overflow-x-auto"><BsDataTable :value="billing.submissions" data-key="id" :label="copy.history"><Column field="status"><template #header>{{ copy.access }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /> <span class="ms-2 text-sm">{{ statusLabel(item.status) }}</span></template></Column><Column field="requestedPlanName"><template #header>{{ copy.requestedPlan }}</template></Column><Column><template #header>{{ copy.expected }}</template><template #body="{ data: item }">{{ money(item.effectivePriceAmount, item.currency) }}</template></Column><Column><template #header>{{ copy.paid }}</template><template #body="{ data: item }">{{ money(item.paidAmount, item.currency) }}</template></Column><Column field="transferReference"><template #header>{{ copy.reference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column><Column field="reviewReason"><template #header>{{ copy.reviewReason }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template></BsDataTable></div></section>
-    </template>
-    <p v-else role="status" class="rounded-xl border border-border p-5 text-sm">{{ copy.noBilling }}</p>
-  </div>
+  <BsBillingPage v-model:checkout-visible="checkoutVisible" v-model:form="billingForm" variant="shop" :copy="billingCopy" :view="billingView" @retry="refresh()" @usage-retry="refresh()" @pricing-retry="refreshCatalog()" @interval="chooseBillingInterval" @variant="selectPaymentVariant" @plan="selectPaymentPlan" @private-preview="previewPrivateOffer" @private-clear="clearPrivateOffer" @checkout="submitBillingChoice" @scheduled-cancel="cancelScheduledChange" @scheduled-pay="payScheduledChange" @checkout-continue="navigateTo('/dashboard')" @checkout-restart="restartCheckoutQuote"/>
 </template>

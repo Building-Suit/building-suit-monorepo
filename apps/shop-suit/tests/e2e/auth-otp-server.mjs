@@ -1,9 +1,9 @@
 import { createServer } from 'node:http'
 
-const port = Number(process.env.PORT || 64321)
-const user = { id: '00000000-0000-4000-8000-000000000101', email: 'owner@example.test', aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: { display_name: 'OTP owner', pending_shop: { name: 'OTP shop', business_mode: 'mixed' } }, identities: [{ id: 'identity-1' }] }
+const port = Number(process.env.PORT || 4432)
+const user = { id: '00000000-0000-4000-8000-000000000101', email: 'owner@example.test', aud: 'authenticated', role: 'authenticated', email_confirmed_at: '2026-09-30T10:00:00Z', app_metadata: {}, user_metadata: { display_name: 'OTP owner', pending_shop: { name: 'OTP shop', business_mode: 'mixed' } }, identities: [{ id: 'identity-1' }] }
 const jwt = `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: user.id, exp: Math.floor(Date.now() / 1000) + 3600, role: 'authenticated', email: user.email })).toString('base64url')}.test`
-const state = { signupCalls: 0, resendCalls: 0, verifyCalls: 0, createCalls: 0, created: false, failFirstCreate: true, signupPayload: null, createPayload: null, shopName: null, locations: [] }
+const state = { signupCalls: 0, resendCalls: 0, verifyCalls: 0, createCalls: 0, created: false, failFirstCreate: true, signupPayload: null, resendPayload: null, verifyPayload: null, createPayload: null, shopName: null, locations: [] }
 
 const resourceLimits = { active_locations: 1, active_members: 8, active_products: 500, active_services: 100, active_customers: 2000, active_suppliers: 150 }
 const trialStartAt = '2026-09-30T10:00:00.000Z'
@@ -43,21 +43,30 @@ createServer(async (request, response) => {
   if (request.method === 'OPTIONS') { send(response, 200, {}); return }
   const url = new URL(request.url, `http://127.0.0.1:${port}`)
   if (url.pathname === '/__state') { send(response, 200, state); return }
-  if (url.pathname === '/__reset') { Object.assign(state, { signupCalls: 0, resendCalls: 0, verifyCalls: 0, createCalls: 0, created: false, failFirstCreate: true, signupPayload: null, createPayload: null, shopName: null, locations: [] }); send(response, 200, state); return }
+  if (url.pathname === '/__reset') { Object.assign(state, { signupCalls: 0, resendCalls: 0, verifyCalls: 0, createCalls: 0, created: false, failFirstCreate: true, signupPayload: null, resendPayload: null, verifyPayload: null, createPayload: null, shopName: null, locations: [] }); send(response, 200, state); return }
 
   if (url.pathname === '/auth/v1/signup') {
     state.signupCalls += 1
     const input = await body(request)
     state.signupPayload = input
-    if (String(input.email).startsWith('existing')) { send(response, 422, { code: 'user_already_exists', message: 'User already registered' }); return }
+    user.email = input.email
+    if (String(input.email).startsWith('masked')) { send(response, 200, { user: { ...user, identities: [] }, session: null }); return }
+    if (String(input.email).startsWith('confirmed') || String(input.email).startsWith('ambiguous')) { send(response, 422, { code: 'user_already_exists', message: 'User already registered' }); return }
     send(response, 200, { user: { ...user, email: input.email }, session: null })
     return
   }
-  if (url.pathname === '/auth/v1/resend') { state.resendCalls += 1; send(response, 200, {}); return }
+  if (url.pathname === '/auth/v1/resend') {
+    state.resendCalls += 1
+    state.resendPayload = await body(request)
+    if (String(user.email).startsWith('ambiguous-failed')) { send(response, 429, { code: 'over_email_send_rate_limit', message: 'Too many requests' }); return }
+    send(response, 200, {}); return
+  }
   if (url.pathname === '/auth/v1/verify') {
     state.verifyCalls += 1
     const input = await body(request)
+    state.verifyPayload = input
     if (input.token !== '654321') { send(response, 403, { code: 'otp_expired', message: 'Token has expired or is invalid' }); return }
+    if (String(user.email).startsWith('wrong-session')) user.email = 'different@example.test'
     send(response, 200, { access_token: jwt, refresh_token: 'synthetic-refresh', expires_in: 3600, token_type: 'bearer', user })
     return
   }

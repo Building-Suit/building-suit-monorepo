@@ -129,6 +129,10 @@ file_size_limit = "50MiB"
 # HMAC bridge protocol. It must never accept a browser Supabase JWT instead.
 verify_jwt = false
 
+[functions.shop-support-sender]
+# This worker requires its own server-only bearer token; browser JWTs are denied.
+verify_jwt = false
+
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]
 enabled = true
@@ -251,6 +255,10 @@ otp_expiry = 3600
 [auth.email.template.confirmation]
 subject = "{{ .Token }} is your Shop Suit verification code"
 content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.invite]
+subject = "Claim your Shop Suit account | تأكيد ملكية حسابك"
+content_path = "./supabase/templates/invite.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
@@ -416,3 +424,12 @@ enabled = true
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# Each handler performs its own authorization: actual Auth user lookup + owner
+# RPC, raw-body XPay signature, or exact server credential respectively.
+[functions.shop-xpay-checkout]
+verify_jwt = true
+[functions.shop-xpay-webhook]
+verify_jwt = false
+[functions.shop-xpay-reconcile]
+verify_jwt = false

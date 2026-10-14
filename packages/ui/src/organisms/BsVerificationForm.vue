@@ -47,7 +47,7 @@ const submitDisabled = computed(() => props.pending || (!props.verified && (code
   <div class="bs-verification-form">
     <BsForm :pending="pending" :error="error" @submit="emit('submit', $event)">
       <div class="bs-verification-form__intro">
-      <div class="bs-verification-form__icon"><AppIcon name="mail" :size="28" /></div>
+      <div class="bs-verification-form__icon"><BsIcon name="mail" :size="28" /></div>
       <p v-if="eyebrow" class="bs-verification-form__eyebrow">{{ eyebrow }}</p>
       <h1 class="bs-verification-form__title">{{ title }}</h1>
       <p class="bs-verification-form__description">{{ description }}</p>
@@ -55,7 +55,7 @@ const submitDisabled = computed(() => props.pending || (!props.verified && (code
       </div>
 
       <div class="bs-verification-form__body">
-      <OtpInput v-if="!verified" v-model="code" :label="codeLabel" :disabled="pending || expired" />
+      <BsOtpInput v-if="!verified" v-model="code" :label="codeLabel" :disabled="pending || expired" />
       <div v-if="!verified && (expiryLabel || expired || attemptsLabel)" class="bs-verification-form__timer" aria-live="polite">
         <span v-if="!expired">{{ expiryLabel }}</span>
         <span v-else class="bs-verification-form__expired">{{ expiredLabel }}</span>

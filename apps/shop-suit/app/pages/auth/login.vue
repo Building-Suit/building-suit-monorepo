@@ -1,9 +1,12 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'auth' })
+definePageMeta({ layout: false })
 
 const supabase = useSupabaseClient()
 const nuxtApp = useNuxtApp()
 const user = useSupabaseUser()
+const route = useRoute()
+const destination = computed(() => typeof route.query.invite === 'string' && /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(route.query.invite)
+  ? `/auth/team-invitation?invite=${route.query.invite}` : '/dashboard')
 const { t, locale } = useI18n()
 
 useHead({
@@ -74,7 +77,7 @@ async function onSubmit() {
 
     if (error) throw error
 
-    await nuxtApp.runWithContext(() => navigateTo('/dashboard'))
+    await nuxtApp.runWithContext(() => navigateTo(destination.value))
   }
   catch (error: unknown) {
     errorMessage.value = normalizeAuthError(error instanceof Error ? error.message : undefined)
@@ -88,21 +91,18 @@ watchEffect(async () => {
   if (user.value) {
     // Do not force-navigation while a submit is executing.
     if (!pending.value && import.meta.client && window.location.pathname === '/auth/login') {
-      await nuxtApp.runWithContext(() => navigateTo('/dashboard'))
+      await nuxtApp.runWithContext(() => navigateTo(destination.value))
     }
   }
 })
 </script>
 
 <template>
-  <BsAuthForm
-    eyebrow="Shop Suit" :title="t('auth.loginTitle')" :description="t('auth.loginSubtitle')"
-    :pending="pending" :error="errorMessage" :submit-label="t('auth.loginAction')" :pending-label="t('auth.loginAction')"
-    :data-client-ready="clientReady ? 'true' : 'false'" @submit="onSubmit"
-  >
-    <FloatingField :label="t('auth.email')"><InputText id="login-email" v-model="email" type="email" autocomplete="email" required dir="ltr" class="ls-input" /></FloatingField>
-    <FloatingField :label="t('auth.password')"><InputText id="login-password" v-model="password" type="password" autocomplete="current-password" required dir="ltr" class="ls-input" /></FloatingField>
-    <NuxtLink to="/auth/forgot-password" class="text-xs text-fg-muted underline">{{ t('auth.forgotPassword') }}</NuxtLink>
-    <template #footer>{{ t('auth.noAccount') }} <NuxtLink to="/auth/signup" class="font-bold text-fg underline underline-offset-4">{{ t('auth.signupAction') }}</NuxtLink></template>
-  </BsAuthForm>
+  <BsSignInPage
+    v-model:email="email" v-model:password="password"
+    :product="{ name: 'Shop Suit', presentation: 'flat', assetPrefix: '/brand/shop-suit', homeLabel: locale === 'ar' ? 'الرئيسية' : 'Home', title: `${t('hero.title')} ${t('hero.subtitle')}`, description: t('hero.description') }"
+    :copy="{ eyebrow: 'Shop Suit', title: t('auth.loginTitle'), description: t('auth.loginSubtitle'), email: t('auth.email'), password: t('auth.password'), submit: t('auth.loginAction'), pending: t('auth.loginAction'), accountPrompt: t('auth.noAccount'), signup: t('auth.signupAction') }"
+    signup-to="/auth/signup" :forgot="{ to: '/auth/forgot-password', label: t('auth.forgotPassword') }"
+    :pending="pending" :error="errorMessage" :hydrated="clientReady" @submit="onSubmit"
+  />
 </template>

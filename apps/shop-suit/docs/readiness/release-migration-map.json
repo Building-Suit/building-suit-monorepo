@@ -1,0 +1,40 @@
+{
+  "reason": "Unapplied source migrations rebased as new forward versions after verified hosted history 20261010123311. Applied migrations remain byte-for-byte unchanged. No hosted application authorized by source preparation.",
+  "mapping": [
+    {
+      "original": "20261007010000_launch_team_controls.sql",
+      "release": "20261011120000_launch_team_controls.sql",
+      "sha256": "301ca83c24a648b715fcca0b0868c7c01167561af73291c3322d00b4c1204d09"
+    },
+    {
+      "original": "20261007200012_launch_cash_policy.sql",
+      "release": "20261011120100_launch_cash_policy.sql",
+      "sha256": "8e4b66b788d05db17d5d810720a35a90f561f0f4576f389dea204e85284225cd"
+    },
+    {
+      "original": "20261008160000_support_notification_delivery.sql",
+      "release": "20261011120200_support_notification_delivery.sql",
+      "sha256": "e46248da0f0faf806e1068fe903ee972ff47a3a270a565bf4e405945f910b612"
+    },
+    {
+      "original": "20261009170000_solo_member_variants.sql",
+      "release": "20261011120300_solo_member_variants.sql",
+      "sha256": "ca32b8193c6097fd84cc7341f1118a2fc8532026b54c7746d95d90c5f84e19d7"
+    },
+    {
+      "original": "20261009180000_preserve_operator_renewal_terms.sql",
+      "release": "20261011120400_preserve_operator_renewal_terms.sql",
+      "sha256": "629ea5f9f8165753427f1e06e14621d409264621430b332a0ecf0504ab80408b"
+    },
+    {
+      "original": "20261009210000_launch_fast_pay.sql",
+      "release": "20261011120500_launch_fast_pay.sql",
+      "sha256": "8205af60cde4f1eebe5af442598db51c6609403d338eef67234fe80ee1263301"
+    },
+    {
+      "original": "20261010110000_shop_scoped_realtime.sql",
+      "release": "20261011120600_shop_scoped_realtime.sql",
+      "sha256": "6ae69683e5dbf516239b415a444bc1de5da4edbe58c7d09f68b85c6ae6949589"
+    }
+  ]
+}

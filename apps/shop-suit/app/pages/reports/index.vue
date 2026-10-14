@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsReportsView, BsReportFilters, BsReportChoices } from '@building-suit/ui/types/reportsPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { OperationalReportKind, OperationalReportPage, OperationalReportRow } from '~/types/reporting'
 import { downloadCsv, encodeCsv } from '~/utils/catalogImport'
@@ -10,16 +11,16 @@ type ReportColumn = { key: string; label: string | undefined; format: ColumnForm
 
 const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const route = useRoute()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const { current, currentId, activeLocations } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
 const reportKinds: OperationalReportKind[] = ['sales', 'collections', 'receivables', 'suppliers', 'expenses', 'inventory', 'margin', 'activity']
 const requestedReport = typeof route.query.report === 'string' && reportKinds.includes(route.query.report as OperationalReportKind)
   ? route.query.report as OperationalReportKind : 'sales'
 const report = ref<OperationalReportKind>(requestedReport)
-const locationId = ref('all')
-const fromDate = ref('')
-const toDate = ref('')
+const locationId = ref(typeof route.query.location === 'string' && activeLocations.value.some(location => location.id === route.query.location) ? route.query.location : 'all')
+const fromDate = ref(typeof route.query.from === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(route.query.from) ? route.query.from : '')
+const toDate = ref(typeof route.query.to === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(route.query.to) ? route.query.to : '')
 const page = ref(1)
 const pageSize = 20
 const exporting = ref(false)
@@ -39,6 +40,7 @@ const copy = computed(() => isArabic.value ? {
   costDenied: 'محتاج صلاحية عرض التكلفة والربح عشان تشوف التقرير ده.', empty: 'مفيش نتايج للاختيارات دي.',
   previous: 'السابق', next: 'التالي', page: 'صفحة', of: 'من', records: 'سجل', open: 'فتح المصدر',
   true: 'نعم', false: 'لا', fifoNotice: 'الهامش بيظهر بس للمنتجات اللي كمياتها مطابقة تمامًا لحركات تكلفة FIFO (الأقدم يتباع الأول). الخدمات والبنود غير المتطابقة مش بتتحسب.',
+  posted: 'مرحّل', voided: 'ملغى',
 } : {
   title: 'Operational reports', subtitle: 'Full-history source-record reports with location/date filters and result-parity exports.',
   operational: 'These are operational reports—not a P&L, balance sheet, general ledger, journal, or double-entry accounting system.',
@@ -50,6 +52,7 @@ const copy = computed(() => isArabic.value ? {
   costDenied: 'Cost and profit permission is required for this report.', empty: 'No results match these filters.',
   previous: 'Previous', next: 'Next', page: 'Page', of: 'of', records: 'records', open: 'Open source',
   true: 'Yes', false: 'No', fifoNotice: 'Margin appears only for product lines whose sold quantity exactly reconciles to FIFO cost movements. Services and unreconciled lines are excluded.',
+  posted: 'Posted', voided: 'Void',
 })
 
 const reportOptions = computed<Array<{ value: OperationalReportKind; label: string }>>(() => [
@@ -61,7 +64,7 @@ const reportOptions = computed<Array<{ value: OperationalReportKind; label: stri
 ])
 const costReports: OperationalReportKind[] = ['suppliers', 'expenses', 'inventory', 'margin']
 
-const { data: access, pending: accessPending, error: accessError, refresh: refreshAccess } = useAsyncData(
+const { data: access, pending: accessPending, error: accessError, refresh: refreshAccess } = await useAsyncData(
   () => `shop-data:report-access:${currentId.value ?? 'none'}`,
   async () => {
     if (!currentId.value) return { 'reports.view': false, 'reports.cost_profit.view': false }
@@ -168,13 +171,24 @@ const totalPages = computed(() => Math.max(1, Math.ceil(Number(result.value.tota
 function money(value: unknown) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(Number(value ?? 0)) }
 function number(value: unknown) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { maximumFractionDigits: 3 }).format(Number(value ?? 0)) }
 function date(value: unknown) { return value ? new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Africa/Cairo' }).format(new Date(String(value))) : '—' }
-function display(value: unknown, format: ColumnFormat) {
+function display(value: unknown, format: ColumnFormat, key?: string) {
   if (value === null || value === undefined || value === '') return '—'
   if (format === 'money') return money(value)
   if (format === 'number') return number(value)
   if (format === 'date') return date(value)
   if (format === 'percent') return `${number(value)}%`
   if (format === 'boolean') return value ? copy.value.true : copy.value.false
+  if (key === 'method' && ['cash', 'bank_transfer', 'card', 'wallet', 'cheque', 'other'].includes(String(value))) return t(`payments.methods.${value}`)
+  if (key === 'item_type' && ['product', 'service'].includes(String(value))) return t(`sales.${value}`)
+  if (key === 'direction' && ['in', 'out'].includes(String(value))) return (value === 'in' ? labels.value.collected : labels.value.refunded) ?? String(value)
+  if (key === 'event_type') {
+    if (value === 'sale' || value === 'customer_payment') return t(`payments.events.${value === 'sale' ? 'sale' : 'receipt'}`)
+    if (value === 'purchase' || value === 'expense') return labels.value[value === 'purchase' ? 'purchases' : 'expenses'] ?? String(value)
+  }
+  if (key === 'status') {
+    if (value === 'posted' || value === 'void') return value === 'posted' ? copy.value.posted : copy.value.voided
+    if (value === 'draft') return t('sales.draft')
+  }
   return String(value).replaceAll('_', ' ')
 }
 function summaryFormat(key: string): ColumnFormat {
@@ -188,13 +202,13 @@ function summaryPath(key: string) {
 function sourcePath(row: OperationalReportRow) { return typeof row.source_path === 'string' ? row.source_path : '' }
 
 async function exportReport() {
-  if (!currentId.value || exporting.value || !canView.value || costDenied.value) return
+  if (!currentId.value || exporting.value || accessPending.value || pending.value || accessError.value || error.value || !result.value.total || !canView.value || costDenied.value) return
   const inScope = captureScope()
   const version = exportVersion
   const stillCurrent = () => inScope() && version === exportVersion
   const args = queryArgs(1, 500)
   const headers = [...columns.value.map(column => column.key), 'source_path']
-  const filename = `shop-${report.value}-${fromDate.value || 'all'}-${toDate.value || 'all'}.csv`
+  const filename = `shop-${report.value}-${args.p_from || 'all'}-${args.p_to || 'all'}.csv`
   exporting.value = true; exportError.value = ''
   try {
     const rows: OperationalReportRow[] = []
@@ -215,51 +229,13 @@ async function exportReport() {
     if (stillCurrent()) exportError.value = copy.value.exportFailed
   } finally { exporting.value = false }
 }
+
+const reportFilters = computed<BsReportFilters>({ get: () => ({ report: report.value, location: locationId.value, from: fromDate.value, to: toDate.value }), set: value => { if (reportKinds.includes(value.report as OperationalReportKind)) report.value = value.report as OperationalReportKind; if (value.location === 'all' || activeLocations.value.some(item => item.id === value.location)) locationId.value = value.location; fromDate.value = value.from; toDate.value = value.to } })
+const reportView = computed<BsReportsView>(() => ({ workspace: current.value?.name ?? '', exporting: exporting.value, exportDisabled: accessPending.value || pending.value || Boolean(accessError.value || error.value) || !result.value.total || !canView.value || costDenied.value, exportLabel: exporting.value ? copy.value.exporting : copy.value.export, notice: copy.value.operational, detailNotice: report.value === 'margin' ? copy.value.fifoNotice : '', dateDisabled: ['inventory', 'receivables'].includes(report.value), failed: Boolean(accessError.value || error.value), exportError: exportError.value, loading: accessPending.value || pending.value, denied: !canView.value, restricted: costDenied.value, summary: Object.entries(result.value.summary).filter(([key]) => !['costBasis', 'snapshot'].includes(key)).map(([key, value]) => ({ id: key, label: labels.value[key] || key, value: display(value, summaryFormat(key)), to: summaryPath(key) })), columns: columns.value.map(column => ({ key: column.key, label: column.label ?? column.key, primary: Boolean(column.primary) })), rows: result.value.items.map((row, index) => ({ id: String(row.id ?? index), cells: Object.fromEntries(columns.value.map(column => [column.key, display(row[column.key], column.format, column.key)])), sourceTo: sourcePath(row) })), total: result.value.total, pagination: `${result.value.total} ${copy.value.records} · ${copy.value.page} ${page.value} ${copy.value.of} ${totalPages.value}`, previousDisabled: page.value <= 1, nextDisabled: page.value >= totalPages.value }))
+const reportChoices = computed<BsReportChoices>(() => ({ reports: reportOptions.value, locations: [{ value: 'all', label: copy.value.allLocations }, ...activeLocations.value.map(item => ({ value: item.id, label: item.name }))] }))
+async function retryReport() { await Promise.all([refreshAccess(), refresh()]) }
+function changeReportPage(direction: number) { page.value = Math.max(1, Math.min(totalPages.value, page.value + direction)) }
 </script>
-
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-start justify-between gap-4">
-      <div><p class="text-xs font-bold uppercase tracking-[0.16em] text-[var(--bs-link)]">{{ current?.name }}</p><h1 class="mt-1 text-3xl font-extrabold">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <BsButton variant="primary" :pending="exporting" :disabled="pending || !result.total || !canView || costDenied" @click="exportReport">{{ exporting ? copy.exporting : copy.export }}</BsButton>
-    </header>
-
-    <p class="rounded-xl border border-[var(--bs-status-warning)]/25 bg-[var(--bs-status-warning-bg)] p-4 text-sm">{{ copy.operational }}</p>
-    <p v-if="report === 'margin'" class="ls-card-flat p-4 text-sm text-muted-foreground">{{ copy.fifoNotice }}</p>
-
-    <section class="ls-card p-4 sm:p-5" :aria-label="copy.title">
-      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <label class="text-xs font-bold text-muted-foreground">{{ copy.title }}<select v-model="report" class="ls-select mt-1 w-full"><option v-for="option in reportOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select></label>
-        <label class="text-xs font-bold text-muted-foreground">{{ copy.location }}<select v-model="locationId" class="ls-select mt-1 w-full"><option value="all">{{ copy.allLocations }}</option><option v-for="location in activeLocations" :key="location.id" :value="location.id">{{ location.name }}</option></select></label>
-        <label class="text-xs font-bold text-muted-foreground">{{ copy.from }}<input v-model="fromDate" type="date" class="ls-input mt-1 w-full" :disabled="report === 'inventory' || report === 'receivables'"></label>
-        <label class="text-xs font-bold text-muted-foreground">{{ copy.to }}<input v-model="toDate" type="date" class="ls-input mt-1 w-full" :disabled="report === 'inventory' || report === 'receivables'"></label>
-      </div><p class="mt-3 text-xs text-muted-foreground">{{ copy.fullHistory }}</p>
-    </section>
-
-    <p v-if="accessError || error" role="alert" class="rounded-xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-4 text-sm text-[var(--bs-status-error)]">{{ copy.failed }} <BsButton @click="refreshAccess(); refresh()">{{ copy.retry }}</BsButton></p>
-    <p v-else-if="exportError" role="alert" class="text-sm text-[var(--bs-status-error)]">{{ exportError }}</p>
-    <p v-if="accessPending || pending" role="status" class="text-sm text-muted-foreground">{{ copy.loading }}</p>
-    <p v-else-if="!canView" class="ls-card-flat p-6 text-sm text-muted-foreground">{{ copy.denied }}</p>
-    <p v-else-if="costDenied" class="ls-card-flat p-6 text-sm text-muted-foreground">{{ copy.costDenied }}</p>
-
-    <template v-else>
-      <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <NuxtLink v-for="(value, key) in result.summary" v-show="key !== 'costBasis' && key !== 'snapshot'" :key="key" :to="summaryPath(String(key))" class="ls-card p-4 transition hover:border-[var(--bs-accent)]"><p class="text-xs font-bold text-muted-foreground">{{ labels[key] || key }}</p><p class="mt-2 text-xl font-extrabold">{{ display(value, summaryFormat(String(key))) }}</p><span class="mt-2 block text-xs font-bold text-[var(--bs-link)]">{{ copy.open }}</span></NuxtLink>
-      </section>
-
-      <section id="report-results" class="scroll-mt-24 overflow-hidden ls-card">
-        <div class="overflow-x-auto">
-          <BsDataTable :value="result.items" data-key="id" :row-class="() => 'border-b border-border last:border-0'">
-            <Column v-for="column in columns" :key="column.key" header-class="px-4 py-3 text-start" body-class="px-4 py-3 text-start whitespace-nowrap">
-              <template #header>{{ column.label }}</template>
-              <template #body="{ data: row }"><NuxtLink v-if="column.primary && sourcePath(row)" :to="sourcePath(row)" class="inline-flex min-h-11 min-w-11 items-center font-bold text-[var(--bs-link)] hover:underline">{{ display(row[column.key], column.format) }}</NuxtLink><span v-else>{{ display(row[column.key], column.format) }}</span></template>
-            </Column>
-            <Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ copy.open }}</template><template #body="{ data: row }"><NuxtLink v-if="sourcePath(row)" :to="sourcePath(row)" class="inline-flex min-h-11 min-w-11 items-center font-bold text-[var(--bs-link)] hover:underline">{{ copy.open }}</NuxtLink></template></Column>
-            <template #empty><p class="p-8 text-center text-sm text-muted-foreground">{{ copy.empty }}</p></template>
-          </BsDataTable>
-        </div>
-        <footer v-if="result.total" class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-sm"><p class="text-muted-foreground">{{ result.total }} {{ copy.records }} · {{ copy.page }} {{ page }} {{ copy.of }} {{ totalPages }}</p><div class="flex gap-2"><BsButton :disabled="page <= 1" @click="page--">{{ copy.previous }}</BsButton><BsButton :disabled="page >= totalPages" @click="page++">{{ copy.next }}</BsButton></div></footer>
-      </section>
-    </template>
-  </div>
+  <BsReportsPage v-model:filters="reportFilters" :copy="copy" :view="reportView" :choices="reportChoices" @export="exportReport" @retry="retryReport" @page="changeReportPage" />
 </template>

@@ -1,0 +1,58 @@
+name: Disposable Shop XPay payment validation
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/shop-xpay-disposable.yml'
+      - 'tooling/database/shop-xpay-disposable.mjs'
+      - 'tooling/database/shop-proration-disposable.mjs'
+      - 'apps/shop-suit/supabase/**'
+      - 'apps/shop-suit/tests/unit/xpay*.test.mjs'
+permissions:
+  contents: read
+concurrency:
+  group: shop-xpay-disposable-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  payments:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Require disposable GitHub-hosted runner
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          echo "SUPABASE_HOME=$RUNNER_TEMP/shop-xpay-supabase" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start disposable Shop backend
+        run: |
+          if ! pnpm exec supabase --workdir apps/shop-suit start --exclude studio,realtime,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/shop-xpay-start.log" 2>&1; then
+            python - <<'PY'
+          import os,re
+          from pathlib import Path
+          lines=Path(os.environ['RUNNER_TEMP']+'/shop-xpay-start.log').read_text().splitlines()
+          for line in lines:
+              if re.search(r'^(ERROR:|error:|Error:|Applying migration|At statement|failed to|unexpected)',line):
+                  line=re.sub(r'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+','[redacted]',line)
+                  line=re.sub(r'(postgres(?:ql)?://)\S+',r'\1[redacted]',line)
+                  print(line[:1000])
+          PY
+            exit 1
+          fi
+      - name: SQL payment authority, trial, replay and history
+        env:
+          SHOP_XPAY_DISPOSABLE: '1'
+        run: node tooling/database/shop-xpay-disposable.mjs
+      - name: Concurrent frozen quotes, real-paid replay and explicit zero-credit settlement
+        env:
+          SHOP_XPAY_DISPOSABLE: '1'
+        run: node tooling/database/shop-proration-disposable.mjs
+      - name: Stop only this disposable Shop backend
+        if: always() && runner.environment == 'github-hosted'
+        run: |
+          pnpm exec supabase --workdir apps/shop-suit stop --project-id building-suit-shop --no-backup
+          rm -f "$RUNNER_TEMP/shop-xpay-start.log"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsPlatformAdministrationCopy, BsAdminCommerceCopy, BsAdminCommerceView, BsAdminSupportForm, BsAdminReceiptReviewForm, BsAdminPriceForm, BsAdminPaymentConfigurationForm, BsAdminAuditRow } from '@building-suit/ui/types/platformAdministrationPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { PlatformBillingConfiguration, PlatformBillingQueueItem } from '~/types/billing'
 import type { PlatformAdminEvent, PlatformAdminSession, PlatformDashboard, PlatformPage, PlatformShopDetail, PlatformShopRow } from '~/types/platformAdmin'
@@ -48,17 +49,8 @@ const priceOverride = reactive({ shopId: '', shopName: '', amount: 0, currency: 
 const { visible: actionOpen, pending: actionPending, dirty: actionDirty, open: showAction, complete: completeAction } = useRecordAction(() => action)
 const { dirty: billingReviewDirty } = useRecordAction(() => billingReview, billingReviewOpen)
 const { dirty: priceOverrideDirty } = useRecordAction(() => priceOverride, priceOverrideOpen)
-let searchTimer: ReturnType<typeof setTimeout> | undefined
-
-watch(search, value => {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => {
-    debouncedSearch.value = value.trim()
-    page.value = 1
-  }, 300)
-})
+const searchInteraction = useDebouncedChange(search, value => { debouncedSearch.value = value.trim(); page.value = 1 }, 300)
 watch(status, () => { page.value = 1 })
-onBeforeUnmount(() => { if (searchTimer) clearTimeout(searchTimer) })
 
 async function callRead<T>(resource: 'dashboard' | 'shops' | 'shop' | 'audit', options: Partial<ShopRpcDatabase['public']['Functions']['platform_admin_read']['Args']> = {}) {
   const { data, error } = await rpc.rpc('platform_admin_read', { p_resource: resource, ...options })
@@ -84,6 +76,7 @@ const { data: session, pending: sessionPending, refresh: refreshSession } = awai
 )
 
 watch(userId, () => {
+  searchInteraction.cancel()
   session.value = null
   selectedShopId.value = null
   actionOpen.value = false
@@ -213,6 +206,7 @@ async function saveBillingConfiguration() {
     if (error) throw error
     configurationRequestId.value = null
     await Promise.all([refreshBillingConfiguration(), refreshBillingAudit()])
+    configurationAction.complete()
     pushToast({ tone: 'success', title: copy.value.configurationSaved })
   }
   catch { configurationError.value = copy.value.commandFailed }
@@ -388,7 +382,6 @@ function handleShopPage(event: { page: number }) { page.value = event.page + 1 }
 function handleAuditPage(event: { page: number }) { auditPage.value = event.page + 1 }
 function handleBillingPage(event: { page: number }) { billingPage.value = event.page + 1 }
 function handleBillingAuditPage(event: { page: number }) { billingAuditPage.value = event.page + 1 }
-function handleDetailVisibility(value: boolean) { if (!value) selectedShopId.value = null }
 async function refreshPlanConsumers() {
   await Promise.all([refreshDashboard(), refreshShops(), refreshDetail(), refreshAudit(), refreshBillingQueue(), refreshBillingSummary(), refreshBillingAudit()])
 }
@@ -426,126 +419,77 @@ const ar = {
   actions: { suspend_shop: 'إيقاف وصول المتجر', reactivate_shop: 'إعادة تفعيل وصول المتجر', extend_trial: 'تمديد التجربة', end_trial: 'إنهاء التجربة', correct_billing_metadata: 'تصحيح بيانات الفوترة', add_support_note: 'إضافة ملاحظة دعم' },
   destructiveConfirm: { suspend_shop: 'إيقاف هذا المتجر؟ سيتوقف وصول المستأجر مع الحفاظ على كل السجل.', end_trial: 'إنهاء التجربة الآن؟ سيصبح المتجر للقراءة فقط.' },
 }
+const catalogControls = reactive(await usePlatformPlanAdmin(reactive({ mode: 'catalog' as const, get canMutate() { return Boolean(session.value?.canMutate) } }), refreshPlanConsumers))
+const shopControls = reactive(await usePlatformPlanAdmin(reactive({ mode: 'shop' as const, get shopId() { return selectedShopId.value }, get canMutate() { return Boolean(session.value?.canMutate) } }), refreshPlanConsumers))
+
+const configurationAction = useRecordAction(() => billingConfiguration)
+const { visible: configurationActionOpen, dirty: configurationActionDirty } = configurationAction
+
+const catalogPresentation = useShopPlatformPlanPresentation(catalogControls)
+const tenantPresentation = useShopPlatformPlanPresentation(shopControls)
+const catalogTerms = catalogPresentation.terms
+const catalogAvailability = catalogPresentation.availability
+const catalogChange = catalogPresentation.change
+const catalogPrice = catalogPresentation.price
+const tenantTerms = tenantPresentation.terms
+const tenantAvailability = tenantPresentation.availability
+const tenantChange = tenantPresentation.change
+const tenantPrice = tenantPresentation.price
+const planCopy = catalogPresentation.copy
+const supportForm = computed<BsAdminSupportForm>({ get: () => ({ reason: action.reason, days: action.days, reference: action.billingReference, billingNote: action.billingNote, note: action.note }), set: value => Object.assign(action, { reason: value.reason, days: value.days, billingReference: value.reference, billingNote: value.billingNote, note: value.note }) })
+const receiptForm = computed<BsAdminReceiptReviewForm>({ get: () => ({ reason: billingReview.reason, amount: billingReview.receivedAmount, reference: billingReview.receivedReference, date: billingReview.receivedDate, mismatchReason: billingReview.amountOverrideReason }), set: value => Object.assign(billingReview, { reason: value.reason, receivedAmount: value.amount, receivedReference: value.reference, receivedDate: value.date, amountOverrideReason: value.mismatchReason }) })
+const priceForm = computed<BsAdminPriceForm>({ get: () => ({ amount: priceOverride.amount, effectiveFrom: priceOverride.effectiveFrom, expiresAt: priceOverride.expiresAt, reason: priceOverride.reason }), set: value => Object.assign(priceOverride, value) })
+const configurationForm = computed<BsAdminPaymentConfigurationForm>({ get: () => ({ recipient: billingConfiguration.recipientAlias, paymentLink: billingConfiguration.paymentLink, qrImageUrl: billingConfiguration.qrImageUrl, instructionsEn: billingConfiguration.instructionsEn, instructionsAr: billingConfiguration.instructionsAr, reason: billingConfiguration.reason }), set: value => Object.assign(billingConfiguration, { recipientAlias: value.recipient, paymentLink: value.paymentLink, qrImageUrl: value.qrImageUrl, instructionsEn: value.instructionsEn, instructionsAr: value.instructionsAr, reason: value.reason }) })
+const presentationCopy = computed<BsPlatformAdministrationCopy>(() => ({ title: copy.value.title, subtitle: copy.value.subtitle, saved: copy.value.commandSucceeded, view: copy.value.overview, search: copy.value.search, filter: copy.value.status, apply: copy.value.save, clear: copy.value.cancel, refresh: copy.value.retry, loading: ui('loading'), empty: copy.value.noRows, scoped: copy.value.controls, memberships: copy.value.members, review: copy.value.review, manage: copy.value.controls, previous: '', next: '', action: copy.value.action, targetPlan: copy.value.requestedPlan, currentPlan: copy.value.currentPlan, inspect: copy.value.open, openReceipt: copy.value.open, reason: copy.value.reason, context: copy.value.note, cancel: copy.value.cancel, submit: copy.value.save }))
+const commerceCopy = computed<BsAdminCommerceCopy>(() => ({
+  overview: copy.value.overview, plans: copy.value.plans, audit: copy.value.audit, billingQueue: copy.value.billingQueue, denied: copy.value.accessDenied, accessHint: copy.value.accessHint, retry: copy.value.retry, loading: ui('loading'), loadFailed: copy.value.loadFailed,
+  tenants: copy.value.shops, tenant: copy.value.shop, owner: copy.value.owner, access: copy.value.access, plan: copy.value.plan, members: copy.value.members, search: copy.value.search, status: copy.value.status, open: copy.value.open, noRows: copy.value.noRows, recentEvents: copy.value.recentEvents, noEvents: copy.value.noEvents, action: copy.value.action, reason: copy.value.reason, actor: copy.value.actor, occurred: copy.value.occurred,
+  currentPlan: copy.value.currentPlan, requestedPlan: copy.value.requestedPlan, listPrice: copy.value.listPrice, effectivePrice: copy.value.effectivePrice, paid: copy.value.paidAmount, blockers: copy.value.blockers, negotiated: copy.value.negotiated, reference: copy.value.transferReference, date: copy.value.transferDate, review: copy.value.review, startReview: copy.value.markUnderReview, approve: copy.value.approve, reject: copy.value.reject, overridePrice: copy.value.priceOverride, emptyBilling: copy.value.emptyBilling,
+  configuration: copy.value.configuration, configurationHelp: copy.value.configurationHelp, recipient: copy.value.recipientAlias, paymentLink: copy.value.paymentLink, qrImageUrl: copy.value.qrImageUrl, instructionsEn: copy.value.instructionsEn, instructionsAr: copy.value.instructionsAr, save: copy.value.save, cancel: copy.value.cancel, usage: copy.value.usage, controls: copy.value.controls, billingHistory: copy.value.billing, sensitive: copy.value.sensitive, notes: copy.value.supportNotes, emptySensitive: copy.value.emptySensitive, emptyNotes: copy.value.emptyNotes,
+  days: copy.value.days, billingReference: copy.value.billingReference, billingNote: copy.value.billingNote, note: copy.value.note, receivedAmount: copy.value.receivedAmount, receivedReference: copy.value.receivedReference, receivedDate: copy.value.receivedDate, mismatchReason: copy.value.amountOverrideReason, overrideAmount: copy.value.overrideAmount, effectiveFrom: copy.value.effectiveFrom, expiresAt: copy.value.expiresAt,
+}))
+function auditRows(items: PlatformAdminEvent[] | undefined, translated = false): BsAdminAuditRow[] { return (items ?? []).map(event => ({ id: event.id, tenant: event.shopName, action: translated ? actionLabel(event.action) : event.action, reason: event.reason, actor: event.actorUserId, occurred: date(event.occurredAt) })) }
+const commerceView = computed<BsAdminCommerceView>(() => {
+  const currentDetail = detail.value?.shop?.id === selectedShopId.value ? detail.value : null
+  const subscription = shopControls.shopPlan?.subscription
+  const pendingChange = subscription?.pendingPlanChange
+  return {
+    selected: view.value, role: session.value ? (session.value.role === 'operator' ? copy.value.operator : copy.value.observer) : '', loading: sessionPending.value, denied: !session.value && !sessionError.value, error: sessionError.value ? (showDevelopmentErrors ? sessionError.value : copy.value.loadFailed) : '', canMutate: Boolean(session.value?.canMutate), overviewPending: dashboardPending.value, overviewError: dashboardError.value || shopsError.value ? copy.value.loadFailed : null,
+    metrics: [['shops', 'shops'], ['activeShops', 'activeShops'], ['suspendedShops', 'suspendedShops'], ['locations', 'locations'], ['members', 'members'], ['activeTrials', 'activeTrials'], ['trialsSoon', 'trialsExpiringSoon'], ['activeSubscriptions', 'activeSubscriptions'], ['readOnly', 'readOnlySubscriptions']].map(([label, key]) => ({ label: copy.value[label as keyof typeof copy.value] as string, value: String(dashboard.value?.[key as keyof PlatformDashboard] ?? '—') })).concat([{ label: copy.value.pendingBilling, value: String(billingSummary.value?.open ?? '—') }]),
+    search: search.value, status: status.value, statusChoices: [{ value: '', label: copy.value.allStates }, { value: 'active', label: copy.value.activeShops }, { value: 'suspended', label: copy.value.suspendedShops }, { value: 'read_only', label: copy.value.readOnly }],
+    tenants: { rows: (shops.value?.items ?? []).map(row => ({ id: row.id, name: row.name, owner: row.ownerName || '—', email: row.ownerEmail || '—', status: row.accessState, plan: row.planSlug || '—', members: String(row.memberCount) })), loading: shopsPending.value, error: shopsError.value ? copy.value.loadFailed : null, total: shops.value?.total ?? 0, first: (page.value - 1) * 20 },
+    recent: { rows: auditRows(dashboard.value?.recentEvents, true), loading: dashboardPending.value, error: null, total: 0, first: 0 }, audit: { rows: auditRows(audit.value?.items, true), loading: auditPending.value, error: auditError.value ? copy.value.loadFailed : null, total: audit.value?.total ?? 0, first: (auditPage.value - 1) * 25 }, plans: catalogPresentation.view.value,
+    billing: { rows: (billingQueue.value?.items ?? []).map(item => ({ id: item.id, tenant: item.shopName, status: item.status, currentPlan: item.currentPlanName, requestedPlan: `${item.requestedPlanName} · ${item.billingInterval}`, listPrice: `${item.listPriceAmount} ${item.currency}`, effectivePrice: `${item.effectivePriceAmount} ${item.currency}`, negotiated: item.priceSource === 'override', paid: `${item.paidAmount} ${item.currency}`, blockers: item.usageBlockers.length ? usageBlockersLabel(item.usageBlockers) : copy.value.noBlockers, reference: item.transferReference, date: date(item.transferDate), canStart: item.status === 'submitted', canReview: ['submitted', 'under_review'].includes(item.status), approveDisabled: item.usageBlockers.length > 0 })), loading: billingQueuePending.value, error: billingQueueError.value ? copy.value.loadFailed : null, total: billingQueue.value?.total ?? 0, first: (billingPage.value - 1) * 25, status: billingStatus.value, statusChoices: [{ value: '', label: copy.value.allStates }, ...(['submitted', 'under_review', 'approved', 'rejected'] as const).map(value => ({ value, label: value === 'under_review' ? copy.value.underReview : copy.value[value] }))] },
+    billingAudit: { rows: auditRows(billingAudit.value?.items), loading: billingAuditPending.value, error: billingAuditError.value ? copy.value.loadFailed : null, total: billingAudit.value?.total ?? 0, first: (billingAuditPage.value - 1) * 25 },
+    detail: { visible: Boolean(selectedShopId.value), title: currentDetail?.shop.name || copy.value.shop, pending: detailPending.value, error: detailError.value ? copy.value.loadFailed : null, available: !detailPending.value && !detailError.value && !!currentDetail,
+      metrics: [{ label: copy.value.owner, value: currentDetail?.owner?.name || currentDetail?.owner?.email || '—' }, { label: copy.value.access, value: '', status: currentDetail ? detailAccessState(currentDetail) : undefined }, { label: copy.value.plan, value: currentDetail?.subscription?.planName || '—' }, { label: copy.value.members, value: String(currentDetail?.usage.members ?? 0) }], trial: `${copy.value.trialStart}: ${date(currentDetail?.subscription?.trialStartAt)} · ${copy.value.trialEnd}: ${date(currentDetail?.subscription?.trialEndAt)} · ${copy.value.periodEnd}: ${date(currentDetail?.subscription?.periodEnd)}`, usage: `${copy.value.locations}: ${currentDetail?.usage.locations ?? 0} · ${copy.value.members}: ${currentDetail?.usage.members ?? 0} · ${isArabic.value ? 'المنتجات' : 'Products'}: ${currentDetail?.usage.products ?? 0} · ${isArabic.value ? 'الخدمات' : 'Services'}: ${currentDetail?.usage.services ?? 0}`, limits: JSON.stringify(currentDetail?.usage.limits || {}, null, 2),
+      subscriptionPending: shopControls.shopPending, subscriptionError: shopControls.shopError ? shopControls.copy.loadFailed : null, subscriptionAvailable: !!subscription, subscriptionMetrics: [{ label: shopControls.copy.currentPlan, value: subscription?.planName ?? '' }, { label: shopControls.copy.access, value: '', status: subscription?.accessState }, { label: shopControls.copy.effectivePrice, value: subscription ? `${shopControls.money(subscription.effectivePriceAmount, subscription.currency)}${subscription.priceSource === 'override' ? ` (${shopControls.copy.negotiatedPrice})` : ''}` : '' }, { label: shopControls.copy.pendingBilling, value: String(subscription?.pendingBillingRequests ?? 0) }], resources: (subscription?.usage.resources ?? []).map(item => ({ id: item.resource, label: shopControls.copy[item.resource as keyof typeof shopControls.copy], value: `${item.used} / ${shopControls.limit(item.limit)}${item.overLimit ? ` · +${item.used - (item.limit || 0)} ${shopControls.copy.excess}` : ''}` })), pendingChange: pendingChange ? `${pendingChange.targetPlanName} · ${shopControls.date(pendingChange.effectiveAt)} · ${pendingChange.reason}` : shopControls.copy.noPendingChange, canRemovePrice: !!subscription?.priceOverrideId, controls: (Object.keys(copy.value.actions) as ActionKey[]).map(value => ({ value, label: actionLabel(value) })),
+      billing: (currentDetail?.billingHistory ?? []).map(item => ({ id: item.id, action: item.kind, status: item.status, reference: item.reference || '', occurred: date(item.submittedAt) })), sensitive: (currentDetail?.sensitiveEvents ?? []).map(item => ({ id: item.id, status: item.type, action: item.action, reason: item.reason || '', occurred: date(item.occurredAt) })), notes: (currentDetail?.supportNotes ?? []).map(item => ({ id: item.id, note: item.note, detail: `${item.reason} · ${date(item.createdAt)}` })),
+    }, tenantPlanDialog: tenantPresentation.dialog.value,
+    supportDialog: { visible: actionOpen.value, title: actionLabel(action.key), dirty: actionDirty.value, pending: actionPending.value, error: commandError.value, showDays: action.key === 'extend_trial', showBilling: action.key === 'correct_billing_metadata', showNote: action.key === 'add_support_note' },
+    receiptDialog: { visible: billingReviewOpen.value, title: billingReview.action === 'approve' ? copy.value.approve : billingReview.action === 'reject' ? copy.value.reject : copy.value.markUnderReview, dirty: billingReviewDirty.value, pending: billingReviewPending.value, error: billingReviewError.value, approving: billingReview.action === 'approve', mismatched: Boolean(billingReview.submission && (billingReview.receivedAmount !== billingReview.submission.effectivePriceAmount || billingReview.submission.paidAmount !== billingReview.submission.effectivePriceAmount)), maxDate: new Date().toISOString().slice(0, 10) }, priceDialog: { visible: priceOverrideOpen.value, title: `${copy.value.priceOverride} · ${priceOverride.shopName}`, dirty: priceOverrideDirty.value, pending: priceOverridePending.value, error: priceOverrideError.value }, configuration: { visible: configurationActionOpen.value, dirty: configurationActionDirty.value, pending: configurationPending.value, error: configurationError.value, loadError: billingConfigurationLoadError.value ? copy.value.loadFailed : null },
+  }
+})
+async function retryPresentation(key: 'session' | 'overview' | 'tenants' | 'catalog' | 'audit' | 'billing' | 'billingAudit' | 'configuration' | 'detail' | 'subscription') {
+  if (key === 'session') await refreshSession()
+  else if (key === 'overview') await Promise.all([refreshDashboard(), refreshShops()])
+  else if (key === 'tenants') await refreshShops()
+  else if (key === 'catalog') await catalogControls.refreshCatalog()
+  else if (key === 'audit') await refreshAudit()
+  else if (key === 'billing') await refreshBillingQueue()
+  else if (key === 'billingAudit') await refreshBillingAudit()
+  else if (key === 'configuration') await refreshBillingConfiguration()
+  else if (key === 'detail') await refreshDetail()
+  else await shopControls.refreshShop()
+}
+function pagePresentation(key: 'tenants' | 'audit' | 'billing' | 'billingAudit', event: { page: number }) { if (key === 'tenants') handleShopPage(event); else if (key === 'audit') handleAuditPage(event); else if (key === 'billing') handleBillingPage(event); else handleBillingAuditPage(event) }
+function closeDialog(key: 'support' | 'receipt' | 'price' | 'configuration') { if (key === 'support') actionOpen.value = false; else if (key === 'receipt') billingReviewOpen.value = false; else if (key === 'price') priceOverrideOpen.value = false; else configurationActionOpen.value = false }
+function reviewById(id: string, actionKey: 'mark_under_review' | 'approve' | 'reject') { const item = billingQueue.value?.items.find(item => item.id === id); if (item) openBillingReview(item, actionKey) }
+function priceById(id: string) { const item = billingQueue.value?.items.find(item => item.id === id); if (item) openPriceOverride(item) }
+function supportByKey(key: string) { if (Object.hasOwn(copy.value.actions, key)) openAction(key as ActionKey) }
+function selectBillingStatus(value: string) { if (['', 'submitted', 'under_review', 'approved', 'rejected'].includes(value)) billingStatus.value = value as typeof billingStatus.value }
+async function planCommand(scope: 'catalog' | 'tenant', command: Parameters<typeof catalogPresentation.command>[0], id?: string) { await (scope === 'catalog' ? catalogPresentation : tenantPresentation).command(command, id) }
 </script>
-
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-end justify-between gap-4">
-      <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <StatusBadge v-if="session" :status="session.role === 'operator' ? 'active' : 'read_only'" />
-    </header>
-
-    <div v-if="sessionPending" role="status" :aria-label="ui('loading')" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><div v-for="item in 8" :key="item" class="h-28 animate-pulse rounded-2xl bg-muted" /></div>
-    <section v-else-if="!session" class="rounded-2xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-6" role="alert">
-      <h2 class="font-extrabold">{{ copy.accessDenied }}</h2><p class="mt-2 text-sm">{{ copy.accessHint }}</p>
-      <BsButton class="ls-btn mt-4" @click="refreshSession()">{{ copy.retry }}</BsButton>
-      <p v-if="sessionError && showDevelopmentErrors" class="mt-3 text-xs opacity-75">{{ sessionError }}</p>
-    </section>
-
-    <template v-else>
-      <div class="flex flex-wrap gap-2" role="group" :aria-label="copy.title">
-        <BsButton variant="chip" :aria-pressed="view === 'overview'" @click="view = 'overview'">{{ copy.overview }}</BsButton>
-        <BsButton variant="chip" :aria-pressed="view === 'plans'" @click="view = 'plans'">{{ copy.plans }}</BsButton>
-        <BsButton variant="chip" :aria-pressed="view === 'billing'" @click="view = 'billing'">{{ copy.billingQueue }}</BsButton>
-        <BsButton variant="chip" :aria-pressed="view === 'audit'" @click="view = 'audit'">{{ copy.audit }}</BsButton>
-      </div>
-
-      <template v-if="view === 'overview'">
-        <p v-if="dashboardError || shopsError" class="ls-error" role="alert">{{ copy.loadFailed }} <BsButton variant="link" class="font-bold underline" @click="refreshDashboard(); refreshShops()">{{ copy.retry }}</BsButton></p>
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5" :aria-busy="dashboardPending">
-          <BsKpiCard :title="copy.shops">{{ dashboard?.shops ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.activeShops">{{ dashboard?.activeShops ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.suspendedShops">{{ dashboard?.suspendedShops ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.locations">{{ dashboard?.locations ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.members">{{ dashboard?.members ?? '—' }}</BsKpiCard>
-          <BsKpiCard :title="copy.activeTrials">{{ dashboard?.activeTrials ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.trialsSoon">{{ dashboard?.trialsExpiringSoon ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.activeSubscriptions">{{ dashboard?.activeSubscriptions ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.readOnly">{{ dashboard?.readOnlySubscriptions ?? '—' }}</BsKpiCard><BsKpiCard :title="copy.pendingBilling">{{ billingSummary?.open ?? '—' }}</BsKpiCard>
-        </div>
-
-        <section class="overflow-hidden ls-card">
-          <div class="flex flex-col gap-3 border-b border-border p-4 sm:flex-row"><input v-model="search" type="search" :placeholder="copy.search" :aria-label="copy.search" class="ls-input sm:max-w-md"><select v-model="status" :aria-label="copy.status" class="ls-select sm:ms-auto sm:w-auto"><option value="">{{ copy.allStates }}</option><option value="active">{{ copy.activeShops }}</option><option value="suspended">{{ copy.suspendedShops }}</option><option value="read_only">{{ copy.readOnly }}</option></select></div>
-          <BsDataTable :value="shops?.items ?? []" :loading="shopsPending" :error="shopsError ? copy.loadFailed : null" :label="copy.shops" data-key="id" lazy paginator :rows="20" :first="(page - 1) * 20" :total-records="shops?.total ?? 0" :always-show-paginator="false" @page="handleShopPage" @retry="refreshShops()">
-            <Column><template #header>{{ copy.shop }}</template><template #body="{ data: row }"><p class="font-bold">{{ row.name }}</p><p class="text-xs text-muted-foreground">{{ row.id }}</p></template></Column>
-            <Column><template #header>{{ copy.owner }}</template><template #body="{ data: row }"><p>{{ row.ownerName || '—' }}</p><p class="text-xs text-muted-foreground">{{ row.ownerEmail || '—' }}</p></template></Column>
-            <Column><template #header>{{ copy.access }}</template><template #body="{ data: row }"><StatusBadge :status="row.accessState" /></template></Column>
-            <Column><template #header>{{ copy.plan }}</template><template #body="{ data: row }">{{ row.planSlug || '—' }}</template></Column>
-            <Column><template #header>{{ copy.members }}</template><template #body="{ data: row }">{{ row.memberCount }}</template></Column>
-            <Column><template #body="{ data: row }"><BsButton variant="link" class="font-bold text-[var(--bs-link)]" @click="selectedShopId = row.id">{{ copy.open }}</BsButton></template></Column>
-            <template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noRows }}</p></template>
-          </BsDataTable>
-        </section>
-
-        <section class="ls-card p-5"><h2 class="text-lg font-extrabold">{{ copy.recentEvents }}</h2><div class="mt-4 overflow-x-auto"><BsDataTable :value="dashboard?.recentEvents ?? []" :loading="dashboardPending" data-key="id" :label="copy.recentEvents"><Column field="shopName"><template #header>{{ copy.shop }}</template></Column><Column field="action"><template #header>{{ copy.action }}</template><template #body="{ data: event }">{{ actionLabel(event.action) || event.action }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: event }">{{ date(event.occurredAt) }}</template></Column><template #empty><p class="p-5 text-center text-sm text-muted-foreground">{{ copy.noEvents }}</p></template></BsDataTable></div></section>
-      </template>
-
-      <PlatformPlanAdmin v-else-if="view === 'plans'" :can-mutate="session.canMutate" @changed="refreshPlanConsumers" />
-
-      <section v-else-if="view === 'audit'" class="overflow-hidden ls-card">
-        <BsDataTable :value="audit?.items ?? []" :loading="auditPending" :error="auditError ? copy.loadFailed : null" :label="copy.audit" data-key="id" lazy paginator :rows="25" :first="(auditPage - 1) * 25" :total-records="audit?.total ?? 0" :always-show-paginator="false" @page="handleAuditPage" @retry="refreshAudit()">
-          <Column field="shopName"><template #header>{{ copy.shop }}</template></Column><Column field="action"><template #header>{{ copy.action }}</template><template #body="{ data: event }">{{ actionLabel(event.action) || event.action }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column field="actorUserId"><template #header>{{ copy.actor }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: event }">{{ date(event.occurredAt) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noEvents }}</p></template>
-        </BsDataTable>
-      </section>
-      <div v-else class="space-y-6">
-        <section class="ls-card p-5 sm:p-6">
-          <h2 class="text-lg font-extrabold">{{ copy.configuration }}</h2><p class="mt-2 text-sm text-muted-foreground">{{ copy.configurationHelp }}</p>
-          <p v-if="billingConfigurationLoadError" role="alert" class="ls-error mt-4">{{ copy.loadFailed }} <BsButton @click="refreshBillingConfiguration()">{{ copy.retry }}</BsButton></p>
-          <BsForm v-else class="mt-5 grid gap-4 sm:grid-cols-2" :pending="configurationPending" :error="configurationError" @submit="saveBillingConfiguration">
-            <fieldset class="contents" :disabled="!session.canMutate || configurationPending">
-            <label class="grid gap-2 text-sm font-bold">{{ copy.recipientAlias }}<input v-model="billingConfiguration.recipientAlias" class="ls-input" dir="ltr" maxlength="200"></label>
-            <label class="grid gap-2 text-sm font-bold">{{ copy.paymentLink }}<input v-model="billingConfiguration.paymentLink" class="ls-input" dir="ltr" maxlength="1000"></label>
-            <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.qrImageUrl }}<input v-model="billingConfiguration.qrImageUrl" class="ls-input" dir="ltr" maxlength="1000"></label>
-            <label class="grid gap-2 text-sm font-bold"><span>{{ copy.instructionsEn }}</span><textarea v-model="billingConfiguration.instructionsEn" class="ls-input" dir="ltr" maxlength="2000" rows="4" /></label>
-            <label class="grid gap-2 text-sm font-bold"><span>{{ copy.instructionsAr }}</span><textarea v-model="billingConfiguration.instructionsAr" class="ls-input" dir="rtl" maxlength="2000" rows="4" /></label>
-            <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.reason }}<textarea v-model="billingConfiguration.reason" class="ls-input" minlength="2" maxlength="1000" required rows="2" /></label>
-            <div class="sm:col-span-2"><BsButton v-if="session.canMutate" type="submit" class="ls-btn ls-btn-primary" :pending="configurationPending">{{ copy.save }}</BsButton></div>
-            </fieldset>
-          </BsForm>
-        </section>
-        <section class="overflow-hidden ls-card">
-          <div class="flex flex-wrap gap-3 border-b border-border p-4"><h2 class="text-lg font-extrabold">{{ copy.billingQueue }}</h2><select v-model="billingStatus" class="ls-select ms-auto" :aria-label="copy.status"><option value="">{{ copy.allStates }}</option><option value="submitted">{{ copy.submitted }}</option><option value="under_review">{{ copy.underReview }}</option><option value="approved">{{ copy.approved }}</option><option value="rejected">{{ copy.rejected }}</option></select></div>
-          <BsDataTable :value="billingQueue?.items ?? []" :loading="billingQueuePending" :error="billingQueueError ? copy.loadFailed : null" :label="copy.billingQueue" data-key="id" lazy paginator :rows="25" :first="(billingPage - 1) * 25" :total-records="billingQueue?.total ?? 0" :always-show-paginator="false" @page="handleBillingPage" @retry="refreshBillingQueue()">
-            <Column field="shopName"><template #header>{{ copy.shop }}</template></Column><Column field="status"><template #header>{{ copy.status }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /></template></Column><Column><template #header>{{ copy.currentPlan }}</template><template #body="{ data: item }">{{ item.currentPlanName }}</template></Column><Column><template #header>{{ copy.requestedPlan }}</template><template #body="{ data: item }">{{ item.requestedPlanName }} · {{ item.billingInterval }}</template></Column><Column><template #header>{{ copy.listPrice }}</template><template #body="{ data: item }">{{ item.listPriceAmount }} {{ item.currency }}</template></Column><Column><template #header>{{ copy.effectivePrice }}</template><template #body="{ data: item }">{{ item.effectivePriceAmount }} {{ item.currency }}<span v-if="item.priceSource === 'override'" class="ms-1 text-xs font-bold text-[var(--bs-link)]">{{ copy.negotiated }}</span></template></Column><Column><template #header>{{ copy.paidAmount }}</template><template #body="{ data: item }">{{ item.paidAmount }} {{ item.currency }}</template></Column><Column><template #header>{{ copy.blockers }}</template><template #body="{ data: item }"><span v-if="item.usageBlockers.length" class="text-[var(--bs-status-warning)]">{{ usageBlockersLabel(item.usageBlockers) }}</span><span v-else>{{ copy.noBlockers }}</span></template></Column><Column field="transferReference"><template #header>{{ copy.transferReference }}</template></Column><Column><template #header>{{ copy.transferDate }}</template><template #body="{ data: item }">{{ date(item.transferDate) }}</template></Column>
-            <Column v-if="session.canMutate"><template #header>{{ copy.review }}</template><template #body="{ data: item }"><div class="flex flex-wrap gap-2"><template v-if="['submitted','under_review'].includes(item.status)"><BsButton v-if="item.status === 'submitted'" class="ls-btn" @click="openBillingReview(item, 'mark_under_review')">{{ copy.markUnderReview }}</BsButton><BsButton class="ls-btn ls-btn-primary" :disabled="item.usageBlockers.length > 0" @click="openBillingReview(item, 'approve')">{{ copy.approve }}</BsButton><BsButton class="ls-btn" @click="openBillingReview(item, 'reject')">{{ copy.reject }}</BsButton></template><BsButton class="ls-btn" @click="openPriceOverride(item)">{{ copy.priceOverride }}</BsButton></div></template></Column>
-            <template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.emptyBilling }}</p></template>
-          </BsDataTable>
-        </section>
-        <section class="overflow-hidden ls-card">
-          <div class="border-b border-border p-4"><h2 class="text-lg font-extrabold">{{ copy.billingQueue }} · {{ copy.audit }}</h2></div>
-          <BsDataTable :value="billingAudit?.items ?? []" :loading="billingAuditPending" :error="billingAuditError ? copy.loadFailed : null" :label="`${copy.billingQueue} ${copy.audit}`" data-key="id" lazy paginator :rows="25" :first="(billingAuditPage - 1) * 25" :total-records="billingAudit?.total ?? 0" :always-show-paginator="false" @page="handleBillingAuditPage" @retry="refreshBillingAudit()">
-            <Column field="shopName"><template #header>{{ copy.shop }}</template></Column><Column field="action"><template #header>{{ copy.action }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column field="actorUserId"><template #header>{{ copy.actor }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: event }">{{ date(event.occurredAt) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ copy.noEvents }}</p></template>
-          </BsDataTable>
-        </section>
-      </div>
-    </template>
-
-    <BsDialog :visible="Boolean(selectedShopId)" :title="detail?.shop.name || copy.shop" size="lg" :pending="detailPending" @update:visible="handleDetailVisibility">
-      <p v-if="detailError" class="ls-error" role="alert">{{ copy.loadFailed }} <BsButton variant="link" class="font-bold underline" @click="refreshDetail()">{{ copy.retry }}</BsButton></p>
-      <div v-else-if="detail" class="space-y-6">
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><BsKpiCard :title="copy.owner">{{ detail.owner?.name || detail.owner?.email || '—' }}</BsKpiCard><BsKpiCard :title="copy.access"><StatusBadge :status="detailAccessState(detail)" /></BsKpiCard><BsKpiCard :title="copy.plan">{{ detail.subscription?.planName || '—' }}</BsKpiCard><BsKpiCard :title="copy.members">{{ detail.usage.members }}</BsKpiCard></div>
-        <section><h3 class="font-extrabold">{{ copy.usage }}</h3><p class="mt-2 text-sm text-muted-foreground">{{ copy.trialStart }}: {{ date(detail.subscription?.trialStartAt) }} · {{ copy.trialEnd }}: {{ date(detail.subscription?.trialEndAt) }} · {{ copy.periodEnd }}: {{ date(detail.subscription?.periodEnd) }}</p><p class="mt-2 text-sm text-muted-foreground">{{ copy.locations }}: {{ detail.usage.locations }} · {{ copy.members }}: {{ detail.usage.members }} · {{ isArabic ? 'المنتجات' : 'Products' }}: {{ detail.usage.products }} · {{ isArabic ? 'الخدمات' : 'Services' }}: {{ detail.usage.services }}</p><pre class="mt-3 overflow-auto rounded-xl bg-muted p-3 text-xs">{{ JSON.stringify(detail.usage.limits || {}, null, 2) }}</pre></section>
-        <PlatformPlanAdmin mode="shop" :shop-id="selectedShopId" :can-mutate="Boolean(session?.canMutate)" @changed="refreshPlanConsumers" />
-        <section v-if="session?.canMutate"><h3 class="font-extrabold">{{ copy.controls }}</h3><div class="mt-3 flex flex-wrap gap-2"><BsButton v-for="key in (Object.keys(copy.actions) as ActionKey[])" :key="key" class="ls-btn" @click="openAction(key)">{{ actionLabel(key) }}</BsButton></div></section>
-        <section><h3 class="font-extrabold">{{ copy.billing }}</h3><BsDataTable class="mt-3" :value="detail.billingHistory" data-key="id" :label="copy.billing"><Column field="kind"><template #header>{{ copy.action }}</template></Column><Column field="status"><template #header>{{ copy.status }}</template><template #body="{ data: item }"><StatusBadge :status="item.status" /></template></Column><Column field="reference"><template #header>{{ copy.billingReference }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: item }">{{ date(item.submittedAt) }}</template></Column><template #empty><p class="p-5 text-center text-sm text-muted-foreground">{{ copy.emptyBilling }}</p></template></BsDataTable></section>
-        <section><h3 class="font-extrabold">{{ copy.sensitive }}</h3><BsDataTable class="mt-3" :value="detail.sensitiveEvents" data-key="id" :label="copy.sensitive"><Column field="type"><template #header>{{ copy.status }}</template></Column><Column field="action"><template #header>{{ copy.action }}</template></Column><Column field="reason"><template #header>{{ copy.reason }}</template></Column><Column><template #header>{{ copy.occurred }}</template><template #body="{ data: event }">{{ date(event.occurredAt) }}</template></Column><template #empty><p class="p-5 text-center text-sm text-muted-foreground">{{ copy.emptySensitive }}</p></template></BsDataTable></section>
-        <section><h3 class="font-extrabold">{{ copy.supportNotes }}</h3><ul v-if="detail.supportNotes.length" class="mt-3 space-y-3"><li v-for="note in detail.supportNotes" :key="note.id" class="rounded-xl border border-border p-4"><p>{{ note.note }}</p><p class="mt-2 text-xs text-muted-foreground">{{ note.reason }} · {{ date(note.createdAt) }}</p></li></ul><p v-else class="mt-3 text-sm text-muted-foreground">{{ copy.emptyNotes }}</p></section>
-      </div>
-    </BsDialog>
-
-    <BsRecordActionDialog v-model:visible="actionOpen" :title="actionLabel(action.key)" :dirty="actionDirty" :pending="actionPending" :error="commandError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="runAction">
-        <label class="block space-y-2 text-sm font-bold">{{ copy.reason }}<textarea v-model="action.reason" class="ls-input" minlength="2" maxlength="1000" required rows="3" /></label>
-        <label v-if="action.key === 'extend_trial'" class="block space-y-2 text-sm font-bold">{{ copy.days }}<input v-model.number="action.days" class="ls-input" type="number" min="1" max="365" step="1" required></label>
-        <template v-if="action.key === 'correct_billing_metadata'"><label class="block space-y-2 text-sm font-bold">{{ copy.billingReference }}<input v-model="action.billingReference" class="ls-input" maxlength="200"></label><label class="block space-y-2 text-sm font-bold">{{ copy.billingNote }}<textarea v-model="action.billingNote" class="ls-input" maxlength="1000" rows="3" /></label></template>
-        <label v-if="action.key === 'add_support_note'" class="block space-y-2 text-sm font-bold">{{ copy.note }}<textarea v-model="action.note" class="ls-input" minlength="2" maxlength="2000" required rows="5" /></label>
-    </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="billingReviewOpen" :title="billingReview.action === 'approve' ? copy.approve : billingReview.action === 'reject' ? copy.reject : copy.markUnderReview" :dirty="billingReviewDirty" :pending="billingReviewPending" :error="billingReviewError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="runBillingReview">
-        <label class="grid gap-2 text-sm font-bold">{{ copy.reason }}<textarea v-model="billingReview.reason" class="ls-input" minlength="2" maxlength="1000" required rows="3" /></label>
-        <template v-if="billingReview.action === 'approve'">
-          <label class="grid gap-2 text-sm font-bold">{{ copy.receivedAmount }}<input v-model.number="billingReview.receivedAmount" class="ls-input" type="number" min="0.01" step="0.01" required></label>
-          <label class="grid gap-2 text-sm font-bold">{{ copy.receivedReference }}<input v-model="billingReview.receivedReference" class="ls-input" dir="ltr" minlength="2" maxlength="200" required></label>
-          <label class="grid gap-2 text-sm font-bold">{{ copy.receivedDate }}<input v-model="billingReview.receivedDate" class="ls-input" type="date" :max="new Date().toISOString().slice(0, 10)" required></label>
-          <label v-if="billingReview.submission && (billingReview.receivedAmount !== billingReview.submission.effectivePriceAmount || billingReview.submission.paidAmount !== billingReview.submission.effectivePriceAmount)" class="grid gap-2 text-sm font-bold">{{ copy.amountOverrideReason }}<textarea v-model="billingReview.amountOverrideReason" class="ls-input" minlength="2" maxlength="1000" required rows="3" /></label>
-        </template>
-    </BsRecordActionDialog>
-    <BsRecordActionDialog v-model:visible="priceOverrideOpen" :title="`${copy.priceOverride} · ${priceOverride.shopName}`" :dirty="priceOverrideDirty" :pending="priceOverridePending" :error="priceOverrideError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="savePriceOverride">
-        <label class="grid gap-2 text-sm font-bold">{{ copy.overrideAmount }}<input v-model.number="priceOverride.amount" class="ls-input" type="number" min="0.01" step="0.01" required></label>
-        <label class="grid gap-2 text-sm font-bold">{{ copy.effectiveFrom }}<input v-model="priceOverride.effectiveFrom" class="ls-input" type="date" required></label>
-        <label class="grid gap-2 text-sm font-bold">{{ copy.expiresAt }}<input v-model="priceOverride.expiresAt" class="ls-input" type="date" :min="priceOverride.effectiveFrom"></label>
-        <label class="grid gap-2 text-sm font-bold">{{ copy.reason }}<textarea v-model="priceOverride.reason" class="ls-input" minlength="2" maxlength="1000" required rows="3" /></label>
-    </BsRecordActionDialog>
-  </div>
+  <BsPlatformAdministrationPage v-model:catalog-terms="catalogTerms" v-model:catalog-availability="catalogAvailability" v-model:catalog-change="catalogChange" v-model:catalog-price="catalogPrice" v-model:tenant-terms="tenantTerms" v-model:tenant-availability="tenantAvailability" v-model:tenant-change="tenantChange" v-model:tenant-price="tenantPrice" v-model:support="supportForm" v-model:receipt="receiptForm" v-model:price="priceForm" v-model:configuration="configurationForm" :copy="presentationCopy" :commerce="commerceView" :commerce-copy="commerceCopy" :plan-copy="planCopy" @select="view = $event" @search="search = $event" @status="status = $event" @retry="retryPresentation" @commerce-page="pagePresentation" @open-tenant="selectedShopId = $event" @close-tenant="selectedShopId = null" @billing-status="selectBillingStatus" @plan="planCommand" @review="reviewById" @price="priceById" @support="supportByKey" @configure="configurationAction.edit()" @close-dialog="closeDialog" @submit-support="runAction" @submit-receipt="runBillingReview" @submit-price="savePriceOverride" @submit-configuration="saveBillingConfiguration"/>
 </template>

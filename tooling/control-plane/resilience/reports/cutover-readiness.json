@@ -544,11 +544,11 @@
       "injected_fault": "focused verification keeps failing through the final allowed attempt",
       "expected_recovery_path": [
         "bounded repair",
-        "safety-stop"
+        "exact operator extension gate"
       ],
       "observed_recovery_path": [
         "repair attempts 1-4",
-        "safety-stop"
+        "wait-operator"
       ],
       "counts": {
         "implementation_attempts": 5,

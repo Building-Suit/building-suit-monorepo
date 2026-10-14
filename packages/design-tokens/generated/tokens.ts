@@ -309,7 +309,7 @@ export const tokens = {
   "typography": {
     "fontFamily": {
       "latin": {
-        "value": "Manrope, Inter, system-ui, sans-serif"
+        "value": "'Manrope Variable', Manrope, Inter, system-ui, sans-serif"
       },
       "arabic": {
         "value": "'IBM Plex Sans Arabic', Cairo, Tajawal, sans-serif"
@@ -476,6 +476,38 @@ export const tokens = {
     }
   },
   "component": {
+    "pricingCard": {
+      "width": {
+        "value": "352px"
+      }
+    },
+    "pointOfSale": {
+      "panelPadding": {
+        "value": "20px"
+      },
+      "catalogTileMinimumHeight": {
+        "value": "200px"
+      }
+    },
+    "dashboardChart": {
+      "barWidth": {
+        "value": "44px"
+      },
+      "plotMaximumWidth": {
+        "value": "680px"
+      }
+    },
+    "dashboardMetric": {
+      "minimumHeight": {
+        "value": "144px"
+      },
+      "valueGap": {
+        "value": "10px"
+      },
+      "padding": {
+        "value": "20px"
+      }
+    },
     "buttonPrimary": {
       "_note": "Primary action. Color flips by mode — Navy on light, Gold on dark.",
       "radius": {

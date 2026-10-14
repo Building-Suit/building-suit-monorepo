@@ -100,6 +100,16 @@ export function useShop() {
     loadedUserId.value = null
   }
 
+  function resetSession() {
+    // Invalidate pending membership/location reads before clearing visible state.
+    loadVersion.value += 1
+    clearShopState()
+    loading.value = false
+    loadError.value = null
+    selectedShopCookie.value = null
+    selectedLocationCookie.value = null
+  }
+
   async function loadLocations(shopId: string | null = currentId.value) {
     const version = ++locationVersion.value
     const userId = user.value?.id
@@ -125,12 +135,7 @@ export function useShop() {
   async function loadShops(options: { force?: boolean } = {}) {
     const userId = user.value?.id
     if (!userId) {
-      loadVersion.value += 1
-      clearShopState()
-      loading.value = false
-      loadError.value = null
-      selectedShopCookie.value = null
-      selectedLocationCookie.value = null
+      resetSession()
       return
     }
     if (!options.force && loadedUserId.value === userId) return
@@ -284,5 +289,6 @@ export function useShop() {
     selectLocation,
     loadLocations,
     reload,
+    resetSession,
   }
 }

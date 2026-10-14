@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { BsSignupForm, BsSignupFeatures, BsSignupView, BsSignupCopy, BsSignupVerificationCopy, BsSignupProduct, BsSignupChoices, BsSignupLinks, BsSignupLegalConsent } from '@building-suit/ui/types/signupPresentation'
+
 import type { Database } from '~~/types/database.types'
 
 definePageMeta({ layout: false })
@@ -39,6 +41,10 @@ const countries = [
 ]
 const supportedCurrencies = ['EGP', 'SAR', 'AED', 'USD', 'GBP', 'EUR'] as const
 const businessTypes: BusinessType[] = ['sole_proprietorship', 'partnership', 'limited_liability', 'corporation', 'nonprofit', 'other']
+const businessTypeOptions = computed(() => businessTypes.map(value => ({ value, label: t(`onboarding.businessTypes.${value}`) })))
+const countryOptions = computed(() => countries.map(country => ({ value: country.code, label: t(`onboarding.countries.${country.code}`) })))
+const currencyOptions = supportedCurrencies.map(value => ({ value, label: value }))
+const fiscalMonthOptions = computed(() => Array.from({ length: 12 }, (_, index) => ({ value: index + 1, label: t(`onboarding.months.${index + 1}`) })))
 const otpExpired = computed(() => awaitingOtp.value && otpExpiresIn.value === 0)
 
 const submitButtonText = computed(() => {
@@ -373,71 +379,28 @@ async function restoreAuthenticatedOnboarding() {
   }
   finally { pending.value = false }
 }
+
+const signupFeatures: BsSignupFeatures = { phone: true, jobTitle: true, organizationDetails: true, mainLocation: false, businessMode: false, passwordMinLength: 8, workspaceMinLength: null, workspaceMaxLength: null, locationMinLength: null, locationMaxLength: null, locationCodeMaxLength: null, locationAddressMaxLength: null, locationPhoneMaxLength: null }
+const signupProduct = computed<BsSignupProduct>(() => ({ framed: true, name: t('app.name'), assetPrefix: '/brand/ledger-suit', homeLabel: t('marketing.home'), title: t('onboarding.title'), description: t('onboarding.subtitle') }))
+const signupForm = computed<BsSignupForm>({
+  get: () => ({ name: form.fullName, phone: form.phone, jobTitle: form.jobTitle, email: form.email, password: form.password, workspaceName: form.organizationName, legalName: form.legalName, businessType: form.businessType, country: form.countryCode, currency: form.currency, timezone: form.timezone, fiscalMonth: form.fiscalYearStartMonth, taxIdentifier: form.taxIdentifier, locationName: '', locationCode: '', locationAddress: '', locationPhone: '', businessMode: '' }),
+  set: value => {
+    form.fullName = value.name; form.phone = value.phone; form.jobTitle = value.jobTitle; form.email = value.email; form.password = value.password
+    form.organizationName = value.workspaceName; form.legalName = value.legalName; form.timezone = value.timezone; form.taxIdentifier = value.taxIdentifier
+    if (businessTypes.includes(value.businessType as BusinessType)) form.businessType = value.businessType as BusinessType
+    if (countries.some(country => country.code === value.country)) form.countryCode = value.country
+    if (supportedCurrencies.includes(value.currency as typeof supportedCurrencies[number])) form.currency = value.currency
+    if (Number.isInteger(value.fiscalMonth) && value.fiscalMonth >= 1 && value.fiscalMonth <= 12) form.fiscalYearStartMonth = value.fiscalMonth
+  },
+})
+const signupView = computed<BsSignupView>(() => ({ stage: awaitingOtp.value ? 'verification' : step.value === 1 ? 'account' : 'workspace', step: step.value, pending: pending.value, error: errorMessage.value, notice: '', existingAccount: existingAccountOnboarding.value, hydrated: hydrated.value, submitDisabled: step.value === 2 && !consentAccepted.value, submitLabel: submitButtonText.value, pendingLabel: submitButtonText.value, expired: otpExpired.value, resendDisabled: resendIn.value > 0, verified: false, canStartOver: false }))
+const signupCopy = computed<BsSignupCopy>(() => ({ eyebrow: '', title: t('onboarding.title'), description: t('onboarding.noCardTrial'), name: t('onboarding.fullName'), phone: t('onboarding.phone'), jobTitle: t('onboarding.jobTitle'), email: t('auth.email'), password: t('auth.password'), passwordHint: t('onboarding.passwordHint'), workspaceName: t('org.name'), legalName: t('onboarding.legalName'), businessType: t('onboarding.businessType'), country: t('onboarding.country'), currency: t('accounts.currency'), timezone: t('onboarding.timezone'), fiscalMonth: t('onboarding.fiscalYear'), taxIdentifier: t('onboarding.taxIdentifier'), optional: t('onboarding.optional'), mainLocation: '', locationName: '', locationCode: '', locationAddress: '', locationPhone: '', businessMode: '', businessModeHelp: '', trialTitle: '', trialBody: '', back: '', formFooter: t('onboarding.noCardRequired'), signIn: '', recoveryTitle: '', recoveryBody: '', recover: '', startOver: '', steps: [1, 2].map(index => ({ id: index, title: t(`onboarding.steps.${index}.title`), body: t(`onboarding.steps.${index}.body`) })) }))
+const signupVerificationCopy = computed<BsSignupVerificationCopy>(() => ({ eyebrow: t('onboarding.otpEyebrow'), title: t('onboarding.otpTitle'), description: t('onboarding.otpDescription'), codeLabel: t('onboarding.otpLabel'), expiryLabel: t('onboarding.otpExpiresIn', { time: formatCountdown(otpExpiresIn.value) }), expiredLabel: t('onboarding.otpExpired'), attemptsLabel: t('onboarding.otpAttemptsHint'), submitLabel: t('onboarding.otpVerify'), pendingLabel: t('onboarding.otpVerifying'), resendPrompt: t('onboarding.otpMissing'), resendLabel: resendIn.value > 0 ? t('onboarding.otpResendIn', { time: formatCountdown(resendIn.value) }) : t('onboarding.otpResend'), securityTitle: t('onboarding.otpSecurityTitle'), securityBody: t('onboarding.otpSecurityBody') }))
+const signupChoices = computed<BsSignupChoices>(() => ({ businessTypes: businessTypeOptions.value, countries: countryOptions.value, currencies: currencyOptions, fiscalMonths: fiscalMonthOptions.value, businessModes: [] }))
+const signupLinks = computed<BsSignupLinks>(() => ({ signInTo: '/login', recoveryTo: '', formSignInLabel: '', verificationFooter: false, legal: [{ to: '/login', label: t('auth.signIn') }, { to: '/contact', label: t('marketing.contact') }] }))
+const signupLegalConsent = computed<BsSignupLegalConsent>(() => ({ keypath: 'onboarding.consent', termsLabel: t('marketing.terms'), termsTo: '/terms', refundLabel: t('marketing.refundCancellation'), refundTo: '/refund-cancellation', privacyLabel: t('marketing.privacy'), privacyTo: '/privacy' }))
+async function submitSignup() { if (step.value === 1) await next(); else await finishOnboarding() }
 </script>
-
 <template>
-  <BsAuthLayout :product-name="t('app.name')" :home-label="t('marketing.home')" :title="t('onboarding.title')" :description="t('onboarding.subtitle')" wide>
-    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" class="h-auto w-56" /></template>
-        <BsAuthForm v-if="!awaitingOtp" :title="t('onboarding.title')" :description="t('onboarding.noCardTrial')" :pending="pending" :data-hydrated="hydrated" @submit="step === 1 ? next() : finishOnboarding()">
-          <BsSignupWizard
-            :step="step"
-            :steps="[1, 2].map(index => ({ id: index, title: t(`onboarding.steps.${index}.title`), body: t(`onboarding.steps.${index}.body`) }))"
-            :pending="pending" :error="errorMessage" :submit-label="submitButtonText" :pending-label="submitButtonText"
-            :submit-disabled="step === 2 && !consentAccepted" @back="back"
-          >
-
-
-          <div v-if="step === 1" class="grid gap-4 sm:grid-cols-2">
-            <FloatingField class="sm:col-span-2" :label="t('onboarding.fullName')"><input id="owner-name" v-model="form.fullName" class="ls-input" autocomplete="name" required></FloatingField>
-            <FloatingField :label="t('onboarding.phone')"><input id="owner-phone" v-model="form.phone" class="ls-input" autocomplete="tel" dir="ltr" required></FloatingField>
-            <FloatingField :label="t('onboarding.jobTitle')"><input id="owner-role" v-model="form.jobTitle" class="ls-input" required></FloatingField>
-            <FloatingField :label="t('auth.email')"><input id="owner-email" v-model="form.email" type="email" class="ls-input" autocomplete="email" dir="ltr" :readonly="existingAccountOnboarding" required></FloatingField>
-            <div v-if="!existingAccountOnboarding"><FloatingField :label="t('auth.password')"><input id="owner-password" v-model="form.password" type="password" minlength="8" class="ls-input" autocomplete="new-password" dir="ltr" required></FloatingField><p class="ls-hint">{{ t('onboarding.passwordHint') }}</p></div>
-          </div>
-
-          <div v-else-if="step === 2" class="grid gap-4 sm:grid-cols-2">
-            <FloatingField :label="t('org.name')"><input id="org-display-name" v-model="form.organizationName" class="ls-input" required></FloatingField>
-            <FloatingField :label="t('onboarding.legalName')"><input id="org-legal-name" v-model="form.legalName" class="ls-input" required></FloatingField>
-            <FloatingField :label="t('onboarding.businessType')"><select id="org-type" v-model="form.businessType" class="ls-input"><option v-for="type in businessTypes" :key="type" :value="type">{{ t(`onboarding.businessTypes.${type}`) }}</option></select></FloatingField>
-            <FloatingField :label="t('onboarding.country')"><select id="org-country" v-model="form.countryCode" class="ls-input"><option v-for="country in countries" :key="country.code" :value="country.code">{{ t(`onboarding.countries.${country.code}`) }}</option></select></FloatingField>
-              <FloatingField :label="t('accounts.currency')"><select id="org-currency" v-model="form.currency" class="ls-input"><option v-for="currency in supportedCurrencies" :key="currency">{{ currency }}</option></select></FloatingField>
-            <FloatingField :label="t('onboarding.timezone')"><input id="org-timezone" v-model="form.timezone" class="ls-input" dir="ltr" required></FloatingField>
-            <FloatingField :label="t('onboarding.fiscalYear')"><select id="org-fiscal" v-model.number="form.fiscalYearStartMonth" class="ls-input"><option v-for="month in 12" :key="month" :value="month">{{ t(`onboarding.months.${month}`) }}</option></select></FloatingField>
-            <div><FloatingField :label="t('onboarding.taxIdentifier')"><input id="org-tax" v-model="form.taxIdentifier" class="ls-input"></FloatingField><p class="ls-hint">{{ t('onboarding.optional') }}</p></div>
-          </div>
-
-          <div v-if="step === 2" class="mt-6 flex items-start gap-3 rounded-control border border-[var(--bs-border)] bg-surface-muted p-4 text-sm leading-6">
-            <input id="signup-consent" v-model="consentAccepted" type="checkbox" required class="mt-1 size-4 shrink-0 accent-[var(--bs-primary)]">
-            <label for="signup-consent">
-              <i18n-t keypath="onboarding.consent" tag="span" scope="global">
-                <template #terms>
-                  <NuxtLink to="/terms" target="_blank" rel="noopener" class="font-semibold text-link underline underline-offset-4">{{ t('marketing.terms') }}</NuxtLink>
-                </template>
-                <template #refund>
-                  <NuxtLink to="/refund-cancellation" target="_blank" rel="noopener" class="font-semibold text-link underline underline-offset-4">{{ t('marketing.refundCancellation') }}</NuxtLink>
-                </template>
-                <template #privacy>
-                  <NuxtLink to="/privacy" target="_blank" rel="noopener" class="font-semibold text-link underline underline-offset-4">{{ t('marketing.privacy') }}</NuxtLink>
-                </template>
-              </i18n-t>
-            </label>
-          </div>
-
-          <template v-if="step === 2" #footer>{{ t('onboarding.noCardRequired') }}</template>
-          </BsSignupWizard>
-        </BsAuthForm>
-
-        <BsVerificationForm
-          v-else v-model="otp" :data-hydrated="hydrated" :eyebrow="t('onboarding.otpEyebrow')"
-          :title="t('onboarding.otpTitle')" :description="t('onboarding.otpDescription')" :email="form.email"
-          :code-label="t('onboarding.otpLabel')" :pending="pending" :error="errorMessage" :expired="otpExpired"
-          :expiry-label="t('onboarding.otpExpiresIn', { time: formatCountdown(otpExpiresIn) })" :expired-label="t('onboarding.otpExpired')"
-          :attempts-label="t('onboarding.otpAttemptsHint')" :submit-label="t('onboarding.otpVerify')" :pending-label="t('onboarding.otpVerifying')"
-          :resend-prompt="t('onboarding.otpMissing')" :resend-label="resendIn > 0 ? t('onboarding.otpResendIn', { time: formatCountdown(resendIn) }) : t('onboarding.otpResend')"
-          :resend-disabled="resendIn > 0" :security-title="t('onboarding.otpSecurityTitle')" :security-body="t('onboarding.otpSecurityBody')"
-          @submit="verifyOtpAndContinue" @resend="resendOtp"
-        />
-
-    <template #legal><p class="mt-4 text-sm text-fg-muted"><NuxtLink to="/login" class="underline">{{ t('auth.signIn') }}</NuxtLink> · <NuxtLink to="/contact" class="underline">{{ t('marketing.contact') }}</NuxtLink></p></template>
-  </BsAuthLayout>
+  <BsSignupPage v-model:form="signupForm" v-model:otp="otp" v-model:consent="consentAccepted" :product="signupProduct" :features="signupFeatures" :view="signupView" :copy="signupCopy" :verification-copy="signupVerificationCopy" :choices="signupChoices" :links="signupLinks" :legal-consent="signupLegalConsent" @submit="submitSignup" @back="back" @verify="verifyOtpAndContinue" @resend="resendOtp" />
 </template>

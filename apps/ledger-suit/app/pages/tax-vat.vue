@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
+import type { BsTaxWorkspaceCopy, BsTaxWorkspaceSetupForm, BsTaxWorkspaceDocumentForm, BsTaxWorkspaceView, BsTaxWorkspaceChoices } from '@building-suit/ui/types/taxWorkspacePresentation'
 import type { VatDirection, VatDocumentKind, VatDocumentRow } from '~/utils/egyptVat'
 import { calculateVatMinor, vatReportReconciles } from '~/utils/egyptVat'
 
@@ -112,40 +114,72 @@ async function saveDocument() {
   catch (failure) { if (currentId.value === organizationId && user.value?.id === actor) formError.value = failureMessage(failure) }
   finally { saving.value = false }
 }
+const ledgerPresentation = useLedgerPresentation()
+
+const taxCopy = computed<BsTaxWorkspaceCopy>(() => ({
+  common_cancel: t('common.cancel'),
+  common_retry: t('common.retry'),
+  common_save: t('common.save'),
+  vat_addInput: t('vat.addInput'),
+  vat_addInputCredit: t('vat.addInputCredit'),
+  vat_addOutput: t('vat.addOutput'),
+  vat_addOutputCredit: t('vat.addOutputCredit'),
+  vat_base: t('vat.base'),
+  vat_baseAccount: t('vat.baseAccount'),
+  vat_calculatedTax: t('vat.calculatedTax'),
+  vat_confirmRegistration: t('vat.confirmRegistration'),
+  vat_counterparty: t('vat.counterparty'),
+  vat_denied: t('vat.denied'),
+  vat_direction: t('vat.direction'),
+  vat_documentDate: t('vat.documentDate'),
+  vat_documents: t('vat.documents'),
+  vat_effectiveFrom: t('vat.effectiveFrom'),
+  vat_egypt: t('vat.egypt'),
+  vat_empty: t('vat.empty'),
+  vat_errors_load: t('vat.errors.load'),
+  vat_evidenceDate: t('vat.evidenceDate'),
+  vat_from: t('vat.from'),
+  vat_grossAccount: t('vat.grossAccount'),
+  vat_history: t('vat.history'),
+  vat_inputAccount: t('vat.inputAccount'),
+  vat_inputDifference: t('vat.inputDifference'),
+  vat_inputVat: t('vat.inputVat'),
+  vat_journal: t('vat.journal'),
+  vat_jurisdiction: t('vat.jurisdiction'),
+  vat_netVat: t('vat.netVat'),
+  vat_notReconciled: t('vat.notReconciled'),
+  vat_original: t('vat.original'),
+  vat_outputAccount: t('vat.outputAccount'),
+  vat_outputDifference: t('vat.outputDifference'),
+  vat_outputVat: t('vat.outputVat'),
+  vat_policy: t('vat.policy'),
+  vat_rate: t('vat.rate'),
+  vat_reconciled: t('vat.reconciled'),
+  vat_reference: t('vat.reference'),
+  vat_registration: t('vat.registration'),
+  vat_reverse: t('vat.reverse'),
+  vat_run: t('vat.run'),
+  vat_scopeWarning: t('vat.scopeWarning'),
+  vat_setupPolicy: t('vat.setupPolicy'),
+  vat_setupTitle: t('vat.setupTitle'),
+  vat_tax: t('vat.tax'),
+  vat_taxPointDate: t('vat.taxPointDate'),
+  vat_title: t('vat.title'),
+  vat_to: t('vat.to'),
+}))
+const taxSetup = computed<BsTaxWorkspaceSetupForm>({ get: () => ({ ...setup }), set: value => Object.assign(setup, value) })
+const taxForm = computed<BsTaxWorkspaceDocumentForm>({ get: () => ({ documentDate: form.documentDate, taxPointDate: form.taxPointDate, reference: form.reference, base: form.base, baseAccount: form.baseAccount, grossAccount: form.grossAccount, counterparty: form.counterparty, original: form.original, reason: form.reason }), set: value => Object.assign(form, value) })
+function taxMoney(value: string | number) { return formatPresentationMoney(value, { currency: 'EGP', locale: locale.value, unit: 'minor', numberingSystem: 'latn' }) }
+const taxView = computed<BsTaxWorkspaceView>(() => ({
+  context: ledgerPresentation.context(from.value, to.value), contextLabel: t('pageContext.label'), canRead: can('tax.read'), canConfigure: can('tax.configure'), canPost: can('tax.post'), canAdjust: can('tax.adjust'), readOnly: readOnly.value,
+  pending: pending.value, loadError: Boolean(error.value), available: Boolean(workspace.value), setupError: setupError.value, setupPending: setupSaving.value, setupDisabled: setupSaving.value || readOnly.value || !outputAccounts.value.length || !inputAccounts.value.length,
+  profile: profile.value ? { registration: profile.value.registration_number, rate: `${(currentRule.value?.rate_basis_points ?? 0) / 100}%`, evidenceDate: currentRule.value?.evidence_verified_on ?? '', ruleName: (locale.value === 'ar' ? currentRule.value?.name_ar : currentRule.value?.name_en) ?? '' } : null,
+  report: report.value ? { output: taxMoney(report.value.output_tax_minor), input: taxMoney(report.value.input_tax_minor), net: taxMoney(report.value.net_vat_minor), outputDifference: taxMoney(report.value.output_difference_minor), inputDifference: taxMoney(report.value.input_difference_minor), reconciled: reconciled.value, documents: report.value.documents.map(row => ({ id: row.id, taxPointDate: row.tax_point_date, documentDate: row.document_date, reference: row.reference, kindLabel: `${t(`vat.directions.${row.direction}`)} · ${t(`vat.kinds.${row.kind}`)}`, base: taxMoney(row.taxable_base_minor), tax: taxMoney(row.tax_minor), journalTo: `/transactions?q=${encodeURIComponent(row.transaction_id)}`, canReverse: row.kind === 'invoice' && !report.value!.documents.some(adjustment => adjustment.adjusts_document_id === row.id) && can('tax.reverse') })) } : null,
+  dialogTitle: t(form.kind === 'reversal' ? 'vat.reverse' : form.kind === 'credit' ? 'vat.creditTitle' : form.direction === 'output' ? 'vat.addOutput' : 'vat.addInput'), dialogPending: saving.value, dialogDirty: dirty.value, dialogError: formError.value, isCredit: form.kind === 'credit', isReversal: form.kind === 'reversal', needsReason: form.kind !== 'invoice', reasonLabel: t(form.kind === 'reversal' ? 'vat.reversalReason' : 'vat.reason'), amountError: amountError.value, previewTax: taxMoney(previewTax.value),
+}))
+const taxChoices = computed<BsTaxWorkspaceChoices>(() => ({ output: outputAccounts.value.map(row => ({ value: row.id, label: `${row.code} · ${row.name}` })), input: inputAccounts.value.map(row => ({ value: row.id, label: `${row.code} · ${row.name}` })), base: availableBaseAccounts.value.map(row => ({ value: row.id, label: `${row.code} · ${row.name}` })), gross: availableGrossAccounts.value.map(row => ({ value: row.id, label: `${row.code} · ${row.name}` })), originals: originalInvoices.value.map(row => ({ value: row.id, label: `${row.reference} · ${row.tax_point_date}` })), counterparties: (workspace.value?.counterparties ?? []).filter(row => !row.archived).map(row => ({ value: row.id, label: row.name })) }))
+function reverseTaxDocument(id: string) { const document = report.value?.documents.find(row => row.id === id); if (document) beginReversal(document) }
 </script>
-
 <template>
-  <div class="space-y-6">
-    <LedgerPageHeader :title="t('vat.title')" :subtitle="t('vat.policy')" :from="from" :to="to" />
-    <aside class="rounded-control border border-warning bg-[var(--bs-status-warning-bg)] p-4" role="note">{{ t('vat.scopeWarning') }}</aside>
-    <p v-if="!can('tax.read')" class="ls-card p-5" role="status">{{ t('vat.denied') }}</p>
-    <template v-else>
-      <p v-if="error" class="ls-error" role="alert">{{ t('vat.errors.load') }} <BsButton type="submit" class="ls-btn" @click="load">{{ t('common.retry') }}</BsButton></p>
-      <SectionSkeleton v-else-if="pending" variant="table" :rows="5" />
-      <template v-else-if="workspace">
-        <section v-if="!profile" class="ls-card p-5 space-y-4">
-          <h2 class="text-h2 font-bold">{{ t('vat.setupTitle') }}</h2><p>{{ t('vat.setupPolicy') }}</p>
-          <p v-if="setupError" class="ls-error" role="alert">{{ setupError }}</p>
-          <BsForm v-if="can('tax.configure')" class="grid gap-4 md:grid-cols-2" @submit.prevent="saveSetup">
-            <FloatingField :label="t('vat.registration')"><input v-model="setup.registration" class="ls-input" required maxlength="64"></FloatingField>
-            <FloatingField :label="t('vat.effectiveFrom')"><input v-model="setup.effective" type="date" class="ls-input" required></FloatingField>
-            <FloatingField :label="t('vat.outputAccount')"><select v-model="setup.output" class="ls-input" required><option value="" /><option v-for="a in outputAccounts" :key="a.id" :value="a.id">{{ a.code }} · {{ a.name }}</option></select></FloatingField>
-            <FloatingField :label="t('vat.inputAccount')"><select v-model="setup.input" class="ls-input" required><option value="" /><option v-for="a in inputAccounts" :key="a.id" :value="a.id">{{ a.code }} · {{ a.name }}</option></select></FloatingField>
-            <BsButton type="submit" class="ls-btn ls-btn-primary md:col-span-2" :disabled="setupSaving || readOnly || !outputAccounts.length || !inputAccounts.length">{{ t('vat.confirmRegistration') }}</BsButton>
-          </BsForm>
-        </section>
-        <template v-else>
-          <section class="ls-card p-5"><dl class="grid gap-3 md:grid-cols-4"><div><dt>{{ t('vat.registration') }}</dt><dd>{{ profile.registration_number }}</dd></div><div><dt>{{ t('vat.jurisdiction') }}</dt><dd>{{ t('vat.egypt') }}</dd></div><div><dt>{{ t('vat.rate') }}</dt><dd>{{ (currentRule?.rate_basis_points ?? 0) / 100 }}%</dd></div><div><dt>{{ t('vat.evidenceDate') }}</dt><dd>{{ currentRule?.evidence_verified_on }}</dd></div></dl><p class="mt-3 text-sm text-fg-muted">{{ locale === 'ar' ? currentRule?.name_ar : currentRule?.name_en }}</p></section>
-          <div class="ls-card grid gap-4 p-5 sm:grid-cols-3"><FloatingField :label="t('vat.from')"><input v-model="from" type="date" class="ls-input" :max="to"></FloatingField><FloatingField :label="t('vat.to')"><input v-model="to" type="date" class="ls-input" :min="from"></FloatingField><BsButton type="submit" class="ls-btn self-end" @click="load">{{ t('vat.run') }}</BsButton></div>
-          <div class="flex flex-wrap gap-2"><BsButton type="submit" v-if="can('tax.post')" class="ls-btn ls-btn-primary" :disabled="readOnly" @click="begin('output')">{{ t('vat.addOutput') }}</BsButton><BsButton type="submit" v-if="can('tax.post')" class="ls-btn ls-btn-primary" :disabled="readOnly" @click="begin('input')">{{ t('vat.addInput') }}</BsButton><BsButton type="submit" v-if="can('tax.adjust')" class="ls-btn" :disabled="readOnly" @click="begin('output','credit')">{{ t('vat.addOutputCredit') }}</BsButton><BsButton type="submit" v-if="can('tax.adjust')" class="ls-btn" :disabled="readOnly" @click="begin('input','credit')">{{ t('vat.addInputCredit') }}</BsButton></div>
-          <template v-if="report">
-            <section class="ls-card p-5"><p :class="reconciled ? 'text-success' : 'text-danger'" :data-vat-reconciled="reconciled">{{ reconciled ? t('vat.reconciled') : t('vat.notReconciled') }}</p><dl class="mt-4 grid gap-3 sm:grid-cols-5"><div><dt>{{ t('vat.outputVat') }}</dt><dd><MoneyText :amount-minor="report.output_tax_minor" currency="EGP" /></dd></div><div><dt>{{ t('vat.inputVat') }}</dt><dd><MoneyText :amount-minor="report.input_tax_minor" currency="EGP" /></dd></div><div><dt>{{ t('vat.netVat') }}</dt><dd><MoneyText :amount-minor="report.net_vat_minor" currency="EGP" /></dd></div><div><dt>{{ t('vat.outputDifference') }}</dt><dd><MoneyText :amount-minor="report.output_difference_minor" currency="EGP" /></dd></div><div><dt>{{ t('vat.inputDifference') }}</dt><dd><MoneyText :amount-minor="report.input_difference_minor" currency="EGP" /></dd></div></dl></section>
-            <section class="ls-card overflow-hidden"><h2 class="p-4 text-h2 font-bold">{{ t('vat.documents') }}</h2><BsDataTable :value="report.documents" data-key="id" :table-props="{ 'aria-label': t('vat.documents') }"><template #empty>{{ t('vat.empty') }}</template><Column field="tax_point_date" :header="t('vat.taxPointDate')" /><Column field="document_date" :header="t('vat.documentDate')" /><Column field="reference" :header="t('vat.reference')" /><Column :header="t('vat.direction')"><template #body="{ data: row }">{{ t(`vat.directions.${row.direction}`) }} · {{ t(`vat.kinds.${row.kind}`) }}</template></Column><Column :header="t('vat.base')"><template #body="{ data: row }"><MoneyText :amount-minor="row.taxable_base_minor" currency="EGP" /></template></Column><Column :header="t('vat.tax')"><template #body="{ data: row }"><MoneyText :amount-minor="row.tax_minor" currency="EGP" /></template></Column><Column :header="t('vat.history')"><template #body="{ data: row }"><NuxtLink :to="{ path: '/transactions', query: { q: row.transaction_id } }" class="text-link underline">{{ t('vat.journal') }}</NuxtLink><BsButton type="submit" v-if="row.kind==='invoice' && !report.documents.some(a=>a.adjusts_document_id===row.id) && can('tax.reverse')" class="ls-btn ms-2" :disabled="readOnly" @click="beginReversal(row)">{{ t('vat.reverse') }}</BsButton></template></Column></BsDataTable></section>
-          </template>
-        </template>
-      </template>
-    </template>
-
-    <BsRecordActionDialog v-model:visible="visible" :title="t(form.kind === 'reversal' ? 'vat.reverse' : form.kind === 'credit' ? 'vat.creditTitle' : form.direction === 'output' ? 'vat.addOutput' : 'vat.addInput')" :pending="saving" :dirty="dirty" :error="formError" size="lg" :submit-label="t('common.save')" :cancel-label="t('common.cancel')" :submit-disabled="readOnly" @submit="saveDocument"><FloatingField v-if="form.kind==='credit'" :label="t('vat.original')"><select v-model="form.original" class="ls-input" required><option value="" /><option v-for="d in originalInvoices" :key="d.id" :value="d.id">{{ d.reference }} · {{ d.tax_point_date }}</option></select></FloatingField><FloatingField :label="t('vat.reference')"><input v-model="form.reference" class="ls-input" :disabled="form.kind==='reversal'" required></FloatingField><div class="grid gap-4 sm:grid-cols-2"><FloatingField :label="t('vat.documentDate')"><input v-model="form.documentDate" type="date" class="ls-input" required></FloatingField><FloatingField :label="t('vat.taxPointDate')"><input v-model="form.taxPointDate" type="date" class="ls-input" required></FloatingField></div><FloatingField :label="t('vat.counterparty')"><select v-model="form.counterparty" class="ls-input" :disabled="form.kind==='reversal'"><option value="" /><option v-for="c in workspace?.counterparties.filter(c=>!c.archived)" :key="c.id" :value="c.id">{{ c.name }}</option></select></FloatingField><FloatingField :label="t('vat.baseAccount')"><select v-model="form.baseAccount" class="ls-input" :disabled="form.kind==='reversal'" required><option value="" /><option v-for="a in availableBaseAccounts" :key="a.id" :value="a.id">{{ a.code }} · {{ a.name }}</option></select></FloatingField><FloatingField :label="t('vat.grossAccount')"><select v-model="form.grossAccount" class="ls-input" :disabled="form.kind==='reversal'" required><option value="" /><option v-for="a in availableGrossAccounts" :key="a.id" :value="a.id">{{ a.code }} · {{ a.name }}</option></select></FloatingField><FloatingField :label="t('vat.base')"><input id="vat-base" v-model="form.base" class="ls-input" inputmode="decimal" :disabled="form.kind==='reversal'" required :aria-invalid="Boolean(amountError)" :aria-describedby="amountError ? 'vat-base-error' : undefined" @blur="baseMinor()"></FloatingField><p v-if="amountError" id="vat-base-error" class="text-sm text-danger" role="alert">{{ amountError }}</p><p>{{ t('vat.calculatedTax') }}: <MoneyText :amount-minor="previewTax" currency="EGP" /></p><FloatingField v-if="form.kind!=='invoice'" :label="t(form.kind==='reversal' ? 'vat.reversalReason' : 'vat.reason')"><input v-model="form.reason" class="ls-input" required></FloatingField></BsRecordActionDialog>
-  </div>
+  <BsTaxWorkspacePage v-model:setup="taxSetup" v-model:form="taxForm" v-model:from="from" v-model:to="to" v-model:visible="visible" :copy="taxCopy" :view="taxView" :choices="taxChoices" @reload="load" @save-setup="saveSetup" @save-document="saveDocument" @validate-amount="baseMinor" @begin-output="begin('output')" @begin-input="begin('input')" @begin-output-credit="begin('output', 'credit')" @begin-input-credit="begin('input', 'credit')" @reverse="reverseTaxDocument" />
 </template>

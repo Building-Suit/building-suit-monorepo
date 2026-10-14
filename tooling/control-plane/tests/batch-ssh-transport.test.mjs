@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
@@ -21,10 +21,13 @@ function invoke(command, exitCode = 0) {
   const home = mkdtempSync(path.join(tmpdir(), 'bs-batch-ssh-'))
   try {
     const bin = path.join(home, 'bin')
-    const agent = path.join(home, 'Dev/building-suit-monorepo/tooling/control-plane/runner/bs-agent.mjs')
+    const release=path.join(home,'.local/lib/building-suit-control-plane/releases/synthetic')
+    const agent = path.join(release, 'tooling/control-plane/runner/runtime-bootstrap.mjs')
     mkdirSync(bin, { recursive:true })
     mkdirSync(path.dirname(agent), { recursive:true })
     writeFileSync(agent, '// Test placeholder: never executed.\n')
+    writeFileSync(path.join(release,'release.json'),'{}')
+    symlinkSync(release,path.join(home,'.local/lib/building-suit-control-plane/current'))
     const fakeNode = path.join(bin, 'node')
     writeFileSync(fakeNode, '#!/bin/sh\nprintf \'%s\\0\' "$@"\nexit "${BS_SSH_TEST_EXIT_CODE:-0}"\n')
     chmodSync(fakeNode, 0o700)
@@ -43,7 +46,7 @@ function invoke(command, exitCode = 0) {
 function accepted(command, expected, exitCode = 0) {
   const result = invoke(command, exitCode)
   assert.equal(result.status, exitCode, result.stderr || result.stdout)
-  assert.deepEqual(result.args, [result.agent, ...expected])
+  assert.deepEqual(result.args, [result.agent, 'runner', ...expected])
 }
 
 function rejected(command, error, code = 64) {
@@ -72,21 +75,28 @@ const complete = `bs-agent run-complete-task ${runId} ${taskId} ${key}`
 const acquireArgs = ['run-acquire-task', runId, 'cp-batch-v2', fingerprint, executionId]
 const completeArgs = ['run-complete-task', runId, taskId, key]
 
-test('actual BS-20 acquire expression reaches the adapter as five distinct arguments', () => {
-  assert.equal(emittedCommand('Acquire or Resume Admitted Task'), acquire)
-  accepted(emittedCommand('Acquire or Resume Admitted Task'), acquireArgs)
-})
-test('actual BS-20 completion expression preserves task identity and replay key', () => {
-  assert.equal(emittedCommand('Record Task Success'), complete)
-  accepted(emittedCommand('Record Task Success'), completeArgs)
+test('BS20 hands the exact existing run to the immutable Supervisor adapter',()=>{
+ const command=emittedCommand('Delegate Run to Supervisor')
+ assert.equal(command,`bs-agent run-supervise ${runId}`)
+ accepted(command,['run-supervise',runId])
+ rejected(`${command}; echo unsafe`,'invalid_run_supervise',64)
 })
 test('known n8n cd prefix preserves acquire arguments', () => accepted(`cd / ; ${acquire}`, acquireArgs))
 test('known n8n cd prefix preserves attributed completion arguments', () => accepted(`cd / ; ${complete}`, completeArgs))
-test('ordinary one-argument completion remains delegated to database policy', () => accepted(`bs-agent run-complete-task ${runId}`, ['run-complete-task', runId]))
+test('anonymous completion fails closed before any database or credit action', () => rejected(`bs-agent run-complete-task ${runId}`, 'attributed_task_credit_required'))
 test('acquire preserves child exit status', () => accepted(acquire, acquireArgs, 23))
 test('completion preserves child exit status', () => accepted(complete, completeArgs, 23))
 test('unrelated supervisor command is unchanged', () => accepted(`bs-agent task-supervise ${taskId}`, ['task-supervise', taskId]))
 test('unknown commands remain forbidden', () => rejected('bs-agent arbitrary-command', 'command_not_allowed', 126))
+test('actual BS-31 watchdog command reaches the immutable runner without extra authority', () => {
+  const watchdog = JSON.parse(readFileSync(path.join(root, 'tooling/control-plane/n8n/artifacts/BS31SelfHealingRecovery.json'), 'utf8'))
+  const command = watchdog.nodes.find(node => node.name === 'Wake Eligible Existing Runs').parameters.workflowInputs.value.command
+  assert.equal(command, 'bs-agent recovery-watch')
+  accepted(command, ['recovery-watch'])
+  accepted(`cd / ; ${command}`, ['recovery-watch'])
+  rejected(`${command}; echo unsafe`, 'command_not_allowed', 126)
+  rejected(`${command} arbitrary`, 'command_not_allowed', 126)
+})
 test('an unapproved working-directory prefix remains forbidden', () => rejected(`cd /tmp ; ${acquire}`, 'command_not_allowed', 126))
 
 const invalidAcquisitions = [

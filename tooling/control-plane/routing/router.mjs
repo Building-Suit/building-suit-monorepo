@@ -56,7 +56,7 @@ export function resolveProfile(
   }
 
   const visibleModels = availableModels.filter(
-    model => model.hidden !== true,
+    model => model.hidden !== true && !['gpt-5.6-sol'].includes(model.model ?? model.id),
   )
 
   if (visibleModels.length === 0) {
@@ -84,7 +84,7 @@ export function resolveProfile(
     }
   }
 
-  if (!selectedModel) {
+  if (!selectedModel && !requested.require_preferred_model) {
     selectedModel = visibleModels.find(
       candidate => candidate.isDefault === true,
     )
@@ -118,6 +118,11 @@ export function resolveProfile(
     supported.length > 0 &&
     !supported.includes(reasoningEffort)
   ) {
+    if (requested.require_preferred_model) {
+      throw new Error(
+        `Configured reasoning effort "${reasoningEffort}" is unavailable for profile "${profile}" on ${selectedModel.model ?? selectedModel.id}.`,
+      )
+    }
     reasoningEffort =
       selectedModel.defaultReasoningEffort ??
       supported[0]

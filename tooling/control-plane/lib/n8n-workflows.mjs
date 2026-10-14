@@ -133,14 +133,17 @@ export function validateControllerReplacements(workflows) {
   const continueWorkflow = byName.get('BS-20 — Continue Suit')
   if (continueWorkflow) {
     const text = workflowText(continueWorkflow)
-    if (!text.includes('9aWPOijyhfmnEtRy')) errors.push('bs20_missing_bs10_reference')
-    if (!/run-acquire-task\b/.test(text)) errors.push('bs20_missing_run_attributed_acquire')
-    if (/bs-agent task-claim\b/.test(text)) errors.push('bs20_contains_anonymous_task_claim')
-    if (!/run-complete-task[^"}]*acquisition\.packet\.task\.task_id/.test(text)) errors.push('bs20_missing_task_attributed_completion')
-    if (!/BS_BATCH_CONTROLLER_FINGERPRINT/.test(text)) errors.push('bs20_missing_trusted_controller_fingerprint_transport')
-    if (/run-finish[^"}]* finished/.test(text)) errors.push('bs20_finishes_run_when_no_task_is_admitted')
-    for (const state of ['success', 'wait', 'safety-stop', 'no-ready-task', 'maintenance-wait', 'stop-requested', 'task-limit']) {
-      if (!text.includes(state)) errors.push(`bs20_missing_state:${state}`)
+    if(continueWorkflow.meta?.lifecycle_owner==='Supervisor'){
+      if(!/run-supervise\b/.test(text))errors.push('bs20_missing_supervisor_run_handoff')
+      if(/run-acquire-task|run-complete-task|task-claim|run-finish/.test(text))errors.push('bs20_competing_lifecycle_owner')
+    }else{
+      if (!text.includes('9aWPOijyhfmnEtRy')) errors.push('bs20_missing_bs10_reference')
+      if (!/run-acquire-task\b/.test(text)) errors.push('bs20_missing_run_attributed_acquire')
+      if (/bs-agent task-claim\b/.test(text)) errors.push('bs20_contains_anonymous_task_claim')
+      if (!/run-complete-task[^"}]*acquisition\.packet\.task\.task_id/.test(text)) errors.push('bs20_missing_task_attributed_completion')
+      if (!/BS_BATCH_CONTROLLER_FINGERPRINT/.test(text)) errors.push('bs20_missing_trusted_controller_fingerprint_transport')
+      if (/run-finish[^"}]* finished/.test(text)) errors.push('bs20_finishes_run_when_no_task_is_admitted')
+      for (const state of ['success','wait','safety-stop','no-ready-task','maintenance-wait','stop-requested','task-limit'])if (!text.includes(state))errors.push(`bs20_missing_state:${state}`)
     }
   }
 

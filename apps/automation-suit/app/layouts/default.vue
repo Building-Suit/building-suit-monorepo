@@ -26,14 +26,5 @@ const labels = computed(() => ({
 </script>
 
 <template>
-  <BsAppShell home-path="/" :product-name="t('app.name')" :groups="groups" :labels="labels">
-    <template #logo>
-      <div class="flex items-center gap-3">
-        <span class="grid h-9 w-9 place-items-center rounded-control border border-[var(--bs-border)] bg-surface-muted text-sm font-black">AS</span>
-        <span class="text-base font-black">{{ t('app.name') }}</span>
-      </div>
-    </template>
-    <template #header><SettingsMenu /></template>
-    <div class="pb-16"><slot /></div>
-  </BsAppShell>
+  <BsWorkspaceShell home-path="/" :product-name="t('app.name')" :groups="groups" :labels="labels" :logo="{ kind: 'initials', initials: 'AS' }"><slot /></BsWorkspaceShell>
 </template>

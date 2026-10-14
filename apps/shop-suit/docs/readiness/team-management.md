@@ -5,7 +5,9 @@ Implemented locally on 2026-09-28. No hosted database was modified.
 The Shop team workflow now provides:
 
 - email-bound, seven-day invitation codes and direct addition for existing
-  confirmed Shop accounts;
+  confirmed Shop accounts in the original September implementation. The launch
+  controls now require explicit acceptance for both existing and new identities;
+  see [SS-LAUNCH-TEAM-001](launch-team-controls.md) for the current contract;
 - owner, manager, cashier, barber/operator, and staff behavior backed by the
   existing granular permission catalog rather than role-name checks;
 - one-or-more active location assignments for non-owner members;
@@ -21,6 +23,10 @@ The Shop team workflow now provides:
   suspended, removed, or deleted, plus an atomic ownership-transfer command;
 - immutable, actor-attributed audit events for invitations, acceptance,
   membership state, role/location changes, and ownership transfer.
+
+The launch task supersedes the original permission-card presentation and adds
+custom/system role editing and member details. Its acceptance remains blocked
+until the dependency and verification prerequisites in the linked handoff pass.
 
 The `/team` page uses the shared shell, forms, dialogs, confirmation controller,
 toasts, and `BsDataTable`. It includes Arabic/English copy, RTL-compatible logical

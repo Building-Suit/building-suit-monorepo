@@ -7,33 +7,199 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
+      activity_correlations: {
+        Row: {
+          created_at: string
+          dispatch_id: string
+          domain_audit_id: string | null
+          target_audit_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dispatch_id: string
+          domain_audit_id?: string | null
+          target_audit_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dispatch_id?: string
+          domain_audit_id?: string | null
+          target_audit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_correlations_dispatch_id_fkey"
+            columns: ["dispatch_id"]
+            isOneToOne: true
+            referencedRelation: "adapter_dispatches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_remote_events: {
+        Row: {
+          action: string
+          actor: string | null
+          binding_id: string
+          event_id: string
+          observed_at: string
+          occurred_at: string
+          reason: string
+          stream: string
+          target: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          binding_id: string
+          event_id: string
+          observed_at?: string
+          occurred_at: string
+          reason: string
+          stream: string
+          target?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          binding_id?: string
+          event_id?: string
+          observed_at?: string
+          occurred_at?: string
+          reason?: string
+          stream?: string
+          target?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_remote_events_binding_id_fkey"
+            columns: ["binding_id"]
+            isOneToOne: false
+            referencedRelation: "suit_environment_bindings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_remote_state: {
+        Row: {
+          binding_id: string
+          last_failed_at: string | null
+          last_observed_at: string | null
+          next_page: number
+          observed_total: number | null
+          stream: string
+        }
+        Insert: {
+          binding_id: string
+          last_failed_at?: string | null
+          last_observed_at?: string | null
+          next_page?: number
+          observed_total?: number | null
+          stream: string
+        }
+        Update: {
+          binding_id?: string
+          last_failed_at?: string | null
+          last_observed_at?: string | null
+          next_page?: number
+          observed_total?: number | null
+          stream?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_remote_state_binding_id_fkey"
+            columns: ["binding_id"]
+            isOneToOne: false
+            referencedRelation: "suit_environment_bindings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adapter_attempt_results: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          outcome: string
+          response_digest: string | null
+          target_audit_id: string | null
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          outcome: string
+          response_digest?: string | null
+          target_audit_id?: string | null
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          outcome?: string
+          response_digest?: string | null
+          target_audit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adapter_attempt_results_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: true
+            referencedRelation: "adapter_attempts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adapter_attempts: {
+        Row: {
+          configuration_versions: Json
+          created_at: string
+          dispatch_id: string
+          expires_at: string
+          id: string
+          key_id: string
+          nonce: string
+          request_timestamp: number
+          secret_reference_id: string
+        }
+        Insert: {
+          configuration_versions: Json
+          created_at?: string
+          dispatch_id: string
+          expires_at: string
+          id?: string
+          key_id: string
+          nonce?: string
+          request_timestamp: number
+          secret_reference_id: string
+        }
+        Update: {
+          configuration_versions?: Json
+          created_at?: string
+          dispatch_id?: string
+          expires_at?: string
+          id?: string
+          key_id?: string
+          nonce?: string
+          request_timestamp?: number
+          secret_reference_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adapter_attempts_dispatch_id_fkey"
+            columns: ["dispatch_id"]
+            isOneToOne: false
+            referencedRelation: "adapter_dispatches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adapter_attempts_secret_reference_id_fkey"
+            columns: ["secret_reference_id"]
+            isOneToOne: false
+            referencedRelation: "integration_secret_references"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       adapter_capability_policy: {
         Row: {
           adapter_registration_id: string
@@ -80,6 +246,56 @@ export type Database = {
             columns: ["adapter_registration_id"]
             isOneToOne: false
             referencedRelation: "adapter_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adapter_dispatches: {
+        Row: {
+          actor_user_id: string
+          audience: string
+          binding_id: string
+          body: string
+          body_digest: string
+          config_versions: Json
+          correlation_id: string
+          created_at: string
+          envelope: Json
+          id: string
+          request_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          audience: string
+          binding_id: string
+          body: string
+          body_digest: string
+          config_versions: Json
+          correlation_id: string
+          created_at?: string
+          envelope: Json
+          id?: string
+          request_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          audience?: string
+          binding_id?: string
+          body?: string
+          body_digest?: string
+          config_versions?: Json
+          correlation_id?: string
+          created_at?: string
+          envelope?: Json
+          id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adapter_dispatches_binding_id_fkey"
+            columns: ["binding_id"]
+            isOneToOne: false
+            referencedRelation: "suit_environment_bindings"
             referencedColumns: ["id"]
           },
         ]
@@ -213,6 +429,51 @@ export type Database = {
           version?: number
         }
         Relationships: []
+      }
+      admin_live_invalidations: {
+        Row: {
+          authority_environment_id: string
+          binding_id: string | null
+          created_at: string
+          delivered_at: string | null
+          id: string
+          kinds: string[]
+          source_key: string
+        }
+        Insert: {
+          authority_environment_id: string
+          binding_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          kinds: string[]
+          source_key: string
+        }
+        Update: {
+          authority_environment_id?: string
+          binding_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          kinds?: string[]
+          source_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_live_invalidations_authority_environment_id_fkey"
+            columns: ["authority_environment_id"]
+            isOneToOne: false
+            referencedRelation: "admin_environments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_live_invalidations_binding_id_fkey"
+            columns: ["binding_id"]
+            isOneToOne: false
+            referencedRelation: "suit_environment_bindings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       configuration_revisions: {
         Row: {
@@ -351,6 +612,228 @@ export type Database = {
           },
           {
             foreignKeyName: "control_plane_events_target_environment_id_fkey"
+            columns: ["target_environment_id"]
+            isOneToOne: false
+            referencedRelation: "admin_environments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_offer_dispatches: {
+        Row: {
+          action: string
+          created_at: string
+          dispatch_id: string
+          offer_version_id: string
+          request_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          dispatch_id: string
+          offer_version_id: string
+          request_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          dispatch_id?: string
+          offer_version_id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_offer_dispatches_dispatch_id_fkey"
+            columns: ["dispatch_id"]
+            isOneToOne: true
+            referencedRelation: "adapter_dispatches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_offer_dispatches_offer_version_id_fkey"
+            columns: ["offer_version_id"]
+            isOneToOne: false
+            referencedRelation: "custom_offer_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_offer_revocations: {
+        Row: {
+          correlation_id: string
+          created_at: string
+          creator_user_id: string
+          offer_version_id: string
+          reason: string
+          request_fingerprint: string
+          request_id: string
+        }
+        Insert: {
+          correlation_id: string
+          created_at?: string
+          creator_user_id: string
+          offer_version_id: string
+          reason: string
+          request_fingerprint: string
+          request_id: string
+        }
+        Update: {
+          correlation_id?: string
+          created_at?: string
+          creator_user_id?: string
+          offer_version_id?: string
+          reason?: string
+          request_fingerprint?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_offer_revocations_offer_version_id_fkey"
+            columns: ["offer_version_id"]
+            isOneToOne: true
+            referencedRelation: "custom_offer_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_offer_target_receipts: {
+        Row: {
+          created_at: string
+          dispatch_id: string
+          redemption_token: string | null
+          state: string
+          target_audit_id: string
+        }
+        Insert: {
+          created_at?: string
+          dispatch_id: string
+          redemption_token?: string | null
+          state: string
+          target_audit_id: string
+        }
+        Update: {
+          created_at?: string
+          dispatch_id?: string
+          redemption_token?: string | null
+          state?: string
+          target_audit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_offer_target_receipts_dispatch_id_fkey"
+            columns: ["dispatch_id"]
+            isOneToOne: true
+            referencedRelation: "custom_offer_dispatches"
+            referencedColumns: ["dispatch_id"]
+          },
+        ]
+      }
+      custom_offer_versions: {
+        Row: {
+          authority_environment_id: string
+          base_plan_id: string
+          billing_interval: string
+          binding_id: string
+          company_id: string
+          correlation_id: string
+          created_at: string
+          creator_user_id: string
+          currency: string
+          definition_id: string
+          display_name: string
+          entitlements: Json
+          expires_at: string
+          id: string
+          price_amount: number
+          reason: string
+          recipient_user_id: string
+          request_fingerprint: string
+          request_id: string
+          resource_limits: Json
+          suit_id: string
+          target_binding_id: string
+          target_environment_id: string
+          template_reference: string | null
+          version: number
+        }
+        Insert: {
+          authority_environment_id: string
+          base_plan_id: string
+          billing_interval: string
+          binding_id: string
+          company_id: string
+          correlation_id: string
+          created_at?: string
+          creator_user_id: string
+          currency: string
+          definition_id: string
+          display_name: string
+          entitlements: Json
+          expires_at: string
+          id?: string
+          price_amount: number
+          reason: string
+          recipient_user_id: string
+          request_fingerprint: string
+          request_id: string
+          resource_limits: Json
+          suit_id: string
+          target_binding_id: string
+          target_environment_id: string
+          template_reference?: string | null
+          version: number
+        }
+        Update: {
+          authority_environment_id?: string
+          base_plan_id?: string
+          billing_interval?: string
+          binding_id?: string
+          company_id?: string
+          correlation_id?: string
+          created_at?: string
+          creator_user_id?: string
+          currency?: string
+          definition_id?: string
+          display_name?: string
+          entitlements?: Json
+          expires_at?: string
+          id?: string
+          price_amount?: number
+          reason?: string
+          recipient_user_id?: string
+          request_fingerprint?: string
+          request_id?: string
+          resource_limits?: Json
+          suit_id?: string
+          target_binding_id?: string
+          target_environment_id?: string
+          template_reference?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_offer_versions_authority_environment_id_fkey"
+            columns: ["authority_environment_id"]
+            isOneToOne: false
+            referencedRelation: "admin_environments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_offer_versions_binding_id_fkey"
+            columns: ["binding_id"]
+            isOneToOne: false
+            referencedRelation: "suit_environment_bindings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_offer_versions_suit_id_fkey"
+            columns: ["suit_id"]
+            isOneToOne: false
+            referencedRelation: "suit_registry"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_offer_versions_target_environment_id_fkey"
             columns: ["target_environment_id"]
             isOneToOne: false
             referencedRelation: "admin_environments"
@@ -695,6 +1178,7 @@ export type Database = {
           description: Json
           display_name: Json
           id: string
+          sort_order: number
           stable_key: string
           status: string
           updated_at: string
@@ -707,6 +1191,7 @@ export type Database = {
           description?: Json
           display_name: Json
           id?: string
+          sort_order?: number
           stable_key: string
           status?: string
           updated_at?: string
@@ -719,6 +1204,7 @@ export type Database = {
           description?: Json
           display_name?: Json
           id?: string
+          sort_order?: number
           stable_key?: string
           status?: string
           updated_at?: string
@@ -731,6 +1217,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      super_admin_activity_context: {
+        Args: { p_binding: string; p_stream: string }
+        Returns: Json
+      }
+      super_admin_activity_failure: {
+        Args: { p_binding: string; p_stream: string }
+        Returns: undefined
+      }
+      super_admin_activity_observe: {
+        Args: { p_binding: string; p_projection: Json; p_request: string }
+        Returns: undefined
+      }
+      super_admin_activity_read: { Args: { p_query: Json }; Returns: Json }
+      super_admin_adapter_claim: {
+        Args: { p_dispatch_id: string }
+        Returns: Json
+      }
+      super_admin_adapter_complete: {
+        Args: { p_attempt_id: string; p_response: Json }
+        Returns: Json
+      }
+      super_admin_adapter_enqueue: { Args: { p_input: Json }; Returns: string }
       super_admin_configuration_command: {
         Args: {
           p_correlation_id: string
@@ -747,6 +1255,16 @@ export type Database = {
         Args: { p_id?: string; p_resource: string }
         Returns: Json
       }
+      super_admin_custom_offer_command: {
+        Args: { p_input: Json }
+        Returns: Json
+      }
+      super_admin_custom_offers_read: {
+        Args: { p_binding_id: string }
+        Returns: Json
+      }
+      super_admin_live_flush: { Args: { p_limit?: number }; Returns: number }
+      super_admin_live_topic: { Args: never; Returns: string }
       super_admin_session: { Args: never; Returns: Json }
     }
     Enums: {
@@ -876,11 +1394,7 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
 } as const
-

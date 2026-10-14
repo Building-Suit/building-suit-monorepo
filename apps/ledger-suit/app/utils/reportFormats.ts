@@ -1,3 +1,5 @@
+import { renderReportDocument } from '@building-suit/ui/utils/reportDocument'
+import { downloadBlob } from '@building-suit/ux'
 import { parseCsv } from './csv.ts'
 import type { CsvReport } from './localizedCsv.ts'
 
@@ -35,9 +37,6 @@ function xml(value: string): string {
   return sanitized.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;')
 }
 
-function html(value: string): string {
-  return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;')
-}
 
 function excelColumn(index: number): string {
   let column = ''
@@ -185,32 +184,12 @@ export function buildReportXlsx(localizedCsv: string, report: CsvReport, metadat
 }
 
 export function buildPrintableReportHtml(localizedCsv: string, report: CsvReport, metadata: ReportFormatMetadata): string {
-  const { headers, rows } = dataRows(localizedCsv)
-  // This is a detached print document, not an application data grid. Keep a
-  // semantic table so browsers can repeat headers across printed/PDF pages.
-  const tableElement = 'table'
-  const detailRows: Array<readonly [string, string]> = [
-    [metadata.labels.organization, metadata.organization],
-    [metadata.labels.currency, metadata.currency],
-    [metadata.labels.generatedAt, metadata.generatedAt],
-    ...metadata.filters.map((filter): readonly [string, string] => [filter.label, filter.value]),
-  ]
-  return `<!doctype html><html lang="${metadata.direction === 'rtl' ? 'ar' : 'en'}" dir="${metadata.direction}"><head><meta charset="utf-8"><title>${html(metadata.title)}</title><style>
-@page{size:landscape;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,"IBM Plex Sans Arabic",sans-serif;color:#172033;margin:0}h1{font-size:22px;margin:0 0 12px}.meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 24px;margin-bottom:14px;font-size:12px}.meta dt{font-weight:700}.meta dd{margin:0}.warning{border:1px solid #a56300;background:#fff7e6;padding:8px;margin:10px 0;font-weight:700}table{border-collapse:collapse;width:100%;font-size:10px}thead{display:table-header-group}th,td{border:1px solid #aab3c2;padding:5px 7px;text-align:start;vertical-align:top}th{background:#e8edf3;font-weight:700}.numeric{text-align:end;font-variant-numeric:tabular-nums;direction:ltr}tr{break-inside:avoid}@media screen{body{padding:20px;max-width:1600px;margin:auto}}</style></head><body><h1>${html(metadata.title)}</h1><dl class="meta">${detailRows.map(([label, value]) => `<div><dt>${html(label)}</dt><dd>${html(value)}</dd></div>`).join('')}</dl>${metadata.warning ? `<p class="warning">${html(metadata.labels.warning)}: ${html(metadata.warning)}</p>` : ''}<${tableElement}><thead><tr>${headers.map(header => `<th>${html(header)}</th>`).join('')}</tr></thead><tbody>${rows.map(values => `<tr>${values.map((value, index) => `<td${monetaryColumns[report].has(index) ? ' class="numeric"' : ''}>${html(value)}</td>`).join('')}</tr>`).join('')}</tbody></${tableElement}></body></html>`
+ const { headers, rows } = dataRows(localizedCsv)
+ return renderReportDocument(headers, rows, monetaryColumns[report], metadata)
 }
 
 export function downloadReportXlsx(filename: string, workbook: Uint8Array) {
-  const bytes = new Uint8Array(workbook.byteLength)
-  bytes.set(workbook)
-  const url = URL.createObjectURL(new Blob([bytes.buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.hidden = true
-  document.body.append(link)
-  link.click()
-  setTimeout(() => {
-    link.remove()
-    URL.revokeObjectURL(url)
-  }, 1000)
+ const bytes = new Uint8Array(workbook.byteLength)
+ bytes.set(workbook)
+ downloadBlob(filename, new Blob([bytes.buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), { mount: true, cleanupDelayMs: 1000 })
 }

@@ -26,7 +26,7 @@ test('Reports only request the active surface and Overview uses one aggregate RP
 
 test('failures retain explicit retry states instead of rendering empty financial data', () => {
   for (const error of ['overviewError', 'profitLossError', 'balanceSheetError', 'cashFlowError', 'ledgerError']) {
-    assert.match(reports, new RegExp(`v-if="[^"]*${error}`))
+    assert.match(reports, new RegExp(`!!${error}\\.value`))
   }
   assert.match(reports, /refreshOverview/)
   assert.match(reports, /refreshProfitLoss/)

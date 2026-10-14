@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { validCatalogImage } from '~/utils/catalogMedia'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 const confirmation = useConfirmation()
 
@@ -6,6 +7,8 @@ definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
 type Product = {
   id: string
+  imageUrl?: string | null
+  imageObjectName?: string | null
   name: string
   sku: string | null
   barcode: string | null
@@ -14,10 +17,11 @@ type Product = {
   category_name: string | null
   created_at: string
 }
-type ProductPage = { items: Product[]; total: number; page: number; pageSize: number }
+type ProductPage = { supportsUploads?: boolean; supportsMedia?: boolean; items: Product[]; total: number; page: number; pageSize: number }
 type Category = { id: string; name: string }
 
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const media = useCatalogMedia()
 const { locale } = useI18n()
 const { current, currentId, loading: shopLoading } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
@@ -28,8 +32,11 @@ const pageSize = 20
 const editingId = ref<string | null>(null)
 const archivingId = ref<string | null>(null)
 const actionError = ref('')
-const form = reactive({ name: '', sku: '', barcode: '', salePrice: 0, categoryId: '' })
-const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => form)
+const form = reactive({ imageObjectName: null as string | null, imageUrl: '', name: '', sku: '', barcode: '', salePrice: 0, categoryId: '' })
+const upload = useCatalogImageUpload(currentId, 'products', objectName => { form.imageObjectName = objectName; form.imageUrl = '' })
+const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => ({ ...form, imageSelection: upload.selectedName.value }))
+function removeImage() { upload.reset(); form.imageUrl = ''; form.imageObjectName = null }
+watch(showForm, visible => { if (!visible) upload.reset() })
 
 const { data: permissionAccess } = useAsyncData('shop-data:product-permissions', async () => {
   if (!currentId.value) return { 'products.manage': false }
@@ -42,8 +49,10 @@ const { data: permissionAccess } = useAsyncData('shop-data:product-permissions',
 const canManage = computed(() => permissionAccess.value?.['products.manage'] === true)
 
 const copy = computed(() => isArabic.value ? {
+  imageUpload: { choose: 'اختيار صورة', replace: 'استبدال الصورة', remove: 'إزالة', retry: 'إعادة المحاولة', help: 'اختر صورة JPEG أو PNG أو WebP، حتى ٥ ميجابايت و١٦ مليون بكسل.', uploading: 'جارٍ رفع الصورة…', uploaded: 'تم رفع الصورة', error: 'تعذّر رفع الصورة. أعد المحاولة أو اختر صورة أخرى.', invalid: 'اختر صورة JPEG أو PNG أو WebP صالحة، حتى ٥ ميجابايت و١٦ مليون بكسل.', placeholder: 'بدون صورة' },
+  imagePlaceholder: 'بدون صورة', imageLabel: 'الصورة (اختياري)', imageUnavailable: 'تعديل الصور غير متاح لهذا الكتالوج بعد.', imageInvalid: 'الصورة المحفوظة غير صالحة. أزلها أو استبدلها.',
   title: 'المنتجات', subtitle: 'ضيف منتجات متجرك وحدد سعر البيع.',
-  add: 'إضافة منتج', edit: 'تعديل', archive: 'أرشفة', cancel: 'إلغاء', save: 'حفظ المنتج', saving: 'بنحفظ...', loading: 'بنحمّل المنتجات…',
+  add: 'إضافة منتج', edit: 'تعديل', editTitle: 'تعديل المنتج', archive: 'أرشفة', cancel: 'إلغاء', save: 'حفظ المنتج', saving: 'بنحفظ...', loading: 'بنحمّل المنتجات…',
   name: 'اسم المنتج', sku: 'رمز المنتج', barcode: 'الباركود', price: 'سعر البيع', category: 'التصنيف', allCategories: 'كل التصنيفات', previous: 'السابق', next: 'التالي', import: 'الاستيراد والإعداد',
   search: 'دوّر باسم المنتج أو الرمز', empty: 'مفيش منتجات لسه.', noResults: 'مفيش نتايج مطابقة.',
   noShop: 'اعمل متجر الأول من لوحة التحكم.', dashboard: 'لوحة التحكم',
@@ -54,8 +63,10 @@ const copy = computed(() => isArabic.value ? {
   archiveConfirm: 'تأرشف المنتج ده؟ سجله هيفضل محفوظ.',
   stockLater: 'تقدر تسجل الكميات يدويًا في المخزون أو من صفحة المشتريات.',
 } : {
+  imageUpload: { choose: 'Choose image', replace: 'Replace image', remove: 'Remove', retry: 'Retry', help: 'Choose JPEG, PNG or WebP, up to 5 MB and 16 million pixels.', uploading: 'Uploading image…', uploaded: 'Image uploaded', error: 'Image upload failed. Retry or choose another image.', invalid: 'Choose a valid JPEG, PNG or WebP image up to 5 MB and 16 million pixels.', placeholder: 'No image' },
+  imagePlaceholder: 'No image', imageLabel: 'Image (optional)', imageUnavailable: 'Image editing is not available for this catalog yet.', imageInvalid: 'The saved image is invalid. Remove or replace it.',
   title: 'Products', subtitle: 'Create your shop catalog and sale prices.',
-  add: 'Add product', edit: 'Edit', archive: 'Archive', cancel: 'Cancel', save: 'Save product', saving: 'Saving...', loading: 'Loading products…',
+  add: 'Add product', edit: 'Edit', editTitle: 'Edit product', archive: 'Archive', cancel: 'Cancel', save: 'Save product', saving: 'Saving...', loading: 'Loading products…',
   name: 'Product name', sku: 'SKU', barcode: 'Barcode', price: 'Sale price', category: 'Category', allCategories: 'All categories', previous: 'Previous', next: 'Next', import: 'Import & setup',
   search: 'Search name or code', empty: 'No products yet.', noResults: 'No matching products.',
   noShop: 'Create a shop from the dashboard first.', dashboard: 'Dashboard',
@@ -77,10 +88,11 @@ const emptyPage = (): ProductPage => ({ items: [], total: 0, page: 1, pageSize }
 const { data: productPage, pending, error, refresh } = useAsyncData(
   'shop-data:products', async () => {
     if (!currentId.value) return emptyPage()
-    const { data, error: queryError } = await shopRpc.rpc('list_products', {
+    const args = {
       p_shop_id: currentId.value, p_search: search.value.trim() || null,
       p_category_id: categoryFilter.value || null, p_page: page.value, p_page_size: pageSize,
-    })
+    }
+    const { data, error: queryError } = await media.request('products', args, () => shopRpc.rpc('list_products', args))
     if (queryError) throw queryError
     return data as ProductPage
   }, { watch: [currentId, search, categoryFilter, page], default: emptyPage },
@@ -89,9 +101,12 @@ const products = computed(() => productPage.value.items)
 watch([search, categoryFilter], () => { page.value = 1 })
 
 function resetForm() {
+  upload.reset()
+  form.imageObjectName = null
   editingId.value = null
   showForm.value = false
   actionError.value = ''
+  form.imageUrl = ''
   form.name = ''
   form.sku = ''
   form.barcode = ''
@@ -107,7 +122,10 @@ function openCreate() {
 }
 
 function openEdit(product: Product) {
+  upload.reset(product.imageUrl ?? '')
+  form.imageObjectName = product.imageObjectName ?? null
   editingId.value = product.id
+  form.imageUrl = product.imageUrl ?? ''
   form.name = product.name
   form.sku = product.sku ?? ''
   form.barcode = product.barcode ?? ''
@@ -118,6 +136,8 @@ function openEdit(product: Product) {
 }
 
 function readableError(message?: string) {
+  if (message === 'INVALID_CATALOG_IMAGE') return copy.value.imageInvalid
+  if (message === 'CATALOG_MEDIA_UNAVAILABLE') return copy.value.imageUnavailable
   const quotaMessage = planQuotaMessage(message, locale.value)
   if (quotaMessage) return quotaMessage
   if (message === 'SHOP_SUBSCRIPTION_INACTIVE' || message === 'SHOP_PERMISSION_DENIED') return copy.value.access
@@ -126,7 +146,7 @@ function readableError(message?: string) {
 }
 
 async function save() {
-  if (!currentId.value || saving.value || !canManage.value) return
+  if (!currentId.value || saving.value || ['uploading', 'error', 'invalid'].includes(upload.status.value) || !canManage.value) return
   actionError.value = ''
   const price = Number(form.salePrice)
   if (form.name.trim().length < 2 || form.name.trim().length > 160
@@ -134,9 +154,11 @@ async function save() {
     actionError.value = copy.value.invalid
     return
   }
+  if (!form.imageObjectName && !validCatalogImage(form.imageUrl)) { actionError.value = copy.value.imageInvalid; return }
   saving.value = true
   try {
-    const { error: saveError } = await shopRpc.rpc('save_product_with_category', {
+    const args = {
+      ...(productPage.value.supportsUploads ? { imageObjectName: form.imageObjectName } : {}),
       p_shop_id: currentId.value,
       p_product_id: editingId.value,
       p_name: form.name.trim(),
@@ -144,8 +166,9 @@ async function save() {
       p_barcode: form.barcode.trim() || null,
       p_sale_price: price,
       p_category_id: form.categoryId || null,
-    })
-    if (saveError) throw saveError
+    }
+    const { error: saveError } = await media.request('save_product', args, () => shopRpc.rpc('save_product_with_category', args), !form.imageObjectName && form.imageUrl.trim() ? new URL(form.imageUrl.trim()).href : null, productPage.value.supportsMedia === true)
+    if (saveError) throw new Error(saveError.message)
     resetForm()
     await refresh()
   } catch (error) {
@@ -179,78 +202,18 @@ function money(value: number) {
     style: 'currency', currency: 'EGP', maximumFractionDigits: 2,
   }).format(value)
 }
+
+useShopRealtime('products', () => formDirty.value)
+
+const categoryOptions = computed(() => [{ value: '', label: copy.value.allCategories }, ...categories.value.map(category => ({ value: category.id, label: category.name }))])
+const itemViews = computed(() => products.value.map(product => ({ id: product.id, name: product.name, category: product.category_name || '—', sku: product.sku || '—', barcode: product.barcode || '—', price: money(Number(product.sale_price)), schedule: '' })))
+const editorForm = computed({
+  get: () => ({ imageUrl: form.imageUrl, name: form.name, description: '', sku: form.sku, barcode: form.barcode, price: form.salePrice, category: form.categoryId, discount: { type: '', value: 0 }, schedule: { enabled: false, duration: null, cleanup: 0, locations: [], staff: [] } }),
+  set: (value: import('@building-suit/ui/types/cataloguePresentation').BsCatalogueForm) => Object.assign(form, { imageUrl: value.imageUrl ?? '', name: value.name, sku: value.sku, barcode: value.barcode, salePrice: value.price, categoryId: value.category }),
+})
+function editById(id: string) { const row = products.value.find(product => product.id === id); if (row) openEdit(row) }
+function archiveById(id: string) { const row = products.value.find(product => product.id === id); if (row) return archive(row) }
 </script>
-
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-end justify-between gap-4">
-      <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <div v-if="current" class="flex flex-wrap gap-2"><NuxtLink to="/catalog-import" class="ls-btn">{{ copy.import }}</NuxtLink></div>
-    </header>
-
-    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
-    <template v-else-if="current">
-      <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm dark:bg-[var(--bs-status-info-bg)]">{{ copy.stockLater }}</p>
-      <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
-
-      <BsRecordActionDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="save">
-        <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.sku }}<input v-model="form.sku" type="text" maxlength="80" class="ls-input"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.barcode }}<input v-model="form.barcode" type="text" maxlength="80" class="ls-input"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.price }}<input v-model.number="form.salePrice" type="number" min="0" step="0.01" required class="ls-input"></label>
-        <label class="space-y-2 text-sm font-bold">{{ copy.category }}<select v-model="form.categoryId" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></label>
-      </BsRecordActionDialog>
-
-      <div class="overflow-hidden ls-card">
-        <BsDataTable
-          :value="products"
-          :label="copy.title"
-          :loading="pending"
-          :error="error ? copy.readError : null"
-          :capabilities="{ insert: canManage, edit: canManage, archive: canManage }"
-          :action-labels="{ insert: copy.add, edit: copy.edit, archive: copy.archive }"
-          :row-action-pending="(action, product) => action === 'archive' && archivingId === product.id"
-          searchable
-          :search-label="copy.search"
-          lazy
-          paginator
-          :rows="pageSize"
-          :first="(page - 1) * pageSize"
-          :total-records="productPage.total"
-          :always-show-paginator="false"
-          data-key="id"
-          :row-class="() => 'border-t border-border'"
-          @search="value => search = value"
-          @page="page = $event.page + 1"
-          @retry="refresh()"
-          @create="openCreate"
-          @edit="openEdit"
-          @archive="archive"
-        >
-  <template #filters><BsSelect v-model="categoryFilter" :label="copy.category" :options="[{ id: '', name: copy.allCategories }, ...categories]" option-label="name" option-value="id" /></template>
-  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4 font-bold">
-    <template #header>{{ copy.name }}</template>
-    <template #body="{ data: product }">{{ product.name }}</template>
-  </Column>
-  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-    <template #header>{{ copy.category }}</template>
-    <template #body="{ data: product }">{{ product.category_name || '—' }}</template>
-  </Column>
-  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-    <template #header>{{ copy.sku }}</template>
-    <template #body="{ data: product }">{{ product.sku || '—' }}</template>
-  </Column>
-  <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-    <template #header>{{ copy.barcode }}</template>
-    <template #body="{ data: product }">{{ product.barcode || '—' }}</template>
-  </Column>
-  <Column header-class="px-5 py-3 text-end" body-class="px-5 py-4 text-end">
-    <template #header>{{ copy.price }}</template>
-    <template #body="{ data: product }">{{ money(Number(product.sale_price)) }}</template>
-  </Column>
-  <template #empty><BsStateSurface state="empty" :title="search || categoryFilter ? copy.noResults : copy.empty" /></template>
-</BsDataTable>
-      </div>
-    </template>
-  </div>
+  <BsCataloguePage v-model:form="editorForm" v-model:visible="showForm" v-model:category="categoryFilter" kind="product" :copy="copy" :context="{ available: Boolean(current), loading: shopLoading, dashboardTo: '/dashboard', importTo: '/catalog-import' }" :rows="itemViews" :categories="categoryOptions" :table="{ loading: pending, error: error ? copy.readError : null, canManage, archivePendingId: archivingId, pageSize, page, total: productPage.total, filtered: Boolean(search || categoryFilter) }" :editor="{ uploadBlocked: ['uploading', 'error', 'invalid'].includes(upload.status.value), mediaSupported: productPage.supportsUploads === true, editing: Boolean(editingId), dirty: formDirty, pending: saving, error: actionError }"  :upload="{ preview: upload.preview.value, status: upload.status.value }" @image-select="upload.select($event)" @image-remove="removeImage" @image-retry="upload.retry()" @search="search = $event" @page="page = $event" @retry="refresh()" @create="openCreate" @edit="editById" @archive="archiveById" @submit="save" />
 </template>

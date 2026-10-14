@@ -1,4 +1,4 @@
-import type { Ref } from 'vue'
+import { onMounted, onBeforeUnmount, type Ref } from 'vue'
 
 /**
  * Closes a popover when the user clicks away or presses Escape.

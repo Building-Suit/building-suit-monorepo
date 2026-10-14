@@ -47,24 +47,11 @@ async function signIn() {
 </script>
 
 <template>
-  <BsAuthLayout :product-name="t('app.name')" :home-label="t('marketing.home')" :title="t('auth.welcomeTitle')" :description="t('auth.welcomeBody')">
-    <template #logo="{ tone }"><BsProductLogo name="Ledger Suit" asset-prefix="/brand/ledger-suit" :tone="tone" class="h-auto w-56" /></template>
-        <BsAuthForm
-          :eyebrow="t('auth.welcomeEyebrow')" :title="t('auth.signIn')" :description="t('auth.subtitle')"
-          :pending="pending" :error="error" :submit-label="t('auth.signIn')" :pending-label="t('auth.signingIn')"
-          :data-hydrated="hydrated" @submit="signIn"
-        >
-          <FloatingField :label="t('auth.email')">
-            <input id="email" v-model="email" type="email" autocomplete="email" required dir="ltr" class="ls-input">
-          </FloatingField>
-          <FloatingField :label="t('auth.password')">
-            <input id="password" v-model="password" type="password" autocomplete="current-password" required dir="ltr" class="ls-input">
-          </FloatingField>
-          <template #footer>{{ t('auth.needAccount') }} <NuxtLink to="/signup" class="font-bold text-fg underline underline-offset-4">{{ t('landing.startTrial') }}</NuxtLink></template>
-        </BsAuthForm>
-        <nav class="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-fg-muted" :aria-label="t('auth.legalNavigation')">
-          <NuxtLink to="/privacy" class="hover:text-fg">{{ t('marketing.privacy') }}</NuxtLink>
-          <NuxtLink to="/contact" class="hover:text-fg">{{ t('marketing.contact') }}</NuxtLink>
-        </nav>
-  </BsAuthLayout>
+  <BsSignInPage
+    v-model:email="email" v-model:password="password"
+    :product="{ name: t('app.name'), assetPrefix: '/brand/ledger-suit', homeLabel: t('marketing.home'), title: t('auth.welcomeTitle'), description: t('auth.welcomeBody') }"
+    :copy="{ eyebrow: t('auth.welcomeEyebrow'), title: t('auth.signIn'), description: t('auth.subtitle'), email: t('auth.email'), password: t('auth.password'), submit: t('auth.signIn'), pending: t('auth.signingIn'), accountPrompt: t('auth.needAccount'), signup: t('landing.startTrial') }"
+    signup-to="/signup" :legal="[{ to: '/privacy', label: t('marketing.privacy') }, { to: '/contact', label: t('marketing.contact') }]"
+    :pending="pending" :error="error" :hydrated="hydrated" @submit="signIn"
+  />
 </template>

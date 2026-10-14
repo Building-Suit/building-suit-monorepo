@@ -57,7 +57,7 @@ const current = computed(() => props.steps[props.step - 1])
 </template>
 
 <style>
-.bs-signup-wizard { display: grid; gap: var(--bs-space-6); }
+.bs-signup-wizard { display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr); gap: var(--bs-space-6); }
 .bs-signup-wizard__steps { display: flex; gap: var(--bs-space-3); padding: 0; margin: 0; list-style: none; }
 .bs-signup-wizard__step { display: flex; min-width: 0; flex: 1 1 0; align-items: flex-start; gap: var(--bs-space-2); }
 .bs-signup-wizard__step[data-state='upcoming'] { opacity: .55; }

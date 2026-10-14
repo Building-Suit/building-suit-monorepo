@@ -1,0 +1,3643 @@
+{
+  "task_states": [
+    {
+      "status": "complete",
+      "task_id": "BS-UI-ZN-OTHER-SUITS-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-ZN-DATA-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-VAL-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-V2-BASELINE-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M2-PAYCORE-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M2-WEBHOOK-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M2-PAYMOB-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M2-XPAY-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-SA-EVIDENCE-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M2-PAYTABS-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M2-PAYPAL-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M2-AUTOACT-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SAS-M1-CONFIG-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-VER-002A"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M2-RECON-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M3-PRICING-POLICY-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M3-DISCOUNTS-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-ZN-PATTERNS-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M3-PLAN-CATALOG-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M3-ENTITLEMENTS-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-PAY-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-PUR-002"
+    },
+    {
+      "status": "complete",
+      "task_id": "SAS-M1-AUTH-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M3-PRICE-EXPLAIN-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M4-CUSTOMERS-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M4-USERS-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-UX-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M4-SUBSCRIPTIONS-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M4-USAGE-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M4-SUIT-OPS-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-BASE-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M4-EVENTS-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-SA-CUSTOM-OFFER-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M5-RBAC-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-BASE-CHK-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M5-ANALYTICS-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M5-NOTIFICATIONS-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-ZN-LEDGER-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-BARBER-COMP-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M5-SECURITY-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SAS-M5-SUPPORT-SESSION-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0002"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-SAFE-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0003"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0004"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0005"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0006"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0007"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0008"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0101"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-EXP-002"
+    },
+    {
+      "status": "planned",
+      "task_id": "LS-UI-004"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0102"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-UI-PRO-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0103"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-UI-PRO-010"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-UI-PRO-009"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-UI-PRO-008"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-UI-PRO-007"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-UI-PRO-006"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-UI-PRO-005"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-UI-PRO-004"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-UI-PRO-003"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-UI-PRO-002"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0104"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0105"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0106"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0107"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0201"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0202"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0203"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-ZN-BROWSER-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LAUNCH-AUTH-EMAIL-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LAUNCH-BASELINE-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-APPT-002"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0204"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-ACC-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-ADMIN-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-ADMIN-002"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-BILL-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-BILL-002"
+    },
+    {
+      "status": "blocked",
+      "task_id": "LS-BILL-003"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-BUG-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-EG-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-EG-002"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-FIX-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-FIX-002"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-FX-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-GROWTH-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-PLAN-ADMIN-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-SA-FUTURE-SUIT-M4-VALIDATION-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-I18N-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "LS-I18N-002"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-MIG-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-MIG-002"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-MIG-003"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-MIG-004"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-ONB-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-OPS-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-PERF-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-PERF-002"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-PERF-003"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-SERV-002"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0205"
+    },
+    {
+      "status": "in_progress",
+      "task_id": "SAS-M1-GATE-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-PLAN-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-PROD-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-REPORT-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-SEC-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-SUP-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-UI-001"
+    },
+    {
+      "status": "blocked",
+      "task_id": "LS-UI-002"
+    },
+    {
+      "status": "planned",
+      "task_id": "LS-UI-003"
+    },
+    {
+      "status": "planned",
+      "task_id": "LS-UI-005"
+    },
+    {
+      "status": "planned",
+      "task_id": "LS-UI-006"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-UX-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-UX-002"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-UX-003"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-UX-004"
+    },
+    {
+      "status": "complete",
+      "task_id": "SAS-M1-ARCH-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LAUNCH-SALE-COPY-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0207"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-ADMIN-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-APPT-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-BARBER-CORE-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-BILLING-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-CASH-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-CATALOG-IMPORT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-EGY-ETA-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-HOT-AR-EG-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-HOT-AUTH-OTP-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-HOT-COPY-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-HOT-LOC-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-HOT-ONBOARD-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-CHROME-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-HOT-OPS-UX-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-HOT-PLAN-LIMITS-V2-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-HOT-PLAN-UI-V2-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-HOT-PLAN-UX-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-HOT-PUBLIC-LEGAL-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-HOT-TRIAL-7D-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LOC-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-MARKET-VAL-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-OFFLINE-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-PILOT-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-PLAN-BILLING-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-PLAN-CATALOG-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-REPAIR-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-REALTIME-ADOPTION-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-PLAN-UI-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-POS-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-RECEIPT-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-RPT-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-RPT-LITE-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-SA-BRIDGE-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-SALE-002"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-SALE-CORR-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-SET-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-SUB-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-TEAM-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0208"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0201A"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0201B"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-UX-FOUNDATION-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-UX-PILOT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0206"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-010"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-WEB-APPT-ACCESS-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-WEB-CATALOG-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0301"
+    },
+    {
+      "status": "complete",
+      "task_id": "SAS-M1-SHOP-ADAPTER-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-009"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-WEB-CUSTOMER-PORTAL-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-WEB-LAUNCH-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-WEB-PROFILE-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-WEB-PUBLIC-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-012"
+    },
+    {
+      "status": "planned",
+      "task_id": "SS-WEB-SLUG-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0302"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0303"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-010-SQL-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-014"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0304"
+    },
+    {
+      "status": "cancelled",
+      "task_id": "SS-WEB-CHANGELOG-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0305"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-011"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0306"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0307"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0308"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0309"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-PILOT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-RUNBOOK-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-E2E-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-OBS-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-013-SQL-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-UX-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-POL-002"
+    },
+    {
+      "status": "complete",
+      "task_id": "SAS-M1-BOOT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-ABUSE-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-AUDIT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-ADMIN-CRM-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-012-RV-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-DASH-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LAUNCH-SUPPORT-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-014-PF-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-ADMIN-PAYOUT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0310"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-PAYOUT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-BAL-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-SA-FUTURE-SUIT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-COMM-002"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-COMM-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-BATCH-READY-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-LIFE-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-INT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-ATTR-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-CUST-002"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-CUST-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-POL-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-ADMIN-OPP-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-OPP-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-RBAC-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-AUTH-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-DATA-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "CAS-M1-BOOT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "SHOP-CAS-M1-INT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0311"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0312"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0313"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0314"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0316"
+    },
+    {
+      "status": "complete",
+      "task_id": "SAS-M1-CUSTOM-OFFER-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0318"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0321"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0322"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0324"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0325"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0326"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0327"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0328"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0329"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0330"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0331"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0332"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0333"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0334"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0335"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0336"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0337"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0338"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0339"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0340"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0342"
+    },
+    {
+      "status": "complete",
+      "task_id": "SAS-M1-REGISTRY-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0343"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0344"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0345"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0346"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-LAUNCH-ACCESS-UI-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-ZN-FINAL-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0315"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0317"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0319"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LAUNCH-SINGLE-SESSION-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-SA-SHELL-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-002"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LAUNCH-FAST-PAY-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-CHANGELOG-VERSION-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-PR-CHAIN-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LAUNCH-REALTIME-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-006"
+    },
+    {
+      "status": "complete",
+      "task_id": "SAS-M1-AUDIT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0401"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0402"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0403"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0404"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0405"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0406"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0410"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0411"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0413"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0414"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0415"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0416"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0417"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0418"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0419"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0420"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0421"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0422"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0423"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-M4-FRD-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-M4-FRD-002"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-M4-FRD-003"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-M4-FRD-004"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-M4-FRD-005"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-M4-FRD-006"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-M4-FRD-007"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-M4-FRD-008"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-M4-FRD-009"
+    },
+    {
+      "status": "planned",
+      "task_id": "BS-M4-FRD-010"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0424"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0425"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0426"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0427"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0428"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0429"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0430"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-REL-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0431"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-BIZ-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-015"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0432"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0433"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0320"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0323"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0341"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-003"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-WORKFLOW-001-R1"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-004"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-005"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-CUST-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-WORKFLOW-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-SALE-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-STOCK-002"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-013"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LAUNCH-SOLO-VARIANTS-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-CANONICAL-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-LEDGER-MIG-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SAS-M1-INSTAPAY-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-007"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-010"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LAUNCH-POS-CUSTOMER-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-SHOP-MIG-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-RPT-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "IS-BASE-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "IS-BOOT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-TEN-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-ITEM-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-WH-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-STOCK-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-TRACK-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-RECV-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-ISSUE-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-TRF-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-RES-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-COUNT-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-ADJ-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-COST-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-LOCK-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-REP-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-IMP-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-INT-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-TABLE-CRUD-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-SAFE-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "IS-VER-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-LANDING-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "LS-EG-003"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-012"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-008"
+    },
+    {
+      "status": "planned",
+      "task_id": "LS-BILL-004"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-009"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-014"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-003"
+    },
+    {
+      "status": "complete",
+      "task_id": "V2-IMP-011"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-CONVERGENCE-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LAUNCH-BRAND-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-REALTIME-FOUNDATION-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LAUNCH-LEGAL-AUDIT-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-004"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-PLAN-LIMITS-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-002"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-HOT-SHOP-SET-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0501"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0502"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-HOT-PLAN-CATALOG-V2-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0505"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-006"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-007"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0506"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0610"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0611"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0612"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-AUTH-001"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0613"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0614"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0615"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0616"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0617"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0618"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0619"
+    },
+    {
+      "status": "planned",
+      "task_id": "TASK-0412"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-PRIMITIVES-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-FOUNDATION-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SAS-M1-BILLING-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-LEDGER-CONSUME-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-SHOP-CONSUME-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-FINAL-GATE-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-005"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-008"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-ZN-CONTRACT-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-ZN-PUBLIC-CHROME-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-ZN-PRIMITIVES-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-ZN-FORMS-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-010-CI-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "CP-RES-013"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-ZN-SHOP-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "BS-UI-ZN-GENERATOR-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LAUNCH-TEAM-001"
+    },
+    {
+      "status": "complete",
+      "task_id": "SS-LAUNCH-CASH-POLICY-001"
+    }
+  ],
+  "workstreams": [
+    {
+      "slug": "shared",
+      "active": true,
+      "metadata": {
+        "current_suits": [
+          "ledger-suit",
+          "shop-suit",
+          "inventory-suit",
+          "automation-suit"
+        ],
+        "foundation_gate": true,
+        "future_suit_rule": "Any apps/*-suit consumer must inherit the same shared UI and interaction contracts.",
+        "rendered_tag_rule": "^Bs[A-Z]",
+        "adapter_only_ui_rule": true,
+        "foundation_repair_pack": "2026-10-01",
+        "zero_native_approved_on": "2026-10-02",
+        "zero_native_starts_after": "BS-UI-FINAL-GATE-001",
+        "design_system_owner_locked": true,
+        "zero_native_foundation_planned": true,
+        "local_vue_component_final_count": 0,
+        "final_browser_acceptance_required": true
+      },
+      "stack_key": "shared",
+      "suit_slug": "shared",
+      "created_at": "2026-10-01T12:58:00.997123+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "updated_at": "2026-10-07T06:16:06.436944+00:00",
+      "display_name": "Building Suit — Shared UI Foundation",
+      "model_profile": "standard",
+      "retry_policy_id": "shared-foundation-five",
+      "application_path": "packages/ui",
+      "concurrency_policy": {
+        "serialized": true
+      },
+      "publication_config": {
+        "merge_authorized": false,
+        "deployment_authorized": false,
+        "hosted_database_changes_authorized": false,
+        "review_required_before_integration": true
+      },
+      "verification_config": {
+        "commands": [
+          {
+            "args": [
+              "--filter",
+              "@building-suit/automation-suit",
+              "build"
+            ],
+            "name": "automation-build",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "automation-build"
+            ]
+          },
+          {
+            "args": [
+              "--filter",
+              "@building-suit/docs",
+              "build"
+            ],
+            "name": "docs-build",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "docs-build"
+            ]
+          },
+          {
+            "args": [
+              "--test",
+              "tooling/new-platform/tests/generate.test.mjs"
+            ],
+            "name": "generator-tests",
+            "program": "node",
+            "required": true,
+            "capabilities": [
+              "generator"
+            ]
+          },
+          {
+            "args": [
+              "--filter",
+              "@building-suit/inventory-suit",
+              "build"
+            ],
+            "name": "inventory-build",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "inventory-build"
+            ]
+          },
+          {
+            "args": [
+              "--filter",
+              "@building-suit/ledger-suit",
+              "build"
+            ],
+            "name": "ledger-build",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "ledger-build"
+            ]
+          },
+          {
+            "args": [
+              "--filter",
+              "@building-suit/ledger-suit",
+              "exec",
+              "playwright",
+              "test",
+              "tests/e2e/shared-ui-foundation.spec.ts",
+              "--workers=1",
+              "--retries=0",
+              "--repeat-each=2"
+            ],
+            "name": "ledger-foundation-browser",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "browser"
+            ]
+          },
+          {
+            "args": [
+              "--test",
+              "apps/ledger-suit/tests/unit/shared-ui-migration.test.mjs"
+            ],
+            "name": "ledger-shared-ui-tests",
+            "program": "node",
+            "required": true,
+            "capabilities": [
+              "ledger-migration"
+            ]
+          },
+          {
+            "args": [
+              "lint"
+            ],
+            "name": "root-lint",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "lint"
+            ]
+          },
+          {
+            "args": [
+              "typecheck"
+            ],
+            "name": "root-typecheck",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "typecheck"
+            ]
+          },
+          {
+            "args": [
+              "--test",
+              "packages/ui/tests/foundation.test.mjs",
+              "packages/ux/tests/export.test.mjs"
+            ],
+            "name": "shared-ui-tests",
+            "program": "node",
+            "required": true,
+            "capabilities": [
+              "shared-ui",
+              "data-table"
+            ]
+          },
+          {
+            "args": [
+              "--filter",
+              "@building-suit/shop-suit",
+              "build"
+            ],
+            "name": "shop-build",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "shop-build"
+            ]
+          },
+          {
+            "args": [
+              "--filter",
+              "@building-suit/shop-suit",
+              "exec",
+              "playwright",
+              "test",
+              "tests/e2e/shared-ui-foundation.spec.ts",
+              "--workers=1",
+              "--retries=0",
+              "--repeat-each=2"
+            ],
+            "name": "shop-foundation-browser",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "browser"
+            ]
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/shared-ui-migration.test.mjs"
+            ],
+            "name": "shop-shared-ui-tests",
+            "program": "node",
+            "required": true,
+            "capabilities": [
+              "shop-migration"
+            ]
+          },
+          {
+            "args": [
+              "check"
+            ],
+            "name": "workspace-check",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "workspace-boundaries",
+              "source-ast"
+            ]
+          },
+          {
+            "args": [
+              "install",
+              "--frozen-lockfile",
+              "--prefer-offline"
+            ],
+            "name": "batch-frozen-dependencies",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "dependency-install"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/batch-frozen-dependencies"
+            ]
+          },
+          {
+            "args": [
+              "tooling/new-platform/verify-fixture.mjs"
+            ],
+            "name": "verification-obligation-blocked-19",
+            "program": "node",
+            "required": true,
+            "capabilities": [
+              "generator",
+              "generated-fixture",
+              "strict-boundary"
+            ],
+            "changed_paths": [
+              "tooling/new-platform/",
+              "tooling/checks/suit-template-boundaries.mjs"
+            ]
+          },
+          {
+            "args": [
+              "tooling/new-platform/verify-fixture.mjs"
+            ],
+            "name": "verification-obligation-blocked-20",
+            "program": "node",
+            "required": true,
+            "capabilities": [
+              "generator",
+              "generated-fixture",
+              "strict-boundary"
+            ],
+            "changed_paths": [
+              "tooling/new-platform/",
+              "tooling/checks/suit-template-boundaries.mjs"
+            ]
+          },
+          {
+            "args": [
+              "tooling/checks/suit-template-boundaries.mjs",
+              "--require-strict"
+            ],
+            "name": "strict-suit-template-boundaries",
+            "program": "node",
+            "required": true
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "packages/testing/playwright.config.ts",
+              "packages/testing/e2e/shared-ui.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "name": "shared-catalogue-browser",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "browser",
+              "shared-catalogue"
+            ]
+          },
+          {
+            "args": [
+              "--test",
+              "packages/data-access/tests/scope.test.mjs",
+              "packages/ux/tests/export.test.mjs"
+            ],
+            "name": "review-data-access-ux-tests",
+            "program": "node",
+            "required": true,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/review-data-access-ux-tests"
+            ]
+          },
+          {
+            "args": [
+              "--test",
+              "packages/contracts/tests/bs-realtime-foundation-001-1.test.mjs"
+            ],
+            "name": "bs-realtime-foundation-001-obligation-1-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/bs-realtime-foundation-001-obligation-1-unit"
+            ],
+            "reviewed_task_id": "BS-REALTIME-FOUNDATION-001",
+            "obligation_description": "Run shared data-access/UX tests, workspace ownership checks and representative Ledger/Shop builds."
+          },
+          {
+            "args": [
+              "--test",
+              "packages/contracts/tests/bs-realtime-adoption-001-1.test.mjs"
+            ],
+            "name": "bs-realtime-adoption-001-obligation-1-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/bs-realtime-adoption-001-obligation-1-unit"
+            ],
+            "reviewed_task_id": "BS-REALTIME-ADOPTION-001",
+            "obligation_description": "Run affected Suit typecheck/build/tests plus shared realtime tests and cross-Suit ownership checks."
+          },
+          {
+            "args": [
+              "--test",
+              "packages/contracts/tests/bs-changelog-version-001-1.test.mjs"
+            ],
+            "name": "bs-changelog-version-001-obligation-1-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/bs-changelog-version-001-obligation-1-unit"
+            ],
+            "reviewed_task_id": "BS-CHANGELOG-VERSION-001",
+            "obligation_description": "Shared schema/unit tests for versions, status, publish-time New window, bilingual requirements and filtering."
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "packages/contracts/tests/e2e/bs-changelog-version-001-2.config.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "name": "bs-changelog-version-001-obligation-2-browser",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/bs-changelog-version-001-obligation-2-browser"
+            ],
+            "reviewed_task_id": "BS-CHANGELOG-VERSION-001",
+            "obligation_description": "Shared UI EN/AR/RTL/LTR browser tests and representative Suit consumer builds."
+          },
+          {
+            "args": [
+              "--test",
+              "packages/contracts/tests/bs-sa-future-suit-001-1.test.mjs"
+            ],
+            "name": "bs-sa-future-suit-001-obligation-1-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/bs-sa-future-suit-001-obligation-1-unit"
+            ],
+            "reviewed_task_id": "BS-SA-FUTURE-SUIT-001",
+            "obligation_description": "Shared contract/type tests."
+          },
+          {
+            "args": [
+              "--test",
+              "packages/contracts/tests/bs-sa-future-suit-001-2.test.mjs"
+            ],
+            "name": "bs-sa-future-suit-001-obligation-2-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/bs-sa-future-suit-001-obligation-2-unit"
+            ],
+            "reviewed_task_id": "BS-SA-FUTURE-SUIT-001",
+            "obligation_description": "Fixture future-Suit onboarding test."
+          },
+          {
+            "args": [
+              "--test",
+              "packages/contracts/tests/bs-sa-future-suit-001-3.test.mjs"
+            ],
+            "name": "bs-sa-future-suit-001-obligation-3-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/bs-sa-future-suit-001-obligation-3-unit"
+            ],
+            "reviewed_task_id": "BS-SA-FUTURE-SUIT-001",
+            "obligation_description": "Zero-native/shared ownership checks."
+          }
+        ],
+        "legacy_plan_mappings": {
+          "Shop build": {
+            "kind": "command",
+            "command": "shop-build",
+            "version": 2,
+            "requires": [
+              "shop-build"
+            ]
+          },
+          "Ledger build": {
+            "kind": "command",
+            "command": "ledger-build",
+            "version": 2,
+            "requires": [
+              "ledger-build"
+            ]
+          },
+          "Inventory build": {
+            "kind": "command",
+            "command": "inventory-build",
+            "version": 2,
+            "requires": [
+              "inventory-build"
+            ]
+          },
+          "generator tests": {
+            "kind": "command",
+            "command": "generator-tests",
+            "version": 2,
+            "requires": [
+              "generator"
+            ]
+          },
+          "Automation build": {
+            "kind": "command",
+            "command": "automation-build",
+            "version": 2,
+            "requires": [
+              "automation-build"
+            ]
+          },
+          "Ledger/Shop builds": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "ledger-build",
+              "shop-build"
+            ],
+            "requires": [
+              "ledger-build",
+              "shop-build"
+            ]
+          },
+          "shared UI/UX tests": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "shared-ui-tests"
+            ],
+            "requires": [
+              "shared-ui"
+            ]
+          },
+          "docs catalogue build": {
+            "kind": "command",
+            "command": "docs-build",
+            "version": 2,
+            "requires": [
+              "docs-build"
+            ]
+          },
+          "Shop foundation browser": {
+            "kind": "command",
+            "command": "shop-foundation-browser",
+            "version": 2,
+            "requires": [
+              "browser"
+            ]
+          },
+          "all current Suit builds": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "ledger-build",
+              "shop-build",
+              "inventory-build",
+              "automation-build",
+              "docs-build"
+            ]
+          },
+          "shared data-table tests": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "shared-ui-tests"
+            ],
+            "requires": [
+              "data-table"
+            ]
+          },
+          "Root typecheck and lint.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "root-typecheck",
+              "root-lint"
+            ]
+          },
+          "Shared UI/UX unit tests.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "shared-ui-tests"
+            ],
+            "requires": [
+              "shared-ui"
+            ]
+          },
+          "Ledger foundation browser": {
+            "kind": "command",
+            "command": "ledger-foundation-browser",
+            "version": 2,
+            "requires": [
+              "browser"
+            ]
+          },
+          "Shop foundation browser test": {
+            "kind": "command",
+            "command": "shop-foundation-browser",
+            "version": 2,
+            "requires": [
+              "browser"
+            ]
+          },
+          "Ledger foundation browser test": {
+            "kind": "command",
+            "command": "ledger-foundation-browser",
+            "version": 2,
+            "requires": [
+              "browser"
+            ]
+          },
+          "future generator strict fixture": {
+            "kind": "planned_test",
+            "blocker": "future_generator_fixture_not_implemented",
+            "version": 2,
+            "expected_outputs": [
+              "the strict generator fixture",
+              "a registered command that executes it"
+            ]
+          },
+          "Ledger/Shop migration unit tests": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "ledger-shared-ui-tests",
+              "shop-shared-ui-tests"
+            ],
+            "requires": [
+              "ledger-migration",
+              "shop-migration"
+            ]
+          },
+          "Shop shared-ui migration unit tests": {
+            "kind": "command",
+            "command": "shop-shared-ui-tests",
+            "version": 2,
+            "requires": [
+              "shop-migration"
+            ]
+          },
+          "Ledger shared-ui migration unit tests": {
+            "kind": "command",
+            "command": "ledger-shared-ui-tests",
+            "version": 2,
+            "requires": [
+              "ledger-migration"
+            ]
+          },
+          "generator dry run into disposable path": {
+            "kind": "planned_test",
+            "blocker": "generator_disposable_fixture_runner_not_registered",
+            "version": 2,
+            "expected_outputs": [
+              "a registered disposable generator command",
+              "generated fixture validation results"
+            ]
+          },
+          "pnpm check / workspace boundary checks.": {
+            "kind": "command",
+            "command": "workspace-check",
+            "version": 2
+          },
+          "Ledger/Shop shared-ui migration unit tests": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "ledger-shared-ui-tests",
+              "shop-shared-ui-tests"
+            ],
+            "requires": [
+              "ledger-migration",
+              "shop-migration"
+            ]
+          },
+          "Build all affected Suits and docs catalogue.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "ledger-build",
+              "shop-build",
+              "inventory-build",
+              "automation-build",
+              "docs-build"
+            ]
+          },
+          "pnpm install --frozen-lockfile --prefer-offline": {
+            "kind": "command",
+            "command": "batch-frozen-dependencies",
+            "version": 2,
+            "requires": [
+              "dependency-install"
+            ]
+          },
+          "node tooling/checks/suit-template-boundaries.mjs": {
+            "kind": "planned_test",
+            "blocker": "missing_suit_template_boundary_runner",
+            "version": 2,
+            "expected_outputs": [
+              "tooling/checks/suit-template-boundaries.mjs",
+              "a registered command that executes the boundary runner"
+            ]
+          },
+          "Run shared UI/UX tests and ownership/workspace checks.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "shared-ui-tests",
+              "workspace-check"
+            ]
+          },
+          "Shop foundation Playwright spec with one worker and zero retries": {
+            "kind": "command",
+            "command": "shop-foundation-browser",
+            "version": 2,
+            "requires": [
+              "browser"
+            ]
+          },
+          "node tooling/checks/suit-template-boundaries.mjs --require-strict": {
+            "kind": "command",
+            "command": "strict-suit-template-boundaries",
+            "version": 2
+          },
+          "Ledger foundation Playwright spec with one worker and zero retries": {
+            "kind": "command",
+            "command": "ledger-foundation-browser",
+            "version": 2,
+            "requires": [
+              "browser"
+            ]
+          },
+          "node tooling/checks/suit-template-boundaries.mjs against generated fixture": {
+            "kind": "planned_test",
+            "blocker": "missing_generated_fixture_boundary_runner",
+            "version": 2,
+            "expected_outputs": [
+              "a disposable generated-Suit fixture",
+              "boundary assertions executed against that fixture"
+            ]
+          },
+          "Representative browser coverage for keyboard, responsive, RTL and theme behavior.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "ledger-foundation-browser",
+              "shop-foundation-browser",
+              "shared-catalogue-browser"
+            ]
+          },
+          "Run Ledger and Shop typecheck/build plus focused access-management browser/component checks.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "root-typecheck",
+              "ledger-build",
+              "shop-build",
+              "shared-ui-tests",
+              "ledger-shared-ui-tests",
+              "shop-shared-ui-tests",
+              "ledger-foundation-browser",
+              "shop-foundation-browser",
+              "shared-catalogue-browser"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "slug": "shop-suit",
+      "active": true,
+      "metadata": {},
+      "stack_key": "shop-suit",
+      "suit_slug": "shop-suit",
+      "created_at": "2026-09-25T21:53:53.761384+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "updated_at": "2026-10-07T06:16:06.436944+00:00",
+      "display_name": "Shop Suit",
+      "model_profile": null,
+      "retry_policy_id": null,
+      "application_path": "apps/shop-suit",
+      "concurrency_policy": {
+        "serialized": true
+      },
+      "publication_config": {
+        "merge_authorized": false,
+        "deployment_authorized": false,
+        "hosted_database_changes_authorized": false,
+        "review_required_before_integration": true
+      },
+      "verification_config": {
+        "mode": "focused",
+        "commands": [
+          {
+            "args": [
+              "diff",
+              "--check"
+            ],
+            "name": "git-diff-check",
+            "program": "git",
+            "required": true,
+            "capabilities": [
+              "diff-check"
+            ]
+          },
+          {
+            "args": [
+              "db:test:shop"
+            ],
+            "name": "shop-database-regression",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "database",
+              "billing-regression",
+              "plan-regression"
+            ]
+          },
+          {
+            "args": [
+              "--test",
+              "tooling/database/tests/environment.test.mjs"
+            ],
+            "name": "shop-environment-isolation",
+            "program": "node",
+            "required": true,
+            "changed_paths": [
+              "__verification-plan-only__/shop-environment-isolation"
+            ]
+          },
+          {
+            "args": [
+              "-e",
+              "const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'); const hits=[]; function walk(dir){for(const e of fs.readdirSync(dir,{withFileTypes:true})){const f=path.join(dir,e.name);if(e.isDirectory())walk(f);else if(/\\.(vue|ts|js|json)$/.test(e.name)){const lines=fs.readFileSync(f,'utf8').split('\\n');lines.forEach((line,i)=>{if(/\\b(?:Basic|Pro)\\b/.test(line))hits.push({file:f,line:i+1,text:line.trim()});});}}} walk('apps/shop-suit/app');walk('apps/shop-suit/i18n');console.log(JSON.stringify({scope:'browser-reachable Shop source and i18n',legacy_commercial_wording:hits,internal_compatibility_identifiers:'Lowercase persisted basic/pro identifiers and key names such as proPlanOnly remain technical identifiers; this gate rejects standalone Basic/Pro commercial wording, including EN/AR text.'},null,2));assert.equal(hits.length,0,'Customer-facing legacy Basic/Pro commercial wording remains');"
+            ],
+            "name": "shop-launch-baseline-copy-inspection",
+            "program": "node",
+            "required": true,
+            "capabilities": [
+              "browser",
+              "copy-inspection"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/shop-launch-baseline-copy-inspection"
+            ]
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "packages/testing/playwright.shop-ux.config.ts",
+              "cross-workflow-usability.spec.ts",
+              "--grep",
+              "retail routes, labels and responsive states|paged purchase choices, explicit stock confirmation and pending save"
+            ],
+            "name": "shop-launch-baseline-inventory-purchases-en-ar",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "e2e",
+              "inventory-purchases-en-ar"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/shop-launch-baseline-inventory-purchases-en-ar"
+            ]
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/appointments.test.mjs",
+              "apps/shop-suit/tests/unit/arabic-copy.test.mjs",
+              "apps/shop-suit/tests/unit/barber-service-scheduling.test.mjs",
+              "apps/shop-suit/tests/unit/billing.test.mjs",
+              "apps/shop-suit/tests/unit/cash-shifts.test.mjs",
+              "apps/shop-suit/tests/unit/catalog-import.test.mjs",
+              "apps/shop-suit/tests/unit/expenses.test.mjs",
+              "apps/shop-suit/tests/unit/general-copy.test.mjs",
+              "apps/shop-suit/tests/unit/locations.test.mjs",
+              "apps/shop-suit/tests/unit/operating-reports.test.mjs",
+              "apps/shop-suit/tests/unit/payment-evidence.test.mjs",
+              "apps/shop-suit/tests/unit/pilot-safety.test.mjs",
+              "apps/shop-suit/tests/unit/plan-catalog.test.mjs",
+              "apps/shop-suit/tests/unit/plan-ui.test.mjs",
+              "apps/shop-suit/tests/unit/platform-admin.test.mjs",
+              "apps/shop-suit/tests/unit/platform-plan-admin.test.mjs",
+              "apps/shop-suit/tests/unit/pos.test.mjs",
+              "apps/shop-suit/tests/unit/public-legal.test.mjs",
+              "apps/shop-suit/tests/unit/receipt-allocations.test.mjs",
+              "apps/shop-suit/tests/unit/sale-receipt.test.mjs",
+              "apps/shop-suit/tests/unit/shared-ui-migration.test.mjs",
+              "apps/shop-suit/tests/unit/shop-context.test.mjs",
+              "apps/shop-suit/tests/unit/shop-profile-settings.test.mjs",
+              "apps/shop-suit/tests/unit/signup-otp-recovery.test.mjs",
+              "apps/shop-suit/tests/unit/subscription-qualification.test.mjs",
+              "apps/shop-suit/tests/unit/super-admin-bridge.test.mjs",
+              "apps/shop-suit/tests/unit/team.test.mjs",
+              "apps/shop-suit/tests/unit/ux-async-actions.test.mjs"
+            ],
+            "name": "shop-launch-baseline-unit-review",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit",
+              "review"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/shop-launch-baseline-unit-review"
+            ]
+          },
+          {
+            "args": [
+              "check"
+            ],
+            "name": "shop-offer-workspace-check",
+            "program": "pnpm",
+            "required": true
+          },
+          {
+            "args": [
+              "exec",
+              "turbo",
+              "run",
+              "typecheck",
+              "lint",
+              "build",
+              "--filter=@building-suit/shop-suit"
+            ],
+            "name": "shop-quality",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "typecheck",
+              "lint",
+              "build"
+            ]
+          },
+          {
+            "cwd": "apps/shop-suit",
+            "args": [
+              "exec",
+              "supabase",
+              "db",
+              "advisors",
+              "--local",
+              "--type",
+              "security",
+              "--level",
+              "info",
+              "--fail-on",
+              "warn",
+              "--output-format",
+              "json"
+            ],
+            "name": "shop-security-advisors-evidence-001",
+            "program": "pnpm",
+            "required": true,
+            "capabilities": [
+              "security-review"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/shop-security-advisors-evidence-001"
+            ],
+            "reviewed_task_id": "SS-SA-EVIDENCE-001",
+            "reviewed_verification_id": 284,
+            "reviewed_source_fingerprint": "0f895b2d304eb1caaac8f816f625f949c06ce6b4b46ddb1471fac41d8fc6389d"
+          },
+          {
+            "args": [
+              "test"
+            ],
+            "name": "shop-unit-regression",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "changed_paths": [
+              "__verification-plan-only__/shop-unit-regression"
+            ]
+          },
+          {
+            "args": [
+              "apps/shop-suit/tests/run-private-offers.mjs"
+            ],
+            "name": "verification-obligation-blocked-13",
+            "program": "node",
+            "required": true,
+            "capabilities": [
+              "database",
+              "billing-regression",
+              "plan-regression",
+              "rpc",
+              "bridge"
+            ]
+          },
+          {
+            "args": [
+              "apps/shop-suit/tests/run-private-offers.mjs"
+            ],
+            "name": "verification-obligation-blocked-14",
+            "program": "node",
+            "required": true,
+            "capabilities": [
+              "database",
+              "billing-regression",
+              "plan-regression",
+              "rpc",
+              "bridge"
+            ]
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/signup-otp-recovery.test.mjs"
+            ],
+            "name": "shop-auth-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit",
+              "otp-recovery"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/shop-auth-unit"
+            ]
+          },
+          {
+            "args": [
+              "--filter",
+              "@building-suit/shop-suit",
+              "typecheck"
+            ],
+            "name": "shop-auth-typecheck",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "typecheck"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/shop-auth-typecheck"
+            ]
+          },
+          {
+            "args": [
+              "--filter",
+              "@building-suit/shop-suit",
+              "lint"
+            ],
+            "name": "shop-auth-lint",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "lint"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/shop-auth-lint"
+            ]
+          },
+          {
+            "args": [
+              "--filter",
+              "@building-suit/shop-suit",
+              "build"
+            ],
+            "name": "shop-auth-build",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "build"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/shop-auth-build"
+            ]
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "apps/shop-suit/playwright.auth-otp.config.ts"
+            ],
+            "name": "shop-auth-e2e",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "e2e",
+              "otp-recovery"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/shop-auth-e2e"
+            ]
+          },
+          {
+            "args": [
+              "db:test:shop"
+            ],
+            "name": "shop-team-database",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/shop-team-database"
+            ]
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/team.test.mjs"
+            ],
+            "name": "shop-team-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/shop-team-unit"
+            ]
+          },
+          {
+            "args": [
+              "exec",
+              "turbo",
+              "run",
+              "typecheck",
+              "lint",
+              "build",
+              "--filter=@building-suit/shop-suit"
+            ],
+            "name": "shop-team-quality",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "typecheck",
+              "lint",
+              "build"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/shop-team-quality"
+            ]
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "packages/testing/playwright.shop-ux.config.ts",
+              "cross-workflow-usability.spec.ts",
+              "--grep",
+              "retail routes, labels and responsive states"
+            ],
+            "name": "shop-team-browser",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "e2e"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/shop-team-browser"
+            ]
+          },
+          {
+            "cwd": "apps/shop-suit",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "--local",
+              "supabase/tests/ss-launch-cash-policy-001-1.test.sql"
+            ],
+            "name": "ss-launch-cash-policy-001-obligation-1-database",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-cash-policy-001-obligation-1-database"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-CASH-POLICY-001",
+            "obligation_description": "DB tests for setting authorization/audit and all relevant sale commands with policy ON/OFF, cash/non-cash and cross-location cases."
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "apps/shop-suit/tests/e2e/ss-launch-cash-policy-001-2.config.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "name": "ss-launch-cash-policy-001-obligation-2-browser",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-cash-policy-001-obligation-2-browser"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-CASH-POLICY-001",
+            "obligation_description": "Full pnpm db:test:shop plus focused POS/Sales/Cash Shift E2E and Shop typecheck/lint/build."
+          },
+          {
+            "args": [
+              "--test",
+              "packages/ui/tests/foundation.test.mjs",
+              "packages/ux/tests/export.test.mjs"
+            ],
+            "name": "review-shared-ui-ux-tests",
+            "program": "node",
+            "required": true,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/review-shared-ui-ux-tests"
+            ]
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-launch-brand-001-1.test.mjs"
+            ],
+            "name": "ss-launch-brand-001-obligation-1-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-brand-001-obligation-1-unit"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-BRAND-001",
+            "obligation_description": "Build Shop and verify public /brand asset paths and favicon head output."
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-launch-brand-001-2.test.mjs"
+            ],
+            "name": "ss-launch-brand-001-obligation-2-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-brand-001-obligation-2-unit"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-BRAND-001",
+            "obligation_description": "Run shared brand/UI checks and inspect representative email markup asset URL."
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-launch-support-001-1.test.mjs"
+            ],
+            "name": "ss-launch-support-001-obligation-1-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-support-001-obligation-1-unit"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-SUPPORT-001",
+            "obligation_description": "Unit/DB tests for outbox state transitions, idempotency, retry and secret boundaries."
+          },
+          {
+            "cwd": "apps/shop-suit",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "--local",
+              "supabase/tests/ss-launch-support-001-1.test.sql"
+            ],
+            "name": "ss-launch-support-001-obligation-1-database",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-support-001-obligation-1-database"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-SUPPORT-001",
+            "obligation_description": "Unit/DB tests for outbox state transitions, idempotency, retry and secret boundaries."
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-launch-support-001-2.test.mjs"
+            ],
+            "name": "ss-launch-support-001-obligation-2-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-support-001-obligation-2-unit"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-SUPPORT-001",
+            "obligation_description": "Test Resend sender with mocked/safe test configuration; do not require production secret mutation."
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "apps/shop-suit/tests/e2e/ss-launch-support-001-3.config.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "name": "ss-launch-support-001-obligation-3-browser",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-support-001-obligation-3-browser"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-SUPPORT-001",
+            "obligation_description": "EN/AR Contact E2E, Shop typecheck/lint/build, and full db:test:shop if DB objects change."
+          },
+          {
+            "cwd": "apps/shop-suit",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "--local",
+              "supabase/tests/ss-launch-solo-variants-001-1.test.sql"
+            ],
+            "name": "ss-launch-solo-variants-001-obligation-1-database",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-solo-variants-001-obligation-1-database"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-SOLO-VARIANTS-001",
+            "obligation_description": "DB tests for appended catalog terms, historical snapshot immutability, quota enforcement, downgrade blockers and invitation reservations."
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "apps/shop-suit/tests/e2e/ss-launch-solo-variants-001-2.config.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "name": "ss-launch-solo-variants-001-obligation-2-browser",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-solo-variants-001-obligation-2-browser"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-SOLO-VARIANTS-001",
+            "obligation_description": "Plan UI EN/AR keyboard/screen-reader E2E and full pnpm db:test:shop, Shop typecheck/lint/build."
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-launch-pos-customer-001-1.test.mjs"
+            ],
+            "name": "ss-launch-pos-customer-001-obligation-1-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-pos-customer-001-obligation-1-unit"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-POS-CUSTOMER-001",
+            "obligation_description": "Focused POS unit/E2E for search, keyboard, select/clear, appointment lock and customerless checkout."
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "apps/shop-suit/tests/e2e/ss-launch-pos-customer-001-1.config.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "name": "ss-launch-pos-customer-001-obligation-1-browser",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-pos-customer-001-obligation-1-browser"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-POS-CUSTOMER-001",
+            "obligation_description": "Focused POS unit/E2E for search, keyboard, select/clear, appointment lock and customerless checkout."
+          },
+          {
+            "cwd": "apps/shop-suit",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "--local",
+              "supabase/tests/ss-launch-fast-pay-001-1.test.sql"
+            ],
+            "name": "ss-launch-fast-pay-001-obligation-1-database",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-fast-pay-001-obligation-1-database"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-FAST-PAY-001",
+            "obligation_description": "DB tests for atomicity, replay/idempotency, insufficient stock, permission denial, customer/customerless, cash-shift ON/OFF and payment methods."
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "apps/shop-suit/tests/e2e/ss-launch-fast-pay-001-2.config.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "name": "ss-launch-fast-pay-001-obligation-2-browser",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-fast-pay-001-obligation-2-browser"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-FAST-PAY-001",
+            "obligation_description": "Full pnpm db:test:shop plus focused Sales/Fast Pay/receipt browser flow and Shop typecheck/lint/build."
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-launch-sale-copy-001-1.test.mjs"
+            ],
+            "name": "ss-launch-sale-copy-001-obligation-1-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-sale-copy-001-obligation-1-unit"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-SALE-COPY-001",
+            "obligation_description": "Search sale/POS customer-facing copy for misleading universal inventory wording."
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-launch-sale-copy-001-2.test.mjs"
+            ],
+            "name": "ss-launch-sale-copy-001-obligation-2-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-sale-copy-001-obligation-2-unit"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-SALE-COPY-001",
+            "obligation_description": "Run focused copy/component/E2E tests plus Shop typecheck/lint/build."
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "apps/shop-suit/tests/e2e/ss-launch-sale-copy-001-2.config.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "name": "ss-launch-sale-copy-001-obligation-2-browser",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-sale-copy-001-obligation-2-browser"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-SALE-COPY-001",
+            "obligation_description": "Run focused copy/component/E2E tests plus Shop typecheck/lint/build."
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-launch-single-session-001-1.test.mjs"
+            ],
+            "name": "ss-launch-single-session-001-obligation-1-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-single-session-001-obligation-1-unit"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-SINGLE-SESSION-001",
+            "obligation_description": "Provider capability inspection is read-only unless separately authorized."
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-launch-single-session-001-2.test.mjs"
+            ],
+            "name": "ss-launch-single-session-001-obligation-2-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-single-session-001-obligation-2-unit"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-SINGLE-SESSION-001",
+            "obligation_description": "Auth/session unit/E2E across two browser contexts; Shop typecheck/lint/build."
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "apps/shop-suit/tests/e2e/ss-launch-single-session-001-2.config.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "name": "ss-launch-single-session-001-obligation-2-browser",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-single-session-001-obligation-2-browser"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-SINGLE-SESSION-001",
+            "obligation_description": "Auth/session unit/E2E across two browser contexts; Shop typecheck/lint/build."
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-launch-single-session-001-3.test.mjs"
+            ],
+            "name": "ss-launch-single-session-001-obligation-3-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-single-session-001-obligation-3-unit"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-SINGLE-SESSION-001",
+            "obligation_description": "If provider setting is not configured, handback must mark provider-configured status separately from implemented status."
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "apps/shop-suit/tests/e2e/ss-launch-realtime-001-1.config.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "name": "ss-launch-realtime-001-obligation-1-browser",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-realtime-001-obligation-1-browser"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-REALTIME-001",
+            "obligation_description": "Multi-browser Shop E2E for appointments/sales/cash/team/customer updates and context switching."
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-launch-realtime-001-2.test.mjs"
+            ],
+            "name": "ss-launch-realtime-001-obligation-2-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-realtime-001-obligation-2-unit"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-REALTIME-001",
+            "obligation_description": "RLS/cross-Shop negative tests, channel cleanup tests, Shop typecheck/lint/build and relevant DB regression if publication settings/schema change."
+          },
+          {
+            "cwd": "apps/shop-suit",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "--local",
+              "supabase/tests/ss-launch-realtime-001-2.test.sql"
+            ],
+            "name": "ss-launch-realtime-001-obligation-2-database",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-realtime-001-obligation-2-database"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-REALTIME-001",
+            "obligation_description": "RLS/cross-Shop negative tests, channel cleanup tests, Shop typecheck/lint/build and relevant DB regression if publication settings/schema change."
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-launch-legal-audit-001-1.test.mjs"
+            ],
+            "name": "ss-launch-legal-audit-001-obligation-1-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-legal-audit-001-obligation-1-unit"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-LEGAL-AUDIT-001",
+            "obligation_description": "Policy-to-implementation evidence matrix; EN/AR route/link/meta checks; Shop public-legal E2E and build."
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "apps/shop-suit/tests/e2e/ss-launch-legal-audit-001-1.config.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "name": "ss-launch-legal-audit-001-obligation-1-browser",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-launch-legal-audit-001-obligation-1-browser"
+            ],
+            "reviewed_task_id": "SS-LAUNCH-LEGAL-AUDIT-001",
+            "obligation_description": "Policy-to-implementation evidence matrix; EN/AR route/link/meta checks; Shop public-legal E2E and build."
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-val-001-1.test.mjs"
+            ],
+            "name": "ss-val-001-obligation-1-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-val-001-obligation-1-unit"
+            ],
+            "reviewed_task_id": "SS-VAL-001",
+            "obligation_description": "Run the current authoritative Shop launch verification matrix and record exact commands/results."
+          },
+          {
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "--config",
+              "apps/shop-suit/tests/e2e/ss-val-001-1.config.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "name": "ss-val-001-obligation-1-browser",
+            "program": "pnpm",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-val-001-obligation-1-browser"
+            ],
+            "reviewed_task_id": "SS-VAL-001",
+            "obligation_description": "Run the current authoritative Shop launch verification matrix and record exact commands/results."
+          },
+          {
+            "args": [
+              "--test",
+              "apps/shop-suit/tests/unit/ss-val-001-2.test.mjs"
+            ],
+            "name": "ss-val-001-obligation-2-unit",
+            "program": "node",
+            "required": true,
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "unit"
+            ],
+            "changed_paths": [
+              "__verification-plan-only__/ss-val-001-obligation-2-unit"
+            ],
+            "reviewed_task_id": "SS-VAL-001",
+            "obligation_description": "No deployment or provider mutation is performed merely to make this review pass."
+          }
+        ],
+        "legacy_plan_mappings": {
+          "No hosted production mutation.": "shop-environment-isolation",
+          "Secret/log/browser payload inspection.": "shop-environment-isolation",
+          "Existing Shop plan/billing/subscription suite.": {
+            "kind": "command",
+            "command": "shop-database-regression",
+            "version": 2,
+            "requires": [
+              "database",
+              "plan-regression"
+            ]
+          },
+          "Shop typecheck/lint/build and git diff --check.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "shop-quality",
+              "git-diff-check"
+            ],
+            "requires": [
+              "typecheck",
+              "lint",
+              "build",
+              "diff-check"
+            ]
+          },
+          "Existing Shop billing database regression suite.": {
+            "kind": "command",
+            "command": "shop-database-regression",
+            "version": 2,
+            "requires": [
+              "database",
+              "billing-regression"
+            ]
+          },
+          "Shop typecheck, lint, build and git diff --check.": "git diff --check",
+          "Full pnpm db:test:shop if Shop schema/RPCs change.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "shop-team-database"
+            ],
+            "requires": [
+              "database"
+            ]
+          },
+          "Supabase advisors/security review where available.": {
+            "kind": "planned_test",
+            "blocker": "shop_security_advisor_evidence_unavailable",
+            "version": 2,
+            "required": true,
+            "expected_outputs": [
+              "Security review of the RESULTING SS-SA-EVIDENCE-001 implementation, with task ID and exact reviewed source/schema revision.",
+              "Supabase advisor findings where available; when unavailable, explicit availability evidence and human-reviewed local schema/security findings. Unavailable is not a passed review.",
+              "Review covers the original task security invariants and focused test results; unresolved security findings remain blockers.",
+              "A reviewed executable verification/evidence binding must resolve this obligation before authoritative acceptance or publication. A worker claim alone does not satisfy it."
+            ]
+          },
+          "Existing Shop admin/billing/plan database regression suite.": "shop-database-regression",
+          "Run Shop auth-related tests plus Shop typecheck/lint/build.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "shop-auth-unit",
+              "shop-auth-typecheck",
+              "shop-auth-lint",
+              "shop-auth-build",
+              "shop-auth-e2e"
+            ],
+            "requires": [
+              "unit",
+              "typecheck",
+              "lint",
+              "build",
+              "browser"
+            ]
+          },
+          "EN/AR desktop/mobile Team E2E and Shop typecheck/lint/build.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "shop-team-quality",
+              "shop-team-browser"
+            ],
+            "requires": [
+              "browser",
+              "e2e",
+              "typecheck",
+              "lint",
+              "build"
+            ]
+          },
+          "Upload/read/signed-access expiry tests using disposable files.": {
+            "kind": "planned_test",
+            "blocker": "shop_storage_http_signed_url_coverage_not_implemented",
+            "version": 2,
+            "expected_outputs": [
+              "executable Storage HTTP upload/read tests",
+              "signed URL expiry assertions using disposable files"
+            ]
+          },
+          "Quota-blocker and exact-price/commercial-period regression tests.": {
+            "kind": "planned_test",
+            "blocker": "shop_custom_offer_commercial_coverage_not_implemented",
+            "version": 2,
+            "expected_outputs": [
+              "executable quota regression tests",
+              "frozen-price and commercial-period assertions"
+            ]
+          },
+          "Storage RLS tests for owner, other tenant, anonymous and trusted review boundary.": {
+            "kind": "planned_test",
+            "blocker": "shop_storage_policy_coverage_not_implemented",
+            "version": 2,
+            "expected_outputs": [
+              "executable owner/other-tenant/anonymous/trusted-review Storage policy tests",
+              "bounded upload assertions"
+            ]
+          },
+          "Focused SQL/RPC/bridge tests for valid, expired, replayed and wrong-recipient offers.": {
+            "kind": "planned_test",
+            "blocker": "shop_custom_offer_bridge_coverage_not_implemented",
+            "version": 2,
+            "expected_outputs": [
+              "executable valid/expired/replayed/wrong-recipient/wrong-environment offer tests"
+            ]
+          },
+          "Focused Shop database/function/Edge Function tests for valid, invalid, wrong-environment and replayed calls.": "shop-unit-regression",
+          "Run Shop unit/review checks, typecheck, lint, build, git diff --check and focused Inventory/Purchases EN/AR smoke tests.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "shop-launch-baseline-unit-review",
+              "shop-quality",
+              "git-diff-check",
+              "shop-launch-baseline-inventory-purchases-en-ar"
+            ],
+            "requires": [
+              "unit",
+              "review",
+              "typecheck",
+              "lint",
+              "build",
+              "diff-check",
+              "browser",
+              "inventory-purchases-en-ar"
+            ]
+          },
+          "Focused unit/E2E coverage for confirmed existing email, unconfirmed existing email, invalid/expired OTP, resend, refresh and retry.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "shop-auth-unit",
+              "shop-auth-build",
+              "shop-auth-e2e"
+            ],
+            "requires": [
+              "unit",
+              "browser",
+              "e2e",
+              "otp-recovery"
+            ]
+          },
+          "Search browser-reachable Shop source/i18n for legacy Basic/Pro commercial wording and explain any intentional internal occurrences.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "shop-launch-baseline-copy-inspection",
+              "shop-launch-baseline-inventory-purchases-en-ar"
+            ],
+            "requires": [
+              "browser",
+              "copy-inspection"
+            ]
+          },
+          "DB tests for role CRUD, permission escalation denial, invitation races/replay, existing/new user acceptance, suspension and owner continuity.": {
+            "kind": "group",
+            "version": 2,
+            "commands": [
+              "shop-team-database",
+              "shop-team-unit"
+            ],
+            "requires": [
+              "database",
+              "unit"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "shared_authority_functions": [
+    {
+      "name": "resolve_authenticated_operator_gate",
+      "definition": "CREATE OR REPLACE FUNCTION control.resolve_authenticated_operator_gate(p_actor uuid, p_run uuid, p_gate text, p_response text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'control'\nAS $function$\nDECLARE item jsonb; ev control.operator_authority_events%ROWTYPE; g control.sas_final_gate_review_grants%ROWTYPE;\nBEGIN\n IF NOT EXISTS(SELECT 1 FROM control.operator_actors WHERE actor_id=p_actor AND enabled) THEN RAISE EXCEPTION 'registered_authenticated_operator_required';END IF;\n IF p_response NOT IN('approve','reject','revoke') THEN RAISE EXCEPTION 'typed_operator_response_required';END IF;\n PERFORM pg_advisory_xact_lock(hashtextextended('operator-gate:'||p_run::text,0));\n PERFORM 1 FROM control.workflow_runs WHERE run_id=p_run FOR UPDATE;\n SELECT * INTO ev FROM control.operator_authority_events WHERE run_id=p_run AND gate_fingerprint=p_gate AND response=p_response;\n IF FOUND AND ev.action='sas-final-gate-single-review' THEN RETURN to_jsonb(ev)||jsonb_build_object('ok',true,'replayed',true,'resolution_id',ev.event_id);END IF;\n IF p_response='revoke' THEN SELECT offer INTO item FROM control.operator_authority_events WHERE run_id=p_run AND gate_fingerprint=p_gate AND response='approve';\n ELSE SELECT value INTO item FROM jsonb_array_elements(control.operator_gate_offers(p_run)) WHERE value->>'gate_fingerprint'=p_gate;END IF;\n IF item->>'action' IS DISTINCT FROM 'sas-final-gate-single-review' THEN RETURN control.resolve_authenticated_operator_gate_before_sas_single_review(p_actor,p_run,p_gate,p_response);END IF;\n PERFORM 1 FROM control.tasks WHERE task_id='SAS-M1-GATE-001' FOR UPDATE;\n IF p_response='revoke' THEN\n SELECT * INTO g FROM control.sas_final_gate_review_grants WHERE run_id=p_run AND event_id=(SELECT event_id FROM control.operator_authority_events WHERE run_id=p_run AND gate_fingerprint=p_gate AND response='approve') FOR UPDATE;\n IF g.grant_id IS NULL OR g.revoked_at IS NOT NULL OR g.consumed_at IS NOT NULL THEN RAISE EXCEPTION 'unconsumed_review_authority_required';END IF;\n ELSE\n IF EXISTS(SELECT 1 FROM control.operator_authority_events WHERE run_id=p_run AND gate_fingerprint=p_gate)\n OR control.sas_final_gate_single_review_offer(p_run)->>'gate_fingerprint' IS DISTINCT FROM p_gate THEN RAISE EXCEPTION 'single_review_offer_stale_or_decided';END IF;\n END IF;\n INSERT INTO control.operator_authority_events(run_id,task_id,gate_fingerprint,action,response,actor_id,offer)\n VALUES(p_run,'SAS-M1-GATE-001',p_gate,'sas-final-gate-single-review',p_response,p_actor,item) RETURNING * INTO ev;\n IF p_response='approve' THEN\n INSERT INTO control.sas_final_gate_review_grants(event_id,run_id,task_id,identity_fingerprint,actor_id,model_profile,model_name,reasoning_effort)\n VALUES(ev.event_id,p_run,'SAS-M1-GATE-001',item->>'identity_fingerprint',p_actor,'review',item->>'model_name',item->>'reasoning_effort');\n -- Resolve only this installed hold. Native queue acquisition restores its prior\n -- claimed state; the operator never writes task status or attempts.\n UPDATE control.recovery_states SET status='resolved',resolved_at=now(),updated_at=now(),version=version+1\n WHERE current_task_id='SAS-M1-GATE-001' AND status='active' AND error_code='sas_final_gate_current_chat_review_required';\n ELSIF p_response='revoke' THEN UPDATE control.sas_final_gate_review_grants SET revoked_at=now() WHERE grant_id=g.grant_id;END IF;\n INSERT INTO control.audit_events(project_id,workstream_slug,task_id,action,source,new_value,metadata)\n VALUES('f71b3b2b-d56b-4f7e-94f5-0b8c379a1088','super-admin-suit','SAS-M1-GATE-001','sas_single_review_'||p_response,'human',to_jsonb(ev),jsonb_build_object('max_new_executions',1,'documentation_event_preserved',27));\n INSERT INTO control.task_events(task_id,event_type,source,payload) VALUES('SAS-M1-GATE-001','sas_single_review_'||p_response,'human',to_jsonb(ev));\n IF p_response IN('approve','revoke') THEN PERFORM control.enqueue_supervisor_wake(p_run);END IF;\n RETURN to_jsonb(ev)||jsonb_build_object('ok',true,'resolution_id',ev.event_id);\nEND $function$\n"
+    },
+    {
+      "name": "task_shared_package_authority_current",
+      "definition": "CREATE OR REPLACE FUNCTION control.task_shared_package_authority_current(p_task text)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'control'\nAS $function$\n SELECT NOT EXISTS(SELECT 1 FROM control.task_shared_package_authorizations WHERE task_id=p_task) OR EXISTS(\n SELECT 1 FROM control.task_shared_package_authorizations a JOIN control.operator_authority_events ev USING(event_id) JOIN control.operator_actors actor USING(actor_id) JOIN control.workflow_runs r ON r.run_id=a.run_id\n WHERE r.status='running' AND NOT r.stop_requested AND NOT r.maintenance_requested AND r.completed_tasks<r.max_tasks\n AND a.task_id=p_task AND a.revoked_at IS NULL AND actor.enabled\n AND a.scope_fingerprint=control.dot_scope_fingerprint(p_task) AND a.requirement_fingerprint=control.task_scope_requirement_fingerprint(p_task)\n AND a.project_fingerprint=(SELECT md5(p.allowed_publication_paths::text) FROM control.projects p JOIN control.tasks t USING(project_id) WHERE t.task_id=p_task));\n$function$\n"
+    },
+    {
+      "name": "task_shared_package_offer",
+      "definition": "CREATE OR REPLACE FUNCTION control.task_shared_package_offer(p_run uuid)\n RETURNS jsonb\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'control'\nAS $function$\n SELECT coalesce(control.task_shared_package_offer_before_sas_final_gate_docs(p_run),control.sas_final_gate_documentation_offer(p_run));\n$function$\n"
+    }
+  ]
+}

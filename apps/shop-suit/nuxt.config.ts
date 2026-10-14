@@ -1,6 +1,14 @@
 export default defineNuxtConfig({
   extends: ['@building-suit/nuxt-layer'],
   modules: ['@nuxtjs/supabase'],
+  app: {
+    head: {
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/brand/shop-suit-mark-light.svg' },
+        { rel: 'icon', type: 'image/png', sizes: '512x512', href: '/brand/shop-suit-email-mark.png' },
+      ],
+    },
+  },
   runtimeConfig: { public: { appUrl: process.env.APP_URL, portalKey: 'shop-crm' } },
   supabase: {
     redirect: false,

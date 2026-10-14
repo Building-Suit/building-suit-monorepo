@@ -1,10 +1,10 @@
 <script setup lang="ts">
-defineProps<{ wide?: boolean; productName: string; homeLabel: string; title: string; description: string }>()
+defineProps<{ wide?: boolean; presentation?: 'default' | 'flat'; productName: string; homeLabel: string; title: string; description: string }>()
 defineSlots<{ default(): unknown; logo(props: { tone: 'auto' | 'light' | 'dark' }): unknown; legal(): unknown }>()
 useTheme()
 </script>
 <template>
-  <main class="bs-auth-layout ls-auth-page" :data-wide="wide || undefined">
+  <main class="bs-auth-layout ls-auth-page" :data-presentation="presentation" :data-wide="wide || undefined">
     <section class="bs-auth-layout__panel ls-auth-panel">
       <div class="bs-auth-layout__form-shell ls-auth-form-shell" :class="wide ? 'bs-auth-layout__form-shell--wide' : ''">
         <NuxtLink to="/" class="bs-auth-layout__mobile-logo" :aria-label="homeLabel">
@@ -12,7 +12,7 @@ useTheme()
         </NuxtLink>
         <slot />
         <slot name="legal" />
-        <div class="bs-auth-layout__settings"><SettingsMenu /></div>
+        <div class="bs-auth-layout__settings"><BsSettingsMenu /></div>
       </div>
     </section>
     <section class="ls-auth-showcase relative hidden overflow-hidden lg:flex lg:items-center lg:justify-center" :aria-label="productName">
@@ -41,7 +41,10 @@ useTheme()
 .bs-auth-layout__panel { display: flex; align-items: center; justify-content: center; padding: var(--bs-space-9) var(--bs-space-5); background: radial-gradient(circle at 50% 18%, color-mix(in oklab, var(--bs-accent) 9%, transparent), transparent 25rem), var(--bs-bg); }
 .bs-auth-layout__form-shell { display: flex; width: 100%; max-width: 27rem; flex-direction: column; align-items: center; }
 .bs-auth-layout__form-shell--wide { max-width: 36rem; }
-.bs-auth-layout__mobile-logo { display: inline-flex; margin-bottom: var(--bs-space-9); }
+.bs-auth-layout__mobile-logo { display: inline-flex; max-inline-size: 100%; margin-bottom: var(--bs-space-9); }
+.bs-auth-layout .ls-auth-brand { max-inline-size: 100%; }
+.bs-auth-layout__mobile-logo .ls-logo,
+.bs-auth-layout .ls-auth-brand .ls-logo { min-inline-size: 0; max-inline-size: 100%; }
 .bs-auth-layout__settings { display: flex; justify-content: center; margin-top: var(--bs-space-5); }
 .ls-auth-showcase { isolation: isolate; color: var(--bs-pearl-white); background: linear-gradient(135deg, rgb(22 41 59 / .88), rgb(13 27 40 / .98)), var(--bs-gradient-navy); }
 /* .ls-auth-brand { top: 48px; left: 50%; transform: translateX(-50%); } */
@@ -62,4 +65,8 @@ useTheme()
   .bs-auth-layout__panel { padding-inline: var(--bs-space-9); }
   .bs-auth-layout__mobile-logo { display: none; }
 }
+.bs-auth-layout[data-presentation='flat'] .bs-auth-layout__panel { background: var(--bs-bg); }
+.bs-auth-layout[data-presentation='flat'] .bs-auth-form { background: var(--bs-surface); border-color: var(--bs-border); border-radius: var(--bs-radius-card); box-shadow: none; }
+.bs-auth-layout[data-presentation='flat'] .bs-auth-form__title { font-size: var(--bs-type-h2-size); line-height: var(--bs-type-h2-lh); font-weight: var(--bs-weight-bold); letter-spacing: normal; }
+.bs-auth-layout[data-presentation='flat'] .ls-auth-showcase-content h2 { font-size: var(--bs-type-display-size); line-height: var(--bs-type-display-lh); font-weight: var(--bs-weight-extrabold); letter-spacing: normal; }
 </style>

@@ -1,0 +1,13 @@
+import {supersededPublicationHold} from '../runner/bounded-publication.mjs'
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {classifyPublicationFiles,verifiedProtectedPublicationPaths} from '../runner/publication-preflight.mjs'
+const file='apps/super-admin-suit/supabase/migrations/exact.sql'
+const args={task:{task_id:'task'},execution:{execution_id:311},verification:{verification_run_id:313,state_fingerprint:'state',verified_state:{files:[{file,object:'a'.repeat(40)}]}},grant:{authorized:true,task_id:'task',execution_id:311,verification_run_id:313,verified_state_fingerprint:'state',protected_files:[{path:file,object:'a'.repeat(40)}]}}
+test('verified protected file approval allows exact task/project scope without changing legacy required paths',()=>{const verifiedProtectedPaths=verifiedProtectedPublicationPaths(args);assert.deepEqual(verifiedProtectedPaths,[file]);const scope={files:[file],taskPaths:['apps/super-admin-suit/**'],projectPaths:['apps/'],verifiedProtectedPaths};assert.deepEqual(classifyPublicationFiles(scope).allowed,[file]);assert.deepEqual(classifyPublicationFiles({...scope,files:[file.replace('exact','unrelated')]}).allowed,[]);assert.deepEqual(classifyPublicationFiles({...scope,taskPaths:['apps/shop-suit/**']}).allowed,[])})
+test('stale task execution verification state or file blob cannot grant protected publication',()=>{for(const grant of [{...args.grant,task_id:'other'},{...args.grant,execution_id:312},{...args.grant,verification_run_id:314},{...args.grant,verified_state_fingerprint:'changed'},{...args.grant,protected_files:[{path:file,object:'b'.repeat(40)}]}])assert.deepEqual(verifiedProtectedPublicationPaths({...args,grant}),[])})
+
+test('current verified path receipt supersedes only the exact old protected scope gate',()=>{
+ const s={packet:{task:{task_id:'task',status:'passed'},publication_boundaries:{task_paths:['apps/super-admin-suit/**'],project_paths:['apps/']}},executions:[args.execution],verification_runs:[{verification_run_id:313,execution_id:311,metadata:{verified_state:{fingerprint:'state',files:[{file,object:'a'.repeat(40)}]}}}],protected_publication_authority:args.grant,run_publication_authority:{authorized:true,mode:'ordinary-draft',task_id:'task',run_id:'run',contract_fingerprint:'contract'},recovery:{next_action:'wait-operator',error_code:'publication_scope_requires_operator',failure_id:1},failures:[{failure_id:1,error_code:'publication_scope_safety_stop',metadata:{classification:{blocked:[file],waiting:[]}}}]}
+ assert.equal(supersededPublicationHold(s),true);s.failures[0].metadata.classification.blocked.push(file.replace('exact','unrelated'));assert.equal(supersededPublicationHold(s),false)
+})

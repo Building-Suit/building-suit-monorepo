@@ -2,6 +2,8 @@
 
 This is the ongoing workflow for every app, shared package and AI agent. Use short-lived `codex/<stack>/<feature>` branches. The segment immediately after `codex/` is the stack key, such as `ledger-suit`, `shop-suit`, `building-suit-docs` or `shared`.
 
+The explicitly requested temporary branch `integration/shop-suit-release` is classified as the `shop-suit` stack by the maintained policy. It retains the same repository, single-root, parent, review and CI gates; no other `integration/*` names are allowed.
+
 Each stack may have one open root PR into `stg`, including drafts. Different stack keys may have independent roots into `stg` at the same time. Additional work in an active stack starts from that stack's newest committed leaf and targets the open same-stack parent branch. Cross-stack parent links and multiple roots for the same stack are invalid. `main` receives release PRs only from `stg`.
 
 ## Before starting or resuming any work

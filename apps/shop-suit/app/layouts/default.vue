@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ShopBilling } from '~/types/billing'
+import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { businessAreaForPath, businessModeSupportsPath, businessModeSupportsProducts, businessModeSupportsServices } from '~/utils/businessMode'
 
 const route = useRoute()
@@ -8,18 +10,44 @@ const user = useSupabaseUser()
 const { locale, t } = useI18n()
 const { shops, current, currentId, activeLocations, currentLocationId, loading, loadError, loadShops, selectShop, selectLocation } = useShop()
 
+const { isOwner, currentMembership } = useShop()
+const isArabic = computed(() => locale.value === 'ar')
+const billingRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const { data: sidebarSnapshot, refresh: refreshSidebar } = useAsyncData('shop-data:sidebar-subscription', async () => {
+  if (loading.value || !currentId.value || !isOwner.value || !currentMembership.value) return null
+  const shopId = currentId.value, profileId = currentMembership.value.profile_id
+  const { data, error } = await billingRpc.rpc('shop_billing_read', { p_shop_id: shopId })
+  if (error) throw error
+  return { shopId, profileId, subscription: (data as ShopBilling | null)?.subscription ?? null }
+}, { watch: [currentId, loading, isOwner, () => currentMembership.value?.profile_id, () => route.path], default: () => null })
+// The account/context remount can reuse a cleared async-data entry after sign-in.
+onMounted(() => { void refreshSidebar() })
+const sidebarSubscription = computed(() => isOwner.value && sidebarSnapshot.value?.shopId === currentId.value && sidebarSnapshot.value?.profileId === currentMembership.value?.profile_id ? sidebarSnapshot.value.subscription : null)
+const planStatus = computed(() => {
+  const status = sidebarSubscription.value?.accessState
+  const labels = isArabic.value ? { trialing: 'فترة التجربة', active: 'اشتراك نشط', read_only: 'للقراءة فقط', suspended: 'موقوف' } : { trialing: 'Free trial', active: 'Active subscription', read_only: 'Read only', suspended: 'Suspended' }
+  return status ? labels[status] : ''
+})
+const planDetail = computed(() => {
+  const subscription = sidebarSubscription.value
+  if (!subscription) return ''
+  const expiry = subscription.accessState === 'trialing' ? subscription.trialEndAt : subscription.periodEnd
+  if (!expiry || !Number.isFinite(new Date(expiry).getTime())) return ''
+  return expiry ? `${isArabic.value ? 'حتى' : 'Until'} ${new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium' }).format(new Date(expiry))}` : ''
+})
 const signingOut = ref(false)
 const signOutError = ref('')
 const showErrorDetails = import.meta.dev
-const isArabic = computed(() => locale.value === 'ar')
 const fullName = computed(() => {
   const value = user.value?.user_metadata.full_name ?? user.value?.user_metadata.name
   return typeof value === 'string' ? value : ''
 })
+const shopOptions = computed(() => shops.value.map(shop => ({ id: shop.id, label: shop.name })))
+const locationOptions = computed(() => activeLocations.value.map(location => ({ id: location.id, label: location.name })))
 
 const copy = computed(() => isArabic.value
-  ? { dashboard: 'التقارير ونظرة عامة', daily: 'العمل اليومي', manage: 'إدارة النشاط', pos: 'نقطة البيع', cashShifts: 'ورديات الخزنة', invoices: 'الفواتير', products: 'المنتجات', catalogSetup: 'إعداد الكتالوج والاستيراد', services: 'الخدمات', appointments: 'التقويم والمواعيد', inventory: 'المخزون', purchases: 'المشتريات', expenses: 'المصروفات', settings: 'إعدادات النشاط', billing: 'الاشتراك والفوترة', team: 'الفريق', reports: 'التقارير', soon: 'قريبًا', shop: 'المتجر', location: 'الفرع', account: 'الحساب', logout: 'تسجيل الخروج', openMenu: 'فتح القائمة', closeMenu: 'إغلاق القائمة', loadFailed: 'تعذّر تحميل بيانات المتجر. حاول مرة أخرى.', retry: 'إعادة المحاولة', loading: 'جاري تحميل المتجر…', signOutFailed: 'تعذّر تسجيل الخروج. حاول مرة أخرى.' }
-  : { dashboard: 'Reports & overview', daily: 'Daily work', manage: 'Business management', pos: 'Point of sale', cashShifts: 'Cashier shifts', invoices: 'Invoices', products: 'Products', catalogSetup: 'Catalog setup & import', services: 'Services', appointments: 'Calendar & appointments', inventory: 'Inventory', purchases: 'Purchases', expenses: 'Expenses', settings: 'Business settings', billing: 'Subscription & billing', team: 'Team', reports: 'Reports', soon: 'Soon', shop: 'Shop', location: 'Location', account: 'Account', logout: 'Sign out', openMenu: 'Open menu', closeMenu: 'Close menu', loadFailed: 'Unable to load shop data. Please try again.', retry: 'Retry', loading: 'Loading shop…', signOutFailed: 'Could not sign out. Please try again.' })
+  ? { dashboard: 'التقارير ونظرة عامة', daily: 'العمل اليومي', manage: 'إدارة النشاط', pos: 'نقطة البيع', cashShifts: 'ورديات الخزنة', invoices: 'الفواتير', products: 'المنتجات', catalogSetup: 'إعداد الكتالوج والاستيراد', services: 'الخدمات', appointments: 'التقويم والمواعيد', inventory: 'المخزون', purchases: 'المشتريات', expenses: 'المصروفات', settings: 'إعدادات النشاط', billing: 'الاشتراك والفوترة', team: 'الفريق', reports: 'التقارير', soon: 'قريبًا', shop: 'المتجر', location: 'الفرع', account: 'الحساب', logout: 'تسجيل الخروج', openMenu: 'فتح القائمة', collapseMenu: 'طي القائمة', closeMenu: 'إغلاق القائمة', loadFailed: 'تعذّر تحميل بيانات المتجر. حاول مرة أخرى.', retry: 'إعادة المحاولة', loading: 'جاري تحميل المتجر…', signOutFailed: 'تعذّر تسجيل الخروج. حاول مرة أخرى.' }
+  : { dashboard: 'Reports & overview', daily: 'Daily work', manage: 'Business management', pos: 'Point of sale', cashShifts: 'Cashier shifts', invoices: 'Invoices', products: 'Products', catalogSetup: 'Catalog setup & import', services: 'Services', appointments: 'Calendar & appointments', inventory: 'Inventory', purchases: 'Purchases', expenses: 'Expenses', settings: 'Business settings', billing: 'Subscription & billing', team: 'Team', reports: 'Reports', soon: 'Soon', shop: 'Shop', location: 'Location', account: 'Account', logout: 'Sign out', openMenu: 'Open menu', collapseMenu: 'Collapse sidebar', closeMenu: 'Close menu', loadFailed: 'Unable to load shop data. Please try again.', retry: 'Retry', loading: 'Loading shop…', signOutFailed: 'Could not sign out. Please try again.' })
 
 const groups = computed(() => {
   const mode = current.value?.business_mode ?? 'mixed'
@@ -62,48 +90,19 @@ async function logout() {
   signingOut.value = true
   signOutError.value = ''
   try {
-    const { error } = await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut({ scope: 'local' })
     if (error) throw error
     await nuxtApp.runWithContext(() => navigateTo('/auth/login'))
   } catch { signOutError.value = copy.value.signOutFailed }
   finally { signingOut.value = false }
 }
-</script>
 
+const shellHeaderScopes = computed(() => [
+  ...(shops.value.length ? [{ key: 'workspace', value: currentId.value, label: copy.value.shop, options: shopOptions.value, visibility: 'desktop' as const }] : []),
+  ...(activeLocations.value.length ? [{ key: 'location', value: currentLocationId.value, label: copy.value.location, options: locationOptions.value }] : []),
+])
+function selectShellScope(key: string, value: string | null) { if (!value) return; if (key === 'workspace') return selectShop(value); if (key === 'location') return selectLocation(value) }
+</script>
 <template>
-  <BsAppShell product-name="Shop Suit" :groups="groups" :mobile-links="[...(groups[0]?.links.slice(0, 3) ?? []), { to: '/dashboard', label: copy.reports, icon: 'dashboard' }]" :labels="{ close: copy.closeMenu, open: copy.openMenu, navigation: copy.shop, dashboard: copy.dashboard }">
-    <template #logo><BsProductLogo name="Shop Suit" asset-prefix="/brand/shop-suit" /></template>
-    <template #context>
-      <label v-if="shops.length" class="grid gap-1 text-xs font-bold sm:hidden">{{ copy.shop }}<select :value="currentId ?? ''" class="ls-select min-h-11 w-full" @change="selectShop(($event.target as HTMLSelectElement).value)"><option v-for="shop in shops" :key="shop.id" :value="shop.id">{{ shop.name }}</option></select></label>
-    </template>
-    <template #header>
-      <select v-if="shops.length" :value="currentId ?? ''" class="ls-select hidden min-h-11 w-36 truncate sm:block lg:w-48" :aria-label="copy.shop" @change="selectShop(($event.target as HTMLSelectElement).value)"><option v-for="shop in shops" :key="shop.id" :value="shop.id">{{ shop.name }}</option></select>
-      <select v-if="activeLocations.length" :value="currentLocationId ?? ''" class="ls-select min-h-11 w-28 truncate sm:w-36 lg:w-48" :aria-label="copy.location" @change="selectLocation(($event.target as HTMLSelectElement).value)"><option v-for="location in activeLocations" :key="location.id" :value="location.id">{{ location.name }}</option></select>
-      <BsUserMenu
-        :name="fullName"
-        :email="user?.email"
-        :account-label="copy.account"
-        :sign-out-label="copy.logout"
-        :sign-out-pending="signingOut"
-        :error="signOutError"
-        @sign-out="logout"
-      />
-    </template>
-        <div v-if="loadError" class="rounded-2xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-5 text-[var(--bs-status-error)] dark:bg-[var(--bs-status-error-bg)] dark:text-[var(--bs-status-error)]" role="alert">
-          <p class="text-sm font-bold">{{ copy.loadFailed }}</p>
-          <p v-if="showErrorDetails" class="mt-2 text-xs opacity-75">{{ loadError }}</p>
-          <BsButton class="mt-3" @click="loadShops({ force: true })">{{ copy.retry }}</BsButton>
-        </div>
-        <div v-else-if="loading" class="space-y-4" role="status" :aria-label="copy.loading">
-          <span class="sr-only">{{ copy.loading }}</span>
-          <div class="h-8 w-48 animate-pulse rounded-lg bg-muted" />
-          <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div v-for="index in 4" :key="index" class="h-32 animate-pulse rounded-2xl bg-muted" />
-          </div>
-        </div>
-        <slot v-else />
-    <template #overlays>
-      <ToastHost />
-    </template>
-  </BsAppShell>
+  <BsWorkspaceShell variant="shop" :sidebar-plan="sidebarSubscription ? { name: sidebarSubscription.planName, status: planStatus, detail: planDetail, actionLabel: copy.billing, to: '/billing' } : undefined" home-path="/dashboard" product-name="Shop Suit" :groups="groups" :mobile-links="[...(groups[0]?.links.slice(0, 3) ?? []), { to: '/dashboard', label: copy.reports, icon: 'dashboard' }]" :labels="{ close: copy.closeMenu, open: copy.openMenu, collapse: copy.collapseMenu, navigation: copy.shop, dashboard: copy.dashboard }" :logo="{ kind: 'product', assetPrefix: '/brand/shop-suit' }" :context-scope="shops.length ? { key: 'workspace', value: currentId, label: copy.shop, options: shopOptions } : undefined" :header-scopes="shellHeaderScopes" :account="{ actions: [{ to: '/settings#shop-profile', label: copy.settings, icon: 'settings' }, ...(isOwner ? [{ to: '/billing', label: copy.billing, icon: 'wallet' }] : [])], name: fullName, email: user?.email, label: copy.account, signOut: copy.logout, pending: signingOut, error: signOutError }" :state="{ loading, error: Boolean(loadError), title: copy.loadFailed, description: showErrorDetails ? loadError || undefined : undefined, retry: copy.retry }" feedback @scope="selectShellScope" @retry="loadShops({ force: true })" @sign-out="logout"><slot /></BsWorkspaceShell>
 </template>

@@ -1,3 +1,4 @@
+import { legacyClassification } from './dot.mjs'
 import {
   completePublicationPolicy,
   mergeVerificationConfig,
@@ -31,6 +32,10 @@ export function safeRegisteredVerificationCommand(command) {
 
 function normalizedPlanEntry(value) {
   return String(value ?? '').trim().replace(/\s+/g, ' ')
+}
+
+export function verificationPlanHasEntries(entries) {
+  return Array.isArray(entries)&&entries.length>0&&entries.every(entry=>typeof entry==='string'?Boolean(entry.trim()):entry?.version===2&&['command','group','planned_test','external_gate','human_gate','blocker'].includes(entry.kind)&&Boolean(normalizedPlanEntry(entry.description??entry.title??entry.obligation_id)))
 }
 
 const semanticPatterns = [
@@ -119,6 +124,7 @@ export function resolveVerificationPlan({
         blocker: structured?.blocker ?? mapped?.blocker ?? 'verification_obligation_requires_explicit_evidence',
         required: structured?.required !== false && mapped?.required !== false,
       }
+
       if (kind === 'planned_test') {
         const expectedOutputs = structured?.expected_outputs ?? mapped?.expected_outputs
         if (!Array.isArray(expectedOutputs) || expectedOutputs.length === 0
@@ -130,13 +136,52 @@ export function resolveVerificationPlan({
           })
           continue
         }
+
         item.expected_outputs = [...expectedOutputs]
         item.required_post_implementation = true
-        if (phase === 'pre_implementation') {
+        const commandRefs = structured?.commands ?? mapped?.commands ?? ((structured?.command ?? mapped?.command) ? [structured?.command ?? mapped?.command] : null)
+        if (commandRefs) {
+          if (expectedOutputs.some(output=>output.startsWith('/')||output.split('/').includes('..')||/[\r\n]/.test(output))) {
+            blockers.push({...item,kind:'invalid_obligation',blocker:'task_owned_output_boundary_required'})
+            continue
+          }
+          const materialized=resolveVerificationPlan({entries:[{version:2,kind:'group',description:entry,commands:commandRefs,requires:structured?.requires??mapped?.requires??[]}],configuredCommands,legacyMappings,phase})
+          if(materialized.blockers.length||materialized.unenforced.length){blockers.push(...materialized.blockers);unenforced.push(...materialized.unenforced);continue}
+          item.registered_checks=materialized.checks
+        }
+
+        const advisorGate =
+          /advisor_evidence_unavailable/i.test(String(item.blocker)) ||
+          /supabase.*advisor/i.test(String(item.plan_entry))
+
+        item.phase = advisorGate
+          ? 'pre_publication'
+          : 'post_implementation'
+
+        if (phase !== item.phase) {
+          deferred.push(item)
+          continue
+        }
+        if(item.registered_checks)checks.push(...item.registered_checks)
+      }
+
+      if (kind === 'external_gate') {
+        item.phase = structured?.phase ?? mapped?.phase ?? 'pre_publication'
+        const commandRefs = structured?.commands ?? mapped?.commands ?? ((structured?.command ?? mapped?.command) ? [structured?.command ?? mapped?.command] : [])
+        if (commandRefs.length) {
+          const collected = resolveVerificationPlan({entries:[{version:2,kind:'group',description:entry,commands:commandRefs,requires:structured?.requires??mapped?.requires??[]}],configuredCommands,legacyMappings,phase})
+          if (collected.blockers.length || collected.unenforced.length) { blockers.push(...collected.blockers); unenforced.push(...collected.unenforced); continue }
+          item.registered_checks = collected.checks
+          // Collect evidence through the exact registered executable before
+          // presenting acknowledgement. The operator cannot manufacture PASS.
+          if (phase === 'post_implementation') checks.push(...collected.checks)
+        }
+        if (phase !== item.phase) {
           deferred.push(item)
           continue
         }
       }
+
       blockers.push(item)
       continue
     }
@@ -345,23 +390,24 @@ export function evaluateWorkstreamReadiness(packet) {
 }
 
 export function classifyVerificationResults(checks = []) {
-  const blocking = checks.filter(check => ['fail', 'not_run'].includes(check.status))
+  const blocking = checks.filter(check => ['fail', 'not_run','unavailable'].includes(check.status))
   if (blocking.length === 0) return { failure_class: null, recovery_action: null }
 
-  const classes = new Set(blocking.map(check => check.failure_class).filter(Boolean))
+  const classes = new Set(blocking.map(check => legacyClassification(check.failure_class)).filter(Boolean))
   const priority = [
     ['verification-lifecycle', 'reverify'],
-    ['verification-configuration', 'wait-operator'],
+    ['verification-product-defect', 'repair'],
     ['verification-infrastructure', 'wait-external'],
     ['verification-required-check-unavailable', 'wait-operator'],
-    ['verification-product-defect', 'repair'],
+    ['verification-configuration', 'wait-operator'],
+    ['unknown-outcome','reconcile'],
   ]
   for (const [failureClass, recoveryAction] of priority) {
     if (classes.has(failureClass)) {
       return { failure_class: failureClass, recovery_action: recoveryAction }
     }
   }
-  return { failure_class: 'verification-product-defect', recovery_action: 'repair' }
+  return classes.size ? {failure_class:'safety-stop',recovery_action:'safety-stop'} : { failure_class: 'unknown-outcome', recovery_action: 'reconcile' }
 }
 
 export function resolveVerificationMode(packet) {
@@ -519,4 +565,33 @@ export function commandResultStatus({
   return required
     ? 'fail'
     : 'skipped'
+}
+
+export function requiredVerificationEvidenceMissing({ name, output = '' }) {
+  if (name !== 'shop-payment-evidence-http') return false
+  const failed = output.match(/^# fail (\d+)$/m)
+  if (Number(failed?.[1] ?? 0) > 0) return false // executed assertions must remain product defects.
+  const skipped = output.match(/^# skipped (\d+)$/m)
+  const passed = output.match(/^# pass (\d+)$/m)
+  return !passed || Number(passed[1]) === 0 || Number(skipped?.[1] ?? 0) > 0
+}
+
+export function verificationCommandFailureClass({ name, required = true, passed, errorCode, signal, output = '', missingEvidence = false }) {
+  if (signal) return 'verification-infrastructure'
+  if (required && missingEvidence) return 'verification-required-check-unavailable'
+  if (passed || !required) return null
+  if (errorCode === 'ENOENT') return 'verification-required-check-unavailable'
+  if (errorCode === 'ETIMEDOUT') return 'verification-infrastructure'
+  if (/EADDRINUSE|listen EPERM|spawn E2BIG/.test(output)) return 'verification-infrastructure'
+  if (/No tests found|Cannot find module.*playwright|Playwright Test did not expect test|Failed to load.*config|Executable doesn't exist/.test(output)) return 'verification-configuration'
+  if (errorCode && ['ECONNRESET','ECONNREFUSED','EPIPE'].includes(errorCode)) return 'verification-infrastructure'
+  // A materialized HTTP check may still require separately provisioned local
+  // identities and bridge fixtures. Preserve that missing prerequisite as a
+  // required gate; an HTTP/RLS assertion failure remains a product defect.
+  if (name === 'shop-payment-evidence-http' &&
+      (/^(?:#\s*)?Error: SHOP_EVIDENCE_[A-Z_]+ is required for the disposable local evidence test$/m.test(output) ||
+       /^(?:#\s*)?AssertionError \[ERR_ASSERTION\]: Disposable local payment-evidence fixture is required; missing: SHOP_EVIDENCE_[A-Z_]+(?:, SHOP_EVIDENCE_[A-Z_]+)*$/m.test(output))) {
+    return 'verification-required-check-unavailable'
+  }
+  return 'unknown-outcome'
 }

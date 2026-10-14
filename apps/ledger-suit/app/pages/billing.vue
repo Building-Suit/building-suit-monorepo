@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useLedgerBillingPresentation } from '~/composables/useLedgerBillingPresentation'
 const { t, te, locale } = useI18n()
 const { accessState, subscription } = useBilling()
 const { rows: usageRows, catalog } = usePlanUsage()
@@ -27,40 +28,14 @@ const currentPlanName = computed(() => {
   return locale.value === 'ar' && te(translation) ? t(translation) : catalogName ?? (te(translation) ? t(translation) : key)
 })
 
-// The global entitlement middleware owns the initial load. Loading again from
-// onMounted made the layout remove and remount this page on every request.
+// Entitlement loading remains owned by the global middleware.
+const billing = useLedgerBillingPresentation(reactive({ get surface() { return pricingSurface.value } }))
+const billingView = computed(() => ({ ...billing.view.value,
+  summary: [{ id: 'plan', label: t('billing.currentPlan'), value: currentPlanName.value, note: t(`billing.states.${accessState.value}`), status: accessState.value }],
+  details: [{ label: t('billing.billingCycle'), value: subscription.value?.billing_interval ? t(`billing.${subscription.value.billing_interval}`) : '—' }, { label: t('billing.nextDate'), value: displayDate(renewalDate.value) }],
+  providerNotice: subscription.value?.provider === 'paymob' ? t('billing.managedByPaymob') : subscription.value?.provider === 'manual' ? t('billing.manual.managed') : '',
+}))
 </script>
-
 <template>
-  <div class="space-y-6">
-    <header>
-      <h1 class="text-h1 font-extrabold">{{ t('billing.title') }}</h1>
-      <p class="mt-1 text-sm text-fg-muted">{{ t('billing.subtitle') }}</p>
-    </header>
-
-    <BsCard as="div" padding="lg">
-      <div class="space-y-6">
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p class="text-xs text-fg-muted">{{ t('billing.currentPlan') }}</p>
-          <p class="text-lg font-bold">{{ currentPlanName }}</p>
-          <p class="text-sm text-fg-muted">{{ t(`billing.states.${accessState}`) }}</p>
-        </div>
-        <StatusBadge :status="accessState" />
-      </div>
-
-      <dl class="grid gap-4 sm:grid-cols-2">
-        <div><dt class="text-xs text-fg-muted">{{ t('billing.billingCycle') }}</dt><dd class="font-semibold">{{ subscription?.billing_interval ? t(`billing.${subscription.billing_interval}`) : '—' }}</dd></div>
-        <div><dt class="text-xs text-fg-muted">{{ t('billing.nextDate') }}</dt><dd class="font-semibold">{{ displayDate(renewalDate) }}</dd></div>
-      </dl>
-
-      <p v-if="subscription?.provider === 'paymob'" class="text-sm text-fg-muted">
-        {{ t('billing.managedByPaymob') }}
-      </p>
-      <p v-if="subscription?.provider === 'manual'" class="text-sm text-fg-muted">{{ t('billing.manual.managed') }}</p>
-      <div id="plans"><BillingCheckout :surface="pricingSurface" compact /></div>
-      </div>
-    </BsCard>
-    <UsageMeters />
-  </div>
+  <BsBillingPage v-model:form="billing.form.value" :copy="billing.copy.value" :view="billingView" :manual="billing.manualView.value" :impact="billing.impact.value" @pricing-retry="billing.retry" @usage-retry="billing.usageRetry" @interval="billing.interval" @plan="billing.choose" @manual-plan="billing.chooseManual" @requests="billing.requests" @manual-close="billing.closeManual" @manual-refresh="billing.refreshManual" @manual-select="billing.select" @manual-file="billing.selectFile" @manual-submit="billing.submitManual" @manual-cancel="billing.cancelManual" @manual-download="billing.download" @open-subscription="billing.openSubscription" @impact-close="billing.closeImpact"/>
 </template>

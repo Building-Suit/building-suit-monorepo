@@ -31,15 +31,15 @@ function sha256(value) {
   return createHash('sha256').update(value).digest('hex')
 }
 
-function fixture({ taskStatus = 'in_progress', executionStatus = null, attempt = 1, verificationStatus = null, publication = null } = {}) {
+function fixture({ taskStatus = 'in_progress', executionStatus = null, attempt = 1, verificationStatus = null, publication = null, productFailure = false } = {}) {
   return {
     packet: {
       task: { task_id: 'CP-FI-001', status: taskStatus, engine_stage: 'implementation' },
       retry_policy: { policy_id: 'critical-five', max_attempts: 5, attempt_profiles: Array(5).fill('standard') },
     },
     executions: executionStatus ? [{ execution_id: 41, attempt, status: executionStatus, engine_stage: 'implementation' }] : [],
-    verification_runs: verificationStatus ? [{ verification_run_id: 71, execution_id: 41, status: verificationStatus }] : [],
-    verification_results: [],
+    verification_runs: verificationStatus ? [{ verification_run_id: 71, execution_id: 41, status: verificationStatus,metadata:productFailure?{failure_class:'verification-product-defect'}:{} }] : [],
+    verification_results: verificationStatus === 'passed' ? [{verification_run_id:71,status:'pass',metadata:{required:true},trusted_receipt:{version:2},trusted_registration:{version:1}}] : [],
     failures: [],
     publications: publication ? [{ pull_request_id: 91, state: 'open', ...publication }] : [],
     recovery: null,
@@ -65,7 +65,7 @@ function lifecycleScenarios() {
   const initial = planSupervisorStep(fixture())
   const running = planSupervisorStep(fixture({ executionStatus: 'running' }))
   const succeeded = planSupervisorStep(fixture({ executionStatus: 'succeeded' }))
-  const failedVerification = planSupervisorStep(fixture({ taskStatus: 'failed', executionStatus: 'succeeded', verificationStatus: 'failed' }))
+  const failedVerification = planSupervisorStep(fixture({ taskStatus: 'failed', executionStatus: 'succeeded', verificationStatus: 'failed', productFailure:true }))
   const verificationResume = planSupervisorStep(fixture({ taskStatus: 'verification', executionStatus: 'succeeded' }))
   const passed = planSupervisorStep(fixture({ taskStatus: 'passed', executionStatus: 'succeeded', verificationStatus: 'passed' }))
 
@@ -178,7 +178,7 @@ function recoveryScenarios(now) {
 function policyScenarios() {
   const focused = customCheckSelection({ check: { name: 'unrelated-workspace-check', required: true, changed_paths: ['apps/shop-suit/'] }, changedFiles: ['tooling/control-plane/runner/task-supervisor.mjs'], mode: 'focused' })
   const milestone = customCheckSelection({ check: { name: 'full-regression', required: true, changed_paths: ['apps/shop-suit/'] }, changedFiles: ['tooling/control-plane/runner/task-supervisor.mjs'], mode: 'milestone' })
-  const exhausted = classifySupervisorFailure({ command: 'task-verify', payload: { error: 'verification_failed' }, attempt: 5, maxAttempts: 5 })
+  const exhausted = classifySupervisorFailure({ command: 'task-verify', payload: { error: 'verification_failed',classification:{failure_class:'verification-product-defect'} }, attempt: 5, maxAttempts: 5 })
   const criteria = ['Verified behavior is already present.']
   const parentPacket = { task: { task_id: 'CP-FI-001', status: 'in_progress', acceptance_criteria: criteria, parent_satisfaction: { source_task_id: 'CP-SOURCE-001', verification_run_id: 71, acceptance_criteria_digest: acceptanceCriteriaDigest(criteria), reason: 'Verified source is in the resolved parent.' } } }
   const parent = evaluateParentSatisfaction({
@@ -258,8 +258,8 @@ function policyScenarios() {
     scenario('focused-verification-isolation', 'an unrelated workspace check is failing outside the focused changed scope', ['skip unrelated check', 'preserve implementation retry budget'], [focused.reason, 'retry budget unchanged'], {
       unrelated_check_not_selected: !focused.selected && focused.reason === 'outside_focused_changed_scope',
     }),
-    scenario('focused-repair-exhaustion', 'focused verification keeps failing through the final allowed attempt', ['bounded repair', 'safety-stop'], ['repair attempts 1-4', exhausted.next_action], {
-      exhausted_reaches_explicit_terminal_state: exhausted.kind === 'terminal' && exhausted.next_action === 'safety-stop',
+    scenario('focused-repair-exhaustion', 'focused verification keeps failing through the final allowed attempt', ['bounded repair', 'exact operator extension gate'], ['repair attempts 1-4', exhausted.next_action], {
+      exhausted_reaches_explicit_operator_gate: exhausted.kind === 'wait' && exhausted.next_action === 'wait-operator',
     }, { implementation_attempts: 5, verification_runs: 5, ai_calls: 5, implementation_retry_budget_consumed: 5 }),
     scenario('milestone-required-check-contract', 'changed paths do not match a required milestone check', ['select required check'], [milestone.reason], {
       required_check_selected: milestone.selected && milestone.reason === 'required_by_milestone_contract',
@@ -382,7 +382,7 @@ function artifactScenarios({ workflows, manifest, baselineFixture, baselineFixtu
   const baselineDigestAfter = sha256(baselineFixtureAfter)
   return [
     scenario('generated-n8n-replacement-compatibility', 'generated BS-10, BS-20, and BS-21 fixtures are evaluated as cutover candidates', ['validate identities', 'reject retry graph', 'reject hardcoded registry'], validation.valid ? ['identities valid', 'no retry graph', 'no hardcoded registry'] : validation.errors, {
-      three_workflows_present: workflows.length === 3,
+      three_controllers_and_optional_watchdog_present: workflows.length === 3 || workflows.length === 4 && workflows.some(w => w.id === 'BS31SelfHealingRecovery'),
       controller_contract_valid: validation.valid,
       compatibility_clean: compatibility.compatible,
       generated_inactive: workflows.every(workflow => workflow.active === false),

@@ -1,0 +1,7 @@
+<script setup lang="ts">
+import type { ScopeOption } from '@building-suit/contracts'
+const model = defineModel<string | null>({ default: null })
+withDefaults(defineProps<{ label: string; options: ScopeOption[]; placeholder?: string; compact?: boolean; disabled?: boolean; visibility?: 'always' | 'mobile' | 'desktop' }>(), { placeholder: undefined, compact: false, disabled: false, visibility: 'always' })
+</script>
+<template><div class="bs-scope-switcher" :data-compact="compact || undefined" :data-visibility="visibility"><BsSelect v-model="model" :label="label" :options="options" option-label="label" option-value="id" :placeholder="placeholder" :disabled="disabled"><template #option="{ option }"><div class="bs-scope-switcher__option"><span>{{ option.label }}</span><small v-if="option.description || option.meta">{{ option.description || option.meta }}</small></div></template></BsSelect></div></template>
+<style>.bs-scope-switcher { min-width: 0; width: 100%; }.bs-scope-switcher[data-compact] { max-width: 12rem; }.bs-scope-switcher[data-visibility='desktop'] { display: none; }.bs-scope-switcher__option { display: grid; min-width: 0; }.bs-scope-switcher__option span, .bs-scope-switcher__option small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.bs-scope-switcher__option small { color: var(--bs-text-muted); font-size: var(--bs-type-caption-size); }@media (min-width: 640px) { .bs-scope-switcher[data-visibility='mobile'] { display: none; }.bs-scope-switcher[data-visibility='desktop'] { display: block; } }</style>

@@ -1,0 +1,5722 @@
+{
+  "runs": [
+    {
+      "run_id": "2518c051-fb28-4641-ae03-c046d7c30807",
+      "status": "running",
+      "max_tasks": 7,
+      "suit_slug": "super-admin-suit",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "started_at": "2026-10-06T20:16:18.029289+00:00",
+      "updated_at": "2026-10-11T20:07:14.586763+00:00",
+      "finished_at": null,
+      "run_revision": 32,
+      "stop_requested": false,
+      "completed_tasks": 6,
+      "current_task_id": "SAS-M1-GATE-001",
+      "workstream_slug": "super-admin-suit",
+      "admitted_repair_id": null,
+      "controller_protocol": "cp-batch-v2",
+      "maintenance_requested": false,
+      "controller_fingerprint": "c51e2846c1fe3966ac5705a2ba6e21c11804e4f1e0ea3be37a14ef2c47cca075",
+      "controller_lease_token": "selfheal:2518c051-fb28-4641-ae03-c046d7c30807",
+      "controller_lease_expires_at": "2026-10-11T20:12:14.586763+00:00"
+    }
+  ],
+  "tasks": [
+    {
+      "title": "Validate future-Suit contracts against completed SAS M4 integrations",
+      "status": "planned",
+      "task_id": "BS-SA-FUTURE-SUIT-M4-VALIDATION-001",
+      "metadata": {
+        "source": "116_shared_foundation_planning.sql",
+        "allowed_paths": [
+          "packages/ui/**",
+          "packages/ux/**",
+          "packages/contracts/**",
+          "docs/shared/**",
+          "apps/building-suit-docs/**"
+        ],
+        "roadmap_phase": "post-m4-integration",
+        "split_from_task_id": "BS-SA-FUTURE-SUIT-001",
+        "separate_authorization_required": true,
+        "hosted_production_changes_authorized": false
+      },
+      "priority": 40,
+      "sequence": 480,
+      "suit_slug": "shared",
+      "task_type": "review",
+      "created_at": "2026-10-10T17:17:38.490935+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "high",
+      "updated_at": "2026-10-10T17:17:38.490935+00:00",
+      "description": "Deferred integration validation of the shared foundation against real completed SAS M4 event/audit and administration projections. Requires separate bounded authorization; never completion evidence for the foundation.",
+      "engine_stage": "pending",
+      "model_profile": "standard",
+      "retry_policy_id": null,
+      "workstream_slug": "shared",
+      "verification_plan": [
+        {
+          "kind": "planned_test",
+          "version": 2,
+          "commands": [
+            "bs-sa-future-suit-m4-validation-001-unit"
+          ],
+          "description": "SAS M4 integration coverage; independently verify adapters, correlation, partial feeds, redaction and unsupported capabilities.",
+          "expected_outputs": [
+            "packages/contracts/tests/bs-sa-future-suit-m4-validation-001.test.mjs"
+          ]
+        }
+      ],
+      "acceptance_criteria": [
+        "Validate the versioned read/command descriptors and registered identity/navigation against completed SAS M4 adapters and event/audit projections.",
+        "Exercise a future Suit with actual M4 integration fixtures, including unavailable/partial feeds and unsupported capabilities safely absent or disabled.",
+        "Preserve immutable source audit authority, redaction and product isolation; retain EN/AR, RTL/LTR and Bs-only ownership boundaries.",
+        "Record the exact M4 source tasks/commits and independent verification evidence; fixture-only foundation completion cannot satisfy this integration task."
+      ]
+    },
+    {
+      "title": "Implement Shop Suit side of the Customer Acquisition Suit attribution/event bridge",
+      "status": "planned",
+      "task_id": "SHOP-CAS-M1-INT-001",
+      "metadata": {
+        "source": "Customer Acquisition Suit M1 requirements conversation 2026-10-07",
+        "milestone": "M1",
+        "exclusions": [
+          "Do not change Shop Suit pricing unless separately approved.",
+          "Do not grant Customer Acquisition Suit direct authority over Shop Suit payment truth.",
+          "Do not expose customer credentials."
+        ],
+        "launch_gate": "M1_INTEGRATION",
+        "seed_target": "shop",
+        "allowed_paths": [
+          "apps/shop-suit/**"
+        ],
+        "project_family": "customer-acquisition-suit",
+        "business_priority": "launch-critical",
+        "verification_mode": "milestone",
+        "registered_project": "building-suit",
+        "source_allowed_paths": [
+          "apps/shop-suit/supabase/**"
+        ],
+        "handback_expectations": [
+          "Report exact changed paths and user-visible behavior.",
+          "Report every check actually executed and its result; do not claim unrun checks passed.",
+          "Report migrations/data changes and whether any hosted/remote operation was performed.",
+          "Leave publication, merge, deployment, hosted database changes, and external money movement to the control plane/operator."
+        ],
+        "registered_workstream": "shop-suit",
+        "verification_expectations": [
+          "Run the registered Shop Suit payment evidence and database tests applicable to the changed flow.",
+          "Test customer signup with valid/invalid acquisition references.",
+          "Test event delivery/retry against a local/disposable Customer Acquisition Suit receiver or contract fixture.",
+          "Verify unrelated Shop Suit signup/payment behavior is preserved."
+        ],
+        "publication_resolved_scopes": [
+          "apps/shop-suit/**"
+        ],
+        "publication_requirement_evidence": {
+          "source": "customer-acquisition-suit-m1-control-plane-tasks.sql",
+          "milestone": "M1",
+          "worker_output_used": false,
+          "user_requested_task_seed": true,
+          "operator_approved_task_data": false
+        }
+      },
+      "priority": 100,
+      "sequence": 120,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-10-07T16:33:43.623291+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "critical",
+      "updated_at": "2026-10-07T16:33:43.623291+00:00",
+      "description": "Inside the registered Shop Suit workstream, preserve the Customer Acquisition Suit acquisition reference through customer-controlled signup, record customer policy acceptance evidence as required, and emit the authoritative versioned lifecycle/payment events consumed by Customer Acquisition Suit. Preserve existing Shop Suit behavior and payment integrity.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": null,
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "git diff --check",
+        "pnpm typecheck"
+      ],
+      "acceptance_criteria": [
+        "Shop Suit can accept the approved Customer Acquisition Suit acquisition reference through the customer-controlled signup path without exposing or transferring customer credentials to the salesperson.",
+        "The acquisition reference is bound server-side to the resulting Shop Suit customer/account using the documented contract.",
+        "Shop Suit emits the required authoritative trial/payment events with stable idempotency identity, actual successful payment amount, currency, Shop Suit customer identity, and acquisition reference.",
+        "The first successful paid subscription event cannot be produced from client-only state and preserves existing Shop Suit payment verification rules.",
+        "Customer acceptance of the applicable terms/billing/cancellation/refund policy version is recorded before paid completion as required by the approved Shop Suit policy flow.",
+        "Existing Shop Suit customers/payments that are unrelated to Customer Acquisition Suit attribution continue to behave correctly.",
+        "Run the registered Shop Suit database/payment/integration regression checks required by changed paths."
+      ]
+    },
+    {
+      "title": "Offline counter sales and deterministic resynchronization",
+      "status": "planned",
+      "task_id": "SS-OFFLINE-001",
+      "metadata": {
+        "imported_by": "shop-suit-control-plane-import-v3.sql",
+        "launch_gate": "formal_egypt_launch",
+        "allowed_paths": [
+          "apps/shop-suit/**",
+          "packages/testing/**",
+          "packages/ux/**"
+        ],
+        "source_record": {
+          "title": "Offline counter sales and deterministic resynchronization",
+          "status": "planned",
+          "task_id": "SS-OFFLINE-001",
+          "metadata": {
+            "launch_gate": "formal_egypt_launch",
+            "business_priority": "normal",
+            "target_application": "apps/shop-suit",
+            "research_source_ids": [
+              "SRC-DAFTRA-OFFLINE",
+              "SRC-LOYVERSE-OFFLINE"
+            ],
+            "publication_strategy": "app-specific-stacked-pr",
+            "barber_two_branch_required": false,
+            "general_marketing_required": false,
+            "formal_egypt_launch_required": true
+          },
+          "priority": 50,
+          "sequence": 500,
+          "suit_slug": "shop-suit",
+          "task_type": "feature",
+          "risk_level": "critical",
+          "workstream": "building-suit/shop-suit",
+          "description": "Keep the critical counter loop usable during internet outages without making the entire back office offline. Cache only the data needed for POS and shifts, queue signed/idempotent local transactions, and expose synchronization state/recovery.",
+          "engine_stage": "pending",
+          "allowed_paths": [
+            "apps/shop-suit/**",
+            "packages/testing/**",
+            "packages/ux/**"
+          ],
+          "model_profile": "deep",
+          "retry_policy_id": "critical-five",
+          "task_dependencies": [
+            "SS-POS-001",
+            "SS-CASH-001",
+            "SS-SALE-CORR-001"
+          ],
+          "verification_plan": [
+            "Browser offline/online transition tests.",
+            "Duplicate sync/idempotency tests.",
+            "Conflict/rejection recovery tests.",
+            "Multi-tab/device safety review.",
+            "Authenticated mobile/tablet manual verification."
+          ],
+          "acceptance_criteria": [
+            "POS can record allowed sales/payments and manage an open cash shift during a network outage.",
+            "Offline records have stable local IDs/request IDs and visible unsynced/syncing/failed/synced states.",
+            "Reconnection sync uses existing server idempotency so duplicate invoice/payment/stock effects cannot occur.",
+            "Conflicts and rejected syncs remain visible and recoverable; nothing is silently dropped.",
+            "Sensitive data is minimized and protected in local storage.",
+            "Back-office purchasing/reporting/settings may remain online-only."
+          ],
+          "blocking_decision_ids": [],
+          "linked_requirement_ids": [
+            "SALE-07",
+            "PAY-06",
+            "SAFE-05",
+            "SAFE-06",
+            "SAFE-10",
+            "UX-03",
+            "UX-07",
+            "UX-08",
+            "VAL-04",
+            "VAL-11"
+          ]
+        },
+        "source_roadmap": "shop-suit-control-plane-roadmap-barber-admin-instapay-v5-2026-09-28.json",
+        "business_priority": "normal",
+        "task_dependencies": [
+          "SS-POS-001",
+          "SS-CASH-001",
+          "SS-SALE-CORR-001"
+        ],
+        "target_application": "apps/shop-suit",
+        "research_source_ids": [
+          "SRC-DAFTRA-OFFLINE",
+          "SRC-LOYVERSE-OFFLINE"
+        ],
+        "publication_strategy": "app-specific-stacked-pr",
+        "source_allowed_paths": [
+          "apps/shop-suit/**",
+          "packages/testing/**",
+          "packages/ux/**"
+        ],
+        "source_model_profile": "deep",
+        "blocking_decision_ids": [],
+        "source_roadmap_sha256": "04a70896b14e04caf1926de0d2702d6e8eb3426ea4466dff232ae5af4c027790",
+        "linked_requirement_ids": [
+          "SALE-07",
+          "PAY-06",
+          "SAFE-05",
+          "SAFE-06",
+          "SAFE-10",
+          "UX-03",
+          "UX-07",
+          "UX-08",
+          "VAL-04",
+          "VAL-11"
+        ],
+        "normalized_model_profile": "deep",
+        "barber_two_branch_required": false,
+        "general_marketing_required": false,
+        "formal_egypt_launch_required": true,
+        "priority_before_hotfix_2026_09_30": 50,
+        "priority_before_new_commercial_stack_2026_09_30": 150
+      },
+      "priority": 150,
+      "sequence": 500,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-09-28T06:22:16.534089+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "critical",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "Keep the critical counter loop usable during internet outages without making the entire back office offline. Cache only the data needed for POS and shifts, queue signed/idempotent local transactions, and expose synchronization state/recovery.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "critical-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Browser offline/online transition tests.",
+        "Duplicate sync/idempotency tests.",
+        "Conflict/rejection recovery tests.",
+        "Multi-tab/device safety review.",
+        "Authenticated mobile/tablet manual verification."
+      ],
+      "acceptance_criteria": [
+        "POS can record allowed sales/payments and manage an open cash shift during a network outage.",
+        "Offline records have stable local IDs/request IDs and visible unsynced/syncing/failed/synced states.",
+        "Reconnection sync uses existing server idempotency so duplicate invoice/payment/stock effects cannot occur.",
+        "Conflicts and rejected syncs remain visible and recoverable; nothing is silently dropped.",
+        "Sensitive data is minimized and protected in local storage.",
+        "Back-office purchasing/reporting/settings may remain online-only."
+      ]
+    },
+    {
+      "title": "Egyptian electronic receipt readiness and integration",
+      "status": "planned",
+      "task_id": "SS-EGY-ETA-001",
+      "metadata": {
+        "imported_by": "shop-suit-control-plane-import-v3.sql",
+        "launch_gate": "formal_egypt_launch",
+        "allowed_paths": [
+          "apps/shop-suit/**",
+          "apps/shop-suit/server/**",
+          "tooling/**",
+          "docs/**"
+        ],
+        "source_record": {
+          "title": "Egyptian electronic receipt readiness and integration",
+          "status": "planned",
+          "task_id": "SS-EGY-ETA-001",
+          "metadata": {
+            "launch_gate": "formal_egypt_launch",
+            "business_priority": "normal",
+            "target_application": "apps/shop-suit",
+            "research_source_ids": [
+              "SRC-EGY-ETA-LAW6",
+              "SRC-EGY-ETA-ERECEIPT-2026",
+              "SRC-EGY-ETA-POS"
+            ],
+            "publication_strategy": "app-specific-stacked-pr",
+            "barber_two_branch_required": false,
+            "general_marketing_required": false,
+            "formal_egypt_launch_required": true
+          },
+          "priority": 51,
+          "sequence": 510,
+          "suit_slug": "shop-suit",
+          "task_type": "feature",
+          "risk_level": "critical",
+          "workstream": "building-suit/shop-suit",
+          "description": "Add an Egypt-specific e-Receipt integration boundary for formal-market readiness. Do not claim compliance until sandbox/official validation is complete.",
+          "engine_stage": "pending",
+          "allowed_paths": [
+            "apps/shop-suit/**",
+            "apps/shop-suit/server/**",
+            "tooling/**",
+            "docs/**"
+          ],
+          "model_profile": "deep",
+          "retry_policy_id": "critical-five",
+          "task_dependencies": [
+            "SS-RECEIPT-001",
+            "SS-SALE-CORR-001",
+            "SS-SET-001"
+          ],
+          "verification_plan": [
+            "Contract tests against current ETA documentation/sandbox where credentials are available.",
+            "Retry/idempotency/rejection tests.",
+            "Credential/redaction/security review.",
+            "Receipt/return linkage tests.",
+            "Manual operator validation with an eligible Egyptian merchant before production activation."
+          ],
+          "acceptance_criteria": [
+            "Store required business/location tax identity and ETA configuration server-side without exposing credentials to the browser.",
+            "Map supported product/service codes and receipt payloads to the current ETA requirements discovered during implementation.",
+            "Submit issued retail receipts through a retry-safe server integration with local status/audit evidence.",
+            "Rejected/pending/accepted states are visible without changing the authoritative Shop sale.",
+            "Return/correction integration links to the original receipt as required by the current ETA contract.",
+            "Receipt UI can show ETA identifiers/QR/status only after successful validated integration.",
+            "No compliance claim is made before official/sandbox acceptance evidence."
+          ],
+          "blocking_decision_ids": [
+            "TAX-D01"
+          ],
+          "linked_requirement_ids": [
+            "SALE-12",
+            "SALE-13",
+            "SALE-14",
+            "SALE-15",
+            "SET-01",
+            "SET-02",
+            "SET-03",
+            "SAFE-05",
+            "SAFE-07",
+            "SAFE-09",
+            "INT-05",
+            "INT-07",
+            "VAL-13"
+          ]
+        },
+        "source_roadmap": "shop-suit-control-plane-roadmap-barber-admin-instapay-v5-2026-09-28.json",
+        "business_priority": "normal",
+        "task_dependencies": [
+          "SS-RECEIPT-001",
+          "SS-SALE-CORR-001",
+          "SS-SET-001"
+        ],
+        "target_application": "apps/shop-suit",
+        "research_source_ids": [
+          "SRC-EGY-ETA-LAW6",
+          "SRC-EGY-ETA-ERECEIPT-2026",
+          "SRC-EGY-ETA-POS"
+        ],
+        "publication_strategy": "app-specific-stacked-pr",
+        "source_allowed_paths": [
+          "apps/shop-suit/**",
+          "apps/shop-suit/server/**",
+          "tooling/**",
+          "docs/**"
+        ],
+        "source_model_profile": "deep",
+        "blocking_decision_ids": [
+          "TAX-D01"
+        ],
+        "source_roadmap_sha256": "04a70896b14e04caf1926de0d2702d6e8eb3426ea4466dff232ae5af4c027790",
+        "linked_requirement_ids": [
+          "SALE-12",
+          "SALE-13",
+          "SALE-14",
+          "SALE-15",
+          "SET-01",
+          "SET-02",
+          "SET-03",
+          "SAFE-05",
+          "SAFE-07",
+          "SAFE-09",
+          "INT-05",
+          "INT-07",
+          "VAL-13"
+        ],
+        "normalized_model_profile": "deep",
+        "barber_two_branch_required": false,
+        "general_marketing_required": false,
+        "formal_egypt_launch_required": true,
+        "priority_before_hotfix_2026_09_30": 51,
+        "priority_before_new_commercial_stack_2026_09_30": 151
+      },
+      "priority": 151,
+      "sequence": 510,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-09-28T06:22:16.534089+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "critical",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "Add an Egypt-specific e-Receipt integration boundary for formal-market readiness. Do not claim compliance until sandbox/official validation is complete.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "critical-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Contract tests against current ETA documentation/sandbox where credentials are available.",
+        "Retry/idempotency/rejection tests.",
+        "Credential/redaction/security review.",
+        "Receipt/return linkage tests.",
+        "Manual operator validation with an eligible Egyptian merchant before production activation."
+      ],
+      "acceptance_criteria": [
+        "Store required business/location tax identity and ETA configuration server-side without exposing credentials to the browser.",
+        "Map supported product/service codes and receipt payloads to the current ETA requirements discovered during implementation.",
+        "Submit issued retail receipts through a retry-safe server integration with local status/audit evidence.",
+        "Rejected/pending/accepted states are visible without changing the authoritative Shop sale.",
+        "Return/correction integration links to the original receipt as required by the current ETA contract.",
+        "Receipt UI can show ETA identifiers/QR/status only after successful validated integration.",
+        "No compliance claim is made before official/sandbox acceptance evidence."
+      ]
+    },
+    {
+      "title": "Business, location, receipt and operational settings",
+      "status": "planned",
+      "task_id": "SS-SET-001",
+      "metadata": {
+        "imported_by": "shop-suit-control-plane-import-v3.sql",
+        "launch_gate": "formal_egypt_launch",
+        "allowed_paths": [
+          "apps/shop-suit/**",
+          "tooling/database/**"
+        ],
+        "source_record": {
+          "title": "Business, location, receipt and operational settings",
+          "status": "planned",
+          "task_id": "SS-SET-001",
+          "metadata": {
+            "launch_gate": "formal_egypt_launch",
+            "business_priority": "normal",
+            "target_application": "apps/shop-suit",
+            "research_source_ids": [],
+            "publication_strategy": "app-specific-stacked-pr",
+            "barber_two_branch_required": false,
+            "general_marketing_required": false,
+            "formal_egypt_launch_required": true
+          },
+          "priority": 53,
+          "sequence": 530,
+          "suit_slug": "shop-suit",
+          "task_type": "feature",
+          "risk_level": "normal",
+          "workstream": "building-suit/shop-suit",
+          "description": "Complete owner-controlled settings for business/location identity, receipt presentation, supported currency and approved operational defaults while preserving finalized-document snapshots.",
+          "engine_stage": "pending",
+          "allowed_paths": [
+            "apps/shop-suit/**",
+            "tooling/database/**"
+          ],
+          "model_profile": "standard",
+          "retry_policy_id": "standard-five",
+          "task_dependencies": [
+            "SS-LOC-001",
+            "SS-RECEIPT-001"
+          ],
+          "verification_plan": [
+            "Authorization/validation tests.",
+            "Historical snapshot immutability tests.",
+            "Typecheck/lint and bilingual settings/receipt verification."
+          ],
+          "acceptance_criteria": [
+            "Business and location identity fields are validated and permissioned.",
+            "Receipt presentation settings are applied to new receipts without rewriting old ones.",
+            "Currency behavior follows approved policy and does not imply currency conversion.",
+            "Tax defaults are not exposed until tax scope is approved.",
+            "Settings never act as authorization boundaries.",
+            "Historical documents remain immutable after settings changes."
+          ],
+          "blocking_decision_ids": [
+            "SET-D01",
+            "SET-D02",
+            "TAX-D01"
+          ],
+          "linked_requirement_ids": [
+            "SET-01",
+            "SET-02",
+            "SET-03",
+            "SET-04",
+            "SET-05",
+            "SAFE-04",
+            "SAFE-08",
+            "SAFE-10",
+            "VAL-11"
+          ]
+        },
+        "handoff_source": "shop-suit.json",
+        "source_roadmap": "shop-suit-control-plane-roadmap-barber-admin-instapay-v5-2026-09-28.json",
+        "original_status": "planned",
+        "business_priority": "normal",
+        "task_dependencies": [
+          "SS-LOC-001",
+          "SS-RECEIPT-001"
+        ],
+        "target_application": "apps/shop-suit",
+        "research_source_ids": [],
+        "publication_strategy": "app-specific-stacked-pr",
+        "source_allowed_paths": [
+          "apps/shop-suit/**",
+          "tooling/database/**"
+        ],
+        "source_model_profile": "standard",
+        "blocking_decision_ids": [
+          "SET-D01",
+          "SET-D02",
+          "TAX-D01"
+        ],
+        "source_roadmap_sha256": "04a70896b14e04caf1926de0d2702d6e8eb3426ea4466dff232ae5af4c027790",
+        "linked_requirement_ids": [
+          "SET-01",
+          "SET-02",
+          "SET-03",
+          "SET-04",
+          "SET-05",
+          "SAFE-04",
+          "SAFE-08",
+          "SAFE-10",
+          "VAL-11"
+        ],
+        "normalized_model_profile": "standard",
+        "barber_two_branch_required": false,
+        "general_marketing_required": false,
+        "formal_egypt_launch_required": true,
+        "noncanonical_requirement_refs": [],
+        "priority_before_hotfix_2026_09_30": 53,
+        "priority_before_new_commercial_stack_2026_09_30": 153
+      },
+      "priority": 153,
+      "sequence": 530,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-09-24T19:24:44.116224+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "normal",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "Complete owner-controlled settings for business/location identity, receipt presentation, supported currency and approved operational defaults while preserving finalized-document snapshots.",
+      "engine_stage": "pending",
+      "model_profile": "standard",
+      "retry_policy_id": "standard-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Authorization/validation tests.",
+        "Historical snapshot immutability tests.",
+        "Typecheck/lint and bilingual settings/receipt verification."
+      ],
+      "acceptance_criteria": [
+        "Business and location identity fields are validated and permissioned.",
+        "Receipt presentation settings are applied to new receipts without rewriting old ones.",
+        "Currency behavior follows approved policy and does not imply currency conversion.",
+        "Tax defaults are not exposed until tax scope is approved.",
+        "Settings never act as authorization boundaries.",
+        "Historical documents remain immutable after settings changes."
+      ]
+    },
+    {
+      "title": "Customer self-booking, reminders and no-show tooling",
+      "status": "planned",
+      "task_id": "SS-APPT-002",
+      "metadata": {
+        "imported_by": "shop-suit-control-plane-import-v3.sql",
+        "launch_gate": "growth",
+        "allowed_paths": [
+          "apps/shop-suit/**",
+          "apps/shop-suit/server/**",
+          "packages/testing/**"
+        ],
+        "source_record": {
+          "title": "Customer self-booking, reminders and no-show tooling",
+          "status": "planned",
+          "task_id": "SS-APPT-002",
+          "metadata": {
+            "launch_gate": "growth",
+            "business_priority": "normal",
+            "target_application": "apps/shop-suit",
+            "research_source_ids": [
+              "SRC-FRESHA-BARBER",
+              "SRC-BOOKSY-FEATURES"
+            ],
+            "publication_strategy": "app-specific-stacked-pr",
+            "barber_two_branch_required": false,
+            "general_marketing_required": false,
+            "formal_egypt_launch_required": false
+          },
+          "priority": 54,
+          "sequence": 540,
+          "suit_slug": "shop-suit",
+          "task_type": "feature",
+          "risk_level": "high",
+          "workstream": "building-suit/shop-suit",
+          "description": "Extend the staff-managed barber calendar with public/self-booking and reminder workflows after the first customer validates the internal calendar.",
+          "engine_stage": "pending",
+          "allowed_paths": [
+            "apps/shop-suit/**",
+            "apps/shop-suit/server/**",
+            "packages/testing/**"
+          ],
+          "model_profile": "standard",
+          "retry_policy_id": "standard-five",
+          "task_dependencies": [
+            "SS-APPT-001",
+            "SS-PILOT-001"
+          ],
+          "verification_plan": [
+            "Availability/concurrency tests.",
+            "Public authorization/privacy tests.",
+            "Reminder scheduling/idempotency tests.",
+            "Mobile booking browser verification."
+          ],
+          "acceptance_criteria": [
+            "Public booking exposes only available location/staff/service slots and prevents double booking.",
+            "Customer can create/reschedule/cancel within configurable rules.",
+            "Automated reminders use an approved messaging channel and retain delivery audit without exposing secrets.",
+            "No-show/cancellation statuses are reportable; deposits/fees are not invented unless separately approved.",
+            "Customer privacy and location/staff availability are protected.",
+            "Booking works in Arabic/English and mobile-first."
+          ],
+          "blocking_decision_ids": [],
+          "linked_requirement_ids": [
+            "BIZ-08",
+            "CUST-01",
+            "TEAM-03",
+            "SAFE-01",
+            "SAFE-05",
+            "SAFE-06",
+            "UX-01",
+            "UX-08",
+            "VAL-09",
+            "VAL-11"
+          ]
+        },
+        "source_roadmap": "shop-suit-control-plane-roadmap-barber-admin-instapay-v5-2026-09-28.json",
+        "business_priority": "normal",
+        "task_dependencies": [
+          "SS-APPT-001",
+          "SS-PILOT-001"
+        ],
+        "target_application": "apps/shop-suit",
+        "research_source_ids": [
+          "SRC-FRESHA-BARBER",
+          "SRC-BOOKSY-FEATURES"
+        ],
+        "publication_strategy": "app-specific-stacked-pr",
+        "source_allowed_paths": [
+          "apps/shop-suit/**",
+          "apps/shop-suit/server/**",
+          "packages/testing/**"
+        ],
+        "source_model_profile": "standard",
+        "blocking_decision_ids": [],
+        "source_roadmap_sha256": "04a70896b14e04caf1926de0d2702d6e8eb3426ea4466dff232ae5af4c027790",
+        "linked_requirement_ids": [
+          "BIZ-08",
+          "CUST-01",
+          "TEAM-03",
+          "SAFE-01",
+          "SAFE-05",
+          "SAFE-06",
+          "UX-01",
+          "UX-08",
+          "VAL-09",
+          "VAL-11"
+        ],
+        "normalized_model_profile": "standard",
+        "barber_two_branch_required": false,
+        "general_marketing_required": false,
+        "formal_egypt_launch_required": false,
+        "priority_before_hotfix_2026_09_30": 54,
+        "priority_before_new_commercial_stack_2026_09_30": 154
+      },
+      "priority": 154,
+      "sequence": 540,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-09-28T06:22:16.534089+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "high",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "Extend the staff-managed barber calendar with public/self-booking and reminder workflows after the first customer validates the internal calendar.",
+      "engine_stage": "pending",
+      "model_profile": "standard",
+      "retry_policy_id": "standard-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Availability/concurrency tests.",
+        "Public authorization/privacy tests.",
+        "Reminder scheduling/idempotency tests.",
+        "Mobile booking browser verification."
+      ],
+      "acceptance_criteria": [
+        "Public booking exposes only available location/staff/service slots and prevents double booking.",
+        "Customer can create/reschedule/cancel within configurable rules.",
+        "Automated reminders use an approved messaging channel and retain delivery audit without exposing secrets.",
+        "No-show/cancellation statuses are reportable; deposits/fees are not invented unless separately approved.",
+        "Customer privacy and location/staff availability are protected.",
+        "Booking works in Arabic/English and mobile-first."
+      ]
+    },
+    {
+      "title": "Barber commissions and staff earnings reporting",
+      "status": "planned",
+      "task_id": "SS-BARBER-COMP-001",
+      "metadata": {
+        "imported_by": "shop-suit-control-plane-import-v3.sql",
+        "launch_gate": "growth",
+        "allowed_paths": [
+          "apps/shop-suit/**",
+          "tooling/database/**"
+        ],
+        "source_record": {
+          "title": "Barber commissions and staff earnings reporting",
+          "status": "planned",
+          "task_id": "SS-BARBER-COMP-001",
+          "metadata": {
+            "launch_gate": "growth",
+            "business_priority": "normal",
+            "target_application": "apps/shop-suit",
+            "research_source_ids": [
+              "SRC-FRESHA-POS",
+              "SRC-BOOKSY-FEATURES"
+            ],
+            "publication_strategy": "app-specific-stacked-pr",
+            "barber_two_branch_required": false,
+            "general_marketing_required": false,
+            "formal_egypt_launch_required": false
+          },
+          "priority": 55,
+          "sequence": 550,
+          "suit_slug": "shop-suit",
+          "task_type": "feature",
+          "risk_level": "normal",
+          "workstream": "building-suit/shop-suit",
+          "description": "Add configurable barber/staff commission tracking only after the first customer's compensation rules are confirmed. This is operational earnings reporting, not payroll.",
+          "engine_stage": "pending",
+          "allowed_paths": [
+            "apps/shop-suit/**",
+            "tooling/database/**"
+          ],
+          "model_profile": "standard",
+          "retry_policy_id": "standard-five",
+          "task_dependencies": [
+            "SS-SALE-CORR-001",
+            "SS-RPT-LITE-001"
+          ],
+          "verification_plan": [
+            "Commission fixture reconciliation including corrections/refunds.",
+            "Permission/location tests.",
+            "Bilingual staff/owner report verification."
+          ],
+          "acceptance_criteria": [
+            "Commission rules follow BARBER-D01 and can be scoped by staff and sale type/service/product as approved.",
+            "Issued sale snapshots preserve the commission basis used at transaction time.",
+            "Refund/void/return effects adjust commission traceably rather than rewriting original sale evidence.",
+            "Staff can see only their permitted earnings; owner/manager can report by branch/staff.",
+            "No payroll, tax withholding or employment-law calculation is claimed."
+          ],
+          "blocking_decision_ids": [
+            "BARBER-D01"
+          ],
+          "linked_requirement_ids": [
+            "TEAM-06",
+            "TEAM-09",
+            "RPT-07",
+            "RPT-10",
+            "SAFE-04",
+            "SAFE-07"
+          ]
+        },
+        "source_roadmap": "shop-suit-control-plane-roadmap-barber-admin-instapay-v5-2026-09-28.json",
+        "business_priority": "normal",
+        "task_dependencies": [
+          "SS-SALE-CORR-001",
+          "SS-RPT-LITE-001"
+        ],
+        "target_application": "apps/shop-suit",
+        "research_source_ids": [
+          "SRC-FRESHA-POS",
+          "SRC-BOOKSY-FEATURES"
+        ],
+        "publication_strategy": "app-specific-stacked-pr",
+        "source_allowed_paths": [
+          "apps/shop-suit/**",
+          "tooling/database/**"
+        ],
+        "source_model_profile": "standard",
+        "blocking_decision_ids": [
+          "BARBER-D01"
+        ],
+        "source_roadmap_sha256": "04a70896b14e04caf1926de0d2702d6e8eb3426ea4466dff232ae5af4c027790",
+        "linked_requirement_ids": [
+          "TEAM-06",
+          "TEAM-09",
+          "RPT-07",
+          "RPT-10",
+          "SAFE-04",
+          "SAFE-07"
+        ],
+        "normalized_model_profile": "standard",
+        "barber_two_branch_required": false,
+        "general_marketing_required": false,
+        "formal_egypt_launch_required": false,
+        "priority_before_hotfix_2026_09_30": 55,
+        "priority_before_new_commercial_stack_2026_09_30": 155
+      },
+      "priority": 155,
+      "sequence": 550,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-09-28T06:22:16.534089+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "normal",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "Add configurable barber/staff commission tracking only after the first customer's compensation rules are confirmed. This is operational earnings reporting, not payroll.",
+      "engine_stage": "pending",
+      "model_profile": "standard",
+      "retry_policy_id": "standard-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Commission fixture reconciliation including corrections/refunds.",
+        "Permission/location tests.",
+        "Bilingual staff/owner report verification."
+      ],
+      "acceptance_criteria": [
+        "Commission rules follow BARBER-D01 and can be scoped by staff and sale type/service/product as approved.",
+        "Issued sale snapshots preserve the commission basis used at transaction time.",
+        "Refund/void/return effects adjust commission traceably rather than rewriting original sale evidence.",
+        "Staff can see only their permitted earnings; owner/manager can report by branch/staff.",
+        "No payroll, tax withholding or employment-law calculation is claimed."
+      ]
+    },
+    {
+      "title": "Optional service material consumption",
+      "status": "planned",
+      "task_id": "SS-SERV-002",
+      "metadata": {
+        "imported_by": "shop-suit-control-plane-import-v3.sql",
+        "launch_gate": "growth",
+        "allowed_paths": [
+          "apps/shop-suit/**",
+          "tooling/database/**"
+        ],
+        "source_record": {
+          "title": "Optional service material consumption",
+          "status": "planned",
+          "task_id": "SS-SERV-002",
+          "metadata": {
+            "launch_gate": "growth",
+            "business_priority": "normal",
+            "target_application": "apps/shop-suit",
+            "research_source_ids": [],
+            "publication_strategy": "app-specific-stacked-pr",
+            "barber_two_branch_required": false,
+            "general_marketing_required": false,
+            "formal_egypt_launch_required": false
+          },
+          "priority": 56,
+          "sequence": 560,
+          "suit_slug": "shop-suit",
+          "task_type": "feature",
+          "risk_level": "high",
+          "workstream": "building-suit/shop-suit",
+          "description": "If approved, allow a service to consume configured stocked materials at issue without making normal services inventory-dependent or charging the customer twice.",
+          "engine_stage": "pending",
+          "allowed_paths": [
+            "apps/shop-suit/**",
+            "tooling/database/**"
+          ],
+          "model_profile": "deep",
+          "retry_policy_id": "standard-five",
+          "task_dependencies": [
+            "SS-STOCK-002",
+            "SS-SALE-001"
+          ],
+          "verification_plan": [
+            "Focused material-definition/consumption SQL tests.",
+            "FIFO/retry/concurrency and snapshot tests.",
+            "Bilingual configuration/sale verification."
+          ],
+          "acceptance_criteria": [
+            "Feature is not exposed unless SERV-D01 approves it.",
+            "Configured materials are versioned and snapshot at issue.",
+            "Consumption occurs exactly once through FIFO and never creates an extra customer charge unless the product is separately sold.",
+            "Unconfigured services create no stock effects.",
+            "Retry/concurrency/insufficient-stock/cross-shop behavior is safe.",
+            "Units/rounding/effective dates follow approved decisions."
+          ],
+          "blocking_decision_ids": [
+            "SERV-D01",
+            "SERV-D02",
+            "SERV-D03"
+          ],
+          "linked_requirement_ids": [
+            "SERV-05",
+            "SERV-06",
+            "STOCK-04",
+            "STOCK-05",
+            "STOCK-06",
+            "STOCK-07",
+            "STOCK-11",
+            "SAFE-05",
+            "SAFE-06"
+          ]
+        },
+        "handoff_source": "shop-suit.json",
+        "source_roadmap": "shop-suit-control-plane-roadmap-barber-admin-instapay-v5-2026-09-28.json",
+        "original_status": "planned",
+        "business_priority": "normal",
+        "task_dependencies": [
+          "SS-STOCK-002",
+          "SS-SALE-001"
+        ],
+        "target_application": "apps/shop-suit",
+        "research_source_ids": [],
+        "publication_strategy": "app-specific-stacked-pr",
+        "source_allowed_paths": [
+          "apps/shop-suit/**",
+          "tooling/database/**"
+        ],
+        "source_model_profile": "deep",
+        "blocking_decision_ids": [
+          "SERV-D01",
+          "SERV-D02",
+          "SERV-D03"
+        ],
+        "source_roadmap_sha256": "04a70896b14e04caf1926de0d2702d6e8eb3426ea4466dff232ae5af4c027790",
+        "linked_requirement_ids": [
+          "SERV-05",
+          "SERV-06",
+          "STOCK-04",
+          "STOCK-05",
+          "STOCK-06",
+          "STOCK-07",
+          "STOCK-11",
+          "SAFE-05",
+          "SAFE-06"
+        ],
+        "normalized_model_profile": "deep",
+        "barber_two_branch_required": false,
+        "general_marketing_required": false,
+        "formal_egypt_launch_required": false,
+        "noncanonical_requirement_refs": [],
+        "priority_before_hotfix_2026_09_30": 56,
+        "priority_before_new_commercial_stack_2026_09_30": 156
+      },
+      "priority": 156,
+      "sequence": 560,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-09-24T19:24:44.116224+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "high",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "If approved, allow a service to consume configured stocked materials at issue without making normal services inventory-dependent or charging the customer twice.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "critical-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Focused material-definition/consumption SQL tests.",
+        "FIFO/retry/concurrency and snapshot tests.",
+        "Bilingual configuration/sale verification."
+      ],
+      "acceptance_criteria": [
+        "Feature is not exposed unless SERV-D01 approves it.",
+        "Configured materials are versioned and snapshot at issue.",
+        "Consumption occurs exactly once through FIFO and never creates an extra customer charge unless the product is separately sold.",
+        "Unconfigured services create no stock effects.",
+        "Retry/concurrency/insufficient-stock/cross-shop behavior is safe.",
+        "Units/rounding/effective dates follow approved decisions."
+      ]
+    },
+    {
+      "title": "Partial returns and advanced sale correction policy",
+      "status": "planned",
+      "task_id": "SS-SALE-002",
+      "metadata": {
+        "imported_by": "shop-suit-control-plane-import-v3.sql",
+        "launch_gate": "growth",
+        "allowed_paths": [
+          "apps/shop-suit/**",
+          "tooling/database/**"
+        ],
+        "source_record": {
+          "title": "Partial returns and advanced sale correction policy",
+          "status": "planned",
+          "task_id": "SS-SALE-002",
+          "metadata": {
+            "launch_gate": "growth",
+            "business_priority": "normal",
+            "target_application": "apps/shop-suit",
+            "research_source_ids": [],
+            "publication_strategy": "app-specific-stacked-pr",
+            "barber_two_branch_required": false,
+            "general_marketing_required": false,
+            "formal_egypt_launch_required": false
+          },
+          "priority": 57,
+          "sequence": 570,
+          "suit_slug": "shop-suit",
+          "task_type": "feature",
+          "risk_level": "high",
+          "workstream": "building-suit/shop-suit",
+          "description": "After the full-return path is stable, add partial item/quantity returns and any additional sale lifecycle semantics that require explicit product policy. Keep tax/custom-line work separate.",
+          "engine_stage": "pending",
+          "allowed_paths": [
+            "apps/shop-suit/**",
+            "tooling/database/**"
+          ],
+          "model_profile": "deep",
+          "retry_policy_id": "standard-five",
+          "task_dependencies": [
+            "SS-SALE-CORR-001",
+            "SS-STOCK-002"
+          ],
+          "verification_plan": [
+            "Partial quantity/value return tests.",
+            "Concurrent/retry ceiling tests.",
+            "Stock/payment reconciliation.",
+            "Cross-shop and history immutability tests."
+          ],
+          "acceptance_criteria": [
+            "Partial return behavior follows SALE-D04.",
+            "Returned product quantity restores stock exactly once with original-sale linkage and valuation traceability.",
+            "Service refund/correction behavior remains traceable and does not invent stock effects.",
+            "Payment refund/allocation changes reconcile to the partial return amount exactly once.",
+            "Issued history remains immutable and every correction is append-only.",
+            "Repeated/concurrent partial returns cannot exceed original quantity/value."
+          ],
+          "blocking_decision_ids": [
+            "SALE-D04"
+          ],
+          "linked_requirement_ids": [
+            "SALE-13",
+            "SALE-14",
+            "STOCK-02",
+            "STOCK-05",
+            "SAFE-04",
+            "SAFE-05",
+            "SAFE-06",
+            "VAL-05"
+          ]
+        },
+        "handoff_source": "shop-suit.json",
+        "source_roadmap": "shop-suit-control-plane-roadmap-barber-admin-instapay-v5-2026-09-28.json",
+        "original_status": "planned",
+        "business_priority": "normal",
+        "task_dependencies": [
+          "SS-SALE-CORR-001",
+          "SS-STOCK-002"
+        ],
+        "target_application": "apps/shop-suit",
+        "research_source_ids": [],
+        "publication_strategy": "app-specific-stacked-pr",
+        "source_allowed_paths": [
+          "apps/shop-suit/**",
+          "tooling/database/**"
+        ],
+        "source_model_profile": "deep",
+        "blocking_decision_ids": [
+          "SALE-D04"
+        ],
+        "source_roadmap_sha256": "04a70896b14e04caf1926de0d2702d6e8eb3426ea4466dff232ae5af4c027790",
+        "linked_requirement_ids": [
+          "SALE-13",
+          "SALE-14",
+          "STOCK-02",
+          "STOCK-05",
+          "SAFE-04",
+          "SAFE-05",
+          "SAFE-06",
+          "VAL-05"
+        ],
+        "normalized_model_profile": "deep",
+        "barber_two_branch_required": false,
+        "general_marketing_required": false,
+        "formal_egypt_launch_required": false,
+        "noncanonical_requirement_refs": [],
+        "priority_before_hotfix_2026_09_30": 57,
+        "priority_before_new_commercial_stack_2026_09_30": 157
+      },
+      "priority": 157,
+      "sequence": 570,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-09-24T19:24:44.116224+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "high",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "After the full-return path is stable, add partial item/quantity returns and any additional sale lifecycle semantics that require explicit product policy. Keep tax/custom-line work separate.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "critical-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Partial quantity/value return tests.",
+        "Concurrent/retry ceiling tests.",
+        "Stock/payment reconciliation.",
+        "Cross-shop and history immutability tests."
+      ],
+      "acceptance_criteria": [
+        "Partial return behavior follows SALE-D04.",
+        "Returned product quantity restores stock exactly once with original-sale linkage and valuation traceability.",
+        "Service refund/correction behavior remains traceable and does not invent stock effects.",
+        "Payment refund/allocation changes reconcile to the partial return amount exactly once.",
+        "Issued history remains immutable and every correction is append-only.",
+        "Repeated/concurrent partial returns cannot exceed original quantity/value."
+      ]
+    },
+    {
+      "title": "Build public Shop slug, tenant URL and publication foundation",
+      "status": "planned",
+      "task_id": "SS-WEB-SLUG-001",
+      "metadata": {
+        "queue_group": "public_web_customer_portal_changelog_tail",
+        "allowed_paths": [
+          "apps/shop-suit/**"
+        ],
+        "queue_ordinal": 1,
+        "payload_sha256": "7af0f8ab35e328d660370915a707ed97bb86afeba1522b0b5db529c025ebf94d",
+        "tail_priority_base": 160,
+        "tail_sequence_base": 1010,
+        "max_implementation_attempts": 3
+      },
+      "priority": 170,
+      "sequence": 1020,
+      "suit_slug": "shop-suit",
+      "task_type": "database",
+      "created_at": "2026-09-30T22:41:15.786877+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "critical",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "Create the public-website identity layer. Published Shops use https://{shop-slug}.shops.building-suit.com. Store slug separately from Shop name; propose it from the Shop name, enforce lowercase ASCII letters/numbers/hyphens, reserved-name rejection and case-insensitive uniqueness, support explicit slug changes with old-slug redirects, and fail closed on unknown/unpublished hosts. Prepare/document wildcard DNS/Vercel requirements but do not mutate provider configuration.",
+      "engine_stage": "pending",
+      "model_profile": "standard",
+      "retry_policy_id": "standard-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "DB tests for slug normalization, reserved names, collisions, concurrent claims, aliases and non-reuse.",
+        "Host-resolution tests for valid, unknown, unpublished and cross-Shop requests.",
+        "Slug-change redirect tests; Shop typecheck/lint/tests/build and git diff --check."
+      ],
+      "acceptance_criteria": [
+        "Canonical public URL is https://{slug}.shops.building-suit.com and the private owner/staff app remains a separate host.",
+        "Slug is stored independently from Shop display name; renaming the Shop never silently changes its URL.",
+        "Slug rules are deterministic, 3-50 chars, lowercase ASCII letters/numbers/hyphens, with reserved-name protection and concurrency-safe case-insensitive uniqueness.",
+        "For non-Latin/ambiguous names, generation uses a safe collision-resistant fallback and remains owner-editable before publish.",
+        "Explicit slug changes preserve old aliases that only redirect to the same Shop; old slugs are not immediately reusable by another Shop.",
+        "Unknown, suspended, archived or unpublished tenant hosts fail closed and do not leak another tenant.",
+        "Provider/DNS wildcard activation is documented as a separate release action and is not performed by this task."
+      ]
+    },
+    {
+      "title": "Add public Shop profile, required logo, contacts, locations and publish readiness",
+      "status": "planned",
+      "task_id": "SS-WEB-PROFILE-001",
+      "metadata": {
+        "queue_group": "public_web_customer_portal_changelog_tail",
+        "allowed_paths": [
+          "apps/shop-suit/**"
+        ],
+        "queue_ordinal": 2,
+        "payload_sha256": "7af0f8ab35e328d660370915a707ed97bb86afeba1522b0b5db529c025ebf94d",
+        "tail_priority_base": 160,
+        "tail_sequence_base": 1010,
+        "max_implementation_attempts": 3
+      },
+      "priority": 180,
+      "sequence": 1030,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-09-30T22:41:15.786877+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "high",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "Add Business settings for the public website. Publication is opt-in and requires a logo, public Shop name, short description, at least one public contact method, at least one explicitly visible active location, and at least one published product/service. Support public phone, WhatsApp and email plus public location presentation/opening-hours data and SEO fields without auto-publishing private operational data.",
+      "engine_stage": "pending",
+      "model_profile": "standard",
+      "retry_policy_id": "standard-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Owner/settings-manager happy path and unauthorized/cross-Shop denial.",
+        "Logo type/size/storage isolation tests.",
+        "Publication readiness matrix and publish/unpublish/republish tests.",
+        "EN/AR responsive settings verification."
+      ],
+      "acceptance_criteria": [
+        "Business settings shows public-site draft/published state and canonical tenant URL.",
+        "Publish is blocked until logo, public name, description, one contact method, one visible active location and one published product/service are present.",
+        "Logo accepts bounded safe raster formats such as PNG/JPEG/WebP; arbitrary unsanitized SVG is rejected.",
+        "Logo/assets are tenant-scoped and cannot be read or replaced across Shops.",
+        "Phone, WhatsApp and email are independently configurable/public.",
+        "Active operational locations are not public by default; owner explicitly selects visible locations and public fields.",
+        "Unpublish removes public content immediately while preserving configuration for later republish.",
+        "Publication/profile writes are permission checked and audited."
+      ]
+    },
+    {
+      "title": "Add selective public product and service publishing",
+      "status": "planned",
+      "task_id": "SS-WEB-CATALOG-001",
+      "metadata": {
+        "queue_group": "public_web_customer_portal_changelog_tail",
+        "allowed_paths": [
+          "apps/shop-suit/**"
+        ],
+        "queue_ordinal": 3,
+        "payload_sha256": "7af0f8ab35e328d660370915a707ed97bb86afeba1522b0b5db529c025ebf94d",
+        "tail_priority_base": 160,
+        "tail_sequence_base": 1010,
+        "max_implementation_attempts": 3
+      },
+      "priority": 190,
+      "sequence": 1040,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-09-30T22:41:15.786877+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "high",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "Create an explicit public-catalog layer. Internal active products/services remain private until the owner publishes them. Support public description, optional image, display order and per-item Show price. Never expose cost, FIFO, internal stock, supplier/private fields, internal notes or unrelated IDs. No ecommerce behavior.",
+      "engine_stage": "pending",
+      "model_profile": "standard",
+      "retry_policy_id": "standard-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Public projection allowlist tests.",
+        "Publish/unpublish/archive/reactivate matrix.",
+        "Shown/hidden price tests in EN/AR and cross-Shop authorization tests."
+      ],
+      "acceptance_criteria": [
+        "Active products/services remain private until explicitly published.",
+        "Publish/unpublish never changes operational active/archive state.",
+        "Per item supports public description, optional image, display order and Show price toggle.",
+        "Hidden price produces a contact-for-price presentation and is absent from public payloads.",
+        "Archived/inactive items automatically disappear publicly while publication configuration may be preserved.",
+        "Public projection is allowlisted and excludes cost/FIFO/stock quantities/supplier-private/internal-note data.",
+        "Cross-Shop item references are rejected server-side.",
+        "No cart, checkout, order, reservation or payment behavior is introduced."
+      ]
+    },
+    {
+      "title": "Build the bilingual public Shop showcase and contact experience",
+      "status": "planned",
+      "task_id": "SS-WEB-PUBLIC-001",
+      "metadata": {
+        "queue_group": "public_web_customer_portal_changelog_tail",
+        "allowed_paths": [
+          "apps/shop-suit/**"
+        ],
+        "queue_ordinal": 4,
+        "payload_sha256": "7af0f8ab35e328d660370915a707ed97bb86afeba1522b0b5db529c025ebf94d",
+        "tail_priority_base": 160,
+        "tail_sequence_base": 1010,
+        "max_implementation_attempts": 3
+      },
+      "priority": 200,
+      "sequence": 1050,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-09-30T22:41:15.786877+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "high",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "Build the customer-facing tenant website from public projections: Shop identity, selected services/products, visible locations, phone, WhatsApp, email and a bounded contact form. Store inquiries for the Shop owner. V1 is showcase/contact only: no booking, cart, checkout, payment, stock reservation, ordering or customer account creation.",
+      "engine_stage": "pending",
+      "model_profile": "standard",
+      "retry_policy_id": "standard-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Two-Shop tenant-isolation browser/API tests.",
+        "EN/AR phone/tablet/desktop rendering.",
+        "Contact validation/honeypot/rate-limit/cross-Shop tests.",
+        "SEO/robots/canonical checks and forbidden-public-field scan."
+      ],
+      "acceptance_criteria": [
+        "Published tenant URL renders only the resolved Shop public profile/catalog/locations.",
+        "Public website is responsive, accessible and bilingual EN/AR with correct RTL/LTR.",
+        "Phone, WhatsApp and email actions appear only when configured/public.",
+        "Contact form collects bounded name/contact/message and stores an inquiry for the resolved Shop.",
+        "Inquiry submission uses server validation, honeypot and rate limiting; anonymous users cannot read inquiry storage.",
+        "Owner can view/manage own website inquiries; no cross-Shop access.",
+        "Unknown/unpublished Shops do not render stale cached tenant content.",
+        "Canonical URL, meta description, Open Graph and robots behavior are correct; unpublished sites are noindex/fail closed.",
+        "No ecommerce or public booking controls exist."
+      ]
+    },
+    {
+      "title": "Issue secure appointment access codes and short-lived customer portal sessions",
+      "status": "planned",
+      "task_id": "SS-WEB-APPT-ACCESS-001",
+      "metadata": {
+        "queue_group": "public_web_customer_portal_changelog_tail",
+        "allowed_paths": [
+          "apps/shop-suit/**"
+        ],
+        "queue_ordinal": 5,
+        "payload_sha256": "7af0f8ab35e328d660370915a707ed97bb86afeba1522b0b5db529c025ebf94d",
+        "tail_priority_base": 160,
+        "tail_sequence_base": 1010,
+        "max_implementation_attempts": 3
+      },
+      "priority": 210,
+      "sequence": 1060,
+      "suit_slug": "shop-suit",
+      "task_type": "database",
+      "created_at": "2026-09-30T22:41:15.786877+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "critical",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "Extend appointments with customer-facing access credentials. Issue cryptographically random non-sequential human-readable codes; authorized staff can issue/rotate them for existing appointments. Code plus matching normalized phone is required. Successful verification creates only a high-entropy short-lived Shop/customer-scoped session. Rate-limit and audit attempts without logging secrets.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "standard-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Entropy/format/collision tests.",
+        "Code+phone success and mismatch/enumeration tests.",
+        "Rate-limit/brute-force, rotate/revoke/session-expiry and cross-Shop replay tests.",
+        "Full appointment DB regression."
+      ],
+      "acceptance_criteria": [
+        "Codes are cryptographically random/non-sequential using a human-friendly alphabet with at least about 50 bits of entropy.",
+        "Code alone never returns appointment/customer history; matching normalized phone is required.",
+        "Mismatch responses avoid revealing whether code, phone, Shop or customer exists.",
+        "Successful verification creates a short-lived token scoped to exactly one Shop and one saved customer or one walk-in appointment.",
+        "Codes/sessions can be rotated/revoked and prior access stops working.",
+        "Full codes/session secrets never appear in ordinary logs/audit/error text.",
+        "Verification is rate-limited at appropriate client/Shop/credential boundaries.",
+        "Appointment edits do not silently rotate access credentials.",
+        "Appointment without usable phone cannot enable portal access until phone is safely captured or it is linked to a saved customer.",
+        "Existing scheduling, availability, idempotency and audit behavior remains intact."
+      ]
+    },
+    {
+      "title": "Build the secure public customer appointment and service-history portal",
+      "status": "planned",
+      "task_id": "SS-WEB-CUSTOMER-PORTAL-001",
+      "metadata": {
+        "queue_group": "public_web_customer_portal_changelog_tail",
+        "allowed_paths": [
+          "apps/shop-suit/**"
+        ],
+        "queue_ordinal": 6,
+        "payload_sha256": "7af0f8ab35e328d660370915a707ed97bb86afeba1522b0b5db529c025ebf94d",
+        "tail_priority_base": 160,
+        "tail_sequence_base": 1010,
+        "max_implementation_attempts": 3
+      },
+      "priority": 220,
+      "sequence": 1070,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-09-30T22:41:15.786877+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "critical",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "Add My appointments to each public Shop website. A verified saved customer sees only same-Shop upcoming/past appointment and service history: date/time, public location, service, assigned staff display name and status. Walk-ins are appointment-scoped. Exclude financial records, internal notes and private staff/customer fields.",
+      "engine_stage": "pending",
+      "model_profile": "standard",
+      "retry_policy_id": "standard-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Saved-customer upcoming/past fixture and walk-in fixture.",
+        "Cross-Shop/cross-customer/expired/revoked denial.",
+        "Payload allowlist proving financial/private fields absent.",
+        "EN/AR phone/tablet/desktop browser flows."
+      ],
+      "acceptance_criteria": [
+        "Public website has a clear My appointments/history entry point.",
+        "No history is queryable without a valid short-lived portal session.",
+        "Saved customer sees only same-Shop upcoming/past appointments/services with date/time, public location, service, staff display name and status.",
+        "Appointment notes, staff contact details, sales, invoices, receipts, payments, balances, product purchase history and internal audit data are excluded.",
+        "Walk-in session exposes only its verified appointment and cannot broaden by matching name/phone.",
+        "Cancelled/no-show/completed statuses render accurately.",
+        "Expired/revoked session returns to verification without exposing cached prior history.",
+        "EN/AR mobile-first accessibility and RTL/LTR pass."
+      ]
+    },
+    {
+      "title": "Qualify public Shop websites, customer portal and changelog for launch",
+      "status": "planned",
+      "task_id": "SS-WEB-LAUNCH-001",
+      "metadata": {
+        "queue_group": "public_web_customer_portal_changelog_tail",
+        "allowed_paths": [
+          "apps/shop-suit/**"
+        ],
+        "queue_ordinal": 8,
+        "payload_sha256": "7af0f8ab35e328d660370915a707ed97bb86afeba1522b0b5db529c025ebf94d",
+        "tail_priority_base": 160,
+        "tail_sequence_base": 1010,
+        "max_implementation_attempts": 3
+      },
+      "priority": 240,
+      "sequence": 1090,
+      "suit_slug": "shop-suit",
+      "task_type": "review",
+      "created_at": "2026-09-30T22:41:15.786877+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "critical",
+      "updated_at": "2026-10-05T07:39:30.119215+00:00",
+      "description": "Perform final end-to-end qualification of the multitenant public-site/customer-portal/changelog scope: host/tenant isolation, slug takeover resistance, public-data minimization, code abuse/rate limits, inquiry abuse controls, cache isolation, SEO, accessibility, EN/AR and complete owner/customer journeys. Do not configure wildcard DNS/Vercel, deploy or promote without separate authorization.",
+      "engine_stage": "pending",
+      "model_profile": "review",
+      "retry_policy_id": "standard-five",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Cross-tenant adversarial matrix and public data-leak review.",
+        "Abuse/rate-limit tests for inquiry and appointment access.",
+        "SEO/accessibility/responsive browser matrix.",
+        "Full Shop DB regression, typecheck, lint, tests, production build and git diff --check.",
+        "Launch checklist separates implemented, verified, provider-configured, deployed and production-smoke-tested states."
+      ],
+      "acceptance_criteria": [
+        "At least two tenant fixtures prove host/slug/content/inquiry/portal isolation.",
+        "Slug collisions, aliases, old-slug takeover and reserved-host attempts fail safely.",
+        "Public payload review proves no cost/FIFO/supplier-private/customer-private/staff-contact/financial/internal-note leakage.",
+        "Appointment code brute-force/rate-limit/session expiry/rotation/revocation/enumeration tests pass.",
+        "Inquiry spam/rate-limit and tenant isolation pass.",
+        "Published/unpublished/suspended behavior and cache invalidation are correct.",
+        "SEO canonical/robots/Open Graph behavior is correct and unpublished/unknown tenants fail closed.",
+        "Public site, portal and changelog pass EN/AR, RTL/LTR, keyboard/semantics and phone/tablet/desktop checks.",
+        "No ecommerce or public booking capability slipped into V1.",
+        "Wildcard provider prerequisites are documented and remain NOT DEPLOYED until separately authorized.",
+        "Full relevant Shop DB/app regression passes."
+      ]
+    },
+    {
+      "title": "Canonical UI PRO methodology, evidence baseline and plan audit",
+      "status": "planned",
+      "task_id": "BS-UI-PRO-001",
+      "metadata": {
+        "initiative": "building-suit-ui-professionalization",
+        "preparation": {
+          "required_reads": [
+            "AGENTS.md",
+            "docs/shared/ui-pro-task-guide.md",
+            "docs/shared/design-system.md",
+            "docs/shared/ui-ownership.md",
+            "docs/shared/interactions.md",
+            "docs/shared/data-table.md",
+            "packages/ui/AGENTS.md",
+            "packages/design-tokens/tokens.json"
+          ],
+          "pilot_before_propagation": true,
+          "rendered_visual_review_required": true
+        },
+        "queue_anchor": {
+          "assigned_priority": 340,
+          "first_ui_sequence": 2610,
+          "previous_max_priority": 240,
+          "previous_max_sequence": 2600
+        },
+        "queue_policy": "last-after-existing-tasks-at-registration",
+        "allowed_paths": [
+          "docs/shared/"
+        ],
+        "required_skill": "building-suit-ui",
+        "selling_blocker": false,
+        "business_priority": "deferred",
+        "verification_mode": "focused",
+        "source_allowed_paths": [
+          "docs/shared/"
+        ],
+        "brand_identity_locked": true,
+        "methodology_guide_path": "docs/shared/ui-pro-task-guide.md",
+        "publication_exact_paths": [
+          "docs/shared/ui-pro-task-guide.md",
+          "docs/shared/README.md"
+        ],
+        "reference_research_fields": [
+          "reference product",
+          "screen/workflow",
+          "usability problem",
+          "observed pattern",
+          "why it works",
+          "Building Suit applicability",
+          "required adaptation",
+          "adopt/adapt/reject",
+          "affected scope",
+          "evidence limit"
+        ],
+        "reference_research_required": true,
+        "framework_migration_authorized": false,
+        "rendered_visual_review_required": true
+      },
+      "priority": 340,
+      "sequence": 2610,
+      "suit_slug": "shared",
+      "task_type": "research",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "normal",
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "description": "OBJECTIVE: Adopt the permanent Building Suit UI PRO methodology in canonical shared documentation and refresh the evidence baseline/task audit before any UI implementation.\n\nUSER / PROBLEM: Building Suit already has a capable shared design system, but future AI sessions need a durable evidence-led method that prevents generic AI-template composition and treats external products as UX behavior references, never branding authority.\n\nCURRENT-STATE EVIDENCE: Inspect current AGENTS rules, shared design/UI ownership/interaction/table docs, canonical tokens, shell, Shop dashboard, Ledger dashboard, available Inventory UI, and the current BS-UI-PRO control-plane graph at the execution-time repository ref. Preserve correct behavior and record unverified areas.\n\nREFERENCE-PATTERN EVIDENCE: Define the focused research record. Normally use one best-in-class general reference, one relevant domain reference, and optionally one strong alternate/open-source reference per UX question. Record observed pattern, why it works, applicability, adaptation, adopt/adapt/reject, affected scope and evidence limit.\n\nBUILDING SUIT ADAPTATION: Materialize the approved methodology at docs/shared/ui-pro-task-guide.md and index it from docs/shared/README.md if current documentation convention requires it. Do not alter product UI, tokens, business logic, databases, n8n, deployment configuration or framework dependencies.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "deep-only",
+      "workstream_slug": "shared",
+      "verification_plan": [
+        "Read root/scoped AGENTS and canonical shared UI specifications.",
+        "Run relevant docs generation/checks plus git diff --check.",
+        "Verify repository-local links/paths.",
+        "Review the final guide as a fresh-session handoff and confirm only allowed docs paths changed."
+      ],
+      "acceptance_criteria": [
+        "docs/shared/ui-pro-task-guide.md exists as the canonical cross-Suit UI PRO methodology and is discoverable from shared docs.",
+        "The guide contains authority hierarchy, reverse-engineering methodology, research fields, page archetypes, component ownership, task-authoring, visual-acceptance, pilot-before-propagation and anti-pattern rules.",
+        "Current UI baseline is refreshed against the execution-time ref and distinguishes correct behavior from composition gaps.",
+        "Existing BS-UI-PRO-001..010 tasks are audited without discarding valid IDs and the pilot approval gate is recorded.",
+        "Future browser/rendered verification capability is confirmed or explicitly BLOCKED/NOT VERIFIED.",
+        "No application UI or domain behavior is changed."
+      ]
+    },
+    {
+      "title": "Professionalize shared application shell and navigation",
+      "status": "planned",
+      "task_id": "BS-UI-PRO-002",
+      "metadata": {
+        "initiative": "building-suit-ui-professionalization",
+        "preparation": {
+          "required_reads": [
+            "AGENTS.md",
+            "docs/shared/ui-pro-task-guide.md",
+            "docs/shared/design-system.md",
+            "docs/shared/ui-ownership.md",
+            "docs/shared/interactions.md",
+            "docs/shared/data-table.md",
+            "packages/ui/AGENTS.md",
+            "packages/design-tokens/tokens.json"
+          ],
+          "pilot_before_propagation": true,
+          "rendered_visual_review_required": true
+        },
+        "queue_anchor": {
+          "assigned_priority": 340,
+          "first_ui_sequence": 2610,
+          "previous_max_priority": 240,
+          "previous_max_sequence": 2600
+        },
+        "queue_policy": "last-after-existing-tasks-at-registration",
+        "allowed_paths": [
+          "packages/ui/",
+          "packages/nuxt-layer/",
+          "packages/testing/",
+          "apps/building-suit-docs/",
+          "docs/shared/"
+        ],
+        "required_skill": "building-suit-ui",
+        "selling_blocker": false,
+        "business_priority": "deferred",
+        "verification_mode": "milestone",
+        "source_allowed_paths": [
+          "packages/ui/",
+          "packages/nuxt-layer/",
+          "packages/testing/",
+          "apps/building-suit-docs/",
+          "docs/shared/"
+        ],
+        "brand_identity_locked": true,
+        "methodology_guide_path": "docs/shared/ui-pro-task-guide.md",
+        "publication_exact_paths": [],
+        "reference_research_fields": [
+          "reference product",
+          "screen/workflow",
+          "usability problem",
+          "observed pattern",
+          "why it works",
+          "Building Suit applicability",
+          "required adaptation",
+          "adopt/adapt/reject",
+          "affected scope",
+          "evidence limit"
+        ],
+        "reference_research_required": true,
+        "framework_migration_authorized": false,
+        "rendered_visual_review_required": true
+      },
+      "priority": 340,
+      "sequence": 2620,
+      "suit_slug": "shared",
+      "task_type": "feature",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "high",
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "description": "OBJECTIVE: Make the authenticated Building Suit shell read as structural professional application chrome rather than floating decorative cards while preserving all navigation behavior.\n\nUSER / PROBLEM: Current desktop chrome uses padded/gapped layout plus rounded/elevated sidebar and top header, and navigation grouping can carry excessive decorative emphasis.\n\nCURRENT-STATE EVIDENCE: Inspect BsAppShell, BsSideMenu, BsTopHeader, Ledger/Shop/Inventory consumers, responsive navigation, account/context slots, focus return, keyboard behavior, RTL and themes.\n\nREFERENCE-PATTERN EVIDENCE: Research one strong enterprise shell/navigation reference plus one relevant operational/admin product. Extract structure, active hierarchy, responsive collapse and context behavior; do not copy branding.\n\nBUILDING SUIT ADAPTATION: Use existing tokens/components. Prefer flat structural chrome, restrained borders/elevation and quieter group hierarchy while preserving logos, routing, mobile behavior, focus, themes and RTL.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "deep-only",
+      "workstream_slug": "shared",
+      "verification_plan": [
+        "Record focused reference-pattern evidence before implementation.",
+        "Capture representative before/after rendered shell evidence.",
+        "Verify desktop/mobile, EN/AR, LTR/RTL, light/dark and keyboard/focus.",
+        "Run shared UI tests, affected consumer checks and git diff --check."
+      ],
+      "acceptance_criteria": [
+        "Desktop shell/navigation reads as structural chrome rather than floating cards.",
+        "Active navigation hierarchy is clear without excessive Gold, uppercase/tracking or decorative elevation.",
+        "Mobile navigation, focus trapping/return, keyboard behavior, RTL and themes remain correct.",
+        "Ledger, Shop and Inventory consumers remain compatible.",
+        "No brand-token, framework, routing, permission or domain behavior is changed."
+      ]
+    },
+    {
+      "title": "Establish Building Suit page archetype composition contracts",
+      "status": "planned",
+      "task_id": "BS-UI-PRO-003",
+      "metadata": {
+        "initiative": "building-suit-ui-professionalization",
+        "preparation": {
+          "required_reads": [
+            "AGENTS.md",
+            "docs/shared/ui-pro-task-guide.md",
+            "docs/shared/design-system.md",
+            "docs/shared/ui-ownership.md",
+            "docs/shared/interactions.md",
+            "docs/shared/data-table.md",
+            "packages/ui/AGENTS.md",
+            "packages/design-tokens/tokens.json"
+          ],
+          "pilot_before_propagation": true,
+          "rendered_visual_review_required": true
+        },
+        "queue_anchor": {
+          "assigned_priority": 340,
+          "first_ui_sequence": 2610,
+          "previous_max_priority": 240,
+          "previous_max_sequence": 2600
+        },
+        "queue_policy": "last-after-existing-tasks-at-registration",
+        "allowed_paths": [
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "apps/building-suit-docs/",
+          "docs/shared/"
+        ],
+        "required_skill": "building-suit-ui",
+        "selling_blocker": false,
+        "business_priority": "deferred",
+        "verification_mode": "milestone",
+        "source_allowed_paths": [
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "apps/building-suit-docs/",
+          "docs/shared/"
+        ],
+        "brand_identity_locked": true,
+        "methodology_guide_path": "docs/shared/ui-pro-task-guide.md",
+        "publication_exact_paths": [],
+        "reference_research_fields": [
+          "reference product",
+          "screen/workflow",
+          "usability problem",
+          "observed pattern",
+          "why it works",
+          "Building Suit applicability",
+          "required adaptation",
+          "adopt/adapt/reject",
+          "affected scope",
+          "evidence limit"
+        ],
+        "reference_research_required": true,
+        "framework_migration_authorized": false,
+        "rendered_visual_review_required": true
+      },
+      "priority": 340,
+      "sequence": 2630,
+      "suit_slug": "shared",
+      "task_type": "feature",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "high",
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "description": "OBJECTIVE: Turn canonical UI PRO archetypes into documented reusable composition contracts and only the minimal shared support actually needed.\n\nUSER / PROBLEM: Without explicit composition contracts, generated pages can repeatedly invent card-heavy dashboard/list/form structures despite the shared library.\n\nCURRENT-STATE EVIDENCE: Inspect BsPageHeader, BsContentSection, BsSectionHeader, BsToolbar, BsTabs, BsStateSurface, BsDialog, BsForm, BsDataTable and docs catalogue before adding anything.\n\nREFERENCE-PATTERN EVIDENCE: For each materially changed archetype, research the concrete UX question rather than broad style inspiration.\n\nBUILDING SUIT ADAPTATION: Document application shell, dashboard, worklist, detail, create/edit, settings, reports, onboarding/auth, wizard, modal/drawer and state patterns without forcing identical pages. Reuse shared components first.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "deep-only",
+      "workstream_slug": "shared",
+      "verification_plan": [
+        "Record research question/reference evidence for each materially implemented archetype capability.",
+        "Render representative catalogue examples with realistic state variations.",
+        "Run shared UI/UX tests, affected app checks, ownership checks and git diff --check.",
+        "Verify Arabic/RTL, themes, narrow layouts, long labels and keyboard/focus where relevant."
+      ],
+      "acceptance_criteria": [
+        "Canonical guide defines Building Suit archetypes and expected behavior.",
+        "Existing components are mapped to archetypes before new abstraction.",
+        "Any new shared support is minimal, explicitly exported and demonstrated.",
+        "State, responsive, RTL and theme expectations are part of the contracts.",
+        "No domain rule moves into shared presentation."
+      ]
+    },
+    {
+      "title": "Professionalize metric hierarchy, sections and surface usage",
+      "status": "planned",
+      "task_id": "BS-UI-PRO-004",
+      "metadata": {
+        "initiative": "building-suit-ui-professionalization",
+        "preparation": {
+          "required_reads": [
+            "AGENTS.md",
+            "docs/shared/ui-pro-task-guide.md",
+            "docs/shared/design-system.md",
+            "docs/shared/ui-ownership.md",
+            "docs/shared/interactions.md",
+            "docs/shared/data-table.md",
+            "packages/ui/AGENTS.md",
+            "packages/design-tokens/tokens.json"
+          ],
+          "pilot_before_propagation": true,
+          "rendered_visual_review_required": true
+        },
+        "queue_anchor": {
+          "assigned_priority": 340,
+          "first_ui_sequence": 2610,
+          "previous_max_priority": 240,
+          "previous_max_sequence": 2600
+        },
+        "queue_policy": "last-after-existing-tasks-at-registration",
+        "allowed_paths": [
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "apps/building-suit-docs/",
+          "docs/shared/"
+        ],
+        "required_skill": "building-suit-ui",
+        "selling_blocker": false,
+        "business_priority": "deferred",
+        "verification_mode": "milestone",
+        "source_allowed_paths": [
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "apps/building-suit-docs/",
+          "docs/shared/"
+        ],
+        "brand_identity_locked": true,
+        "methodology_guide_path": "docs/shared/ui-pro-task-guide.md",
+        "publication_exact_paths": [],
+        "reference_research_fields": [
+          "reference product",
+          "screen/workflow",
+          "usability problem",
+          "observed pattern",
+          "why it works",
+          "Building Suit applicability",
+          "required adaptation",
+          "adopt/adapt/reject",
+          "affected scope",
+          "evidence limit"
+        ],
+        "reference_research_required": true,
+        "framework_migration_authorized": false,
+        "rendered_visual_review_required": true
+      },
+      "priority": 340,
+      "sequence": 2640,
+      "suit_slug": "shared",
+      "task_type": "feature",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "high",
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "description": "OBJECTIVE: Create reusable information-surface patterns that replace equal-weight KPI/card walls with deliberate hierarchy while preserving canonical token values.\n\nUSER / PROBLEM: Important dashboards can give materially different indicators equal visual weight and overuse containers, producing generic generated-SaaS composition.\n\nCURRENT-STATE EVIDENCE: Inspect BsCard, BsKpiCard, section components, base styles, token usage and representative Ledger/Shop dashboards. Treat canonical token values as locked unless separately approved.\n\nREFERENCE-PATTERN EVIDENCE: Study metric-summary/dashboard hierarchy in one strong enterprise reference plus one domain product. Extract prioritization, grouping, comparison and drill-through behavior.\n\nBUILDING SUIT ADAPTATION: Prefer typography/spacing/proximity/borders before standalone cards. Add/refine a shared metric summary only where reusable. Keep Gold scarce and reserve stronger elevation for temporary surfaces.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "deep-only",
+      "workstream_slug": "shared",
+      "verification_plan": [
+        "Record reference evidence and why each adopted pattern applies.",
+        "Capture rendered before/after examples with realistic values, long labels and narrow layouts.",
+        "Verify light/dark and EN/AR hierarchy.",
+        "Run shared checks, affected builds/typechecks and git diff --check."
+      ],
+      "acceptance_criteria": [
+        "Reusable primary-metric summary supports a small set of genuinely important measures without one floating card per value.",
+        "Ordinary sections can compose without decorative card wrappers where grouping does not require them.",
+        "Canonical Building Suit color/radius/typography-family/elevation token values remain unchanged by default.",
+        "Gold and semantic colors retain intentional meanings.",
+        "BsCard/BsKpiCard remain available where meaningful."
+      ]
+    },
+    {
+      "title": "Professionalize tables, forms and working density",
+      "status": "planned",
+      "task_id": "BS-UI-PRO-005",
+      "metadata": {
+        "initiative": "building-suit-ui-professionalization",
+        "preparation": {
+          "required_reads": [
+            "AGENTS.md",
+            "docs/shared/ui-pro-task-guide.md",
+            "docs/shared/design-system.md",
+            "docs/shared/ui-ownership.md",
+            "docs/shared/interactions.md",
+            "docs/shared/data-table.md",
+            "packages/ui/AGENTS.md",
+            "packages/design-tokens/tokens.json"
+          ],
+          "pilot_before_propagation": true,
+          "rendered_visual_review_required": true
+        },
+        "queue_anchor": {
+          "assigned_priority": 340,
+          "first_ui_sequence": 2610,
+          "previous_max_priority": 240,
+          "previous_max_sequence": 2600
+        },
+        "queue_policy": "last-after-existing-tasks-at-registration",
+        "allowed_paths": [
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "apps/building-suit-docs/",
+          "docs/shared/"
+        ],
+        "required_skill": "building-suit-ui",
+        "selling_blocker": false,
+        "business_priority": "deferred",
+        "verification_mode": "milestone",
+        "source_allowed_paths": [
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "apps/building-suit-docs/",
+          "docs/shared/"
+        ],
+        "brand_identity_locked": true,
+        "methodology_guide_path": "docs/shared/ui-pro-task-guide.md",
+        "publication_exact_paths": [],
+        "reference_research_fields": [
+          "reference product",
+          "screen/workflow",
+          "usability problem",
+          "observed pattern",
+          "why it works",
+          "Building Suit applicability",
+          "required adaptation",
+          "adopt/adapt/reject",
+          "affected scope",
+          "evidence limit"
+        ],
+        "reference_research_required": true,
+        "framework_migration_authorized": false,
+        "rendered_visual_review_required": true
+      },
+      "priority": 340,
+      "sequence": 2650,
+      "suit_slug": "shared",
+      "task_type": "feature",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "high",
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "description": "OBJECTIVE: Refine the existing PrimeVue-backed table/form system so operational work feels dense, professional and consistent without adding another grid/form engine.\n\nUSER / PROBLEM: Data-heavy pages need integrated search/filter/action behavior, predictable density and consistent forms; decorative wrappers or duplicated controls reduce efficiency.\n\nCURRENT-STATE EVIDENCE: Inspect BsDataTable, BsTableDensity, BsToolbar, BsForm, fields/selects/dialogs, shared controllers, lazy-query semantics and Ledger/Shop consumers.\n\nREFERENCE-PATTERN EVIDENCE: Use one best-in-class data-table/index reference and one domain reference; use a mature settings/form pattern where form behavior changes. Extract query, selection, bulk-action, density, dirty-state and error behavior.\n\nBUILDING SUIT ADAPTATION: Keep BsDataTable/BsForm/BsDialog/useRecordAction/useConfirmation authoritative. Improve composition/contracts rather than replacing PrimeVue or moving authorization to UI.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "deep-only",
+      "workstream_slug": "shared",
+      "verification_plan": [
+        "Use realistic datasets, long content, no-match, empty, loading, error and denied states.",
+        "Verify selection/bulk action behavior and failure-state selection preservation where relevant.",
+        "Verify EN/AR, LTR/RTL, light/dark, compact/comfortable, keyboard/focus and narrow layouts.",
+        "Run shared UI/UX tests, affected product checks, ownership enforcement and git diff --check."
+      ],
+      "acceptance_criteria": [
+        "Operational tables can be first-class page work surfaces with coherent integrated search/filter/action placement.",
+        "Compact/comfortable density remains usable and query/search ownership is not duplicated.",
+        "Forms use consistent labels/hints/errors/sections/actions and preserve pending + dirty-state policy.",
+        "Lazy queries, permissions and server authorization remain product-owned.",
+        "Keyboard/focus, RTL and loading/empty/error/denied/narrow states remain accessible."
+      ]
+    },
+    {
+      "title": "Shop dashboard professional reference pilot",
+      "status": "planned",
+      "task_id": "BS-UI-PRO-006",
+      "metadata": {
+        "initiative": "building-suit-ui-professionalization",
+        "preparation": {
+          "required_reads": [
+            "AGENTS.md",
+            "docs/shared/ui-pro-task-guide.md",
+            "docs/shared/design-system.md",
+            "docs/shared/ui-ownership.md",
+            "docs/shared/interactions.md",
+            "docs/shared/data-table.md",
+            "packages/ui/AGENTS.md",
+            "packages/design-tokens/tokens.json"
+          ],
+          "pilot_before_propagation": true,
+          "rendered_visual_review_required": true
+        },
+        "queue_anchor": {
+          "assigned_priority": 340,
+          "first_ui_sequence": 2610,
+          "previous_max_priority": 240,
+          "previous_max_sequence": 2600
+        },
+        "queue_policy": "last-after-existing-tasks-at-registration",
+        "allowed_paths": [
+          "apps/shop-suit/app/",
+          "apps/shop-suit/i18n/",
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "docs/shared/"
+        ],
+        "required_skill": "building-suit-ui",
+        "selling_blocker": false,
+        "business_priority": "deferred",
+        "verification_mode": "milestone",
+        "source_allowed_paths": [
+          "apps/shop-suit/app/",
+          "apps/shop-suit/i18n/",
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "docs/shared/"
+        ],
+        "brand_identity_locked": true,
+        "methodology_guide_path": "docs/shared/ui-pro-task-guide.md",
+        "publication_exact_paths": [],
+        "reference_research_fields": [
+          "reference product",
+          "screen/workflow",
+          "usability problem",
+          "observed pattern",
+          "why it works",
+          "Building Suit applicability",
+          "required adaptation",
+          "adopt/adapt/reject",
+          "affected scope",
+          "evidence limit"
+        ],
+        "reference_research_required": true,
+        "framework_migration_authorized": false,
+        "rendered_visual_review_required": true
+      },
+      "priority": 340,
+      "sequence": 2660,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "normal",
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "description": "OBJECTIVE: Implement Shop Dashboard as the first complete product pilot of the approved UI PRO methodology and shared patterns.\n\nUSER / PROBLEM: Shop Dashboard contains rich operational data but too many blocks/card-like surfaces receive similar visual treatment, reducing hierarchy.\n\nCURRENT-STATE EVIDENCE: Inspect the real dashboard, report permissions, trial/setup states, branch filters, reports, drill-through routes, loading/denied/error states and calculations. Preserve all functional behavior.\n\nREFERENCE-PATTERN EVIDENCE: Research operational-summary hierarchy, location/date filtering, exceptions and source drill-through using one strong general operational dashboard and one relevant POS/shop-domain reference.\n\nBUILDING SUIT ADAPTATION: Apply Building Suit shell/archetypes/metric/table/form patterns. Prioritize a small set of primary metrics, meaningful exceptions/actions and records. Preserve Shop data, permissions, calculations, subscription/setup behavior and bilingual content.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "deep-only",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Record references/pattern decisions and Building Suit adaptation.",
+        "Capture before/after screenshots using the same realistic fixture where possible.",
+        "Exercise filters, drill-through, owner/employee access and state variations.",
+        "Run Shop/app/shared checks appropriate to changed paths and git diff --check."
+      ],
+      "acceptance_criteria": [
+        "Rendered Shop Dashboard follows the quiet premium operational language and no longer reads as a wall of equivalent cards.",
+        "Primary metrics, filters, exceptions, detail sections and source drill-through have deliberate hierarchy.",
+        "All report calculations, permissions, routes, setup/trial/subscription behavior and backend semantics remain unchanged.",
+        "Before/after evidence covers desktop/mobile, EN/AR, LTR/RTL, light/dark and relevant states.",
+        "Pilot produces an explicit visual handback suitable for operator approval before propagation."
+      ]
+    },
+    {
+      "title": "Propagate approved UI PRO patterns across remaining Shop workflows",
+      "status": "planned",
+      "task_id": "BS-UI-PRO-008",
+      "metadata": {
+        "initiative": "building-suit-ui-professionalization",
+        "preparation": {
+          "required_reads": [
+            "AGENTS.md",
+            "docs/shared/ui-pro-task-guide.md",
+            "docs/shared/design-system.md",
+            "docs/shared/ui-ownership.md",
+            "docs/shared/interactions.md",
+            "docs/shared/data-table.md",
+            "packages/ui/AGENTS.md",
+            "packages/design-tokens/tokens.json"
+          ],
+          "pilot_before_propagation": true,
+          "rendered_visual_review_required": true
+        },
+        "queue_anchor": {
+          "assigned_priority": 340,
+          "first_ui_sequence": 2610,
+          "previous_max_priority": 240,
+          "previous_max_sequence": 2600
+        },
+        "queue_policy": "last-after-existing-tasks-at-registration",
+        "allowed_paths": [
+          "apps/shop-suit/app/",
+          "apps/shop-suit/i18n/",
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "docs/shared/"
+        ],
+        "required_skill": "building-suit-ui",
+        "selling_blocker": false,
+        "business_priority": "deferred",
+        "verification_mode": "milestone",
+        "source_allowed_paths": [
+          "apps/shop-suit/app/",
+          "apps/shop-suit/i18n/",
+          "packages/ui/",
+          "packages/ux/",
+          "packages/testing/",
+          "docs/shared/"
+        ],
+        "brand_identity_locked": true,
+        "methodology_guide_path": "docs/shared/ui-pro-task-guide.md",
+        "publication_exact_paths": [],
+        "reference_research_fields": [
+          "reference product",
+          "screen/workflow",
+          "usability problem",
+          "observed pattern",
+          "why it works",
+          "Building Suit applicability",
+          "required adaptation",
+          "adopt/adapt/reject",
+          "affected scope",
+          "evidence limit"
+        ],
+        "reference_research_required": true,
+        "framework_migration_authorized": false,
+        "rendered_visual_review_required": true
+      },
+      "priority": 340,
+      "sequence": 2680,
+      "suit_slug": "shop-suit",
+      "task_type": "feature",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "normal",
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "description": "OBJECTIVE: Apply only operator-approved pilot patterns across remaining authenticated Shop screens, using workflow-specific research where specialized operations differ from ordinary admin pages.\n\nUSER / PROBLEM: Shop has distinct operational journeys; one generic dashboard/list template would make POS, scheduling, purchases and cash close less usable.\n\nCURRENT-STATE EVIDENCE: Inspect each target route and classify it as worklist, detail, form/settings, report or focused workflow. Preserve product behavior and permissions/data semantics.\n\nREFERENCE-PATTERN EVIDENCE: For POS/scheduling/cash close and other specialized journeys, use relevant domain references rather than assuming the dashboard pilot solves them.\n\nBUILDING SUIT ADAPTATION: Use approved shared shell/components while allowing focused workflows to diverge when the task demands it.",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "retry_policy_id": "deep-only",
+      "workstream_slug": "shop-suit",
+      "verification_plan": [
+        "Require BS-UI-PILOT-001 approval before execution.",
+        "Record workflow-specific reference evidence.",
+        "Run focused browser coverage for representative worklist/detail/form/focused workflows.",
+        "Run Shop/shared checks and git diff --check."
+      ],
+      "acceptance_criteria": [
+        "Remaining Shop authenticated screens use approved shared patterns without becoming identical templates.",
+        "POS/scheduling/cash/purchase workflows retain domain-appropriate task focus.",
+        "Sales, inventory, supplier/customer, billing, permissions and calculations remain unchanged.",
+        "Repeated local visual recipes are removed only where shared components correctly own them.",
+        "Representative workflows pass responsive/theme/RTL/state review."
+      ]
+    },
+    {
+      "title": "Cross-Suit UI PRO visual acceptance and regression gate",
+      "status": "planned",
+      "task_id": "BS-UI-PRO-010",
+      "metadata": {
+        "initiative": "building-suit-ui-professionalization",
+        "preparation": {
+          "required_reads": [
+            "AGENTS.md",
+            "docs/shared/ui-pro-task-guide.md",
+            "docs/shared/design-system.md",
+            "docs/shared/ui-ownership.md",
+            "docs/shared/interactions.md",
+            "docs/shared/data-table.md",
+            "packages/ui/AGENTS.md",
+            "packages/design-tokens/tokens.json"
+          ],
+          "pilot_before_propagation": true,
+          "rendered_visual_review_required": true
+        },
+        "queue_anchor": {
+          "assigned_priority": 340,
+          "first_ui_sequence": 2610,
+          "previous_max_priority": 240,
+          "previous_max_sequence": 2600
+        },
+        "queue_policy": "last-after-existing-tasks-at-registration",
+        "allowed_paths": [
+          "apps/building-suit-docs/",
+          "docs/shared/"
+        ],
+        "required_skill": "building-suit-ui",
+        "selling_blocker": false,
+        "business_priority": "deferred",
+        "verification_mode": "release",
+        "source_allowed_paths": [
+          "apps/building-suit-docs/",
+          "docs/shared/"
+        ],
+        "brand_identity_locked": true,
+        "methodology_guide_path": "docs/shared/ui-pro-task-guide.md",
+        "publication_exact_paths": [],
+        "reference_research_fields": [
+          "reference product",
+          "screen/workflow",
+          "usability problem",
+          "observed pattern",
+          "why it works",
+          "Building Suit applicability",
+          "required adaptation",
+          "adopt/adapt/reject",
+          "affected scope",
+          "evidence limit"
+        ],
+        "reference_research_required": true,
+        "framework_migration_authorized": false,
+        "rendered_visual_review_required": true
+      },
+      "priority": 340,
+      "sequence": 2700,
+      "suit_slug": "shared",
+      "task_type": "review",
+      "created_at": "2026-10-06T07:10:05.996155+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "risk_level": "normal",
+      "updated_at": "2026-10-06T07:31:34.660404+00:00",
+      "description": "OBJECTIVE: Perform final cross-Suit visual/behavioral acceptance against the canonical UI PRO guide. This is a review/evidence gate: do not directly modify Suit application UI; route any discovered defect back to the owning shared or Suit-specific workstream.\n\nUSER / PROBLEM: Propagation is not complete until the family is visually coherent, domain-appropriate, responsive, bilingual, accessible and free from documented AI-template anti-patterns.\n\nCURRENT-STATE EVIDENCE: Inspect final current routes/components and all UI PRO handbacks/reference decisions. No new visual concept should first appear in this gate.\n\nREFERENCE-PATTERN EVIDENCE: No broad new research. Use targeted research only if a specific unresolved UX question remains.\n\nBUILDING SUIT ADAPTATION: Verify family consistency without forcing identical domain layouts. Preserve identity, tokens and domain workflows. Record defects with the exact owning workstream and evidence instead of fixing product code from the shared review task.",
+      "engine_stage": "pending",
+      "model_profile": "review",
+      "retry_policy_id": "legacy-review-five",
+      "workstream_slug": "shared",
+      "verification_plan": [
+        "Require BS-UI-PILOT-001 approval before execution.",
+        "Run broad safe current repository verification appropriate to shared UI impact.",
+        "Capture/review final screenshot/state matrix against canonical anti-pattern checklist.",
+        "Verify no DB migrations, secrets, deployment config or unrelated domain logic changed.",
+        "Run git diff --check and report publication/integration/deployment separately."
+      ],
+      "acceptance_criteria": [
+        "Representative Ledger, Shop and Inventory screens no longer exhibit documented AI-template anti-patterns.",
+        "Suits clearly belong to one Building Suit family while retaining domain-specific IA.",
+        "Canonical palette, typography, icons, themes, RTL and semantic statuses remain intact.",
+        "Final rendered evidence matrix covers representative dashboard/worklist/detail-form/focused-workflow states where implemented.",
+        "Desktop/mobile, EN/AR, LTR/RTL, light/dark, keyboard/focus and relevant state coverage are verified.",
+        "Unavailable rendered verification cannot be replaced with source-only PASS.",
+        "Any discovered defect is routed to its owning shared or Suit-specific workstream; this final shared review task does not directly edit product UI."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "slug": "cp-installed-operator-proof",
+      "active": false,
+      "metadata": {},
+      "created_at": "2026-10-07T06:27:41.208448+00:00",
+      "project_id": "f7d3d651-4fa0-4884-b883-182d6849b8f1",
+      "updated_at": "2026-10-07T06:27:41.208448+00:00",
+      "display_name": "Installed operator synthetic proof",
+      "n8n_metadata": {},
+      "codex_enabled": false,
+      "worktree_root": "/tmp/no-business-worktree",
+      "stack_strategy": {
+        "type": "stacked-pr"
+      },
+      "repository_path": "synthetic/no-repository",
+      "retry_policy_id": null,
+      "application_paths": {},
+      "github_repository": "synthetic/no-repository",
+      "production_branch": "main",
+      "concurrency_policy": {
+        "max_parallel": 3,
+        "max_run_tasks": 20,
+        "serialize_workstreams": true
+      },
+      "integration_branch": "stg",
+      "environment_routing": {},
+      "verification_config": {},
+      "default_model_profile": "standard",
+      "local_repository_root": "/tmp/no-business-repository",
+      "local_database_strategy": {
+        "type": "none"
+      },
+      "allowed_publication_paths": []
+    },
+    {
+      "slug": "building-suit",
+      "active": true,
+      "metadata": {
+        "compatibility": "control.suits is retained",
+        "shared_ui_foundation_workstream": "shared",
+        "shared_ui_foundation_approved_on": "2026-10-01"
+      },
+      "created_at": "2026-09-25T21:53:53.761384+00:00",
+      "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+      "updated_at": "2026-10-07T16:33:43.623291+00:00",
+      "display_name": "Building Suit",
+      "n8n_metadata": {
+        "adapter": "optional",
+        "legacy_command": "bs-agent"
+      },
+      "codex_enabled": true,
+      "worktree_root": ".local/worktrees",
+      "stack_strategy": {
+        "type": "stacked-pr"
+      },
+      "repository_path": "Building-Suit/building-suit-monorepo",
+      "retry_policy_id": "standard-five",
+      "application_paths": {
+        "shared": "packages/ui",
+        "shop-suit": "apps/shop-suit",
+        "ledger-suit": "apps/ledger-suit",
+        "control-plane": "tooling/control-plane",
+        "inventory-suit": "apps/inventory-suit",
+        "automation-suit": "apps/automation-suit",
+        "super-admin-suit": "apps/super-admin-suit",
+        "customer-acquisition-suit": "apps/customer-acquisition-suit"
+      },
+      "github_repository": "Building-Suit/building-suit-monorepo",
+      "production_branch": "main",
+      "concurrency_policy": {
+        "max_parallel": 3,
+        "max_run_tasks": 20,
+        "serialize_workstreams": true
+      },
+      "integration_branch": "stg",
+      "environment_routing": {
+        "control_database": "environment"
+      },
+      "verification_config": {},
+      "default_model_profile": "standard",
+      "local_repository_root": ".",
+      "local_database_strategy": {
+        "type": "none"
+      },
+      "allowed_publication_paths": [
+        "AGENTS.md",
+        "apps/",
+        "docs/",
+        "package.json",
+        "packages/",
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml",
+        "README.md",
+        "supabase/environments/",
+        "tooling/",
+        "turbo.json"
+      ]
+    }
+  ],
+  "activation": {
+    "outcome": "activated",
+    "release_id": "f9ebf54c9405c4c47ea7ea1609f758b09666c715ce80a88a0a38c8f0db98c9a0",
+    "recorded_at": "2026-10-11T18:11:27.9438+00:00",
+    "activation_id": 44,
+    "readiness_proof": {
+      "focused": {
+        "tests": 72,
+        "failed": 0,
+        "passed": 72,
+        "sha256": "65c444292088672a4bee8a4a3605a9413d739e586428e9d322d07b234e9f8c61",
+        "skipped": 0
+      },
+      "regression": {
+        "tests": 72,
+        "failed": 0,
+        "passed": 72,
+        "sha256": "65c444292088672a4bee8a4a3605a9413d739e586428e9d322d07b234e9f8c61",
+        "skipped": 0
+      },
+      "source_commit": "8e61433138c0f27610d6a2d49f349e239550126f",
+      "schema_version": 120,
+      "readiness_passed": true,
+      "schema_fingerprint": "2b78692cec897b9ef22000b8574ba59bab4760e46b6c414233501872d9f690de"
+    },
+    "observed_pointer": "/home/tareq/.local/lib/building-suit-control-plane/releases/f9ebf54c9405c4c47ea7ea1609f758b09666c715ce80a88a0a38c8f0db98c9a0",
+    "previous_release": "5ba5d1b354d560f9f7bb2d4ee1a3bfdce572cf318a0f34723da5bf9c0eab219a"
+  },
+  "dependencies": [
+    {
+      "task_id": "V2-IMP-008",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-003"
+    },
+    {
+      "task_id": "V2-IMP-008",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-004"
+    },
+    {
+      "task_id": "V2-IMP-008",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-005"
+    },
+    {
+      "task_id": "V2-IMP-009",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-003"
+    },
+    {
+      "task_id": "V2-IMP-009",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-004"
+    },
+    {
+      "task_id": "V2-IMP-009",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-005"
+    },
+    {
+      "task_id": "V2-IMP-010",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-003"
+    },
+    {
+      "task_id": "V2-IMP-010",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-004"
+    },
+    {
+      "task_id": "V2-IMP-010",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-005"
+    },
+    {
+      "task_id": "V2-IMP-011",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-003"
+    },
+    {
+      "task_id": "V2-IMP-011",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-004"
+    },
+    {
+      "task_id": "V2-IMP-011",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-005"
+    },
+    {
+      "task_id": "V2-IMP-011",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-007"
+    },
+    {
+      "task_id": "V2-IMP-012",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-002"
+    },
+    {
+      "task_id": "V2-IMP-012",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-003"
+    },
+    {
+      "task_id": "V2-IMP-012",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-004"
+    },
+    {
+      "task_id": "V2-IMP-012",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-005"
+    },
+    {
+      "task_id": "V2-IMP-013",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-003"
+    },
+    {
+      "task_id": "V2-IMP-013",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-004"
+    },
+    {
+      "task_id": "V2-IMP-013",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-005"
+    },
+    {
+      "task_id": "V2-IMP-014",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-003"
+    },
+    {
+      "task_id": "V2-IMP-014",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-004"
+    },
+    {
+      "task_id": "V2-IMP-014",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-005"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-001"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-002"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-003"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-004"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-005"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-006"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-007"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-008"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-009"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-010"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-011"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-012"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-013"
+    },
+    {
+      "task_id": "V2-IMP-015",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-014"
+    },
+    {
+      "task_id": "SS-PUR-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PAY-001"
+    },
+    {
+      "task_id": "SS-STOCK-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SALE-001"
+    },
+    {
+      "task_id": "SS-STOCK-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PUR-002"
+    },
+    {
+      "task_id": "SAS-M1-BOOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-ARCH-001"
+    },
+    {
+      "task_id": "SAS-M1-CONFIG-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-BOOT-001"
+    },
+    {
+      "task_id": "SAS-M1-CONFIG-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-ARCH-001"
+    },
+    {
+      "task_id": "BS-SA-SHELL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-ZN-PRIMITIVES-001"
+    },
+    {
+      "task_id": "SS-SA-BRIDGE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-ARCH-001"
+    },
+    {
+      "task_id": "SS-SA-BRIDGE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SUB-001"
+    },
+    {
+      "task_id": "SAS-M1-AUTH-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-CONFIG-001"
+    },
+    {
+      "task_id": "SAS-M1-REGISTRY-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-AUTH-001"
+    },
+    {
+      "task_id": "SAS-M1-REGISTRY-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-CONFIG-001"
+    },
+    {
+      "task_id": "SAS-M1-REGISTRY-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-SA-SHELL-001"
+    },
+    {
+      "task_id": "SS-SA-EVIDENCE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SA-BRIDGE-001"
+    },
+    {
+      "task_id": "SS-SA-CUSTOM-OFFER-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SA-BRIDGE-001"
+    },
+    {
+      "task_id": "SS-SA-CUSTOM-OFFER-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SUB-001"
+    },
+    {
+      "task_id": "SAS-M1-SHOP-ADAPTER-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-AUTH-001"
+    },
+    {
+      "task_id": "SAS-M1-SHOP-ADAPTER-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-CONFIG-001"
+    },
+    {
+      "task_id": "SAS-M1-SHOP-ADAPTER-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SA-BRIDGE-001"
+    },
+    {
+      "task_id": "SAS-M1-INSTAPAY-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-SHOP-ADAPTER-001"
+    },
+    {
+      "task_id": "SAS-M1-INSTAPAY-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-REGISTRY-001"
+    },
+    {
+      "task_id": "SAS-M1-BILLING-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-INSTAPAY-001"
+    },
+    {
+      "task_id": "SAS-M1-BILLING-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-SHOP-ADAPTER-001"
+    },
+    {
+      "task_id": "SAS-M1-BILLING-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SA-EVIDENCE-001"
+    },
+    {
+      "task_id": "SAS-M1-CUSTOM-OFFER-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-SHOP-ADAPTER-001"
+    },
+    {
+      "task_id": "SAS-M1-CUSTOM-OFFER-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-CONFIG-001"
+    },
+    {
+      "task_id": "SAS-M1-CUSTOM-OFFER-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SA-CUSTOM-OFFER-001"
+    },
+    {
+      "task_id": "SAS-M1-AUDIT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-SHOP-ADAPTER-001"
+    },
+    {
+      "task_id": "SAS-M1-AUDIT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-CONFIG-001"
+    },
+    {
+      "task_id": "SAS-M1-GATE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-REGISTRY-001"
+    },
+    {
+      "task_id": "SAS-M1-GATE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-BILLING-001"
+    },
+    {
+      "task_id": "SAS-M1-GATE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-CUSTOM-OFFER-001"
+    },
+    {
+      "task_id": "SAS-M1-GATE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-AUDIT-001"
+    },
+    {
+      "task_id": "IS-TEN-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-BOOT-001"
+    },
+    {
+      "task_id": "IS-ITEM-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-TEN-001"
+    },
+    {
+      "task_id": "IS-WH-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-ITEM-001"
+    },
+    {
+      "task_id": "IS-STOCK-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-WH-001"
+    },
+    {
+      "task_id": "IS-TRACK-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-STOCK-001"
+    },
+    {
+      "task_id": "IS-RECV-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-TRACK-001"
+    },
+    {
+      "task_id": "IS-ISSUE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-RECV-001"
+    },
+    {
+      "task_id": "IS-TRF-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-ISSUE-001"
+    },
+    {
+      "task_id": "IS-RES-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-TRF-001"
+    },
+    {
+      "task_id": "IS-COUNT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-RES-001"
+    },
+    {
+      "task_id": "IS-ADJ-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-COUNT-001"
+    },
+    {
+      "task_id": "IS-COST-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-ADJ-001"
+    },
+    {
+      "task_id": "IS-LOCK-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-COST-001"
+    },
+    {
+      "task_id": "IS-REP-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-LOCK-001"
+    },
+    {
+      "task_id": "IS-IMP-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-REP-001"
+    },
+    {
+      "task_id": "IS-RPT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-IMP-001"
+    },
+    {
+      "task_id": "IS-INT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-RPT-001"
+    },
+    {
+      "task_id": "IS-SAFE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-INT-001"
+    },
+    {
+      "task_id": "IS-VER-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "IS-SAFE-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-AUTH-EMAIL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-BASELINE-001"
+    },
+    {
+      "task_id": "BS-LAUNCH-ACCESS-UI-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-AUTH-EMAIL-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-TEAM-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-LAUNCH-ACCESS-UI-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-CASH-POLICY-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-TEAM-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-BRAND-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-CASH-POLICY-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-SUPPORT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-BRAND-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-SOLO-VARIANTS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-SUPPORT-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-POS-CUSTOMER-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-SOLO-VARIANTS-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-FAST-PAY-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-POS-CUSTOMER-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-FAST-PAY-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-CASH-POLICY-001"
+    },
+    {
+      "task_id": "SS-UX-FOUNDATION-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PAY-001"
+    },
+    {
+      "task_id": "SS-LOC-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PAY-001"
+    },
+    {
+      "task_id": "SS-ADMIN-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-UX-FOUNDATION-001"
+    },
+    {
+      "task_id": "SS-ADMIN-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LOC-001"
+    },
+    {
+      "task_id": "SS-BILLING-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-ADMIN-001"
+    },
+    {
+      "task_id": "SS-TEAM-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LOC-001"
+    },
+    {
+      "task_id": "SS-TEAM-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-UX-FOUNDATION-001"
+    },
+    {
+      "task_id": "SS-BARBER-CORE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LOC-001"
+    },
+    {
+      "task_id": "SS-BARBER-CORE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-TEAM-001"
+    },
+    {
+      "task_id": "SS-APPT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-BARBER-CORE-001"
+    },
+    {
+      "task_id": "SS-APPT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-UX-FOUNDATION-001"
+    },
+    {
+      "task_id": "SS-POS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-APPT-001"
+    },
+    {
+      "task_id": "LS-UX-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-014"
+    },
+    {
+      "task_id": "LS-UX-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-001"
+    },
+    {
+      "task_id": "LS-UX-003",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-001"
+    },
+    {
+      "task_id": "LS-FIX-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-003"
+    },
+    {
+      "task_id": "LS-FIX-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-004"
+    },
+    {
+      "task_id": "LS-FIX-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-003"
+    },
+    {
+      "task_id": "LS-FIX-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-007"
+    },
+    {
+      "task_id": "LS-FIX-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-002"
+    },
+    {
+      "task_id": "LS-REL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-014"
+    },
+    {
+      "task_id": "LS-REL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-FIX-001"
+    },
+    {
+      "task_id": "LS-REL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-FIX-002"
+    },
+    {
+      "task_id": "LS-SEC-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-REL-001"
+    },
+    {
+      "task_id": "LS-OPS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-REL-001"
+    },
+    {
+      "task_id": "LS-BILL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-REL-001"
+    },
+    {
+      "task_id": "LS-ONB-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-003"
+    },
+    {
+      "task_id": "LS-REPORT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-002"
+    },
+    {
+      "task_id": "LS-EG-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-013"
+    },
+    {
+      "task_id": "LS-EG-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-014"
+    },
+    {
+      "task_id": "LS-EG-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-EG-001"
+    },
+    {
+      "task_id": "LS-EG-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-008"
+    },
+    {
+      "task_id": "LS-ACC-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-REL-001"
+    },
+    {
+      "task_id": "LS-PROD-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-002"
+    },
+    {
+      "task_id": "LS-PROD-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-003"
+    },
+    {
+      "task_id": "LS-UX-004",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-001"
+    },
+    {
+      "task_id": "LS-UX-004",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-002"
+    },
+    {
+      "task_id": "LS-UX-004",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-003"
+    },
+    {
+      "task_id": "LS-EG-003",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-EG-001"
+    },
+    {
+      "task_id": "LS-EG-003",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-014"
+    },
+    {
+      "task_id": "LS-GROWTH-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-REL-001"
+    },
+    {
+      "task_id": "LS-FX-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-008"
+    },
+    {
+      "task_id": "LS-FX-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "V2-IMP-009"
+    },
+    {
+      "task_id": "LS-PERF-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-001"
+    },
+    {
+      "task_id": "LS-PERF-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-002"
+    },
+    {
+      "task_id": "LS-PERF-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UX-003"
+    },
+    {
+      "task_id": "LS-PERF-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-FIX-001"
+    },
+    {
+      "task_id": "LS-PERF-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-FIX-002"
+    },
+    {
+      "task_id": "LS-BUG-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-PERF-001"
+    },
+    {
+      "task_id": "LS-REL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-BUG-001"
+    },
+    {
+      "task_id": "LS-PERF-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-EG-002"
+    },
+    {
+      "task_id": "LS-PERF-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-EG-003"
+    },
+    {
+      "task_id": "LS-PERF-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-GROWTH-001"
+    },
+    {
+      "task_id": "LS-PERF-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-FX-001"
+    },
+    {
+      "task_id": "SAS-M2-PAYCORE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M1-GATE-001"
+    },
+    {
+      "task_id": "LS-MIG-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-MIG-001"
+    },
+    {
+      "task_id": "LS-MIG-003",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-MIG-002"
+    },
+    {
+      "task_id": "LS-MIG-004",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-MIG-003"
+    },
+    {
+      "task_id": "LS-BILL-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-MIG-004"
+    },
+    {
+      "task_id": "LS-ADMIN-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-BILL-002"
+    },
+    {
+      "task_id": "LS-ADMIN-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-ADMIN-001"
+    },
+    {
+      "task_id": "LS-PLAN-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-ADMIN-002"
+    },
+    {
+      "task_id": "LS-I18N-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-PLAN-001"
+    },
+    {
+      "task_id": "LS-SUP-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-I18N-001"
+    },
+    {
+      "task_id": "LS-BILL-003",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-SUP-001"
+    },
+    {
+      "task_id": "LS-PERF-003",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-PERF-002"
+    },
+    {
+      "task_id": "LS-MIG-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-PERF-003"
+    },
+    {
+      "task_id": "SS-POS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-TEAM-001"
+    },
+    {
+      "task_id": "SS-POS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-UX-FOUNDATION-001"
+    },
+    {
+      "task_id": "SS-CASH-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-POS-001"
+    },
+    {
+      "task_id": "SS-CASH-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-TEAM-001"
+    },
+    {
+      "task_id": "SS-CASH-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LOC-001"
+    },
+    {
+      "task_id": "SS-RECEIPT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-POS-001"
+    },
+    {
+      "task_id": "SS-RECEIPT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-UX-FOUNDATION-001"
+    },
+    {
+      "task_id": "SS-SALE-CORR-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-POS-001"
+    },
+    {
+      "task_id": "SS-SALE-CORR-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-CASH-001"
+    },
+    {
+      "task_id": "SS-RPT-LITE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LOC-001"
+    },
+    {
+      "task_id": "SS-RPT-LITE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-APPT-001"
+    },
+    {
+      "task_id": "SS-RPT-LITE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-CASH-001"
+    },
+    {
+      "task_id": "SS-RPT-LITE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SALE-CORR-001"
+    },
+    {
+      "task_id": "SS-UX-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-BILLING-001"
+    },
+    {
+      "task_id": "SS-UX-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-APPT-001"
+    },
+    {
+      "task_id": "SS-UX-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-POS-001"
+    },
+    {
+      "task_id": "SS-UX-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-CASH-001"
+    },
+    {
+      "task_id": "SS-UX-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-RECEIPT-001"
+    },
+    {
+      "task_id": "SS-UX-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-RPT-LITE-001"
+    },
+    {
+      "task_id": "SS-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-ADMIN-001"
+    },
+    {
+      "task_id": "SS-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-BILLING-001"
+    },
+    {
+      "task_id": "SS-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-RECEIPT-001"
+    },
+    {
+      "task_id": "SS-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SALE-CORR-001"
+    },
+    {
+      "task_id": "SS-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-RPT-LITE-001"
+    },
+    {
+      "task_id": "SS-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-UX-PILOT-001"
+    },
+    {
+      "task_id": "SS-CATALOG-IMPORT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-STOCK-002"
+    },
+    {
+      "task_id": "SS-CATALOG-IMPORT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-POS-001"
+    },
+    {
+      "task_id": "SS-EXP-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-TEAM-001"
+    },
+    {
+      "task_id": "SS-RPT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PUR-002"
+    },
+    {
+      "task_id": "SS-RPT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-STOCK-002"
+    },
+    {
+      "task_id": "SS-RPT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-EXP-002"
+    },
+    {
+      "task_id": "SS-RPT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-RPT-LITE-001"
+    },
+    {
+      "task_id": "SS-UX-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-RPT-001"
+    },
+    {
+      "task_id": "SAS-M2-WEBHOOK-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-PAYCORE-001"
+    },
+    {
+      "task_id": "SAS-M2-PAYMOB-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-PAYCORE-001"
+    },
+    {
+      "task_id": "SAS-M2-PAYMOB-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-WEBHOOK-001"
+    },
+    {
+      "task_id": "SAS-M2-XPAY-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-PAYCORE-001"
+    },
+    {
+      "task_id": "SAS-M2-XPAY-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-WEBHOOK-001"
+    },
+    {
+      "task_id": "SAS-M2-PAYTABS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-PAYCORE-001"
+    },
+    {
+      "task_id": "SAS-M2-PAYTABS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-WEBHOOK-001"
+    },
+    {
+      "task_id": "SS-UX-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-CATALOG-IMPORT-001"
+    },
+    {
+      "task_id": "SS-MARKET-VAL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-UX-001"
+    },
+    {
+      "task_id": "SS-MARKET-VAL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-RPT-001"
+    },
+    {
+      "task_id": "SS-OFFLINE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-POS-001"
+    },
+    {
+      "task_id": "SS-OFFLINE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-CASH-001"
+    },
+    {
+      "task_id": "SS-OFFLINE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SALE-CORR-001"
+    },
+    {
+      "task_id": "SS-EGY-ETA-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-RECEIPT-001"
+    },
+    {
+      "task_id": "SS-EGY-ETA-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SALE-CORR-001"
+    },
+    {
+      "task_id": "SS-EGY-ETA-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SET-001"
+    },
+    {
+      "task_id": "SS-SET-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LOC-001"
+    },
+    {
+      "task_id": "SS-SET-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-RECEIPT-001"
+    },
+    {
+      "task_id": "SS-APPT-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-APPT-001"
+    },
+    {
+      "task_id": "SS-APPT-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PILOT-001"
+    },
+    {
+      "task_id": "SS-BARBER-COMP-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SALE-CORR-001"
+    },
+    {
+      "task_id": "SS-BARBER-COMP-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-RPT-LITE-001"
+    },
+    {
+      "task_id": "SS-SERV-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-STOCK-002"
+    },
+    {
+      "task_id": "SS-SERV-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SALE-001"
+    },
+    {
+      "task_id": "SS-SALE-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-SALE-CORR-001"
+    },
+    {
+      "task_id": "SS-SALE-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-STOCK-002"
+    },
+    {
+      "task_id": "LS-UI-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UI-001"
+    },
+    {
+      "task_id": "LS-UI-003",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UI-002"
+    },
+    {
+      "task_id": "LS-UI-004",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UI-003"
+    },
+    {
+      "task_id": "LS-UI-005",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UI-004"
+    },
+    {
+      "task_id": "LS-UI-006",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UI-004"
+    },
+    {
+      "task_id": "LS-BILL-004",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UI-005"
+    },
+    {
+      "task_id": "LS-I18N-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UI-005"
+    },
+    {
+      "task_id": "LS-I18N-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-UI-006"
+    },
+    {
+      "task_id": "LS-I18N-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "LS-BILL-004"
+    },
+    {
+      "task_id": "SS-PLAN-CATALOG-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PILOT-001"
+    },
+    {
+      "task_id": "SS-PLAN-LIMITS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PILOT-001"
+    },
+    {
+      "task_id": "SS-PLAN-LIMITS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-CATALOG-001"
+    },
+    {
+      "task_id": "SS-PLAN-BILLING-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PILOT-001"
+    },
+    {
+      "task_id": "SS-PLAN-BILLING-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-CATALOG-001"
+    },
+    {
+      "task_id": "SS-PLAN-BILLING-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-LIMITS-001"
+    },
+    {
+      "task_id": "SS-PLAN-ADMIN-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PILOT-001"
+    },
+    {
+      "task_id": "SS-PLAN-ADMIN-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-CATALOG-001"
+    },
+    {
+      "task_id": "SS-PLAN-ADMIN-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-LIMITS-001"
+    },
+    {
+      "task_id": "SS-PLAN-ADMIN-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-BILLING-001"
+    },
+    {
+      "task_id": "SS-PLAN-UI-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PILOT-001"
+    },
+    {
+      "task_id": "SS-PLAN-UI-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-CATALOG-001"
+    },
+    {
+      "task_id": "SS-PLAN-UI-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-LIMITS-001"
+    },
+    {
+      "task_id": "SS-PLAN-UI-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-BILLING-001"
+    },
+    {
+      "task_id": "SS-SUB-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PILOT-001"
+    },
+    {
+      "task_id": "SS-SUB-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-CATALOG-001"
+    },
+    {
+      "task_id": "SS-SUB-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-LIMITS-001"
+    },
+    {
+      "task_id": "SS-SUB-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-BILLING-001"
+    },
+    {
+      "task_id": "SS-SUB-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-ADMIN-001"
+    },
+    {
+      "task_id": "SS-SUB-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-PLAN-UI-001"
+    },
+    {
+      "task_id": "SS-HOT-TRIAL-7D-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-HOT-AR-EG-001"
+    },
+    {
+      "task_id": "SS-HOT-PUBLIC-LEGAL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-HOT-TRIAL-7D-001"
+    },
+    {
+      "task_id": "SS-HOT-PLAN-CATALOG-V2-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-HOT-TRIAL-7D-001"
+    },
+    {
+      "task_id": "SS-HOT-PLAN-LIMITS-V2-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-HOT-PLAN-CATALOG-V2-001"
+    },
+    {
+      "task_id": "SS-HOT-PLAN-UI-V2-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-HOT-PUBLIC-LEGAL-001"
+    },
+    {
+      "task_id": "SS-HOT-PLAN-UI-V2-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-HOT-PLAN-CATALOG-V2-001"
+    },
+    {
+      "task_id": "SS-HOT-PLAN-UI-V2-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-HOT-PLAN-LIMITS-V2-001"
+    },
+    {
+      "task_id": "SS-WEB-PROFILE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-WEB-SLUG-001"
+    },
+    {
+      "task_id": "SS-WEB-CATALOG-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-WEB-PROFILE-001"
+    },
+    {
+      "task_id": "SS-WEB-PUBLIC-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-WEB-CATALOG-001"
+    },
+    {
+      "task_id": "SS-WEB-APPT-ACCESS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-WEB-PUBLIC-001"
+    },
+    {
+      "task_id": "SS-WEB-CUSTOMER-PORTAL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-WEB-APPT-ACCESS-001"
+    },
+    {
+      "task_id": "SS-WEB-CHANGELOG-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-WEB-CUSTOMER-PORTAL-001"
+    },
+    {
+      "task_id": "BS-UI-CANONICAL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-FOUNDATION-001"
+    },
+    {
+      "task_id": "BS-UI-LEDGER-MIG-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-CANONICAL-001"
+    },
+    {
+      "task_id": "BS-UI-SHOP-MIG-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-LEDGER-MIG-001"
+    },
+    {
+      "task_id": "BS-UI-CONVERGENCE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-SHOP-MIG-001"
+    },
+    {
+      "task_id": "BS-UI-REPAIR-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-CONVERGENCE-001"
+    },
+    {
+      "task_id": "BS-UI-PRIMITIVES-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-REPAIR-001"
+    },
+    {
+      "task_id": "BS-UI-LANDING-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-PRIMITIVES-001"
+    },
+    {
+      "task_id": "BS-UI-AUTH-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-LANDING-001"
+    },
+    {
+      "task_id": "BS-UI-CHROME-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-AUTH-001"
+    },
+    {
+      "task_id": "BS-UI-TABLE-CRUD-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-CHROME-001"
+    },
+    {
+      "task_id": "BS-UI-LEDGER-CONSUME-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-TABLE-CRUD-001"
+    },
+    {
+      "task_id": "BS-UI-SHOP-CONSUME-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-LEDGER-CONSUME-001"
+    },
+    {
+      "task_id": "BS-UI-FINAL-GATE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-SHOP-CONSUME-001"
+    },
+    {
+      "task_id": "BS-UI-ZN-CONTRACT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-FINAL-GATE-001"
+    },
+    {
+      "task_id": "BS-UI-ZN-PRIMITIVES-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-ZN-CONTRACT-001"
+    },
+    {
+      "task_id": "BS-UI-ZN-FORMS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-ZN-PRIMITIVES-001"
+    },
+    {
+      "task_id": "BS-UI-ZN-PUBLIC-CHROME-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-ZN-FORMS-001"
+    },
+    {
+      "task_id": "BS-UI-ZN-DATA-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-ZN-PUBLIC-CHROME-001"
+    },
+    {
+      "task_id": "BS-UI-ZN-PATTERNS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-ZN-DATA-001"
+    },
+    {
+      "task_id": "BS-UI-ZN-LEDGER-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-ZN-PATTERNS-001"
+    },
+    {
+      "task_id": "BS-UI-ZN-SHOP-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-ZN-LEDGER-001"
+    },
+    {
+      "task_id": "BS-UI-ZN-OTHER-SUITS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-ZN-SHOP-001"
+    },
+    {
+      "task_id": "BS-UI-ZN-GENERATOR-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-ZN-OTHER-SUITS-001"
+    },
+    {
+      "task_id": "BS-UI-ZN-BROWSER-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-ZN-GENERATOR-001"
+    },
+    {
+      "task_id": "BS-UI-ZN-FINAL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-ZN-BROWSER-001"
+    },
+    {
+      "task_id": "CP-RES-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CP-RES-001"
+    },
+    {
+      "task_id": "CP-RES-003",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CP-RES-002"
+    },
+    {
+      "task_id": "CP-RES-004",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CP-RES-003"
+    },
+    {
+      "task_id": "CP-RES-005",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CP-RES-004"
+    },
+    {
+      "task_id": "CP-RES-006",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CP-RES-005"
+    },
+    {
+      "task_id": "CP-RES-007",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CP-RES-006"
+    },
+    {
+      "task_id": "CP-RES-008",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CP-RES-007"
+    },
+    {
+      "task_id": "CP-RES-009",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CP-RES-008"
+    },
+    {
+      "task_id": "SAS-M2-PAYPAL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-PAYCORE-001"
+    },
+    {
+      "task_id": "SAS-M2-PAYPAL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-WEBHOOK-001"
+    },
+    {
+      "task_id": "SAS-M2-AUTOACT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-WEBHOOK-001"
+    },
+    {
+      "task_id": "SAS-M2-RECON-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-AUTOACT-001"
+    },
+    {
+      "task_id": "SAS-M2-RECON-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-PAYMOB-001"
+    },
+    {
+      "task_id": "SAS-M2-RECON-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-XPAY-001"
+    },
+    {
+      "task_id": "SAS-M2-RECON-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-PAYTABS-001"
+    },
+    {
+      "task_id": "SAS-M2-RECON-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-PAYPAL-001"
+    },
+    {
+      "task_id": "SAS-M3-PRICING-POLICY-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M2-RECON-001"
+    },
+    {
+      "task_id": "SAS-M3-DISCOUNTS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M3-PRICING-POLICY-001"
+    },
+    {
+      "task_id": "SAS-M3-PLAN-CATALOG-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M3-PRICING-POLICY-001"
+    },
+    {
+      "task_id": "SAS-M3-ENTITLEMENTS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M3-PLAN-CATALOG-001"
+    },
+    {
+      "task_id": "SAS-M3-PRICE-EXPLAIN-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M3-DISCOUNTS-001"
+    },
+    {
+      "task_id": "SAS-M3-PRICE-EXPLAIN-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M3-PLAN-CATALOG-001"
+    },
+    {
+      "task_id": "SAS-M3-PRICE-EXPLAIN-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M3-ENTITLEMENTS-001"
+    },
+    {
+      "task_id": "SAS-M4-CUSTOMERS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M3-PRICE-EXPLAIN-001"
+    },
+    {
+      "task_id": "SAS-M4-USERS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M4-CUSTOMERS-001"
+    },
+    {
+      "task_id": "SAS-M4-SUBSCRIPTIONS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M4-CUSTOMERS-001"
+    },
+    {
+      "task_id": "SAS-M4-USAGE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M4-SUBSCRIPTIONS-001"
+    },
+    {
+      "task_id": "SAS-M4-SUIT-OPS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M4-CUSTOMERS-001"
+    },
+    {
+      "task_id": "SAS-M4-SUIT-OPS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M4-SUBSCRIPTIONS-001"
+    },
+    {
+      "task_id": "SAS-M4-EVENTS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M4-SUIT-OPS-001"
+    },
+    {
+      "task_id": "SAS-M4-EVENTS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M4-USAGE-001"
+    },
+    {
+      "task_id": "SAS-M5-RBAC-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-SA-FUTURE-SUIT-001"
+    },
+    {
+      "task_id": "SAS-M5-ANALYTICS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M5-RBAC-001"
+    },
+    {
+      "task_id": "SAS-M5-NOTIFICATIONS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M5-RBAC-001"
+    },
+    {
+      "task_id": "SAS-M5-NOTIFICATIONS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M4-EVENTS-001"
+    },
+    {
+      "task_id": "SAS-M5-SECURITY-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M5-RBAC-001"
+    },
+    {
+      "task_id": "SAS-M5-SUPPORT-SESSION-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M5-RBAC-001"
+    },
+    {
+      "task_id": "BS-UI-PRO-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-PRO-001"
+    },
+    {
+      "task_id": "BS-UI-PRO-003",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-PRO-002"
+    },
+    {
+      "task_id": "BS-UI-PRO-004",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-PRO-003"
+    },
+    {
+      "task_id": "BS-UI-PRO-005",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-PRO-004"
+    },
+    {
+      "task_id": "BS-UI-PRO-006",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-PRO-005"
+    },
+    {
+      "task_id": "BS-UI-PRO-007",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-PRO-006"
+    },
+    {
+      "task_id": "BS-UI-PRO-008",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-PRO-007"
+    },
+    {
+      "task_id": "BS-UI-PRO-009",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-PRO-008"
+    },
+    {
+      "task_id": "BS-UI-PRO-010",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-UI-PRO-009"
+    },
+    {
+      "task_id": "SS-LAUNCH-SALE-COPY-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-FAST-PAY-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-SINGLE-SESSION-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-SALE-COPY-001"
+    },
+    {
+      "task_id": "BS-REALTIME-FOUNDATION-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-SINGLE-SESSION-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-REALTIME-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-REALTIME-FOUNDATION-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-LEGAL-AUDIT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-REALTIME-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-LEGAL-AUDIT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-SUPPORT-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-LEGAL-AUDIT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-SOLO-VARIANTS-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-LEGAL-AUDIT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-SINGLE-SESSION-001"
+    },
+    {
+      "task_id": "SS-LAUNCH-LEGAL-AUDIT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-CASH-POLICY-001"
+    },
+    {
+      "task_id": "SS-VAL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-LAUNCH-LEGAL-AUDIT-001"
+    },
+    {
+      "task_id": "BS-REALTIME-ADOPTION-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-VAL-001"
+    },
+    {
+      "task_id": "CAS-M1-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-E2E-001"
+    },
+    {
+      "task_id": "TASK-0002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0001"
+    },
+    {
+      "task_id": "BS-CHANGELOG-VERSION-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-REALTIME-ADOPTION-001"
+    },
+    {
+      "task_id": "SS-WEB-LAUNCH-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SS-WEB-CUSTOMER-PORTAL-001"
+    },
+    {
+      "task_id": "SS-WEB-LAUNCH-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-CHANGELOG-VERSION-001"
+    },
+    {
+      "task_id": "BS-LAUNCH-ACCESS-UI-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-SA-SHELL-001"
+    },
+    {
+      "task_id": "BS-REALTIME-FOUNDATION-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-SA-SHELL-001"
+    },
+    {
+      "task_id": "BS-REALTIME-ADOPTION-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-SA-SHELL-001"
+    },
+    {
+      "task_id": "BS-CHANGELOG-VERSION-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-SA-SHELL-001"
+    },
+    {
+      "task_id": "CAS-M1-PILOT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-RUNBOOK-001"
+    },
+    {
+      "task_id": "CAS-M1-RUNBOOK-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-E2E-001"
+    },
+    {
+      "task_id": "CAS-M1-E2E-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-ABUSE-001"
+    },
+    {
+      "task_id": "CAS-M1-E2E-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-UX-001"
+    },
+    {
+      "task_id": "CAS-M1-E2E-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-OBS-001"
+    },
+    {
+      "task_id": "CAS-M1-E2E-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-AUDIT-001"
+    },
+    {
+      "task_id": "CAS-M1-OBS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-INT-001"
+    },
+    {
+      "task_id": "CAS-M1-OBS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-COMM-002"
+    },
+    {
+      "task_id": "CAS-M1-OBS-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-ADMIN-PAYOUT-001"
+    },
+    {
+      "task_id": "CAS-M1-UX-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-DASH-001"
+    },
+    {
+      "task_id": "CAS-M1-UX-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-ADMIN-CRM-001"
+    },
+    {
+      "task_id": "CAS-M1-UX-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-ADMIN-PAYOUT-001"
+    },
+    {
+      "task_id": "CAS-M1-UX-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-POL-002"
+    },
+    {
+      "task_id": "CAS-M1-POL-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-POL-001"
+    },
+    {
+      "task_id": "CAS-M1-POL-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SHOP-CAS-M1-INT-001"
+    },
+    {
+      "task_id": "CAS-M1-ABUSE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-ATTR-001"
+    },
+    {
+      "task_id": "CAS-M1-ABUSE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-COMM-001"
+    },
+    {
+      "task_id": "CAS-M1-ABUSE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-PAYOUT-001"
+    },
+    {
+      "task_id": "CAS-M1-AUDIT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-ADMIN-CRM-001"
+    },
+    {
+      "task_id": "CAS-M1-AUDIT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-ADMIN-PAYOUT-001"
+    },
+    {
+      "task_id": "CAS-M1-AUDIT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-ADMIN-OPP-001"
+    },
+    {
+      "task_id": "CAS-M1-ADMIN-CRM-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-LIFE-001"
+    },
+    {
+      "task_id": "CAS-M1-ADMIN-CRM-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-COMM-002"
+    },
+    {
+      "task_id": "CAS-M1-ADMIN-CRM-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-RBAC-001"
+    },
+    {
+      "task_id": "CAS-M1-DASH-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-LIFE-001"
+    },
+    {
+      "task_id": "CAS-M1-DASH-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-BAL-001"
+    },
+    {
+      "task_id": "CAS-M1-DASH-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-PAYOUT-001"
+    },
+    {
+      "task_id": "CAS-M1-ADMIN-PAYOUT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-PAYOUT-001"
+    },
+    {
+      "task_id": "CAS-M1-ADMIN-PAYOUT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-RBAC-001"
+    },
+    {
+      "task_id": "CAS-M1-PAYOUT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-BAL-001"
+    },
+    {
+      "task_id": "CAS-M1-BAL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-COMM-002"
+    },
+    {
+      "task_id": "CAS-M1-COMM-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-COMM-001"
+    },
+    {
+      "task_id": "CAS-M1-COMM-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-LIFE-001"
+    },
+    {
+      "task_id": "CAS-M1-LIFE-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SHOP-CAS-M1-INT-001"
+    },
+    {
+      "task_id": "CAS-M1-INT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-ATTR-001"
+    },
+    {
+      "task_id": "CAS-M1-ATTR-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-CUST-002"
+    },
+    {
+      "task_id": "CAS-M1-CUST-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-CUST-001"
+    },
+    {
+      "task_id": "CAS-M1-CUST-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-POL-001"
+    },
+    {
+      "task_id": "CAS-M1-POL-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-ADMIN-OPP-001"
+    },
+    {
+      "task_id": "CAS-M1-ADMIN-OPP-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-OPP-001"
+    },
+    {
+      "task_id": "CAS-M1-OPP-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-RBAC-001"
+    },
+    {
+      "task_id": "CAS-M1-RBAC-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-AUTH-001"
+    },
+    {
+      "task_id": "CAS-M1-AUTH-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-DATA-001"
+    },
+    {
+      "task_id": "CAS-M1-DATA-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-BOOT-001"
+    },
+    {
+      "task_id": "SHOP-CAS-M1-INT-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "CAS-M1-INT-001"
+    },
+    {
+      "task_id": "TASK-0003",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0002"
+    },
+    {
+      "task_id": "TASK-0004",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0001"
+    },
+    {
+      "task_id": "TASK-0005",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0004"
+    },
+    {
+      "task_id": "TASK-0006",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0004"
+    },
+    {
+      "task_id": "TASK-0007",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0004"
+    },
+    {
+      "task_id": "TASK-0007",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0005"
+    },
+    {
+      "task_id": "TASK-0007",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0006"
+    },
+    {
+      "task_id": "TASK-0008",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0007"
+    },
+    {
+      "task_id": "TASK-0101",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0003"
+    },
+    {
+      "task_id": "TASK-0101",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0008"
+    },
+    {
+      "task_id": "TASK-0102",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0003"
+    },
+    {
+      "task_id": "TASK-0102",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0008"
+    },
+    {
+      "task_id": "TASK-0103",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0102"
+    },
+    {
+      "task_id": "TASK-0104",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0007"
+    },
+    {
+      "task_id": "TASK-0104",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0103"
+    },
+    {
+      "task_id": "TASK-0105",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0101"
+    },
+    {
+      "task_id": "TASK-0106",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0104"
+    },
+    {
+      "task_id": "TASK-0107",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0101"
+    },
+    {
+      "task_id": "TASK-0201",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0105"
+    },
+    {
+      "task_id": "TASK-0201",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0106"
+    },
+    {
+      "task_id": "TASK-0201",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0107"
+    },
+    {
+      "task_id": "TASK-0202",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0201"
+    },
+    {
+      "task_id": "TASK-0203",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0201"
+    },
+    {
+      "task_id": "TASK-0204",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0203"
+    },
+    {
+      "task_id": "TASK-0205",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0204"
+    },
+    {
+      "task_id": "TASK-0207",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0201"
+    },
+    {
+      "task_id": "TASK-0208",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0201"
+    },
+    {
+      "task_id": "TASK-0201A",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0201"
+    },
+    {
+      "task_id": "TASK-0201B",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0201A"
+    },
+    {
+      "task_id": "TASK-0206",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0204"
+    },
+    {
+      "task_id": "TASK-0301",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0005"
+    },
+    {
+      "task_id": "TASK-0301",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0201B"
+    },
+    {
+      "task_id": "TASK-0301",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0202"
+    },
+    {
+      "task_id": "TASK-0301",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0205"
+    },
+    {
+      "task_id": "TASK-0301",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0206"
+    },
+    {
+      "task_id": "TASK-0301",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0207"
+    },
+    {
+      "task_id": "TASK-0301",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0208"
+    },
+    {
+      "task_id": "TASK-0302",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0301"
+    },
+    {
+      "task_id": "TASK-0303",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0301"
+    },
+    {
+      "task_id": "TASK-0304",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0301"
+    },
+    {
+      "task_id": "TASK-0305",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0303"
+    },
+    {
+      "task_id": "TASK-0306",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0301"
+    },
+    {
+      "task_id": "TASK-0307",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0306"
+    },
+    {
+      "task_id": "TASK-0308",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0206"
+    },
+    {
+      "task_id": "TASK-0308",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0303"
+    },
+    {
+      "task_id": "TASK-0309",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0306"
+    },
+    {
+      "task_id": "TASK-0310",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0302"
+    },
+    {
+      "task_id": "TASK-0311",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0301"
+    },
+    {
+      "task_id": "TASK-0311",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0304"
+    },
+    {
+      "task_id": "TASK-0312",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0305"
+    },
+    {
+      "task_id": "TASK-0312",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0311"
+    },
+    {
+      "task_id": "TASK-0313",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0203"
+    },
+    {
+      "task_id": "TASK-0313",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0311"
+    },
+    {
+      "task_id": "TASK-0314",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0303"
+    },
+    {
+      "task_id": "TASK-0314",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0304"
+    },
+    {
+      "task_id": "TASK-0315",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0311"
+    },
+    {
+      "task_id": "TASK-0316",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0305"
+    },
+    {
+      "task_id": "TASK-0317",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0316"
+    },
+    {
+      "task_id": "TASK-0318",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0305"
+    },
+    {
+      "task_id": "TASK-0319",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0305"
+    },
+    {
+      "task_id": "TASK-0319",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0318"
+    },
+    {
+      "task_id": "TASK-0320",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0319"
+    },
+    {
+      "task_id": "TASK-0321",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0320"
+    },
+    {
+      "task_id": "TASK-0322",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0104"
+    },
+    {
+      "task_id": "TASK-0322",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0321"
+    },
+    {
+      "task_id": "TASK-0323",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0321"
+    },
+    {
+      "task_id": "TASK-0323",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0322"
+    },
+    {
+      "task_id": "TASK-0324",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0005"
+    },
+    {
+      "task_id": "TASK-0324",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0323"
+    },
+    {
+      "task_id": "TASK-0325",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0104"
+    },
+    {
+      "task_id": "TASK-0325",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0321"
+    },
+    {
+      "task_id": "TASK-0326",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0322"
+    },
+    {
+      "task_id": "TASK-0326",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0324"
+    },
+    {
+      "task_id": "TASK-0326",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0325"
+    },
+    {
+      "task_id": "TASK-0327",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0321"
+    },
+    {
+      "task_id": "TASK-0328",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0322"
+    },
+    {
+      "task_id": "TASK-0328",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0327"
+    },
+    {
+      "task_id": "TASK-0329",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0327"
+    },
+    {
+      "task_id": "TASK-0329",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0328"
+    },
+    {
+      "task_id": "TASK-0330",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0005"
+    },
+    {
+      "task_id": "TASK-0330",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0328"
+    },
+    {
+      "task_id": "TASK-0331",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0328"
+    },
+    {
+      "task_id": "TASK-0331",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0329"
+    },
+    {
+      "task_id": "TASK-0331",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0330"
+    },
+    {
+      "task_id": "TASK-0332",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0327"
+    },
+    {
+      "task_id": "TASK-0332",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0328"
+    },
+    {
+      "task_id": "TASK-0332",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0329"
+    },
+    {
+      "task_id": "TASK-0332",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0330"
+    },
+    {
+      "task_id": "TASK-0332",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0331"
+    },
+    {
+      "task_id": "TASK-0333",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0329"
+    },
+    {
+      "task_id": "TASK-0334",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0333"
+    },
+    {
+      "task_id": "TASK-0335",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0329"
+    },
+    {
+      "task_id": "TASK-0335",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0333"
+    },
+    {
+      "task_id": "TASK-0335",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0334"
+    },
+    {
+      "task_id": "TASK-0336",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0005"
+    },
+    {
+      "task_id": "TASK-0336",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0333"
+    },
+    {
+      "task_id": "TASK-0336",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0334"
+    },
+    {
+      "task_id": "TASK-0337",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0333"
+    },
+    {
+      "task_id": "TASK-0337",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0334"
+    },
+    {
+      "task_id": "TASK-0338",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0335"
+    },
+    {
+      "task_id": "TASK-0338",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0336"
+    },
+    {
+      "task_id": "TASK-0338",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0337"
+    },
+    {
+      "task_id": "TASK-0339",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0333"
+    },
+    {
+      "task_id": "TASK-0339",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0335"
+    },
+    {
+      "task_id": "TASK-0340",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0338"
+    },
+    {
+      "task_id": "TASK-0340",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0339"
+    },
+    {
+      "task_id": "TASK-0341",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0104"
+    },
+    {
+      "task_id": "TASK-0342",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0341"
+    },
+    {
+      "task_id": "TASK-0343",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0341"
+    },
+    {
+      "task_id": "TASK-0343",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0342"
+    },
+    {
+      "task_id": "TASK-0344",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0343"
+    },
+    {
+      "task_id": "TASK-0345",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0343"
+    },
+    {
+      "task_id": "TASK-0346",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0005"
+    },
+    {
+      "task_id": "TASK-0346",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0343"
+    },
+    {
+      "task_id": "TASK-0346",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0344"
+    },
+    {
+      "task_id": "TASK-0346",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0345"
+    },
+    {
+      "task_id": "BS-M4-FRD-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0301"
+    },
+    {
+      "task_id": "BS-M4-FRD-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0304"
+    },
+    {
+      "task_id": "BS-M4-FRD-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0346"
+    },
+    {
+      "task_id": "BS-M4-FRD-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-001"
+    },
+    {
+      "task_id": "BS-M4-FRD-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0104"
+    },
+    {
+      "task_id": "BS-M4-FRD-002",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0419"
+    },
+    {
+      "task_id": "BS-M4-FRD-003",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-001"
+    },
+    {
+      "task_id": "BS-M4-FRD-003",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-002"
+    },
+    {
+      "task_id": "BS-M4-FRD-004",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-003"
+    },
+    {
+      "task_id": "BS-M4-FRD-004",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0301"
+    },
+    {
+      "task_id": "BS-M4-FRD-005",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-004"
+    },
+    {
+      "task_id": "BS-M4-FRD-005",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0301"
+    },
+    {
+      "task_id": "BS-M4-FRD-006",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-003"
+    },
+    {
+      "task_id": "BS-M4-FRD-006",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-004"
+    },
+    {
+      "task_id": "BS-M4-FRD-007",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-003"
+    },
+    {
+      "task_id": "BS-M4-FRD-007",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-004"
+    },
+    {
+      "task_id": "BS-M4-FRD-007",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0419"
+    },
+    {
+      "task_id": "BS-M4-FRD-008",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-005"
+    },
+    {
+      "task_id": "BS-M4-FRD-008",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0005"
+    },
+    {
+      "task_id": "BS-M4-FRD-009",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-001"
+    },
+    {
+      "task_id": "BS-M4-FRD-009",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-002"
+    },
+    {
+      "task_id": "BS-M4-FRD-009",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-003"
+    },
+    {
+      "task_id": "BS-M4-FRD-009",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-004"
+    },
+    {
+      "task_id": "BS-M4-FRD-009",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-005"
+    },
+    {
+      "task_id": "BS-M4-FRD-009",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-006"
+    },
+    {
+      "task_id": "BS-M4-FRD-009",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-007"
+    },
+    {
+      "task_id": "BS-M4-FRD-009",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-008"
+    },
+    {
+      "task_id": "BS-M4-FRD-010",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-009"
+    },
+    {
+      "task_id": "TASK-0315",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0423"
+    },
+    {
+      "task_id": "TASK-0317",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0411"
+    },
+    {
+      "task_id": "TASK-0319",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0423"
+    },
+    {
+      "task_id": "TASK-0320",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0423"
+    },
+    {
+      "task_id": "TASK-0323",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0404"
+    },
+    {
+      "task_id": "TASK-0323",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0412"
+    },
+    {
+      "task_id": "TASK-0323",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0423"
+    },
+    {
+      "task_id": "TASK-0341",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0404"
+    },
+    {
+      "task_id": "TASK-0341",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0412"
+    },
+    {
+      "task_id": "TASK-0401",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0104"
+    },
+    {
+      "task_id": "TASK-0402",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0401"
+    },
+    {
+      "task_id": "TASK-0403",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0005"
+    },
+    {
+      "task_id": "TASK-0403",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0104"
+    },
+    {
+      "task_id": "TASK-0404",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0104"
+    },
+    {
+      "task_id": "TASK-0405",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0404"
+    },
+    {
+      "task_id": "TASK-0406",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0405"
+    },
+    {
+      "task_id": "TASK-0410",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0406"
+    },
+    {
+      "task_id": "TASK-0411",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0316"
+    },
+    {
+      "task_id": "TASK-0411",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0404"
+    },
+    {
+      "task_id": "TASK-0412",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0404"
+    },
+    {
+      "task_id": "TASK-0412",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0411"
+    },
+    {
+      "task_id": "TASK-0413",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0405"
+    },
+    {
+      "task_id": "TASK-0413",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0410"
+    },
+    {
+      "task_id": "TASK-0414",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0413"
+    },
+    {
+      "task_id": "TASK-0415",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0414"
+    },
+    {
+      "task_id": "TASK-0416",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0413"
+    },
+    {
+      "task_id": "TASK-0417",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0414"
+    },
+    {
+      "task_id": "TASK-0417",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0416"
+    },
+    {
+      "task_id": "TASK-0418",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0410"
+    },
+    {
+      "task_id": "TASK-0419",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0414"
+    },
+    {
+      "task_id": "TASK-0419",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0417"
+    },
+    {
+      "task_id": "TASK-0419",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0418"
+    },
+    {
+      "task_id": "TASK-0420",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0417"
+    },
+    {
+      "task_id": "TASK-0420",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0419"
+    },
+    {
+      "task_id": "TASK-0421",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0410"
+    },
+    {
+      "task_id": "TASK-0421",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0413"
+    },
+    {
+      "task_id": "TASK-0421",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0419"
+    },
+    {
+      "task_id": "TASK-0421",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0422"
+    },
+    {
+      "task_id": "TASK-0422",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0413"
+    },
+    {
+      "task_id": "TASK-0422",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0420"
+    },
+    {
+      "task_id": "TASK-0423",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0318"
+    },
+    {
+      "task_id": "TASK-0423",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0404"
+    },
+    {
+      "task_id": "TASK-0424",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0401"
+    },
+    {
+      "task_id": "TASK-0424",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0402"
+    },
+    {
+      "task_id": "TASK-0425",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0104"
+    },
+    {
+      "task_id": "TASK-0425",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0419"
+    },
+    {
+      "task_id": "TASK-0425",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0424"
+    },
+    {
+      "task_id": "TASK-0426",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0424"
+    },
+    {
+      "task_id": "TASK-0426",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0425"
+    },
+    {
+      "task_id": "TASK-0427",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0426"
+    },
+    {
+      "task_id": "TASK-0428",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0426"
+    },
+    {
+      "task_id": "TASK-0429",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0427"
+    },
+    {
+      "task_id": "TASK-0429",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0428"
+    },
+    {
+      "task_id": "TASK-0430",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0426"
+    },
+    {
+      "task_id": "TASK-0431",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0424"
+    },
+    {
+      "task_id": "TASK-0431",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0425"
+    },
+    {
+      "task_id": "TASK-0431",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0426"
+    },
+    {
+      "task_id": "TASK-0431",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0430"
+    },
+    {
+      "task_id": "TASK-0432",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0427"
+    },
+    {
+      "task_id": "TASK-0432",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0428"
+    },
+    {
+      "task_id": "TASK-0432",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0429"
+    },
+    {
+      "task_id": "TASK-0432",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0430"
+    },
+    {
+      "task_id": "TASK-0432",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0431"
+    },
+    {
+      "task_id": "TASK-0433",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-M4-FRD-010"
+    },
+    {
+      "task_id": "TASK-0433",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0424"
+    },
+    {
+      "task_id": "TASK-0433",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0425"
+    },
+    {
+      "task_id": "TASK-0433",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0426"
+    },
+    {
+      "task_id": "TASK-0433",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0427"
+    },
+    {
+      "task_id": "TASK-0433",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0428"
+    },
+    {
+      "task_id": "TASK-0433",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0429"
+    },
+    {
+      "task_id": "TASK-0433",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0430"
+    },
+    {
+      "task_id": "TASK-0433",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0431"
+    },
+    {
+      "task_id": "TASK-0433",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0432"
+    },
+    {
+      "task_id": "TASK-0412",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0502"
+    },
+    {
+      "task_id": "TASK-0501",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0207"
+    },
+    {
+      "task_id": "TASK-0502",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0005"
+    },
+    {
+      "task_id": "TASK-0505",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0205"
+    },
+    {
+      "task_id": "TASK-0506",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0101"
+    },
+    {
+      "task_id": "TASK-0610",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0315"
+    },
+    {
+      "task_id": "TASK-0610",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0316"
+    },
+    {
+      "task_id": "TASK-0610",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0317"
+    },
+    {
+      "task_id": "TASK-0610",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0410"
+    },
+    {
+      "task_id": "TASK-0610",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0411"
+    },
+    {
+      "task_id": "TASK-0610",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0413"
+    },
+    {
+      "task_id": "TASK-0611",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0610"
+    },
+    {
+      "task_id": "TASK-0612",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0412"
+    },
+    {
+      "task_id": "TASK-0612",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0502"
+    },
+    {
+      "task_id": "TASK-0613",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0413"
+    },
+    {
+      "task_id": "TASK-0613",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0419"
+    },
+    {
+      "task_id": "TASK-0614",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0414"
+    },
+    {
+      "task_id": "TASK-0614",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0415"
+    },
+    {
+      "task_id": "TASK-0614",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0416"
+    },
+    {
+      "task_id": "TASK-0614",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0417"
+    },
+    {
+      "task_id": "TASK-0614",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0418"
+    },
+    {
+      "task_id": "TASK-0614",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0419"
+    },
+    {
+      "task_id": "TASK-0614",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0420"
+    },
+    {
+      "task_id": "TASK-0614",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0421"
+    },
+    {
+      "task_id": "TASK-0614",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0422"
+    },
+    {
+      "task_id": "TASK-0615",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0318"
+    },
+    {
+      "task_id": "TASK-0615",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0319"
+    },
+    {
+      "task_id": "TASK-0615",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0320"
+    },
+    {
+      "task_id": "TASK-0615",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0423"
+    },
+    {
+      "task_id": "TASK-0616",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0321"
+    },
+    {
+      "task_id": "TASK-0616",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0322"
+    },
+    {
+      "task_id": "TASK-0616",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0323"
+    },
+    {
+      "task_id": "TASK-0616",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0324"
+    },
+    {
+      "task_id": "TASK-0616",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0325"
+    },
+    {
+      "task_id": "TASK-0616",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0326"
+    },
+    {
+      "task_id": "TASK-0617",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0327"
+    },
+    {
+      "task_id": "TASK-0617",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0328"
+    },
+    {
+      "task_id": "TASK-0617",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0329"
+    },
+    {
+      "task_id": "TASK-0617",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0330"
+    },
+    {
+      "task_id": "TASK-0617",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0331"
+    },
+    {
+      "task_id": "TASK-0617",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0332"
+    },
+    {
+      "task_id": "TASK-0618",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0333"
+    },
+    {
+      "task_id": "TASK-0618",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0334"
+    },
+    {
+      "task_id": "TASK-0618",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0335"
+    },
+    {
+      "task_id": "TASK-0618",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0336"
+    },
+    {
+      "task_id": "TASK-0618",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0337"
+    },
+    {
+      "task_id": "TASK-0618",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0338"
+    },
+    {
+      "task_id": "TASK-0618",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0339"
+    },
+    {
+      "task_id": "TASK-0618",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0340"
+    },
+    {
+      "task_id": "TASK-0619",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0341"
+    },
+    {
+      "task_id": "TASK-0619",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0342"
+    },
+    {
+      "task_id": "TASK-0619",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0343"
+    },
+    {
+      "task_id": "TASK-0619",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0344"
+    },
+    {
+      "task_id": "TASK-0619",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0345"
+    },
+    {
+      "task_id": "TASK-0619",
+      "dependency_type": "hard",
+      "depends_on_task_id": "TASK-0346"
+    },
+    {
+      "task_id": "BS-SA-FUTURE-SUIT-001",
+      "dependency_type": "soft",
+      "depends_on_task_id": "SAS-M4-EVENTS-001"
+    },
+    {
+      "task_id": "BS-SA-FUTURE-SUIT-M4-VALIDATION-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "BS-SA-FUTURE-SUIT-001"
+    },
+    {
+      "task_id": "BS-SA-FUTURE-SUIT-M4-VALIDATION-001",
+      "dependency_type": "hard",
+      "depends_on_task_id": "SAS-M4-EVENTS-001"
+    }
+  ]
+}

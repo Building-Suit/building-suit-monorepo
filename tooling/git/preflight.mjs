@@ -6,6 +6,9 @@ try {
   const repo = repository()
   // Fetch updates remote-tracking refs only. Never pull, stash, reset, rebase or delete user work.
   git(['fetch', 'origin', '--prune'])
+  // Saved cloud checkouts can fetch only main. Refresh stg explicitly rather
+  // than trusting a stale remote-tracking ref left outside that refspec.
+  git(['fetch', 'origin', 'refs/heads/stg:refs/remotes/origin/stg'])
   const root = git(['rev-parse', '--show-toplevel'])
   const prs = openPullRequests(repo)
   const errors = checkPullRequestPolicy(prs)

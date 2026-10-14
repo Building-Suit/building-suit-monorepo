@@ -121,7 +121,7 @@ test('public pricing renders three server-priced families with exact monthly and
   await expect(multi).toContainText('11,988')
   await expect(plans.getByText('32% off')).toHaveCount(3)
   await plans.getByRole('radio', { name: '3 branches' }).check()
-  await expect(multi).toHaveAttribute('data-variant', 'multi_3')
+  await expect(multi.getByRole('radio').last()).toBeChecked()
   await expect(multi).toContainText('9,783.84')
   await expect(multi).toContainText('14,388')
   await expect(multi).toContainText('25')
@@ -146,7 +146,7 @@ for (const locale of ['en', 'ar']) {
     await variant.focus()
     await page.keyboard.press('Space')
     await expect(variant).toBeChecked()
-    await expect(multi).toHaveAttribute('data-variant', 'multi_3')
+    await expect(multi.getByRole('radio').last()).toBeChecked()
     await expect(multi).toContainText(locale === 'ar' ? '٢٥' : '25')
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   })
@@ -160,25 +160,28 @@ for (const locale of ['en', 'ar']) for (const width of [360, 768, 1440]) {
     const main = page.getByRole('main')
     await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
     await expect(main.getByRole('heading', { name: locale === 'ar' ? 'الاشتراك والدفع' : 'Subscription and billing' })).toBeVisible()
-    const currentSubscription = main.locator('section[aria-label="Current subscription"]')
-    await expect(currentSubscription.getByText(locale === 'ar' ? 'يُطبق سعر تفاوضي' : 'Negotiated price applies', { exact: true })).toBeVisible()
-    await expect(main.locator('[data-usage-state="over"]')).toHaveCount(4)
-    await expect(main.locator('[data-usage-state="near"]')).toHaveCount(1)
-    await expect(main.locator('[data-usage-state="available"]')).toHaveCount(1)
+    const currentSubscription = main.locator('#current-plan')
+    await expect(currentSubscription).toContainText(locale === 'ar' ? 'يُطبق سعر تفاوضي' : 'Negotiated price applies')
+    await expect(main.locator('#usage').getByText(locale === 'ar' ? 'أعلى من الحد' : 'Over limit', { exact: true })).toHaveCount(4)
+    await expect(main.locator('#usage').getByText(locale === 'ar' ? 'قريب من الحد' : 'Near limit', { exact: true })).toHaveCount(1)
+    await expect(main.locator('#usage').getByText(locale === 'ar' ? 'متاح' : 'Available', { exact: true })).toHaveCount(1)
     await expect(main.getByRole('heading', { name: 'Legacy founder' })).toHaveCount(0)
     const soloCard = main.locator('article').filter({ has: page.getByRole('heading', { name: 'Solo', exact: true }) })
     const soloChoice = soloCard.getByRole('button', { name: locale === 'ar' ? 'اختيار الخطة' : 'Choose plan' })
     await expect(soloChoice).toBeEnabled()
-    await expect(soloCard.getByRole('alert').getByRole('listitem')).toHaveCount(6)
+    await expect(soloCard.getByRole('status')).toHaveCount(0)
+    await soloChoice.click()
+    const restrictions = page.getByRole('dialog').locator('.bs-plan-status')
+    await expect(restrictions.getByRole('listitem')).toHaveCount(6)
     for (const label of locale === 'ar'
       ? ['فروع المتجر', 'أفراد فريقك', 'المنتجات النشطة', 'الخدمات النشطة', 'العملاء النشطون', 'الموردون النشطون']
       : ['Shop locations', 'People on your team', 'Active products', 'Active services', 'Active customers', 'Active suppliers']) {
-      await expect(soloCard.getByRole('alert')).toContainText(label)
+      await expect(restrictions).toContainText(label)
     }
-    await expect(soloCard.getByRole('alert')).toContainText(locale === 'ar'
+    await expect(restrictions).toContainText(locale === 'ar'
       ? 'لن يُحذف أو يُؤرشف أي شيء تلقائيًا'
       : 'Nothing is deleted or archived automatically')
-    await expect(soloCard.getByRole('alert')).toContainText(locale === 'ar'
+    await expect(restrictions).toContainText(locale === 'ar'
       ? 'حتى تخفّض الاستخدام أو ترقي الخطة'
       : 'until you reduce usage or upgrade the plan')
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
@@ -188,92 +191,83 @@ for (const locale of ['en', 'ar']) for (const width of [360, 768, 1440]) {
 for (const locale of ['en', 'ar']) for (const [slug, name, price] of [
   ['solo', 'Solo', 349], ['team', 'Team', 649], ['multi', 'Multi', 999],
 ] as const) {
-  test(`trial owner can submit a plan-aware ${name} request: ${locale}`, async ({ page }) => {
-    await page.setViewportSize({ width: 768, height: 900 })
-    const request = { status: null as RequestStatus }
-    const { calls } = await setup(page, locale, request)
+  test(`trial owner can review the exact ${name} X-Pay quote without a manual payment: ${locale}`, async ({ page }) => {
+    const { calls } = await setup(page, locale, { status: null })
     await navigate(page, '/billing')
-    const main = page.getByRole('main')
-    const planCard = main.getByTestId('shop-plan-cards').locator('article').filter({ has: page.getByRole('heading', { name, exact: true }) })
-    await planCard.getByRole('button').click()
-    await expect(main.getByText(new RegExp(`${locale === 'ar' ? 'الخطة المطلوبة' : 'Requested plan'}: ${name}`))).toBeVisible()
-    await main.getByRole('spinbutton', { name: locale === 'ar' ? 'المبلغ المحوّل' : 'Amount transferred' }).fill(String(price))
-    await main.getByLabel(locale === 'ar' ? 'تاريخ التحويل' : 'Transfer date').fill('2026-09-29')
-    await main.getByRole('textbox', { name: locale === 'ar' ? 'مرجع التحويل' : 'Transfer reference' }).fill(`IPN-${slug.toUpperCase()}-001`)
-    await main.getByRole('button', { name: locale === 'ar' ? 'ابعت للمراجعة' : 'Submit for review' }).click()
-    await page.getByRole('dialog').getByRole('button', { name: locale === 'ar' ? 'تأكيد' : 'Confirm', exact: true }).click()
-
-    await expect.poll(() => calls.filter(call => call.name === 'submit_shop_billing_notice').length).toBe(1)
-    const submission = calls.find(call => call.name === 'submit_shop_billing_notice')
-    expect(submission?.args.p_requested_plan_slug).toBe(slug)
-    expect(submission?.args.p_requested_catalog_terms_id).toBe(`terms-${slug}-${slug === 'multi' ? 'multi_2' : 'standard'}-monthly`)
-    expect(submission?.args.p_paid_amount).toBe(price)
+    const card = page.getByTestId('shop-plan-cards').locator(`[data-plan="${slug}"]`)
+    await card.getByRole('button').click()
+    const checkout = page.getByTestId('hosted-checkout')
+    await expect(checkout).toContainText(name)
+    await expect(checkout).toContainText(new Intl.NumberFormat(locale === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP' }).format(price))
+    await expect(page.getByRole('dialog').locator('button[type="submit"]')).toBeDisabled()
+    expect(calls.filter(call => call.name === 'submit_shop_billing_notice')).toEqual([])
   })
 }
 
-test('owner can select the Multi 3 yearly quote before submitting an InstaPay notice', async ({ page }) => {
-  await page.setViewportSize({ width: 768, height: 900 })
-  const request = { status: null as RequestStatus }
-  const { calls } = await setup(page, 'en', request)
+test('owner selects exact Multi 3 annual quote for X-Pay', async ({ page }) => {
+  await setup(page, 'en', { status: null })
   await navigate(page, '/billing')
-  const main = page.getByRole('main')
-  const plans = main.getByTestId('shop-plan-cards')
+  const plans = page.getByTestId('shop-plan-cards')
   await plans.getByRole('radio', { name: 'Yearly' }).check()
   await plans.getByRole('radio', { name: '3 branches' }).check()
-  const multi = plans.locator('[data-plan="multi"]')
-  await expect(multi).toContainText('9,783.84')
-  await multi.getByRole('button', { name: 'Choose plan' }).click()
-  const quote = main.getByText(/Requested plan: Multi · 3 branches/)
-  await expect(quote).toContainText('9,783.84')
-  await expect(quote).toContainText('Annual')
-  await main.getByRole('spinbutton', { name: 'Amount transferred' }).fill('9783.84')
-  await main.getByLabel('Transfer date').fill('2026-09-29')
-  await main.getByRole('textbox', { name: 'Transfer reference' }).fill('IPN-MULTI3-YEARLY')
-  await main.getByRole('button', { name: 'Submit for review' }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Confirm', exact: true }).click()
-  await expect.poll(() => calls.filter(call => call.name === 'submit_shop_billing_notice').length).toBe(1)
-  const submission = calls.find(call => call.name === 'submit_shop_billing_notice')
-  expect(submission?.args.p_requested_catalog_terms_id).toBe('terms-multi-multi_3-annual')
-  expect(submission?.args.p_paid_amount).toBe(9783.84)
+  await plans.locator('[data-plan="multi"]').getByRole('button', { name: 'Choose plan' }).click()
+  await expect(page.getByTestId('hosted-checkout')).toContainText('Multi · 3 branches')
+  await expect(page.getByTestId('hosted-checkout')).toContainText('9,783.84')
+  await expect(page.getByTestId('hosted-checkout')).toContainText('Annual')
+  await expect(page.getByRole('dialog').locator('button[type="submit"]')).toBeDisabled()
 })
 
-for (const locale of ['en', 'ar']) {
-  test(`manual request and review states do not imply activation: ${locale}`, async ({ page }) => {
-    await page.setViewportSize({ width: 360, height: 900 })
-    const request = { status: null as RequestStatus }
-    const { calls } = await setup(page, locale, request)
+for (const locale of ['en', 'ar']) for (const status of ['submitted', 'under_review', 'approved', 'rejected'] as const) {
+  test(`historical ${status} does not imply a new activation: ${locale}`, async ({ page }) => {
+    const { calls } = await setup(page, locale, { status })
     await navigate(page, '/billing')
-    const main = page.getByRole('main')
-    const choose = main.getByRole('button', { name: locale === 'ar' ? 'اختيار الخطة' : 'Choose plan' }).last()
-    await choose.focus()
-    await page.keyboard.press('Enter')
-    await main.getByRole('spinbutton', { name: locale === 'ar' ? 'المبلغ المحوّل' : 'Amount transferred' }).fill('999')
-    await main.getByLabel(locale === 'ar' ? 'تاريخ التحويل' : 'Transfer date').fill('2026-09-29')
-    await main.getByRole('textbox', { name: locale === 'ar' ? 'مرجع التحويل' : 'Transfer reference' }).fill('IPN-PLAN-001')
-    await main.getByRole('button', { name: locale === 'ar' ? 'ابعت للمراجعة' : 'Submit for review' }).click()
+    await expect(page.getByRole('row').filter({ hasText: 'IPN-PLAN-001' })).toBeVisible()
+    await expect(page.locator('#current-plan')).toContainText(locale === 'ar' ? 'فترة تجريبية' : 'Trialing')
+    await page.locator('#payment').getByRole('button').first().click()
+    await expect(page.getByRole('dialog').locator('button[type="submit"]')).toBeDisabled()
+    await expect(page.locator('input[type="file"], input[type="date"], input[type="number"]')).toHaveCount(0)
+    expect(calls.filter(call => /submit_shop_billing_notice|reserve_shop_billing_payment_evidence/.test(call.name))).toEqual([])
+  })
+}
+
+for (const [locale, width, dark] of [['en', 1440, false], ['ar', 390, true]] as const) {
+  test(`Popular remains Team and active plan is disabled; restrictions move into checkout: ${locale}`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: 1000 })
+    await page.addInitScript(value => localStorage.setItem('building-suit.theme', value), dark ? 'dark' : 'light')
+    const snapshot = billing(null)
+    snapshot.subscription.accessState = 'active'
+    snapshot.subscription.status = 'active'
+    const fixture = await pilotFixture(page, locale, 'owner', name => {
+      if (name === 'shop_public_plan_catalog') return catalog
+      if (name === 'shop_billing_read') return snapshot
+      if (name === 'shop-xpay-checkout') return { ready: true, mode: 'test', orders: [] }
+      return undefined
+    })
+    await navigate(page, '/')
+    await page.locator('#pricing').scrollIntoViewIfNeeded()
+    const landingCard = page.locator('[data-plan="team"]')
+    const landingWidth = await landingCard.evaluate(node => node.getBoundingClientRect().width)
+    await expect(landingCard).toHaveAttribute('data-featured', 'true')
+    await navigate(page, '/billing')
+    const plans = page.getByTestId('shop-plan-cards')
+    const team = plans.locator('[data-plan="team"]')
+    await expect(team).toHaveAttribute('data-featured', 'true')
+    await expect(team.getByRole('button')).toHaveText(locale === 'en' ? 'Selected' : 'تم الاختيار')
+    await expect(team.getByRole('button')).toBeDisabled()
+    const cardWidth = await team.evaluate(node => node.getBoundingClientRect().width)
+    expect(cardWidth).toBeLessThanOrEqual(352)
+    if (width === 1440) expect(cardWidth).toBe(landingWidth)
+    await expect(plans.locator('.bs-plan-status')).toHaveCount(0)
+    await plans.locator('[data-plan="solo"]').getByRole('button').click()
     const dialog = page.getByRole('dialog')
-    await expect(dialog).toContainText(locale === 'ar' ? 'لن يتغير الوصول' : 'access will not change')
-    await dialog.getByRole('button', { name: locale === 'ar' ? 'تأكيد' : 'Confirm', exact: true }).click()
-    await expect(main.getByText(locale === 'ar' ? /تم الإرسال للمراجعة اليدوية/ : /Submitted for manual review/)).toBeVisible()
-    expect(calls.filter(call => call.name === 'submit_shop_billing_notice')).toHaveLength(1)
-
-    for (const [status, message] of locale === 'ar'
-      ? [['under_review', /يراجع مسؤول المنصة/], ['approved', /تم اعتماد هذا الطلب/], ['rejected', /تم رفض الطلب/]] as const
-      : [['under_review', /operator is reviewing/], ['approved', /request was approved/], ['rejected', /request was rejected/]] as const) {
-      request.status = status
-      await page.reload()
-
-      // A full reload starts with an empty client-side auth ref. The synthetic
-      // fixture therefore passes through /auth/login and restores the session
-      // on /dashboard. Wait for that restoration before using the SPA router,
-      // otherwise the auth redirect can overwrite the /billing navigation.
-      await expect(page.getByRole('main').getByRole('heading', {
-        name: locale === 'ar' ? 'لوحة التحكم' : 'Operating dashboard',
-        exact: true,
-      })).toBeVisible({ timeout: 20_000 })
-
-      await navigate(page, '/billing')
-      await expect(page.getByRole('main').getByText(message)).toBeVisible()
-    }
+    await expect(dialog).toBeVisible()
+    await expect(dialog.locator('.bs-plan-status')).toContainText(locale === 'en' ? 'Plan change blockers' : 'عوائق تغيير الخطة')
+    await expect(dialog.locator('button[type="submit"]')).toBeDisabled()
+    await expect(team).toHaveAttribute('data-featured', 'true')
+    await page.screenshot({ path: testInfo.outputPath('checkout-restrictions.png'), animations: 'disabled' })
+    await page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
+    await expect(plans.locator('[data-plan="solo"]').getByRole('button')).toBeFocused()
+    expect(fixture.calls.filter(call => call.name === 'shop-xpay-checkout' && call.args.requestId)).toEqual([])
   })
 }

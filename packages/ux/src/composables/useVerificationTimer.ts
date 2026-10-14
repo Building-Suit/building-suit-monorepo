@@ -1,0 +1,18 @@
+export function useVerificationTimer(expirySeconds = 3600, resendSeconds = 60) {
+  const expiresAt = ref(0)
+  const resendAt = ref(0)
+  const now = ref(Date.now())
+  const expiresIn = computed(() => Math.max(0, Math.ceil((expiresAt.value - now.value) / 1000)))
+  const resendIn = computed(() => Math.max(0, Math.ceil((resendAt.value - now.value) / 1000)))
+  const expired = computed(() => expiresIn.value === 0)
+  function start() { now.value = Date.now(); expiresAt.value = now.value + expirySeconds * 1000; resendAt.value = now.value + resendSeconds * 1000 }
+  function restore(savedExpiresAt: number, savedResendAt: number) {
+    now.value = Date.now()
+    expiresAt.value = Number.isFinite(savedExpiresAt) ? savedExpiresAt : 0
+    resendAt.value = Number.isFinite(savedResendAt) ? savedResendAt : 0
+  }
+  function reset() { now.value = Date.now(); expiresAt.value = 0; resendAt.value = 0 }
+  function format(seconds: number) { return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}` }
+  usePolling(() => { now.value = Date.now() }, () => 1000)
+  return { expiresAt, resendAt, expiresIn, resendIn, expired, start, restore, reset, format }
+}

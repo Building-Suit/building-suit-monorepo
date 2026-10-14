@@ -1,0 +1,41 @@
+name: Disposable Shop media validation
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/shop-media-disposable.yml'
+      - 'tooling/database/shop-media-disposable.mjs'
+      - 'tooling/database/tests/shop-media-disposable.test.mjs'
+      - 'apps/shop-suit/supabase/**'
+permissions:
+  contents: read
+concurrency:
+  group: shop-media-disposable-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  media:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SHOP_MEDIA_DISPOSABLE: '1'
+    steps:
+      - name: Require GitHub-hosted disposable runner
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          echo "SUPABASE_HOME=$RUNNER_TEMP/shop-media-supabase" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start fresh local Shop backend
+        # Do not echo the CLI's generated local credentials or upload its log.
+        run: pnpm exec supabase --workdir apps/shop-suit start --exclude studio,realtime,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/shop-media-start.log" 2>&1
+      - name: SQL authorization and real Auth/Storage/save validation
+        run: node tooling/database/shop-media-disposable.mjs
+      - name: Stop only this job's disposable Shop stack
+        if: always() && runner.environment == 'github-hosted'
+        run: |
+          pnpm exec supabase --workdir apps/shop-suit stop --project-id building-suit-shop --no-backup
+          rm -f "$RUNNER_TEMP/shop-media-start.log"

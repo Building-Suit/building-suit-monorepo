@@ -15,6 +15,8 @@ export const SUPPORTED_OPERATIONS = Object.freeze([
   'shop.billing.command',
   'shop.plan.query',
   'shop.plan.command',
+  'shop.account.query',
+  'shop.account.command',
 ])
 
 export class BridgeError extends Error {

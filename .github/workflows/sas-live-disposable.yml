@@ -1,0 +1,64 @@
+name: Disposable SAS private invalidation validation
+on:
+  pull_request:
+    paths: ['.github/workflows/sas-live-disposable.yml', 'tooling/database/sas-live-disposable.mjs', 'apps/super-admin-suit/**']
+permissions:
+  contents: read
+concurrency:
+  group: sas-live-disposable-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  private-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SAS_LIVE_DISPOSABLE: '1'
+    steps:
+      - name: Require GitHub-hosted disposable runner
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          echo "SUPABASE_HOME=$RUNNER_TEMP/sas-live-supabase" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start isolated SAS Auth and Realtime
+        run: |
+          if ! pnpm exec supabase --workdir apps/super-admin-suit start --exclude studio,storage-api,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/sas-live-start.log" 2>&1; then
+            python - <<'PY'
+          import os,re
+          from pathlib import Path
+          for line in Path(os.environ['RUNNER_TEMP']+'/sas-live-start.log').read_text().splitlines():
+            if re.search(r'^(ERROR:|error:|Error:|Applying migration|At statement|failed to|unexpected)',line):
+              print(re.sub(r'[A-Za-z0-9_-]{40,}','[redacted]',line)[:250])
+          PY
+            exit 1
+          fi
+      - name: Verify SQL scope, send denial and deduplication
+        run: pnpm exec supabase --workdir apps/super-admin-suit test db --local
+      - name: Verify real Auth and private-channel isolation
+        run: node tooling/database/sas-live-disposable.mjs
+      - name: Generate updated schema contract
+        run: |
+          # Same pinned Supabase image, with the publisher's Docker Hub mirror
+          # when the shared public ECR runner quota has been exhausted.
+          if ! docker pull public.ecr.aws/supabase/postgres-meta:v0.98.0 > /dev/null 2>&1; then
+            docker pull supabase/postgres-meta:v0.98.0
+            docker tag supabase/postgres-meta:v0.98.0 public.ecr.aws/supabase/postgres-meta:v0.98.0
+          fi
+          mkdir -p "$RUNNER_TEMP/sas-live-contract"
+          pnpm exec supabase --workdir apps/super-admin-suit gen types typescript --local --schema public > "$RUNNER_TEMP/sas-live-contract/database.types.ts"
+          diff -u --ignore-blank-lines apps/super-admin-suit/app/types/database.types.ts "$RUNNER_TEMP/sas-live-contract/database.types.ts"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sas-live-contract
+          path: ${{ runner.temp }}/sas-live-contract
+          retention-days: 7
+      - name: Stop only this disposable SAS stack
+        if: always() && runner.environment == 'github-hosted'
+        run: |
+          pnpm exec supabase --workdir apps/super-admin-suit stop --project-id building-suit-super-admin --no-backup
+          rm -f "$RUNNER_TEMP/sas-live-start.log"

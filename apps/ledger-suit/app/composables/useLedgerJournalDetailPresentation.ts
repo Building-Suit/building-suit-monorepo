@@ -1,0 +1,38 @@
+import { formatPresentationMoney } from '@building-suit/ui/utils/presentation'
+import type { BsJournalDetailCopy, BsJournalDetailForm, BsJournalDetailView } from '@building-suit/ui/types/journalDetailPresentation'
+export function useLedgerJournalDetailPresentation(options: { transactionId: string | null }, events: { close: () => void; changed: () => unknown; navigate?: (id: string) => void }) {
+  const router = useRouter()
+  const detail = reactive(useLedgerTransactionDetailDialogView(options, (event, ...args) => {
+    if (event === 'close') events.close()
+    else if (event === 'changed') void events.changed()
+    else if (event === 'navigate' && typeof args[0] === 'string') events.navigate?.(args[0])
+  }))
+  const tags = reactive(useLedgerTransactionTagsView(reactive({ get transactionId() { return options.transactionId }, get selected() { return detail.selectedTagId }, get pending() { return detail.tagPending } }), (event, ...args) => {
+    if (event === 'update:selected' && typeof args[0] === 'string') detail.selectedTagId = args[0]
+    else if (event === 'update:pending' && typeof args[0] === 'boolean') detail.tagPending = args[0]
+    else if (event === 'changed') void events.changed()
+  }))
+  const form = computed<BsJournalDetailForm>({ get: () => ({ reason: detail.reason, selectedTag: detail.selectedTagId, confirming: detail.confirming }), set: value => { detail.reason = value.reason; detail.selectedTagId = value.selectedTag; detail.confirming = value.confirming } })
+  const copy = computed<BsJournalDetailCopy>(() => ({
+    title: detail.t('detail.title'), close: detail.t('common.close'), journal: detail.t('detail.journal'), account: detail.t('detail.account'), debit: detail.t('detail.debit'), credit: detail.t('detail.credit'), totals: detail.t('journalCenter.lineTotals'), tags: detail.t('operations.tabs.tags'), tagsHint: detail.t('tagsGuide.detailHint'), noTags: detail.t('tagsGuide.noneAssigned'), chooseTag: detail.t('tagsGuide.choose'), assignTag: detail.t('operations.assign'), removeTag: detail.t('common.delete'), noTagOptions: detail.t('tagsGuide.noOptions'), tagError: detail.t('tagsGuide.loadError'), retry: detail.t('accounts.retry'), attachments: detail.t('operations.attachments'), upload: detail.t('operations.upload'), saving: detail.t('common.saving'), noAttachments: detail.t('operations.noAttachments'), delete: detail.t('common.delete'), relationships: detail.t('journalCenter.relationships'), reverseExplanation: detail.t('detail.reverseExplain'), reverseReason: detail.t('detail.reverseReason'), reasonPlaceholder: detail.t('detail.reverseReasonPlaceholder'), cancel: detail.t('common.cancel'), reversing: detail.t('detail.reversing'), reverseConfirm: detail.t('detail.reverseConfirm'), reverseAction: detail.t('detail.reverseAction'), openSource: detail.t('journalCenter.openSource'), loading: detail.t('app.loading'), failed: detail.t('transactionWorkspace.loadError'),
+  }))
+  function money(amount: number | string | null | undefined, currency?: string | null) { return formatPresentationMoney(amount ?? 0, { currency: detail.ledgerPresentation.currency(currency), locale: detail.locale, unit: 'minor', numberingSystem: 'latn' }) }
+  const view = computed<BsJournalDetailView>(() => {
+    const transaction = detail.transaction
+    const relationships = [
+      { id: transaction?.reversed_by_transaction_id, label: detail.t('detail.reversedNotice'), prefix: detail.t('journalCenter.reversalJournal') },
+      { id: transaction?.reverses_transaction_id, label: detail.t('journalCenter.reverses'), prefix: detail.t('journalCenter.originalJournal') },
+      { id: transaction?.correction_of_transaction_id, label: detail.t('journalCenter.adjusts'), prefix: '' },
+    ].flatMap(item => item.id ? [{ id: item.id, label: item.label, reference: [item.prefix, detail.relationship(item.id)?.journal_reference].filter(Boolean).join(' ') }] : [])
+    return {
+      visible: Boolean(options.transactionId), title: transaction?.description || detail.t('detail.title'), status: transaction?.status || '', type: transaction?.type ? detail.t(`types.${transaction.type}`) : '', reference: transaction?.journal_reference || '', dirty: detail.overlayDirty0, pending: detail.reversing || detail.uploading || detail.tagPending, loading: detail.detailPending, loadError: detail.detailError ? detail.t('transactionWorkspace.loadError') : null,
+      descriptions: [{ id: 'reference', label: detail.t('journalCenter.journalReference'), value: transaction?.journal_reference || detail.t('common.dash') }, { id: 'date', label: detail.t('journalCenter.accountingDate'), value: formatDate(transaction?.transaction_date, detail.locale) }, { id: 'source', label: detail.t('journalCenter.source'), value: transaction?.source ? detail.t(`journalSources.${transaction.source}`) : detail.t('common.dash') }, { id: 'category', label: detail.t('transactions.category'), value: transaction?.category_name || detail.t('common.dash') }, { id: 'party', label: detail.t('transactions.counterparty'), value: transaction?.counterparty_name || detail.t('common.dash') }, { id: 'referenceExternal', label: detail.t('transactions.reference'), value: transaction?.reference || detail.t('common.dash') }, { id: 'actor', label: detail.t('transactions.createdBy'), value: transaction?.created_by_name || transaction?.created_by_email || detail.t('common.dash') }, ...(transaction?.adjustment_reason ? [{ id: 'reason', label: detail.t('detail.reason'), value: transaction.adjustment_reason }] : [])], source: detail.sourceLink ? { label: detail.t('journalCenter.sourceRecord'), to: router.resolve(detail.sourceLink).href } : null,
+      entries: detail.entries.map((entry, index) => ({ id: entry.entry_id ?? `entry-${index}`, account: entry.account_name || '', memo: entry.memo || '', debit: entry.side === 'debit' ? money(entry.amount_minor, entry.currency_code) : detail.t('common.dash'), credit: entry.side === 'credit' ? money(entry.amount_minor, entry.currency_code) : detail.t('common.dash') })), debit: money(transaction?.debit_minor, transaction?.currency_code), credit: money(transaction?.credit_minor, transaction?.currency_code),
+      tags: { visible: tags.can('tags.read'), loading: tags.pending || tags.tagsPending, failed: !!(tags.error || tags.tagsError), pending: tags.busy, assigned: tags.assigned.map(row => ({ id: row.tag_id, name: row.tags?.name || '' })), choices: tags.available.map(tag => ({ value: tag.id, label: tag.name })), canManage: tags.canManage, noOptions: !tags.tags.length, error: tags.failure }, attachments: detail.attachments.map(item => ({ id: item.id, name: item.file_name })), canUpload: detail.can('attachments.create'), uploading: detail.uploading, canDelete: detail.can('attachments.delete'), storage: detail.ledgerUsage.item('max_storage_bytes'), relationships, restriction: detail.periodRestriction, canReverse: detail.canReverse, reversing: detail.reversing, error: detail.errorMessage,
+    }
+  })
+  async function retryTags() { await Promise.all([tags.refresh(), tags.refreshOptions()]) }
+  async function download(id: string) { const item = detail.attachments.find(item => item.id === id); if (item) await detail.downloadAttachment(item) }
+  async function deleteAttachment(id: string) { const item = detail.attachments.find(item => item.id === id); if (item) await detail.deleteAttachment(item) }
+  return { copy, view, form, retry: detail.refresh, retryTags, assignTag: () => tags.changeTag(detail.selectedTagId), removeTag: (id: string) => tags.changeTag(id, true), upload: detail.uploadAttachment, download, deleteAttachment, reverse: detail.reverse }
+}

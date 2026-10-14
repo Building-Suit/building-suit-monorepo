@@ -313,6 +313,32 @@ invariants. Any Shop schema change needed for external actors or shared private
 domain routines is a separate forward migration with `pnpm db:test:shop`; this
 architecture task makes no Shop schema change.
 
+### 5.1 Account activation and secure provisioning
+
+The bounded `activate_trial` plan command grants the selected purchasable plan
+immediately through Shop's operator authority. It pins the expected trial
+subscription, preserves its original trial dates, refuses an existing active
+period and records actor, reason, effective dates and request in append-only
+audit. It creates no payment receipt or billing confirmation.
+
+Versioned `shop.account.query` exposes only `catalog` and `status`;
+`shop.account.command` exposes only `create_and_activate` and
+`resend_invitation`. Both are advertised only with protected target policy and
+fresh source capability authorization. Account creation reserves a random Auth
+ID and exact catalog terms before provider calls. Server-owned identity metadata
+must match that reservation; matching email never proves ownership. Tenant,
+owner membership, maintained seven-day trial and operator activation commit in
+one target transaction. The owner later claims the invitation through provider
+OTP verification and an authenticated, verified-owner target RPC.
+
+These commands declare staged request idempotency: principal, actor and body are
+exact; completed results are frozen; unfinished Auth/invitation stages reconcile
+under the same request with leases and append-only events. A lost invitation
+response never triggers an automatic resend. An explicitly acknowledged resend
+uses a separate audited request and warns that older links can expire. The source
+may report a grant active while the owner remains unverified; email verification
+and product security gates remain enforced by the target.
+
 ## 6. Secrets, rotation and revocation
 
 The Super Admin database stores a Vault UUID, purpose and non-secret key ID, not

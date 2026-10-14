@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { validCatalogImage } from '~/utils/catalogMedia'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
 type Service = {
   id: string
+  imageUrl?: string | null
+  imageObjectName?: string | null
   name: string
   description: string | null
   baseSalePrice: number
@@ -19,7 +22,7 @@ type Service = {
   categoryName: string | null
 }
 type Category = { id: string; name: string }
-type ServicePage = { items: Service[]; total: number; page: number; pageSize: number }
+type ServicePage = { supportsUploads?: boolean; supportsMedia?: boolean; items: Service[]; total: number; page: number; pageSize: number }
 type SchedulingOptions = {
   locations: Array<{ id: string; name: string }>
   staff: Array<{ membershipId: string; name: string; locationIds: string[] }>
@@ -28,6 +31,7 @@ type SchedulingOptions = {
 const confirmation = useConfirmation()
 const { push: pushToast } = useToasts()
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const media = useCatalogMedia()
 const { locale } = useI18n()
 const { current, currentId, loading: shopLoading } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
@@ -39,17 +43,22 @@ const editingId = ref<string | null>(null)
 const archivingId = ref<string | null>(null)
 const actionError = ref('')
 const form = reactive({
-  name: '', description: '', price: 0,
+  imageObjectName: null as string | null, imageUrl: '', name: '', description: '', price: 0,
   discountType: 'amount' as 'amount' | 'percent', discountValue: 0,
   schedulingEnabled: false, durationMinutes: 30 as number | null, cleanupMinutes: 0,
   locationIds: [] as string[], staffMembershipIds: [] as string[],
   categoryId: '',
 })
-const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => form)
+const upload = useCatalogImageUpload(currentId, 'services', objectName => { form.imageObjectName = objectName; form.imageUrl = '' })
+const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction(() => ({ ...form, imageSelection: upload.selectedName.value }))
+function removeImage() { upload.reset(); form.imageUrl = ''; form.imageObjectName = null }
+watch(showForm, visible => { if (!visible) upload.reset() })
 
 const copy = computed(() => isArabic.value ? {
+  imageUpload: { choose: 'اختيار صورة', replace: 'استبدال الصورة', remove: 'إزالة', retry: 'إعادة المحاولة', help: 'اختر صورة JPEG أو PNG أو WebP، حتى ٥ ميجابايت و١٦ مليون بكسل.', uploading: 'جارٍ رفع الصورة…', uploaded: 'تم رفع الصورة', error: 'تعذّر رفع الصورة. أعد المحاولة أو اختر صورة أخرى.', invalid: 'اختر صورة JPEG أو PNG أو WebP صالحة، حتى ٥ ميجابايت و١٦ مليون بكسل.', placeholder: 'بدون صورة' },
+  imagePlaceholder: 'بدون صورة', imageLabel: 'الصورة (اختياري)', imageUnavailable: 'تعديل الصور غير متاح لهذا الكتالوج بعد.', imageInvalid: 'الصورة المحفوظة غير صالحة. أزلها أو استبدلها.',
   title: 'الخدمات', subtitle: 'ظبط الخدمات وأسعارها، وشغّل الحجز بس للخدمات اللي محتاجة مواعيد.',
-  add: 'إضافة خدمة', edit: 'تعديل', archive: 'أرشفة', cancel: 'إلغاء', save: 'حفظ الخدمة', saving: 'بنحفظ…',
+  add: 'إضافة خدمة', edit: 'تعديل', editTitle: 'تعديل الخدمة', archive: 'أرشفة', cancel: 'إلغاء', save: 'حفظ الخدمة', saving: 'بنحفظ…',
   saved: 'اتحفظت الخدمة.', archived: 'اتأرشفت الخدمة.', name: 'اسم الخدمة', description: 'وصف اختياري',
   price: 'سعر البيع', discountType: 'نوع الخصم', discountValue: 'قيمة الخصم', amount: 'مبلغ', percent: 'نسبة مئوية', net: 'السعر بعد الخصم', category: 'التصنيف', allCategories: 'كل التصنيفات', import: 'الاستيراد والإعداد',
   scheduling: 'الحجز بالمواعيد', schedulingHelp: 'حدد مدة الخدمة والفروع والموظفين اللي يقدّموا الخدمة. باقي الخدمات هتفضل زي ما هي.',
@@ -62,8 +71,10 @@ const copy = computed(() => isArabic.value ? {
   mismatch: 'يجب أن يكون كل موظف مؤهلًا للعمل في فرع واحد على الأقل من الفروع المختارة.',
   archiveConfirm: 'تأرشف الخدمة دي؟ المبيعات القديمة هتفضل محفوظة.',
 } : {
+  imageUpload: { choose: 'Choose image', replace: 'Replace image', remove: 'Remove', retry: 'Retry', help: 'Choose JPEG, PNG or WebP, up to 5 MB and 16 million pixels.', uploading: 'Uploading image…', uploaded: 'Image uploaded', error: 'Image upload failed. Retry or choose another image.', invalid: 'Choose a valid JPEG, PNG or WebP image up to 5 MB and 16 million pixels.', placeholder: 'No image' },
+  imagePlaceholder: 'No image', imageLabel: 'Image (optional)', imageUnavailable: 'Image editing is not available for this catalog yet.', imageInvalid: 'The saved image is invalid. Remove or replace it.',
   title: 'Services', subtitle: 'Manage services and prices, and opt only appointment-based services into scheduling.',
-  add: 'Add service', edit: 'Edit', archive: 'Archive', cancel: 'Cancel', save: 'Save service', saving: 'Saving…',
+  add: 'Add service', edit: 'Edit', editTitle: 'Edit service', archive: 'Archive', cancel: 'Cancel', save: 'Save service', saving: 'Saving…',
   saved: 'Service saved.', archived: 'Service archived.', name: 'Service name', description: 'Optional description',
   price: 'Sale price', discountType: 'Discount type', discountValue: 'Discount value', amount: 'Amount', percent: 'Percent', net: 'Net price', category: 'Category', allCategories: 'All categories', import: 'Import & setup',
   scheduling: 'Appointment scheduling', schedulingHelp: 'Set service duration, available locations, and eligible staff. Other services remain unchanged.',
@@ -77,7 +88,7 @@ const copy = computed(() => isArabic.value ? {
   archiveConfirm: 'Archive this service? Historical sales will remain unchanged.',
 })
 
-const { data: permissionAccess } = useAsyncData('shop-data:service-permissions', async () => {
+const { data: permissionAccess } = await useAsyncData('shop-data:service-permissions', async () => {
   if (!currentId.value) return { 'services.manage': false }
   const { data, error } = await shopRpc.rpc('shop_permission_access', {
     p_shop_id: currentId.value, p_permission_keys: ['services.manage'],
@@ -98,11 +109,12 @@ const emptyOptions = (): SchedulingOptions => ({ locations: [], staff: [] })
 const { data: servicesPage, pending, error, refresh } = useAsyncData(
   'shop-data:services', async (): Promise<ServicePage> => {
     if (!currentId.value) return emptyPage()
-    const { data, error: queryError } = await shopRpc.rpc('list_services_by_category', {
+    const args = {
       p_shop_id: currentId.value, p_search: search.value.trim() || null,
       p_category_id: categoryFilter.value || null,
       p_page: page.value, p_page_size: pageSize,
-    })
+    }
+    const { data, error: queryError } = await media.request('services', args, () => shopRpc.rpc('list_services_by_category', args))
     if (queryError) throw queryError
     return data as ServicePage
   }, { watch: [currentId, search, categoryFilter, page], default: emptyPage },
@@ -131,10 +143,12 @@ function money(value: number) {
   return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(value)
 }
 function resetForm() {
+  upload.reset()
+  form.imageObjectName = null
   editingId.value = null
   showForm.value = false
   actionError.value = ''
-  Object.assign(form, { name: '', description: '', price: 0, discountType: 'amount', discountValue: 0,
+  Object.assign(form, { imageUrl: '', name: '', description: '', price: 0, discountType: 'amount', discountValue: 0,
     schedulingEnabled: false, durationMinutes: 30, cleanupMinutes: 0, locationIds: [], staffMembershipIds: [], categoryId: '' })
 }
 function openCreate() {
@@ -143,8 +157,10 @@ function openCreate() {
   showForm.value = true
 }
 function openEdit(service: Service) {
+  upload.reset(service.imageUrl ?? '')
+  form.imageObjectName = service.imageObjectName ?? null
   editingId.value = service.id
-  Object.assign(form, { name: service.name, description: service.description ?? '', price: Number(service.baseSalePrice),
+  Object.assign(form, { imageUrl: service.imageUrl ?? '', name: service.name, description: service.description ?? '', price: Number(service.baseSalePrice),
     discountType: service.defaultDiscountType, discountValue: Number(service.defaultDiscountValue),
     schedulingEnabled: service.schedulingEnabled, durationMinutes: service.durationMinutes ?? 30,
     cleanupMinutes: Number(service.cleanupMinutes), locationIds: [...service.locationIds], staffMembershipIds: [...service.staffMembershipIds], categoryId: service.categoryId ?? '' })
@@ -152,6 +168,8 @@ function openEdit(service: Service) {
   showForm.value = true
 }
 function readableError(message?: string) {
+  if (message === 'INVALID_CATALOG_IMAGE') return copy.value.imageInvalid
+  if (message === 'CATALOG_MEDIA_UNAVAILABLE') return copy.value.imageUnavailable
   const quotaMessage = planQuotaMessage(message, locale.value)
   if (quotaMessage) return quotaMessage
   if (message === 'SHOP_SUBSCRIPTION_INACTIVE' || message === 'SHOP_PERMISSION_DENIED') return copy.value.access
@@ -169,12 +187,14 @@ function isFormValid() {
       && form.cleanupMinutes <= 240 && form.locationIds.length > 0 && form.staffMembershipIds.length > 0))
 }
 async function save() {
-  if (!currentId.value || saving.value || !canManage.value) return
+  if (!currentId.value || saving.value || ['uploading', 'error', 'invalid'].includes(upload.status.value) || !canManage.value) return
   actionError.value = ''
   if (!isFormValid()) { actionError.value = copy.value.invalid; return }
+  if (!form.imageObjectName && !validCatalogImage(form.imageUrl)) { actionError.value = copy.value.imageInvalid; return }
   saving.value = true
   try {
-    const { error: saveError } = await shopRpc.rpc('save_service_with_category', {
+    const args = {
+      ...(servicesPage.value.supportsUploads ? { imageObjectName: form.imageObjectName } : {}),
       p_shop_id: currentId.value, p_service_id: editingId.value, p_name: form.name.trim(),
       p_description: form.description.trim() || null, p_base_sale_price: Number(form.price),
       p_discount_type: form.discountType, p_discount_value: Number(form.discountValue),
@@ -184,8 +204,9 @@ async function save() {
       p_location_ids: form.schedulingEnabled ? form.locationIds : [],
       p_staff_membership_ids: form.schedulingEnabled ? form.staffMembershipIds : [],
       p_category_id: form.categoryId || null,
-    })
-    if (saveError) throw saveError
+    }
+    const { error: saveError } = await media.request('save_service', args, () => shopRpc.rpc('save_service_with_category', args), !form.imageObjectName && form.imageUrl.trim() ? new URL(form.imageUrl.trim()).href : null, servicesPage.value.supportsMedia === true)
+    if (saveError) throw new Error(saveError.message)
     resetForm(); await refresh(); pushToast({ tone: 'success', title: copy.value.saved })
   } catch (caught) { actionError.value = planQuotaMessage(caught, locale.value) ?? readableError(caught instanceof Error ? caught.message : undefined) }
   finally { saving.value = false }
@@ -200,74 +221,19 @@ async function archive(service: Service) {
   } catch (caught) { actionError.value = readableError(caught instanceof Error ? caught.message : undefined) }
   finally { archivingId.value = null }
 }
+
+useShopRealtime('services', () => formDirty.value)
+
+const categoryOptions = computed(() => [{ value: '', label: copy.value.allCategories }, ...categories.value.map(category => ({ value: category.id, label: category.name }))])
+const itemViews = computed(() => services.value.map(service => ({ id: service.id, name: service.name, description: service.description ?? undefined, category: service.categoryName || '—', sku: '', barcode: '', price: money(netPrice(service)), schedule: service.schedulingEnabled ? `${service.durationMinutes} + ${service.cleanupMinutes} ${isArabic.value ? 'دقيقة' : 'min'}` : '—' })))
+const editorForm = computed({
+  get: () => ({ imageUrl: form.imageUrl, name: form.name, description: form.description, sku: '', barcode: '', price: form.price, category: form.categoryId, discount: { type: form.discountType, value: form.discountValue }, schedule: { enabled: form.schedulingEnabled, duration: form.durationMinutes, cleanup: form.cleanupMinutes, locations: [...form.locationIds], staff: [...form.staffMembershipIds] } }),
+  set: (value: import('@building-suit/ui/types/cataloguePresentation').BsCatalogueForm) => Object.assign(form, { imageUrl: value.imageUrl ?? '', name: value.name, description: value.description, price: value.price, categoryId: value.category, discountType: value.discount.type as 'amount' | 'percent', discountValue: value.discount.value, schedulingEnabled: value.schedule.enabled, durationMinutes: value.schedule.duration, cleanupMinutes: value.schedule.cleanup, locationIds: value.schedule.locations, staffMembershipIds: value.schedule.staff }),
+})
+const schedulingView = computed(() => ({ loading: schedulingOptionsPending.value, error: schedulingOptionsError.value ? readErrorMessage.value : null, locations: schedulingOptions.value.locations.map(location => ({ value: location.id, label: location.name })), staff: schedulingOptions.value.staff.map(member => ({ value: member.membershipId, label: member.name })) }))
+function editById(id: string) { const row = services.value.find(service => service.id === id); if (row) openEdit(row) }
+function archiveById(id: string) { const row = services.value.find(service => service.id === id); if (row) return archive(row) }
 </script>
-
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-end justify-between gap-4">
-      <div><h1 class="text-3xl font-extrabold tracking-tight">{{ copy.title }}</h1><p class="mt-2 text-sm text-muted-foreground">{{ copy.subtitle }}</p></div>
-      <div v-if="current" class="flex gap-2"><NuxtLink to="/catalog-import" class="ls-btn">{{ copy.import }}</NuxtLink></div>
-    </header>
-
-    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm"><p>{{ copy.noShop }}</p><NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ copy.dashboard }}</NuxtLink></div>
-    <template v-else-if="current">
-      <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-[var(--bs-status-error)]">{{ actionError }}</p>
-
-      <BsRecordActionDialog v-model:visible="showForm" :title="editingId ? copy.edit : copy.add" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="save">
-            <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.name }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
-            <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.description }}<textarea v-model="form.description" maxlength="1000" rows="2" class="ls-input" /></label>
-            <label class="grid gap-2 text-sm font-bold">{{ copy.price }}<input v-model.number="form.price" type="number" min="0" max="999999999.99" step="0.01" required class="ls-input"></label>
-            <label class="grid gap-2 text-sm font-bold">{{ copy.discountType }}<select v-model="form.discountType" class="ls-input"><option value="amount">{{ copy.amount }}</option><option value="percent">{{ copy.percent }}</option></select></label>
-            <label class="grid gap-2 text-sm font-bold">{{ copy.discountValue }}<input v-model.number="form.discountValue" type="number" min="0" step="0.01" required class="ls-input"></label>
-            <label class="grid gap-2 text-sm font-bold sm:col-span-2">{{ copy.category }}<select v-model="form.categoryId" class="ls-select"><option value="">{{ copy.allCategories }}</option><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></label>
-            <fieldset class="rounded-xl border border-border p-4 sm:col-span-2">
-              <label class="flex min-h-11 items-center gap-3 font-bold"><input v-model="form.schedulingEnabled" type="checkbox">{{ copy.scheduling }}</label>
-              <p class="mt-2 text-sm text-muted-foreground">{{ copy.schedulingHelp }}</p>
-              <p v-if="schedulingOptionsPending" role="status" class="mt-3 text-sm text-muted-foreground">{{ copy.loading }}</p>
-              <p v-else-if="schedulingOptionsError" role="alert" class="mt-3 text-sm text-[var(--bs-status-error)]">{{ readErrorMessage }}</p>
-              <div v-if="form.schedulingEnabled" class="mt-4 grid gap-4 sm:grid-cols-2">
-                <label class="grid gap-2 text-sm font-bold">{{ copy.duration }}<input v-model.number="form.durationMinutes" type="number" min="5" max="1440" step="1" required class="ls-input"></label>
-                <label class="grid gap-2 text-sm font-bold">{{ copy.cleanup }}<input v-model.number="form.cleanupMinutes" type="number" min="0" max="240" step="1" required class="ls-input"></label>
-                <fieldset><legend class="text-sm font-bold">{{ copy.locations }}</legend><label v-for="location in schedulingOptions.locations" :key="location.id" class="mt-2 flex min-h-11 items-center gap-2 text-sm"><input v-model="form.locationIds" type="checkbox" :value="location.id">{{ location.name }}</label></fieldset>
-                <fieldset><legend class="text-sm font-bold">{{ copy.staff }}</legend><label v-for="member in schedulingOptions.staff" :key="member.membershipId" class="mt-2 flex min-h-11 items-center gap-2 text-sm"><input v-model="form.staffMembershipIds" type="checkbox" :value="member.membershipId">{{ member.name }}</label></fieldset>
-              </div>
-            </fieldset>
-      </BsRecordActionDialog>
-
-      <section class="overflow-hidden ls-card">
-        <BsDataTable
-          :value="services"
-          :label="copy.title"
-          :loading="pending"
-          :error="error ? readErrorMessage : null"
-          :capabilities="{ insert: canManage, edit: canManage, archive: canManage }"
-          :action-labels="{ insert: copy.add, edit: copy.edit, archive: copy.archive }"
-          :row-action-pending="(action, service) => action === 'archive' && archivingId === service.id"
-          searchable
-          :search-label="copy.search"
-          lazy
-          paginator
-          :rows="pageSize"
-          :first="(page - 1) * pageSize"
-          :total-records="servicesPage.total"
-          :always-show-paginator="false"
-          data-key="id"
-          :row-class="() => 'border-b border-border last:border-0'"
-          @search="value => search = value"
-          @page="page = $event.page + 1"
-          @retry="refresh()"
-          @create="openCreate"
-          @edit="openEdit"
-          @archive="archive"
-        >
-          <template #filters><BsSelect v-model="categoryFilter" :label="copy.category" :options="[{ id: '', name: copy.allCategories }, ...categories]" option-label="name" option-value="id" /></template>
-          <Column header-class="py-3 text-start" body-class="py-3 font-semibold"><template #header>{{ copy.name }}</template><template #body="{ data: service }">{{ service.name }}<p v-if="service.description" class="text-xs font-normal text-muted-foreground">{{ service.description }}</p></template></Column>
-          <Column header-class="py-3 text-start" body-class="py-3"><template #header>{{ copy.category }}</template><template #body="{ data: service }">{{ service.categoryName || '—' }}</template></Column>
-          <Column header-class="py-3 text-end" body-class="py-3 text-end"><template #header>{{ copy.net }}</template><template #body="{ data: service }">{{ money(netPrice(service)) }}</template></Column>
-          <Column header-class="py-3 text-start" body-class="py-3 text-start"><template #header>{{ copy.scheduleSummary }}</template><template #body="{ data: service }"><span v-if="service.schedulingEnabled">{{ service.durationMinutes }} + {{ service.cleanupMinutes }} {{ isArabic ? 'دقيقة' : 'min' }}</span><span v-else>—</span></template></Column>
-          <template #empty><BsStateSurface state="empty" :title="servicesPage.total ? copy.noResults : copy.empty" /></template>
-        </BsDataTable>
-      </section>
-    </template>
-  </div>
+  <BsCataloguePage v-model:form="editorForm" v-model:visible="showForm" v-model:category="categoryFilter" kind="service" :copy="{ ...copy, tablePrice: copy.net }" :context="{ available: Boolean(current), loading: shopLoading, dashboardTo: '/dashboard', importTo: '/catalog-import' }" :rows="itemViews" :categories="categoryOptions" :table="{ loading: pending, error: error ? readErrorMessage : null, canManage, archivePendingId: archivingId, pageSize, page, total: servicesPage.total, filtered: Boolean(servicesPage.total) }" :editor="{ uploadBlocked: ['uploading', 'error', 'invalid'].includes(upload.status.value), mediaSupported: servicesPage.supportsUploads === true, editing: Boolean(editingId), dirty: formDirty, pending: saving, error: actionError, priceMax: 999999999.99 }" :scheduling="schedulingView" :discounts="[{ value: 'amount', label: copy.amount }, { value: 'percent', label: copy.percent }]" :upload="{ preview: upload.preview.value, status: upload.status.value }" @image-select="upload.select($event)" @image-remove="removeImage" @image-retry="upload.retry()" @search="search = $event" @page="page = $event" @retry="refresh()" @create="openCreate" @edit="editById" @archive="archiveById" @submit="save" />
 </template>

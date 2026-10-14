@@ -1,0 +1,115 @@
+{
+  "status": "DRAFT_CODE_ASSEMBLED_CHECKS_AND_DEPLOYMENT_AMBIGUITY_PENDING",
+  "branch": "codex/shared/staging-integration",
+  "baseBranch": "stg",
+  "baseSha": "266d91dc11cbc07b5e9f3b6d37dd53e541fb70e1",
+  "completedShopHead": "fdd800883a186225fbbf7aeeaf183e898f9e38c4",
+  "completedMediaHead": "f8cb888e59236d9456edf4ff0c6d514e27d217bc",
+  "includedPullRequests": [
+    250,
+    251,
+    252,
+    253,
+    255,
+    256,
+    257,
+    258,
+    259,
+    260,
+    261,
+    262,
+    263,
+    264,
+    265,
+    266,
+    267,
+    268,
+    269,
+    270,
+    271,
+    272,
+    273,
+    274,
+    275,
+    276,
+    279,
+    280
+  ],
+  "additionalPreservedCommit": {
+    "pullRequest": 250,
+    "sha": "a262ffdf9b18f9d9f83983545dfc8c0edbbfef4f",
+    "change": "Three-line review checkpoint only; prior visual changes already ancestors"
+  },
+  "pendingDependencies": [],
+  "excludedPullRequests": [
+    {
+      "number": 215,
+      "reason": "stg-to-main promotion; current final target is stg"
+    }
+  ],
+  "requiredMergeGates": [
+    "Completed SAS and XPay final heads incorporated with preserved history",
+    "Reconcile shared debt manifest by preserving independent removals",
+    "Required checks green on actual final combined head",
+    "Read-only verified Vercel stg deployment consequences",
+    "Verify Supabase stg GitHub automatic-migration setting; preview-disabled check does not establish stg migration suppression",
+    "Explicit hosted migration gate remains; three media migrations unapplied",
+    "No full visual matrix or pixel-perfect claim"
+  ],
+  "mediaValidation": {
+    "workflowRun": 38370990158,
+    "codeSha": "f8cb888e59236d9456edf4ff0c6d514e27d217bc",
+    "sqlMedia": "passed with rollback",
+    "sqlImageUpload": "passed with rollback",
+    "productRealTransport": "passed",
+    "serviceRealTransport": "passed",
+    "runner": "GitHub-hosted ubuntu-latest",
+    "hostedReady": false
+  },
+  "fullDesignMatrixComplete": false,
+  "stackPolicy": "Shared integration root targets stg; existing Shop/SAS roots and feature branches remain intact. GitHub rejected empty completed-ancestor retarget, so abandoned new PR277 was closed without merging.",
+  "completedSasHead": "9da7c4a6d65c50913e2428b0ad95763b9319bd9f",
+  "sasValidation": {
+    "workflowRun": 38388319061,
+    "codeSha": "9da7c4a6d65c50913e2428b0ad95763b9319bd9f",
+    "status": "Parent-confirmed completed feature; SQL and signed provisioning/invitation/claim passed; combined checks pending"
+  },
+  "hostedSasGate": {
+    "shopMigrations": [
+      "20261013071953_operator_trial_activation",
+      "20261013081832_secure_account_provisioning"
+    ],
+    "sasMigrations": [
+      "20261013073934_account_activation_navigation",
+      "20261013081834_account_provisioning_policy"
+    ],
+    "deploymentRequirements": [
+      "Shop bridge and invitation template",
+      "SMTP and redirect configuration",
+      "Protected SAS capabilities/environment bindings"
+    ],
+    "status": "Unapplied/unconfigured hosted; no live changes authorized"
+  },
+  "sasMergeResolution": {
+    "conflicts": [
+      "packages/ui/package.json",
+      "docs/shared/design-system.md",
+      "tooling/database/test-shop-local.mjs"
+    ],
+    "strategy": "Union exported templates, documentation and SQL suites; preserve automatic Shop flat/SAS wide auth merge and 79-route inventory",
+    "localChecks": {
+      "boundaries": "passed: 79 full templates, zero migration debt",
+      "focusedTests": 32,
+      "combinedCi": "pending on pushed merged head"
+    }
+  },
+  "completedXpayHead": "9a4f830caf849f00b08499f8ade8fe133a161a18",
+  "xpayValidation": {
+    "sourceHead": "9a4f830caf849f00b08499f8ade8fe133a161a18",
+    "sourceCi": "payments/review/policy passed",
+    "textualConflicts": 0,
+    "combinedLocalFocusedUnits": 54,
+    "combinedCi": "pending on merged head",
+    "liveProviderValidation": false
+  }
+}

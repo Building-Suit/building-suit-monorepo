@@ -6,6 +6,7 @@ import {
 import {
   isPaymentEvidenceAccess, signPaymentEvidenceAccess,
 } from '../_shared/payment-evidence.mjs'
+import { accountAuthAdmin, isAccountProvisioning, processAccountProvisioning } from '../_shared/account-provisioning.mjs'
 
 // Kong strips /functions/v1; the HMAC input still uses the public INVOCATION_PATH.
 const RUNTIME_INVOCATION_PATH = '/shop-super-admin-bridge/v1/invoke'
@@ -120,7 +121,10 @@ Deno.serve(async request => {
       p_nonce: headers.nonce, p_request_id: headers.requestId,
       p_request_timestamp: headers.timestamp, p_body_digest: requestDigest,
     })
-    const result = await rpc(isPaymentEvidenceAccess(envelope)
+    const result = isAccountProvisioning(envelope) ? await processAccountProvisioning({
+      rpc, principalId: principal.principalId, nonce: headers.nonce, bodyDigest: requestDigest, envelope,
+      auth: accountAuthAdmin({ supabaseUrl: env('SUPABASE_URL'), serviceRoleKey: env('SUPABASE_SERVICE_ROLE_KEY') }),
+    }) : await rpc(isPaymentEvidenceAccess(envelope)
       ? 'shop_super_admin_bridge_evidence_access'
       : 'shop_super_admin_bridge_invoke', {
       p_principal_id: principal.principalId, p_nonce: headers.nonce,

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "mode": "strict",
+  "auditedReference": {
+    "branch": "codex/shared/bs-ui-zn-final-001",
+    "commit": "7c651e5acaf503a7de0dc4e70a9824038f0d8aa8"
+  },
+  "scope": "apps/*-suit/app/**/*.vue",
+  "owner": "packages/ui",
+  "violations": []
+}

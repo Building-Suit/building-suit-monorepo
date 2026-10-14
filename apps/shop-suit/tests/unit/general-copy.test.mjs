@@ -29,6 +29,21 @@ function stringLiterals(source) {
   return [...source.matchAll(/(['"`])((?:\\.|(?!\1)[\s\S])*?)\1/g)].map(match => match[2])
 }
 
+test('browser source and translations do not advertise retired plan names', async () => {
+  const files = (await Promise.all(browserRoots.map(sourceFiles))).flat()
+  const violations = []
+  for (const file of files) {
+    const source = await readFile(file, 'utf8')
+    // Lowercase persisted plan slugs and translation keys remain compatibility identifiers.
+    for (const [index, line] of source.split('\n').entries()) {
+      if (/\b(?:Basic|Pro)\b/.test(line)) {
+        violations.push(`${file.pathname.split('/apps/shop-suit/')[1]}:${index + 1}: ${line.trim()}`)
+      }
+    }
+  }
+  assert.deepEqual(violations, [])
+})
+
 test('general browser copy does not assume the shop is a barber business', async () => {
   const files = (await Promise.all(browserRoots.map(sourceFiles))).flat()
   const violations = []
@@ -44,7 +59,7 @@ test('general browser copy does not assume the shop is a barber business', async
 })
 
 test('dashboard setup and POS staff copy stay neutral in English and Arabic', async () => {
-  const guide = await readFile(new URL('../../app/components/BarberSetupGuide.vue', import.meta.url), 'utf8')
+  const guide = await readFile(new URL('../../app/composables/useShopSetupGuide.ts', import.meta.url), 'utf8')
   const team = await readFile(new URL('../../app/pages/team.vue', import.meta.url), 'utf8')
   const english = await readFile(new URL('../../i18n/locales/en.ts', import.meta.url), 'utf8')
   const arabic = await readFile(new URL('../../i18n/locales/ar.ts', import.meta.url), 'utf8')

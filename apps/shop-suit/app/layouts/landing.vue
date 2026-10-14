@@ -21,7 +21,7 @@ const legalLinks = computed(() => [
 ])
 </script>
 <template>
-  <BsMarketingLayout :navigation="navigation" :legal-links="legalLinks" :signed-in="!!user" login-path="/auth/login" signup-path="/auth/signup" :labels="{ ...copy, navigation: ui('navigation'), open: ui('open'), close: ui('close'), footerNavigation: t('marketing.footerNavigation') }">
-    <template #logo><BsProductLogo name="Shop Suit" asset-prefix="/brand/shop-suit" class="my-2 h-auto w-auto max-w-36 sm:max-w-52" /></template><slot />
+  <BsMarketingLayout :product="{ name: 'Shop Suit', assetPrefix: '/brand/shop-suit' }" :navigation="navigation" :legal-links="legalLinks" :signed-in="!!user" login-path="/auth/login" signup-path="/auth/signup" :labels="{ ...copy, navigation: ui('navigation'), open: ui('open'), close: ui('close'), footerNavigation: t('marketing.footerNavigation') }">
+    <slot />
   </BsMarketingLayout>
 </template>

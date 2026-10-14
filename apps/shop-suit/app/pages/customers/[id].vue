@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { BsCustomerIdentityForm } from '@building-suit/ui/types/customerDirectoryPresentation'
+import type { BsCustomerProfileView, BsCustomerReceivablesView, BsCustomerStatementView, BsCustomerProfileCopy, BsCustomerReceiptForm } from '@building-suit/ui/types/customerProfilePresentation'
 import { receiptAllocations as validateReceiptAllocations } from '~/utils/receiptAllocations'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
@@ -99,7 +101,7 @@ const { data: outstanding, pending: outstandingPending, error: outstandingError,
   }, { watch: [currentId, customerId, outstandingPage], default: () => ({ items: [], total: 0 }) },
 )
 
-const { data: overdue, refresh: refreshOverdue } = useAsyncData(
+const { data: overdue, pending: overduePending, error: overdueError, refresh: refreshOverdue } = useAsyncData(
   () => `shop-data:customer-overdue:${currentId.value ?? 'none'}:${customerId.value}`,
   async (): Promise<OutstandingPage> => {
     if (!currentId.value || !customerId.value) return { items: [], total: 0 }
@@ -108,6 +110,7 @@ const { data: overdue, refresh: refreshOverdue } = useAsyncData(
     return data as OutstandingPage
   }, { watch: [currentId, customerId], default: () => ({ items: [], total: 0 }) },
 )
+async function retryOutstanding() { await Promise.all([refreshOutstanding(), refreshOverdue()]) }
 
 watch([currentId, customerId], () => {
   receiptOpen.value = false; showForm.value = false
@@ -120,6 +123,7 @@ watch(outstanding, (value) => {
 })
 
 function openReceipt() {
+  if (!customer.value?.is_active || !paymentAccess.value?.can_receive || outstandingPending.value || outstandingError.value) return
   receiptInvoices.value = Object.fromEntries(outstanding.value.items.map(invoice => [invoice.id, invoice]))
   receiptError.value = ''
   receiptAllocations.value = {}
@@ -132,7 +136,7 @@ function openReceipt() {
 }
 
 async function saveReceipt() {
-  if (!currentId.value || !customer.value || receiptPending.value) return
+  if (!currentId.value || !customer.value?.is_active || !paymentAccess.value?.can_receive || receiptPending.value || outstandingPending.value || outstandingError.value) return
   const allocations = validateReceiptAllocations(receiptAllocations.value, receiptInvoices.value)
   if (!allocations) {
     receiptError.value = t('payments.invalidAllocation')
@@ -156,7 +160,7 @@ async function saveReceipt() {
     pushToast({ tone: 'success', title: t('payments.saved') })
   }
   catch (error) {
-    receiptError.value = error instanceof Error && error.message.includes('PAYMENT_OVERPAYMENT_REJECTED')
+    receiptError.value = commandErrorMessage(error)?.includes('PAYMENT_OVERPAYMENT_REJECTED')
       ? t('payments.overpayment') : t('customers.writeError')
   }
   finally { receiptPending.value = false }
@@ -178,6 +182,9 @@ function readableError(message?: string) {
   if (message === 'SHOP_SUBSCRIPTION_INACTIVE' || message === 'SHOP_PERMISSION_DENIED') return t('customers.manageDenied')
   if (message === 'CUSTOMER_NOT_FOUND') return t('customers.notFound')
   return t('customers.writeError')
+}
+function commandErrorMessage(caught: unknown) {
+  return typeof caught === 'object' && caught !== null && 'message' in caught && typeof caught.message === 'string' ? caught.message : undefined
 }
 
 async function save() {
@@ -208,7 +215,7 @@ async function save() {
     pushToast({ tone: 'success', title: t('customers.updatedSuccess') })
   }
   catch (saveError) {
-    actionError.value = readableError(saveError instanceof Error ? saveError.message : undefined)
+    actionError.value = readableError(commandErrorMessage(saveError))
   }
   finally {
     saving.value = false
@@ -217,7 +224,7 @@ async function save() {
 
 async function archive() {
   if (!currentId.value || !customer.value?.is_active || !customer.value.can_manage || archiving.value) return
-  if (!await confirmation.ask(t('customers.archiveConfirm'))) return
+  if (!await confirmation.ask({ title: t('customers.archive'), message: `${customer.value.name} · ${t('customers.archiveConfirm')}`, confirmLabel: t('customers.archive'), cancelLabel: t('customers.cancel'), tone: 'danger' })) return
   archiving.value = true
   actionError.value = ''
   try {
@@ -230,7 +237,7 @@ async function archive() {
     pushToast({ tone: 'success', title: t('customers.archivedSuccess') })
   }
   catch (archiveError) {
-    actionError.value = readableError(archiveError instanceof Error ? archiveError.message : undefined)
+    actionError.value = readableError(commandErrorMessage(archiveError))
   }
   finally {
     archiving.value = false
@@ -245,90 +252,82 @@ function money(value: number) {
   return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(value)
 }
 const overdueCount = computed(() => overdue.value.total)
+
+useShopRealtime('customers', () => receiptDirty.value || formDirty.value)
+
+const customerView = computed<BsCustomerProfileView | null>(() => customer.value ? ({
+  name: customer.value.name, status: t(customer.value.is_active ? 'customers.active' : 'customers.archived'),
+  phone: customer.value.phone || '—', email: customer.value.email || '—', address: customer.value.address || '—', notes: customer.value.notes || '—',
+  created: formatDate(customer.value.created_at), updated: formatDate(customer.value.updated_at), archived: customer.value.archived_at ? formatDate(customer.value.archived_at) : null,
+  canManage: customer.value.can_manage, canEdit: customer.value.can_manage && customer.value.is_active,
+  canReceive: customer.value.is_active && Boolean(paymentAccess.value?.can_receive) && !outstandingPending.value && !outstandingError.value && outstanding.value.total > 0,
+}) : null)
+const outstandingView = computed<BsCustomerReceivablesView>(() => ({
+  rows: outstanding.value.items.map(invoice => ({ id: invoice.id, number: invoice.invoice_number, href: `/sales/${invoice.id}`, settlement: t(`payments.settlement.${invoice.settlement_state}`), due: invoice.due_date || '—', amount: money(Number(invoice.outstanding)), amountLimit: invoice.outstanding })),
+  page: outstandingPage.value, pageSize: outstandingPageSize, total: outstanding.value.total, loading: outstandingPending.value, error: outstandingError.value ? t('payments.loadError') : null,
+  balance: statementPending.value || statementError.value ? '' : money(Number(statement.value.outstanding)),
+  overdue: overduePending.value || overdueError.value ? '' : t('customers.overdueCount', { count: overdueCount.value }),
+}))
+const statementView = computed<BsCustomerStatementView>(() => ({
+  rows: statement.value.items.map(event => ({ id: event.event_id, date: formatDate(event.event_at), type: t(`payments.events.${event.event_type}`), href: `/sales/${event.invoice_id}`, document: event.document_number, debit: Number(event.debit) ? money(Number(event.debit)) : '—', credit: Number(event.credit) ? money(Number(event.credit)) : '—', balance: money(Number(event.running_balance)) })),
+  page: statementPageNumber.value, pageSize: statementPageSize, total: statement.value.total, loading: statementPending.value, error: statementError.value ? t('payments.loadError') : null,
+}))
+const profileCopy = computed<BsCustomerProfileCopy>(() => ({
+  customers_back: t('customers.back'),
+  common_retry: t('common.retry'),
+  customers_notFound: t('customers.notFound'),
+  customers_details: t('customers.details'),
+  customers_edit: t('customers.edit'),
+  customers_archive: t('customers.archive'),
+  customers_manageDenied: t('customers.manageDenied'),
+  customers_contact: t('customers.contact'),
+  customers_phone: t('customers.phone'),
+  customers_email: t('customers.email'),
+  customers_address: t('customers.address'),
+  customers_notes: t('customers.notes'),
+  customers_created: t('customers.created'),
+  customers_updated: t('customers.updated'),
+  customers_archivedOn: t('customers.archivedOn'),
+  customers_receivables: t('customers.receivables'),
+  payments_recordReceipt: t('payments.recordReceipt'),
+  payments_loadError: t('payments.loadError'),
+  sales_invoiceNumber: t('sales.invoiceNumber'),
+  payments_settlementLabel: t('payments.settlementLabel'),
+  sales_dueDate: t('sales.dueDate'),
+  payments_outstanding: t('payments.outstanding'),
+  customers_noOutstanding: t('customers.noOutstanding'),
+  customers_statement: t('customers.statement'),
+  sales_date: t('sales.date'),
+  payments_event: t('payments.event'),
+  payments_debit: t('payments.debit'),
+  payments_credit: t('payments.credit'),
+  payments_runningBalance: t('payments.runningBalance'),
+  customers_noStatement: t('customers.noStatement'),
+  payments_save: t('payments.save'),
+  customers_cancel: t('customers.cancel'),
+  payments_allocateInvoices: t('payments.allocateInvoices'),
+  payments_amount: t('payments.amount'),
+  payments_date: t('payments.date'),
+  payments_method: t('payments.method'),
+  payments_reference: t('payments.reference'),
+  payments_notes: t('payments.notes'),
+  customers_editTitle: t('customers.editTitle'),
+  customers_save: t('customers.save'),
+  customers_name: t('customers.name'),
+}))
+const editorForm = computed<BsCustomerIdentityForm>({ get: () => ({ ...form }), set: value => Object.assign(form, value) })
+const receiptForm = computed<BsCustomerReceiptForm>({
+  get: () => ({ date: receiptDate.value, method: receiptMethod.value, reference: receiptReference.value, notes: receiptNotes.value, allocations: { ...receiptAllocations.value } }),
+  set: value => {
+    receiptDate.value = value.date
+    if (['cash', 'bank_transfer', 'card', 'wallet', 'cheque', 'other'].includes(value.method)) receiptMethod.value = value.method as PaymentMethod
+    receiptReference.value = value.reference; receiptNotes.value = value.notes; receiptAllocations.value = { ...value.allocations }
+  },
+})
+const receiptEditor = computed(() => ({ dirty: receiptDirty.value, pending: receiptPending.value, error: receiptError.value, amount: money(receiptAmount.value), submitDisabled: receiptAmount.value <= 0 || outstandingPending.value || Boolean(outstandingError.value) || !customer.value?.is_active || !paymentAccess.value?.can_receive }))
+const methodOptions = computed(() => ['cash', 'bank_transfer', 'card', 'wallet', 'cheque', 'other'].map(value => ({ value, label: t(`payments.methods.${value}`), disabled: false })))
+const profileError = computed(() => error.value ? (error.value.message.includes('SHOP_PERMISSION_DENIED') ? t('customers.permissionDenied') : t('customers.detailError')) : null)
 </script>
-
 <template>
-  <div class="space-y-6">
-    <NuxtLink to="/customers" class="inline-flex font-semibold text-[var(--bs-link)] underline-offset-4 hover:underline">{{ t('customers.back') }}</NuxtLink>
-
-    <div v-if="pending" class="space-y-4">
-      <div class="h-10 w-64 animate-pulse rounded-lg bg-muted" />
-      <div class="h-52 animate-pulse rounded-2xl bg-muted" />
-    </div>
-    <div v-else-if="error" role="alert" class="rounded-2xl border border-[var(--bs-status-error)]/30 bg-[var(--bs-status-error-bg)] p-5 text-sm text-fg">
-      <p>{{ error.message.includes('SHOP_PERMISSION_DENIED') ? t('customers.permissionDenied') : t('customers.detailError') }}</p>
-      <BsButton variant="link" type="button" class="mt-3 font-bold underline" @click="refresh()">{{ t('common.retry') }}</BsButton>
-    </div>
-    <div v-else-if="!customer" class="ls-card p-8 text-center text-sm text-muted-foreground">
-      {{ t('customers.notFound') }}
-    </div>
-
-    <template v-else>
-      <header class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div class="flex flex-wrap items-center gap-3">
-            <h1 class="text-3xl font-extrabold tracking-tight">{{ customer.name }}</h1>
-            <span class="ls-badge" :class="customer.is_active ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">
-              {{ customer.is_active ? t('customers.active') : t('customers.archived') }}
-            </span>
-          </div>
-          <p class="mt-2 text-sm text-muted-foreground">{{ t('customers.details') }}</p>
-        </div>
-        <div v-if="customer.can_manage && customer.is_active" class="flex flex-wrap gap-2">
-          <BsButton type="button" class="ls-btn" @click="openEdit">{{ t('customers.edit') }}</BsButton>
-          <BsButton type="button" class="ls-btn text-fg" :disabled="archiving" @click="archive">{{ t('customers.archive') }}</BsButton>
-        </div>
-      </header>
-
-      <p v-if="actionError && !showForm" role="alert" class="rounded-xl bg-[var(--bs-status-error-bg)] p-3 text-sm text-fg">{{ actionError }}</p>
-      <p v-if="!customer.can_manage" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">{{ t('customers.manageDenied') }}</p>
-
-      <div class="grid gap-5 lg:grid-cols-2">
-        <section class="ls-card p-5">
-          <h2 class="text-lg font-bold">{{ t('customers.contact') }}</h2>
-          <dl class="mt-4 grid gap-4 sm:grid-cols-2">
-            <div><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.phone') }}</dt><dd class="mt-1 break-words">{{ customer.phone || '—' }}</dd></div>
-            <div><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.email') }}</dt><dd class="mt-1 break-words">{{ customer.email || '—' }}</dd></div>
-            <div class="sm:col-span-2"><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.address') }}</dt><dd class="mt-1 whitespace-pre-wrap">{{ customer.address || '—' }}</dd></div>
-            <div class="sm:col-span-2"><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.notes') }}</dt><dd class="mt-1 whitespace-pre-wrap">{{ customer.notes || '—' }}</dd></div>
-          </dl>
-        </section>
-        <section class="ls-card p-5">
-          <h2 class="text-lg font-bold">{{ t('customers.details') }}</h2>
-          <dl class="mt-4 space-y-4">
-            <div><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.created') }}</dt><dd class="mt-1">{{ formatDate(customer.created_at) }}</dd></div>
-            <div><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.updated') }}</dt><dd class="mt-1">{{ formatDate(customer.updated_at) }}</dd></div>
-            <div v-if="customer.archived_at"><dt class="text-xs font-bold uppercase tracking-wide text-muted-foreground">{{ t('customers.archivedOn') }}</dt><dd class="mt-1">{{ formatDate(customer.archived_at) }}</dd></div>
-          </dl>
-        </section>
-      </div>
-
-      <section class="ls-card p-5"><div class="flex flex-wrap items-start justify-between gap-4"><div><h2 class="text-lg font-bold">{{ t('customers.receivables') }}</h2><p class="mt-1 text-sm text-muted-foreground">{{ t('customers.overdueCount', { count: overdueCount }) }}</p></div><div class="flex flex-wrap items-center gap-3"><p class="text-2xl font-extrabold">{{ money(Number(statement.outstanding)) }}</p><BsButton v-if="customer.is_active && paymentAccess?.can_receive && outstanding.total > 0" type="button" class="ls-btn ls-btn-primary" @click="openReceipt">{{ t('payments.recordReceipt') }}</BsButton></div></div><p v-if="outstandingError" role="alert" class="mt-4 text-sm text-fg">{{ t('payments.loadError') }} <BsButton variant="link" type="button" class="font-bold underline" @click="refreshOutstanding()">{{ t('common.retry') }}</BsButton></p><div v-else class="mt-4 overflow-x-auto"><BsDataTable :value="outstanding.items" :label="t('customers.receivables')" lazy paginator :rows="outstandingPageSize" :first="(outstandingPage - 1) * outstandingPageSize" :total-records="outstanding.total" :loading="outstandingPending" data-key="id" :row-class="() => 'border-t border-border'" @page="outstandingPage = $event.page + 1"><Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ t('sales.invoiceNumber') }}</template><template #body="{ data: invoice }"><NuxtLink :to="`/sales/${invoice.id}`" class="font-bold text-[var(--bs-link)]">{{ invoice.invoice_number }}</NuxtLink></template></Column><Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ t('payments.settlementLabel') }}</template><template #body="{ data: invoice }">{{ t(`payments.settlement.${invoice.settlement_state}`) }}</template></Column><Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ t('sales.dueDate') }}</template><template #body="{ data: invoice }"><span :class="invoice.overdue ? 'font-bold text-fg' : ''">{{ invoice.due_date || '—' }}</span></template></Column><Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end font-bold"><template #header>{{ t('payments.outstanding') }}</template><template #body="{ data: invoice }">{{ money(Number(invoice.outstanding)) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ t('customers.noOutstanding') }}</p></template></BsDataTable></div></section>
-
-      <section class="ls-card p-5"><h2 class="text-lg font-bold">{{ t('customers.statement') }}</h2><p v-if="statementError" role="alert" class="mt-4 text-sm text-fg">{{ t('payments.loadError') }} <BsButton variant="link" type="button" class="font-bold underline" @click="refreshStatement()">{{ t('common.retry') }}</BsButton></p><div v-else class="mt-4 overflow-x-auto"><BsDataTable :value="statement.items" :label="t('customers.statement')" lazy paginator :rows="statementPageSize" :first="(statementPageNumber - 1) * statementPageSize" :total-records="statement.total" :loading="statementPending" data-key="event_id" :row-class="() => 'border-t border-border'" @page="statementPageNumber = $event.page + 1"><Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ t('sales.date') }}</template><template #body="{ data: event }">{{ formatDate(event.event_at) }}</template></Column><Column header-class="px-4 py-3 text-start" body-class="px-4 py-3"><template #header>{{ t('payments.event') }}</template><template #body="{ data: event }"><p class="font-bold">{{ t(`payments.events.${event.event_type}`) }}</p><NuxtLink :to="`/sales/${event.invoice_id}`" class="text-[var(--bs-link)]">{{ event.document_number }}</NuxtLink></template></Column><Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ t('payments.debit') }}</template><template #body="{ data: event }">{{ Number(event.debit) ? money(Number(event.debit)) : '—' }}</template></Column><Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end"><template #header>{{ t('payments.credit') }}</template><template #body="{ data: event }">{{ Number(event.credit) ? money(Number(event.credit)) : '—' }}</template></Column><Column header-class="px-4 py-3 text-end" body-class="px-4 py-3 text-end font-bold"><template #header>{{ t('payments.runningBalance') }}</template><template #body="{ data: event }">{{ money(Number(event.running_balance)) }}</template></Column><template #empty><p class="p-6 text-center text-sm text-muted-foreground">{{ t('customers.noStatement') }}</p></template></BsDataTable></div></section>
-
-      <BsRecordActionDialog v-model:visible="receiptOpen" :title="t('payments.recordReceipt')" :dirty="receiptDirty" :pending="receiptPending" :error="receiptError" :submit-label="t('payments.save')" :cancel-label="t('customers.cancel')" :submit-disabled="receiptAmount <= 0" size="lg" @submit="saveReceipt">
-            <p class="text-sm text-muted-foreground">{{ t('payments.allocateInvoices') }}</p>
-            <BsDataTable :value="outstanding.items" :label="t('customers.receivables')" :loading="outstandingPending" :error="outstandingError ? t('payments.loadError') : null" lazy paginator :rows="outstandingPageSize" :first="(outstandingPage - 1) * outstandingPageSize" :total-records="outstanding.total" @page="outstandingPage = $event.page + 1" @retry="refreshOutstanding()">
-              <Column :header="t('sales.invoiceNumber')"><template #body="{ data: invoice }">{{ invoice.invoice_number }}<p>{{ t('payments.outstanding') }}: {{ money(Number(invoice.outstanding)) }}</p></template></Column>
-              <Column :header="t('payments.amount')"><template #body="{ data: invoice }"><input v-model.number="receiptAllocations[invoice.id]" type="number" min="0" :max="invoice.outstanding" step="0.01" class="ls-input w-36" :aria-label="`${invoice.invoice_number} ${t('payments.amount')}`"></template></Column>
-            </BsDataTable>
-            <p class="font-bold">{{ t('payments.amount') }}: {{ money(receiptAmount) }}</p>
-            <div class="grid gap-4 sm:grid-cols-2">
-              <label class="space-y-2 text-sm font-bold">{{ t('payments.date') }}<input v-model="receiptDate" type="date" required class="ls-input"></label>
-              <label class="space-y-2 text-sm font-bold">{{ t('payments.method') }}<select v-model="receiptMethod" class="ls-select"><option v-for="method in ['cash','bank_transfer','card','wallet','cheque','other']" :key="method" :value="method">{{ t(`payments.methods.${method}`) }}</option></select></label>
-              <label class="space-y-2 text-sm font-bold">{{ t('payments.reference') }}<input v-model="receiptReference" maxlength="200" class="ls-input"></label>
-              <label class="space-y-2 text-sm font-bold">{{ t('payments.notes') }}<input v-model="receiptNotes" maxlength="2000" class="ls-input"></label>
-            </div>
-      </BsRecordActionDialog>
-
-      <BsRecordActionDialog v-model:visible="showForm" :title="t('customers.editTitle')" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="t('customers.save')" :cancel-label="t('customers.cancel')" @submit="save">
-            <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.name') }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
-            <label class="space-y-2 text-sm font-bold">{{ t('customers.phone') }}<input v-model="form.phone" type="tel" maxlength="50" autocomplete="tel" class="ls-input"></label>
-            <label class="space-y-2 text-sm font-bold">{{ t('customers.email') }}<input v-model="form.email" type="email" maxlength="254" autocomplete="email" class="ls-input"></label>
-            <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.address') }}<textarea v-model="form.address" maxlength="500" rows="2" class="ls-input" /></label>
-            <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.notes') }}<textarea v-model="form.notes" maxlength="2000" rows="3" class="ls-input" /></label>
-      </BsRecordActionDialog>
-    </template>
-  </div>
+  <BsCustomerProfilePage v-model:visible="showForm" v-model:receipt-open="receiptOpen" v-model:form="editorForm" v-model:receipt-form="receiptForm" :customer="customerView" :copy="profileCopy" :pending="pending" :error="profileError" :outstanding="outstandingView" :statement="statementView" :archiving="archiving" :action-error="actionError" :saving="saving" :editor-dirty="formDirty" :receipt-editor="receiptEditor" :method-options="methodOptions" @retry="refresh()" @retry-outstanding="retryOutstanding" @retry-statement="refreshStatement()" @edit="openEdit" @archive="archive" @receive="openReceipt" @save="save" @save-receipt="saveReceipt" @outstanding-page="outstandingPage = $event" @statement-page="statementPageNumber = $event"/>
 </template>

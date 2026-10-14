@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BsCustomerDirectoryCopy, BsCustomerDirectoryRow, BsCustomerIdentityForm } from '@building-suit/ui/types/customerDirectoryPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
@@ -37,18 +38,13 @@ const pageSize = 20
 const form = reactive({ name: '', phone: '', email: '', address: '', notes: '' })
 const actionError = ref('')
 const { visible: showForm, pending: saving, dirty: formDirty, complete } = useRecordAction(() => form)
-let searchTimer: ReturnType<typeof setTimeout> | undefined
-
-watch(search, (value) => {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(() => {
-    debouncedSearch.value = value.trim()
-    page.value = 1
-  }, 300)
+const { cancel: cancelSearch } = useDebouncedChange(search, (value) => {
+  debouncedSearch.value = value.trim()
+  page.value = 1
 })
-onBeforeUnmount(() => { if (searchTimer) clearTimeout(searchTimer) })
 watch(statusFilter, () => { page.value = 1 })
 watch(currentId, () => {
+  cancelSearch()
   page.value = 1
   search.value = ''
   debouncedSearch.value = ''
@@ -155,105 +151,42 @@ function handlePage(event: { page: number }) {
 function formatDate(value: string) {
   return new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { dateStyle: 'medium' }).format(new Date(value))
 }
+
+useShopRealtime('customers', () => formDirty.value)
+
+const copy = computed<BsCustomerDirectoryCopy>(() => ({
+  title: t('customers.title'),
+  subtitle: t('customers.subtitle'),
+  noShop: t('customers.noShop'),
+  dashboard: t('customers.dashboard'),
+  historyNotice: t('customers.historyNotice'),
+  permissionDenied: t('customers.permissionDenied'),
+  manageDenied: t('customers.manageDenied'),
+  createTitle: t('customers.createTitle'),
+  save: t('customers.save'),
+  cancel: t('customers.cancel'),
+  name: t('customers.name'),
+  phone: t('customers.phone'),
+  email: t('customers.email'),
+  address: t('customers.address'),
+  notes: t('customers.notes'),
+  add: t('customers.add'),
+  search: t('customers.search'),
+  contact: t('customers.contact'),
+  status: t('customers.status'),
+  updated: t('customers.updated'),
+  noCustomers: t('customers.noCustomers'),
+}))
+const rows = computed<BsCustomerDirectoryRow[]>(() => (customerPage.value?.items ?? []).map(customer => ({
+  id: customer.id, name: customer.name, href: `/customers/${customer.id}`,
+  phone: customer.phone || '—', email: customer.email || '—',
+  status: t(customer.is_active ? 'customers.active' : 'customers.archived'), updated: formatDate(customer.updated_at),
+})))
+const editorForm = computed<BsCustomerIdentityForm>({ get: () => ({ ...form }), set: value => Object.assign(form, value) })
+const statusModel = computed<string>({ get: () => statusFilter.value, set: value => { if (value === 'active' || value === 'archived' || value === 'all') statusFilter.value = value } })
+const statusOptions = computed(() => ['active', 'archived', 'all'].map(value => ({ value, label: t(`customers.${value}`) })))
 </script>
 
 <template>
-  <div class="space-y-6">
-    <header class="flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-extrabold tracking-tight">{{ t('customers.title') }}</h1>
-        <p class="mt-2 text-sm text-muted-foreground">{{ t('customers.subtitle') }}</p>
-      </div>
-    </header>
-
-    <div v-if="!current && !shopLoading" class="ls-card p-8 text-center text-sm">
-      <p>{{ t('customers.noShop') }}</p>
-      <NuxtLink to="/dashboard" class="mt-3 inline-block font-bold text-[var(--bs-link)] underline">{{ t('customers.dashboard') }}</NuxtLink>
-    </div>
-
-    <template v-else-if="current">
-      <p class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">
-        {{ t('customers.historyNotice') }}
-      </p>
-
-      <p v-if="customerPage?.permissionDenied" role="alert" class="rounded-xl border border-[var(--bs-status-warning)]/30 bg-[var(--bs-status-warning-bg)] p-4 text-sm">
-        {{ t('customers.permissionDenied') }}
-      </p>
-      <p v-else-if="customerPage && !canManage" class="rounded-xl border border-[var(--bs-status-info)]/25 bg-[var(--bs-status-info-bg)] p-4 text-sm">
-        {{ t('customers.manageDenied') }}
-      </p>
-
-      <BsRecordActionDialog v-model:visible="showForm" :title="t('customers.createTitle')" :dirty="formDirty" :pending="saving" :error="actionError" :submit-label="t('customers.save')" :cancel-label="t('customers.cancel')" @submit="save">
-            <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.name') }}<input v-model="form.name" type="text" minlength="2" maxlength="160" required class="ls-input"></label>
-            <label class="space-y-2 text-sm font-bold">{{ t('customers.phone') }}<input v-model="form.phone" type="tel" maxlength="50" autocomplete="tel" class="ls-input"></label>
-            <label class="space-y-2 text-sm font-bold">{{ t('customers.email') }}<input v-model="form.email" type="email" maxlength="254" autocomplete="email" class="ls-input"></label>
-            <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.address') }}<textarea v-model="form.address" maxlength="500" rows="2" class="ls-input" /></label>
-            <label class="space-y-2 text-sm font-bold sm:col-span-2">{{ t('customers.notes') }}<textarea v-model="form.notes" maxlength="2000" rows="3" class="ls-input" /></label>
-      </BsRecordActionDialog>
-
-      <div v-if="!customerPage?.permissionDenied" class="overflow-hidden ls-card">
-        <BsDataTable
-          :value="customerPage?.items ?? []"
-          :loading="pending"
-          :error="error ? t('customers.loadError') : null"
-          :label="t('customers.title')"
-          :capabilities="{ insert: canManage }"
-          :action-labels="{ insert: t('customers.add') }"
-          searchable
-          :search-label="t('customers.search')"
-          data-key="id"
-          lazy
-          paginator
-          :rows="pageSize"
-          :first="(page - 1) * pageSize"
-          :total-records="customerPage?.total ?? 0"
-          :always-show-paginator="false"
-          :row-class="() => 'border-t border-border'"
-          @search="value => search = value"
-          @page="handlePage"
-          @retry="refresh()"
-          @create="openCreate"
-        >
-          <template #filters>
-            <BsSelect
-              v-model="statusFilter"
-              :label="t('customers.status')"
-              :options="[
-              { value: 'active', label: t('customers.active') },
-              { value: 'archived', label: t('customers.archived') },
-              { value: 'all', label: t('customers.all') },
-              ]"
-              option-label="label"
-              option-value="value"
-            />
-          </template>
-          <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-            <template #header>{{ t('customers.name') }}</template>
-            <template #body="{ data: customer }">
-              <NuxtLink :to="`/customers/${customer.id}`" class="font-bold text-[var(--bs-link)] underline-offset-4 hover:underline">{{ customer.name }}</NuxtLink>
-            </template>
-          </Column>
-          <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-            <template #header>{{ t('customers.contact') }}</template>
-            <template #body="{ data: customer }">
-              <div class="space-y-1"><p>{{ customer.phone || '—' }}</p><p class="text-xs text-muted-foreground">{{ customer.email || '—' }}</p></div>
-            </template>
-          </Column>
-          <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-            <template #header>{{ t('customers.status') }}</template>
-            <template #body="{ data: customer }">
-              <span class="ls-badge" :class="customer.is_active ? 'bg-[var(--bs-status-success-bg)] text-fg' : 'bg-muted text-muted-foreground'">
-                {{ customer.is_active ? t('customers.active') : t('customers.archived') }}
-              </span>
-            </template>
-          </Column>
-          <Column header-class="px-5 py-3 text-start" body-class="px-5 py-4">
-            <template #header>{{ t('customers.updated') }}</template>
-            <template #body="{ data: customer }">{{ formatDate(customer.updated_at) }}</template>
-          </Column>
-          <template #empty><p class="p-8 text-center text-sm text-muted-foreground">{{ t('customers.noCustomers') }}</p></template>
-        </BsDataTable>
-      </div>
-    </template>
-  </div>
+  <BsCustomerDirectoryPage v-model:form="editorForm" v-model:visible="showForm" v-model:status="statusModel" :copy="copy" :rows="rows" :context-available="Boolean(current)" :context-loading="shopLoading" :permission-denied="Boolean(customerPage?.permissionDenied)" :can-manage="canManage" :loading="pending" :error="error ? t('customers.loadError') : null" :page="page" :page-size="pageSize" :total="customerPage?.total ?? 0" :editor-dirty="formDirty" :saving="saving" :action-error="actionError" :status-options="statusOptions" @search="search = $event" @page="handlePage" @retry="refresh()" @create="openCreate" @save="save"/>
 </template>

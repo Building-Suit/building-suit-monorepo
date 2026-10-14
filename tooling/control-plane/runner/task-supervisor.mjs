@@ -1,3 +1,7 @@
+import { effectiveFailureClass, legacyClassification } from './dot.mjs'
+import { supersededPublicationHold, operationHasAuthoritativeSuccess, publicationStopNeedsReclassification } from './bounded-publication.mjs'
+import { executionFailure, failedVerificationEvidence, reviewedFailureClass } from './recovery-evidence.mjs'
+import { AUTO_CLASSES } from './selfhealing.mjs'
 import { createHash } from 'node:crypto'
 
 const explicitWaitClasses = new Map([
@@ -78,6 +82,8 @@ export function supervisorStateFingerprint(snapshot) {
       snapshot.packet.workstream.publication_config,
       snapshot.packet.workstream.verification_config,
     ],
+    publication_execution_eligible:snapshot.publication_execution_eligible??null,
+    run_publication_authority: snapshot.run_publication_authority ?? null,
     publication_boundaries: snapshot.packet?.publication_boundaries ?? null,
     publication_contract: snapshot.packet?.publication_contract && [
       snapshot.packet.publication_contract.contract_id,
@@ -95,6 +101,8 @@ export function supervisorStateFingerprint(snapshot) {
     serialization_conflicts: snapshot.serialization_conflicts?.map(item =>
       [item.task_id, item.status, item.engine_stage],
     ),
+    retry_accounting: snapshot.retry_accounting,
+    binding_recovery: snapshot.binding_recovery,
     execution: execution && [execution.execution_id, execution.attempt, execution.status, execution.engine_stage],
     verification: verification && [
       verification.verification_run_id,
@@ -137,8 +145,25 @@ export function planSupervisorStep(snapshot) {
   const publication = latest(snapshot.publications, 'pull_request_id')
   const recovery = snapshot.recovery
 
+  const run = snapshot.workflow_run
+  if (run && (run.stop_requested || run.maintenance_requested || run.status !== 'running' || run.completed_tasks >= run.max_tasks)) {
+    return decision('wait', 'wait-operator', 'operator-wait', run.stop_requested ? 'stop_requested' : run.maintenance_requested ? 'maintenance_requested' : run.completed_tasks >= run.max_tasks ? 'limit_reached' : 'run_not_running', { execution, fingerprint })
+  }
+  if(task.status==='failed'&&snapshot.exhaustion_audit?.action==='investigate'&&(!snapshot.authoritative_failure||snapshot.authoritative_failure.classification==='UNKNOWN')&&!['operator-wait','decision-wait'].includes(executionFailure(snapshot,execution)?.failure_class))return decision('wait','wait-external','transient-infrastructure','retry_audit_investigation_required',{execution,fingerprint,exhaustion_audit:snapshot.exhaustion_audit})
+  const reclassifyPublicationStop = publicationStopNeedsReclassification(snapshot)
+  if (recovery?.next_action === 'safety-stop' && !reclassifyPublicationStop && recovery.condition?.fingerprint === fingerprint) {
+    return decision('terminal','safety-stop',recovery.failure_class ?? 'safety-stop',recovery.error_code ?? 'persisted_safety_stop',{execution,verification,publication,fingerprint,persisted:true,recoverable:false})
+  }
+  const operation = snapshot.runtime_operations?.find(op => op.status !== 'consumed')
+  if (operation && !(recovery?.status === 'active' && ['wait-operator','wait-decision','safety-stop'].includes(recovery.next_action))) {
+    if (!operationHasAuthoritativeSuccess(snapshot, operation) && Date.parse(operation.next_wake_at) > Date.now()) return decision('wait','wait-external','transient-infrastructure','runtime_backoff_pending',{ operation, execution, fingerprint })
+    return decision('act','reconcile-runtime','transient-infrastructure','runtime_operation_resume',{ command: operation.action, operation, execution, fingerprint })
+  }
   if (
     recovery?.status === 'active' &&
+    !(recovery.next_action === 'wait-external' && ['VERIFIER_INFRA','CONFIGURATION'].includes(snapshot.authoritative_failure?.classification)) &&
+    !reclassifyPublicationStop &&
+    !supersededPublicationHold(snapshot) &&
     recovery.condition?.preflight !== true &&
     recovery.condition?.fingerprint === fingerprint &&
     ['wait-external', 'wait-decision', 'wait-operator', 'safety-stop'].includes(recovery.next_action) &&
@@ -187,6 +212,20 @@ export function planSupervisorStep(snapshot) {
     })
   }
 
+  if (task.status === 'failed' && snapshot.authoritative_failure?.classification === 'EXTERNAL_EVIDENCE'
+    && Number(snapshot.authoritative_failure.execution_id) === Number(execution?.execution_id)
+    && Number(snapshot.authoritative_failure.evidence?.verification_run_id) === Number(verification?.verification_run_id)) {
+    return decision('wait','wait-external','external-wait','trusted_external_evidence_required',{execution,verification,fingerprint})
+  }
+  if(task.status==='failed'&&snapshot.recovery_readiness?.allowed===false&&['VERIFIER_INFRA','CONFIGURATION'].includes(snapshot.authoritative_failure?.classification))return decision('wait','reverify',snapshot.authoritative_failure.classification==='VERIFIER_INFRA'?'verification-infrastructure':'verification-configuration','verifier_repair_required',{execution,fingerprint})
+  if(task.status==='failed'&&snapshot.recovery_readiness?.allowed===false)return decision('wait','wait-external','unknown-outcome','verifier_repair_without_progress',{execution,fingerprint})
+
+  if(task.status==='failed'&&snapshot.recovery_readiness?.allowed===true&&['VERIFIER_INFRA','CONFIGURATION'].includes(snapshot.authoritative_failure?.classification)&&!snapshot.authoritative_failure?.evidence?.adoption_materialization)return decision('act','reverify',snapshot.authoritative_failure.classification==='VERIFIER_INFRA'?'verification-infrastructure':'verification-configuration','current_trusted_verifier_recovery',{command:'task-verify',execution,verification,fingerprint})
+
+  if (task.status==='failed' && snapshot.authoritative_failure?.evidence?.adoption_materialization===true && Number(snapshot.authoritative_failure.evidence.verification_run_id)===Number(verification?.verification_run_id) && snapshot.recovery_readiness?.allowed===true) {
+    return decision('act','reverify','verification-infrastructure','legacy_trusted_evidence_materialization',{command:'task-verify',execution,verification,fingerprint})
+  }
+
   if (task.status === 'in_progress') {
     if (!execution) {
       if (snapshot.parent_satisfaction?.satisfied === true) {
@@ -225,21 +264,35 @@ export function planSupervisorStep(snapshot) {
   }
 
   if (task.status === 'failed') {
-    const explicitFailure = latest(
-      (snapshot.failures ?? []).filter(item => item.resolved_at == null),
-      'failure_id',
-    )
+    const originalFailure = executionFailure(snapshot, execution)
+    const explicitFailure = originalFailure && { ...originalFailure, failure_class: effectiveFailureClass(snapshot, originalFailure.failure_class) }
+    if (['verification-configuration','verification-infrastructure'].includes(explicitFailure?.failure_class) && execution?.status==='failed' && snapshot.run_publication_authority?.authorized) {
+      return decision('act','reverify',explicitFailure.failure_class,'same_attempt_verifier_reacceptance',{command:'task-reaccept',execution,verification,publication,fingerprint})
+    }
+    if (['verification-configuration','verification-infrastructure'].includes(explicitFailure?.failure_class) && execution?.status==='succeeded' && snapshot.exhaustion_audit?.entries?.some(e=>e.execution_id===execution.execution_id&&e.proof?.length&&e.proof.every(p=>p.version===2)))return decision('act','reverify',explicitFailure.failure_class,'reviewed_existing_verifier_recovery',{command:'task-verify',execution,verification,publication,fingerprint})
+    if (explicitFailure?.failure_class==='verification-configuration' && execution?.status==='succeeded' && snapshot.binding_recovery) {
+      return decision('act','reverify','verification-configuration','existing_executable_binding_recovery',{command:'task-verify',execution,verification,publication,fingerprint})
+    }
+    // An audited unknown is a safety gate, never fall through to legacy PRODUCT.
+    if (explicitFailure?.failure_class==='unknown-outcome') return decision('wait','wait-external','unknown-outcome','retry_classification_review_required',{execution,verification,publication,fingerprint})
+    if (explicitFailure?.failure_class==='safety-stop') return decision('wait','wait-operator','operator-wait','retry_classification_review_required',{execution,verification,publication,fingerprint})
     const explicitWait = explicitWaitClasses.get(explicitFailure?.failure_class)
-    if (explicitWait && explicitFailure?.metadata?.supervisor_classified === true) {
+    const typedFailure = explicitFailure?.metadata?.classification?.failure_class === explicitFailure?.failure_class
+    if (explicitWait && (explicitFailure?.metadata?.supervisor_classified === true || typedFailure)) {
       return decision(explicitWait === 'safety-stop' ? 'terminal' : 'wait', explicitWait, explicitFailure.failure_class, explicitFailure.error_code ?? 'classified_failure', {
         execution, verification, publication, fingerprint, recoverable: explicitWait !== 'safety-stop',
       })
     }
 
+    if (AUTO_CLASSES.has(explicitFailure?.failure_class) && !String(explicitFailure.failure_class).startsWith('verification-')) {
+      return decision('wait','wait-external',explicitFailure.failure_class,'same_execution_infrastructure_recovery',{ execution, verification, publication, fingerprint })
+    }
     const verificationFailureClass =
+      reviewedFailureClass(snapshot,execution) ??
       (String(explicitFailure?.failure_class ?? '').startsWith('verification-')
         ? explicitFailure.failure_class
         : null) ??
+      failedVerificationEvidence(snapshot)?.classification?.failure_class ??
       verification?.metadata?.failure_class ??
       latest(
         (snapshot.verification_results ?? []).filter(result =>
@@ -247,9 +300,11 @@ export function planSupervisorStep(snapshot) {
         ),
         'verification_id',
       )?.metadata?.failure_class ??
-      (execution?.status === 'succeeded' ? 'verification-product-defect' : null)
+      (execution?.status === 'succeeded' && verification?.status === 'failed' ? 'unknown-outcome' : null)
 
-    if (execution?.status === 'succeeded' && verificationFailureClass !== 'verification-product-defect') {
+    if (verificationFailureClass && verificationFailureClass !== 'verification-product-defect') {
+      if(reviewedFailureClass(snapshot,execution)&&['verification-infrastructure','verification-configuration'].includes(verificationFailureClass))return decision('act','reverify',verificationFailureClass,'trusted_reviewed_same_execution_reverification',{command:'task-verify',execution,verification,publication,fingerprint})
+      if (verificationFailureClass === 'unknown-outcome') return decision('wait','wait-external','unknown-outcome','retry_audit_investigation_required',{execution,verification,publication,fingerprint})
       if (verificationFailureClass === 'verification-lifecycle') {
         return decision('act', 'reverify', verificationFailureClass, 'verification_lifecycle_reverify', {
           command: 'task-verify', execution, verification, publication, fingerprint,
@@ -280,20 +335,33 @@ export function planSupervisorStep(snapshot) {
       })
     }
 
+    if (verificationFailureClass !== 'verification-product-defect' && explicitFailure?.failure_class !== 'verification-product-defect') {
+      return decision('wait','wait-external','unknown-outcome','unknown_failure_outcome',{execution,verification,publication,fingerprint})
+    }
     const policy = snapshot.packet.retry_policy ?? {}
-    const attemptsRemain = execution && Number(execution.attempt) < Number(policy.max_attempts ?? 0)
+    const attemptsRemain = execution && (Number(snapshot.retry_accounting?.consumed ?? execution.attempt) < Number(policy.max_attempts ?? 0) || (snapshot.run_publication_authority?.unattended_queue_authority!==true && Number.isSafeInteger(policy.one_invocation_extension?.grant_id)))
+    if (!attemptsRemain&&!snapshot.exhaustion_audit)return decision('wait','wait-external','transient-infrastructure','retry_audit_required',{execution,fingerprint})
+    if (!attemptsRemain && snapshot.retry_accounting && snapshot.retry_accounting.all_product !== true) {
+      return decision('wait', 'wait-operator', 'operator-wait', 'retry_classification_review_required', { execution, verification, publication, fingerprint })
+    }
     if (!attemptsRemain) {
-      return decision('terminal', 'safety-stop', 'safety-stop', 'retry_budget_exhausted', {
+      return decision('wait', 'wait-operator', 'operator-wait', 'retry_budget_exhausted', {
         execution, verification, publication, fingerprint, recoverable: false,
       })
     }
-    const verificationFailure = execution.status === 'succeeded'
+    const verificationFailure = verificationFailureClass === 'verification-product-defect'
     return decision('act', verificationFailure ? 'repair' : 'retry', verificationFailure ? 'verification-product-defect' : 'transient-infrastructure', verificationFailure ? 'verification_failed' : 'implementation_failed', {
       command: 'task-retry', execution, verification, publication, fingerprint,
     })
   }
 
   if (task.status === 'passed') {
+    if (Array.isArray(snapshot.verification_results)) {
+      const selected=snapshot.verification_results.filter(check=>Number(check.verification_run_id)===Number(verification?.verification_run_id) && check.metadata?.required!==false && check.status!=='skipped')
+      if (!selected.length || selected.some(check=>check.trusted_receipt?.version!==2 || !check.trusted_registration)) {
+        return decision('act','reverify','verification-lifecycle','trusted_pass_reverification_required',{command:'task-verify',execution,verification,publication,fingerprint})
+      }
+    }
     if (publication) {
       return decision('act', 'reconcile-publication', 'publication-reconciliation', 'publication_record_requires_reconciliation', {
         command: 'task-publish', execution, verification, publication, fingerprint,
@@ -309,13 +377,38 @@ export function planSupervisorStep(snapshot) {
   })
 }
 
-export function classifySupervisorFailure({ command, payload, attempt, maxAttempts }) {
+export function classifySupervisorFailure({ command, payload, attempt, maxAttempts, snapshot }) {
   const error = String(payload?.publication?.error ?? payload?.error ?? 'task_action_failed')
-  const lower = `${error} ${JSON.stringify(payload ?? {})}`.toLowerCase()
-  const verificationClass = payload?.classification?.failure_class
+  const lower = error.toLowerCase()
+  const verificationClass = legacyClassification(payload?.classification?.failure_class ?? payload?.recovery?.failure_class ?? payload?.failure_class ?? payload?.publication?.classification?.failure_class ?? payload?.probe?.classification?.failure_class)
+  const current = snapshot?.authoritative_failure
+  const execution = snapshot && latestExecution(snapshot)
+  const verification = snapshot?.verification_runs?.filter(v => Number(v.execution_id) === Number(execution?.execution_id)).at(-1)
+  if (command === 'task-verify' && ['VERIFIER_INFRA','CONFIGURATION'].includes(current?.classification) && Number(current.execution_id) === Number(execution?.execution_id) && Number(current.evidence?.verification_run_id) === Number(verification?.verification_run_id) && [undefined,'unknown-outcome','transient-infrastructure'].includes(verificationClass)) {
+    return decision('wait','reverify',current.classification === 'VERIFIER_INFRA' ? 'verification-infrastructure' : 'verification-configuration','verifier_repair_required',{recoverable:true})
+  }
+  if(/unchanged_recovery_action_forbidden|classified_verifier_repair_required/.test(error)){
+    const failureClass = legacyClassification(payload?.classification?.failure_class)
+    if (['verification-infrastructure', 'verification-configuration'].includes(failureClass)) return decision('wait', 'reverify', failureClass, 'verifier_repair_required', {recoverable:true})
+    return decision('wait','wait-external','unknown-outcome','verifier_repair_without_progress',{recoverable:true})
+  }
+  const explicitWait = explicitWaitClasses.get(verificationClass)
+  if (explicitWait) {
+    return decision(explicitWait === 'safety-stop' ? 'terminal' : 'wait', explicitWait, verificationClass, error.slice(0, 160), { recoverable: explicitWait !== 'safety-stop' })
+  }
+
+  if (['transient-infrastructure', 'repository-state', 'publication-reconciliation', 'flaky-verification', 'unknown-outcome'].includes(verificationClass)) {
+    return decision('wait','wait-external',verificationClass,error.slice(0,160))
+  }
 
   if (verificationClass === 'verification-lifecycle') {
     return decision('act', 'reverify', verificationClass, 'verification_lifecycle_reverify', { command: 'task-verify' })
+  }
+  if (verificationClass === 'verification-product-defect') {
+    if (Number(attempt ?? 0) >= Number(maxAttempts ?? 0)) {
+      return decision('wait', 'wait-operator', 'operator-wait', 'retry_budget_exhausted', { recoverable: false })
+    }
+    return decision('act', 'repair', verificationClass, 'repair_verification_failed', { command: 'task-retry' })
   }
   if (verificationClass === 'verification-configuration') {
     return decision('wait', 'wait-operator', verificationClass, 'verification_configuration_required')
@@ -325,6 +418,21 @@ export function classifySupervisorFailure({ command, payload, attempt, maxAttemp
   }
   if (verificationClass === 'verification-required-check-unavailable') {
     return decision('wait', 'wait-operator', verificationClass, 'required_verification_check_unavailable')
+  }
+
+  if ((payload?.classification?.recovery_action ?? payload?.publication?.classification?.recovery_action) === 'wait-operator') {
+    return decision(
+      'wait',
+      'wait-operator',
+      verificationClass ?? 'operator-wait',
+      error.slice(0, 160),
+    )
+  }
+
+  if (verificationClass) return decision('terminal','safety-stop','safety-stop','unknown_explicit_failure_class',{ recoverable: false })
+
+  if (command === 'task-publish' && ['git_commit_failed','git_push_failed','gh_pr_create_failed','pr_create_failed'].includes(lower)) {
+    return decision('wait','wait-external','publication-reconciliation','publication_response_lost_or_unavailable')
   }
 
   if (lower.includes('no_publishable_changes')) {
@@ -341,17 +449,15 @@ export function classifySupervisorFailure({ command, payload, attempt, maxAttemp
   if (/timeout|network|fetch|connect|temporar|unavailable|pr_create_failed|unable_to_find_existing_pr|unable_to_inspect_remote_branch|unable_to_read_created_pr|stack_parent_resolution_failed/.test(lower)) {
     return decision('wait', 'wait-external', 'external-wait', 'external_dependency_unavailable')
   }
-  if (command === 'task-verify' || lower.includes('verification_failed')) {
-    if (Number(attempt ?? 0) >= Number(maxAttempts ?? 0)) {
-      return decision('terminal', 'safety-stop', 'safety-stop', 'retry_budget_exhausted', { recoverable: false })
-    }
-    return decision('act', 'repair', 'verification-product-defect', 'verification_failed', { command: 'task-retry' })
+  if (lower === 'verification_failed' || lower === 'repair_verification_failed') {
+    return decision('wait','wait-external','unknown-outcome','retry_audit_investigation_required')
   }
+  if (command === 'task-verify' || /malformed_child_response|durable_operation_pending|worker_process_interrupted|runtime_operation_in_flight/.test(lower)) return decision('wait','wait-external','transient-infrastructure','process_recovery_required')
   if (/parent|worktree|branch mismatch|dirty|upstream/.test(lower)) {
     return decision('wait', 'wait-operator', 'repository-state', 'repository_reconciliation_requires_operator')
   }
   if (/decision|requirement/.test(lower)) {
     return decision('wait', 'wait-decision', 'decision-wait', 'decision_required')
   }
-  return decision('terminal', 'safety-stop', 'safety-stop', error.slice(0, 160), { recoverable: false })
+  return decision('wait','wait-external','unknown-outcome',error.slice(0,160))
 }

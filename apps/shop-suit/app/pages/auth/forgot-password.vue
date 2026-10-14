@@ -36,24 +36,9 @@ async function onSubmit() {
 </script>
 
 <template>
-  <BsAuthForm
-    eyebrow="Shop Suit" :title="t('auth.forgotTitle')" :description="t('auth.forgotSubtitle')"
-    :pending="pending" :error="errorMessage" :submit-label="sent ? undefined : t('auth.resetAction')"
-    :pending-label="t('auth.resetAction')" novalidate @submit="onSubmit"
-  >
-    <BsStateSurface
-      v-if="sent" state="success" :title="t('auth.resetSent')"
-      :description="isArabic ? 'لو البريد مسجّل عندنا، هتوصلك رسالة فيها رابط آمن لتغيير كلمة المرور.' : 'If the address is registered, you will receive a secure link to choose a new password.'"
-    />
-    <template v-else>
-      <div class="space-y-2">
-        <label for="reset-email" class="text-sm font-semibold">{{ t('auth.email') }}</label>
-        <div class="relative">
-          <AppIcon name="mail" class="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input id="reset-email" v-model="email" type="email" autocomplete="email" required class="ls-input" :placeholder="t('auth.emailPlaceholder')">
-        </div>
-      </div>
-    </template>
-    <template #footer><NuxtLink to="/auth/login" class="font-bold text-foreground underline decoration-[var(--bs-accent)] decoration-2 underline-offset-4">{{ t('auth.backToLogin') }}</NuxtLink></template>
-  </BsAuthForm>
+  <BsPasswordRecoveryPage
+    v-model:email="email" mode="request"
+    :copy="{ eyebrow: 'Shop Suit', title: t('auth.forgotTitle'), description: t('auth.forgotSubtitle'), submit: t('auth.resetAction'), pending: t('auth.resetAction'), success: t('auth.resetSent'), successDescription: isArabic ? 'لو البريد مسجّل عندنا، هتوصلك رسالة فيها رابط آمن لتغيير كلمة المرور.' : 'If the address is registered, you will receive a secure link to choose a new password.', email: t('auth.email'), emailPlaceholder: t('auth.emailPlaceholder'), back: t('auth.backToLogin') }"
+    :pending="pending" :error="errorMessage" :complete="sent" back-to="/auth/login" @submit="onSubmit"
+  />
 </template>

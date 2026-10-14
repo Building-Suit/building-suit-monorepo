@@ -23,13 +23,19 @@ async function pageScript(file, exports, rpc) {
     useConfirmation: () => ({ ask: async () => false }),
     useToasts: () => ({ push: toast => toasts.push(toast) }), refreshNuxtData: async () => {},
     useAsyncData: (key, handler, options) => ({
-      data: vue.ref(typeof key === 'function' && key().includes('report-access') ? { 'reports.view': true, 'reports.cost_profit.view': true } : options.default()),
+      data: vue.ref(typeof key === 'function' && key().includes('report-access')
+        ? { 'reports.view': true, 'reports.cost_profit.view': true }
+        : typeof key === 'function' && key().includes('operational-report')
+          ? { ...options.default(), total: 1, items: [{ amount: 10 }] }
+          : options.default()),
       pending: vue.ref(false), error: vue.ref(null), refresh: async () => {},
     }),
   }
   const scope = vue.effectScope()
   const imported = { downloadCsv: (...args) => downloads.push(args), encodeCsv: (headers, rows) => ({ headers, rows }), importTemplates: { products: [] } }
-  const result = scope.run(() => new Function('require', 'exports', ...Object.keys(globals), code)(() => imported, {}, ...Object.values(globals)))
+  const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
+  globals.watch = (...args) => scope.run(() => vue.watch(...args))
+  const result = await scope.run(() => new AsyncFunction('require', 'exports', ...Object.keys(globals), code)(() => imported, {}, ...Object.values(globals)))
   return { ...result, scope, downloads, context, currentId, toasts }
 }
 const deferred = () => {

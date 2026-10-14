@@ -1,3 +1,4 @@
+-- Historical manual records are seeded by rolled-back pg_temp fixtures; current public writes stay retired.
 -- HOT-11: exact V2 offers, immutable historical terms, explicit variant/term
 -- changes, exact renewal, and manual approval snapshots.
 
@@ -18,8 +19,10 @@ begin
   where portal.key = 'shop-crm' and plan.slug in ('solo', 'team', 'multi');
 
   if v_catalog is distinct from '[
-    {"family":"solo","variant":"standard","interval":"annual","price":2847.84,"trialDays":7,"locations":1},
-    {"family":"solo","variant":"standard","interval":"monthly","price":349.00,"trialDays":7,"locations":1},
+    {"family":"solo","variant":"solo_1","interval":"annual","price":2847.84,"trialDays":7,"locations":1},
+    {"family":"solo","variant":"solo_1","interval":"monthly","price":349.00,"trialDays":7,"locations":1},
+    {"family":"solo","variant":"solo_2","interval":"annual","price":4071.84,"trialDays":7,"locations":1},
+    {"family":"solo","variant":"solo_2","interval":"monthly","price":499.00,"trialDays":7,"locations":1},
     {"family":"team","variant":"standard","interval":"annual","price":5703.84,"trialDays":7,"locations":1},
     {"family":"team","variant":"standard","interval":"monthly","price":699.00,"trialDays":7,"locations":1},
     {"family":"multi","variant":"multi_2","interval":"annual","price":8151.84,"trialDays":7,"locations":2},
@@ -31,7 +34,7 @@ begin
   end if;
 
   if (select count(distinct id) from public.shop_public_plan_catalog()) <> 3
-    or (select count(*) from public.shop_public_plan_catalog()) <> 8
+    or (select count(*) from public.shop_public_plan_catalog()) <> 10
     or not exists (select 1 from public.plan_catalog_terms where trial_days = 14)
     or exists (select 1 from public.plan_catalog_terms
       where catalog_generation = 1 and trial_days = 14 and created_at > now()) then
@@ -40,7 +43,8 @@ begin
 
   if exists (
     with expected(slug, variant, limits) as (values
-      ('solo', 'standard', '{"active_locations":1,"active_members":2,"active_products":250,"active_services":50,"active_customers":500,"active_suppliers":50}'::jsonb),
+      ('solo', 'solo_1', '{"active_locations":1,"active_members":1,"active_products":250,"active_services":50,"active_customers":500,"active_suppliers":50}'::jsonb),
+      ('solo', 'solo_2', '{"active_locations":1,"active_members":2,"active_products":250,"active_services":50,"active_customers":500,"active_suppliers":50}'::jsonb),
       ('team', 'standard', '{"active_locations":1,"active_members":8,"active_products":500,"active_services":100,"active_customers":2000,"active_suppliers":150}'::jsonb),
       ('multi', 'multi_2', '{"active_locations":2,"active_members":16,"active_products":1000,"active_services":200,"active_customers":5000,"active_suppliers":300}'::jsonb),
       ('multi', 'multi_3', '{"active_locations":3,"active_members":25,"active_products":2000,"active_services":300,"active_customers":10000,"active_suppliers":500}'::jsonb)
@@ -157,7 +161,7 @@ declare
       and catalog.billing_interval = 'annual');
   v_notice uuid;
 begin
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     (select multi2_request from shop_plan_catalog_v2_fixture),
     current_setting('hot11.shop')::uuid, 'multi', v_terms,
     8151.84, current_date, 'HOT11-MULTI2-YEARLY'
@@ -221,7 +225,7 @@ set local role authenticated;
 do $$
 declare v_notice uuid;
 begin
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     (select renewal_request from shop_plan_catalog_v2_fixture),
     current_setting('hot11.shop')::uuid, 8151.84, current_date, 'HOT11-RENEW-SAME'
   );
@@ -267,7 +271,7 @@ declare
       and catalog.billing_interval = 'monthly');
   v_notice uuid;
 begin
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     (select multi3_request from shop_plan_catalog_v2_fixture),
     current_setting('hot11.shop')::uuid, 'multi', v_terms,
     1199, current_date, 'HOT11-MULTI3-MONTHLY'
@@ -304,7 +308,7 @@ select set_config('request.jwt.claim.sub', owner_id::text, true),
   set_config('request.jwt.claim.role', 'authenticated', true)
 from shop_plan_catalog_v2_fixture;
 set local role authenticated;
-select public.submit_shop_billing_notice(
+select pg_temp.seed_legacy_submit_shop_billing_notice(
   (select downgrade_request from shop_plan_catalog_v2_fixture),
   current_setting('hot11.shop')::uuid, 'multi',
   (select catalog.catalog_terms_id
@@ -425,7 +429,7 @@ declare
       and catalog.billing_interval = 'annual');
   v_notice uuid;
 begin
-  v_notice := public.submit_shop_billing_notice(
+  v_notice := pg_temp.seed_legacy_submit_shop_billing_notice(
     gen_random_uuid(), current_setting('hot11.shop')::uuid, 'multi', v_terms,
     9000, current_date, 'HOT11-NEGOTIATED-YEARLY'
   );

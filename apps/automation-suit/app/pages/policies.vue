@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { automationStatusTone } from '../utils/automationStatusTone'
 import type { RetryPolicyRow } from '../../types/operations'
 const { data, error, refresh } = await useFetch<{ policies: RetryPolicyRow[] }>('/api/policies')
 const { data: operator } = await useFetch<{ writesEnabled: boolean }>('/api/operator/status')
@@ -25,29 +26,25 @@ async function save() {
     : 'The policy could not be saved.')
   if (saved) success('Policy saved and audited.')
 }
+
+const policyViews = computed(() => (data.value?.policies ?? []).map(policy => ({
+  id: policy.policy_id, name: policy.display_name,
+  status: policy.active ? 'active' : 'inactive', statusLabel: policy.active ? 'active' : 'inactive',
+  statusTone: automationStatusTone(policy.active ? 'active' : 'inactive'),
+  attempts: policy.attempt_profiles.map((profile, index) => ({ id: String(index), label: `Attempt ${index + 1}`, profile })),
+})))
+const editorForm = computed({
+  get: () => ({ id: form.policy_id, name: form.display_name, maximumAttempts: form.max_attempts, profiles: form.attempt_profiles, active: form.active }),
+  set: (value: import('@building-suit/ui/types/routingPolicyPresentation').BsRoutingPolicyForm) => Object.assign(form, { policy_id: value.id, display_name: value.name, max_attempts: value.maximumAttempts, attempt_profiles: value.profiles, active: value.active }),
+})
+const copy = computed(() => ({
+  eyebrow: 'Routing', title: 'Retry policies', description: 'Every attempt has an explicit profile. Assignments inherit global → project → workstream → task.',
+  create: 'Create policy', edit: 'Edit', createTitle: 'Create retry policy', editTitle: 'Edit retry policy', submit: 'Validate and save',
+  id: 'Policy ID', name: 'Display name', maximumAttempts: 'Max attempts', profiles: 'Attempt profiles, comma-separated', active: 'Active',
+  writeStatus: operator.value?.writesEnabled ? 'Operator writes enabled' : 'Configure NUXT_CONTROL_OPERATOR_DATABASE_URL to save',
+}))
+function editById(id: string) { const policy = data.value?.policies.find(row => row.policy_id === id); if (policy) edit(policy) }
 </script>
 <template>
-  <main class="space-y-5">
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <div><p class="text-xs font-bold uppercase tracking-widest text-fg-muted">Routing</p><h1 class="mt-2 text-3xl font-black">Retry policies</h1><p class="mt-1 text-sm text-fg-muted">Every attempt has an explicit profile. Assignments inherit global → project → workstream → task.</p></div>
-      <BsButton variant="primary" @click="create">Create policy</BsButton>
-    </div>
-    <p v-if="error" class="text-danger">{{ error.message }}</p>
-    <div class="grid gap-4 xl:grid-cols-2">
-      <BsCard v-for="policy in data?.policies || []" :key="policy.policy_id">
-        <div class="flex justify-between gap-3"><div><h2 class="font-black">{{ policy.display_name }}</h2><p class="font-mono text-xs text-fg-muted">{{ policy.policy_id }}</p></div><div class="flex items-start gap-2"><DashboardStatusPill :value="policy.active ? 'active' : 'inactive'" /><BsButton size="sm" @click="edit(policy)">Edit</BsButton></div></div>
-        <ol class="mt-4 grid gap-2 sm:grid-cols-2"><li v-for="(profile,index) in policy.attempt_profiles" :key="index" class="rounded-control border border-[var(--bs-border)] p-3 text-sm"><span class="text-fg-muted">Attempt {{ index + 1 }}</span><strong class="ms-2">{{ profile }}</strong></li></ol>
-      </BsCard>
-    </div>
-    <BsRecordActionDialog v-model:visible="visible" :title="mode === 'edit' ? 'Edit retry policy' : 'Create retry policy'" :dirty="dirty" :pending="pending" :error="actionError" :submit-disabled="!operator?.writesEnabled" submit-label="Validate and save" @submit="save">
-      <div class="grid gap-3 md:grid-cols-3">
-        <FloatingField label="Policy ID"><input v-model="form.policy_id" class="ls-input" required></FloatingField>
-        <FloatingField label="Display name"><input v-model="form.display_name" class="ls-input" required></FloatingField>
-        <FloatingField label="Max attempts"><input v-model.number="form.max_attempts" type="number" min="1" max="20" class="ls-input" required></FloatingField>
-      </div>
-      <FloatingField label="Attempt profiles, comma-separated"><input v-model="form.attempt_profiles" class="ls-input font-mono" required></FloatingField>
-      <label class="flex items-center gap-2 text-sm"><input v-model="form.active" type="checkbox">Active</label>
-      <p class="text-xs text-fg-muted">{{ operator?.writesEnabled ? 'Operator writes enabled' : 'Configure NUXT_CONTROL_OPERATOR_DATABASE_URL to save' }}</p>
-    </BsRecordActionDialog>
-  </main>
+  <BsRoutingPolicyPage v-model:form="editorForm" v-model:visible="visible" :policies="policyViews" :copy="copy" :error="error?.message" :editor="{ editing: mode === 'edit', dirty, pending, error: actionError, canSubmit: Boolean(operator?.writesEnabled) }" @create="create" @edit="editById" @submit="save" />
 </template>
