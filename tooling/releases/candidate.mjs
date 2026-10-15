@@ -70,3 +70,43 @@ export function promotionCandidate(revisions, { mainParent, tree, ancestor }) {
   return match
 }
 export function loadInventory() { return JSON.parse(readFileSync('release-changes/items.json','utf8')) }
+
+/** Task additions use their final-tree line positions; removals conservatively use
+ * same-file deleted text. Thus internal path coverage cannot erase a surviving public edit. */
+export function changedEdits(base, head, run = git) {
+  const edits = new Map()
+  const files = run('diff','--no-renames','--name-only','-z',base,head).split('\0').filter(Boolean)
+  for (const file of files) {
+    // Task metadata, documentation and tests alone do not establish customer behavior.
+    if (file.startsWith('release-fragments/') || file.startsWith('release-changes/') || file.startsWith('docs/')
+      || /\/(?:docs|tests?)\//.test(file) || /\.(?:test|spec)\.[cm]?[jt]sx?$/.test(file)) continue
+    const tokens = new Set()
+    let line = 0
+    const patch = run('diff','--no-ext-diff','--no-textconv','--no-renames','--unified=0',base,head,'--',file)
+    for (const text of patch.split('\n')) {
+      const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/.exec(text)
+      if (hunk) { line = Number(hunk[1]) + (hunk[2] === '0' ? 1 : 0); continue }
+      if (!line) continue
+      if (text.startsWith('+')) { tokens.add(JSON.stringify(['+',line,text.slice(1)])); line++ }
+      else if (text.startsWith('-')) tokens.add(JSON.stringify(['-',text.slice(1)]))
+      else if (text.startsWith(' ')) line++
+    }
+    if (/^Binary files /m.test(patch)) tokens.add(JSON.stringify(['binary',run('ls-tree',head,'--',file)]))
+    if (/^(old|new) mode /m.test(patch)) tokens.add(JSON.stringify(['mode',run('ls-tree',head,'--',file)]))
+    if (tokens.size) edits.set(file,tokens)
+  }
+  return edits
+}
+export function validatePublicTaskCoverage({fragments,inventory,candidate,base,main,head,run=git,reviewed=new Set()}) {
+  const taskEdits=changedEdits(base,head,run), netEdits=changedEdits(main,head,run)
+  const active=new Set(candidate.changes.filter(row=>row.disposition==='public').map(row=>row.id))
+  for (const fragment of fragments.filter(row=>row.disposition==='public'&&!reviewed.has(row.id))) {
+    const survives=[...taskEdits].some(([file,tokens])=>fragment.paths.some(path=>file===path||file.startsWith(`${path}/`))
+      && [...tokens].some(token=>netEdits.get(file)?.has(token)))
+    for (const suit of fragment.suits) {
+      const linked=inventory.filter(item=>item.disposition==='public'&&item.sources?.includes(fragment.id)&&item.suits.includes(suit))
+      if (!linked.length) throw new Error(`Public task needs reviewed net-change inventory/evidence: ${fragment.id}`)
+      if (survives && !linked.some(item=>active.has(item.id))) throw new Error(`Public task has surviving net edits but no contributing inventory item: ${fragment.id} (${suit})`)
+    }
+  }
+}
