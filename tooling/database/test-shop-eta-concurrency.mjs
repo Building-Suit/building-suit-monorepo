@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
-import { randomUUID } from 'node:crypto'
+import { randomUUID, randomInt } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import pg from 'pg'
+import { setTimeout as delay } from 'node:timers/promises'
 const connection={host:'127.0.0.1',port:61322,user:'postgres',password:'postgres',database:'postgres'}
 const admin=new pg.Client(connection)
 await admin.connect()
@@ -23,7 +24,8 @@ try {
   await admin.query('select public.issue_sale($1,$2,$3)',[randomUUID(),info.shop,sale]);sales.push(sale)
  }
  await admin.query('COMMIT')
- const request=randomUUID()
+ const request=randomUUID(),gate=randomInt(100000,100000000)
+ await admin.query('select pg_advisory_lock($1::bigint)',[gate])
  async function worker(fn) {
   const client=new pg.Client(connection);await client.connect()
   try {return await fn(client)}finally{await client.end()}
@@ -31,10 +33,18 @@ try {
  async function queue(client) {
   await client.query('BEGIN')
   await client.query("select set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role','authenticated',true)",[info.owner]);await client.query('SET LOCAL ROLE authenticated')
+  await client.query('select pg_advisory_xact_lock_shared($1::bigint)',[gate])
   const result=await client.query("select public.queue_eta_receipt($1,$2,$3,'{\"type\":\"P\"}','C') id",[request,info.shop,sales[0]])
   await client.query('COMMIT');return result.rows[0].id
  }
- const ids=await Promise.all([worker(queue),worker(queue)])
+ const competing=[worker(queue),worker(queue)]
+ try {
+  const deadline=Date.now()+10000
+  while ((await admin.query("select count(*)::int n from pg_locks where locktype='advisory' and objid=$1::oid and mode='ShareLock' and not granted",[gate])).rows[0].n!==2) {
+   assert.ok(Date.now()<deadline,'Both queue sessions must reach the race barrier');await delay(10)
+  }
+ } finally {await admin.query('select pg_advisory_unlock($1::bigint)',[gate])}
+ const ids=await Promise.all(competing)
  assert.equal(ids[0],ids[1])
  await admin.query('BEGIN');await admin.query("select set_config('request.jwt.claim.sub',$1,true)",[info.owner]);await admin.query('SET LOCAL ROLE authenticated')
  await admin.query("select public.queue_eta_receipt($1,$2,$3,'{\"type\":\"P\"}','C')",[randomUUID(),info.shop,sales[1]]);await admin.query('COMMIT')
