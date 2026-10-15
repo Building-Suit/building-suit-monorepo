@@ -55,18 +55,8 @@ Official documentation reviewed 2026-10-15:
 - https://sdk.invoicing.eta.gov.eg/documents/invoice-v1-0/
 - https://sdk.invoicing.eta.gov.eg/faq/
 
-## Exact B2B completion boundary
+## B2B completion boundary
 
-B2B is **not operationally complete** in this slice. The implemented part is `buildEinvoice(source, signer)`: a deterministic EGP invoice v1.0 projection, business receiver/address validation, separate `documents` envelope and an injected CAdES-BES signer contract. Its unit test uses a synthetic signer callback. Base64 syntax checking is not cryptographic signature verification or a real signing implementation.
-
-Code still required, separately from external credentials:
-
-1. Implement the server signing/provider adapter: canonical document serialization/hash, actual CAdES-BES certificate/device/provider interaction and verification/error handling. No such provider is wired to `buildEinvoice` today.
-2. Add an authorized B2B command and frozen receiver identity/address projection at issuance or another explicitly reviewed immutable boundary. Current `queue_eta_receipt` accepts only P/F buyers, current issuance sources fix `channel: ereceipt`, and the UI exposes B2C receipt queueing only.
-3. Extend the durable outbox contract and preparation validation for invoice documents. Current `shop_eta_prepare` requires receipt header UUID/previousUUID, and the worker constructs a receipt payload/POS chain. Those receipt-specific checks cannot be reused blindly for invoices.
-4. Implement distinct eInvoice authentication/provider binding, document submission transport, accepted/rejected document mapping and submission-status polling/reconciliation. `createEtaClient`, `createEtaDispatcher` and `createEtaReconciler` currently call receipt endpoints and use POS authentication only. They do not dispatch the output of `buildEinvoice`.
-5. Add B2B queue/status UX and deterministic signer vectors, server/provider fault, replay, isolation and invoice status-transition coverage. Existing B2B tests prove the builder boundary and missing-provider failure only.
-
-External setup after that code exists: an approved signing/provider integration and certificate/device access, managed ERP credentials and taxpayer authorization, supported deployment/scheduler, and external ETA acceptance evidence. Supplying credentials alone cannot enable B2B today. Return business workflows remain with the separate returns owner; this boundary adds no returns command.
+The B2B follow-up implements a persistent invoice queue, ERP authentication/submission/status transport, configured CAdES-BES provider adapter, cryptographic verification against a pinned signing certificate, optional reference OpenSSL/PKCS#11 signing bridge, shared EN/AR queue/status UX and deterministic/SQL tests. The receipt/POS worker remains distinct. See [B2B implementation and external setup](eta-b2b-einvoice.md) for the exact contracts and final verification record. It remains disabled without managed server configuration; no live signing, credentials or external ETA acceptance are implied.
 
 The tax and ETA disposable workflows now reuse an existing pinned metadata image or pull the same official Supabase Docker Hub mirror already used by the SAS workflow, then tag it with the CLI's expected ECR name. SQL execution and fresh local public-schema generation remain mandatory; no previous artifact is substituted for current verification. If both official registries are unavailable/rate-limited, the job fails and requires provider quota recovery rather than a bypass.
