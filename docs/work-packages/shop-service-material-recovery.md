@@ -1,6 +1,6 @@
 # SS-SERV-002 recovery
 
-Status: implementation in progress; draft checkpoint is not merge-ready.
+Status: implemented; local verification complete; draft awaits required real Supabase/combined CI.
 
 Workspace: saved cloud `/workspace/service-material-recovery`; branch `codex/shop-suit/service-material-recovery`.
 Verified staging: `4c1ac6cc9652e3fedfc3e9a7368962baeb7c7290`.
@@ -28,3 +28,7 @@ Initial verification: Node preflight passed with no errors. Root pnpm entry init
 Implementation checkpoint: unified completion migration, optional immutable recipes/units, FIFO consumption, appointment integration, walk-in/multi-unit commissions using the tax owner's pre-tax snapshot, supported offline replay/reconciliation, shared UI and Shop adapters.
 
 Local verification: Shop typecheck and changed-file lint pass; strict UI boundaries and atomic route registry pass; materials SQL suite and two-session stock race pass in disposable PostgreSQL 17 with explicit provider stubs. Actual Supabase image extraction exceeded disk capacity; no existing data/images were deleted. Real Supabase workflow added. Fresh replay identified a syntax defect in tax parent b0081657 (its subsequent d4768af1 checkpoint fixes it); parent update will be incorporated before final validation.
+
+Latest verification and exact limitations: `apps/shop-suit/docs/SS-SERV-002-verification.md`. Tax parent syntax/retired-plan fixture fixes have been incorporated.
+
+Final local acceptance: six EN/AR browser cases, 322 Shop unit tests, all focused SQL suites/concurrency, Shop typecheck/build/lint and strict workspace/UI checks pass. Broad repository test limitations and the precise 29.999 stock fixture mismatch are explicitly recorded in the verification document.

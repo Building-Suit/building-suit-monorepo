@@ -31,14 +31,17 @@ const copy = computed<BsServiceWorkCopy>(() => locale.value === 'ar' ? {
 })
 const { data, pending: loading, error, refresh } = useAsyncData(() => `shop-data:service-materials:${currentId.value}:${currentLocationId.value}:${saleId.value}:${offset.value}`, async () => {
  if (!currentId.value || !currentLocationId.value) return null
- const key = `service-fulfillment:${saleId.value}:${offset.value}`
- if (!counter.online.value && saleId.value) return counter.cached<{context: Context; recipes: RecipeContext | null}>(key)
+ const key = 'service-fulfillment'
+ if (!counter.online.value && saleId.value) {
+  const cached = await counter.cached<{invoiceId: string; offset: number; value: {context: Context; recipes: RecipeContext | null}}>(key)
+  return cached?.invoiceId === saleId.value && cached.offset === offset.value ? cached.value : null
+ }
  const recipes = await rpc.rpc('service_recipe_context', {p_shop_id: currentId.value, p_offset: offset.value})
  if (!saleId.value) { if (recipes.error) throw recipes.error; return {context: {lines: []} as Context, recipes: recipes.data as RecipeContext} }
  const result = await rpc.rpc('service_fulfillment_context', {p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_invoice_id: saleId.value, p_offset: offset.value})
  if (result.error) throw result.error
  const value = {context: result.data as Context, recipes: recipes.error ? null : recipes.data as RecipeContext}
- await counter.cache(key, {context: value.context, recipes: null})
+ await counter.cache(key, {invoiceId: saleId.value, offset: offset.value, value: {context: {totalCount: 0, lines: value.context.lines.map(line => ({id: line.id, name: line.name, quantity: line.quantity, completedQuantity: line.completedQuantity, history: []}))}, recipes: null}})
  return value
 }, { watch: [currentId, currentLocationId, saleId, offset], default: () => null })
 watch([currentId, currentLocationId, saleId], () => { recordAction.complete(); pending.value = false; retainedRequest = null; correctionMode.value = false; actionError.value = ''; success.value = ''; form.value = {target: '', quantity: '1', reason: '', effectiveAt: '', override: false, materials: [], unit: 'each'} })

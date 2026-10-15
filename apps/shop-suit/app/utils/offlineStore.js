@@ -71,7 +71,7 @@ export function createOfflineStore({ scope, indexedDB = globalThis.indexedDB, cr
   return {
     async cache(key, value) { return exclusive(async () => {
       // Each cache key is an owning product allowlist entry; never a URL response cache.
-      if (!['catalog', 'context', 'shift', 'categories'].includes(key)) throw new Error('OFFLINE_CACHE_FORBIDDEN')
+      if (!['catalog', 'context', 'shift', 'categories', 'service-fulfillment'].includes(key)) throw new Error('OFFLINE_CACHE_FORBIDDEN')
       await put(`cache:${key}`, { expires: now() + CACHE_TTL, value })
     }) },
     async cached(key) { return exclusive(async () => {
@@ -84,7 +84,7 @@ export function createOfflineStore({ scope, indexedDB = globalThis.indexedDB, cr
     }) },
     async clearCache() { return exclusive(async () => {
       const db = await open(); const tx = db.transaction('records', 'readwrite'); const done = finished(tx)
-      for (const key of ['catalog', 'context', 'shift', 'categories']) tx.objectStore('records').delete(`cache:${key}`)
+      for (const key of ['catalog', 'context', 'shift', 'categories', 'service-fulfillment']) tx.objectStore('records').delete(`cache:${key}`)
       await done
     }) },
     async enqueue(command, localId = crypto.randomUUID()) { return exclusive(async () => {

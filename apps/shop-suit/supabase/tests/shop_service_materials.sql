@@ -59,6 +59,25 @@ begin
  begin perform public.complete_service(gen_random_uuid(),shop,loc,line,1);raise exception 'Shortage accepted';exception when check_violation then null;end;
  if (public.service_fulfillment_context(shop,loc,sale)->'lines'->0->>'completedQuantity')::numeric<>0 then raise exception 'Shortage left fulfillment';end if;
  begin perform public.complete_service(gen_random_uuid(),shop,loc,line,0.001);raise exception 'Unsupported precision rounded';exception when invalid_parameter_value then null;end;
+ -- Existing stock precision is two decimals: reject 29.999 rather than round it.
+ begin perform public.save_service_recipe(gen_random_uuid(),shop,service,null,jsonb_build_array(jsonb_build_object('productId',product,'unit','mL','quantity',29.999)),'Unsupported precision');raise exception 'Sub-cent stock precision accepted';exception when invalid_parameter_value then null;end;
+ -- Authorized actual usage is independently captured; near-boundary shortage is atomic.
+ declare actual_product uuid; actual_sale uuid; actual_line uuid; usage jsonb;
+ begin
+  actual_product:=public.save_product(shop,null,'Actual use mL',null,null,1);
+  perform public.define_service_material_unit(shop,actual_product,'mL');
+  perform public.adjust_stock(gen_random_uuid(),shop,actual_product,29.99,1,'Representable near-boundary opening');
+  actual_sale:=public.save_sale_draft(gen_random_uuid(),shop,null,customer,null,jsonb_build_array(jsonb_build_object('item_type','service','source_id',service,'quantity',1)));
+  select id into actual_line from public.invoice_items where invoice_id=actual_sale;
+  perform public.issue_sale(gen_random_uuid(),shop,actual_sale);
+  usage:=jsonb_build_array(jsonb_build_object('productId',actual_product,'unit','mL','quantity',30));
+  begin perform public.complete_service(gen_random_uuid(),shop,loc,actual_line,1,null,usage,'Actual shortage');raise exception 'Near-boundary shortage accepted';exception when check_violation then null;end;
+  if (public.service_fulfillment_context(shop,loc,actual_sale)->'lines'->0->>'completedQuantity')::numeric<>0 then raise exception 'Failed actual use left completion';end if;
+  if (select sum(remaining_quantity) from public.inventory_batches where product_id=actual_product)<>29.99 then raise exception 'Near-boundary failure changed stock';end if;
+  usage:=jsonb_build_array(jsonb_build_object('productId',actual_product,'unit','mL','quantity',2));
+  perform public.complete_service(gen_random_uuid(),shop,loc,actual_line,1,null,usage,'Manager actual use');
+  if (public.service_fulfillment_context(shop,loc,actual_sale)->'lines'->0->'history'->0->'materials'->0->>'quantity')::numeric<>2 then raise exception 'Actual use not captured';end if;
+ end;
  -- Multi-unit recipe-free service: full-line fulfillment and full payment required.
  perform public.save_service_recipe(gen_random_uuid(),shop,service,null,'[]','Multi-unit without recipe');
  sale:=public.save_sale_draft(gen_random_uuid(),shop,null,customer,null,jsonb_build_array(jsonb_build_object('item_type','service','source_id',service,'quantity',2)));

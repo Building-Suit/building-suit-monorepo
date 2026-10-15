@@ -10,14 +10,14 @@ Appointment completion executes the same atomic command. Unlinked appointments r
 
 Refunds and sale corrections do not restore consumed material: consumption movements reference fulfillment IDs, separately from sale stock movements. `correct_service_material` is a manager-only, reasoned, idempotent partial restoration bounded by the original consumed FIFO allocation. It appends a correction and stock movement; it never edits consumption history. No automatic commission changes arise from material corrections.
 
-The existing encrypted offline vault holds service completion commands with stable request IDs. Synced means the server confirmed completion. Pending and stock/permission conflicts remain visible. Reconciliation either reports the committed fulfillment or atomically tombstones the original request, preventing late posting. Offline completions use the recipe active when accepted by the server, not a stale cached estimate. Offline recipe changes and actual-usage overrides require live manager context.
+The existing encrypted offline vault caches only one service-line projection (IDs, names and quantities); audit history/reasons require connection. It holds service completion commands with stable request IDs. Synced means the server confirmed completion. Pending and stock/permission conflicts remain visible. Reconciliation either reports the committed fulfillment or atomically tombstones the original request, preventing late posting. Offline completions use the recipe active when accepted by the server, not a stale cached estimate. Offline recipe changes and actual-usage overrides require live manager context.
 
 ## Contracts
 
 - `define_service_material_unit(shop, product, unit) -> void`: manager; unused product only; immutable unit declaration.
 - `save_service_recipe(request, shop, service, effectiveAt|null, materials, reason) -> uuid`: manager; null means now; no past effective time; materials use `{productId, unit, quantity}` per service unit.
 - `complete_service(request, shop, location, line|null, quantity, appointment|null, actualMaterials|null, reason) -> fulfillment uuid`: authorized sales and location access; appointment access when present; issued uncorrected sales may be unpaid. Null actual materials applies active recipe; a supplied array requires manager authority and uses total actual amounts for this completion.
-- `service_fulfillment_context(shop, location, invoice|null) -> {lines}`: authorized line quantities, completed quantities, immutable history and FIFO allocations.
+- `service_fulfillment_context(shop, location, invoice|null, offset=0) -> {totalCount, lines}`: authorized line quantities, completed quantities, immutable history and FIFO allocations; completion history is server-paginated in pages of 50.
 - `service_recipe_context(shop, offset=0)`: manager context; recipe version history paginated in pages of 50.
 - `correct_service_material(request, shop, consumption, quantity, reason) -> correction uuid`: explicit audited restoration to original layer, bounded cumulatively.
 - `reconcile_service_completion(shop, originalArgs, resolutionRequest, reason)`: `{state:'synced', invoiceId:fulfillmentUuid}` or `{state:'cancelled', resolutionRequestId}`. The legacy queue result field `invoiceId` carries a fulfillment ID here; no receipt link is fabricated.

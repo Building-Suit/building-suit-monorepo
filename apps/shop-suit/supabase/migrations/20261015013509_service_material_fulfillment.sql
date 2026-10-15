@@ -133,8 +133,8 @@ language sql stable security definer set search_path='' as $$
 $$;
 revoke all on function shop_private.service_completed_quantity(uuid) from public,anon,authenticated,service_role;
 
-create function public.complete_service(p_request_id uuid,p_shop_id uuid,p_location_id uuid,p_line_id uuid,p_quantity numeric,
- p_appointment_id uuid default null,p_materials jsonb default null,p_reason text default 'Service performed') returns uuid
+create function shop_private.complete_service(p_request_id uuid,p_shop_id uuid,p_location_id uuid,p_line_id uuid,p_quantity numeric,
+ p_appointment_id uuid default null,p_materials jsonb default null,p_reason text default 'Service performed',p_from_transition boolean default false) returns uuid
 language plpgsql security definer set search_path='' as $$
 declare actor uuid; line public.invoice_items%rowtype; sale public.invoices%rowtype; ap public.appointments%rowtype;
  recipe public.service_recipe_versions%rowtype; previous public.service_fulfillments%rowtype;
@@ -169,7 +169,7 @@ begin
  if p_appointment_id is not null then
   perform shop_private.appointment_actor_profile(p_shop_id,'appointments.manage');
   select * into ap from public.appointments where id=p_appointment_id and shop_id=p_shop_id for update;
-  if not found or ap.location_id<>p_location_id or ap.status not in('in_service','completed') or p_quantity<>1
+  if not found or ap.location_id<>p_location_id or not (ap.status='in_service' or (p_from_transition and ap.status='completed')) or p_quantity<>1
    or (p_line_id is not null and (ap.service_id<>service or ap.sale_id is distinct from sale.id))
    or (p_line_id is null and ap.sale_id is not null) then
    raise exception 'INVALID_SERVICE_APPOINTMENT' using errcode='23514';end if;
@@ -219,6 +219,12 @@ begin
  if sale.id is not null then perform shop_private.reconcile_commission(sale.id);end if;
  return result;
 end;$$;
+revoke all on function shop_private.complete_service(uuid,uuid,uuid,uuid,numeric,uuid,jsonb,text,boolean) from public,anon,authenticated,service_role;
+create function public.complete_service(p_request_id uuid,p_shop_id uuid,p_location_id uuid,p_line_id uuid,p_quantity numeric,
+ p_appointment_id uuid default null,p_materials jsonb default null,p_reason text default 'Service performed') returns uuid
+language sql security definer set search_path='' as $$
+ select shop_private.complete_service(p_request_id,p_shop_id,p_location_id,p_line_id,p_quantity,p_appointment_id,p_materials,p_reason,false)
+$$;
 revoke all on function public.complete_service(uuid,uuid,uuid,uuid,numeric,uuid,jsonb,text) from public,anon;
 grant execute on function public.complete_service(uuid,uuid,uuid,uuid,numeric,uuid,jsonb,text) to authenticated;
 
@@ -330,7 +336,7 @@ begin
     if matches<>1 then raise exception 'APPOINTMENT_SERVICE_LINE_AMBIGUOUS' using errcode='23514';end if;
    end if;
    req:=nullif(current_setting('shop.appointment_request_id',true),'')::uuid;
-   perform public.complete_service(req,new.shop_id,new.location_id,line,1,new.id,null,'Appointment performed');
+   perform shop_private.complete_service(req,new.shop_id,new.location_id,line,1,new.id,null,'Appointment performed',true);
   end if;
  elsif new.sale_id is not null and old.sale_id is null then
   select * into f from public.service_fulfillments where appointment_id=new.id and line_id is null;
