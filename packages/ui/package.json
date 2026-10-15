@@ -329,7 +329,10 @@
     "./types/offlineCounterPresentation": "./src/types/offlineCounterPresentation.ts",
     "./templates/BsOfflineCounterStatus": "./src/templates/BsOfflineCounterStatus.vue",
     "./types/commissionPresentation": "./src/types/commissionPresentation.ts",
-    "./templates/BsCommissionPolicyPage": "./src/templates/BsCommissionPolicyPage.vue"
+    "./templates/BsCommissionPolicyPage": "./src/templates/BsCommissionPolicyPage.vue",
+    "./types/shopTaxPresentation": "./src/types/shopTaxPresentation.ts",
+    "./molecules/BsShopTaxRuleFields": "./src/molecules/BsShopTaxRuleFields.vue",
+    "./templates/BsShopTaxSettingsPage": "./src/templates/BsShopTaxSettingsPage.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",
