@@ -72,7 +72,7 @@ watch(categoryFilter, () => { catalogPage.value = 1 })
 
 const locationChanged = computed(() => Boolean(transactionLocationId.value && currentLocationId.value !== transactionLocationId.value))
 const taxLines = computed(() => lines.value.map(line => ({ item_type: line.itemType, source_id: line.sourceId, quantity: Number(line.quantity) })))
-const { data: taxQuote, pending: taxPending, error: taxError } = useSaleTaxQuote(currentId, currentLocationId, taxLines, counter.online)
+const { data: taxQuote, pending: taxPending, error: taxError } = useSaleTaxQuote(currentId, currentLocationId, taxLines, counter)
 const total = computed(() => Number(counter.online.value ? taxQuote.value?.total ?? cartTotal(lines.value) : cartTotal(lines.value)))
 const selectedStaff = computed(() => context.value.staff.find(member => member.id === staffId.value))
 

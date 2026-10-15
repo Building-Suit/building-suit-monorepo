@@ -361,7 +361,7 @@ async function issue() {
       refresh(),
       refreshNuxtData('shop-data:sales'),
       refreshNuxtData('shop-data:inventory-overview'),
-      refreshNuxtData('shop-data:recent-invoices'),
+      refreshNuxtData('shop-data:recent-invoices'), refreshTax(),
     ])
     pushToast({ tone: 'success', title: saleCopy(t, 'sales.issuedSuccess', sale.value?.lines ?? []) })
   }

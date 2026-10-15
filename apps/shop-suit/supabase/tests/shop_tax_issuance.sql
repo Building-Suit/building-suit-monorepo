@@ -40,6 +40,22 @@ begin
  perform public.checkout_customerless_sale(gen_random_uuid(),shop,sale,129.96,now(),'cash',null);
  select total_amount into amount from public.invoices where id=sale;
  if amount<>129.96 then raise exception 'Customerless total wrong %',amount; end if;
+ -- Discount shares and taxed commissions survive full correction at the old rate.
+ sale:=public.save_sale_draft(gen_random_uuid(),shop,null,customer,null,jsonb_build_array(jsonb_build_object('item_type','product','source_id',product,'quantity',1)));
+ perform public.set_sale_order_discount(shop,sale,14);
+ select id into line from public.invoice_items where invoice_id=sale;
+ perform public.assign_sale_commission(shop,line,member,null);
+ perform public.issue_sale(gen_random_uuid(),shop,sale);
+ snap:=public.get_sale_tax_snapshot(shop,sale);
+ if (snap->>'net')::numeric<>100 or (snap->>'tax')::numeric<>14 or (snap->'lines'->0->>'orderDiscount5')::numeric<>14 then raise exception 'Order discount integrated incorrectly %',snap; end if;
+ perform public.record_customer_receipt(gen_random_uuid(),shop,customer,114,now(),'cash',null,null,jsonb_build_array(jsonb_build_object('invoice_id',sale,'amount',114)));
+ commission:=public.commission_history(shop,sale)->'lines'->0;
+ if (commission->>'earned')::numeric<>10 then raise exception 'Discount taxed commission earned on wrong base'; end if;
+ perform public.correct_location_sale(gen_random_uuid(),shop,location,sale,clock_timestamp(),'Tax sale full correction',null);
+ commission:=public.commission_history(shop,sale)->'lines'->0;
+ if (commission->>'earned')::numeric<>10 or (commission->>'adjustments')::numeric<>-10 then raise exception 'Tax correction failed to reverse original commission %',commission; end if;
+ if public.get_sale_tax_snapshot(shop,sale)<>snap then raise exception 'Correction repriced tax snapshot'; end if;
+
 end; $$;
 reset role;
 do $$ begin
