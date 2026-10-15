@@ -126,8 +126,14 @@ test('production sitemap, metadata and sensitive routes remain correct', async (
   expect(structured).not.toHaveProperty('aggregateRating')
   const headers = { host: 'shop.building-suit.com', 'x-forwarded-proto': 'https' }
   const sitemap = await request.get('http://127.0.0.1:4337/sitemap.xml', { headers })
-  expect((await sitemap.text()).match(/<loc>/g)).toHaveLength(7)
-  expect(await sitemap.text()).not.toMatch(/billing|dashboard|auth|pricing|changelog/)
+  const sitemapText = await sitemap.text()
+  const locations = [...sitemapText.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1])
+  expect(locations).toEqual(['/', '/about', '/contact', '/terms', '/privacy', '/delivery-shipping', '/refund-cancellation', '/changelog'].map(path => origin + path))
+  expect(sitemapText).not.toMatch(/billing|dashboard|auth|pricing/)
+  await page.goto(origin + '/changelog')
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(1)
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', origin + '/changelog')
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'index, follow')
   for (const path of ['/auth/signup', '/billing']) {
     const response = await request.get('http://127.0.0.1:4337' + path, { headers, maxRedirects: 0 })
     expect(response.headers()['x-robots-tag']).toBe('noindex, nofollow')
