@@ -6,7 +6,7 @@ grant select on eta_fixture to authenticated;
 select set_config('request.jwt.claim.sub',owner::text,true),set_config('request.jwt.claim.role','authenticated',true) from eta_fixture;
 set local role authenticated;
 do $$
-declare shop uuid; location uuid; product uuid; customer uuid; legacy uuid; branch_b uuid; draft_b uuid; usd_shop uuid; usd_location uuid; usd_product uuid; usd_sale uuid; sale uuid; req uuid:=gen_random_uuid(); version uuid; job uuid; conf jsonb; before jsonb;
+declare shop uuid; location uuid; product uuid; customer uuid; legacy uuid; branch_b uuid; draft_b uuid; usd_shop uuid; usd_location uuid; usd_product uuid; usd_sale uuid; sale uuid; req uuid:=gen_random_uuid(); first_queue_request uuid:=gen_random_uuid(); version uuid; job uuid; conf jsonb; before jsonb;
 begin
  shop:=public.create_owner_shop('ETA fixture','mixed'::public.business_mode);
  select id into location from public.shop_locations where shop_id=shop and is_default;
@@ -32,10 +32,11 @@ begin
  for idx in 1..2 loop
  sale:=public.save_sale_draft(gen_random_uuid(),shop,null,customer,null,jsonb_build_array(jsonb_build_object('item_type','product','source_id',product,'quantity',1)));
  perform public.issue_sale(gen_random_uuid(),shop,sale);
- job:=public.queue_eta_receipt(gen_random_uuid(),shop,sale,'{"type":"P"}','C');
+ job:=public.queue_eta_receipt(case when idx=1 then first_queue_request else gen_random_uuid() end,shop,sale,'{"type":"P"}','C');
  if public.queue_eta_receipt(gen_random_uuid(),shop,sale,'{"type":"P"}','C')<>job then raise exception 'Same sale queued twice'; end if;
  if idx=1 then perform set_config('eta_test.first',job::text,true);end if;
  end loop;
+ begin perform public.queue_eta_receipt(first_queue_request,shop,sale,'{"type":"P"}','C');raise exception 'Request from another sale was accepted';exception when unique_violation then if sqlerrm<>'ETA_REQUEST_CONFLICT' then raise;end if;end;
  perform set_config('eta_test.shop',shop::text,true);perform set_config('eta_test.sale',sale::text,true);perform set_config('eta_test.location',location::text,true);
  before:=public.get_sale_tax_snapshot(shop,sale);
  perform public.save_eta_configuration(gen_random_uuid(),shop,jsonb_set(conf,'{profile,legalName}','"Changed merchant"'),'Changed for future only');
