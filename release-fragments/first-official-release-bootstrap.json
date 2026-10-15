@@ -1,0 +1,9 @@
+{
+  "id": "first-official-release-bootstrap",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [".github/workflows/ci.yml", "AGENTS.md", "docs/agent-workflows.md", "docs/shared/changelog-versioning.md", "docs/shared/release-publication-runbook.md", "apps/super-admin-suit/supabase/migrations/20261015212440_first_official_release_bootstrap.sql", "tooling/releases/catalog-disposable.mjs", "tooling/releases/bootstrap-disposable.mjs"],
+  "reason": "First-version catalog initialization and private provenance bookkeeping only. No new public capability, operational product activation or fabricated historical release."
+}

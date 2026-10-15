@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { testBootstrap } from './bootstrap-disposable.mjs'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createChangelogClient } from '../../packages/data-access/src/changelog.ts'
 import { filterChangelog, selectChangelogReleases, isChangelogNew } from '../../packages/contracts/src/changelog.ts'
@@ -23,9 +24,9 @@ const request = (sha,parent,fragments) => ({repository:'Building-Suit/building-s
 const accept = row => JSON.parse(sql(`${jwt} select public.release_stage_accept(${json(row)});`).split('\n').at(-1))
 const publish = (env,ref,rows) => JSON.parse(sql(`${jwt} select public.release_publish('${env}','refs/heads/${ref}','${three}',${json(rows)});`).split('\n').at(-1))
 const fails = (statement, pattern) => assert.throws(()=>sql(statement),pattern)
-async function parallelSql(statement) {
+async function parallelSql(statement, database = 'postgres') {
   return new Promise((resolve,reject)=>{
-    const child=spawn('docker',['exec','-i',container,'psql','-U','postgres','-v','ON_ERROR_STOP=1','-At'])
+    const child=spawn('docker',['exec','-i',container,'psql','-U','postgres','-d',database,'-v','ON_ERROR_STOP=1','-At'])
     let out='',err='';child.stdout.on('data',value=>out+=value);child.stderr.on('data',value=>err+=value)
     child.on('close',code=>code===0?resolve(out.trim()):reject(new Error(err)));child.stdin.end(statement)
   })
@@ -121,5 +122,7 @@ try {
   assert.ok(teaser.every(row=>isChangelogNew(row,client.serverNow)&&!isChangelogNew(row,expiry)))
   for(const forbidden of ['BS-TEST','fragments','sourceSha','parentSha','paths','classification','digest','ordinal','baseline_evidence']) assert.ok(!JSON.stringify(productionFeed).includes(forbidden),forbidden)
   if(outputArgs[1]) writeFileSync(outputArgs[1],JSON.stringify(productionFeed)+'\n')
+  await testBootstrap({ sql, parallelDatabaseSql: (database, statement) => parallelSql(statement, database), databaseSql: (database, statement) => docker(['exec','-i',container,'psql','-U','postgres','-d',database,'-v','ON_ERROR_STOP=1','-At'], statement),
+    migration: new URL('../../apps/super-admin-suit/supabase/migrations/20261015212440_first_official_release_bootstrap.sql', import.meta.url) })
   console.log('Disposable PostgreSQL release acceptance passed: atomic allocation, concurrent retry, ordering, recovery, authorization, immutable timestamps, projection and batch promotion')
 } finally { docker(['rm','-f',container]) }
