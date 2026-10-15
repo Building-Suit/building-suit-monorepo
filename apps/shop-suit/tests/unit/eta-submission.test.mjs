@@ -92,3 +92,17 @@ test('ambiguous POST recovery requires provider document, taxpayer and POS evide
  await assert.rejects(recover(job.id,'recovered-1'),/EVIDENCE_REQUIRED/);assert.equal(calls.some(call=>call.name==='shop_eta_link_recovery'),false)
  matched=true;assert.deepEqual(await recover(job.id,'recovered-1'),{state:'submitted'});assert.equal(calls.at(-1).name,'shop_eta_link_recovery')
 })
+
+test('Edge dispatcher rejects browser/anonymous callers and stays disabled until server setup',async()=>{
+ const original=globalThis.Deno
+ let handler
+ const values={SUPABASE_SERVICE_ROLE_KEY:'synthetic-server-only'}
+ globalThis.Deno={env:{get:key=>values[key]},serve:fn=>{handler=fn}}
+ try {
+  await import('../../supabase/functions/shop-eta-dispatch/index.ts')
+  assert.equal((await handler(new Request('https://example.invalid',{method:'POST'}))).status,403)
+  assert.equal((await handler(new Request('https://example.invalid',{method:'POST',headers:{authorization:'Bearer synthetic-browser-key'}}))).status,403)
+  const response=await handler(new Request('https://example.invalid',{method:'POST',headers:{authorization:'Bearer synthetic-server-only'}}))
+  assert.equal(response.status,503);assert.deepEqual(await response.json(),{state:'disabled'})
+ } finally {globalThis.Deno=original}
+})

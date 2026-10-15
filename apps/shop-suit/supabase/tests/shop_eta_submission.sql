@@ -1,7 +1,7 @@
 -- Synthetic fixtures; disposable database only. Caller wraps in transaction.
-create temporary table eta_fixture as select gen_random_uuid() owner,gen_random_uuid() outsider;
+create temporary table eta_fixture as select gen_random_uuid() owner,gen_random_uuid() outsider,gen_random_uuid() currency_owner;
 insert into auth.users(id,email,encrypted_password,aud,role,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
-select id,id::text||'@eta.invalid','x','authenticated','authenticated',now(),'{}','{}',now(),now() from(select owner id from eta_fixture union all select outsider from eta_fixture)u;
+select id,id::text||'@eta.invalid','x','authenticated','authenticated',now(),'{}','{}',now(),now() from(select owner id from eta_fixture union all select outsider from eta_fixture union all select currency_owner from eta_fixture)u;
 grant select on eta_fixture to authenticated;
 select set_config('request.jwt.claim.sub',owner::text,true),set_config('request.jwt.claim.role','authenticated',true) from eta_fixture;
 set local role authenticated;
@@ -35,12 +35,11 @@ begin
  if public.queue_eta_receipt(gen_random_uuid(),shop,sale,'{"type":"P"}','C')<>job then raise exception 'Same sale queued twice'; end if;
  if idx=1 then perform set_config('eta_test.first',job::text,true);end if;
  end loop;
- if (select source->'profile'->>'legalName' from public.eta_outbox where id=job)<>'Test merchant' then raise exception 'Original merchant identity changed';end if;
  perform set_config('eta_test.shop',shop::text,true);perform set_config('eta_test.sale',sale::text,true);perform set_config('eta_test.location',location::text,true);
  before:=public.get_sale_tax_snapshot(shop,sale);
  perform public.save_eta_configuration(gen_random_uuid(),shop,jsonb_set(conf,'{profile,legalName}','"Changed merchant"'),'Changed for future only');
  if public.get_sale_tax_snapshot(shop,sale)<>before then raise exception 'ETA setup repriced sale'; end if;
- if (select source->'profile'->>'legalName' from public.eta_outbox where id=job)<>'Test merchant' then raise exception 'Queued merchant identity changed';end if;
+ perform set_config('request.jwt.claim.sub',(select currency_owner::text from eta_fixture),true);
  usd_shop:=public.create_owner_shop('Non-EGP ETA fixture','mixed'::public.business_mode);
  perform public.save_business_currency(usd_shop,'USD');
  usd_product:=public.save_product(usd_shop,null,'USD item',null,null,1);
@@ -54,6 +53,7 @@ reset role;
 do $$
 declare job jsonb; second jsonb; doc text:=repeat('a',64); payload text; lease uuid;
 begin
+ if (select source->'profile'->>'legalName' from public.eta_outbox where id=current_setting('eta_test.first')::uuid)<>'Test merchant' then raise exception 'Original merchant identity changed';end if;
  if has_table_privilege('authenticated','public.eta_outbox','SELECT') or has_table_privilege('authenticated','public.eta_profile_versions','INSERT') or has_function_privilege('authenticated','public.shop_eta_claim()','EXECUTE') then raise exception 'ETA direct access leaked';end if;
  job:=public.shop_eta_claim();lease:=(job->>'lease_id')::uuid;
  if job->>'id'<>current_setting('eta_test.first') then raise exception 'FIFO claim failed';end if;
