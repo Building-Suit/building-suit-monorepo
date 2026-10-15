@@ -12,6 +12,7 @@
   "disposition": "internal",
   "paths": [
     ".github/workflows/shop-eta-disposable.yml",
+    ".github/workflows/account-provisioning-disposable.yml",
     "packages/ui",
     "tooling/database/test-shop-eta-einvoice-local.mjs",
     "tooling/database/test-shop-eta-einvoice-concurrency.mjs",

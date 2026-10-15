@@ -1453,8 +1453,10 @@ export type Database = {
         Row: {
           adapter_version: string
           attempts: number
+          channel: string
           created_at: string
-          device_serial: string
+          created_by_profile_id: string | null
+          device_serial: string | null
           document_uuid: string | null
           error_code: string | null
           id: string
@@ -1464,9 +1466,11 @@ export type Database = {
           location_id: string
           next_attempt_at: string
           payload: string | null
+          payload_hash: string | null
           profile_version_id: string
           request_id: string
           shop_id: string
+          signing_certificate_fingerprint: string | null
           source: Json
           state: string
           submission_uuid: string | null
@@ -1475,8 +1479,10 @@ export type Database = {
         Insert: {
           adapter_version?: string
           attempts?: number
+          channel?: string
           created_at?: string
-          device_serial: string
+          created_by_profile_id?: string | null
+          device_serial?: string | null
           document_uuid?: string | null
           error_code?: string | null
           id?: string
@@ -1486,9 +1492,11 @@ export type Database = {
           location_id: string
           next_attempt_at?: string
           payload?: string | null
+          payload_hash?: string | null
           profile_version_id: string
           request_id: string
           shop_id: string
+          signing_certificate_fingerprint?: string | null
           source: Json
           state?: string
           submission_uuid?: string | null
@@ -1497,8 +1505,10 @@ export type Database = {
         Update: {
           adapter_version?: string
           attempts?: number
+          channel?: string
           created_at?: string
-          device_serial?: string
+          created_by_profile_id?: string | null
+          device_serial?: string | null
           document_uuid?: string | null
           error_code?: string | null
           id?: string
@@ -1508,15 +1518,24 @@ export type Database = {
           location_id?: string
           next_attempt_at?: string
           payload?: string | null
+          payload_hash?: string | null
           profile_version_id?: string
           request_id?: string
           shop_id?: string
+          signing_certificate_fingerprint?: string | null
           source?: Json
           state?: string
           submission_uuid?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "eta_outbox_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "eta_outbox_invoice_id_shop_id_location_id_fkey"
             columns: ["invoice_id", "shop_id", "location_id"]
@@ -9565,6 +9584,10 @@ export type Database = {
         Args: { p_product_id: string; p_shop_id: string; p_unit: string }
         Returns: undefined
       }
+      eta_original_document_reference: {
+        Args: { p_invoice_id: string; p_shop_id: string }
+        Returns: Json
+      }
       eta_settings: {
         Args: { p_offset?: number; p_shop_id: string }
         Returns: Json
@@ -9999,6 +10022,16 @@ export type Database = {
           p_shop_id: string
         }
         Returns: Json
+      }
+      queue_eta_invoice: {
+        Args: {
+          p_invoice_id: string
+          p_reason: string
+          p_receiver: Json
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: string
       }
       queue_eta_receipt: {
         Args: {
@@ -10679,6 +10712,37 @@ export type Database = {
         Returns: Json
       }
       shop_eta_claim: { Args: never; Returns: Json }
+      shop_eta_invoice_acknowledge: {
+        Args: {
+          p_document_uuid: string
+          p_id: string
+          p_lease_id: string
+          p_submission_uuid: string
+        }
+        Returns: undefined
+      }
+      shop_eta_invoice_claim: { Args: never; Returns: Json }
+      shop_eta_invoice_link_recovery: {
+        Args: {
+          p_document_uuid: string
+          p_id: string
+          p_submission_uuid: string
+        }
+        Returns: undefined
+      }
+      shop_eta_invoice_prepare: {
+        Args: {
+          p_certificate_fingerprint: string
+          p_id: string
+          p_lease_id: string
+          p_payload: string
+        }
+        Returns: undefined
+      }
+      shop_eta_invoice_recovery_context: {
+        Args: { p_id: string }
+        Returns: Json
+      }
       shop_eta_link_recovery: {
         Args: {
           p_document_uuid: string
