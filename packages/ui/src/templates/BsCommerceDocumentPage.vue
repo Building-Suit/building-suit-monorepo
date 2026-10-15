@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import type { BsCommerceDocumentCopy, BsCommerceDocumentForm, BsCommerceCorrectionForm, BsCommerceDocumentView } from '../types/commerceDocumentPresentation'
-defineProps<{ copy: BsCommerceDocumentCopy; view: BsCommerceDocumentView; backTo: string; inventoryTo: string; methods: { value: string; label: string }[]; constraints: { referenceLength: number; notesLength: number; reasonMinimum: number; reasonMaximum: number; amountMinimum: number; amountStep: number; quantityStep: number } }>()
+import type { BsReturnForm, BsRefundRecordForm, BsDocumentReturnsCopy, BsDocumentReturnsView } from '../types/documentReturns'
+defineProps<{ returnsCopy?: BsDocumentReturnsCopy; returnsView?: BsDocumentReturnsView; copy: BsCommerceDocumentCopy; view: BsCommerceDocumentView; backTo: string; inventoryTo: string; methods: { value: string; label: string }[]; constraints: { referenceLength: number; notesLength: number; reasonMinimum: number; reasonMaximum: number; amountMinimum: number; amountStep: number; quantityStep: number } }>()
+const returnOpen = defineModel<boolean>('returnOpen', { default: false })
+const refundRecordOpen = defineModel<boolean>('refundRecordOpen', { default: false })
+const returnForm = defineModel<BsReturnForm>('returnForm', { default: () => ({ quantities: {}, dispositions: {}, reason: '' }) })
+const refundRecordForm = defineModel<BsRefundRecordForm>('refundRecordForm', { default: () => ({ reference: '', reason: '' }) })
 const form = defineModel<BsCommerceDocumentForm>('form', { required: true })
 const correctionForm = defineModel<BsCommerceCorrectionForm>('correctionForm', { required: true })
 const dialogOpen = defineModel<boolean>('dialogOpen', { required: true })
 const correctionOpen = defineModel<boolean>('correctionOpen', { required: true })
 const discountOpen = defineModel<boolean>('discountOpen', { default: false })
 const orderDiscount = defineModel<number>('orderDiscount', { default: 0 })
-const emit = defineEmits<{ editOrderDiscount: []; saveOrderDiscount: []; retry: []; issue: []; share: []; payment: []; credit: []; return: []; reverse: [id: string]; refund: [id: string]; correct: []; retryCorrection: []; submit: []; submitCorrection: [] }>()
+const emit = defineEmits<{ startReturn: []; retryReturns: []; previewReturn: []; confirmReturn: []; recordReturnRefund: [id: string]; completeReturnRefund: []; failReturnRefund: []; previousReturns: []; nextReturns: []; editOrderDiscount: []; saveOrderDiscount: []; retry: []; issue: []; share: []; payment: []; credit: []; return: []; reverse: [id: string]; refund: [id: string]; correct: []; retryCorrection: []; submit: []; submitCorrection: [] }>()
 function updateForm<K extends keyof BsCommerceDocumentForm>(key: K, value: BsCommerceDocumentForm[K]) { form.value = { ...form.value, [key]: value } }
 function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, value: BsCommerceCorrectionForm[K]) { correctionForm.value = { ...correctionForm.value, [key]: value } }
 </script>
@@ -47,6 +52,7 @@ function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, valu
         </BsBox>
         <BsText v-else as="p" size="sm" tone="muted">{{ view.correction.notice }}</BsText><BsText as="p" size="sm" tone="muted">{{ view.correction.fullOnly }}</BsText>
       </BsPanel>
+      <BsDocumentReturns v-if="returnsCopy && returnsView" v-model:open="returnOpen" v-model:record-open="refundRecordOpen" v-model:form="returnForm" v-model:record-form="refundRecordForm" :copy="returnsCopy" :view="returnsView" @start="emit('startReturn')" @retry="emit('retryReturns')" @preview="emit('previewReturn')" @confirm="emit('confirmReturn')" @record="emit('recordReturnRefund', $event)" @complete="emit('completeReturnRefund')" @fail="emit('failReturnRefund')" @previous="emit('previousReturns')" @next="emit('nextReturns')" />
       <BsGrid :columns="2">
         <BsPanel padding="md"><BsHeading :level="2">{{ copy.party }}</BsHeading><BsStack v-if="view.party.name" gap="xs">
           <BsText as="p" emphasis="semibold"><BsLink v-if="view.party.to" :to="view.party.to">{{ view.party.name }}</BsLink><template v-else>{{ view.party.name }}</template></BsText>

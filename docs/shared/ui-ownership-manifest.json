@@ -361,6 +361,18 @@
       "adapterBoundary": "Shop supplies authorized service lines, recipe/material projections, decimal quantities, history and commands; shared UI owns composition and UX owns dialog/offline interaction",
       "task": "SS-SERV-002",
       "migrationStatus": "implemented; automated validation in progress"
+    },
+    {
+      "family": "invoice-linked-returns",
+      "owner": "packages/ui",
+      "components": [
+        "BsDocumentReturns",
+        "BsCommerceDocumentPage"
+      ],
+      "interactionOwner": "packages/ux",
+      "adapterBoundary": "Shop supplies immutable return previews, quantities, disposition choices, original-payment allocation and authorized commands; shared UI owns dialogs and audit presentation; useReviewedCommand retains review/request identity through uncertain responses",
+      "task": "SS-PARTIAL-RETURNS-001",
+      "migrationStatus": "implemented; verification in progress"
     }
   ]
 }

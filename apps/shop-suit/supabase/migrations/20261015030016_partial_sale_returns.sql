@@ -436,3 +436,70 @@ begin
 end;
 $$;
 
+
+-- Actual payment totals remain distinct from correction credits and reservations.
+create or replace function shop_private.get_sale(p_shop_id uuid, p_invoice_id uuid)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare v_result jsonb; v_access record; v_payment_access record;
+begin
+  perform shop_private.assert_sale_read_access(p_shop_id);
+  select * into v_access from shop_private.sale_access(p_shop_id);
+  select * into v_payment_access from shop_private.payment_access(p_shop_id);
+  select to_jsonb(invoice) || jsonb_build_object(
+    'canManage', v_access.can_manage, 'canIssue', v_access.can_issue,
+    'canReceivePayment', coalesce(v_payment_access.can_receive, false),
+    'canReversePayment', coalesce(v_payment_access.can_reverse, false),
+    'canRefundPayment', coalesce(v_payment_access.can_refund, false),
+    'amountPaid', case when invoice.status = 'issued'
+      then coalesce((select sum(a.amount) from public.customer_payment_allocations a where a.invoice_id=invoice.id),0)
+      - coalesce((select sum(ad.amount) from public.customer_payment_adjustments ad join public.customer_payment_allocations a on a.id=ad.original_allocation_id where a.invoice_id=invoice.id),0)
+      - coalesce((select sum(p.amount) from public.payments p where p.invoice_id=invoice.id and p.sale_return_refund_id is not null),0) else 0 end,
+    'outstanding', case when invoice.status = 'issued'
+      then shop_private.invoice_outstanding(invoice.id) else invoice.total_amount end,
+    'settlementState', case when invoice.status <> 'issued' then null
+      when shop_private.invoice_outstanding(invoice.id) = 0 then 'paid'
+      when shop_private.invoice_outstanding(invoice.id) = invoice.total_amount then 'unpaid'
+      else 'partial' end,
+    'overdue', invoice.status = 'issued' and invoice.due_date is not null
+      and invoice.due_date < current_date and shop_private.invoice_outstanding(invoice.id) > 0,
+    'lines', (select coalesce(jsonb_agg(to_jsonb(item) order by item.line_order, item.id), '[]'::jsonb)
+      from public.invoice_items item where item.invoice_id = invoice.id),
+    'movements', (select coalesce(jsonb_agg(jsonb_build_object('id', movement.id,
+      'productId', movement.product_id, 'invoiceItemId', movement.invoice_item_id,
+      'batchId', movement.batch_id, 'quantityChange', movement.quantity_change,
+      'unitCostSnapshot', movement.unit_cost_snapshot, 'createdAt', movement.created_at)
+      order by movement.created_at, movement.id), '[]'::jsonb)
+      from public.inventory_movements movement where movement.shop_id = p_shop_id
+        and movement.reference_id = invoice.id and movement.movement_type = 'out'),
+    'payments', case when coalesce(v_payment_access.can_view, false) then (
+      select coalesce(jsonb_agg(event order by event ->> 'eventAt', event ->> 'id'), '[]'::jsonb)
+      from (
+        select jsonb_build_object('id', allocation.id, 'eventType', 'receipt',
+          'paymentId', payment.id, 'allocationId', allocation.id,
+          'amount', allocation.amount, 'eventAt', payment.paid_at, 'method', payment.method,
+          'reference', payment.reference, 'actorProfileId', payment.created_by_profile_id,
+          'remainingEffective', shop_private.allocation_remaining(allocation.id)) event
+        from public.customer_payment_allocations allocation join public.payments payment
+          on payment.id = allocation.payment_id where allocation.invoice_id = invoice.id
+        union all
+        select jsonb_build_object('id', adjustment.id, 'eventType', adjustment.kind,
+          'paymentId', adjustment.original_payment_id,
+          'allocationId', adjustment.original_allocation_id, 'amount', adjustment.amount,
+          'eventAt', adjustment.effective_at, 'method', refund.method,
+          'reference', coalesce(adjustment.reference, refund.reference),
+          'reason', adjustment.reason, 'actorProfileId', adjustment.created_by_profile_id,
+          'remainingEffective', shop_private.allocation_remaining(adjustment.original_allocation_id))
+        from public.customer_payment_adjustments adjustment
+        join public.customer_payment_allocations allocation
+          on allocation.id = adjustment.original_allocation_id
+        left join public.payments refund on refund.id = adjustment.refund_payment_id
+        where allocation.invoice_id = invoice.id
+      ) payment_events
+    ) else '[]'::jsonb end
+  ) into v_result from public.invoices invoice
+  where invoice.id = p_invoice_id and invoice.shop_id = p_shop_id
+    and invoice.status in ('draft', 'issued');
+  return v_result;
+end;
+$$;
+

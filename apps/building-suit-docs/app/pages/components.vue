@@ -461,6 +461,9 @@ const invitationPreviewCopy={
     <BsContentSection :title="isArabic ? 'عمولات اختيارية'  : 'Optional commissions'">
       <BsDescriptionList><BsDescriptionItem term="BsServiceFulfillmentPage">{{ isArabic ? 'وصفات اختيارية، وتنفيذ صريح بالكميات، وسجل FIFO وتسوية الطلبات بدون اتصال وتصحيحات مدققة.' : 'Optional recipes, explicit quantity fulfillment, FIFO history, offline reconciliation and audited corrections. Product adapters own authorization and business commands.' }}</BsDescriptionItem><BsDescriptionItem term="BsCommissionPolicyPage">{{ isArabic ? 'تفعيل النشاط والموظف، ونسب أو مبالغ ثابتة، وإسناد المسودات، وفصل التقديرات والمكتسبات والتعديلات بعد التصدير.' : 'Shop and employee opt-in, percentage or fixed unit rates, draft attribution, and separate estimates, earnings and post-export adjustments. Shop owns authorized commands and financial values.' }}</BsDescriptionItem></BsDescriptionList>
     </BsContentSection>
+    <BsContentSection :title="isArabic ? 'المرتجعات المرتبطة بالفاتورة' : 'Invoice-linked returns'">
+      <BsDescriptionList><BsDescriptionItem term="BsDocumentReturns / BsCommerceDocumentPage">{{ isArabic ? 'كميات وحالة مخزون، ومراجعة تخفيض الدين وتوزيع الدفعات الأصلية، وسجل مستقل لإثبات رد المبلغ. الحساب والصلاحيات من التطبيق.' : 'Quantity and disposition inputs, reviewed debt reduction and original-tender allocation, and separate refund completion evidence/history. Product adapters own financial arithmetic and authorization.' }}</BsDescriptionItem></BsDescriptionList>
+    </BsContentSection>
     <WorkflowPatternCatalogue />
 
     <BsToastHost />

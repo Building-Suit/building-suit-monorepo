@@ -39,6 +39,7 @@ jobs:
             exit 1
           fi
       - run: node tooling/database/test-shop-returns-local.mjs
+      - run: node tooling/database/test-shop-returns-concurrency.mjs
 
       - name: Generate verified public database contract
         run: pnpm exec supabase --workdir apps/shop-suit gen types typescript --local --schema public > "$RUNNER_TEMP/shop-returns-database.types.ts"
