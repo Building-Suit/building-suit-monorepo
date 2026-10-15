@@ -131,7 +131,7 @@ begin
 end;$$;
 reset role;
 do $$declare t text;begin
- foreach t in array array['sale_returns','sale_return_lines','sale_return_stock','sale_return_refunds','sale_return_refund_events'] loop
+ foreach t in array array['sale_return_sources','sale_returns','sale_return_lines','sale_return_stock','sale_return_refunds','sale_return_refund_events'] loop
   if has_table_privilege('authenticated','public.'||t,'SELECT') or has_table_privilege('authenticated','public.'||t,'INSERT') or has_table_privilege('service_role','public.'||t,'UPDATE') then raise exception 'Direct return access %',t;end if;
  end loop;
  if exists(select 1 from public.sale_return_stock s join public.inventory_movements original on original.id=s.movement_id join public.inventory_movements restored on restored.id=s.restoration_movement_id where original.batch_id<>restored.batch_id or original.unit_cost_snapshot<>restored.unit_cost_snapshot) then raise exception 'FIFO cost changed';end if;
@@ -139,3 +139,21 @@ do $$declare t text;begin
  if (select count(*) from public.cash_drawer_events e join public.payments p on p.id=e.payment_id where p.sale_return_refund_id is not null)<>1 then raise exception 'Cash outflow missing or duplicated';end if;
  begin update public.sale_returns set reason='Changed' where id=current_setting('returns.id')::uuid;raise exception 'Return mutable';exception when object_not_in_prerequisite_state then null;end;
 end;$$;
+
+-- A historical issued row with no original snapshot is explicitly unsupported.
+-- Direct synthetic INSERT does not execute the forward issuance capture trigger.
+do $$declare historical uuid; actor uuid;ctx jsonb;
+begin
+ select profile_id into actor from public.shop_memberships where shop_id=current_setting('returns.shop')::uuid and role='owner';
+ insert into public.invoices(shop_id,location_id,created_by_profile_id,issued_by_profile_id,invoice_number,status,issued_at,total_amount,currency)
+ values(current_setting('returns.shop')::uuid,current_setting('returns.loc')::uuid,actor,actor,'HISTORICAL-UNSUPPORTED','issued',clock_timestamp()-interval '1 year',100,'EGP') returning id into historical;
+ perform set_config('returns.historical',historical::text,true);
+end;$$;
+select set_config('request.jwt.claim.sub',owner::text,true) from return_fixture;
+set local role authenticated;
+do $$declare ctx jsonb;begin
+ ctx:=public.sale_return_context(current_setting('returns.shop')::uuid,current_setting('returns.loc')::uuid,current_setting('returns.historical')::uuid);
+ if (ctx->>'supported')::boolean or (ctx->>'canReturn')::boolean then raise exception 'Invented historical return basis';end if;
+ begin perform public.preview_sale_return(current_setting('returns.shop')::uuid,current_setting('returns.loc')::uuid,current_setting('returns.historical')::uuid,'[]');raise exception 'Historical return accepted';exception when object_not_in_prerequisite_state then null;end;
+end;$$;
+reset role;

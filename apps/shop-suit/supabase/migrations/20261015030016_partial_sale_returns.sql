@@ -1,5 +1,34 @@
 -- Invoice-linked append-only corrections. Debt-first is a Building Suit policy.
 -- Refund reservations are obligations, never evidence of money movement.
+-- Forward-only evidence for explicitly disabled/unconfigured tax calculation.
+-- Historical receipts without tax evidence are not interpreted as zero-rated.
+create table public.sale_return_sources (
+ invoice_id uuid primary key,shop_id uuid not null,location_id uuid not null,snapshot jsonb not null,
+ created_at timestamptz not null default clock_timestamp(),
+ foreign key(invoice_id,shop_id,location_id) references public.invoices(id,shop_id,location_id)
+);
+alter table public.sale_return_sources enable row level security;
+revoke all on public.sale_return_sources from public,anon,authenticated,service_role;
+create trigger return_source_immutable before update or delete on public.sale_return_sources for each row execute function shop_private.tax_immutable();
+create trigger return_source_no_truncate before truncate on public.sale_return_sources for each statement execute function shop_private.tax_immutable();
+create function shop_private.capture_return_source() returns trigger language plpgsql security definer set search_path='' as $$
+declare policy public.tax_policy_versions%rowtype; lines jsonb; total numeric;
+begin
+ if old.status<>'draft' or new.status<>'issued' or exists(select 1 from public.sale_tax_snapshots where invoice_id=new.id) then return new;end if;
+ select * into policy from public.tax_policy_versions where shop_id=new.shop_id and effective_at<=statement_timestamp() order by effective_at desc,created_at desc,id desc limit 1;
+ if coalesce((policy.policy->>'enabled')::boolean,false) then return new;end if;
+ select jsonb_agg(jsonb_build_object('id',l.id,'itemType',l.item_type,'originalQuantity',l.quantity,'originalUnitPrice',l.unit_price,
+  'lineDiscount',l.discount_amount,'total',l.total_amount,'net',l.total_amount,'tax',0,'treatment','calculation-disabled') order by l.line_order,l.id),sum(l.total_amount)
+ into lines,total from public.invoice_items l where l.invoice_id=new.id;
+ if lines is null or total<>new.total_amount then return new;end if;
+ insert into public.sale_return_sources(invoice_id,shop_id,location_id,snapshot)
+ values(new.id,new.shop_id,new.location_id,jsonb_build_object('version',1,'source','forward-disabled-calculation','currency',new.currency,
+  'calculationEnabled',false,'policyVersionId',policy.id,'total',total,'net',total,'tax',0,'lines',lines));
+ return new;
+end;$$;
+create trigger zzz_return_source after update of status on public.invoices for each row execute function shop_private.capture_return_source();
+revoke all on function shop_private.capture_return_source() from public,anon,authenticated,service_role;
+
 create table public.sale_returns (
  id uuid primary key default gen_random_uuid(), shop_id uuid not null, location_id uuid not null, invoice_id uuid not null,
  request_id uuid not null, payload jsonb not null, currency text not null, original_document jsonb not null,
@@ -91,21 +120,12 @@ returns numeric language sql stable security definer set search_path='' as $$
  from public.invoices i where i.id=p_invoice_id;
 $$;
 
--- Frozen tax sources preferred. Legacy receipts are supported only when their
--- immutable line totals exactly explain the document total without order discount.
+-- Only immutable issuance evidence is accepted. No historical reconstruction.
 create function shop_private.return_source(p_invoice_id uuid) returns jsonb
-language plpgsql stable security definer set search_path='' as $$
-declare source jsonb; receipt jsonb; lines jsonb; amount numeric;
-begin
- select snapshot into source from public.sale_tax_snapshots where invoice_id=p_invoice_id;
- if source is not null then return source;end if;
- select snapshot into receipt from public.sale_receipt_issue_snapshots where invoice_id=p_invoice_id;
- if receipt is null then return null;end if;
- select jsonb_agg(e||jsonb_build_object('originalQuantity',e->'quantity','originalUnitPrice',e->'unitPrice','tax',0,'net',e->'total') order by e->>'id'),sum((e->>'total')::numeric)
- into lines,amount from jsonb_array_elements(receipt->'lines') e;
- if lines is null or amount is distinct from (receipt->>'total')::numeric then return null;end if;
- return jsonb_build_object('currency',receipt->'currency','total',receipt->'total','net',receipt->'total','tax',0,'lines',lines,'source','immutable-untaxed-receipt');
-end;$$;
+language sql stable security definer set search_path='' as $$
+ select snapshot from public.sale_tax_snapshots where invoice_id=p_invoice_id
+ union all select snapshot from public.sale_return_sources where invoice_id=p_invoice_id limit 1;
+$$;
 
 create function shop_private.return_plan(p_shop_id uuid,p_location_id uuid,p_invoice_id uuid,p_lines jsonb) returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -371,6 +391,7 @@ begin
  if not found then raise exception 'SALE_NOT_FOUND' using errcode='P0002';end if;
  begin perform shop_private.return_actor(p_shop_id,p_location_id);exception when insufficient_privilege then allowed:=false;end;
  source:=shop_private.return_source(sale.id);
+ if exists(select 1 from public.invoice_items where invoice_id=sale.id and round(quantity,2)<>quantity) then source:=null;end if;
  return jsonb_build_object('version',1,'canReturn',allowed and sale.status='issued' and source is not null and not exists(select 1 from public.sale_corrections where invoice_id=sale.id),
  'supported',source is not null,'due',shop_private.invoice_outstanding(sale.id),'currency',sale.currency,
  'lines',(select coalesce(jsonb_agg(jsonb_build_object('id',l.id,'name',l.item_name,'itemType',l.item_type,'quantity',l.quantity,
