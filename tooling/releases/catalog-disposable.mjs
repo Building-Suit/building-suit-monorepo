@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict'
 import { testBootstrap } from './bootstrap-disposable.mjs'
+import { testCandidates } from './candidate-disposable.mjs'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createChangelogClient } from '../../packages/data-access/src/changelog.ts'
 import { filterChangelog, selectChangelogReleases, isChangelogNew } from '../../packages/contracts/src/changelog.ts'
 import { spawnSync, spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 const outputArgs = process.argv.slice(2)
-if (outputArgs.length && (outputArgs.length !== 2 || outputArgs[0] !== '--public-feed' || !outputArgs[1])) throw new Error('Expected optional --public-feed output path')
+if (outputArgs.length && (outputArgs.length !== 2 || !['--public-feed','--candidate-feed'].includes(outputArgs[0]) || !outputArgs[1])) throw new Error('Expected optional --public-feed or --candidate-feed output path')
 const container = `bs-release-test-${randomUUID()}`
 function docker(args, input) {
   const result = spawnSync('docker',args,{input,encoding:'utf8',timeout:120000})
@@ -121,8 +122,9 @@ try {
   const expiry=new Date(Date.parse(productionFeed.entries[0].publishedAt)+48*60*60*1000).toISOString()
   assert.ok(teaser.every(row=>isChangelogNew(row,client.serverNow)&&!isChangelogNew(row,expiry)))
   for(const forbidden of ['BS-TEST','fragments','sourceSha','parentSha','paths','classification','digest','ordinal','baseline_evidence']) assert.ok(!JSON.stringify(productionFeed).includes(forbidden),forbidden)
-  if(outputArgs[1]) writeFileSync(outputArgs[1],JSON.stringify(productionFeed)+'\n')
+  if(outputArgs[0] === '--public-feed') writeFileSync(outputArgs[1],JSON.stringify(productionFeed)+'\n')
   await testBootstrap({ sql, parallelDatabaseSql: (database, statement) => parallelSql(statement, database), databaseSql: (database, statement) => docker(['exec','-i',container,'psql','-U','postgres','-d',database,'-v','ON_ERROR_STOP=1','-At'], statement),
     migration: new URL('../../apps/super-admin-suit/supabase/migrations/20261015212440_first_official_release_bootstrap.sql', import.meta.url) })
+  await testCandidates({ outputPath: outputArgs[0] === '--candidate-feed' ? outputArgs[1] : undefined, sql, parallelDatabaseSql: (database, statement) => parallelSql(statement, database), databaseSql: (database, statement) => docker(['exec','-i',container,'psql','-U','postgres','-d',database,'-v','ON_ERROR_STOP=1','-At'], statement) })
   console.log('Disposable PostgreSQL release acceptance passed: atomic allocation, concurrent retry, ordering, recovery, authorization, immutable timestamps, projection and batch promotion')
 } finally { docker(['rm','-f',container]) }

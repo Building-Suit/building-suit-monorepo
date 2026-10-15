@@ -1,0 +1,14 @@
+{
+  "id": "upcoming-net-release-preview",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["shop-suit"],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": ["apps/shop-suit/app/composables/usePublicChangelog.ts", "apps/shop-suit/tests/e2e/public-changelog.spec.ts", "packages/ui", "packages/contracts"],
+  "reason": "Shop exposes one evolving bilingual upcoming release based on the current production-to-staging net changes, rather than a release per PR.",
+  "notes": {
+    "title": {"en": "One upcoming release", "ar": "إصدار قادم واحد"},
+    "summary": {"en": "Review the combined changes awaiting production in English or Arabic.", "ar": "مراجعة التغييرات المجمعة التي تنتظر النشر الفعلي بالإنجليزية أو العربية."},
+    "details": {"en": "The upcoming release updates as staging changes. Its version and notes freeze only after production deployment succeeds.", "ar": "يتحدث الإصدار القادم مع تغييرات بيئة الاختبار. يثبت إصداره وملاحظاته بعد نجاح النشر الفعلي فقط."}
+  }
+}

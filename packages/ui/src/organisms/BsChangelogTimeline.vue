@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
-import { parseChangelogFeed, filterChangelog, selectChangelogReleases, isChangelogNew } from '@building-suit/contracts'
+import { parseChangelogFeed, filterChangelog, selectChangelogReleases, selectChangelogOverview, isChangelogNew } from '@building-suit/contracts'
 import type { ChangelogFeed, ChangelogLocale, ChangelogCopy, ChangelogEntry, ChangelogFilter } from '@building-suit/contracts'
 const props = withDefaults(defineProps<{
   feed: ChangelogFeed; locale: ChangelogLocale; copy: ChangelogCopy
@@ -13,7 +13,7 @@ const validated = computed(() => parseChangelogFeed(props.feed))
 const filter = computed<ChangelogFilter>(() => ({ suit: props.suit ?? selectedSuit.value, status: props.releasedOnly ? 'released' : (status.value || undefined) as ChangelogEntry['status'] | undefined }))
 const entries = computed(() => props.releaseLimit === undefined
   ? filterChangelog(validated.value, filter.value)
-  : selectChangelogReleases(validated.value, filter.value, props.releaseLimit))
+  : props.releasedOnly ? selectChangelogReleases(validated.value, filter.value, props.releaseLimit) : selectChangelogOverview(validated.value, filter.value, props.releaseLimit))
 const elapsed = ref(0)
 let baseline = 0, timer: ReturnType<typeof setInterval> | undefined
 // Advance a server snapshot by monotonic elapsed time. Browser wall-clock changes have no effect.

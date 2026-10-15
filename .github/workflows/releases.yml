@@ -1,4 +1,4 @@
-name: Publish accepted task releases
+name: Reconcile upcoming releases and freeze production
 on:
   push:
     branches: [stg, main]
@@ -54,7 +54,7 @@ jobs:
         if: steps.publisher.outputs.adopted == 'true'
         with:
           node-version-file: .node-version
-      - name: Reconcile durable catalog and gate publication on deployment readiness
+      - name: Refresh net candidate or freeze exact production release after deployment readiness
         if: steps.publisher.outputs.adopted == 'true'
         env:
           GH_TOKEN: ${{ github.token }}

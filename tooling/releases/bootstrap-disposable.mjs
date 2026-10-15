@@ -164,5 +164,5 @@ export async function testBootstrap({ sql, databaseSql, parallelDatabaseSql, mig
     assert.equal(other('select count(*) from public.release_version_heads;'), '0')
     assert.throws(() => other(`${jwt} select public.release_catalog_state();`), /RELEASE_CONFIGURATION_REQUIRED/)
   }
-  console.log('First-version bootstrap passed: real preserved 0.1.0/0.1.1 replay, private internal consumers, unchanged operational/public registry, atomic recovery, existing-state preservation and production no-op')
+  console.log('Legacy v1 migration compatibility passed (not current policy): preserved reservation replay, private internal consumers, unchanged operational/public registry, atomic recovery, existing-state preservation and production no-op')
 }
