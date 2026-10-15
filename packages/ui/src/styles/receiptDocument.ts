@@ -9,6 +9,7 @@ export const receiptDocumentStyles = String.raw`
 .bs-receipt-heading h2 { font-size: 17px; font-weight: 600; margin-top: 3px; overflow-wrap: anywhere; }
 .bs-receipt-merchant-logo { display: block; width: 48px; height: 48px; object-fit: contain; margin: 0 auto 8px; filter: grayscale(1); }
 .bs-sale-receipt .bs-receipt-title { text-align: center; font-size: 15px; font-weight: 700; letter-spacing: 2.6px; margin: 11px 0 12px; }
+.bs-sale-receipt[lang='en'] .bs-receipt-title { text-transform: uppercase; }
 .bs-sale-receipt[lang='ar'] .bs-receipt-title { font-size: 23px; letter-spacing: normal; margin: 6px 0 7px; }
 .bs-receipt-reprint { text-align: center; font-size: 9px; margin-bottom: 5px !important; }
 .bs-receipt-details { padding-bottom: 9px; border-bottom: 1px dashed var(--bs-component-receipt-separator); margin-bottom: 11px; }

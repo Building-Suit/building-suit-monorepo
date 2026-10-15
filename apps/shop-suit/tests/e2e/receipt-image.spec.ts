@@ -19,6 +19,7 @@ for (const locale of ['en', 'ar']) test(`receipt image clipboard, explicit downl
   await expect(receipt).toHaveCSS('background-color', 'rgb(255, 255, 255)')
   await expect(receipt).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
   await expect(receipt).toContainText('Configured merchant footer')
+  if (locale === 'en') await expect(receipt.locator('.bs-receipt-title')).toHaveCSS('text-transform', 'uppercase')
   const copyButton = page.getByRole('button', { name: locale === 'ar' ? 'نسخ صورة الإيصال' : 'Copy receipt image', exact: true })
   await copyButton.click()
   await expect(page.getByText(locale === 'ar' ? 'تم نسخ صورة الإيصال. يمكنك لصقها في واتساب.' : 'Receipt image copied. Paste it into WhatsApp.', { exact: true })).toBeVisible()

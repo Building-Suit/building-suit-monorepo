@@ -20,7 +20,8 @@ older bars mark visible in the references.
 
 Copy starts `ClipboardItem`/`clipboard.write` in the original click call stack,
 with a PNG promise. Success feedback follows the resolved browser write. There is
-no text fallback. Unsupported/denied copying exposes a separate image-download
+no text fallback. Pending image results and download fallbacks are invalidated
+when the merchant, branch or receipt changes or the page unmounts. Unsupported/denied copying exposes a separate image-download
 action on both receipt and sale-detail screens. Rendering occurs inside the
 browser, uses self-hosted fonts and inline/same-origin assets, and sends no receipt
 data to an image service. It waits for fonts and image decoding, embeds font bytes,

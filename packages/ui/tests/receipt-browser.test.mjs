@@ -24,7 +24,7 @@ const view = {
   // Reference-only merchant text. The renderer never supplies this content.
   footer: 'Tareq Abdelwhap | CEO, CTO & Founder @ Building Suit',
 }
-const copy = { title: 'SALES RECEIPT', reprintLabel: 'REPRINT / COPY', invoice: 'Sale No.', date: 'Date & Time', location: 'Branch', address: 'Address', phone: 'Phone', staff: 'Cashier', customer: 'Customer', items: 'Items', item: 'Product / Service', quantity: 'Qty', unitPrice: 'Unit Price', lineTotal: 'Amount', total: 'Total Paid', payment: 'Payment', reference: 'Reference No.', thankYou: 'Thank you', greeting: 'Hope you have a good day', issuedVia: 'Issued via Shop Suit by Building Suit', compliance: 'This is proof of sale only — not an Egyptian tax invoice or e-receipt approved by the Tax Authority.' }
+const copy = { title: 'Sales Receipt', reprintLabel: 'REPRINT / COPY', invoice: 'Sale No.', date: 'Date & Time', location: 'Branch', address: 'Address', phone: 'Phone', staff: 'Cashier', customer: 'Customer', items: 'Items', item: 'Product / Service', quantity: 'Qty', unitPrice: 'Unit Price', lineTotal: 'Amount', total: 'Total Paid', payment: 'Payment', reference: 'Reference No.', thankYou: 'Thank you', greeting: 'Hope you have a good day', issuedVia: 'Issued via Shop Suit by Building Suit', compliance: 'This is proof of sale only — not an Egyptian tax invoice or e-receipt approved by the Tax Authority.' }
 
 for (const language of ['en', 'ar']) test(`receipt ${language}: deterministic render, original-reference comparison and complete PNG clipboard`, async () => {
   const browser = await chromium.launch({ headless: true, args: ['--disable-lcd-text'] })

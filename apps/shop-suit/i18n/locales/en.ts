@@ -324,7 +324,7 @@ export default defineI18nLocale(async () => ({
     lineTotal: 'Amount',
     subtotal: 'Subtotal',
     discount: 'Discount',
-    total: 'Total paid',
+    total: 'Total Paid',
     payment: 'Payment',
     compliance: 'Proof of sale only — not an Egyptian tax invoice or ETA e-Receipt.',
   },
