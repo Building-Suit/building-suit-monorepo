@@ -8,9 +8,9 @@ export function validateProfile(profile) {
  for (const [key, max, pattern] of [['legalName', 200], ['rin', 9, /^\d{9}$/], ['activityCode', 10, /^\d{4,10}$/]]) if (!str(profile?.[key], max, pattern)) missing.push(key)
  return missing
 }
-export function validateBranch(branch) {
+export function validateBranch(branch, requirePos = true) {
  const missing = []
- for (const [key, max] of [['branchCode', 50], ['deviceSerialNumber', 100]]) if (!str(branch?.[key], max)) missing.push(key)
+ for (const [key, max] of (requirePos ? [['branchCode', 50], ['deviceSerialNumber', 100]] : [['branchCode',50]])) if (!str(branch?.[key], max)) missing.push(key)
  for (const [key, max] of [['governate',100], ['regionCity',100], ['street',200], ['buildingNumber',100]]) if (!str(branch?.address?.[key], max)) missing.push(`address.${key}`)
  if (branch?.address?.country !== 'EG') missing.push('address.country')
  return missing
@@ -49,10 +49,11 @@ export async function receiptUuid(receipt) {
  const digest = await crypto.subtle.digest('SHA-256',new TextEncoder().encode(serializeEta(input)))
  return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('')
 }
-export async function buildReceipt(source, previousUUID = '') {
+export async function buildReceipt(source, previousUUID = '') { return buildReceiptInternal(source,previousUUID,false) }
+async function buildReceiptInternal(source, previousUUID = '', forInvoice = false) {
  if (source.channel !== 'ereceipt') fail('ETA_EINVOICE_REQUIRES_SEPARATE_ADAPTER_AND_CADES_BES')
  if (source.currency !== 'EGP') fail('ETA_EXPORT_EGP_ONLY')
- if (validateProfile(source.profile).length || validateBranch(source.branch).length) fail('ETA_CONFIGURATION_INCOMPLETE')
+ if (validateProfile(source.profile).length || validateBranch(source.branch,!forInvoice).length) fail('ETA_CONFIGURATION_INCOMPLETE')
  if (previousUUID && !/^[a-f0-9]{64}$/.test(previousUUID)) fail('ETA_INVALID_PREVIOUS_UUID')
  const snap = source.tax
  if (snap?.version !== 1 || snap.componentDecimals !== 5 || !snap.calculationEnabled || !Array.isArray(snap.lines) || !snap.lines.length) fail('ETA_LEGACY_SNAPSHOT_UNSUPPORTED')
@@ -104,7 +105,7 @@ export async function buildReceipt(source, previousUUID = '') {
   seller:{rin:source.profile.rin,companyTradeName:source.profile.legalName,branchCode:source.branch.branchCode,branchAddress,deviceSerialNumber:source.branch.deviceSerialNumber,activityCode:source.profile.activityCode},
   buyer:buyerProjection, itemData, totalSales:decimal(sum(itemData,'totalSale')), totalCommercialDiscount:decimal(sum(itemData,'totalSale')-net), totalItemsDiscount:0,
   netAmount:decimal(net), feesAmount:0, totalAmount:decimal(net+tax), taxTotals:[{taxType:'T1',amount:decimal(tax)}], paymentMethod:source.paymentMethod, adjustment:0 }
- receipt.header.uuid = await receiptUuid(receipt)
+ if (!forInvoice) receipt.header.uuid = await receiptUuid(receipt)
  return {adapterVersion:ADAPTER_VERSION, uuid:receipt.header.uuid, receipt, body:JSON.stringify({receipts:[receipt]})}
 }
 // Deliberately separate B2B contract: never route an invoice through receipts.
@@ -117,7 +118,7 @@ export async function buildEinvoice(source, signer) {
  for (const key of ['governate','regionCity','street','buildingNumber']) if (!str(receiver.address[key],key === 'street'?200:100)) fail('ETA_EINVOICE_RECEIVER_ADDRESS_REQUIRED')
  // Reuse exact component validation; this intermediate receipt is never sent.
  // B2B identity, envelope, signature and endpoint remain separate contracts.
- const {receipt}=await buildReceipt({...source,channel:'ereceipt',buyer:{type:'F',id:receiver.id,name:receiver.name.slice(0,100)},paymentMethod:'O'})
+ const {receipt}=await buildReceiptInternal({...source,channel:'ereceipt',buyer:{type:'F',id:receiver.id,name:receiver.name.slice(0,100)},paymentMethod:'O'},'',true)
  const receiverProjection={type:'B',id:receiver.id,name:receiver.name,address:Object.fromEntries(['country','governate','regionCity','street','buildingNumber'].map(key=>[key,receiver.address[key]]))}
  const document={issuer:{type:'B',id:source.profile.rin,name:source.profile.legalName,address:{branchId:source.branch.branchCode,...receipt.seller.branchAddress}},
   receiver:receiverProjection,documentType:'i',documentTypeVersion:'1.0',dateTimeIssued:source.issuedAt,taxpayerActivityCode:source.profile.activityCode,internalId:source.receiptNumber,
