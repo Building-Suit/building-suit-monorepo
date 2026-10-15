@@ -150,7 +150,7 @@ begin
  return jsonb_build_object('version',1,'currency',sale.currency,'lines',rows,'total',total,'tax',tax,'net',total-tax,
   'dueBefore',due,'debtReduction',least(total,due),'refundDue',greatest(total-due,0),'dueAfter',greatest(due-total,0),'allocations',allocations,
   'originalDocument',jsonb_build_object('invoiceId',sale.id,'invoiceNumber',sale.invoice_number,'issuedAt',sale.issued_at,
-   'receiptId',(select id from public.sale_receipts where invoice_id=sale.id),'etaSourceAvailable',exists(select 1 from public.eta_sale_sources where invoice_id=sale.id)));
+   'receiptId',(select invoice_id from public.sale_receipts where invoice_id=sale.id),'etaSourceAvailable',exists(select 1 from public.eta_sale_sources where invoice_id=sale.id)));
 end;$$;
 
 create function public.preview_sale_return(p_shop_id uuid,p_location_id uuid,p_invoice_id uuid,p_lines jsonb) returns jsonb
