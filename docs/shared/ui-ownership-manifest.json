@@ -278,7 +278,9 @@
       "owner": "packages/ui",
       "components": [
         "BsChangelogCard",
-        "BsChangelogTimeline"
+        "BsChangelogTimeline",
+        "BsWhatsNewSection",
+        "BsChangelogPage"
       ],
       "adapterBoundary": "Authorized, curated bilingual feed and authoritative serverNow; publishing and visibility authorization remain service-owned",
       "task": "BS-CHANGELOG-VERSION-001",

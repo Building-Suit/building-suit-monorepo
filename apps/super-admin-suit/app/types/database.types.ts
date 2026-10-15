@@ -1103,6 +1103,156 @@ export type Database = {
           },
         ]
       }
+      release_catalog_configuration: {
+        Row: {
+          anchor_sha: string
+          authority_environment_id: string
+          cursor_sha: string
+          repository: string
+          singleton: boolean
+        }
+        Insert: {
+          anchor_sha: string
+          authority_environment_id: string
+          cursor_sha: string
+          repository: string
+          singleton?: boolean
+        }
+        Update: {
+          anchor_sha?: string
+          authority_environment_id?: string
+          cursor_sha?: string
+          repository?: string
+          singleton?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_catalog_configuration_authority_environment_id_fkey"
+            columns: ["authority_environment_id"]
+            isOneToOne: false
+            referencedRelation: "admin_environments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      release_consumed_fragments: {
+        Row: {
+          fragment_digest: string
+          fragment_id: string
+          source_sha: string
+        }
+        Insert: {
+          fragment_digest: string
+          fragment_id: string
+          source_sha: string
+        }
+        Update: {
+          fragment_digest?: string
+          fragment_id?: string
+          source_sha?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_consumed_fragments_source_sha_fkey"
+            columns: ["source_sha"]
+            isOneToOne: false
+            referencedRelation: "release_manifests"
+            referencedColumns: ["source_sha"]
+          },
+        ]
+      }
+      release_manifests: {
+        Row: {
+          accepted_at: string
+          deployment_sha: string | null
+          digest: string
+          first_published_at: string | null
+          manifest: Json
+          ordinal: number
+          request: Json
+          source_sha: string
+        }
+        Insert: {
+          accepted_at?: string
+          deployment_sha?: string | null
+          digest: string
+          first_published_at?: string | null
+          manifest: Json
+          ordinal?: never
+          request: Json
+          source_sha: string
+        }
+        Update: {
+          accepted_at?: string
+          deployment_sha?: string | null
+          digest?: string
+          first_published_at?: string | null
+          manifest?: Json
+          ordinal?: never
+          request?: Json
+          source_sha?: string
+        }
+        Relationships: []
+      }
+      release_version_heads: {
+        Row: {
+          baseline_evidence: string
+          suit_id: string
+          version: string
+        }
+        Insert: {
+          baseline_evidence: string
+          suit_id: string
+          version: string
+        }
+        Update: {
+          baseline_evidence?: string
+          suit_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_version_heads_suit_id_fkey"
+            columns: ["suit_id"]
+            isOneToOne: true
+            referencedRelation: "suit_registry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      release_versions: {
+        Row: {
+          source_sha: string
+          suit_id: string
+          version: string
+        }
+        Insert: {
+          source_sha: string
+          suit_id: string
+          version: string
+        }
+        Update: {
+          source_sha?: string
+          suit_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_versions_source_sha_fkey"
+            columns: ["source_sha"]
+            isOneToOne: false
+            referencedRelation: "release_manifests"
+            referencedColumns: ["source_sha"]
+          },
+          {
+            foreignKeyName: "release_versions_suit_id_fkey"
+            columns: ["suit_id"]
+            isOneToOne: false
+            referencedRelation: "suit_registry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suit_environment_bindings: {
         Row: {
           adapter_base_url: string
@@ -1217,6 +1367,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      release_catalog_state: { Args: never; Returns: Json }
+      release_public_feed: { Args: never; Returns: Json }
+      release_publish: {
+        Args: {
+          p_deployment_sha: string
+          p_environment: string
+          p_ref: string
+          p_releases: Json
+        }
+        Returns: Json
+      }
+      release_stage_accept: { Args: { p_request: Json }; Returns: Json }
       super_admin_activity_context: {
         Args: { p_binding: string; p_stream: string }
         Returns: Json

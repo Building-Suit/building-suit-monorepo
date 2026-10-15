@@ -221,6 +221,8 @@ const invitationPreviewCopy={
       <BsChangelogTimeline :feed="changelogFeed" :locale="isArabic ? 'ar' : 'en'" :copy="changelogCopy" :state="changelogState" @retry="changelogState = 'ready'" />
     </BsContentSection>
 
+    <BsWhatsNewSection :content="{ title: isArabic ? 'ما الجديد — مثال توضيحي' : 'What’s new — demonstration', linkLabel: isArabic ? 'سجل التحديثات' : 'Full changelog', to: '/components#changelog', feed: changelogFeed, copy: changelogCopy, locale: isArabic ? 'ar' : 'en', suit: 'shop-suit', state: changelogState }" @retry="changelogState = 'ready'" />
+
     <BsContentSection id="administration-shell" :title="isArabic ? 'هيكل الإدارة' : 'Administration shell'" :description="isArabic ? 'أمثلة التنقل والحالات من بيانات التطبيق.' : 'App-owned descriptors, controlled selection and normal/loading/empty/overflow examples.'">
       <BsInline>
         <BsButton v-for="state in (['normal', 'loading', 'empty', 'overflow'] as const)" :key="state" :aria-pressed="shellState === state" @click="shellState = state">{{ state }}</BsButton>

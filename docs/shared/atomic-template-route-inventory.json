@@ -70,7 +70,8 @@
     "BsOwnerInvitationPage": "packages/ui/src/templates/BsOwnerInvitationPage.vue",
     "BsOfflineCounterStatus": "packages/ui/src/templates/BsOfflineCounterStatus.vue",
     "BsCommissionPolicyPage": "packages/ui/src/templates/BsCommissionPolicyPage.vue",
-    "BsShopTaxSettingsPage": "packages/ui/src/templates/BsShopTaxSettingsPage.vue"
+    "BsShopTaxSettingsPage": "packages/ui/src/templates/BsShopTaxSettingsPage.vue",
+    "BsChangelogPage": "packages/ui/src/templates/BsChangelogPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2528,6 +2529,22 @@
         "~/types/shopCrmRpc"
       ],
       "purpose": "service-recipes-and-explicit-fulfillment"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/changelog.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsChangelogPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsChangelogPage"
+      ],
+      "destination": "packages/ui/src/templates/BsChangelogPage.vue",
+      "status": "shared-owner-available",
+      "domainAdapter": "apps/shop-suit/app/pages/changelog.vue",
+      "dependencies": [],
+      "verification": "BS-CHANGELOG-VERSION-001 release landing browser acceptance",
+      "purpose": "public-changelog"
     }
   ],
   "verifiedSharedHeads": [
@@ -2646,6 +2663,7 @@
     "BsOwnerInvitationPage",
     "BsCommissionPolicyPage",
     "BsShopTaxSettingsPage",
-    "BsServiceFulfillmentPage"
+    "BsServiceFulfillmentPage",
+    "BsChangelogPage"
   ]
 }

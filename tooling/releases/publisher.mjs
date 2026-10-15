@@ -84,11 +84,14 @@ export async function runPublisher() {
   } else {
     const staging = createCatalog(process.env.RELEASE_STAGING_URL, process.env.RELEASE_STAGING_TOKEN, refs.staging.projectRef)
     const accepted = await staging('release_catalog_state')
-    if (accepted.environment !== 'staging') throw new Error('Missing staging catalog')
+    if (accepted.environment !== 'staging' || accepted.anchorSha !== policy.activationAnchor) throw new Error('Missing staging catalog or mismatched activation boundary')
+    if (git('rev-list', '--no-merges', tip, '^origin/stg', `^${policy.activationAnchor}`)) throw new Error('Main contains commits without staging ancestry; route hotfixes through stg')
     // Include all post-anchor fragments, not only HEAD's delta: multiple staging releases may ship together.
     const baseline = new Set(fragmentTree(accepted.anchorSha).map(({row}) => row.id))
     const fragments = fragmentTree(tip).map(({row})=>row).filter(row => !baseline.has(row.id))
     releases = selectPromotion(accepted.manifests, fragments, sha => ancestor(sha, tip))
+    const stagedTip = releases.at(-1)?.manifest.sourceSha
+    if (!stagedTip || git('rev-parse', `${stagedTip}^{tree}`) !== git('rev-parse', `${tip}^{tree}`)) throw new Error('Production tree lacks an exact accepted staging snapshot')
   }
   // Reservation may succeed while deployments fail. A later trusted event resumes publication.
   const [statuses, checkRuns] = await Promise.all([github(`commits/${tip}/status?per_page=100`), github(`commits/${tip}/check-runs?per_page=100`)] )

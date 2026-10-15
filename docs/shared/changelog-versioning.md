@@ -26,3 +26,7 @@ Browser output captures desktop/mobile EN/AR in both themes. This local verifica
 ## Local verification record
 
 In the task worktree, the declared unit executable passed, as did shared UI/UX tests, `pnpm check`, catalogue typecheck, targeted ESLint and the Ledger, Shop and catalogue builds. The required Playwright executable was attempted with one worker and zero retries; it failed before tests ran. Direct catalogue server startup identified `listen EPERM` for `127.0.0.1:4392` in the managed sandbox. EN/AR, theme, mobile, keyboard and state assertions exist in the task-owned spec, but rendered acceptance and screenshot review remain unverified. Re-run the browser command in an environment permitted to listen on loopback. `pnpm agent:preflight` also failed because the linked Git worktree's `FETCH_HEAD` is outside writable roots; live upstream/PR state is unverified. No publication action was taken.
+
+## Shop landing discovery
+
+The optional typed changelog projection on `BsLandingPage` renders shared `BsWhatsNewSection`, showing the newest three deployed Shop releases and an EN/AR link to `/changelog`. `BsChangelogPage` displays the full public released Shop history. Both reuse `BsChangelogTimeline`/`BsChangelogCard` with the trusted clock and existing exact 48-hour badge. Public adapters exclude internal entries, future publication and Coming Soon; no fixture announcements appear in product pages. Loading, empty, failure and retry remain explicit. This is an additive section after pricing, not a landing redesign.

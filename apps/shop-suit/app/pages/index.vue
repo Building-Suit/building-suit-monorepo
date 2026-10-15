@@ -4,6 +4,13 @@ import type { LandingContent } from '@building-suit/contracts'
 import type { ShopPlanOffer } from '~/types/plans'
 definePageMeta({ layout: 'landing' })
 const { t, locale } = useI18n()
+const { feed: releaseFeed, state: releaseState, copy: releaseCopy, refresh: refreshReleases } = usePublicChangelog()
+const landingChangelog = computed(() => ({
+  title: locale.value === 'ar' ? 'ما الجديد' : 'What’s new',
+  linkLabel: locale.value === 'ar' ? 'عرض سجل التحديثات الكامل' : 'View the full changelog',
+  to: '/changelog', feed: releaseFeed.value, state: releaseState.value, copy: releaseCopy.value,
+  locale: locale.value === 'ar' ? 'ar' as const : 'en' as const, suit: 'shop-suit',
+}))
 useHead({ title: 'Shop Suit · Building Suit', meta: [{ name: 'description', content: () => t('hero.description') }] })
 const content = computed<LandingContent>(() => ({
   eyebrow: 'Shop Suit', heroTitle: `${t('hero.title')} ${t('hero.subtitle')}`, heroBody: t('hero.description'),
@@ -45,5 +52,5 @@ const landingPricing = computed(() => ({
 function chooseInterval(value: string) { if (value === 'monthly' || value === 'annual') publicPricing.interval = value }
 </script>
 <template>
-  <BsLandingPage :content="content" :preview="{ kind: 'features' }" :pricing="landingPricing" signup-path="/auth/signup" @interval="chooseInterval" @variant="publicPricing.chooseVariant" @action="publicPricing.choose" @retry="refresh()"/>
+  <BsLandingPage :content="content" :changelog="landingChangelog" :preview="{ kind: 'features' }" :pricing="landingPricing" signup-path="/auth/signup" @changelog-retry="refreshReleases()" @interval="chooseInterval" @variant="publicPricing.chooseVariant" @action="publicPricing.choose" @retry="refresh()"/>
 </template>

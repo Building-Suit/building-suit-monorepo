@@ -334,7 +334,9 @@
     "./molecules/BsShopTaxRuleFields": "./src/molecules/BsShopTaxRuleFields.vue",
     "./templates/BsShopTaxSettingsPage": "./src/templates/BsShopTaxSettingsPage.vue",
     "./templates/BsServiceFulfillmentPage": "./src/templates/BsServiceFulfillmentPage.vue",
-    "./types/serviceFulfillmentPresentation": "./src/types/serviceFulfillmentPresentation.ts"
+    "./types/serviceFulfillmentPresentation": "./src/types/serviceFulfillmentPresentation.ts",
+    "./organisms/BsWhatsNewSection": "./src/organisms/BsWhatsNewSection.vue",
+    "./templates/BsChangelogPage": "./src/templates/BsChangelogPage.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",

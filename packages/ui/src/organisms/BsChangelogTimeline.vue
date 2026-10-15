@@ -4,12 +4,13 @@ import { parseChangelogFeed, filterChangelog, isChangelogNew } from '@building-s
 import type { ChangelogFeed, ChangelogLocale, ChangelogCopy, ChangelogEntry } from '@building-suit/contracts'
 const props = withDefaults(defineProps<{
   feed: ChangelogFeed; locale: ChangelogLocale; copy: ChangelogCopy
+  releasedOnly?: boolean; hideFilters?: boolean; limit?: number
   suit?: string; state?: 'ready' | 'loading' | 'error' | 'denied'
-}>(), { suit: undefined, state: 'ready' })
+}>(), { suit: undefined, state: 'ready', releasedOnly: false, hideFilters: false, limit: undefined })
 defineEmits<{ retry: [] }>()
 const selectedSuit = ref(''), status = ref('')
 const validated = computed(() => parseChangelogFeed(props.feed))
-const entries = computed(() => filterChangelog(validated.value, { suit: props.suit ?? selectedSuit.value, status: (status.value || undefined) as ChangelogEntry['status'] | undefined }))
+const entries = computed(() => filterChangelog(validated.value, { suit: props.suit ?? selectedSuit.value, status: props.releasedOnly ? 'released' : (status.value || undefined) as ChangelogEntry['status'] | undefined }).slice(0, props.limit))
 const elapsed = ref(0)
 let baseline = 0, timer: ReturnType<typeof setInterval> | undefined
 // Advance a server snapshot by monotonic elapsed time. Browser wall-clock changes have no effect.
@@ -21,12 +22,12 @@ const stateTitle = computed(() => props.copy[props.state === 'ready' ? 'empty' :
 </script>
 <template>
   <section class="bs-changelog" :dir="locale === 'ar' ? 'rtl' : 'ltr'" :lang="locale" :aria-label="copy.timeline">
-    <div class="bs-changelog__filters">
+    <div v-if="!hideFilters" class="bs-changelog__filters">
       <BsSelect v-if="!suit" v-model="selectedSuit" native :label="copy.suit">
         <BsSelectOption value="">{{ copy.allSuits }}</BsSelectOption>
         <BsSelectOption v-for="item in validated.suits" :key="item.id" :value="item.id">{{ item.name[locale] }}</BsSelectOption>
       </BsSelect>
-      <BsSelect v-model="status" native :label="copy.status">
+      <BsSelect v-if="!releasedOnly" v-model="status" native :label="copy.status">
         <BsSelectOption value="">{{ copy.allStatuses }}</BsSelectOption>
         <BsSelectOption value="released">{{ copy.released }}</BsSelectOption>
         <BsSelectOption value="coming-soon">{{ copy.comingSoon }}</BsSelectOption>

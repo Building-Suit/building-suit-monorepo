@@ -15,7 +15,7 @@ const pageKey = computed(() => signupActive.value ? 'signup' : contextKey.value)
 // advances after the destination page resolves, so using it here would keep
 // the host hidden forever after logout. The committed router route has already
 // passed middleware and can reopen the host for an anonymous destination.
-const publicPaths = ['/', '/about', '/pricing', '/contact', '/terms', '/privacy', '/delivery-shipping', '/refund-cancellation']
+const publicPaths = ['/', '/about', '/pricing', '/contact', '/terms', '/privacy', '/delivery-shipping', '/refund-cancellation', '/changelog']
 const canRenderPage = computed(() => {
   const path = router.currentRoute.value.path
   return !!user.value || path.startsWith('/auth/') || publicPaths.includes(path)

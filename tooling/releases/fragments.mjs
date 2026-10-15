@@ -10,7 +10,7 @@ const impacts = ['internal', 'patch', 'minor', 'major']
 const allowed = (value, keys) => value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).every(key => keys.includes(key))
 export function plainText(value) {
   return typeof value === 'string' && value.trim().length > 0 && value.length <= 8000 && !/[<>]/.test(value) && !Array.from(value).some(char => char.charCodeAt(0) < 9)
-    && !/(?:BS-[A-Z]+-\d|SS-[A-Z]+-\d|service_role|secret[_ -]?key|-----BEGIN|github_pat_|ghp_)/i.test(value)
+    && !/(?:\b(?:BS|SS|SAS|LS|IS|AS)-[A-Z0-9-]+\b|service_role|secret[_ -]?key|-----BEGIN|github_pat_|ghp_)/i.test(value)
 }
 export function validateFragment(row, registry) {
   if (!allowed(row, ['id', 'task', 'suits', 'classification', 'disposition', 'paths', 'reason', 'notes'])

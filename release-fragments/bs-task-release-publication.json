@@ -17,7 +17,11 @@
     "package.json",
     "packages/nuxt-layer",
     "apps/super-admin-suit",
-    "tooling/releases"
+    "tooling/releases",
+    "apps/shop-suit/app",
+    "apps/shop-suit/tests",
+    "packages/ui",
+    "apps/building-suit-docs/app/pages/components.vue"
   ],
   "reason": "Adds reviewed task-based release publication with deployment gates and a shared read adapter",
   "notes": {
@@ -30,8 +34,8 @@
       "ar": "يمكن عرض التحديثات المراجعة في سجل التغييرات بعد نجاح النشر."
     },
     "details": {
-      "en": "Release notes support English and Arabic. Each product keeps its own version, and staging releases retain the same version and content when promoted.",
-      "ar": "تدعم ملاحظات الإصدار اللغتين الإنجليزية والعربية. يحتفظ كل منتج بإصداره الخاص، وتحافظ إصدارات بيئة الاختبار على الإصدار والمحتوى نفسيهما عند الترقية."
+      "en": "Release notes support English and Arabic. Shop’s landing page shows deployed updates and links to the full changelog. Each product keeps its version and content when staging releases are promoted.",
+      "ar": "تدعم ملاحظات الإصدار اللغتين الإنجليزية والعربية. تعرض الصفحة الرئيسية للمتجر التحديثات المنشورة وترتبط بسجل التحديثات الكامل. يحتفظ كل منتج بإصداره ومحتواه عند ترقية إصدارات بيئة الاختبار."
     }
   }
 }
