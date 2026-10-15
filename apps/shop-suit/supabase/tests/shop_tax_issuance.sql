@@ -8,7 +8,7 @@ do $$
 declare shop uuid; location uuid; customer uuid; product uuid; member uuid; sale uuid; line uuid; policy jsonb;
  version uuid; snap jsonb; commission jsonb; amount numeric; receipt uuid; original jsonb;
 begin
- shop:=public.create_owner_shop('Tax fixture','pro','mixed'::public.business_mode);
+ shop:=public.create_owner_shop('Tax fixture','mixed'::public.business_mode);
  select id into location from public.shop_locations where shop_id=shop and is_default;
  select id into member from public.shop_memberships where shop_id=shop and role='owner';
  customer:=public.save_customer(shop,null,'Tax customer',null,null,null,null);
