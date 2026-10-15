@@ -51,3 +51,23 @@ test('landing failure retries to an empty public feed without fixture announceme
   await expect(section.getByText('No published updates yet')).toBeVisible()
   await expect(section.getByRole('link',{name:'View the full changelog'})).toBeVisible()
 })
+test('resuming and navigating refreshes the trusted clock without resetting first publication',async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'})
+  await page.context().addCookies([{name:'building-suit-locale',value:'en',url:'http://127.0.0.1:4393'}])
+  let serverNow=now,calls=0
+  await page.route('**/api/changelog',route=>{calls++;return route.fulfill({json:{serverNow,suits,entries:[entry]}})})
+  await page.goto('/')
+  const section=page.locator('#whats-new')
+  await expect(section.getByText('New',{exact:true})).toHaveCount(1)
+  const publication=await section.locator('time').first().getAttribute('datetime')
+  const before=calls
+  serverNow='2026-10-16T12:00:00Z'
+  await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')))
+  await expect.poll(()=>calls).toBeGreaterThan(before)
+  await expect(section.locator('article')).toHaveCount(1)
+  await expect(section.getByText('New',{exact:true})).toHaveCount(0)
+  expect(await section.locator('time').first().getAttribute('datetime')).toBe(publication)
+  await section.getByRole('link',{name:'View the full changelog'}).click()
+  await expect(page.locator('main .bs-changelog article')).toHaveCount(1)
+  await expect(page.locator('main .bs-changelog').getByText('New',{exact:true})).toHaveCount(0)
+})

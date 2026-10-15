@@ -7,6 +7,10 @@ export function usePublicChangelog() {
   const request = useRequestFetch()
   const client = createChangelogClient(signal => request('/api/changelog', { signal }))
   const { data, status, error, refresh } = useAsyncData('public-changelog:shop-suit', () => client.list({ suit: 'shop-suit', status: 'released' }), { server: false })
+  // A new route mount or resumed tab refreshes the trusted clock instead of restarting a stale snapshot.
+  const resume = () => { if (document.visibilityState === 'visible') void refresh({ dedupe: 'defer' }) }
+  onMounted(() => { void refresh({ dedupe: 'defer' }); document.addEventListener('visibilitychange', resume) })
+  onBeforeUnmount(() => document.removeEventListener('visibilitychange', resume))
   // An empty error/loading snapshot is never interpreted as a published release or a clock source.
   const feed = computed<ChangelogFeed>(() => data.value ?? { serverNow: '1970-01-01T00:00:00Z', suits: [], entries: [] })
   const state = computed(() => error.value ? 'error' as const : status.value === 'pending' || status.value === 'idle' ? 'loading' as const : 'ready' as const)

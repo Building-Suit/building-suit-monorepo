@@ -2,28 +2,17 @@
   "id": "bs-task-release-publication",
   "task": "BS-CHANGELOG-VERSION-001",
   "suits": [
-    "automation-suit",
-    "inventory-suit",
-    "ledger-suit",
-    "shop-suit",
-    "super-admin-suit"
+    "shop-suit"
   ],
   "classification": "minor",
   "disposition": "public",
   "paths": [
-    ".github",
-    "AGENTS.md",
-    "docs",
-    "package.json",
-    "packages/nuxt-layer",
-    "apps/super-admin-suit",
-    "tooling/releases",
     "apps/shop-suit/app",
     "apps/shop-suit/tests",
     "packages/ui",
-    "apps/building-suit-docs/app/pages/components.vue"
+    "packages/nuxt-layer"
   ],
-  "reason": "Adds reviewed task-based release publication with deployment gates and a shared read adapter",
+  "reason": "Shop exposes reviewed deployed release notes on its public landing page and full changelog; other consumers are classified internally in the foundation fragment.",
   "notes": {
     "title": {
       "en": "Automatic release notes",
