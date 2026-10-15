@@ -69,7 +69,8 @@
     "BsAccountProvisioningPage": "packages/ui/src/templates/BsAccountProvisioningPage.vue",
     "BsOwnerInvitationPage": "packages/ui/src/templates/BsOwnerInvitationPage.vue",
     "BsOfflineCounterStatus": "packages/ui/src/templates/BsOfflineCounterStatus.vue",
-    "BsCommissionPolicyPage": "packages/ui/src/templates/BsCommissionPolicyPage.vue"
+    "BsCommissionPolicyPage": "packages/ui/src/templates/BsCommissionPolicyPage.vue",
+    "BsShopTaxSettingsPage": "packages/ui/src/templates/BsShopTaxSettingsPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2490,6 +2491,25 @@
         "~/types/shopCrmRpc"
       ],
       "purpose": "commission-policy-and-history"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/taxes.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsShopTaxSettingsPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsShopTaxSettingsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsShopTaxSettingsPage.vue",
+      "status": "implemented",
+      "domainAdapter": "apps/shop-suit/app/pages/taxes.vue",
+      "dependencies": [
+        "@building-suit/ui/types/shopTaxPresentation",
+        "~/types/tax",
+        "~/types/shopCrmRpc"
+      ],
+      "purpose": "versioned-tax-settings"
     }
   ],
   "verifiedSharedHeads": [
@@ -2606,6 +2626,7 @@
     "BsAccountActivationPage",
     "BsAccountProvisioningPage",
     "BsOwnerInvitationPage",
-    "BsCommissionPolicyPage"
+    "BsCommissionPolicyPage",
+    "BsShopTaxSettingsPage"
   ]
 }

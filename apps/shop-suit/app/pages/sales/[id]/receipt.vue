@@ -69,6 +69,7 @@ const receiptView = computed<BsReceiptView | null>(() => {
     lines: value.lines.map(line => ({ id: line.id, label: line.name, description: value.presentation?.showDescriptions === false ? undefined : line.description || line.sku || undefined, quantity: String(Number(line.quantity)), unitPrice: money(line.unitPrice), total: money(line.total) })),
     totals: [ { id: 'subtotal', label: copy('subtotal'), value: money(value.subtotal) },
       ...(value.discount ? [{ id: 'discount', label: copy('discount'), value: '− ' + money(value.discount) }] : []),
+      ...(value.tax?.calculationEnabled ? [{ id: 'tax', label: receiptLanguage.value === 'ar' ? 'الضريبة' : 'Tax', value: money(value.tax.tax) }] : []),
       { id: 'total', label: copy('total'), value: money(value.total), emphasis: true } ],
     payments: value.payments.map(payment => ({ id: payment.id, summary: `${paymentLabel(payment.method)} · ${money(payment.amount)}`, reference: payment.reference })),
     footer: value.footer,

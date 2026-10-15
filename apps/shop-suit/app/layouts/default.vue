@@ -57,6 +57,7 @@ const groups = computed(() => {
       { to: '/pos', label: copy.value.pos, icon: 'cash' },
       { to: '/customers', label: t('customers.title'), icon: 'user' },
       { to: '/team', label: copy.value.team, icon: 'user' },
+      { to: '/taxes', label: locale.value === 'ar' ? 'الضرائب' : 'Taxes', icon: 'settings' },
       { to: '/commissions', label: locale.value === 'ar' ? 'العمولات' : 'Commissions', icon: 'wallet' },
       { to: '/cash-shifts', label: copy.value.cashShifts, icon: 'wallet' },
       { to: '/sales', label: t('sales.title'), icon: 'invoice' },

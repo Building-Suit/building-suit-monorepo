@@ -341,6 +341,15 @@
       "adapterBoundary": "typed policy forms, staff and draft assignment projections, formatted earning rows, translated copy and authorized semantic commands",
       "task": "SS-BARBER-COMP-001",
       "migrationStatus": "implemented; verification recorded in product task evidence"
+    },
+    {
+      "family": "shop-tax-settings",
+      "owner": "packages/ui",
+      "components": [
+        "BsShopTaxSettingsPage",
+        "BsShopTaxRuleFields"
+      ],
+      "adapterBoundary": "Typed tax settings, catalog projections, translated copy and authorized semantic commands; financial calculation remains server owned."
     }
   ]
 }

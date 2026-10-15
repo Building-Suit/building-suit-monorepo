@@ -168,7 +168,9 @@ function lineAmounts(line: DraftLine) {
   return { price, discount, total: Math.max(0, Math.round((price * quantity - discount) * 100) / 100) }
 }
 
-const previewTotal = computed(() => lines.value.reduce((sum, line) => sum + lineAmounts(line).total, 0))
+const taxLines = computed(() => lines.value.map(line => ({ item_type: line.itemType, source_id: line.sourceId, quantity: Number(line.quantity) })))
+const { data: taxQuote, pending: taxPending, error: taxError } = useSaleTaxQuote(currentId, currentLocationId, taxLines)
+const previewTotal = computed(() => Number(taxQuote.value?.total ?? lines.value.reduce((sum, line) => sum + lineAmounts(line).total, 0)))
 
 function resetEditor() {
   fastPayAttempt.value = null
@@ -325,6 +327,7 @@ async function issue() {
 }
 
 async function fastPay() {
+  if (taxPending.value || taxError.value || !taxQuote.value) return
   if (!currentId.value || !currentLocationId.value || saving.value || issuing.value
     || !salePage.value?.canManage || !salePage.value.canIssue || !paymentAccess.value.can_receive) return
   if (!validDraft() || previewTotal.value <= 0) { editorError.value = t('sales.invalid'); return }

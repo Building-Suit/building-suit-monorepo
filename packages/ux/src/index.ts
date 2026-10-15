@@ -231,3 +231,5 @@ export { boundedQuantity, steppedQuantity, restoreQuantityInput } from './utils/
 export { focusAfterRecordRemoval } from './utils/collectionFocus.ts'
 export { useConnectivity } from './composables/useConnectivity.ts'
 export { readRasterImage } from './utils/readRasterImage.ts'
+
+export { localDateTimeInput } from "./utils/localDateTimeInput.ts"

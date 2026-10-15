@@ -4,6 +4,12 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      quote_sale_tax: { Args: { p_shop_id: string; p_location_id: string; p_lines: { item_type: string; source_id: string; quantity: number }[] }; Returns: unknown }
+      save_tax_policy: { Args: { p_request_id: string; p_shop_id: string; p_effective_at: string; p_policy: import('./tax').TaxPolicy; p_reason: string }; Returns: string }
+      tax_settings: { Args: { p_shop_id: string }; Returns: unknown }
+      get_sale_tax_snapshot: { Args: { p_shop_id: string; p_invoice_id: string }; Returns: unknown }
+      set_sale_order_discount: { Args: { p_shop_id: string; p_invoice_id: string; p_discount: number }; Returns: undefined }
+
       save_commission_policy: { Args: { p_request_id: string; p_shop_id: string; p_policy: import('./commission').CommissionPolicy; p_reason: string }; Returns: string }
       commission_history: { Args: { p_shop_id: string; p_invoice_id?: string | null; p_offset?: number }; Returns: unknown }
       assign_sale_commission: { Args: { p_shop_id: string; p_line_id: string; p_membership_id: string | null; p_appointment_id?: string | null }; Returns: undefined }
