@@ -1,5 +1,5 @@
 import { legalDocuments } from '~/utils/legal'
-import { canIndex, isPublicPath, productionOrigin } from '../../shared/publicSeo'
+import { canIndex, isPublicPath, productionOrigin } from '#shared/publicSeo'
 export function useShopSeo() {
   const route = useRoute()
   const config = useRuntimeConfig()
@@ -8,7 +8,8 @@ export function useShopSeo() {
   useHead(() => {
     const publicPage = isPublicPath(route.path)
     const canonical = `${productionOrigin}${publicPage ? route.path : '/'}`
-    const documentKey = ({ '/about': 'about', '/contact': undefined, '/terms': 'terms', '/privacy': 'privacy', '/delivery-shipping': 'delivery', '/refund-cancellation': 'refund' } as const)[route.path as '/about']
+    const documentRoutes: Record<string, keyof typeof legalDocuments> = { '/about': 'about', '/terms': 'terms', '/privacy': 'privacy', '/delivery-shipping': 'delivery', '/refund-cancellation': 'refund' }
+    const documentKey = documentRoutes[route.path]
     const document = documentKey ? legalDocuments[documentKey][locale.value === 'ar' ? 'ar' : 'en'] : undefined
     const title = document ? `${document.title} · Shop Suit` : 'Shop Suit · Building Suit'
     const description = document?.intro || (locale.value === 'ar' ? 'Shop Suit من Building Suit لإدارة المتاجر والمبيعات والمخزون والخدمات.' : 'Shop Suit by Building Suit: manage shops, sales, inventory and services.')

@@ -1,4 +1,4 @@
-import { canIndex, isPublicPath } from '../../shared/publicSeo'
+import { canIndex, isPublicPath } from '#shared/publicSeo'
 export default defineEventHandler((event) => {
   const url = getRequestURL(event)
   const config = useRuntimeConfig(event)

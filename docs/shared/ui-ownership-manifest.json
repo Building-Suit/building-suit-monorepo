@@ -373,6 +373,16 @@
       "adapterBoundary": "Shop supplies immutable return previews, quantities, disposition choices, original-payment allocation and authorized commands; shared UI owns dialogs and audit presentation; useReviewedCommand retains review/request identity through uncertain responses",
       "task": "SS-PARTIAL-RETURNS-001",
       "migrationStatus": "implemented; verification in progress"
+    },
+    {
+      "family": "privacy-consent",
+      "owner": "packages/ui",
+      "components": [
+        "BsPrivacyConsent"
+      ],
+      "adapterBoundary": "Products supply translated purposes and versioned consent state; shared UX owns validation, focus and optional analytics transport. No provider access before opt-in.",
+      "task": "SS-SEO-PRIVACY-001",
+      "migrationStatus": "implemented; verification recorded in Shop privacy runbook"
     }
   ]
 }
