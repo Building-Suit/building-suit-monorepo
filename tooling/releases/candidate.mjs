@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { git, validateFragment, affectedSuits } from './fragments.mjs'
+import { git, validateFragment, affectedSuits, fragmentTree, digest } from './fragments.mjs'
 
 /** Evidence is reviewed semantic text, compared directly between the two branch trees.
  * Commit lists, merge-base-only diffs and fragment accumulation are never release authority. */
@@ -57,7 +57,12 @@ export function workspaceGraphAt(ref, run = git) {
 export function buildCandidate(main, staging) {
   const items = JSON.parse(readTree(staging, 'release-changes/items.json'))
   return { schemaVersion: 2, repository: 'Building-Suit/building-suit-monorepo', stagingRef: 'refs/heads/stg', productionRef: 'refs/heads/main', mainSha: git('rev-parse',main), mainTree: git('rev-parse',`${main}^{tree}`),
-    stagingSha: git('rev-parse',staging), stagingTree: git('rev-parse',`${staging}^{tree}`), changes: netCandidate({main,staging,items,graph:workspaceGraphAt(staging)}) }
+    stagingSha: git('rev-parse',staging), stagingTree: git('rev-parse',`${staging}^{tree}`),
+    // Durable audit only. Neither commits nor fragments select public items or allocate versions.
+    provenance: {
+      branchCommits: git('rev-list','--first-parent','--reverse',`${main}..${staging}`).split('\n').filter(Boolean).map(sha=>({sha,parentSha:git('rev-parse',`${sha}^1`)})),
+      fragmentDigests: fragmentTree(staging).map(({row})=>({id:row.id,task:row.task,digest:digest(row)})),
+    }, changes: netCandidate({main,staging,items,graph:workspaceGraphAt(staging)}) }
 }
 export function promotionCandidate(revisions, { mainParent, tree, ancestor }) {
   const match = revisions.filter(row => row.readyAt && row.manifest.mainSha === mainParent && row.manifest.stagingTree === tree && ancestor(row.manifest.stagingSha)).at(-1)
