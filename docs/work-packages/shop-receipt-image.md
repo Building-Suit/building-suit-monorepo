@@ -66,5 +66,8 @@ user after the parent's merge.
 - Real built-Shop Chromium coverage verifies an actual PNG clipboard write/read,
   denied-permission download, dark-mode white receipt, print invocation and A4
   selection in both languages. Only synthetic fixture services run in the cloud.
-- CI and exact PR/head results are recorded in the PR; no hosted database writes,
+- Initial CI found system-heading-font differences in clean baselines. Headings
+  now use self-hosted Manrope; body uses self-hosted Roboto Condensed and IBM Plex
+  Sans Arabic. Reference and preview/PNG comparisons were regenerated and passed.
+- CI and exact PR/head results are recorded in PR #321; no hosted database writes,
   direct stg/main pushes or manual deployments are part of this change.

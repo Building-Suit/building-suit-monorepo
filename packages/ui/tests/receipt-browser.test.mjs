@@ -11,6 +11,8 @@ const fonts = await Promise.all([400, 600, 700].map(async weight => `@font-face{
 const tokens = await read('packages/design-tokens/generated/tokens.css')
 const receiptFont = await read('packages/ui/node_modules/@fontsource-variable/roboto-condensed/files/roboto-condensed-latin-wght-normal.woff2')
 fonts.push(`@font-face{font-family:'Roboto Condensed Variable';font-style:normal;font-weight:100 900;src:url(data:font/woff2;base64,${receiptFont.toString('base64')}) format('woff2')}`)
+const headingFont = await read('node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2')
+fonts.push(`@font-face{font-family:'Manrope Variable';font-style:normal;font-weight:200 800;src:url(data:font/woff2;base64,${headingFont.toString('base64')}) format('woff2')}`)
 const css = `${tokens}\n${fonts.join('')}\n`
 const source = (await read('packages/ux/src/utils/documentImage.ts')).toString().replace("import('html-to-image')", 'Promise.resolve(window.htmlToImage)').replace(/^export /gm, '')
 const controller = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText

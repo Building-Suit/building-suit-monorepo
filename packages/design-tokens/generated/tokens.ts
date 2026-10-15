@@ -481,7 +481,7 @@ export const tokens = {
         "value": "'Roboto Condensed Variable', 'IBM Plex Sans Arabic', sans-serif"
       },
       "headingFontFamily": {
-        "value": "Arial, 'IBM Plex Sans Arabic', sans-serif"
+        "value": "'Manrope Variable', Manrope, 'IBM Plex Sans Arabic', sans-serif"
       },
       "ink": {
         "value": "#000"
