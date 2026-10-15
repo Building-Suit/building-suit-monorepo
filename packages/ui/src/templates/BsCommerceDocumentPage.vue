@@ -12,7 +12,7 @@ const dialogOpen = defineModel<boolean>('dialogOpen', { required: true })
 const correctionOpen = defineModel<boolean>('correctionOpen', { required: true })
 const discountOpen = defineModel<boolean>('discountOpen', { default: false })
 const orderDiscount = defineModel<number>('orderDiscount', { default: 0 })
-const emit = defineEmits<{ startReturn: []; retryReturns: []; previewReturn: []; confirmReturn: []; recordReturnRefund: [id: string]; completeReturnRefund: []; failReturnRefund: []; previousReturns: []; nextReturns: []; editOrderDiscount: []; saveOrderDiscount: []; retry: []; issue: []; share: []; payment: []; credit: []; return: []; reverse: [id: string]; refund: [id: string]; correct: []; retryCorrection: []; submit: []; submitCorrection: [] }>()
+const emit = defineEmits<{ startReturn: []; retryReturns: []; previewReturn: []; confirmReturn: []; recordReturnRefund: [id: string]; completeReturnRefund: []; failReturnRefund: []; previousReturns: []; nextReturns: []; editOrderDiscount: []; saveOrderDiscount: []; retry: []; issue: []; share: []; downloadReceipt: []; payment: []; credit: []; return: []; reverse: [id: string]; refund: [id: string]; correct: []; retryCorrection: []; submit: []; submitCorrection: [] }>()
 function updateForm<K extends keyof BsCommerceDocumentForm>(key: K, value: BsCommerceDocumentForm[K]) { form.value = { ...form.value, [key]: value } }
 function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, value: BsCommerceCorrectionForm[K]) { correctionForm.value = { ...correctionForm.value, [key]: value } }
 </script>
@@ -41,6 +41,7 @@ function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, valu
       <BsText v-if="view.status" as="p" size="sm">{{ view.status }}</BsText>
       <BsText v-if="view.success" role="status" as="p" size="sm">{{ view.success }}</BsText>
       <BsText v-if="view.actionError && !dialogOpen && !correctionOpen" role="alert" as="p" size="sm" tone="danger">{{ view.actionError }}</BsText>
+      <BsButton v-if="view.receiptImageError && copy.downloadReceipt" :pending="view.sharing" @click="emit('downloadReceipt')">{{ copy.downloadReceipt }}</BsButton>
       <BsText v-if="view.notice" as="p" size="sm">{{ view.notice }}</BsText>
       <BsPanel v-if="view.correction.visible" padding="md">
         <BsHeading :level="2">{{ copy.correction }}</BsHeading>

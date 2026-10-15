@@ -37,10 +37,25 @@ jobs:
         with:
           ref: ${{ matrix.branch }}
           fetch-depth: 0
+      - name: Check publisher adoption on the checked-out protected branch
+        id: publisher
+        shell: bash
+        run: |
+          if git cat-file -e HEAD:tooling/releases/publisher.mjs 2>/dev/null; then
+            echo 'adopted=true' >> "$GITHUB_OUTPUT"
+          elif test -n "$(git log -1 --format=%H -- tooling/releases/publisher.mjs)"; then
+            echo '::error::This branch previously adopted the release publisher, but its entrypoint is missing.'
+            exit 1
+          else
+            echo 'adopted=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::This protected branch has not adopted the release publisher; no publication was attempted.'
+          fi
       - uses: actions/setup-node@v4
+        if: steps.publisher.outputs.adopted == 'true'
         with:
           node-version-file: .node-version
       - name: Reconcile durable catalog and gate publication on deployment readiness
+        if: steps.publisher.outputs.adopted == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_ENVIRONMENT: ${{ matrix.environment }}

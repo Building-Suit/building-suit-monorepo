@@ -82,5 +82,5 @@ test('unavailable snapshots keep print and share disabled', async ({ page }) => 
   await fixtureGoto(page, '/sales/sale-1/receipt')
   await expect(page.getByText(/A receipt is available after an issued sale is fully paid/)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Reprint receipt', exact: true })).toBeDisabled()
-  await expect(page.getByRole('button', { name: 'Share receipt', exact: true })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Copy receipt image', exact: true })).toBeDisabled()
 })

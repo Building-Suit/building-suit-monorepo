@@ -238,7 +238,8 @@
         "BsDocumentHeader",
         "BsDocumentLines",
         "BsDocumentTotals",
-        "BsPrintActions"
+        "BsPrintActions",
+        "BsSaleReceipt"
       ],
       "adapterBoundary": "issuer, snapshot, preformatted line/totals and print/share commands",
       "auditSources": [

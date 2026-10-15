@@ -1,6 +1,45 @@
-import { test, expect } from '@playwright/test'
-import type { Page, BrowserContext } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
+import type { Page, BrowserContext, Route, APIResponse } from '@playwright/test'
 import { catalog } from './marketing-privacy-fixture.mjs'
+const fixtureLifecycles = new WeakMap<BrowserContext, { closing: boolean; pending: Set<Promise<void>> }>()
+function fixtureLifecycle(context: BrowserContext) {
+  let state = fixtureLifecycles.get(context)
+  if (!state) { state = { closing: false, pending: new Set() }; fixtureLifecycles.set(context, state) }
+  return state
+}
+async function fixtureRoute(context: BrowserContext, route: Route, work: () => Promise<void>) {
+  const state = fixtureLifecycle(context)
+  const pending = state.closing ? route.abort() : work()
+  state.pending.add(pending)
+  try { await pending }
+  finally { state.pending.delete(pending) }
+}
+async function drainFixtureContext(context: BrowserContext) {
+  const state = fixtureLifecycle(context)
+  state.closing = true
+  // Keep interception installed while draining. New prefetches are aborted;
+  // active forwarders retain their APIResponse until body + fulfillment finish.
+  while (state.pending.size) await Promise.all([...state.pending])
+}
+async function closeFixtureContext(context: BrowserContext) {
+  await drainFixtureContext(context)
+  await context.close()
+}
+const test = base.extend({
+  context: async ({ context }, use) => {
+    try { await use(context) }
+    finally { await closeFixtureContext(context) }
+  },
+})
+async function fulfillFetchedResponse(route: Route, response: APIResponse) {
+  try {
+    // Materialize the body while its request context is alive; fulfillment must
+    // not lazily read an APIResponse during browser-context disposal.
+    const body = await response.body()
+    await route.fulfill({ response, body })
+  }
+  finally { await response.dispose() }
+}
 const origin = 'https://shop.building-suit.com'
 const dispatched = new WeakMap<BrowserContext, unknown[][]>()
 async function fixture(context: BrowserContext, port = 4337, host = origin) {
@@ -8,11 +47,11 @@ async function fixture(context: BrowserContext, port = 4337, host = origin) {
   const recorded: unknown[][] = []
   dispatched.set(context, recorded)
   await context.exposeBinding('__recordSyntheticAnalytics', (_source, event: unknown[]) => { recorded.push(event) })
-  await context.route(`${host}/**`, async route => {
+  await context.route(`${host}/**`, route => fixtureRoute(context, route, async () => {
     const url = new URL(route.request().url())
     const response = await route.fetch({ url: `http://127.0.0.1:${port}${url.pathname}${url.search}`, headers: { ...route.request().headers(), host: new URL(host).host, 'x-forwarded-proto': 'https' } })
-    await route.fulfill({ response })
-  })
+    await fulfillFetchedResponse(route, response)
+  }))
   await context.route(/https:\/\/[^/]*(googletagmanager|google-analytics)\.com\//, async route => {
     requests.push(route.request().url())
     await route.fulfill({ contentType: 'text/javascript', body: `/* Synthetic provider stub, no Google collection requests. */
@@ -95,13 +134,15 @@ test('settings keyboard, reject, back navigation, locale/theme/mobile and stale 
 test('staging and missing ID stay silent after consent; staging is crawlable noindex', async ({ browser, request }) => {
   for (const port of [4338, 4339]) {
     const context = await browser.newContext()
-    const requests = await fixture(context, port)
-    const page = await context.newPage()
-    await page.goto(origin)
-    await page.getByRole('button', { name: 'Accept optional', exact: true }).click()
-    await expect(page.locator('iframe[title="Optional analytics"]')).toHaveCount(0)
-    expect(requests).toEqual([])
-    await context.close()
+    try {
+      const requests = await fixture(context, port)
+      const page = await context.newPage()
+      await page.goto(origin)
+      await page.getByRole('button', { name: 'Accept optional', exact: true }).click()
+      await expect(page.locator('iframe[title="Optional analytics"]')).toHaveCount(0)
+      expect(requests).toEqual([])
+    }
+    finally { await closeFixtureContext(context) }
   }
   const headers = { host: 'stg.shop.building-suit.com', 'x-forwarded-proto': 'https' }
   const response = await request.get('http://127.0.0.1:4338/', { headers })
@@ -194,27 +235,69 @@ test('settings save enables analytics and pricing link emits one safe marketing 
 })
 test('expired preferences reprompt and unavailable storage keeps choices in memory only', async ({ browser }) => {
   const context = await browser.newContext()
-  const requests = await fixture(context)
-  await context.addInitScript(() => localStorage.setItem('bs-shop.privacy', JSON.stringify({ version: 1, analytics: true, savedAt: Date.now() - 181 * 86400000 })))
-  const page = await context.newPage()
-  await page.goto(origin)
-  await expect(page.getByRole('region', { name: 'Privacy choices' })).toBeVisible()
-  expect(requests).toEqual([])
-  await context.close()
+  try {
+    const requests = await fixture(context)
+    await context.addInitScript(() => localStorage.setItem('bs-shop.privacy', JSON.stringify({ version: 1, analytics: true, savedAt: Date.now() - 181 * 86400000 })))
+    const page = await context.newPage()
+    await page.goto(origin)
+    await expect(page.getByRole('region', { name: 'Privacy choices' })).toBeVisible()
+    expect(requests).toEqual([])
+  }
+  finally { await closeFixtureContext(context) }
   const blocked = await browser.newContext()
-  const blockedRequests = await fixture(blocked)
-  await blocked.addInitScript(() => {
-    Storage.prototype.getItem = () => { throw new Error('Synthetic storage denied') }
-    Storage.prototype.setItem = () => { throw new Error('Synthetic storage denied') }
-  })
-  const blockedPage = await blocked.newPage()
-  await blockedPage.goto(origin)
-  await blockedPage.getByRole('button', { name: 'Reject optional', exact: true }).click()
-  await expect(blockedPage.getByRole('region', { name: 'Privacy choices' })).toHaveCount(0)
-  await blockedPage.evaluate(() => window.dispatchEvent(new Event('focus')))
-  await expect(blockedPage.getByRole('region', { name: 'Privacy choices' })).toHaveCount(0)
-  await blockedPage.reload()
-  await expect(blockedPage.getByRole('region', { name: 'Privacy choices' })).toBeVisible()
-  expect(blockedRequests).toEqual([])
-  await blocked.close()
+  try {
+    const blockedRequests = await fixture(blocked)
+    await blocked.addInitScript(() => {
+      Storage.prototype.getItem = () => { throw new Error('Synthetic storage denied') }
+      Storage.prototype.setItem = () => { throw new Error('Synthetic storage denied') }
+    })
+    const blockedPage = await blocked.newPage()
+    await blockedPage.goto(origin)
+    await blockedPage.getByRole('button', { name: 'Reject optional', exact: true }).click()
+    await expect(blockedPage.getByRole('region', { name: 'Privacy choices' })).toHaveCount(0)
+    await blockedPage.evaluate(() => window.dispatchEvent(new Event('focus')))
+    await expect(blockedPage.getByRole('region', { name: 'Privacy choices' })).toHaveCount(0)
+    await blockedPage.reload()
+    await expect(blockedPage.getByRole('region', { name: 'Privacy choices' })).toBeVisible()
+    expect(blockedRequests).toEqual([])
+  }
+  finally { await closeFixtureContext(blocked) }
+})
+
+
+test('fixture drains a fetched response before closing its browser context', async ({ browser }) => {
+  const context = await browser.newContext()
+  const page = await context.newPage()
+  let release!: () => void
+  let started!: () => void
+  const gate = new Promise<void>(resolve => { release = resolve })
+  const ready = new Promise<void>(resolve => { started = resolve })
+  let fulfilled = false
+  let closeRequested = false
+  const nativeClose = context.close.bind(context)
+  context.close = async options => { closeRequested = true; await nativeClose(options) }
+  let closing: Promise<void> | undefined
+  try {
+    await context.route(origin + '/fixture-lifecycle-probe', route => fixtureRoute(context, route, async () => {
+      const response = await route.fetch({ url: 'http://127.0.0.1:4337/robots.txt' })
+      started()
+      await gate
+      await fulfillFetchedResponse(route, response)
+      fulfilled = true
+    }))
+    // Only the synthetic intercepted probe is intentionally fire-and-forget.
+    await page.evaluate(url => { void fetch(url).catch(() => undefined) }, origin + '/fixture-lifecycle-probe')
+    await ready
+    closing = closeFixtureContext(context)
+    expect(closeRequested).toBe(false)
+    release()
+    await closing
+    expect(fulfilled).toBe(true)
+    expect(closeRequested).toBe(true)
+  }
+  finally {
+    release()
+    if (closing) await closing
+    else await closeFixtureContext(context)
+  }
 })

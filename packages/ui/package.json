@@ -341,18 +341,22 @@
     "./types/etaPresentation": "./src/types/etaPresentation.ts",
     "./organisms/BsDocumentReturns": "./src/organisms/BsDocumentReturns.vue",
     "./types/documentReturns": "./src/types/documentReturns.ts",
-    "./organisms/BsPrivacyConsent": "./src/organisms/BsPrivacyConsent.vue"
+    "./organisms/BsPrivacyConsent": "./src/organisms/BsPrivacyConsent.vue",
+    "./organisms/BsSaleReceipt": "./src/organisms/BsSaleReceipt.vue",
+    "./utils/receiptDocument": "./src/utils/receiptDocument.ts"
   },
   "dependencies": {
-    "primevue": "4.5.5",
+    "@building-suit/brand": "workspace:*",
+    "@building-suit/contracts": "workspace:*",
+    "@building-suit/design-tokens": "workspace:*",
+    "@building-suit/ux": "workspace:*",
+    "@fontsource-variable/manrope": "5.3.0",
+    "@fontsource-variable/roboto": "5.3.0",
+    "@fontsource-variable/roboto-condensed": "5.3.0",
+    "@fontsource/ibm-plex-sans-arabic": "5.3.0",
     "@hugeicons/core-free-icons": "4.2.1",
     "@hugeicons/vue": "1.0.6",
-    "@fontsource-variable/manrope": "5.3.0",
-    "@fontsource/ibm-plex-sans-arabic": "5.3.0",
-    "@building-suit/design-tokens": "workspace:*",
-    "@building-suit/contracts": "workspace:*",
-    "@building-suit/brand": "workspace:*",
-    "@building-suit/ux": "workspace:*"
+    "primevue": "4.5.5"
   },
   "peerDependencies": {
     "vue": "^3.5.0"

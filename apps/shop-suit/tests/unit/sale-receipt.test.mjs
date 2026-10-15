@@ -6,6 +6,7 @@ import { buildReceiptShareText, formatReceiptMoney } from '../../app/utils/recei
 const sharedPrintStyles = await readFile(new URL('../../../../packages/ui/src/styles/base.css', import.meta.url), 'utf8')
 const migration = await readFile(new URL('../../supabase/migrations/20260928233000_immutable_sale_receipts.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_sale_receipts.sql', import.meta.url), 'utf8')
+const presentation = await readFile(new URL('../../app/utils/receiptPresentation.ts', import.meta.url), 'utf8')
 const receiptPage = await readFile(new URL('../../app/pages/sales/[id]/receipt.vue', import.meta.url), 'utf8')
 const receiptTemplate = await readFile(new URL('../../../../packages/ui/src/templates/BsReceiptPage.vue', import.meta.url), 'utf8')
 const printController = await readFile(new URL('../../../../packages/ux/src/composables/useDocumentPrint.ts', import.meta.url), 'utf8')
@@ -120,8 +121,8 @@ test('receipt storage is immutable, tenant-scoped, and captures only fully-paid 
     'SALE_RECEIPT_IMMUTABLE',
     'get_location_sale_receipt',
     'shop_private\\.assert_location_access',
-    "copy\\('compliance'\\)",
-  ]) assert.match(`${migration}\n${receiptPage}`, new RegExp(evidence))
+    "label\\('compliance'\\)",
+  ]) assert.match(`${migration}\n${receiptPage}\n${presentation}`, new RegExp(evidence))
   for (const evidence of [
     'settings or location change rewrote issued receipt snapshot',
     'settings changed after issue rewrote the finalized document',
@@ -137,7 +138,7 @@ test('thermal/A4 print and share actions are connected from POS completion and s
   assert.match(printController, /window\.print\(\)/)
   assert.match(receiptPage, /<BsReceiptPage\b/)
   assert.match(receiptPage, /shareReceipt/)
-  assert.match(receiptPage, /reprintLabel/)
+  assert.match(presentation, /reprintLabel/)
   assert.match(posPage, /sales\/\$\{completedId\}\/receipt/)
   assert.match(salePage, /receipt\.reprint/)
   assert.match(salePage, /receipt\.share/)
