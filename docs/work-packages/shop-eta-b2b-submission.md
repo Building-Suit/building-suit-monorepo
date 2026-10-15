@@ -10,4 +10,15 @@ Returns #317 owns return business commands. This follow-up will provide a read-o
 
 Sources rechecked 2026-10-15: ETA invoice v1.0, signature creation, document serialization, eInvoice Submit Documents and Get Submission, common authentication, integration practices. Receipt/POS transport will remain separate from invoice/ERP transport.
 
-Current B2B code is only the pure `buildEinvoice` envelope and injected signer contract. Completion will be assessed against actual final-head tests and published PR evidence, not possession of external credentials.
+Starting assessment: B2B code was only the pure `buildEinvoice` envelope and injected signer contract. Completion will be assessed against actual final-head tests and published PR evidence, not possession of external credentials.
+
+
+Implementation checkpoint: persistent invoice-channel queue and provider-ID mapping, ERP client-credentials transport, signed-wire preparation, submission polling/recovery, configured HTTPS signing adapter with pinned-certificate CMS verification, optional actual OpenSSL/PKCS#11 reference signer, and shared EN/AR channel/receiver forms are implemented. Original source references are exposed through the read-only versioned `eta_original_document_reference` contract for the returns owner. No return/refund commands were added.
+
+B2C stays independent: PR #316 code/CI-mirror checkpoint `4421c93d` passed every required and disposable check. Its only subsequent change is release-fragment checkpoint `8d09701e62721b1aa53ebab9e6f5e8ba37fa9022`; no further changes are planned there. Parent owns its merge after final-head checks.
+
+The B2B child incorporates published returns checkpoints through `208d4ef59335110935a0492fe8a5b4116be67044` by merge only; no parent dirty work was copied. PR #319 targets #317. EN/AR fragments use PR #318's exact schema/validator from `479524c3`, read temporarily outside the repository. Its release automation was not copied or merged. Public copy describes configurable support and expressly excludes live activation/compliance claims; shared-consumer/tooling changes are separately classified as internal.
+
+Current actual local verification: 360 Shop unit tests pass; all 38 ETA receipt/invoice adapter/worker tests pass, including real synthetic OpenSSL CAdES creation and WebCrypto validation. Four ETA browser cases pass (B2C/B2B × EN desktop/AR mobile). Shop build/typecheck and strict UI/workspace boundaries pass. Shop lint has zero errors; existing parent owner-invitation and returns-route attribute-order warnings remain. New SQL migration and replay/concurrency fixtures are being verified through disposable CI; failures found so far were corrected SQL quoting/fixture-name issues and are not claimed as green until final-head checks pass.
+
+Exact implemented code versus external setup is documented in `apps/shop-suit/docs/eta-b2b-einvoice.md`. Remaining external setup is deployment/scheduler, actual approved certificate/device/provider access, managed ERP/signing credentials, verified official codes and external ETA acceptance. Synthetic cryptographic tests do not prove those external requirements or legal compliance. No hosted writes, live credentials, production/main promotion, release publication or provider setting changes were performed.
