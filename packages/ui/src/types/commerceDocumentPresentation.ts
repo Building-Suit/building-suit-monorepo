@@ -4,6 +4,7 @@ export interface BsCommerceDocumentLine { id: string; name: string; description:
 export interface BsCommerceDocumentEvent { id: string; title: string; description: string; reason: string; canReverse: boolean; canRefund: boolean }
 export interface BsCommerceDocumentMovement { id: string; date: string; name: string; quantity: string; cost: string; batch: string; to: string }
 export interface BsCommerceDocumentView {
+  receiptImageError?: boolean
   serviceAction?: { label: string; to: string }
   amountBreakdown?: { label: string; value: string }[]
   orderDiscount?: { label: string; canEdit: boolean; pending: boolean; dirty: boolean }
@@ -20,6 +21,7 @@ export interface BsCommerceDocumentView {
   correctionDialog: { dirty: boolean; pending: boolean; warning: string }
 }
 export interface BsCommerceDocumentCopy {
+  downloadReceipt?: string
   back: string; loading: string; loadError: string; retry: string; notFound: string; party: string; date: string; created: string; notes: string; total: string; balance: string; discount: string; paid: string; due: string; settlement: string
   lines: string; item: string; quantity: string; price: string; available: string; payments: string; credits: string; inventory: string; empty: string; noInventory: string; noParty: string; details: string; batch: string; open: string
   recordPayment: string; recordCredit: string; recordReturn: string; reverse: string; refund: string; issue: string; issuing: string; edit: string; reprint: string; share: string

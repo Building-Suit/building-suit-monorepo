@@ -1,0 +1,14 @@
+{
+  "id": "shop-receipt-image",
+  "task": "SS-RECEIPT-IMAGE-001",
+  "suits": ["shop-suit"],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": ["apps/shop-suit"],
+  "reason": "Improves issued receipt layout and replaces text copying with a local PNG clipboard flow.",
+  "notes": {
+    "title": {"en": "Receipt images", "ar": "صور الإيصالات"},
+    "summary": {"en": "Copy an issued receipt as a clear image for pasting into WhatsApp, with an image download option when copying is unavailable.", "ar": "انسخ الإيصال المُصدر كصورة واضحة للصقها في واتساب، مع إمكانية تنزيل الصورة عند تعذر النسخ."},
+    "details": {"en": "Arabic and English receipts share a monochrome thermal layout for preview, printing and images. Merchant and branch names, issued amounts and payment references are retained. Existing thermal and A4 print sizes remain available.", "ar": "تستخدم الإيصالات العربية والإنجليزية تنسيقًا حراريًا أحادي اللون للمعاينة والطباعة والصور، مع الاحتفاظ بأسماء المتجر والفرع والمبالغ المُصدرة ومراجع الدفع. تظل مقاسات الطباعة الحرارية وA4 متاحة."}
+  }
+}

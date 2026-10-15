@@ -22,6 +22,18 @@ export function formatReceiptDate(value: string, locale: string) {
   }).format(new Date(value))
 }
 
+/** Thermal document ordering follows the reference: date then time stays one
+ * LTR group, while Arabic's localized day period retains its RTL position. */
+export function formatReceiptDocumentDate(value: string, locale: string) {
+  const parts = new Intl.DateTimeFormat(receiptLocale(locale), {
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: '2-digit',
+    hour12: true, numberingSystem: 'latn', calendar: 'gregory', timeZone: 'Africa/Cairo',
+  }).formatToParts(new Date(value))
+  const part = (name: Intl.DateTimeFormatPartTypes) => parts.find(item => item.type === name)?.value ?? ''
+  const dateTime = `${part('year')}/${part('month')}/${part('day')} ${part('hour')}:${part('minute')}`
+  return locale === 'ar' ? `\u2066${dateTime}\u2069 ${part('dayPeriod')}` : `${dateTime} ${part('dayPeriod')}`
+}
+
 export function buildReceiptShareText(
   receipt: SaleReceiptSnapshot,
   copy: ReceiptShareCopy,
