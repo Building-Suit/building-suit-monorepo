@@ -39,6 +39,16 @@ const changelogFeed: ChangelogFeed = {
     ...(index % 2 === 0 ? { status: 'released' as const, version: '1.0.0', releasedAt: '2026-10-09T10:00:00Z' } : { status: 'coming-soon' as const, targetVersion: '1.1.0-beta.1' }),
   })),
 }
+// Synthetic batch-promotion example: equal clocks, several versions and several notes per version.
+const changelogBatchFeed: ChangelogFeed = {
+  ...changelogFeed,
+  entries: ['1.9.0', '1.10.0', '2.0.0', '2.0.1'].flatMap((version, index) => [0, 1].map(note => ({
+    id: `batch-${3 - index}-${note}`, suit: 'shop-suit', visibility: 'public' as const, status: 'released' as const, version,
+    publishedAt: '2026-10-09T12:00:00Z', releasedAt: '2026-10-09T12:00:00Z',
+    title: changelogFeed.entries[0]!.title, summary: changelogFeed.entries[0]!.summary,
+    details: changelogFeed.entries[0]!.details, links: [],
+  }))),
+}
 const changelogCopy = computed<ChangelogCopy>(() => isArabic.value ? {
   timeline: 'سجل التحديثات', suit: 'التطبيق', status: 'حالة الإصدار', allSuits: 'كل التطبيقات', allStatuses: 'كل الحالات', released: 'تم الإصدار', comingSoon: 'قريباً', targetVersion: 'الإصدار المستهدف', new: 'جديد', published: 'تاريخ النشر', releasedAt: 'تاريخ الإصدار', empty: 'لا توجد تحديثات', loading: 'جار تحميل التحديثات', error: 'تعذر تحميل التحديثات', denied: 'الوصول غير مسموح', retry: 'إعادة المحاولة',
 } : {
@@ -221,7 +231,7 @@ const invitationPreviewCopy={
       <BsChangelogTimeline :feed="changelogFeed" :locale="isArabic ? 'ar' : 'en'" :copy="changelogCopy" :state="changelogState" @retry="changelogState = 'ready'" />
     </BsContentSection>
 
-    <BsWhatsNewSection :content="{ title: isArabic ? 'ما الجديد — مثال توضيحي' : 'What’s new — demonstration', linkLabel: isArabic ? 'سجل التحديثات' : 'Full changelog', to: '/components#changelog', feed: changelogFeed, copy: changelogCopy, locale: isArabic ? 'ar' : 'en', suit: 'shop-suit', state: changelogState }" @retry="changelogState = 'ready'" />
+    <BsWhatsNewSection :content="{ title: isArabic ? 'ما الجديد — مثال توضيحي' : 'What’s new — demonstration', linkLabel: isArabic ? 'سجل التحديثات' : 'Full changelog', to: '/components#changelog', feed: changelogBatchFeed, copy: changelogCopy, locale: isArabic ? 'ar' : 'en', suit: 'shop-suit', state: changelogState }" @retry="changelogState = 'ready'" />
 
     <BsContentSection id="administration-shell" :title="isArabic ? 'هيكل الإدارة' : 'Administration shell'" :description="isArabic ? 'أمثلة التنقل والحالات من بيانات التطبيق.' : 'App-owned descriptors, controlled selection and normal/loading/empty/overflow examples.'">
       <BsInline>

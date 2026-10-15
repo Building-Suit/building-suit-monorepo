@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { createChangelogClient } from '../../packages/data-access/src/changelog.ts'
+import { filterChangelog, selectChangelogReleases, isChangelogNew } from '../../packages/contracts/src/changelog.ts'
 import { spawnSync, spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
+const outputArgs = process.argv.slice(2)
+if (outputArgs.length && (outputArgs.length !== 2 || outputArgs[0] !== '--public-feed' || !outputArgs[1])) throw new Error('Expected optional --public-feed output path')
 const container = `bs-release-test-${randomUUID()}`
 function docker(args, input) {
   const result = spawnSync('docker',args,{input,encoding:'utf8',timeout:120000})
@@ -53,6 +57,13 @@ try {
   const internalRelease=accept(request(two,one,[internal]));assert.deepEqual(internalRelease.manifest.versions,{})
   const maxRelease=accept(request(three,two,[{...fragment,id:'major-change',classification:'major'},{...fragment,id:'patch-change',classification:'patch'}]))
   assert.equal(maxRelease.manifest.versions['shop-suit'],'3.0.0')
+  // Several accepted staging releases, each with several curated fragments, ship in one promotion.
+  let parent=three
+  const additional=[]
+  for (const [sha, count] of [['4'.repeat(40),2],['5'.repeat(40),3],['6'.repeat(40),2]]) {
+    const notes=Array.from({length:count},(_,index)=>({...fragment,id:`batch-${sha[0]}-note-${index}`,classification:'patch'}))
+    additional.push(accept(request(sha,parent,notes)));parent=sha
+  }
   assert.deepEqual(JSON.parse(sql('select public.release_public_feed()')).entries,[],'Unready deployment advertises nothing')
   for (const role of ['anon','authenticated']) {
     fails(`set role ${role}; select public.release_stage_accept(${json(a)});`,/permission denied/)
@@ -61,12 +72,12 @@ try {
   fails(`set role service_role;select public.release_catalog_state();`,/SERVER_REQUIRED/)
   fails(`${jwt} select public.release_publish('production','refs/heads/main','${three}',${json([release])});`,/WRONG_ENVIRONMENT/)
   fails(`${jwt} select public.release_publish('staging','refs/heads/stg','${three}',${json([{...release,digest:'a'.repeat(64)}])});`,/DIGEST_CONFLICT/)
-  const missing={...release.manifest,sourceSha:'4'.repeat(40)}
+  const missing={...release.manifest,sourceSha:'7'.repeat(40)}
   const missingDigest=sql(`select super_admin_private.release_digest(${json(missing)});`)
   fails(`${jwt} select public.release_publish('staging','refs/heads/stg','${three}',${json([{manifest:missing,digest:missingDigest,publishedAt:null}])});`,/MISSING_STAGING_MANIFEST/)
-  publish('staging','stg',[release,internalRelease,maxRelease])
+  publish('staging','stg',[release,internalRelease,maxRelease,...additional])
   const feed=JSON.parse(sql('set role anon;select public.release_public_feed();').split('\n').at(-1))
-  assert.equal(feed.entries.length,3);for(const forbidden of ['BS-TEST','fragments','sourceSha','parentSha','paths','classification','baseline_evidence']) assert.ok(!JSON.stringify(feed).includes(forbidden),forbidden)
+  assert.equal(feed.entries.length,10);for(const forbidden of ['BS-TEST','fragments','sourceSha','parentSha','paths','classification','baseline_evidence']) assert.ok(!JSON.stringify(feed).includes(forbidden),forbidden)
   const published=JSON.parse(sql(`${jwt} select public.release_catalog_state();`).split('\n').at(-1)).manifests
   const before=feed.entries[0].publishedAt;publish('staging','stg',published)
   assert.equal(JSON.parse(sql('select public.release_public_feed()')).entries[0].publishedAt,before)
@@ -91,8 +102,24 @@ try {
   assert.equal(prodSql('select cursor_sha from public.release_catalog_configuration'),anchor)
   promote(published);promote(published)
   const prod=JSON.parse(prodSql(`${jwt}select public.release_catalog_state();`).split('\n').at(-1))
-  assert.deepEqual(prod.manifests.map(r=>[r.manifest,r.digest]),published.map(r=>[r.manifest,r.digest]));assert.equal(prod.manifests.length,3)
+  assert.deepEqual(prod.manifests.map(r=>[r.manifest,r.digest]),published.map(r=>[r.manifest,r.digest]));assert.equal(prod.manifests.length,6)
   assert.notEqual(prod.manifests[0].publishedAt,published[0].publishedAt)
   assert.throws(()=>prodSql(`${jwt}select public.release_stage_accept(${json(a)});`),/WRONG_ENVIRONMENT/)
+  const productionFeed=JSON.parse(prodSql('set role anon;select public.release_public_feed();').split('\n').at(-1))
+  assert.equal(new Set(productionFeed.entries.map(row=>row.publishedAt)).size,1,'Batch publication has one immutable environment clock')
+  const expectedVersions=['3.0.3','3.0.2','3.0.1','3.0.0','2.8.0']
+  assert.deepEqual([...new Set(productionFeed.entries.map(row=>row.version))],expectedVersions,'Actual public RPC preserves release chronology')
+  // Exercise the actual shared client and selector, including reordering the public response.
+  const client=await createChangelogClient(async()=>({...productionFeed,entries:[...productionFeed.entries].reverse()})).list({suit:'shop-suit'})
+  assert.deepEqual([...new Set(client.entries.map(row=>row.version))],expectedVersions)
+  assert.deepEqual(filterChangelog(client).map(row=>row.id),client.entries.map(row=>row.id))
+  const teaser=selectChangelogReleases(client,{suit:'shop-suit'},3)
+  assert.deepEqual([...new Set(teaser.map(row=>row.version))],expectedVersions.slice(0,3))
+  assert.equal(teaser.length,7,'Three distinct releases include all seven fragments, rather than three entries')
+  assert.deepEqual(teaser.map(row=>row.publishedAt),Array(7).fill(productionFeed.entries[0].publishedAt))
+  const expiry=new Date(Date.parse(productionFeed.entries[0].publishedAt)+48*60*60*1000).toISOString()
+  assert.ok(teaser.every(row=>isChangelogNew(row,client.serverNow)&&!isChangelogNew(row,expiry)))
+  for(const forbidden of ['BS-TEST','fragments','sourceSha','parentSha','paths','classification','digest','ordinal','baseline_evidence']) assert.ok(!JSON.stringify(productionFeed).includes(forbidden),forbidden)
+  if(outputArgs[1]) writeFileSync(outputArgs[1],JSON.stringify(productionFeed)+'\n')
   console.log('Disposable PostgreSQL release acceptance passed: atomic allocation, concurrent retry, ordering, recovery, authorization, immutable timestamps, projection and batch promotion')
 } finally { docker(['rm','-f',container]) }

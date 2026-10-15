@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
-import { parseChangelogFeed, filterChangelog, isChangelogNew } from '@building-suit/contracts'
-import type { ChangelogFeed, ChangelogLocale, ChangelogCopy, ChangelogEntry } from '@building-suit/contracts'
+import { parseChangelogFeed, filterChangelog, selectChangelogReleases, isChangelogNew } from '@building-suit/contracts'
+import type { ChangelogFeed, ChangelogLocale, ChangelogCopy, ChangelogEntry, ChangelogFilter } from '@building-suit/contracts'
 const props = withDefaults(defineProps<{
   feed: ChangelogFeed; locale: ChangelogLocale; copy: ChangelogCopy
-  releasedOnly?: boolean; hideFilters?: boolean; limit?: number
+  releasedOnly?: boolean; hideFilters?: boolean; releaseLimit?: number
   suit?: string; state?: 'ready' | 'loading' | 'error' | 'denied'
-}>(), { suit: undefined, state: 'ready', releasedOnly: false, hideFilters: false, limit: undefined })
+}>(), { suit: undefined, state: 'ready', releasedOnly: false, hideFilters: false, releaseLimit: undefined })
 defineEmits<{ retry: [] }>()
 const selectedSuit = ref(''), status = ref('')
 const validated = computed(() => parseChangelogFeed(props.feed))
-const entries = computed(() => filterChangelog(validated.value, { suit: props.suit ?? selectedSuit.value, status: props.releasedOnly ? 'released' : (status.value || undefined) as ChangelogEntry['status'] | undefined }).slice(0, props.limit))
+const filter = computed<ChangelogFilter>(() => ({ suit: props.suit ?? selectedSuit.value, status: props.releasedOnly ? 'released' : (status.value || undefined) as ChangelogEntry['status'] | undefined }))
+const entries = computed(() => props.releaseLimit === undefined
+  ? filterChangelog(validated.value, filter.value)
+  : selectChangelogReleases(validated.value, filter.value, props.releaseLimit))
 const elapsed = ref(0)
 let baseline = 0, timer: ReturnType<typeof setInterval> | undefined
 // Advance a server snapshot by monotonic elapsed time. Browser wall-clock changes have no effect.

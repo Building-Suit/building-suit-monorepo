@@ -1,12 +1,15 @@
+import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { test, expect } from '@playwright/test'
 const text = { en: 'Deployed counter update', ar: 'تحديث نقطة البيع المنشور' }
 const now = '2026-10-15T12:00:00Z'
 const entry = { id: 'deployed', suit: 'shop-suit', visibility: 'public', status: 'released', version: '2.8.0', publishedAt: '2026-10-14T12:00:00Z', releasedAt: '2026-10-14T12:00:00Z', title: text, summary: text, details: text, links: [] }
 const suits = [{ id: 'shop-suit', name: { en: 'Shop Suit', ar: 'شوب سوت' } }, { id: 'ledger-suit', name: { en: 'Ledger Suit', ar: 'ليدجر سوت' } }]
 const entries = [entry,
-  { ...entry, id: 'at-48-hours', publishedAt: '2026-10-13T12:00:00Z', releasedAt: '2026-10-13T12:00:00Z' },
-  { ...entry, id: 'old', publishedAt: '2026-10-12T12:00:00Z', releasedAt: '2026-10-12T12:00:00Z' },
-  { ...entry, id: 'older', publishedAt: '2026-10-11T12:00:00Z', releasedAt: '2026-10-11T12:00:00Z' },
+  { ...entry, id: 'at-48-hours', version: '2.7.9', publishedAt: '2026-10-13T12:00:00Z', releasedAt: '2026-10-13T12:00:00Z' },
+  { ...entry, id: 'old', version: '2.7.8', publishedAt: '2026-10-12T12:00:00Z', releasedAt: '2026-10-12T12:00:00Z' },
+  { ...entry, id: 'older', version: '2.7.7', publishedAt: '2026-10-11T12:00:00Z', releasedAt: '2026-10-11T12:00:00Z' },
   { ...entry, id: 'internal', visibility: 'internal', title: {en:'PRIVATE TASK',ar:'خاص'} },
   { ...entry, id: 'future', publishedAt: '2026-11-01T12:00:00Z', title: {en:'Future claim',ar:'مستقبلي'} },
   { ...entry, id: 'other-suit', suit: 'ledger-suit', title: {en:'Ledger only',ar:'ليدجر فقط'} },
@@ -70,4 +73,37 @@ test('resuming and navigating refreshes the trusted clock without resetting firs
   await section.getByRole('link',{name:'View the full changelog'}).click()
   await expect(page.locator('main .bs-changelog article')).toHaveCount(1)
   await expect(page.locator('main .bs-changelog').getByText('New',{exact:true})).toHaveCount(0)
+})
+
+for (const locale of ['en','ar'] as const) test(`${locale}: actual batch promotion feed keeps three complete newest releases in the teaser`,async({page},testInfo)=>{
+  test.setTimeout(60000)
+  const output=testInfo.outputPath('promoted-public-feed.json')
+  // This creates only uniquely named disposable Docker databases; the output is the actual anon RPC projection.
+  execFileSync(process.execPath,['tooling/releases/catalog-disposable.mjs','--public-feed',output],{
+    cwd:fileURLToPath(new URL('../../../../',import.meta.url)),timeout:45000,stdio:'pipe',
+  })
+  const feed=JSON.parse(readFileSync(output,'utf8'))
+  const publishedAt=feed.entries[0].publishedAt
+  expect(new Set(feed.entries.map((row:{publishedAt:string})=>row.publishedAt)).size).toBe(1)
+  await page.emulateMedia({reducedMotion:'reduce'})
+  await page.context().addCookies([{name:'building-suit-locale',value:locale,url:'http://127.0.0.1:4393'}])
+  await page.addInitScript(()=>{Date.now=()=>0})
+  // Deliberately scramble server delivery order; neither MD5 IDs nor response position may decide newest.
+  await page.route('**/api/changelog',route=>route.fulfill({json:{...feed,entries:[...feed.entries].reverse()}}))
+  await page.goto('/')
+  const section=page.locator('#whats-new')
+  await expect(section.locator('article')).toHaveCount(7)
+  await expect(section.locator('article bdi')).toHaveText(['3.0.3','3.0.3','3.0.2','3.0.2','3.0.2','3.0.1','3.0.1'])
+  await expect(section.getByText(locale==='ar'?'جديد':'New',{exact:true})).toHaveCount(7)
+  expect(await section.locator('time[datetime]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('datetime')))).toEqual(Array(14).fill(publishedAt))
+  await section.getByRole('link',{name:locale==='ar'?'عرض سجل التحديثات الكامل':'View the full changelog'}).click()
+  await expect(page.locator('main .bs-changelog article')).toHaveCount(10)
+  await expect(page.locator('main .bs-changelog article bdi')).toHaveText(['3.0.3','3.0.3','3.0.2','3.0.2','3.0.2','3.0.1','3.0.1','3.0.0','3.0.0','2.8.0'])
+  await page.unroute('**/api/changelog')
+  const serverNow=new Date(Date.parse(publishedAt)+48*60*60*1000).toISOString()
+  await page.route('**/api/changelog',route=>route.fulfill({json:{...feed,serverNow}}))
+  await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')))
+  await expect(page.locator('main .bs-changelog article')).toHaveCount(10)
+  await expect(page.locator('main .bs-changelog').getByText(locale==='ar'?'جديد':'New',{exact:true})).toHaveCount(0)
+  expect(await page.locator('main .bs-changelog time').first().getAttribute('datetime')).toBe(publishedAt)
 })

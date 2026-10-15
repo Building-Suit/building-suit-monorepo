@@ -36,3 +36,22 @@ Not activated; no hosted mutations, credential creation/configuration, privilege
 External setup is exactly the runbook prerequisites: existing provider/Git migration deployment, reviewed historical version baselines and matching anchor/cursor configuration, verified production ref, existing server-only SAS credentials, per-environment provider readiness contexts and product public-read configuration. Missing configuration/deployment success fails closed. No release numbers/types are requested from the owner. Real historical evidence must establish baselines; synthetic UI examples are not historical releases.
 
 Parent: preserve the PR316 stack and obtain its curated ETA fragment before integration under the new rule; perform the separately authorized stg integration only after final checks and provider readiness, then manual EN/AR acceptance. This implementation does not authorize main/production promotion.
+
+## Focused review repair — comment6183709000
+
+Fixed equal-publication-time ordering without introducing public provenance fields or changing stored timestamps. Public filtering retains publication chronology; ties now use independent Suit identity, release state, descending SemVer precedence within that Suit, then opaque entry ID only after equal precedence. Numeric identifiers retain arbitrary precision, prereleases follow standard precedence, and build metadata does not affect precedence.
+
+The teaser uses `selectChangelogReleases` through `BsChangelogTimeline.releaseLimit`: three distinct Suit/version groups, keeping every note in each selected group. It no longer slices three entries. The catalogue demonstrates an equal-clock batch with several versions and notes. Public filtering/allowlists, immutable publication/release time and trusted New timing are unchanged.
+
+The disposable migration test now stages five public versions (one internal-only manifest in between), promotes all six manifests in one transaction, reads the actual anon RPC projection, reverses delivery to the real shared client and asserts sorted complete groups. The old ID-based algorithm produced teaser versions `[3.0.1,3.0.3,3.0.2]`; the repaired selection returns `[3.0.3,3.0.3,3.0.2,3.0.2,3.0.2,3.0.1,3.0.1]`. The test confirms identical immutable batch timestamps and excludes internal metadata. Its optional public-only output drives EN/AR browser tests of the actual Shop teaser/full-history path, including 48-hour expiry and unchanged timestamps.
+
+Repair validation:
+
+- `pnpm test`: 1,471 passed, 23 environment-dependent skips, zero failures.
+- All six app typechecks passed; Shop and catalogue production builds passed.
+- `pnpm check`, changed contract/UI/tooling/Shop test lint and `git diff --check` passed.
+- Existing changelog contract tests plus three new semantic-order/grouping cases passed (10 total); actual disposable PostgreSQL batch/public-feed/client/selection regression passed.
+- Shop public-changelog browser suite: eight passed, including both EN/AR actual-batch regressions. Existing timeline/filter/keyboard/theme/mobile regressions are also run on the repaired source.
+- Final-head GitHub CI is required after publication; earlier checkpoint479524c3 has green required review/branch-policy/verify and SAS disposable checks. Its account-provisioning schema-generation check failed only because the public ECR image registry returned `toomanyrequests`; no product assertion failed in that run. Do not treat earlier checks as proof for the repair head.
+
+No hosted writes, schema changes, timestamp rewrites, production merge or provider configuration changes were made for this repair. Existing activation prerequisites and parent-owned staging integration remain in effect.
