@@ -1,0 +1,24 @@
+{
+  "id": "shop-eta-submission-support-infrastructure",
+  "task": "SS-ETA-SUBMISSION-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/shop-eta-disposable.yml",
+    ".github/workflows/shop-taxes-disposable.yml",
+    "packages/ui",
+    "tooling/database/test-shop-eta-local.mjs",
+    "tooling/database/test-shop-eta-concurrency.mjs",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared",
+    "docs/work-packages/shop-eta-submission-support.md"
+  ],
+  "reason": "Shared presentation exports and isolated verification infrastructure support the Shop capability; other products receive no tax submission feature."
+}

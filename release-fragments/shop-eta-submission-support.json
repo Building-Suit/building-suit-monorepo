@@ -1,0 +1,29 @@
+{
+  "id": "shop-eta-submission-support",
+  "task": "SS-ETA-SUBMISSION-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit",
+    "packages/ui/src/templates/BsEtaSettingsPage.vue",
+    "packages/ui/src/types/etaPresentation.ts"
+  ],
+  "reason": "Adds configurable Shop integration support while live activation and compliance remain external decisions.",
+  "notes": {
+    "title": {
+      "en": "Prepare electronic receipt integration",
+      "ar": "تجهيز الربط بالإيصالات الإلكترونية"
+    },
+    "summary": {
+      "en": "Configure merchant tax identity, branch and item codes, and track supported receipts through a durable submission queue.",
+      "ar": "جهّز الهوية الضريبية للنشاط وأكواد الفروع والأصناف، وتابع الإيصالات المدعومة في قائمة إرسال محفوظة."
+    },
+    "details": {
+      "en": "Initial export supports Egyptian-pound receipts and preserves original sale amounts. Submitted receipts remain pending until external validation. Saving settings does not activate live submission or establish tax compliance; provider deployment, credentials and activation evidence are still required.",
+      "ar": "يدعم التصدير المبدئي الإيصالات بالجنيه المصري مع الحفاظ على مبالغ البيع الأصلية. تظل الإيصالات المرسلة قيد التحقق حتى وصول النتيجة الخارجية. حفظ الإعدادات لا يفعّل الإرسال الفعلي ولا يثبت الامتثال الضريبي؛ يظل نشر الربط وبيانات الوصول ودليل التفعيل مطلوبًا."
+    }
+  }
+}
