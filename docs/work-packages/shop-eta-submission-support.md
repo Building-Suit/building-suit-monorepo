@@ -36,7 +36,7 @@ Forward migration: `20261015021836_eta_submission_support.sql`. Applied migratio
 All presentation is in shared UI; existing shared UX record-action/form controllers provide interaction. Shop owns business adapters, typed values, errors and authorization. No frontend `.agents/skills` files existed in the selected cloud environment; maintained scoped UI/Shop/database guidance was used.
 
 Actual checks:
-- 349 Shop unit tests pass, including 27 ETA payload/worker/server-boundary tests.
+- 350 Shop unit tests pass, including 28 ETA payload/worker/server-boundary tests.
 - EN desktop and AR mobile ETA browser cases both pass, including saving setup, pending validation status and no overflow.
 - Shop production build passes. All six workspace app typechecks pass (including documentation after generating its catalogue).
 - Shop lint has zero errors; two pre-existing owner-invitation attribute-order warnings remain. Changed shared UI/tooling lint passes.

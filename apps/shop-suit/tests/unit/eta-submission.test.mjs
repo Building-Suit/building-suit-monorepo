@@ -27,7 +27,7 @@ test('merchant and item format validation exposes missing fields without claimin
 })
 for (const [name,mutate,error] of [
  ['non EGP',s=>s.currency='USD','EGP_ONLY'],['legacy',s=>s.tax=null,'LEGACY'],['disabled',s=>s.tax.calculationEnabled=false,'LEGACY'],
- ['compound',s=>s.tax.lines[0].rule.taxType='T2','TREATMENT'],['hidden withholding',s=>s.tax.lines[0].rule.withholding=5,'TREATMENT'],['invalid subtype',s=>s.tax.lines[0].rule.subtype='W001','TREATMENT'],
+ ['compound',s=>s.tax.lines[0].rule.taxType='T2','TREATMENT'],['hidden withholding',s=>s.tax.lines[0].rule.withholding=5,'TREATMENT'],['invalid subtype',s=>s.tax.lines[0].rule.subtype='W001','TREATMENT'],['unknown classification',s=>s.tax.lines[0].rule.treatment='constructor','TREATMENT'],
  ['three decimal rate',s=>s.tax.lines[0].rule.rate=14.001,'RATE'],['missing code',s=>s.items=[],'CODES'],
  ['money rounding',s=>s.tax.total=114.01,'ROUNDING'],['B2B',s=>s.buyer={type:'B',id:'987654321'},'B2B'],
  ['eInvoice',s=>s.channel='einvoice','EINVOICE'],['high amount buyer',s=>s.tax.total5=150000,'BUYER'],
@@ -75,6 +75,7 @@ test('POS tokens reused with single flight and tenant/POS/credential-version iso
  const client=createEtaClient({fetcher:async()=>{calls++;return new Response(JSON.stringify({access_token:'synthetic-token',expires_in:3600}))},now:()=>1000})
  await Promise.all([client.token(config),client.token(config)]);await client.token(config);assert.equal(calls,1)
  await client.token({...config,shopId:'shop-2'});await client.token({...config,deviceSerialNumber:'POS-2'});await client.token({...config,credentialVersion:'v2'});assert.equal(calls,4)
+ await client.token({...config,deviceSerialNumber:'POS:A',credentialVersion:'B'});await client.token({...config,deviceSerialNumber:'POS',credentialVersion:'A:B'});assert.equal(calls,6)
 })
 
 test('B2B eInvoice uses separate envelope and explicit CAdES-BES signing provider',async()=>{

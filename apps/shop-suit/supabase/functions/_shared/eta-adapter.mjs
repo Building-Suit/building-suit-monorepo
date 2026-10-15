@@ -72,7 +72,7 @@ export async function buildReceipt(source, previousUUID = '') {
   if (!str(description,500)) fail('ETA_ITEM_DESCRIPTION_REQUIRED')
   const rule = line.rule
   const allowed = {vat:['V009','V010'],zero_rated:['V001','V002','V010'],exempt:['V003','V005','V006','V007','V008'],non_taxable:['V004']}
-  if (!rule || Object.keys(rule).some(key=>!['treatment','rate','priceMode','subtype','taxType','itemType','sourceId'].includes(key)) || (rule.taxType && rule.taxType !== 'T1') || !allowed[rule.treatment]?.includes(rule.subtype) || !['inclusive','exclusive'].includes(rule.priceMode)) fail('ETA_TAX_TREATMENT_UNSUPPORTED')
+  if (!rule || Object.keys(rule).some(key=>!['treatment','rate','priceMode','subtype','taxType','itemType','sourceId'].includes(key)) || (rule.taxType && rule.taxType !== 'T1') || (!Object.hasOwn(allowed,rule.treatment) || !allowed[rule.treatment].includes(rule.subtype)) || !['inclusive','exclusive'].includes(rule.priceMode)) fail('ETA_TAX_TREATMENT_UNSUPPORTED')
   const rate = units(rule.rate)
   if (rate > 10000000n || rate % 1000n || (rule.treatment !== 'vat' && rate !== 0n) || (rule.treatment === 'vat' && rate === 0n)) fail('ETA_TAX_RATE_UNSUPPORTED')
   const quantity = units(line.originalQuantity), net = units(line.net5), tax = units(line.tax5), discount = units(line.discountNet5)

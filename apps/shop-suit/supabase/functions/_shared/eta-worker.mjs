@@ -2,10 +2,11 @@ import { buildReceipt, EtaError } from './eta-adapter.mjs'
 export const retryDelay = (attempt, retryAfter = 0) => Math.min(86400, Math.max(60, Number(retryAfter) || 0, 60 * 2 ** Math.min(attempt, 10)))
 // Cache is server-instance scoped and tenant/POS/credential-version isolated.
 export function createEtaClient({ fetcher = fetch, now = Date.now }) {
+ const tokenKey = config => JSON.stringify([config.shopId,config.deviceSerialNumber,config.credentialVersion])
  const tokens = new Map()
  const inflight = new Map()
  async function token(config) {
-  const key = `${config.shopId}:${config.deviceSerialNumber}:${config.credentialVersion}`
+  const key = tokenKey(config)
   const cached = tokens.get(key)
   if (cached && cached.until > now() + 60000) return cached.value
   if (inflight.has(key)) return inflight.get(key)
@@ -25,7 +26,7 @@ export function createEtaClient({ fetcher = fetch, now = Date.now }) {
  async function call(config, path, options = {}) {
   const bearer = await token(config)
   const response = await fetcher(`https://api.preprod.invoicing.eta.gov.eg${path}`,{...options,redirect:'error',signal:AbortSignal.timeout(20000),headers:{authorization:`Bearer ${bearer}`,'content-type':'application/json'}})
-  if (response.status === 401) tokens.delete(`${config.shopId}:${config.deviceSerialNumber}:${config.credentialVersion}`)
+  if (response.status === 401) tokens.delete(tokenKey(config))
   return response
  }
  return {token, submit:(config,body)=>call(config,'/api/v1/receiptsubmissions',{method:'POST',body}),
