@@ -9,7 +9,11 @@ export default defineNuxtConfig({
       ],
     },
   },
-  runtimeConfig: { public: { appUrl: process.env.APP_URL, portalKey: 'shop-crm' } },
+  runtimeConfig: { public: {
+    appUrl: process.env.APP_URL, portalKey: 'shop-crm',
+    appEnvironment: process.env.APP_ENV || 'local',
+    gaMeasurementId: '', searchConsoleVerification: '',
+  } },
   supabase: {
     redirect: false,
     // Independent product/environment session; no cross-product SSO.
