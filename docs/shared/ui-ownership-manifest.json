@@ -347,6 +347,7 @@
       "owner": "packages/ui",
       "components": [
         "BsShopTaxSettingsPage",
+        "BsEtaSettingsPage",
         "BsShopTaxRuleFields"
       ],
       "adapterBoundary": "Typed tax settings, catalog projections, translated copy and authorized semantic commands; financial calculation remains server owned."

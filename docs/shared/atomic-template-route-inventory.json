@@ -70,7 +70,8 @@
     "BsOwnerInvitationPage": "packages/ui/src/templates/BsOwnerInvitationPage.vue",
     "BsOfflineCounterStatus": "packages/ui/src/templates/BsOfflineCounterStatus.vue",
     "BsCommissionPolicyPage": "packages/ui/src/templates/BsCommissionPolicyPage.vue",
-    "BsShopTaxSettingsPage": "packages/ui/src/templates/BsShopTaxSettingsPage.vue"
+    "BsShopTaxSettingsPage": "packages/ui/src/templates/BsShopTaxSettingsPage.vue",
+    "BsEtaSettingsPage": "packages/ui/src/templates/BsEtaSettingsPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2528,6 +2529,24 @@
         "~/types/shopCrmRpc"
       ],
       "purpose": "service-recipes-and-explicit-fulfillment"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/eta.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsEtaSettingsPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsEtaSettingsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsEtaSettingsPage.vue",
+      "status": "implemented",
+      "domainAdapter": "apps/shop-suit/app/pages/eta.vue",
+      "dependencies": [
+        "@building-suit/ui/types/etaPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "purpose": "eta-merchant-setup-and-submission"
     }
   ],
   "verifiedSharedHeads": [
@@ -2646,6 +2665,7 @@
     "BsOwnerInvitationPage",
     "BsCommissionPolicyPage",
     "BsShopTaxSettingsPage",
-    "BsServiceFulfillmentPage"
+    "BsServiceFulfillmentPage",
+    "BsEtaSettingsPage"
   ]
 }

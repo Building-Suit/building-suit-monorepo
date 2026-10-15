@@ -4,6 +4,9 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      eta_settings: {Args:{p_shop_id:string;p_offset?:number};Returns:unknown}
+      save_eta_configuration: {Args:{p_request_id:string;p_shop_id:string;p_configuration:unknown;p_reason:string};Returns:string}
+      queue_eta_receipt: {Args:{p_request_id:string;p_shop_id:string;p_invoice_id:string;p_buyer:{type:string;id?:string;name?:string};p_payment_method:string};Returns:string}
       complete_service: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_line_id: string | null; p_quantity: number; p_appointment_id?: string | null; p_materials?: Array<{productId: string; unit: string; quantity: number}> | null; p_reason?: string }; Returns: string }
       service_fulfillment_context: { Args: {p_shop_id: string; p_location_id: string; p_invoice_id?: string | null; p_offset?: number}; Returns: unknown }
       service_recipe_context: { Args: {p_shop_id: string; p_offset?: number}; Returns: unknown }
