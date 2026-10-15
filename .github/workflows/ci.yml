@@ -54,6 +54,14 @@ jobs:
       # Control-plane node tests render the health UI with Playwright.
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test
+      - name: Retain receipt reference comparisons
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: receipt-reference-comparisons
+          path: test-results/receipt
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Verify disposable release catalog transactions and authorization
         run: node tooling/releases/catalog-disposable.mjs
   verify:
