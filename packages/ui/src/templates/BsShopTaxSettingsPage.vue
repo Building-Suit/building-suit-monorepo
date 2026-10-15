@@ -17,7 +17,7 @@ const columns = computed<BsDataTableColumn<BsShopTaxVersionRow>[]>(() => [
   <BsText v-else-if="!available">{{ copy.noContext }}</BsText>
   <template v-else>
    <BsText v-if="saved" role="status">{{ copy.saved }}</BsText>
-   <BsDataTable :value="records" :columns="columns" row-key="id" :label="copy.history" :empty-message="copy.empty" />
+   <BsDataTable :value="records" :columns="columns" row-key="id" :label="copy.history" ><template #empty><BsText role="status">{{ copy.empty }}</BsText></template></BsDataTable>
    <BsRecordActionDialog v-model:visible="editor" :title="copy.title" :dirty="dirty" :pending="pending" :error="actionError ? copy.error : undefined" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('save')">
     <BsCheckbox v-model="form.enabled" :label="copy.enabled" />
     <BsField :label="copy.effectiveAt"><BsInput v-model="form.effectiveAt" type="datetime-local" required :aria-label="copy.effectiveAt" /></BsField>
