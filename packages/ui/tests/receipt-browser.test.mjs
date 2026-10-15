@@ -27,7 +27,7 @@ const view = {
 const copy = { title: 'SALES RECEIPT', reprintLabel: 'REPRINT / COPY', invoice: 'Sale No.', date: 'Date & Time', location: 'Branch', address: 'Address', phone: 'Phone', staff: 'Cashier', customer: 'Customer', items: 'Items', item: 'Product / Service', quantity: 'Qty', unitPrice: 'Unit Price', lineTotal: 'Amount', total: 'Total Paid', payment: 'Payment', reference: 'Reference No.', thankYou: 'Thank you', greeting: 'Hope you have a good day', issuedVia: 'Issued via Shop Suit by Building Suit', compliance: 'This is proof of sale only — not an Egyptian tax invoice or e-receipt approved by the Tax Authority.' }
 
 for (const language of ['en', 'ar']) test(`receipt ${language}: deterministic render, original-reference comparison and complete PNG clipboard`, async () => {
-  const browser = await chromium.launch({ headless: true })
+  const browser = await chromium.launch({ headless: true, args: ['--disable-lcd-text'] })
   try {
     const page = await browser.newPage({ viewport: { width: 900, height: 1000 }, deviceScaleFactor: 1 })
     const requests = []
@@ -69,25 +69,15 @@ for (const language of ['en', 'ar']) test(`receipt ${language}: deterministic re
       const canvas = document.createElement('canvas'); canvas.width = expected.width; canvas.height = expected.height
       const context = canvas.getContext('2d'); context.filter = 'blur(.5px)'
       context.drawImage(expected, 0, 0); const left = context.getImageData(0, 0, canvas.width, canvas.height).data
-      let best = { error: 1, dx: 0, dy: 0, unalignedError: 1 }
-      // 80 mm has a fractional CSS-pixel width. Screenshot crop rounding and
-      // FreeType builds can differ by one pixel between Linux runners.
-      for (const dx of [-1, 0, 1]) for (const dy of [-1, 0, 1]) {
-        context.clearRect(0, 0, canvas.width, canvas.height)
-        context.fillStyle = 'white'; context.fillRect(0, 0, canvas.width, canvas.height)
-        context.drawImage(actual, dx, dy)
-        const right = context.getImageData(0, 0, canvas.width, canvas.height).data
-        let delta = 0
-        for (let i = 0; i < left.length; i += 4) delta += Math.abs(left[i] - right[i])
-        const error = delta / (canvas.width * canvas.height * 255)
-        if (dx === 0 && dy === 0) best.unalignedError = error
-        if (error < best.error) best = { ...best, error, dx, dy }
-      }
-      return best
+      context.clearRect(0, 0, canvas.width, canvas.height)
+      context.drawImage(actual, 0, 0)
+      const right = context.getImageData(0, 0, canvas.width, canvas.height).data
+      let delta = 0
+      for (let i = 0; i < left.length; i += 4) delta += Math.abs(left[i] - right[i])
+      return delta / (canvas.width * canvas.height * 255)
     }, { a: `data:image/png;base64,${baseline.toString('base64')}`, b: `data:image/png;base64,${screenshot.toString('base64')}` })
-    console.log(language, 'clean baseline comparison', baselineError)
-    if (process.env.CI && (typeof baselineError === 'number' || baselineError.error >= 0.01)) console.log(`RECEIPT_DIAGNOSTIC_${language.toUpperCase()}_BASE64:${screenshot.toString('base64')}`)
-    assert.ok(typeof baselineError !== 'number' && baselineError.error < 0.01, `Receipt ${language} differs from its reviewed clean baseline: ${JSON.stringify(baselineError)}`)
+    console.log(language, 'clean baseline comparison error', baselineError)
+    assert.ok(baselineError < 0.01, `Receipt ${language} differs from its reviewed clean baseline: ${baselineError}`)
     await page.addScriptTag({ content: (await read('packages/ux/node_modules/html-to-image/dist/html-to-image.js')).toString() })
     await page.addScriptTag({ content: `${controller}\nwindow.receiptCopy = copyDocumentImage; window.receiptRender = renderDocumentImage; window.receiptDownload = downloadDocumentImage;` })
     await page.evaluate(markup => {

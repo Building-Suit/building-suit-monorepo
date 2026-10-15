@@ -68,6 +68,10 @@ user after the parent's merge.
   selection in both languages. Only synthetic fixture services run in the cloud.
 - Initial CI found system-heading-font differences in clean baselines. Headings
   now use self-hosted Manrope; body uses self-hosted Roboto Condensed and IBM Plex
-  Sans Arabic. Reference and preview/PNG comparisons were regenerated and passed.
+  Sans Arabic. Further CI inspection identified LCD subpixel antialiasing rather
+  than geometry drift: CI images had colored text edges, local images were gray.
+  Chromium's deterministic fixture now sets `--disable-lcd-text`; baseline and
+  preview/PNG thresholds remain unchanged. Temporary diagnostic logging and
+  alignment allowances were removed. Reference and preview/PNG comparisons passed.
 - CI and exact PR/head results are recorded in PR #321; no hosted database writes,
   direct stg/main pushes or manual deployments are part of this change.
