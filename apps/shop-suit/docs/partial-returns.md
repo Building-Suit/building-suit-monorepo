@@ -14,6 +14,8 @@ Creating a return does not move money. `external_record` records evidence that a
 
 The shared `BsDocumentReturns` organism is embedded by `BsCommerceDocumentPage`. Shared `useReviewedCommand` invalidates stale previews and retains the exact request/payload after an uncertain response. Shop supplies authorized adapters and translated Arabic/English content. Return/refund writes require connection. They are not added to an offline queue or reported as successful locally; existing offline counter replay/reconciliation remains unchanged. An uncertain request is retried with the same identity and reconciled through authoritative history. On a fresh page load, history must load before a new review. Failed/pending refund obligations remain visible. Original documents remain available unchanged.
 
+Both return read APIs require `sales.view`, `payments.view` (the existing `payment_access.can_view` boundary), and access to the requested location before returning any document or context. A member with sales visibility but no payment visibility can still read the ordinary sale with its existing payment redaction; return history and refund identifiers, tender amounts and references are denied. Manager capabilities do not bypass location scope.
+
 ## Stable API / ETA handoff
 
 - `sale_return_context(shop, location, invoice, offset=0)` returns capability, supported-original status, due, original lines and remaining quantities, and 50 return records per history page with `totalCount`.
