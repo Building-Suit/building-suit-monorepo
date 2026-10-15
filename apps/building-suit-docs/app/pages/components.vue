@@ -1,6 +1,15 @@
 <script setup lang="ts">
+import type { PrivacyPresentation } from '@building-suit/ux'
 import type { ChangelogFeed, ChangelogCopy } from '@building-suit/contracts'
 import type { BsBillingCopy, BsBillingForm, BsBillingView } from '@building-suit/ui/types/billingPresentation'
+const privacyExampleOpen = ref(false)
+const privacyExampleChoice = ref(false)
+const privacyExample = computed<PrivacyPresentation>(() => ({
+  ready: privacyExampleOpen.value, prompt: false, settings: privacyExampleOpen.value, analytics: privacyExampleChoice.value,
+  open: () => { privacyExampleOpen.value = true }, close: () => { privacyExampleOpen.value = false },
+  save: value => { privacyExampleChoice.value = value; privacyExampleOpen.value = false }, change: value => { privacyExampleChoice.value = value },
+  copy: { title: 'Privacy choices / خيارات الخصوصية', body: '', accept: 'Accept optional / قبول الاختياري', reject: 'Reject optional / رفض الاختياري', settings: 'Privacy settings / إعدادات الخصوصية', necessary: 'Catalogue example only. No provider or storage is connected. مثال توضيحي دون مزود أو تخزين.', analytics: 'Optional analytics / التحليلات الاختيارية', save: 'Save / حفظ', policy: 'Policy / السياسة' },
+}))
 const billingExampleForm = ref<BsBillingForm>({ paidAmount: 0, transferDate: '', transferReference: '', privateLink: '', reason: '' })
 const billingExampleBlocked = ref(false)
 const billingExampleDialogVisible = ref(false)
@@ -476,5 +485,9 @@ const invitationPreviewCopy={
     >
       <BsField v-slot="field" :label="isArabic ? 'الاسم' : 'Name'" for="catalogue-record-name" required><BsInput id="catalogue-record-name" v-model="name" required :aria-describedby="field.describedby" /></BsField>
     </BsRecordActionDialog>
+  <BsContentSection title="Privacy consent / خيارات الخصوصية">
+    <BsButton @click="privacyExampleOpen = true">Privacy settings / إعدادات الخصوصية</BsButton>
+    <BsPrivacyConsent :model="privacyExample" />
+  </BsContentSection>
   </div>
 </template>

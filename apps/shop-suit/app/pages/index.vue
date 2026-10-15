@@ -4,6 +4,7 @@ import type { LandingContent } from '@building-suit/contracts'
 import type { ShopPlanOffer } from '~/types/plans'
 definePageMeta({ layout: 'landing' })
 const { t, locale } = useI18n()
+const analytics = useMarketingAnalytics()
 useHead({ title: 'Shop Suit · Building Suit', meta: [{ name: 'description', content: () => t('hero.description') }] })
 const content = computed<LandingContent>(() => ({
   eyebrow: 'Shop Suit', heroTitle: `${t('hero.title')} ${t('hero.subtitle')}`, heroBody: t('hero.description'),
@@ -45,5 +46,5 @@ const landingPricing = computed(() => ({
 function chooseInterval(value: string) { if (value === 'monthly' || value === 'annual') publicPricing.interval = value }
 </script>
 <template>
-  <BsLandingPage :content="content" :preview="{ kind: 'features' }" :pricing="landingPricing" signup-path="/auth/signup" @interval="chooseInterval" @variant="publicPricing.chooseVariant" @action="publicPricing.choose" @retry="refresh()"/>
+  <BsLandingPage :content="content" :preview="{ kind: 'features' }" :pricing="landingPricing" signup-path="/auth/signup" @interval="chooseInterval" @variant="publicPricing.chooseVariant" @action="publicPricing.choose" @link-action="analytics.track('pricing_cta')" @retry="refresh()"/>
 </template>
