@@ -1,5 +1,6 @@
 export default defineI18nLocale(async () => ({
   returns: {
+    originalRefund: 'التزام رد المبلغ عند الإرجاع',
     settlement: 'طُبقت المرتجعات؛ راجع حالة رد المبلغ',
     "title": "المرتجعات ورد المبالغ",
     "action": "إرجاع أصناف",

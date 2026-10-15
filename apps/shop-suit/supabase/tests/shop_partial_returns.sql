@@ -1,7 +1,7 @@
 -- Disposable synthetic fixtures, transaction rolled back by runner.
-create temporary table return_fixture as select gen_random_uuid() owner,gen_random_uuid() outsider;
+create temporary table return_fixture as select gen_random_uuid() owner,gen_random_uuid() outsider,gen_random_uuid() sales_reader,gen_random_uuid() manager;
 insert into auth.users(id,email,encrypted_password,aud,role,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
-select id,id::text||'@returns.invalid','x','authenticated','authenticated',now(),'{}','{}',now(),now() from(select owner id from return_fixture union all select outsider from return_fixture)u;
+select id,id::text||'@returns.invalid','x','authenticated','authenticated',now(),'{}','{}',now(),now() from(select owner id from return_fixture union all select outsider from return_fixture union all select sales_reader from return_fixture union all select manager from return_fixture)u;
 grant select on return_fixture to authenticated;
 select set_config('request.jwt.claim.sub',owner::text,true),set_config('request.jwt.claim.role','authenticated',true) from return_fixture;
 set local role authenticated;
@@ -33,6 +33,7 @@ begin
  doc:=public.get_sale_return(shop,loc,ret);
  if doc->'original_document'->>'invoiceId'<>sale::text or (doc->>'refund_due')::numeric<>20 or doc->'refunds'->0->>'state'<>'pending' then raise exception 'Return document contract %',doc;end if;
  refund:=(doc->'refunds'->0->>'id')::uuid;
+ perform set_config('returns.read_return',ret::text,true);
  if public.sale_return_context(shop,loc,sale)->>'due'<>'0' and (public.sale_return_context(shop,loc,sale)->>'due')::numeric<>0 then raise exception 'Debt not closed';end if;
  begin perform public.record_sale_return_refund(gen_random_uuid(),shop,loc,refund,'cash_handover','','No tender conversion');raise exception 'Card converted to cash';exception when check_violation then null;end;
  perform public.record_sale_return_refund(gen_random_uuid(),shop,loc,refund,'failed','Gateway declined','External attempt failed');
@@ -156,5 +157,73 @@ do $$declare ctx jsonb;begin
  ctx:=public.sale_return_context(current_setting('returns.shop')::uuid,current_setting('returns.loc')::uuid,current_setting('returns.historical')::uuid);
  if (ctx->>'supported')::boolean or (ctx->>'canReturn')::boolean then raise exception 'Invented historical return basis';end if;
  begin perform public.preview_sale_return(current_setting('returns.shop')::uuid,current_setting('returns.loc')::uuid,current_setting('returns.historical')::uuid,'[]');raise exception 'Historical return accepted';exception when object_not_in_prerequisite_state then null;end;
+end;$$;
+reset role;
+
+-- Refund details retain the existing payment-view capability boundary even for
+-- a valid sales-view member assigned to this sale's location.
+do $$declare shop uuid:=current_setting('returns.shop')::uuid; person uuid; member uuid; custom_role uuid; other_loc uuid;
+begin
+ insert into public.profiles(user_id,portal_id,display_name,email_snapshot)
+ select f.sales_reader,s.portal_id,'Sales-only reader','sales-reader@returns.invalid'
+ from return_fixture f join public.shops s on s.id=shop returning id into person;
+ insert into public.shop_memberships(shop_id,profile_id,role) values(shop,person,'employee') returning id into member;
+ insert into public.roles(shop_id,name) values(shop,'Sales without payment visibility') returning id into custom_role;
+ insert into public.role_permissions(role_id,permission_id)
+ select custom_role,p.id from public.permissions p join public.shops s on s.portal_id=p.portal_id where s.id=shop and p.key='sales.view';
+ insert into public.membership_roles(membership_id,role_id) values(member,custom_role);
+ perform set_config('returns.reader_member',member::text,true);
+ insert into public.profiles(user_id,portal_id,display_name,email_snapshot)
+ select f.manager,s.portal_id,'Authorized return manager','manager@returns.invalid'
+ from return_fixture f join public.shops s on s.id=shop returning id into person;
+ insert into public.shop_memberships(shop_id,profile_id,role) values(shop,person,'employee') returning id into member;
+ insert into public.membership_roles(membership_id,role_id)
+ select member,id from public.roles where shop_id=shop and key='manager' and is_system;
+ perform set_config('returns.manager_member',member::text,true);
+ -- Isolated alternate-location fixture: this tests read scope, not paid-plan provisioning.
+ insert into public.shop_locations(shop_id,name,code) values(shop,'Unassigned return branch','RETURN-OTHER') returning id into other_loc;
+ perform set_config('returns.other_loc',other_loc::text,true);
+end;$$;
+select set_config('request.jwt.claim.sub',owner::text,true) from return_fixture;
+set local role authenticated;
+do $$declare shop uuid:=current_setting('returns.shop')::uuid;loc uuid:=current_setting('returns.loc')::uuid;other_loc uuid:=current_setting('returns.other_loc')::uuid;
+begin
+ perform public.assign_membership_locations(shop,current_setting('returns.reader_member')::uuid,array[loc]);
+ perform public.assign_membership_locations(shop,current_setting('returns.manager_member')::uuid,array[loc]);
+ -- A correctly authorized owner still cannot substitute another location scope.
+ begin perform public.get_sale_return(shop,other_loc,current_setting('returns.read_return')::uuid);raise exception 'Wrong-scope return document read';exception when no_data_found then
+  if sqlerrm<>'RETURN_NOT_FOUND' then raise;end if;end;
+ begin perform public.sale_return_context(shop,other_loc,current_setting('returns.sale')::uuid);raise exception 'Wrong-scope return context read';exception when no_data_found then
+  if sqlerrm<>'SALE_NOT_FOUND' then raise;end if;end;
+end;$$;
+reset role;
+select set_config('request.jwt.claim.sub',sales_reader::text,true) from return_fixture;
+set local role authenticated;
+do $$declare shop uuid:=current_setting('returns.shop')::uuid;loc uuid:=current_setting('returns.loc')::uuid;sale uuid:=current_setting('returns.sale')::uuid;ordinary jsonb;
+begin
+ if coalesce((select can_view from public.payment_access(shop)),true) then raise exception 'Sales-only fixture has payment visibility';end if;
+ ordinary:=public.get_location_sale(shop,loc,sale);
+ if ordinary is null or ordinary->>'id'<>sale::text or ordinary->'payments'<>'[]'::jsonb then raise exception 'Sales-only fixture does not reproduce get_sale payment redaction';end if;
+ begin perform public.get_sale_return(shop,loc,current_setting('returns.read_return')::uuid);raise exception 'Sales-only member read refund document';exception when insufficient_privilege then
+  if sqlerrm<>'SHOP_PERMISSION_DENIED' then raise;end if;end;
+ begin perform public.sale_return_context(shop,loc,sale);raise exception 'Sales-only member read refund context';exception when insufficient_privilege then
+  if sqlerrm<>'SHOP_PERMISSION_DENIED' then raise;end if;end;
+end;$$;
+reset role;
+select set_config('request.jwt.claim.sub',manager::text,true) from return_fixture;
+set local role authenticated;
+do $$declare shop uuid:=current_setting('returns.shop')::uuid;loc uuid:=current_setting('returns.loc')::uuid;sale uuid:=current_setting('returns.sale')::uuid;doc jsonb;ctx jsonb;
+begin
+ if not coalesce((select can_view from public.payment_access(shop)),false) then raise exception 'Manager fixture lacks payment visibility';end if;
+ doc:=public.get_sale_return(shop,loc,current_setting('returns.read_return')::uuid);
+ ctx:=public.sale_return_context(shop,loc,sale);
+ if doc->>'invoice_id'<>sale::text or doc->'refunds'->0->>'payment_id' is null or doc->'refunds'->0->>'allocation_id' is null
+  or (doc->'refunds'->0->>'amount')::numeric<>20 or doc->'refunds'->0->>'method'<>'card' then raise exception 'Authorized manager lost original refund details';end if;
+ if not exists(select 1 from jsonb_array_elements(doc->'refunds')r cross join lateral jsonb_array_elements(r->'events')e where e->>'reference'='BANK-REF-20') then raise exception 'Authorized manager lost external refund reference';end if;
+ if not (ctx->>'canReturn')::boolean or not exists(select 1 from jsonb_array_elements(ctx->'history')h where h->>'id'=doc->>'id') then raise exception 'Authorized manager lost return context';end if;
+ begin perform public.get_sale_return(shop,current_setting('returns.other_loc')::uuid,current_setting('returns.read_return')::uuid);raise exception 'Manager read unassigned-location refund';exception when insufficient_privilege then
+  if sqlerrm<>'LOCATION_ACCESS_DENIED' then raise;end if;end;
+ begin perform public.sale_return_context(shop,current_setting('returns.other_loc')::uuid,sale);raise exception 'Manager read unassigned-location context';exception when insufficient_privilege then
+  if sqlerrm<>'LOCATION_ACCESS_DENIED' then raise;end if;end;
 end;$$;
 reset role;

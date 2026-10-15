@@ -364,7 +364,7 @@ end; $$;
 
 
 create function shop_private.return_document(p_return_id uuid) returns jsonb language sql stable security definer set search_path='' as $$
- select to_jsonb(r)-'payload'||jsonb_build_object('version',1,
+ select to_jsonb(r)-'payload'||jsonb_build_object('version',1,'actorName',(select coalesce(p.display_name,p.email_snapshot) from public.profiles p where p.id=r.actor_profile_id),
  'lines',coalesce((select jsonb_agg(to_jsonb(l) order by l.line_id) from public.sale_return_lines l where l.return_id=r.id),'[]'::jsonb),
  'stock',coalesce((select jsonb_agg(to_jsonb(s) order by s.line_id,s.movement_id) from public.sale_return_stock s where s.return_id=r.id),'[]'::jsonb),
  'refunds',coalesce((select jsonb_agg(to_jsonb(f)||jsonb_build_object('state',
@@ -376,6 +376,7 @@ create function public.get_sale_return(p_shop_id uuid,p_location_id uuid,p_retur
 language plpgsql stable security definer set search_path='' as $$
 begin
  perform shop_private.assert_sale_read_access(p_shop_id);
+ perform shop_private.assert_payment_read_access(p_shop_id);
  perform shop_private.assert_location_access(p_shop_id,p_location_id,false);
  if not exists(select 1 from public.sale_returns where id=p_return_id and shop_id=p_shop_id and location_id=p_location_id) then raise exception 'RETURN_NOT_FOUND' using errcode='P0002';end if;
  return shop_private.return_document(p_return_id);
@@ -385,6 +386,7 @@ language plpgsql stable security definer set search_path='' as $$
 declare sale public.invoices%rowtype; source jsonb; allowed boolean:=true;
 begin
  perform shop_private.assert_sale_read_access(p_shop_id);
+ perform shop_private.assert_payment_read_access(p_shop_id);
  perform shop_private.assert_location_access(p_shop_id,p_location_id,false);
  if p_offset<0 or p_offset>100000 then raise exception 'INVALID_RETURN_OFFSET' using errcode='22023';end if;
  select * into sale from public.invoices where id=p_invoice_id and shop_id=p_shop_id and location_id=p_location_id;

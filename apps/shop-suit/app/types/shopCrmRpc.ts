@@ -4,6 +4,8 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      queue_eta_invoice: {Args:{p_request_id:string;p_shop_id:string;p_invoice_id:string;p_receiver:{type:'B';id:string;name:string;address:{country:string;governate:string;regionCity:string;street:string;buildingNumber:string}};p_reason:string};Returns:string}
+      eta_original_document_reference: {Args:{p_shop_id:string;p_invoice_id:string};Returns:unknown}
       eta_settings: {Args:{p_shop_id:string;p_offset?:number};Returns:unknown}
       save_eta_configuration: {Args:{p_request_id:string;p_shop_id:string;p_configuration:unknown;p_reason:string};Returns:string}
       queue_eta_receipt: {Args:{p_request_id:string;p_shop_id:string;p_invoice_id:string;p_buyer:{type:string;id?:string;name?:string};p_payment_method:string};Returns:string}
