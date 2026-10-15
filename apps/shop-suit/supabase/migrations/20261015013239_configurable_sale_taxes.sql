@@ -42,7 +42,7 @@ revoke all on function shop_private.tax_manager(uuid) from public,anon,authentic
 create function shop_private.validate_tax_rule(rule jsonb) returns void language plpgsql immutable set search_path='' as $$
 declare rate numeric; treatment text:=rule->>'treatment'; subtype text:=rule->>'subtype';
 begin
- if jsonb_typeof(rule) is distinct from 'object' or coalesce(treatment,'') not in('vat','zero_rated','exempt','non_taxable')
+ if jsonb_typeof(rule) is distinct from 'object' or (rule-array['treatment','rate','priceMode','subtype','taxType','itemType','sourceId'])<>'{}'::jsonb or coalesce(treatment,'') not in('vat','zero_rated','exempt','non_taxable')
  or coalesce(rule->>'priceMode','') not in('inclusive','exclusive')
  or jsonb_typeof(rule->'rate') is distinct from 'number'
  or coalesce(rule->>'taxType','T1')<>'T1' or rule ?| array['compound','withholding','tableTax'] then
@@ -64,7 +64,7 @@ begin
  actor:=shop_private.tax_manager(p_shop_id);
  perform 1 from public.shops where id=p_shop_id for update;
  if p_request_id is null or p_effective_at is null or not isfinite(p_effective_at)
- or jsonb_typeof(p_policy) is distinct from 'object' or jsonb_typeof(p_policy->'enabled') is distinct from 'boolean'
+ or jsonb_typeof(p_policy) is distinct from 'object' or (p_policy-array['enabled','default','items'])<>'{}'::jsonb or jsonb_typeof(p_policy->'enabled') is distinct from 'boolean'
  or jsonb_typeof(p_policy->'items') is distinct from 'array' or jsonb_array_length(p_policy->'items')>1000
  or length(btrim(coalesce(p_reason,''))) not between 2 and 1000 then
  raise exception 'INVALID_TAX_POLICY' using errcode='22023'; end if;
@@ -98,14 +98,14 @@ declare line jsonb; rule jsonb; rows jsonb:='[]'; enabled boolean:=coalesce((p_p
  gross numeric; line_discount numeric; available numeric:=0; cumulative numeric:=0; allocated numeric:=0; share numeric;
  net5 numeric; tax5 numeric; total5 numeric; net_sum numeric:=0; tax_sum numeric:=0; total_sum numeric:=0;
  previous_net numeric:=0; previous_tax numeric:=0; previous_total numeric:=0; net_money numeric; tax_money numeric; total_money numeric;
- qty numeric; price numeric; rate numeric; amount numeric;
+ qty numeric; price numeric; rate numeric; amount numeric; discount_net5 numeric; discount_net_money numeric:=0;
 begin
  if jsonb_typeof(p_lines) is distinct from 'array' or jsonb_array_length(p_lines) not between 1 and 100
  or p_order_discount is null or p_order_discount<0 or round(p_order_discount,2)<>p_order_discount then
  raise exception 'INVALID_TAX_INPUT' using errcode='22023'; end if;
  for line in select value from jsonb_array_elements(p_lines) loop
  qty:=(line->>'quantity')::numeric; price:=(line->>'unitPrice')::numeric; line_discount:=(line->>'lineDiscount')::numeric;
- if qty is null or qty<=0 or round(qty,5)<>qty or price is null or price<0 or round(price,5)<>price
+ if qty is null or qty<=0 or qty>1000000 or round(qty,5)<>qty or price is null or price<0 or price>9999999999.99 or round(price,5)<>price
  or line_discount is null or line_discount<0 or round(line_discount,5)<>line_discount then
  raise exception 'INVALID_TAX_INPUT' using errcode='22023'; end if;
  gross:=round(qty*price,case when enabled then 5 else 2 end);
@@ -125,6 +125,8 @@ begin
  if enabled then perform shop_private.validate_tax_rule(rule); rate:=(rule->>'rate')::numeric; end if;
  net5:=case when enabled and rule->>'priceMode'='inclusive' then round(amount/(1+rate/100),5) else amount end;
  tax5:=case when enabled and rule->>'priceMode'='inclusive' then amount-net5 else round(net5*rate/100,5) end;
+ discount_net5:=case when enabled and rule->>'priceMode'='inclusive' then round((line_discount+share)/(1+rate/100),5) else line_discount+share end;
+ discount_net_money:=discount_net_money+round(discount_net5,2);
  total5:=net5+tax5;
  net_sum:=net_sum+net5; tax_sum:=tax_sum+tax5; total_sum:=total_sum+total5;
  -- Currency money rounds per line; document money sums those rounded lines.
@@ -133,12 +135,12 @@ begin
  net_money:=total_money-tax_money;
  previous_total:=previous_total+total_money; previous_tax:=previous_tax+tax_money; previous_net:=previous_net+net_money;
  rows:=rows||jsonb_build_array(line||jsonb_build_object('originalUnitPrice',price,'originalQuantity',qty,
- 'gross5',gross,'lineDiscount5',line_discount,'orderDiscount5',share,'net5',net5,'tax5',tax5,'total5',total5,
+ 'discountNet5',discount_net5,'gross5',gross,'lineDiscount5',line_discount,'orderDiscount5',share,'net5',net5,'tax5',tax5,'total5',total5,
  'net',net_money,'tax',tax_money,'total',total_money,'calculationEnabled',enabled,
  'rule',case when enabled then rule else null end));
  end loop;
  return jsonb_build_object('version',1,'calculationEnabled',enabled,'minorUnits',2,'componentDecimals',5,
- 'orderDiscount',p_order_discount,'net5',net_sum,'tax5',tax_sum,'total5',total_sum,
+ 'orderDiscount',p_order_discount,'discountNet',discount_net_money,'net5',net_sum,'tax5',tax_sum,'total5',total_sum,
  'net',previous_net,'tax',previous_tax,'total',previous_total,'moneyRounding5',previous_total-total_sum,'lines',rows);
 end; $$;
 revoke all on function shop_private.calculate_tax(jsonb,jsonb,numeric) from public,anon,authenticated,service_role;
@@ -218,7 +220,7 @@ begin
 end; $$;
 revoke all on function public.tax_settings(uuid) from public,anon;
 grant execute on function public.tax_settings(uuid) to authenticated;
-create function public.get_sale_tax_snapshot(p_shop_id uuid,p_invoice_id uuid) returns jsonb language plpgsql stable security definer set search_path='' as $$
+create function public.get_sale_tax_snapshot(p_shop_id uuid,p_invoice_id uuid) returns jsonb language plpgsql volatile security definer set search_path='' as $$
 declare location uuid; sale_status text;
 begin
  perform shop_private.assert_sale_read_access(p_shop_id);
@@ -330,8 +332,8 @@ begin
     ) order by item.line_order, item.id), '[]'::jsonb)
       from public.invoice_items item where item.invoice_id = new.id),
     'payments', '[]'::jsonb,
-    'subtotal', coalesce((select (snapshot->>'net')::numeric from public.sale_tax_snapshots where invoice_id=new.id),new.total_amount) + coalesce(new.discount_amount, 0),
-    'discount', coalesce(new.discount_amount, 0),
+    'subtotal', coalesce((select (snapshot->>'net')::numeric+(snapshot->>'discountNet')::numeric from public.sale_tax_snapshots where invoice_id=new.id),new.total_amount+coalesce(new.discount_amount,0)),
+    'discount', coalesce((select (snapshot->>'discountNet')::numeric from public.sale_tax_snapshots where invoice_id=new.id),coalesce(new.discount_amount,0)),
     'total', new.total_amount,
     'footer', nullif(btrim(v_settings.footer), ''),
     'paperSize', coalesce(v_settings.paper_size, 'thermal_80')
@@ -346,7 +348,7 @@ $$;
 notify pgrst, 'reload schema';
 
 create function shop_private.quote_invoice_tax(p_invoice_id uuid,p_at timestamptz) returns jsonb
-language sql stable security definer set search_path='' as $$
+language sql volatile security definer set search_path='' as $$
  select shop_private.calculate_tax((select jsonb_agg(jsonb_build_object('id',l.id,'itemType',l.item_type,'sourceId',coalesce(l.product_id,l.service_id),'quantity',l.quantity,'unitPrice',l.unit_price,'lineDiscount',l.discount_amount) order by l.line_order,l.id) from public.invoice_items l where l.invoice_id=i.id),
  (select policy from public.tax_policy_versions where shop_id=i.shop_id and effective_at<=p_at order by effective_at desc,created_at desc,id desc limit 1),i.tax_order_discount)
  from public.invoices i where i.id=p_invoice_id;

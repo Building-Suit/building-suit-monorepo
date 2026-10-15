@@ -4,6 +4,8 @@ declare policy jsonb:='{"enabled":true,"default":{"treatment":"vat","rate":14,"p
 begin
  s:=shop_private.calculate_tax('[{"id":"a","quantity":1,"unitPrice":114,"lineDiscount":0}]',policy,0);
  if (s->>'net')::numeric<>100 or (s->>'tax')::numeric<>14 or (s->>'total')::numeric<>114 then raise exception 'Inclusive 114 failed: %',s; end if;
+ s:=shop_private.calculate_tax('[{"id":"a","quantity":1,"unitPrice":114,"lineDiscount":11.4}]',policy,0);
+ if (s->>'discountNet')::numeric<>10 or (s->>'net')::numeric<>90 or (s->>'tax')::numeric<>12.6 then raise exception 'Inclusive discount base failed %',s; end if;
  s:=shop_private.calculate_tax('[{"id":"a","quantity":0.125,"unitPrice":114,"lineDiscount":1.25},{"id":"b","quantity":3,"unitPrice":0.01,"lineDiscount":0}]',policy,0.01);
  select sum((x->>'net')::numeric),sum((x->>'tax')::numeric),sum((x->>'total')::numeric) into net,tax,total from jsonb_array_elements(s->'lines')x;
  if net+tax<>total or total<>(s->>'total')::numeric then raise exception 'Conservation failed'; end if;
