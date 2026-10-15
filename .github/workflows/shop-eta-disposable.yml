@@ -44,19 +44,9 @@ jobs:
 
       - name: Generate verified public database contract
         run: pnpm exec supabase --workdir apps/shop-suit gen types typescript --local --schema public > "$RUNNER_TEMP/shop-eta-database.types.ts"
+      - name: Normalize and record public database contract
+        run: node tooling/database/schema-contract-evidence.mjs apps/shop-suit/app/types/database.types.ts "$RUNNER_TEMP/shop-eta-database.types.ts"
       - uses: actions/upload-artifact@v4
         with:
           name: shop-eta-database-types
           path: ${{ runner.temp }}/shop-eta-database.types.ts
-      # Public schema declarations contain no credentials or customer data. Keep a
-      # log recovery path for environments unable to download Azure-hosted artifacts.
-      - name: Public database contract recovery
-        run: |
-          python - <<'PYTYPES'
-          import base64,gzip,os
-          from pathlib import Path
-          data=Path(os.environ['RUNNER_TEMP']+'/shop-eta-database.types.ts').read_bytes()
-          encoded=base64.b64encode(gzip.compress(data,mtime=0)).decode()
-          for start in range(0,len(encoded),2000):
-              print('SHOP_ETA_PUBLIC_TYPES='+encoded[start:start+2000])
-          PYTYPES
