@@ -15,12 +15,12 @@ Only an active owner or system manager with `team.manage` can configure or expor
 The percentage basis is the finalized net line amount after line and allocated
 order discounts, before tax. Tips, fees and material-cost deductions are excluded.
 This is Shop Suit policy, not a claim about another provider's default behavior.
-At this branch's current base there are no configured tax/order-discount fields.
-Tax integration is pending the tax worker's committed snapshot contract. The
-confirmed configured-tax contract makes `invoice_items.total_amount` tax-inclusive;
-commission must instead consume its immutable pre-tax `base`/`basePayable` value.
-Do not treat the current untaxed fallback as the tax-enabled integration contract,
-or deduct an allocated order discount twice.
+Tax-enabled issuance reads the immutable `sale_tax_snapshots.snapshot.lines[].net`
+amount for each line; it includes the original allocated order discount and excludes
+tax. `invoice_items.total_amount` is payable including tax. Historical/no-tax sales
+retain the existing line-total fallback. Applied migration 20261014181109 is unchanged;
+the forward tax migration supplies this integration and regression fixtures.
+
 
 Employee attribution is optional and explicit on a draft line. A service requires
 an appointment for that same service, employee, shop, location and sale; one

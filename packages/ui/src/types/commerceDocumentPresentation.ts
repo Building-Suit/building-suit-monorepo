@@ -5,6 +5,9 @@ export interface BsCommerceDocumentEvent { id: string; title: string; descriptio
 export interface BsCommerceDocumentMovement { id: string; date: string; name: string; quantity: string; cost: string; batch: string; to: string }
 export interface BsCommerceDocumentView {
   serviceAction?: { label: string; to: string }
+  amountBreakdown?: { label: string; value: string }[]
+  orderDiscount?: { label: string; canEdit: boolean; pending: boolean; dirty: boolean }
+
   relatedAction?: { label: string; to: string }
   loading: boolean; error: boolean; found: boolean; title: string; subtitle: string; status: string; actionError: string; success: string; notice: string
   party: { name: string; to: string; phone: string; email: string; address: string }

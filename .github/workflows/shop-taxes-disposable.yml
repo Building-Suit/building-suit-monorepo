@@ -8,7 +8,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: shop-taxs-${{ github.event.pull_request.number }}
+  group: shop-taxes-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 jobs:
   taxes:
@@ -40,3 +40,9 @@ jobs:
           fi
       - run: node tooling/database/test-shop-tax-local.mjs
 
+      - name: Generate verified public database contract
+        run: pnpm exec supabase --workdir apps/shop-suit gen types typescript --local --schema public > "$RUNNER_TEMP/shop-tax-database.types.ts"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shop-tax-database-types
+          path: ${{ runner.temp }}/shop-tax-database.types.ts

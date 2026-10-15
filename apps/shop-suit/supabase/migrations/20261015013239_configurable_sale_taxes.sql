@@ -127,10 +127,11 @@ begin
  tax5:=case when enabled and rule->>'priceMode'='inclusive' then amount-net5 else round(net5*rate/100,5) end;
  total5:=net5+tax5;
  net_sum:=net_sum+net5; tax_sum:=tax_sum+tax5; total_sum:=total_sum+total5;
- -- Set payable and tax cumulatively, derive net so all money components reconcile.
- total_money:=round(total_sum,2)-previous_total; tax_money:=round(tax_sum,2)-previous_tax;
+ -- Currency money rounds per line; document money sums those rounded lines.
+ -- Five-decimal ETA components stay separate, including the explicit rounding delta.
+ total_money:=round(total5,2); tax_money:=least(total_money,round(tax5,2));
  net_money:=total_money-tax_money;
- previous_total:=round(total_sum,2); previous_tax:=round(tax_sum,2); previous_net:=previous_total-previous_tax;
+ previous_total:=previous_total+total_money; previous_tax:=previous_tax+tax_money; previous_net:=previous_net+net_money;
  rows:=rows||jsonb_build_array(line||jsonb_build_object('originalUnitPrice',price,'originalQuantity',qty,
  'gross5',gross,'lineDiscount5',line_discount,'orderDiscount5',share,'net5',net5,'tax5',tax5,'total5',total5,
  'net',net_money,'tax',tax_money,'total',total_money,'calculationEnabled',enabled,
@@ -138,7 +139,7 @@ begin
  end loop;
  return jsonb_build_object('version',1,'calculationEnabled',enabled,'minorUnits',2,'componentDecimals',5,
  'orderDiscount',p_order_discount,'net5',net_sum,'tax5',tax_sum,'total5',total_sum,
- 'net',previous_net,'tax',previous_tax,'total',previous_total,'lines',rows);
+ 'net',previous_net,'tax',previous_tax,'total',previous_total,'moneyRounding5',previous_total-total_sum,'lines',rows);
 end; $$;
 revoke all on function shop_private.calculate_tax(jsonb,jsonb,numeric) from public,anon,authenticated,service_role;
 
@@ -169,6 +170,7 @@ begin
  perform shop_private.assert_location_access(p_shop_id,sale.location_id,true);
  if p_discount is null or p_discount<0 or round(p_discount,2)<>p_discount then raise exception 'INVALID_TAX_DISCOUNT' using errcode='22023'; end if;
  update public.invoices set tax_order_discount=p_discount where id=sale.id;
+ perform shop_private.quote_invoice_tax(sale.id,statement_timestamp());
 end; $$;
 revoke all on function public.set_sale_order_discount(uuid,uuid,numeric) from public,anon;
 grant execute on function public.set_sale_order_discount(uuid,uuid,numeric) to authenticated;
@@ -211,12 +213,13 @@ end; $$;
 revoke all on function public.tax_settings(uuid) from public,anon;
 grant execute on function public.tax_settings(uuid) to authenticated;
 create function public.get_sale_tax_snapshot(p_shop_id uuid,p_invoice_id uuid) returns jsonb language plpgsql stable security definer set search_path='' as $$
-declare location uuid;
+declare location uuid; sale_status text;
 begin
  perform shop_private.assert_sale_read_access(p_shop_id);
- select location_id into location from public.invoices where id=p_invoice_id and shop_id=p_shop_id;
+ select location_id,status::text into location,sale_status from public.invoices where id=p_invoice_id and shop_id=p_shop_id;
  if not found then raise exception 'SALE_NOT_FOUND' using errcode='P0002'; end if;
  perform shop_private.assert_location_access(p_shop_id,location,false);
+ if sale_status='draft' then return shop_private.quote_invoice_tax(p_invoice_id,statement_timestamp()); end if;
  return (select snapshot from public.sale_tax_snapshots where invoice_id=p_invoice_id and shop_id=p_shop_id);
 end; $$;
 revoke all on function public.get_sale_tax_snapshot(uuid,uuid) from public,anon;
@@ -553,7 +556,7 @@ begin
   select * into v_context from public.pos_sale_contexts where invoice_id = p_invoice_id
     and shop_id = p_shop_id and location_id = p_location_id;
   if v_invoice.id is null or v_context.invoice_id is null then raise exception 'INVALID_POS_CHECKOUT'; end if;
-  if p_amount <> case when v_invoice.status='draft' then (shop_private.quote_invoice_tax(v_invoice.id,statement_timestamp())->>'total')::numeric else v_invoice.total_amount end then raise exception 'POS_CHECKOUT_REQUIRES_FULL_PAYMENT' using errcode = '23514'; end if;
+  if p_amount <> (case when v_invoice.status='draft' then (shop_private.quote_invoice_tax(v_invoice.id,statement_timestamp())->>'total')::numeric else v_invoice.total_amount end) then raise exception 'POS_CHECKOUT_REQUIRES_FULL_PAYMENT' using errcode = '23514'; end if;
   if v_context.appointment_id is not null and p_appointment_request_id is null then
     raise exception 'INVALID_POS_APPOINTMENT' using errcode = '22023';
   end if;
