@@ -136,6 +136,12 @@ export async function testBootstrap({ sql, databaseSql, parallelDatabaseSql, mig
   assert.throws(() => apply(existing), /RELEASE_BOOTSTRAP_CONFIGURATION_CONFLICT/)
   assert.equal(snapshot(existing), conflict)
 
+  const configOnly = fixture('bootstrap_config_only')
+  configOnly(`insert into public.release_catalog_configuration values(true,'${authority}','Building-Suit/building-suit-monorepo','${anchor}','${anchor}');`)
+  const configOnlyState = snapshot(configOnly)
+  assert.throws(() => apply(configOnly), /RELEASE_BOOTSTRAP_PARTIAL_STATE/)
+  assert.equal(snapshot(configOnly), configOnlyState, 'A configuration-only partial setup is not silently backfilled')
+
   const partial = fixture('bootstrap_partial')
   partial(`insert into public.release_version_heads values('${shop}','3.2.1','Partial verified evidence must not be reset');`)
   const partialState = snapshot(partial)

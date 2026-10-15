@@ -93,6 +93,9 @@ begin
       or repository<>'Building-Suit/building-suit-monorepo' or anchor_sha<>anchor) then
       raise exception 'RELEASE_BOOTSTRAP_CONFIGURATION_CONFLICT: review existing evidence; nothing overwritten';
     end if;
+    if not exists(select 1 from public.release_version_heads where suit_id=shop) then
+      raise exception 'RELEASE_BOOTSTRAP_PARTIAL_STATE: initialized authority has no Shop baseline; nothing overwritten';
+    end if;
     raise notice 'RELEASE_BOOTSTRAP_ALREADY_INITIALIZED: preserving all existing release state';
     return;
   end if;
