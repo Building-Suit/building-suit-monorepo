@@ -1,0 +1,24 @@
+{
+  "id": "shop-partial-returns-support",
+  "task": "SS-PARTIAL-RETURNS-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/shop-returns-disposable.yml",
+    "tooling/database/test-shop-returns-local.mjs",
+    "tooling/database/test-shop-returns-concurrency.mjs",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/shop-partial-returns.md",
+    "packages/ui",
+    "packages/ux"
+  ],
+  "reason": "Optional shared return presentation and reviewed-command support enable the separately described Shop feature. Other Suit customer flows are unchanged. The shared consumer impact, documentation and disposable validation tooling are internal maintenance."
+}
