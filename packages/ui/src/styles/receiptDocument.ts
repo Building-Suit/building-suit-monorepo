@@ -23,21 +23,21 @@ export const receiptDocumentStyles = String.raw`
 .bs-sale-receipt[dir='rtl'] .bs-receipt-detail svg { grid-column: 4; grid-row: 1; }
 .bs-receipt-lines { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; line-height: 1.45; }
 .bs-receipt-product { width: 34%; }.bs-receipt-quantity { width: 12%; }
-.bs-receipt-lines th { background: var(--bs-component-receipt-band); font-weight: 700; padding: 5px 3px; text-align: center; }
+.bs-receipt-lines th { background: var(--bs-component-receipt-band); font-weight: 700; padding: 3px 3px; text-align: center; }
 .bs-receipt-lines th:first-child,.bs-receipt-lines td:first-child { text-align: start; }
-.bs-receipt-lines td { padding: 7px 3px; text-align: center; border-bottom: 1px dotted var(--bs-component-receipt-row-separator); overflow-wrap: anywhere; vertical-align: top; }
+.bs-receipt-lines td { padding: 6px 3px; text-align: center; border-bottom: 1px dotted var(--bs-component-receipt-row-separator); overflow-wrap: anywhere; vertical-align: top; }
 .bs-receipt-lines td:last-child { text-align: end; }
 .bs-receipt-lines tr:last-child td { border-bottom: 1px dashed var(--bs-component-receipt-separator); }
 .bs-receipt-lines small { display: block; font-size: 9px; white-space: pre-wrap; }
 .bs-receipt-totals { padding-top: 4px; padding-bottom: 9px; border-bottom: 1px dashed var(--bs-component-receipt-separator); }
 .bs-receipt-total { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 5px 3px; overflow-wrap: anywhere; }
-.bs-receipt-total--strong { font-size: 16px; font-weight: 700; background: var(--bs-component-receipt-band); margin-top: 1px; padding: 5px; }
+.bs-receipt-total--strong { font-size: 16px; font-weight: 700; background: var(--bs-component-receipt-band); margin-top: 1px; padding: 3px 5px; }
 .bs-receipt-payments { padding-top: 9px; padding-bottom: 13px; border-bottom: 1px dashed var(--bs-component-receipt-separator); }
 .bs-receipt-payments h3 { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 700; margin-bottom: 6px; }
 .bs-receipt-payments h3 { display: grid; direction: ltr; grid-template-columns: 1fr 18px; }
 .bs-sale-receipt[dir='rtl'] .bs-receipt-payments h3 span { text-align: right; padding-right: 6px; }
 .bs-receipt-payment + .bs-receipt-payment { margin-top: 8px; }
-.bs-receipt-payment .bs-receipt-detail { border-radius: 6px; background: var(--bs-component-receipt-payment-band); padding: 3px 8px; margin-top: 3px; grid-template-columns: 37% 10% minmax(0,1fr); }
+.bs-receipt-payment .bs-receipt-detail { border-radius: 6px; background: var(--bs-component-receipt-payment-band); padding: 1px 8px; margin-top: 3px; grid-template-columns: 37% 10% minmax(0,1fr); }
 .bs-sale-receipt[dir='rtl'] .bs-receipt-payment .bs-receipt-detail { grid-template-columns: minmax(0,1fr) 8% 43%; }
 .bs-receipt-payment .bs-receipt-label { font-weight: 400 !important; }
 .bs-sale-receipt .bs-receipt-footer { border: 0; font-size: 12px; text-align: center; padding-top: 9px; }
@@ -45,8 +45,8 @@ export const receiptDocumentStyles = String.raw`
 .bs-receipt-thanks::before,.bs-receipt-thanks::after { content: ''; width: 20%; border-top: .5px solid var(--bs-component-receipt-separator); }
 .bs-receipt-greeting { font-size: 11px; margin-bottom: 8px !important; }
 .bs-receipt-merchant-text { font-size: 10px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 5px 0 !important; }
-.bs-receipt-credit { border-top: .5px solid var(--bs-component-receipt-separator); margin-top: 7px; padding: 7px 0; display: flex; justify-content: center; align-items: center; gap: 6px; font-size: 8px; }
-.bs-receipt-credit img { filter: grayscale(1); object-fit: contain; }
+.bs-receipt-credit { border-top: .5px solid var(--bs-component-receipt-separator); margin-top: 7px; padding: 5px 0; display: flex; justify-content: center; align-items: center; gap: 6px; font-size: 8px; }
+.bs-receipt-credit img { width: 18px; height: 18px; filter: grayscale(1); object-fit: contain; }
 .bs-receipt-compliance { border-top: 1px dashed var(--bs-component-receipt-footer-separator); padding-top: 6px; font-size: 8px; color: var(--bs-component-receipt-separator) !important; }
 .bs-printable-document.bs-receipt-preview[data-format] .bs-printable-document__paper { padding: 0; border: 0; background: var(--bs-component-receipt-paper); }
 @media print { .bs-sale-receipt { max-width: none; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .bs-receipt-lines tr,.bs-receipt-payments,.bs-receipt-footer { break-inside: avoid; } }
@@ -56,6 +56,6 @@ export const receiptDocumentStyles = String.raw`
 .bs-receipt-heading { padding-bottom: 9px; }
 .bs-sale-receipt { font-size: 13px; }
 .bs-receipt-lines { font-size: 12px; }
-.bs-sale-receipt[lang='ar'] .bs-receipt-detail { min-height: 24px; }
+.bs-sale-receipt[lang='ar'] .bs-receipt-detail { min-height: 23px; }
 .bs-sale-receipt[lang='ar'] .bs-receipt-label { font-size: 13px; }
 `

@@ -54,6 +54,9 @@ user after the parent's merge.
 
 ## Verification
 
+- Reference-guided final spacing reduces normalized photograph comparison error
+  to EN 0.09471 and AR 0.10020, with 701/700 px clean receipt heights at 304 px
+  screenshot width. Pixel-perfect matching remains unverified.
 - Focused issued-currency, projection, escaping, clipboard lifecycle and failure regressions.
 - Chromium AR/EN clean-baseline comparison, preview/PNG pixel comparison with
   antialiasing tolerance, no external asset requests, PNG dimensions and 30-line
