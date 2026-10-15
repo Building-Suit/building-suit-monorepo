@@ -55,3 +55,5 @@ Repair validation:
 - Final-head GitHub CI is required after publication; earlier checkpoint479524c3 has green required review/branch-policy/verify and SAS disposable checks. Its account-provisioning schema-generation check failed only because the public ECR image registry returned `toomanyrequests`; no product assertion failed in that run. Do not treat earlier checks as proof for the repair head.
 
 No hosted writes, schema changes, timestamp rewrites, production merge or provider configuration changes were made for this repair. Existing activation prerequisites and parent-owned staging integration remain in effect.
+
+Final validation encountered the same public ECR `toomanyrequests` failure in account-provisioning run38677923962. The disposable schema-generation step now uses the exact pinned postgres-meta:v0.98.0 publisher mirror fallback already present in SAS CI. This does not change schema, credentials, image version, hosted providers or deployment gates; it lets the remaining account integration assertions run. All six production builds and full lint also passed locally on the ordering repair.
