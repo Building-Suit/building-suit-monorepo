@@ -4,7 +4,7 @@ on:
     # Edited includes retargets. Revalidate the destination, even when the head SHA is unchanged.
     types: [opened, synchronize, reopened, edited]
   push:
-    branches: [main]
+    branches: [stg, main]
 concurrency:
   group: verify-${{ github.ref }}
   cancel-in-progress: true
@@ -31,16 +31,31 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Fetch protected branch history for release classification
+        if: github.event_name == 'pull_request'
+        env:
+          FETCH_BASE_REF: ${{ github.base_ref }}
+        run: git fetch origin "$FETCH_BASE_REF" --no-tags
+      - name: Validate task release fragments
+        if: github.event_name == 'pull_request'
+        env:
+          RELEASE_BASE_SHA: origin/${{ github.base_ref }}
+          RELEASE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node tooling/releases/check.mjs
       - run: pnpm check
       # Control-plane node tests render the health UI with Playwright.
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test
+      - name: Verify disposable release catalog transactions and authorization
+        run: node tooling/releases/catalog-disposable.mjs
   verify:
     needs: [review, branch-policy]
     # Stacked feature PRs get review checks and relevant local tests. Build the combined batch once.
@@ -78,3 +93,34 @@ jobs:
           name: browser-results
           path: test-results
           retention-days: 7
+  publish-releases:
+    needs: [verify]
+    if: always() && github.event_name == 'push' && needs.verify.result == 'success'
+    permissions:
+      contents: read
+      checks: read
+      statuses: read
+    environment: ${{ github.ref_name == 'stg' && 'staging' || 'production' }}
+    concurrency:
+      group: release-catalog-${{ github.ref_name == 'stg' && 'staging' || 'production' }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Reconcile after full validation and wait for provider readiness
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ENVIRONMENT: ${{ github.ref_name == 'stg' && 'staging' || 'production' }}
+          RELEASE_CATALOG_URL: ${{ vars.RELEASE_CATALOG_URL }}
+          RELEASE_CATALOG_TOKEN: ${{ secrets.RELEASE_CATALOG_TOKEN }}
+          RELEASE_STAGING_URL: ${{ vars.RELEASE_STAGING_URL }}
+          RELEASE_STAGING_TOKEN: ${{ secrets.RELEASE_STAGING_TOKEN }}
+          RELEASE_REQUIRED_CONTEXTS: ${{ vars.RELEASE_REQUIRED_CONTEXTS }}
+          RELEASE_WAIT_FOR_DEPLOYMENT: '1'
+        run: node tooling/releases/publisher.mjs

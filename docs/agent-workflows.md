@@ -8,8 +8,9 @@ Use these workflows to navigate, maintain and extend the repository. Select only
 2. Run `pnpm agent:preflight` and inspect all worktrees, dirty files, commits, fetched upstreams, open PRs and recent/manual GitHub merges. Read [the branch workflow](shared/git-workflow.md) and reconcile stale/retired branches before editing. Preserve unrelated edits and active worktrees.
 3. Find the owning app/package/schema using the navigation map, exports and dependency graph.
 4. Identify affected consumers, environment assumptions and acceptance criteria. Search existing implementations before adding abstractions.
-5. Use documented root scripts and workspace filters; verify actual script names.
-6. Reuse the open feature branch for adjustments. For new work, derive its key from `codex/<stack>/<feature>`, identify that stack's newest active leaf, record its committed SHA and create the child worktree from that SHA. Target its PR at the same-stack parent branch; use fresh `origin/stg` only when that stack has no active parent. Reconcile merged/closed parents first. Dirty parent edits stay in that worktree until its owner commits a checkpoint and the child incorporates it. Implement the requested scope, run relevant checks and update documentation. Use a short task record when a handoff is useful; small fixes do not require a new planning document.
+5. Append task release fragments with affected registered Suits, path coverage, classification/disposition and curated EN/AR public copy. Run `pnpm release:check` against the actual PR parent; see [automatic publication](shared/release-publication-runbook.md). Truly internal changes still require explicit internal classification.
+6. Use documented root scripts and workspace filters; verify actual script names.
+7. Reuse the open feature branch for adjustments. For new work, derive its key from `codex/<stack>/<feature>`, identify that stack's newest active leaf, record its committed SHA and create the child worktree from that SHA. Target its PR at the same-stack parent branch; use fresh `origin/stg` only when that stack has no active parent. Reconcile merged/closed parents first. Dirty parent edits stay in that worktree until its owner commits a checkpoint and the child incorporates it. Implement the requested scope, run relevant checks and update documentation. Use a short task record when a handoff is useful; small fixes do not require a new planning document.
 
 ## 2. Add or change a product feature
 
@@ -90,6 +91,8 @@ For final zero-native acceptance, run `node tooling/checks/suit-template-boundar
 7. Verify the new app and affected existing consumers. Scaffolding alone does not authorize paid resources or publication.
 
 ## 9. Release a change
+
+Reviewed task fragments drive deterministic per-Suit SemVer and changelog publication after deployment readiness. Stg reserves/publishes; main promotes the exact accepted staging manifests, including multiple releases, without choosing numbers or bumping again. See [the publication runbook](shared/release-publication-runbook.md) for activation, protected environment gates, internal no-ops, hotfix provenance and recovery. This does not authorize a merge or production promotion.
 
 1. Run the preflight again, check live PR/base/head state and the [app-stack integration procedure](shared/git-workflow.md#integrate-and-release-app-stacks). Incorporate only reviewed, ready features and inspect affected apps/packages/database objects, including shared and root changes.
 2. Run required CI checks; verify the artifact/commit, environment variables, project refs and callbacks.

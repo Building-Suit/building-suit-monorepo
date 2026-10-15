@@ -1,0 +1,37 @@
+{
+  "id": "bs-task-release-publication",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    ".github",
+    "AGENTS.md",
+    "docs",
+    "package.json",
+    "packages/nuxt-layer",
+    "apps/super-admin-suit",
+    "tooling/releases"
+  ],
+  "reason": "Adds reviewed task-based release publication with deployment gates and a shared read adapter",
+  "notes": {
+    "title": {
+      "en": "Automatic release notes",
+      "ar": "ملاحظات الإصدار التلقائية"
+    },
+    "summary": {
+      "en": "Reviewed updates can appear in the changelog after deployment succeeds.",
+      "ar": "يمكن عرض التحديثات المراجعة في سجل التغييرات بعد نجاح النشر."
+    },
+    "details": {
+      "en": "Release notes support English and Arabic. Each product keeps its own version, and staging releases retain the same version and content when promoted.",
+      "ar": "تدعم ملاحظات الإصدار اللغتين الإنجليزية والعربية. يحتفظ كل منتج بإصداره الخاص، وتحافظ إصدارات بيئة الاختبار على الإصدار والمحتوى نفسيهما عند الترقية."
+    }
+  }
+}

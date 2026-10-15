@@ -85,6 +85,10 @@ Use manifests, package exports and the dependency graph to find interfaces and a
 - Run write tests in staging or an explicitly disposable environment. Never reset a hosted business database or run destructive production fixtures.
 - Keep database deployments explicit, environment-bound, serialized and uncached. Use the maintained runbook and recovery checks appropriate to the change's risk.
 
+## Task release fragments
+
+Every task PR appends curated release fragments under `release-fragments/` and runs `pnpm release:check`. Follow [the release publication runbook](docs/shared/release-publication-runbook.md). Classify breaking changes as major, compatible capabilities as minor, fixes/improvements as patch and truly internal work as internal. Cover changed paths and affected dependency consumers, supply reviewed EN/AR plain-text notes for public work and keep task references private. Agents supply classification; deterministic CI assigns versions. Never edit accepted fragments, dump raw task/commit text, invoke an LLM in CI or bypass deployment readiness. Parent/release authorization still governs staging/main integration.
+
 ## Verification and completion
 
 - Run checks appropriate to the change. Use the dependency graph to include affected consumers; shared UI/auth/contract changes require verification in all products using them.
