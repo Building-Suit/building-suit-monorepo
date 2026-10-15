@@ -1,0 +1,20 @@
+{
+  "id": "finished-staging-batch-integration",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "AGENTS.md",
+    "docs/agent-workflows.md",
+    "docs/shared/git-workflow.md",
+    "docs/work-packages/staging-finished-batch.md"
+  ],
+  "reason": "Owner-authorized history-preserving combined staging integration and its stack/documentation metadata; public feature notes remain in the preserved source task fragments."
+}

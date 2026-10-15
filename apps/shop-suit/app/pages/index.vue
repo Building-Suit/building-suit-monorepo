@@ -4,6 +4,7 @@ import type { LandingContent } from '@building-suit/contracts'
 import type { ShopPlanOffer } from '~/types/plans'
 definePageMeta({ layout: 'landing' })
 const { t, locale } = useI18n()
+const analytics = useMarketingAnalytics()
 const { feed: releaseFeed, state: releaseState, copy: releaseCopy, refresh: refreshReleases } = usePublicChangelog()
 const landingChangelog = computed(() => ({
   title: locale.value === 'ar' ? 'ما الجديد' : 'What’s new',
@@ -52,5 +53,5 @@ const landingPricing = computed(() => ({
 function chooseInterval(value: string) { if (value === 'monthly' || value === 'annual') publicPricing.interval = value }
 </script>
 <template>
-  <BsLandingPage :content="content" :changelog="landingChangelog" :preview="{ kind: 'features' }" :pricing="landingPricing" signup-path="/auth/signup" @changelog-retry="refreshReleases()" @interval="chooseInterval" @variant="publicPricing.chooseVariant" @action="publicPricing.choose" @retry="refresh()"/>
+  <BsLandingPage :content="content" :changelog="landingChangelog" :preview="{ kind: 'features' }" :pricing="landingPricing" signup-path="/auth/signup" @changelog-retry="refreshReleases()" @interval="chooseInterval" @variant="publicPricing.chooseVariant" @action="publicPricing.choose" @link-action="analytics.track('pricing_cta')" @retry="refresh()"/>
 </template>

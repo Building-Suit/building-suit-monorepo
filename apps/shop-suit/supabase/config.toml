@@ -433,3 +433,11 @@ verify_jwt = true
 verify_jwt = false
 [functions.shop-xpay-reconcile]
 verify_jwt = false
+
+# Server-authorized dispatcher; disabled until explicit preproduction setup.
+[functions.shop-eta-dispatch]
+verify_jwt = false
+
+# Server-only, preproduction invoice dispatcher; distinct ERP/signing setup.
+[functions.shop-eta-einvoice-dispatch]
+verify_jwt = false

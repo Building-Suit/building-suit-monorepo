@@ -92,6 +92,9 @@ For final zero-native acceptance, run `node tooling/checks/suit-template-boundar
 
 ## 9. Release a change
 
+For the explicitly owner-authorized [2026-10-15 combined batch](work-packages/staging-finished-batch.md), combine the finished pinned heads in PR318, retain their source history/fragments, supersede the incorporated source PR and run all applicable combined GitHub CI/security checks. The parent then performs exactly one merge into `stg`. The prior separate-root and provider-recovery hold does not gate this batch’s Git merge; do not manually deploy or wait for Vercel/Supabase recovery. Runtime publication/deployment-success gates remain intact and `main` is excluded.
+
+
 Reviewed task fragments drive deterministic per-Suit SemVer and changelog publication after deployment readiness. Stg reserves/publishes; main promotes the exact accepted staging manifests, including multiple releases, without choosing numbers or bumping again. See [the publication runbook](shared/release-publication-runbook.md) for activation, protected environment gates, internal no-ops, hotfix provenance and recovery. This does not authorize a merge or production promotion.
 
 1. Run the preflight again, check live PR/base/head state and the [app-stack integration procedure](shared/git-workflow.md#integrate-and-release-app-stacks). Incorporate only reviewed, ready features and inspect affected apps/packages/database objects, including shared and root changes.

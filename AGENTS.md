@@ -23,6 +23,8 @@ User instructions take priority. Scoped rules specialize these rules within thei
 - Preserve dirty and active worktrees. Never auto-stash, reset, delete, rebase or force-push others' work. Only rewrite a solely owned branch within current authorization, with an explicit expected remote SHA and `--force-with-lease`.
 - GitHub CI and PR rules do not control external provider events. Keep feature Git deployments disabled in app Vercel configuration and verify Supabase Automatic branching is off. Use the maintained provider setup in `docs/shared/git-workflow.md`; do not claim dashboard settings are active without checking them.
 
+The owner-authorized 2026-10-15 combined batch is recorded in [staging-finished-batch](docs/work-packages/staging-finished-batch.md). For that batch only, PR318 is the single integration root and the prior separate-root/provider-recovery hold is superseded. Required GitHub CI/security checks still apply to the exact combined head. The parent performs one history-preserving merge into `stg`; do not manually deploy or wait for Vercel/Supabase recovery. This exception does not weaken product release-publication readiness or authorize `main` changes.
+
 ## Navigation and ownership
 
 | Location | Responsibility |

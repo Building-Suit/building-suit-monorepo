@@ -336,7 +336,12 @@
     "./templates/BsServiceFulfillmentPage": "./src/templates/BsServiceFulfillmentPage.vue",
     "./types/serviceFulfillmentPresentation": "./src/types/serviceFulfillmentPresentation.ts",
     "./organisms/BsWhatsNewSection": "./src/organisms/BsWhatsNewSection.vue",
-    "./templates/BsChangelogPage": "./src/templates/BsChangelogPage.vue"
+    "./templates/BsChangelogPage": "./src/templates/BsChangelogPage.vue",
+    "./templates/BsEtaSettingsPage": "./src/templates/BsEtaSettingsPage.vue",
+    "./types/etaPresentation": "./src/types/etaPresentation.ts",
+    "./organisms/BsDocumentReturns": "./src/organisms/BsDocumentReturns.vue",
+    "./types/documentReturns": "./src/types/documentReturns.ts",
+    "./organisms/BsPrivacyConsent": "./src/organisms/BsPrivacyConsent.vue"
   },
   "dependencies": {
     "primevue": "4.5.5",
