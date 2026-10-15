@@ -1,6 +1,6 @@
 # SS-SEO-PRIVACY-001 — Shop public SEO, consent and optional analytics
 
-Status: implemented; final browser/CI verification in progress. No deployment performed.
+Status: implemented and locally verified; draft review and external deployment/account handoff remain separate. No deployment performed.
 
 Requested scope: environment-aware public SEO, crawlable staging noindex, genuine-public sitemap, non-disruptive language/canonical strategy, factual sharing/schema, basic consent-gated GA4, bilingual reusable consent, truthful disclosure and exact owner account handoff.
 
@@ -20,8 +20,22 @@ Owning code: Shop app/composables, `shared/publicSeo.ts` and `shared/marketingAn
 - `pnpm test`: latest full run 1,496 passed, 23 skipped, zero failures (1,519 tests). Skipped tests require optional disposable PostgreSQL/receipt fixtures or are existing skips; no hosted data tests were run.
 - New policy/provisioning tests: six passed, including failure/replay cases and browser-restricted cookie cleanup.
 - Local production Node/Nitro Shop build: passed. The build uses the maintained lockfile and pnpm 10.33.0; the environment's initial pnpm 11 mismatch was corrected using an isolated `/tmp` Corepack installation, without changing project engine requirements.
-- Browser results are being finalized below. Earlier runs exposed and fixed auth-screen banner obstruction. A superseded checkout regression run was interrupted after a rebuild replaced its served artifact; it is not acceptance evidence. All final browser runs use a completed immutable build.
+- Final completed-build browser suite: **8 passed** (`pnpm exec playwright test -c apps/shop-suit/tests/e2e/marketing-privacy.config.ts`). Includes safe signup transport, real pricing-link activation, settings draft/save, stale/expired preferences and blocked-storage focus/reload behavior.
+- Final public/auth regression: **10 passed** (`pnpm exec playwright test -c apps/shop-suit/tests/e2e/cloud-public-auth.config.ts`), including OTP response-loss/retry, Arabic signup and Arabic mobile sign-in.
+- Final billing/checkout regression: **12 passed** (`pnpm exec playwright test -c apps/shop-suit/tests/e2e/scheduled-billing.config.ts`), including explicit cash/credit review, deferred changes, expired quotes and private-offer recovery.
+- All final output logs are saved under `.local/seo-privacy-evidence/`; screenshots `consent-en.png` and `consent-ar-dark-mobile.png` show the controls in this saved worktree. Google requests are stubbed using an explicitly synthetic test ID; actual Google ingestion is not verified.
+- Earlier runs exposed and fixed auth-screen banner obstruction. A superseded checkout regression run was interrupted after a rebuild replaced its served artifact; it is not acceptance evidence. All final browser runs use a completed immutable build.
 - Initial remote GitHub `branch-policy` and `review` checks passed on PR #320; stacked full `verify` is correctly skipped. A new `marketing-privacy` workflow adds the focused production-build browser acceptance to relevant PR changes.
+
+## Release fragments
+
+`release-fragments/ss-seo-privacy-analytics.json` classifies the Shop-only compatible capability as minor and supplies curated English/Arabic public notes without private task references. `ss-seo-privacy-shared-support.json` classifies shared support and root CI/lockfile changes internally for all affected registered Suits. Paths are exact owned files, so this task does not accidentally classify ETA/returns work.
+
+The release tooling is not yet in this branch (it belongs to #318). Its actual `fragments.mjs` and `check.mjs` were read from fetched commit `479524c316b6e303b07f6743b7e0a2955d5d11b6`, materialized under `/tmp/shop-release-validator` solely for read-only validation, and run against the committed fragment tree:
+
+`RELEASE_BASE_SHA=85e962566cc76a1229ba87a348da66ccc90a9a48 node /tmp/shop-release-validator/check.mjs`
+
+Result: classification, translations, exact-path/affected-consumer coverage and public boundary checks passed. No release code was copied into this feature branch and no release publication was attempted. Parent should run maintained `pnpm release:check` on the combined candidate after #318 supplies it.
 
 ## Handoff / blockers
 
