@@ -26,7 +26,9 @@ const units = value => {
 }
 const decimal = value => {
  if (value < 0n || value > BigInt(Number.MAX_SAFE_INTEGER)) fail('ETA_COMPONENT_RANGE_UNSUPPORTED')
- return Number(value) / 100000
+ const result = Number(`${value / 100000n}.${String(value % 100000n).padStart(5,'0')}`)
+ if (units(result) !== value) fail('ETA_COMPONENT_RANGE_UNSUPPORTED')
+ return result
 }
 const roundDivide = (n, d) => (n + d / 2n) / d
 const sum = (rows, key) => rows.reduce((n,row) => n + units(row[key]),0n)

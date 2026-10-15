@@ -455,6 +455,7 @@ const invitationPreviewCopy={
     </BsContentSection>
 
     <BsContentSection :title="isArabic ? 'حساب الضريبة' : 'Tax calculation'">
+      <BsDescriptionList><BsDescriptionItem term="BsEtaSettingsPage">{{ isArabic ? 'إعداد هوية التاجر وفروع وأكواد المصلحة وحالة الإرسال، مع حفظ المسودات وحالات الخطأ والإرسال المعلّق. التطبيق يملك الصلاحيات والمحول المالي.' : 'Merchant identity, branch and item-code configuration and asynchronous submission status, using shared forms, dirty-state protection and error feedback. The product owns authorization and financial adapters.' }}</BsDescriptionItem></BsDescriptionList>
       <BsDescriptionList><BsDescriptionItem term="BsShopTaxSettingsPage / BsShopTaxRuleFields">{{ isArabic ? 'إعدادات مؤرخة وتصنيف مستقل لكل بند؛ التطبيق يملك الصلاحيات والحساب المالي. تعطيل الحساب ليس إعفاء.' : 'Versioned effective settings and per-item classification; the product owns authorization and financial arithmetic. Disabled calculation is not exemption.' }}</BsDescriptionItem></BsDescriptionList>
     </BsContentSection>
     <BsContentSection :title="isArabic ? 'عمولات اختيارية'  : 'Optional commissions'">

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BsEtaCopy, BsEtaForm, BsEtaRow } from '../types/etaPresentation'
 import type { BsDataTableColumn } from '@building-suit/ux'
-const props = defineProps<{copy:BsEtaCopy;available:boolean;loading:boolean;error:boolean;pending:boolean;dirty:boolean;message:string;records:BsEtaRow[];canPrevious:boolean;canNext:boolean}>()
+const props = defineProps<{copy:BsEtaCopy;available:boolean;loading:boolean;error:boolean;pending:boolean;dirty:boolean;message:string;setupStatus:string;records:BsEtaRow[];canPrevious:boolean;canNext:boolean}>()
 const form=defineModel<BsEtaForm>('form',{required:true})
 const editor=defineModel<boolean>('editor',{required:true})
 const invoice=defineModel<string>('invoice',{required:true})
@@ -22,10 +22,11 @@ const columns=computed<BsDataTableColumn<BsEtaRow>[]>(()=>[
   <BsText v-else-if="!available">{{copy.noContext}}</BsText>
   <template v-else>
    <BsText role="status">{{copy.setup}}</BsText>
+   <BsText role="status">{{setupStatus}}</BsText>
    <BsText v-if="message" role="status">{{message}}</BsText>
    <BsPanel>
     <BsHeading :level="2">{{copy.queue}}</BsHeading>
-    <BsForm @submit="emit('queue')">
+    <BsForm :pending="pending" @submit="emit('queue')">
      <BsField :label="copy.invoice"><BsInput v-model="invoice" required :aria-label="copy.invoice" /></BsField>
      <BsField :label="copy.buyerName"><BsInput v-model="buyerName" maxlength="100" :aria-label="copy.buyerName" /></BsField>
      <BsField :label="copy.buyerId"><BsInput v-model="buyerId" maxlength="14" :aria-label="copy.buyerId" /></BsField>
@@ -35,7 +36,7 @@ const columns=computed<BsDataTableColumn<BsEtaRow>[]>(()=>[
    </BsPanel>
    <BsDataTable :value="records" :columns="columns" row-key="id" :label="copy.history"><template #empty><BsText>{{copy.empty}}</BsText></template></BsDataTable>
    <BsInline><BsButton :disabled="!canPrevious || loading" @click="emit('previous')">{{copy.previous}}</BsButton><BsButton :disabled="!canNext || loading" @click="emit('next')">{{copy.next}}</BsButton><BsButton @click="emit('retry')">{{copy.retry}}</BsButton></BsInline>
-   <BsRecordActionDialog v-model:visible="editor" :title="copy.title" :dirty="dirty" :pending="pending" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('save')">
+   <BsRecordActionDialog v-model:visible="editor" :title="copy.title" :dirty="dirty" :pending="pending" :error="message || undefined" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('save')">
     <BsField :label="copy.legalName"><BsInput v-model="form.profile.legalName" required maxlength="200" :aria-label="copy.legalName" /></BsField>
     <BsField :label="copy.rin"><BsInput v-model="form.profile.rin" required pattern="[0-9]{9}" maxlength="9" :aria-label="copy.rin" /></BsField>
     <BsField :label="copy.activityCode"><BsInput v-model="form.profile.activityCode" required maxlength="10" :aria-label="copy.activityCode" /></BsField>

@@ -6,6 +6,37 @@ create table public.eta_profile_versions (
 );
 create index eta_profile_latest on public.eta_profile_versions(shop_id,created_at desc,id desc);
 create trigger eta_profile_immutable before update or delete on public.eta_profile_versions for each row execute function shop_private.tax_immutable();
+-- Capture configured export identity/codes at issuance, never at later export time.
+-- Missing setup never blocks an operational sale and never creates a backfill.
+create table public.eta_sale_sources (
+ invoice_id uuid primary key, shop_id uuid not null, location_id uuid not null, profile_version_id uuid not null,
+ source jsonb not null, created_at timestamptz not null default clock_timestamp(),
+ foreign key(invoice_id,shop_id,location_id) references public.invoices(id,shop_id,location_id),
+ foreign key(profile_version_id,shop_id) references public.eta_profile_versions(id,shop_id)
+);
+create index eta_sale_source_scope on public.eta_sale_sources(shop_id,location_id,invoice_id);
+alter table public.eta_sale_sources enable row level security;
+revoke all on public.eta_sale_sources from public,anon,authenticated,service_role;
+create trigger eta_sale_source_immutable before update or delete on public.eta_sale_sources for each row execute function shop_private.tax_immutable();
+create function shop_private.capture_eta_source() returns trigger language plpgsql security definer set search_path='' as $$
+declare profile public.eta_profile_versions%rowtype; branch jsonb; tax jsonb;
+begin
+ if old.status<>'draft' or new.status<>'issued' then return new;end if;
+ -- Serialize profile selection with manager changes without altering the sale.
+ perform 1 from public.shops where id=new.shop_id for update;
+ select * into profile from public.eta_profile_versions where shop_id=new.shop_id order by created_at desc,id desc limit 1;
+ select value into branch from jsonb_array_elements(profile.configuration->'branches') where value->>'locationId'=new.location_id::text;
+ select snapshot into tax from public.sale_tax_snapshots where invoice_id=new.id and shop_id=new.shop_id;
+ if branch is null or tax is null then return new;end if;
+ insert into public.eta_sale_sources(invoice_id,shop_id,location_id,profile_version_id,source)
+ values(new.id,new.shop_id,new.location_id,profile.id,jsonb_build_object('channel','ereceipt','kind','sale','currency',new.currency,
+ 'issuedAt',to_char(new.issued_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"'),'receiptNumber',new.invoice_number,
+ 'tax',tax,'profile',profile.configuration->'profile','branch',branch-'locationId','items',profile.configuration->'items',
+ 'names',(select jsonb_object_agg(id::text,item_name) from public.invoice_items where invoice_id=new.id)));
+ return new;
+end; $$;
+revoke all on function shop_private.capture_eta_source() from public,anon,authenticated,service_role;
+create trigger zz_eta_capture after update of status on public.invoices for each row execute function shop_private.capture_eta_source();
 create table public.eta_pos_chains (
  shop_id uuid not null references public.shops(id), device_serial text not null, last_uuid text not null default '',
  primary key(shop_id,device_serial), check(last_uuid='' or last_uuid ~ '^[a-f0-9]{64}$')
@@ -68,7 +99,7 @@ begin
  if p_request_id is null or length(btrim(coalesce(p_reason,''))) not between 2 and 1000
  or jsonb_typeof(p_configuration) is distinct from 'object' or (p_configuration-array['profile','branches','items'])<>'{}'::jsonb
  or jsonb_typeof(p_configuration->'profile') is distinct from 'object'
- or (p_configuration->'profile'-array['legalName','rin','activityCode'])<>'{}'::jsonb
+ or ((p_configuration->'profile')-array['legalName','rin','activityCode'])<>'{}'::jsonb
  or length(btrim(coalesce(p_configuration->'profile'->>'legalName',''))) not between 1 and 200
  or coalesce(p_configuration->'profile'->>'rin','') !~ '^[0-9]{9}$'
  or coalesce(p_configuration->'profile'->>'activityCode','') !~ '^[0-9]{4,10}$'
@@ -80,6 +111,7 @@ begin
  if existing.configuration<>p_configuration or existing.reason<>btrim(p_reason) or existing.actor_profile_id<>actor then raise exception 'ETA_REQUEST_CONFLICT' using errcode='23505'; end if;
  return existing.id; end if;
  if exists(select 1 from jsonb_array_elements(p_configuration->'branches') b group by b->>'locationId' having count(*)>1)
+ or exists(select 1 from jsonb_array_elements(p_configuration->'branches') b group by b->>'deviceSerialNumber' having count(*)>1)
  or exists(select 1 from jsonb_array_elements(p_configuration->'items') i group by i->>'sourceType',i->>'sourceId' having count(*)>1) then raise exception 'ETA_DUPLICATE_CONFIGURATION' using errcode='22023'; end if;
  for entry in select value from jsonb_array_elements(p_configuration->'branches') loop
  if (entry-array['locationId','branchCode','deviceSerialNumber','address'])<>'{}'::jsonb
@@ -87,7 +119,7 @@ begin
  or length(btrim(coalesce(entry->>'branchCode',''))) not between 1 and 50
  or length(btrim(coalesce(entry->>'deviceSerialNumber',''))) not between 1 and 100
  or jsonb_typeof(entry->'address') is distinct from 'object'
- or (entry->'address'-array['country','governate','regionCity','street','buildingNumber'])<>'{}'::jsonb
+ or ((entry->'address')-array['country','governate','regionCity','street','buildingNumber'])<>'{}'::jsonb
  or entry->'address'->>'country' is distinct from 'EG'
  or length(btrim(coalesce(entry->'address'->>'governate',''))) not between 1 and 100
  or length(btrim(coalesce(entry->'address'->>'regionCity',''))) not between 1 and 100
@@ -141,14 +173,11 @@ begin
  if found then
  if existing.invoice_id<>sale.id or existing.source->'buyer'<>p_buyer or existing.source->>'paymentMethod'<>p_payment_method then raise exception 'ETA_REQUEST_CONFLICT' using errcode='23505'; end if;
  return existing.id; end if;
- select * into profile from public.eta_profile_versions where shop_id=p_shop_id order by created_at desc,id desc limit 1;
- select value into branch from jsonb_array_elements(profile.configuration->'branches') where value->>'locationId'=sale.location_id::text;
- if branch is null then raise exception 'ETA_CONFIGURATION_INCOMPLETE' using errcode='22023'; end if;
- select snapshot into tax from public.sale_tax_snapshots where invoice_id=sale.id and shop_id=p_shop_id;
- if tax is null or tax->>'version'<>'1' or not coalesce((tax->>'calculationEnabled')::boolean,false) then raise exception 'ETA_LEGACY_SNAPSHOT_UNSUPPORTED' using errcode='22023'; end if;
- source:=jsonb_build_object('channel','ereceipt','kind','sale','currency',sale.currency,'issuedAt',to_char(sale.issued_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"'),
- 'receiptNumber',sale.invoice_number,'tax',tax,'profile',profile.configuration->'profile','branch',branch-'locationId','items',profile.configuration->'items','buyer',p_buyer,'paymentMethod',p_payment_method,
- 'names',(select jsonb_object_agg(id::text,item_name) from public.invoice_items where invoice_id=sale.id));
+ select e.source,e.profile_version_id into source,profile.id from public.eta_sale_sources e where e.invoice_id=sale.id and e.shop_id=p_shop_id and e.location_id=sale.location_id;
+ if source is null then raise exception 'ETA_LEGACY_SNAPSHOT_UNSUPPORTED' using errcode='22023';end if;
+ branch:=source->'branch';tax:=source->'tax';
+ if not coalesce((tax->>'calculationEnabled')::boolean,false) then raise exception 'ETA_LEGACY_SNAPSHOT_UNSUPPORTED' using errcode='22023';end if;
+ source:=source||jsonb_build_object('buyer',p_buyer,'paymentMethod',p_payment_method);
  insert into public.eta_pos_chains(shop_id,device_serial) values(p_shop_id,branch->>'deviceSerialNumber') on conflict do nothing;
  insert into public.eta_outbox(shop_id,location_id,invoice_id,profile_version_id,request_id,device_serial,source)
  values(p_shop_id,sale.location_id,sale.id,profile.id,p_request_id,branch->>'deviceSerialNumber',source) returning id into result;
@@ -209,3 +238,19 @@ begin
 end; $$;
 revoke all on function public.shop_eta_claim(),public.shop_eta_prepare(uuid,uuid,text,text,text),public.shop_eta_transition(uuid,uuid,text,text,text,integer) from public,anon,authenticated;
 grant execute on function public.shop_eta_claim(),public.shop_eta_prepare(uuid,uuid,text,text,text),public.shop_eta_transition(uuid,uuid,text,text,text,integer) to service_role;
+
+-- Provider evidence must be checked by the server reconciler before invoking.
+-- Browser managers cannot assert external success or reset uncertain documents.
+create function public.shop_eta_recovery_context(p_id uuid) returns jsonb language sql stable security definer set search_path='' as $$
+ select to_jsonb(o) from public.eta_outbox o where o.id=p_id and o.state='uncertain';
+$$;
+create function public.shop_eta_link_recovery(p_id uuid,p_submission_uuid text,p_document_uuid text) returns void
+language plpgsql security definer set search_path='' as $$
+begin
+ if p_submission_uuid is null or p_submission_uuid !~ '^[A-Za-z0-9_-]{1,100}$' then raise exception 'ETA_RECOVERY_EVIDENCE_REQUIRED' using errcode='22023'; end if;
+ update public.eta_outbox set state='submitted',submission_uuid=p_submission_uuid,error_code='ETA_RECOVERED_FROM_PROVIDER_EVIDENCE',next_attempt_at=now()+interval '1 minute',updated_at=now()
+ where id=p_id and state='uncertain' and document_uuid=p_document_uuid and submission_uuid is null;
+ if not found then raise exception 'ETA_RECOVERY_CONFLICT' using errcode='55000'; end if;
+end; $$;
+revoke all on function public.shop_eta_recovery_context(uuid),public.shop_eta_link_recovery(uuid,text,text) from public,anon,authenticated;
+grant execute on function public.shop_eta_recovery_context(uuid),public.shop_eta_link_recovery(uuid,text,text) to service_role;

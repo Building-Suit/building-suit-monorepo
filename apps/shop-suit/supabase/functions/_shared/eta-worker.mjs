@@ -102,3 +102,22 @@ export function createEtaDispatcher({ rpc, configuration, client }) {
   } catch { await change('uncertain','ETA_SUBMISSION_OUTCOME_UNKNOWN'); return {state:'uncertain'} }
  }
 }
+
+// An operator may supply a submission ID found in ETA after an ambiguous POST.
+// The server verifies its document evidence before releasing the blocked POS.
+export function createEtaReconciler({rpc,configuration,client}) {
+ return async (outboxId,submissionUUID)=>{
+  if (!/^[0-9a-f-]{36}$/.test(outboxId) || !/^[A-Za-z0-9_-]{1,100}$/.test(submissionUUID)) throw new EtaError('ETA_RECOVERY_REFERENCE_INVALID')
+  const job=await rpc('shop_eta_recovery_context',{p_id:outboxId})
+  if (!job) throw new EtaError('ETA_RECOVERY_NOT_REQUIRED')
+  const config=configuration(job.shop_id,job.device_serial)
+  if (!config || config.environment!=='preproduction' || config.shopId!==job.shop_id || config.deviceSerialNumber!==job.device_serial || config.rin!==job.source.profile.rin) throw new EtaError('ETA_PROVIDER_SETUP_REQUIRED')
+  const response=await client.poll(config,submissionUUID)
+  if (!response.ok) throw new EtaError('ETA_RECOVERY_EVIDENCE_REQUIRED')
+  const result=await response.json()
+  const receipt=result.receipts?.find(item=>item.uuid===job.document_uuid)
+  if (result.submissionuuid!==submissionUUID || result.sellerId!==config.rin || !receipt || receipt.sellerId!==config.rin || receipt.deviceSerialNumber!==job.device_serial) throw new EtaError('ETA_RECOVERY_EVIDENCE_REQUIRED')
+  await rpc('shop_eta_link_recovery',{p_id:outboxId,p_submission_uuid:submissionUUID,p_document_uuid:job.document_uuid})
+  return {state:'submitted'}
+ }
+}
