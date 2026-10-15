@@ -27,7 +27,15 @@ create table public.release_candidate_promotions (
   deployment_sha text not null check(deployment_sha ~ '^[a-f0-9]{40}$'),
   first_published_at timestamptz not null
 );
+create function super_admin_private.legacy_release_retired() returns trigger
+language plpgsql set search_path='' as $$ begin raise exception 'PER_MERGE_RELEASES_RETIRED'; end $$;
+revoke all on function super_admin_private.legacy_release_retired() from public,anon,authenticated,service_role;
 do $$ declare t text; begin
+  perform pg_advisory_xact_lock(736271901);
+  -- Drain old writers, then guard the tables too: an already-started cached v1 call cannot resume writing after adoption.
+  foreach t in array array['release_version_heads','release_manifests','release_consumed_fragments','release_versions'] loop
+    execute format('create trigger v1_release_catalog_retired before insert or update or delete or truncate on public.%I for each statement execute function super_admin_private.legacy_release_retired()',t);
+  end loop;
   foreach t in array array['release_candidate_versions','release_candidate_baseline','release_candidate_revisions','release_candidate_pointer','release_candidate_promotions'] loop
     execute format('alter table public.%I enable row level security',t);
     execute format('revoke all on public.%I from public,anon,authenticated,service_role',t);

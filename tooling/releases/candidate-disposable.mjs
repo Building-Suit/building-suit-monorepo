@@ -93,6 +93,8 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
   assert.equal(isChangelogNew(feed(prod).entries[0],new Date(Date.parse(published)+48*60*60*1000).toISOString()),false)
   assert.throws(()=>prod(`update public.release_candidate_promotions set first_published_at=clock_timestamp();`),/IMMUTABLE_CANDIDATE_HISTORY/)
   assert.throws(()=>stage(`${jwt}select public.release_stage_accept('{}');`),/PER_MERGE_RELEASES_RETIRED/)
+  assert.throws(()=>stage("update public.release_version_heads set version='9.9.9';"),/PER_MERGE_RELEASES_RETIRED/)
+  assert.throws(()=>stage(`insert into public.release_manifests(source_sha) values('${'f'.repeat(40)}');`),/PER_MERGE_RELEASES_RETIRED/,'Table guards also stop a cached old writer after model adoption')
   for(const role of ['anon','authenticated']) {
     assert.throws(()=>stage(`set role ${role};select public.release_candidate_refresh(${json(first)});`),/permission denied/)
     assert.throws(()=>stage(`set role ${role};select * from public.release_candidate_revisions;`),/permission denied/)
