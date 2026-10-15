@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       accounting_periods: {
@@ -2194,6 +2169,7 @@ export type Database = {
           notes: string | null
           shop_id: string
           status: Database["public"]["Enums"]["invoice_status"]
+          tax_order_discount: number
           total_amount: number
           updated_at: string
         }
@@ -2217,6 +2193,7 @@ export type Database = {
           notes?: string | null
           shop_id: string
           status?: Database["public"]["Enums"]["invoice_status"]
+          tax_order_discount?: number
           total_amount?: number
           updated_at?: string
         }
@@ -2240,6 +2217,7 @@ export type Database = {
           notes?: string | null
           shop_id?: string
           status?: Database["public"]["Enums"]["invoice_status"]
+          tax_order_discount?: number
           total_amount?: number
           updated_at?: string
         }
@@ -3829,6 +3807,48 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "shops"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_tax_snapshots: {
+        Row: {
+          created_at: string
+          invoice_id: string
+          location_id: string
+          policy_version_id: string | null
+          shop_id: string
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          invoice_id: string
+          location_id: string
+          policy_version_id?: string | null
+          shop_id: string
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          invoice_id?: string
+          location_id?: string
+          policy_version_id?: string | null
+          shop_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_tax_snapshots_invoice_id_shop_id_location_id_fkey"
+            columns: ["invoice_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+          {
+            foreignKeyName: "sale_tax_snapshots_policy_version_id_shop_id_fkey"
+            columns: ["policy_version_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "tax_policy_versions"
+            referencedColumns: ["id", "shop_id"]
           },
         ]
       }
@@ -7037,6 +7057,54 @@ export type Database = {
           },
         ]
       }
+      tax_policy_versions: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          effective_at: string
+          id: string
+          policy: Json
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          effective_at: string
+          id?: string
+          policy: Json
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          effective_at?: string
+          id?: string
+          policy?: Json
+          reason?: string
+          request_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_policy_versions_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_policy_versions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_invoice_items: {
         Row: {
           created_at: string
@@ -8507,6 +8575,10 @@ export type Database = {
         Args: { p_invoice_id: string; p_shop_id: string }
         Returns: Json
       }
+      get_sale_tax_snapshot: {
+        Args: { p_invoice_id: string; p_shop_id: string }
+        Returns: Json
+      }
       inventory_access: {
         Args: { p_shop_id: string }
         Returns: {
@@ -8860,6 +8932,10 @@ export type Database = {
       }
       prepare_support_notification: {
         Args: { p_id: string; p_lease_token: string; p_payload: Json }
+        Returns: Json
+      }
+      quote_sale_tax: {
+        Args: { p_lines: Json; p_location_id: string; p_shop_id: string }
         Returns: Json
       }
       receipt_settings: { Args: { p_shop_id: string }; Returns: Json }
@@ -9377,6 +9453,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      save_tax_policy: {
+        Args: {
+          p_effective_at: string
+          p_policy: Json
+          p_reason: string
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
       save_vendor: {
         Args: {
           p_address: string
@@ -9403,6 +9489,10 @@ export type Database = {
       }
       set_reorder_threshold: {
         Args: { p_product_id: string; p_shop_id: string; p_threshold: number }
+        Returns: undefined
+      }
+      set_sale_order_discount: {
+        Args: { p_discount: number; p_invoice_id: string; p_shop_id: string }
         Returns: undefined
       }
       set_shop_business_mode: {
@@ -9701,6 +9791,7 @@ export type Database = {
           can_view: boolean
         }[]
       }
+      tax_settings: { Args: { p_shop_id: string }; Returns: Json }
       transfer_shop_ownership: {
         Args: {
           p_reason: string
@@ -9901,9 +9992,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       appointment_block_kind: ["break", "time_off"],

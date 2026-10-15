@@ -3,7 +3,7 @@ import test from 'node:test'
 import { readFileSync } from 'node:fs'
 import { stripTypeScriptTypes } from 'node:module'
 import { ref, computed } from 'vue'
-const source = stripTypeScriptTypes(readFileSync(new URL('../../app/composables/useSaleTaxQuote.ts', import.meta.url), 'utf8'), { mode: 'transform' }).replace('export function', 'function')
+const source = stripTypeScriptTypes(readFileSync(new URL('../../app/composables/useSaleTaxQuote.ts', import.meta.url), 'utf8'), { mode: 'strip' }).replace('export function', 'function')
 function fixture({ online = true, cached = false, delayed = false } = {}) {
  const shop = ref('shop-1'), location = ref('location-1'), user = ref({ id: 'user-1' })
  const calls = [], writes = []
