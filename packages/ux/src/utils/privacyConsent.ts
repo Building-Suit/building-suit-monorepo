@@ -14,7 +14,7 @@ export function privacyPreference(analytics: boolean, now = Date.now()): Privacy
 }
 /** Remove only our GA cookies, including supported parent-domain/path variants. */
 export function removeAnalyticsCookies(doc: Document, hostname: string) {
-  let cookies = ''
+  let cookies: string
   try { cookies = doc.cookie } catch { return }
   const names = cookies.split(';').map(cookie => cookie.split('=')[0]?.trim() || '').filter(name => name === '_ga' || name.startsWith('_ga_'))
   const labels = hostname.split('.')

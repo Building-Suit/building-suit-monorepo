@@ -179,6 +179,7 @@ test('settings save enables analytics and pricing link emits one safe marketing 
   expect(requests).toEqual([])
   await page.getByRole('button', { name: 'Save choices' }).click()
   await expect.poll(async () => (await events(page)).filter(event => event[1] === 'page_view').length).toBe(1)
+  await page.locator('#pricing').scrollIntoViewIfNeeded()
   await page.locator('[data-plan="solo"] a[href="/auth/signup"]').first().click()
   await expect(page).toHaveURL(origin + '/auth/signup')
   await expect.poll(() => dispatched.get(context)!.filter(event => event[1] === 'select_content').length).toBe(1)
