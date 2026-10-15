@@ -1,6 +1,6 @@
 import type { BsReceiptView, BsReceiptDocumentCopy } from '@building-suit/ui/types/receiptPresentation'
 import type { SaleReceiptSnapshot } from '../types/receipt'
-import { formatReceiptDate, formatReceiptMoney } from './receipt.ts'
+import { formatReceiptDocumentDate, formatReceiptMoney } from './receipt.ts'
 
 export function projectReceipt(receipt: SaleReceiptSnapshot, language: string, translate: (key: string) => string): { view: BsReceiptView; copy: BsReceiptDocumentCopy } {
   const label = (key: string) => translate(`receipt.${key}`)
@@ -14,7 +14,7 @@ export function projectReceipt(receipt: SaleReceiptSnapshot, language: string, t
       logoDataUrl: receipt.presentation?.logoDataUrl, notes: receipt.presentation?.notes,
       direction: receipt.presentation?.direction === 'auto' ? undefined : receipt.presentation?.direction,
       issuer: receipt.business.name, issuerDetails: [receipt.business.address, receipt.business.phone].filter((item): item is string => Boolean(item)),
-      invoice: receipt.invoiceNumber, issued: formatReceiptDate(receipt.issuedAt, language), location: { ...receipt.location, address: receipt.location.address ?? receipt.business.address, phone: receipt.location.phone ?? receipt.business.phone },
+      invoice: receipt.invoiceNumber, issued: formatReceiptDocumentDate(receipt.issuedAt, language), location: { ...receipt.location, address: receipt.location.address ?? receipt.business.address, phone: receipt.location.phone ?? receipt.business.phone },
       staff: receipt.staffName || '—', customer: receipt.customer.name || label('walkIn'),
       lines: receipt.lines.map(line => ({ id: line.id, label: line.name, description: receipt.presentation?.showDescriptions === false ? undefined : line.description || line.sku || undefined, quantity: String(Number(line.quantity)), unitPrice: money(line.unitPrice), total: money(line.total) })),
       totals: [

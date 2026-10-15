@@ -131,8 +131,9 @@
   --bs-shadow-elevation1-dark: 0 1px 2px rgba(0, 0, 0, 0.28);
   --bs-shadow-elevation2-dark: 0 10px 28px rgba(0, 0, 0, 0.36);
   --bs-shadow-elevation3-dark: 0 24px 64px rgba(0, 0, 0, 0.52);
-  --bs-component-receipt-font-family: 'Roboto Condensed Variable', 'IBM Plex Sans Arabic', sans-serif;
-  --bs-component-receipt-heading-font-family: 'Manrope Variable', Manrope, 'IBM Plex Sans Arabic', sans-serif;
+  --bs-component-receipt-font-family: 'Roboto Variable', 'IBM Plex Sans Arabic', sans-serif;
+  --bs-component-receipt-table-font-family: 'Roboto Condensed Variable', 'IBM Plex Sans Arabic', sans-serif;
+  --bs-component-receipt-heading-font-family: 'Roboto Variable', 'IBM Plex Sans Arabic', sans-serif;
   --bs-component-receipt-ink: #000;
   --bs-component-receipt-paper: #fff;
   --bs-component-receipt-band: #e9e9e9;

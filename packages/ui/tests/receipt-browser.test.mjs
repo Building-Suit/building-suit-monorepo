@@ -9,10 +9,10 @@ const root = new URL('../../../', import.meta.url)
 const read = path => readFile(new URL(path, root))
 const fonts = await Promise.all([400, 600, 700].map(async weight => `@font-face{font-family:'IBM Plex Sans Arabic';font-style:normal;font-weight:${weight};src:url(data:font/woff2;base64,${(await read(`node_modules/@fontsource/ibm-plex-sans-arabic/files/ibm-plex-sans-arabic-arabic-${weight}-normal.woff2`)).toString('base64')}) format('woff2')}`))
 const tokens = await read('packages/design-tokens/generated/tokens.css')
-const receiptFont = await read('packages/ui/node_modules/@fontsource-variable/roboto-condensed/files/roboto-condensed-latin-wght-normal.woff2')
-fonts.push(`@font-face{font-family:'Roboto Condensed Variable';font-style:normal;font-weight:100 900;src:url(data:font/woff2;base64,${receiptFont.toString('base64')}) format('woff2')}`)
-const headingFont = await read('node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2')
-fonts.push(`@font-face{font-family:'Manrope Variable';font-style:normal;font-weight:200 800;src:url(data:font/woff2;base64,${headingFont.toString('base64')}) format('woff2')}`)
+const receiptFont = await read('packages/ui/node_modules/@fontsource-variable/roboto/files/roboto-latin-wght-normal.woff2')
+fonts.push(`@font-face{font-family:'Roboto Variable';font-style:normal;font-weight:100 900;src:url(data:font/woff2;base64,${receiptFont.toString('base64')}) format('woff2')}`)
+const tableFont = await read('packages/ui/node_modules/@fontsource-variable/roboto-condensed/files/roboto-condensed-latin-wght-normal.woff2')
+fonts.push(`@font-face{font-family:'Roboto Condensed Variable';font-style:normal;font-weight:100 900;src:url(data:font/woff2;base64,${tableFont.toString('base64')}) format('woff2')}`)
 const css = `${tokens}\n${fonts.join('')}\n`
 const source = (await read('packages/ux/src/utils/documentImage.ts')).toString().replace("import('html-to-image')", 'Promise.resolve(window.htmlToImage)').replace(/^export /gm, '')
 const controller = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText
@@ -43,7 +43,7 @@ for (const language of ['en', 'ar']) test(`receipt ${language}: deterministic re
     const labels = { ...copy }
     if (language === 'ar') {
       Object.assign(labels, { title: 'إيصال بيع', invoice: 'رقم البيع', date: 'التاريخ والوقت', location: 'الفرع', address: 'العنوان', phone: 'الهاتف', staff: 'الموظف', customer: 'العميل', item: 'المنتج / الخدمة', quantity: 'الكمية', unitPrice: 'سعر الوحدة', lineTotal: 'المبلغ', payment: 'الدفع', reference: 'الرقم المرجعي', thankYou: 'شكرًا لزيارتكم', greeting: 'نتمنى لكم يومًا سعيدًا', issuedVia: 'صادر عبر Shop Suit by Building Suit', compliance: 'هذا الإيصال لأغراض محاسبية فقط — وليس فاتورة ضريبية معتمدة من مصلحة الضرائب.' })
-      model.issued = '2021/10/05 6:08 م'
+      model.issued = '\u20662021/10/05 6:08\u2069 م'
       model.lines.forEach(line => { line.unitPrice = line.unitPrice.replace('EGP ', '') + ' ج.م.'; line.total = line.total.replace('EGP ', '') + ' ج.م.' })
       model.totals = [{ id: 'subtotal', label: 'الإجمالي قبل الخصم', value: '3,198.00 ج.م.' }, { id: 'paid', label: 'إجمالي المدفوع', value: '3,198.00 ج.م.', emphasis: true }]
       model.payments[0].summary = 'نقدي'
@@ -55,6 +55,17 @@ for (const language of ['en', 'ar']) test(`receipt ${language}: deterministic re
     const paper = page.locator('[data-receipt-document]')
     const overflowing = await paper.evaluate(node => [...node.querySelectorAll('*')].filter(element => element.scrollWidth > element.clientWidth + 1 && element.clientWidth > 0).map(element => element.className))
     assert.deepEqual(overflowing, [])
+    const datePositions = await page.locator('.bs-receipt-details .bs-receipt-detail').nth(1).locator('.bs-receipt-value bdi').evaluate(node => {
+      const value = node.firstChild
+      const position = text => {
+        const start = value.textContent.indexOf(text)
+        const range = document.createRange(); range.setStart(value, start); range.setEnd(value, start + text.length)
+        return range.getBoundingClientRect().x
+      }
+      return { date: position('2021/10/05'), time: position('6:08'), period: position(node.textContent.includes('م') ? 'م' : 'PM') }
+    })
+    assert.ok(datePositions.date < datePositions.time, 'Date must precede time visually inside its isolated LTR group')
+    assert.ok(language === 'ar' ? datePositions.period < datePositions.date : datePositions.time < datePositions.period, 'Localized meridiem must match the reference direction')
     const screenshot = await paper.screenshot()
     const output = new URL('test-results/receipt/', root)
     await mkdir(output, { recursive: true })
@@ -119,21 +130,25 @@ for (const language of ['en', 'ar']) test(`receipt ${language}: deterministic re
     assert.deepEqual(requests, [])
     const reference = await read(`packages/ui/tests/fixtures/receipt-references/${language === 'ar' ? '1000165558' : '1000165557'}.jpg`)
     // Compare clean output with the photographed reference after cropping its
-    // background and normalizing size. Report error honestly; no "pixel-perfect" gate.
+    // background at equal paper widths, preserving aspect ratios and padding white.
+    // Report error honestly; photo lighting is not clean-render fidelity.
     const comparison = await page.evaluate(async ({ original, actual }) => {
       const load = async src => { const image = new Image(); image.src = src; await image.decode(); return image }
       const [reference, rendered] = await Promise.all([load(original), load(actual)])
-      const width = 300, height = 690
+      const width = 304
+      const referenceHeight = 1600 * width / 694
+      const renderedHeight = rendered.height * width / rendered.width
+      const height = Math.ceil(Math.max(referenceHeight, renderedHeight))
       const canvas = document.createElement('canvas'); canvas.width = width * 3; canvas.height = height
       const context = canvas.getContext('2d')
       context.fillStyle = 'white'; context.fillRect(0, 0, canvas.width, height)
-      context.drawImage(reference, 103, 0, 694, 1600, 0, 0, width, height)
-      context.drawImage(rendered, width, 0, width, height)
+      context.drawImage(reference, 103, 0, 694, 1600, 0, 0, width, referenceHeight)
+      context.drawImage(rendered, width, 0, width, renderedHeight)
       const left = context.getImageData(0, 0, width, height), right = context.getImageData(width, 0, width, height)
       let error = 0
       for (let i = 0; i < left.data.length; i += 4) { const delta = Math.abs(left.data[i] - right.data[i]); error += delta; const j = i; left.data[j] = delta; left.data[j+1] = delta; left.data[j+2] = delta }
       context.putImageData(left, width * 2, 0)
-      return { meanAbsoluteError: error / (width * height * 255), image: canvas.toDataURL(), originalSize: [reference.width, reference.height], renderedSize: [rendered.width, rendered.height] }
+      return { method: 'equal-paper-width, aspect-preserved, white-padded', meanAbsoluteError: error / (width * height * 255), image: canvas.toDataURL(), originalSize: [reference.width, reference.height], renderedSize: [rendered.width, rendered.height] }
     }, { original: `data:image/jpeg;base64,${reference.toString('base64')}`, actual: `data:image/png;base64,${screenshot.toString('base64')}` })
     await writeFile(new URL(`${language}-reference-comparison.png`, output), Buffer.from(comparison.image.split(',')[1], 'base64'))
     delete comparison.image

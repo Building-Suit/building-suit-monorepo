@@ -10,11 +10,14 @@ export const receiptDocumentStyles = String.raw`
 .bs-receipt-merchant-logo { display: block; width: 48px; height: 48px; object-fit: contain; margin: 0 auto 8px; filter: grayscale(1); }
 .bs-sale-receipt .bs-receipt-title { text-align: center; font-size: 15px; font-weight: 700; letter-spacing: 2.6px; margin: 11px 0 12px; }
 .bs-sale-receipt[lang='en'] .bs-receipt-title { text-transform: uppercase; }
+.bs-sale-receipt[lang='en'] .bs-receipt-payments { padding-bottom: 6px; }
+.bs-sale-receipt[lang='en'] .bs-receipt-footer { padding-top: 5px; }
+.bs-sale-receipt[lang='en'] .bs-receipt-thanks { font-size: 15.5px; }
 .bs-sale-receipt[lang='ar'] .bs-receipt-title { font-size: 23px; letter-spacing: normal; margin: 6px 0 7px; }
 .bs-receipt-reprint { text-align: center; font-size: 9px; margin-bottom: 5px !important; }
 .bs-receipt-details { padding-bottom: 9px; border-bottom: 1px dashed var(--bs-component-receipt-separator); margin-bottom: 11px; }
 .bs-receipt-detail { display: grid; direction: ltr; grid-template-columns: 30% 10% minmax(0,1fr) 18px; align-items: center; min-height: 22px; column-gap: 2px; }
-.bs-receipt-detail svg,.bs-receipt-payments svg { width: 16px; height: 16px; justify-self: end; }
+.bs-receipt-detail svg,.bs-receipt-payments svg { width: 18px; height: 18px; justify-self: end; }
 .bs-receipt-label,.bs-receipt-value { overflow-wrap: anywhere; min-width: 0; }
 .bs-receipt-value { text-align: start; }
 .bs-sale-receipt[dir='rtl'] .bs-receipt-detail { grid-template-columns: minmax(0,1fr) 8% 34% 18px; }
@@ -22,7 +25,7 @@ export const receiptDocumentStyles = String.raw`
 .bs-sale-receipt[dir='rtl'] .bs-receipt-colon { grid-column: 2; grid-row: 1; text-align: center; }
 .bs-sale-receipt[dir='rtl'] .bs-receipt-value { grid-column: 1; grid-row: 1; text-align: left; }
 .bs-sale-receipt[dir='rtl'] .bs-receipt-detail svg { grid-column: 4; grid-row: 1; }
-.bs-receipt-lines { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; line-height: 1.45; }
+.bs-receipt-lines { font-family: var(--bs-component-receipt-table-font-family); width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; line-height: 1.45; }
 .bs-receipt-product { width: 34%; }.bs-receipt-quantity { width: 12%; }
 .bs-receipt-lines th { background: var(--bs-component-receipt-band); font-weight: 700; padding: 3px 3px; text-align: center; }
 .bs-receipt-lines th:first-child,.bs-receipt-lines td:first-child { text-align: start; }
@@ -52,10 +55,10 @@ export const receiptDocumentStyles = String.raw`
 .bs-printable-document.bs-receipt-preview[data-format] .bs-printable-document__paper { padding: 0; border: 0; background: var(--bs-component-receipt-paper); }
 @media print { .bs-sale-receipt { max-width: none; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .bs-receipt-lines tr,.bs-receipt-payments,.bs-receipt-footer { break-inside: avoid; } }
 /* Thermal typography follows the supplied specimen; headings keep broad Latin forms. */
-.bs-receipt-heading h1 { font-family: var(--bs-component-receipt-heading-font-family); font-size: 26px; }
+.bs-receipt-heading h1 { font-family: var(--bs-component-receipt-heading-font-family); font-size: 28px; }
 .bs-receipt-heading h2 { font-family: var(--bs-component-receipt-heading-font-family); font-size: 16px; margin-top: 2px; }
 .bs-receipt-heading { padding-bottom: 9px; }
-.bs-sale-receipt { font-size: 13px; }
+.bs-sale-receipt { font-size: 12px; }
 .bs-receipt-lines { font-size: 12px; }
 .bs-sale-receipt[lang='ar'] .bs-receipt-detail { min-height: 23px; }
 .bs-sale-receipt[lang='ar'] .bs-receipt-label { font-size: 13px; }

@@ -14,7 +14,7 @@ const paths: Record<string, string> = {
   customer: '<circle cx="9" cy="6" r="4" fill="currentColor" stroke="none"/><circle cx="17" cy="7" r="3" fill="currentColor" stroke="none"/><path fill="currentColor" stroke="none" d="M1 22v-3a8 8 0 0 1 16 0v3z M18 22v-3a10 10 0 0 0-3-7c6-1 8 3 8 7v3z"/>',
   wallet: '<path d="M3 7 18 2l2 5 M3 7h18v15H3z M21 12h-7v6h7"/><circle cx="17" cy="15" r=".8"/>',
 }
-const icon = (name: string) => `<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">${paths[name] ?? ''}</svg>`
+const icon = (name: string) => `<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">${paths[name] ?? ''}</svg>`
 
 /** Pure shared presentation. All merchant data and financial values arrive formatted by the Suit. */
 export function renderReceiptDocument(receipt: BsReceiptView, copy: BsReceiptDocumentCopy, language: string, reprint = false): string {

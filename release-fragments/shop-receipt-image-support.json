@@ -1,9 +1,26 @@
 {
   "id": "shop-receipt-image-support",
   "task": "SS-RECEIPT-IMAGE-001",
-  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
   "classification": "internal",
   "disposition": "internal",
-  "paths": [".github/workflows/ci.yml", "packages/testing", "packages/ui", "packages/ux", "packages/design-tokens", "apps/building-suit-docs", "docs/shared/ui-ownership-manifest.json", "docs/work-packages/shop-receipt-image.md", "pnpm-lock.yaml"],
-  "reason": "Adds optional shared receipt presentation, local image handling, a self-hosted document font, catalogue coverage and deterministic visual/clipboard regressions for Shop. Other Suit workflows retain their current behavior."
+  "paths": [
+    ".github/workflows/ci.yml",
+    "packages/testing",
+    "packages/ui",
+    "packages/ux",
+    "packages/design-tokens",
+    "apps/building-suit-docs",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/shop-receipt-image.md",
+    "pnpm-lock.yaml",
+    "apps/shop-suit/tests/e2e/marketing-privacy.spec.ts"
+  ],
+  "reason": "Adds optional shared receipt presentation, local image handling, a self-hosted document font, catalogue coverage and deterministic visual/clipboard regressions for Shop. Other Suit workflows retain their current behavior. Drains active synthetic privacy-fixture forwards before browser-context shutdown, with a deterministic lifecycle regression."
 }

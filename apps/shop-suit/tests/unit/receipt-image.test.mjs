@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { renderReceiptDocument } from '../../../../packages/ui/src/utils/receiptDocument.ts'
 import { projectReceipt, sumReceiptAmounts } from '../../app/utils/receiptPresentation.ts'
+import { formatReceiptDocumentDate } from '../../app/utils/receipt.ts'
 import { copyDocumentImage } from '../../../../packages/ux/src/utils/documentImage.ts'
 
 const receipt = { business: { name: '<Tenant & Shop>', address: null, phone: null }, location: { name: 'فرع / Branch', code: '01', address: 'Address', phone: '+20100' }, invoiceNumber: 'SALE-1', issuedAt: '2026-10-15T10:00:00Z', currency: 'EGP', staffName: 'Cashier', customer: { name: 'Customer' }, lines: [{ id: '1', name: 'منتج', quantity: 2, unitPrice: 15, total: 25, discount: 5 }], payments: [{ id: 'a', amount: 10, method: 'cash', reference: 'CASH-1' }, { id: 'b', amount: 5, method: 'card', reference: 'CARD-1' }], subtotal: 30, discount: 5, total: 27, tax: { calculationEnabled: true, tax: 2 }, footer: null }
@@ -71,4 +72,11 @@ test('unsupported and denied image writes reject without text fallback', async (
   assert.equal(rendered, false)
   class Item { constructor(data) { this.data = data } }
   await assert.rejects(copyDocumentImage(async () => new Blob(), { write: async () => { throw new Error('denied') } }, Item), /denied/)
+})
+
+
+test('thermal date/time retains Cairo chronology and isolates the Arabic numeric group', () => {
+  const timestamp = '2021-10-05T16:08:00Z'
+  assert.equal(formatReceiptDocumentDate(timestamp, 'en'), '2021/10/05 6:08 PM')
+  assert.equal(formatReceiptDocumentDate(timestamp, 'ar'), '\u20662021/10/05 6:08\u2069 م')
 })

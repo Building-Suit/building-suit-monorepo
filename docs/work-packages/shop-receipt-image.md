@@ -46,8 +46,10 @@ sibling `receipt-baselines` directory. `receipt-browser.test.mjs` automatically
 creates previews, copied PNGs, original/render/difference triptychs and numeric
 comparison reports under ignored `test-results/receipt/`.
 
-The photographed references are cropped at x=103, width=694 and normalized for
-comparison. Their lighting, perspective and background differ from clean output.
+The photographed references are cropped at x=103, width=694 and compared at
+equal paper width with aspect ratios preserved and white padding. Earlier
+full-height normalization distorted vertical spacing, so its scores are not
+directly comparable to the current report. Their lighting, perspective and background differ from clean output.
 The output is **not certified pixel-perfect**: typography, spacing and the current
 canonical brand mark retain measurable differences. Do not interpret comparison
 error as a perceptual similarity percentage. Manual staging review belongs to the
@@ -55,9 +57,14 @@ user after the parent's merge.
 
 ## Verification
 
-- Reference-guided final spacing reduces normalized photograph comparison error
-  to EN 0.09471 and AR 0.10020, with 701/700 px clean receipt heights at 304 px
-  screenshot width. Pixel-perfect matching remains unverified.
+- Reference-review follow-up uses regular self-hosted Roboto for body text,
+  retaining condensed table text to preserve column fit. Shop/branch headings use regular Roboto to match reference widths. Detail glyphs are 18 px
+  with stronger strokes; English footer spacing and thank-you width were adjusted.
+  Aspect-preserving photograph comparison error is EN 0.09808 / AR 0.10148,
+  with 689/701 px clean heights at 304 px paper width. These values include photo
+  lighting and remaining layout/type differences; pixel-perfect matching remains
+  unverified. Arabic date/time uses an isolated LTR numeric group with localized
+  meridiem, verified through actual browser text-range positions.
 - Focused issued-currency, projection, escaping, clipboard lifecycle and failure regressions.
 - Chromium AR/EN clean-baseline comparison, preview/PNG pixel comparison with
   antialiasing tolerance, no external asset requests, PNG dimensions and 30-line
@@ -73,11 +80,23 @@ user after the parent's merge.
   denied-permission download, dark-mode white receipt, print invocation and A4
   selection in both languages. Only synthetic fixture services run in the cloud.
 - Initial CI found system-heading-font differences in clean baselines. Headings
-  now use self-hosted Manrope; body uses self-hosted Roboto Condensed and IBM Plex
-  Sans Arabic. Further CI inspection identified LCD subpixel antialiasing rather
+  initially used self-hosted Manrope, then reference review selected Roboto; body uses self-hosted Roboto and IBM Plex Sans Arabic; compact table
+  text uses Roboto Condensed. Further CI inspection identified LCD subpixel antialiasing rather
   than geometry drift: CI images had colored text edges, local images were gray.
   Chromium's deterministic fixture now sets `--disable-lcd-text`; baseline and
   preview/PNG thresholds remain unchanged. Temporary diagnostic logging and
   alignment allowances were removed. Reference and preview/PNG comparisons passed.
 - CI and exact PR/head results are recorded in PR #321; no hosted database writes,
   direct stg/main pushes or manual deployments are part of this change.
+
+### Privacy CI fixture shutdown
+
+The exact-head privacy failure on `1c0e5749` occurred while a synthetic forwarder
+still held a fetched APIResponse during browser-context teardown. The fixture now
+materializes the response body, awaits fulfillment and disposes the response,
+then drains active forwards before closing the context. New prefetches are
+aborted during shutdown while interception remains installed. No consent/product
+logic or privacy assertions changed; retries remain zero. A gated regression
+proves that context close waits for fulfillment: it fails without the drain and
+passes with it. All nine privacy tests passed twice (18/18) locally. Exact-head
+CI results are tracked on PR #321.

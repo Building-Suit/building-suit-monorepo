@@ -478,10 +478,13 @@ export const tokens = {
   "component": {
     "receipt": {
       "fontFamily": {
+        "value": "'Roboto Variable', 'IBM Plex Sans Arabic', sans-serif"
+      },
+      "tableFontFamily": {
         "value": "'Roboto Condensed Variable', 'IBM Plex Sans Arabic', sans-serif"
       },
       "headingFontFamily": {
-        "value": "'Manrope Variable', Manrope, 'IBM Plex Sans Arabic', sans-serif"
+        "value": "'Roboto Variable', 'IBM Plex Sans Arabic', sans-serif"
       },
       "ink": {
         "value": "#000"
