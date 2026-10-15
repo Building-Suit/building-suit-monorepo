@@ -16,6 +16,12 @@ Recovery is isolated in `/workspace/service-material-recovery`, branch `codex/sh
 
 The browser suite caught and verified the fix for a forbidden cache key. The supported vault now allowlists one bounded service-line cache (IDs/names/quantities only), including its scope-clear path. Audit history and reasons are not cached. Completed historical appointments cannot be newly consumed through the public RPC; only the private current-transition hook can enter the completed-status path.
 
+## Real provider CI
+
+The corrected [materials job](https://github.com/Building-Suit/building-suit-monorepo/actions/runs/38669327045/job/116208445927) passed on `3abac458`: real disposable Supabase migration startup, materials SQL suite, two-session stock concurrency and original commission regressions. The first attempt exposed an incorrect workflow runner filename, which was fixed in that checkpoint. Branch policy, review, commission, media and payment CI also passed. A later tax job passed its database tests but failed its public-type generation image pull with `toomanyrequests: Data limit exceeded`; this is a provider limitation, not a SQL failure. Parent must obtain green combined checks before merge.
+
+Client query-cache keys include product/project URL, authenticated user, tenant, location, sale and page. Session changes clear editor/pending state; offline scope remains bound to the captured authenticated user.
+
 ## Limits and required integration gates
 
 Actual Supabase image extraction exceeded available Docker disk capacity. No existing data, images or workspaces were deleted. The dedicated `.github/workflows/shop-service-materials-disposable.yml` runs against real disposable Supabase and includes the original commission regression suite. Its result and the staging candidate's required checks must pass before merge; local provider stubs do not replace them.

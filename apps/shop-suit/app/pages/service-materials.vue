@@ -9,6 +9,8 @@ type RecipeContext = {services: {id: string; name: string}[]; materials: BsServi
 const { currentId, currentLocationId } = useShop()
 const { locale } = useI18n()
 const route = useRoute()
+const sessionUser = useSupabaseUser()
+const runtimeConfig = useRuntimeConfig()
 const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const counter = useOfflineCounter()
 const offline = useOfflineCounterView(counter)
@@ -29,7 +31,7 @@ const copy = computed<BsServiceWorkCopy>(() => locale.value === 'ar' ? {
 } : {
  title: 'Service fulfillment & materials', help: 'Recipes are optional. Completion is independent of payment. Quantities use 0.01 stock units with no conversions. Service refunds never automatically restore consumed materials.', back: 'Back', loading: 'Loading…', error: 'Could not load. Check shop and location permissions.', retry: 'Retry', noContext: 'Select a shop and location.', empty: 'No history.', configure: 'New recipe version', complete: 'Record fulfillment', unit: 'Stock unit', defineUnit: 'Define unit for an unused stock product', product: 'Material', service: 'Service', quantity: 'Quantity', reason: 'Reason', effectiveAt: 'Effective from', immediate: 'Leave blank for immediate effect. An empty recipe disables future consumption.', override: 'Record actual usage instead of recipe (manager)', add: 'Add material', remove: 'Remove', save: 'Save', queued: 'Request retained locally; fulfillment is unconfirmed until synced. Check the request status below.', saved: 'Saved.', history: 'Fulfillment & recipe history', detail: 'Materials and FIFO allocations', date: 'Effective or completion time', correction: 'Audited correction',
 })
-const { data, pending: loading, error, refresh } = useAsyncData(() => `shop-data:service-materials:${currentId.value}:${currentLocationId.value}:${saleId.value}:${offset.value}`, async () => {
+const { data, pending: loading, error, refresh } = useAsyncData(() => `shop-data:shop-crm:${runtimeConfig.public.supabase.url}:${sessionUser.value?.id}:service-materials:${currentId.value}:${currentLocationId.value}:${saleId.value}:${offset.value}`, async () => {
  if (!currentId.value || !currentLocationId.value) return null
  const key = 'service-fulfillment'
  if (!counter.online.value && saleId.value) {
@@ -43,8 +45,8 @@ const { data, pending: loading, error, refresh } = useAsyncData(() => `shop-data
  const value = {context: result.data as Context, recipes: recipes.error ? null : recipes.data as RecipeContext}
  await counter.cache(key, {invoiceId: saleId.value, offset: offset.value, value: {context: {totalCount: 0, lines: value.context.lines.map(line => ({id: line.id, name: line.name, quantity: line.quantity, completedQuantity: line.completedQuantity, history: []}))}, recipes: null}})
  return value
-}, { watch: [currentId, currentLocationId, saleId, offset], default: () => null })
-watch([currentId, currentLocationId, saleId], () => { recordAction.complete(); pending.value = false; retainedRequest = null; correctionMode.value = false; actionError.value = ''; success.value = ''; form.value = {target: '', quantity: '1', reason: '', effectiveAt: '', override: false, materials: [], unit: 'each'} })
+}, { watch: [() => sessionUser.value?.id, currentId, currentLocationId, saleId, offset], default: () => null })
+watch([() => sessionUser.value?.id, currentId, currentLocationId, saleId], () => { recordAction.complete(); pending.value = false; retainedRequest = null; correctionMode.value = false; actionError.value = ''; success.value = ''; form.value = {target: '', quantity: '1', reason: '', effectiveAt: '', override: false, materials: [], unit: 'each'} })
 watch(() => counter.records.value.filter(item => item.envelope.command.kind === 'service' && item.state === 'synced').length, () => { void refresh() })
 watch(counter.ready, ready => { if (ready) void refresh() })
 const view = computed<BsServiceWorkView>(() => {

@@ -40,7 +40,7 @@ for (const locale of ['en', 'ar']) {
   await expect.poll(()=>calls.filter(c=>c.name==='complete_service').length).toBe(1)
   expect(calls.find(c=>c.name==='complete_service')?.args).toMatchObject({p_shop_id:'shop-1',p_location_id:'location-1',p_line_id:'line-1',p_quantity:1,p_appointment_id:null,p_materials:null,p_reason:'One unit performed'})
   await expect(page.getByText(ar ? 'التخزين المحلي غير متاح.' : 'Local storage is unavailable.', {exact:false})).not.toBeVisible()
-  await expect(page.getByRole('paragraph').filter({hasText: ar ? /تنفيذ خدمة.*متزامن/ : /Service fulfillment.*Synced/})).toBeVisible()
+  await expect(page.getByRole('paragraph').filter({hasText: ar ? /تنفيذ خدمة.*· متزامن(?:\s|$)/ : /Service fulfillment.*· Synced(?:\s|$)/})).toBeVisible()
  })
 }
 
@@ -68,6 +68,6 @@ for (const locale of ['en', 'ar']) test(`material shortage stays failed across r
  expect(requests).toHaveLength(1)
  shortage=false
  await page.getByRole('button',{name:ar?'إعادة المحاولة بنفس معرف العملية':'Retry with the same request IDs',exact:true}).click()
- await expect(page.getByRole('paragraph').filter({hasText:ar?/تنفيذ خدمة.*متزامن/:/Service fulfillment.*Synced/})).toBeVisible()
- expect(requests).toHaveLength(2);expect(requests[0]).toEqual(requests[1])
+ await expect(page.getByRole('paragraph').filter({hasText:ar?/تنفيذ خدمة.*· متزامن(?:\s|$)/:/Service fulfillment.*· Synced(?:\s|$)/})).toBeVisible()
+ await expect.poll(()=>requests.length).toBe(2);expect(requests[0]).toEqual(requests[1])
 })
