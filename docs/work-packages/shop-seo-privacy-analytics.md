@@ -46,3 +46,9 @@ Search Console domain property ownership is already verified. Parent submits the
 Vercel quota currently prevents staging builds. No deployment retry, provider workaround, purchase, credential provisioning or hosted DB operation was attempted. Parent owns staging integration/deployment and the user performs manual staging acceptance. Index removal and GA delivery are not claimed as deployed/verified.
 
 #318 owns the public changelog route and landing section. This PR detects the actual route file at build time before including it in sitemap/SEO/analytics. Preserve that PR's public route/auth updates while integrating; its backend feed is not copied into this stack.
+
+## Parent reconciliation — 15 October 2026
+
+The parent requested history-preserving reconciliation after completing the Shop stack. Merge `ffd6843012ddce73f017653077c9bb7ebd2b3d82` incorporates stable parent #319 at `e2896c88badacf8a56ad4bdc8a335e04c8f5f4a2` (including #317 at `8328d6520b39294e8642015f59bc5d477c0e42bf` and root #316 at `8d09701e62721b1aa53ebab9e6f5e8ba37fa9022`). Both merge parents and all feature/release-fragment history are preserved.
+
+The only conflict was `docs/shared/ui-ownership-manifest.json`: keep the parent's verified returns status and append the privacy-consent family. No feature implementation or release fragment was discarded. Fragment coverage validation against the current parent passed with PR318's fetched validator. The resumed workspace/unit/lint/type/build and privacy/auth/checkout checks are recorded separately under `.local/seo-privacy-evidence/reconcile-*` so prior acceptance evidence is retained. Parent still owns leaf-first PR integration, combined root full verification and deployment gating; no PR merge or hosted action is performed here.
