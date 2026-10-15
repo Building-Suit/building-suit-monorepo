@@ -32,3 +32,5 @@ Local verification: Shop typecheck and changed-file lint pass; strict UI boundar
 Latest verification and exact limitations: `apps/shop-suit/docs/SS-SERV-002-verification.md`. Tax parent syntax/retired-plan fixture fixes have been incorporated.
 
 Final local acceptance: six EN/AR browser cases, 322 Shop unit tests, all focused SQL suites/concurrency, Shop typecheck/build/lint and strict workspace/UI checks pass. Broad repository test limitations and the precise 29.999 stock fixture mismatch are explicitly recorded in the verification document.
+
+Real disposable Supabase CI is running on PR #315; branch-policy has passed. All schema/types/adapters/tests are published; parent retains the combined CI and staging merge gate.
