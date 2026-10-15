@@ -86,6 +86,7 @@ for (const language of ['en', 'ar']) test(`receipt ${language}: deterministic re
       return best
     }, { a: `data:image/png;base64,${baseline.toString('base64')}`, b: `data:image/png;base64,${screenshot.toString('base64')}` })
     console.log(language, 'clean baseline comparison', baselineError)
+    if (process.env.CI && (typeof baselineError === 'number' || baselineError.error >= 0.01)) console.log(`RECEIPT_DIAGNOSTIC_${language.toUpperCase()}_BASE64:${screenshot.toString('base64')}`)
     assert.ok(typeof baselineError !== 'number' && baselineError.error < 0.01, `Receipt ${language} differs from its reviewed clean baseline: ${JSON.stringify(baselineError)}`)
     await page.addScriptTag({ content: (await read('packages/ux/node_modules/html-to-image/dist/html-to-image.js')).toString() })
     await page.addScriptTag({ content: `${controller}\nwindow.receiptCopy = copyDocumentImage; window.receiptRender = renderDocumentImage; window.receiptDownload = downloadDocumentImage;` })
