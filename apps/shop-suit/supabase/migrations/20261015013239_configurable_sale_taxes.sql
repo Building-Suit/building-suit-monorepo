@@ -146,17 +146,23 @@ revoke all on function shop_private.calculate_tax(jsonb,jsonb,numeric) from publ
 -- Future partial returns use a difference of cumulative original-snapshot amounts.
 create function shop_private.tax_return_components(p_line jsonb,p_cumulative_quantity numeric,p_previous_quantity numeric default 0)
 returns jsonb language plpgsql immutable set search_path='' as $$
-declare qty numeric:=(p_line->>'originalQuantity')::numeric; result jsonb:='{}'; key text; delta numeric;
+declare qty numeric:=(p_line->>'originalQuantity')::numeric;
+ original_total numeric:=(p_line->>'total')::numeric; original_tax numeric:=(p_line->>'tax')::numeric;
+ current_total numeric; prior_total numeric; current_tax numeric; prior_tax numeric;
 begin
  if qty is null or qty<=0 or p_cumulative_quantity is null or p_previous_quantity is null
  or p_previous_quantity<0 or p_cumulative_quantity<p_previous_quantity or p_cumulative_quantity>qty
- or round(p_cumulative_quantity,5)<>p_cumulative_quantity or round(p_previous_quantity,5)<>p_previous_quantity then
+ or round(p_cumulative_quantity,5)<>p_cumulative_quantity or round(p_previous_quantity,5)<>p_previous_quantity
+ or original_total is null or original_tax is null or original_tax<0 or original_total<original_tax then
  raise exception 'INVALID_CUMULATIVE_TAX_RETURN' using errcode='22023'; end if;
- foreach key in array array['tax','total'] loop
- delta:=round((p_line->>key)::numeric*p_cumulative_quantity/qty,2)-round((p_line->>key)::numeric*p_previous_quantity/qty,2);
- result:=result||jsonb_build_object(key,delta);
- end loop;
- return result||jsonb_build_object('net',(result->>'total')::numeric-(result->>'tax')::numeric);
+ current_total:=round(original_total*p_cumulative_quantity/qty,2);
+ prior_total:=round(original_total*p_previous_quantity/qty,2);
+ -- Apportion cumulative refunded minor units. Independent tax rounding can
+ -- produce negative pre-tax deltas; this monotonic allocation cannot.
+ current_tax:=case when original_total=0 then 0 else floor(current_total*100*original_tax/original_total)/100 end;
+ prior_tax:=case when original_total=0 then 0 else floor(prior_total*100*original_tax/original_total)/100 end;
+ return jsonb_build_object('total',current_total-prior_total,'tax',current_tax-prior_tax,
+ 'net',(current_total-prior_total)-(current_tax-prior_tax));
 end; $$;
 revoke all on function shop_private.tax_return_components(jsonb,numeric,numeric) from public,anon,authenticated,service_role;
 

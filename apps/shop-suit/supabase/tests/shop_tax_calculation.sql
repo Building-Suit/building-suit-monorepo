@@ -12,6 +12,10 @@ begin
  line:=s->'lines'->0;
  first:=shop_private.tax_return_components(line,1,0); second:=shop_private.tax_return_components(line,2,1); third:=shop_private.tax_return_components(line,3,2);
  if (first->>'total')::numeric+(second->>'total')::numeric+(third->>'total')::numeric<>(line->>'total')::numeric then raise exception 'Refund conservation failed'; end if;
+ line:='{"originalQuantity":3,"total":0.02,"tax":0.01,"net":0.01}';
+ first:=shop_private.tax_return_components(line,1,0); second:=shop_private.tax_return_components(line,2,1); third:=shop_private.tax_return_components(line,3,2);
+ if (first->>'net')::numeric<0 or (second->>'net')::numeric<0 or (third->>'net')::numeric<0
+ or (first->>'tax')::numeric+(second->>'tax')::numeric+(third->>'tax')::numeric<>0.01 then raise exception 'Refund tax/net allocation failed'; end if;
  -- Later policy changes cannot affect original snapshot returns.
  policy:=jsonb_set(policy,'{default,rate}','20');
  if shop_private.tax_return_components(line,3,0)->>'total' is distinct from line->>'total' then raise exception 'Original refund changed'; end if;
