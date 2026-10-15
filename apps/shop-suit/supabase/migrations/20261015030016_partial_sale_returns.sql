@@ -100,7 +100,7 @@ begin
  select snapshot into source from public.sale_tax_snapshots where invoice_id=p_invoice_id;
  if source is not null then return source;end if;
  select snapshot into receipt from public.sale_receipt_issue_snapshots where invoice_id=p_invoice_id;
- if receipt is null or coalesce((receipt->>'discount')::numeric,0)<>0 then return null;end if;
+ if receipt is null then return null;end if;
  select jsonb_agg(e||jsonb_build_object('originalQuantity',e->'quantity','originalUnitPrice',e->'unitPrice','tax',0,'net',e->'total') order by e->>'id'),sum((e->>'total')::numeric)
  into lines,amount from jsonb_array_elements(receipt->'lines') e;
  if lines is null or amount is distinct from (receipt->>'total')::numeric then return null;end if;
@@ -110,7 +110,7 @@ end;$$;
 create function shop_private.return_plan(p_shop_id uuid,p_location_id uuid,p_invoice_id uuid,p_lines jsonb) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare sale public.invoices%rowtype; source jsonb; item jsonb; line public.invoice_items%rowtype; frozen jsonb; prior numeric; qty numeric;
- components jsonb; rows jsonb:='[]'; allocations jsonb:='[]'; total numeric:=0; tax numeric:=0; due numeric; needed numeric; take_amount numeric; a record;
+ components jsonb; rows jsonb:='[]'; allocations jsonb:='[]'; total numeric:=0; tax numeric:=0; due numeric; needed numeric; take_amount numeric; receipt_part record;
 begin
  perform shop_private.return_actor(p_shop_id,p_location_id);
  select * into sale from public.invoices where id=p_invoice_id and shop_id=p_shop_id and location_id=p_location_id for update;
@@ -140,11 +140,11 @@ begin
  -- Same allocation locks used by legacy refunds; verify again after waiting.
  perform a.id from public.customer_payment_allocations a where a.invoice_id=sale.id order by a.id for update;
  due:=shop_private.invoice_outstanding(sale.id);needed:=greatest(total-due,0);
- for a in select a.id,a.payment_id,p.method,p.paid_at,shop_private.allocation_remaining(a.id) capacity
+ for receipt_part in select a.id,a.payment_id,p.method,p.paid_at,shop_private.allocation_remaining(a.id) capacity
   from public.customer_payment_allocations a join public.payments p on p.id=a.payment_id and p.shop_id=a.shop_id
   where a.invoice_id=sale.id and p.customer_kind='receipt' and p.status='completed' order by p.paid_at,p.id,a.id loop
-  take_amount:=least(needed,a.capacity);
-  if take_amount>0 then allocations:=allocations||jsonb_build_array(jsonb_build_object('allocationId',a.id,'paymentId',a.payment_id,'method',a.method,'amount',take_amount));needed:=needed-take_amount;end if;
+  take_amount:=least(needed,receipt_part.capacity);
+  if take_amount>0 then allocations:=allocations||jsonb_build_array(jsonb_build_object('allocationId',receipt_part.id,'paymentId',receipt_part.payment_id,'method',receipt_part.method,'amount',take_amount));needed:=needed-take_amount;end if;
  end loop;
  if needed>0 then raise exception 'RETURN_REFUND_CAPACITY_UNAVAILABLE' using errcode='23514';end if;
  return jsonb_build_object('version',1,'currency',sale.currency,'lines',rows,'total',total,'tax',tax,'net',total-tax,
@@ -158,8 +158,8 @@ language sql security definer set search_path='' as $$select shop_private.return
 
 create function public.create_sale_return(p_request_id uuid,p_shop_id uuid,p_location_id uuid,p_invoice_id uuid,p_lines jsonb,p_reason text,p_expected_plan jsonb) returns uuid
 language plpgsql security definer set search_path='' as $$
-declare actor uuid; payload jsonb; previous public.sale_returns%rowtype; plan jsonb; result uuid:=gen_random_uuid(); item jsonb; a jsonb;
- line public.invoice_items%rowtype; m record; needed numeric; take_qty numeric; movement uuid; refund uuid; stamp timestamptz:=clock_timestamp();
+declare actor uuid; payload jsonb; previous public.sale_returns%rowtype; plan jsonb; result uuid:=gen_random_uuid(); item jsonb; refund_part jsonb;
+ line public.invoice_items%rowtype; fifo_part record; needed numeric; take_qty numeric; movement uuid; refund uuid; stamp timestamptz:=clock_timestamp();
 begin
  actor:=shop_private.return_actor(p_shop_id,p_location_id);
  if p_request_id is null or length(btrim(coalesce(p_reason,''))) not between 2 and 1000 or p_expected_plan is null then raise exception 'INVALID_RETURN_REQUEST' using errcode='22023';end if;
@@ -186,31 +186,31 @@ begin
   values(result,p_shop_id,line.id,(item->>'quantity')::numeric,item->>'disposition',item->'originalSnapshot',(item->>'total')::numeric,(item->>'net')::numeric,(item->>'tax')::numeric);
   if line.item_type='product' then
    needed:=(item->>'quantity')::numeric;
-   for m in select m.*,abs(m.quantity_change)-coalesce((select sum(s.quantity) from public.sale_return_stock s where s.movement_id=m.id),0) capacity
+   for fifo_part in select m.*,abs(m.quantity_change)-coalesce((select sum(s.quantity) from public.sale_return_stock s where s.movement_id=m.id),0) capacity
     from public.inventory_movements m join public.inventory_batches b on b.id=m.batch_id
     where m.reference_id=p_invoice_id and m.invoice_item_id=line.id and m.product_id=line.product_id and m.shop_id=p_shop_id
      and m.location_id=p_location_id and m.movement_type='out' and m.sale_correction_id is null
      and not exists(select 1 from public.service_material_consumptions c where c.movement_id=m.id)
     order by b.received_at,b.id,m.id loop
-    take_qty:=least(needed,m.capacity);if take_qty<=0 then continue;end if;
-    if m.unit_cost_snapshot is null or round(take_qty,2)<>take_qty then raise exception 'RETURN_FIFO_LINEAGE_UNSUPPORTED' using errcode='55000';end if;
+    take_qty:=least(needed,fifo_part.capacity);if take_qty<=0 then continue;end if;
+    if fifo_part.unit_cost_snapshot is null or round(take_qty,2)<>take_qty then raise exception 'RETURN_FIFO_LINEAGE_UNSUPPORTED' using errcode='55000';end if;
     movement:=null;
     if item->>'disposition'='resellable' then
-     update public.inventory_batches set remaining_quantity=remaining_quantity+take_qty where id=m.batch_id and shop_id=p_shop_id and location_id=p_location_id;
+     update public.inventory_batches set remaining_quantity=remaining_quantity+take_qty where id=fifo_part.batch_id and shop_id=p_shop_id and location_id=p_location_id;
      if not found then raise exception 'RETURN_FIFO_LINEAGE_UNSUPPORTED' using errcode='55000';end if;
      insert into public.inventory_movements(shop_id,location_id,product_id,batch_id,quantity_change,movement_type,reference_id,created_by_profile_id,unit_cost_snapshot,invoice_item_id)
-     values(p_shop_id,p_location_id,m.product_id,m.batch_id,take_qty,'in',result,actor,m.unit_cost_snapshot,line.id) returning id into movement;
+     values(p_shop_id,p_location_id,fifo_part.product_id,fifo_part.batch_id,take_qty,'in',result,actor,fifo_part.unit_cost_snapshot,line.id) returning id into movement;
     end if;
     insert into public.sale_return_stock(return_id,line_id,movement_id,quantity,disposition,restoration_movement_id)
-    values(result,line.id,m.id,take_qty,item->>'disposition',movement);
+    values(result,line.id,fifo_part.id,take_qty,item->>'disposition',movement);
     needed:=needed-take_qty;if needed=0 then exit;end if;
    end loop;
    if needed<>0 then raise exception 'RETURN_FIFO_LINEAGE_UNSUPPORTED' using errcode='55000';end if;
   end if;
  end loop;
- for a in select value from jsonb_array_elements(plan->'allocations') loop
+ for refund_part in select value from jsonb_array_elements(plan->'allocations') loop
   insert into public.sale_return_refunds(return_id,shop_id,allocation_id,payment_id,amount,method)
-  values(result,p_shop_id,(a->>'allocationId')::uuid,(a->>'paymentId')::uuid,(a->>'amount')::numeric,(a->>'method')::public.payment_method) returning id into refund;
+  values(result,p_shop_id,(refund_part->>'allocationId')::uuid,(refund_part->>'paymentId')::uuid,(refund_part->>'amount')::numeric,(refund_part->>'method')::public.payment_method) returning id into refund;
   insert into public.sale_return_refund_events(refund_id,shop_id,request_id,state,operation,reference,reason,actor_profile_id)
   values(refund,p_shop_id,refund,'pending','reserved','',btrim(p_reason),actor);
  end loop;
@@ -302,7 +302,7 @@ begin
  into paid,payable from public.invoices where id=p_invoice_id and status='issued';
  for s in select * from public.commission_snapshots where invoice_id=p_invoice_id order by id loop
   select coalesce(sum(quantity),0),coalesce(sum(net),0) into returned_qty,returned_net from public.sale_return_lines where line_id=s.line_id;
-  if paid and returned_qty<s.quantity and not exists(select 1 from public.appointments a where a.id=s.appointment_id and a.status in('cancelled','no_show')) and (s.item_type='product' or (shop_private.service_completed_quantity(s.line_id)>=s.quantity
+  if paid and returned_qty<s.quantity and not exists(select 1 from public.appointments a where a.id=s.appointment_id and a.status in('cancelled','no_show')) and (s.item_type='product' or (shop_private.service_completed_quantity(s.line_id)>=s.quantity-returned_qty
    and (s.appointment_id is null or exists(select 1 from public.appointments a where a.id=s.appointment_id
     and a.shop_id=s.shop_id and a.sale_id=s.invoice_id and a.assigned_membership_id=s.membership_id and a.status='completed')))) then
    insert into public.commission_events(snapshot_id,kind,event_key,amount,reason)
