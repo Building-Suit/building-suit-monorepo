@@ -50,7 +50,7 @@ do $$ declare t text; begin
   end if;
 end $$;
 
-create function super_admin_private.candidate_versions(p_snapshot jsonb, p_first_production boolean default false) returns jsonb
+create function super_admin_private.candidate_versions(p_snapshot jsonb) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare f jsonb; s text; suit uuid; previous text; impact integer; parts bigint[]; versions jsonb:='{}';
 begin
@@ -81,9 +81,6 @@ begin
   for s in select distinct jsonb_array_elements_text(value->'suits') from jsonb_array_elements(p_snapshot->'changes') where value->>'disposition'='public' loop
     select id into strict suit from public.suit_registry where stable_key=s and status='active';
     select version into previous from public.release_candidate_versions where suit_id=suit;
-    if previous is null and p_first_production and p_snapshot#>>array['baseVersions',s]='0.0.0'
-      and not exists(select 1 from public.release_manifests where first_published_at is not null)
-      and not exists(select 1 from public.release_candidate_promotions) then previous:='0.0.0'; end if;
     if previous is null then raise exception 'VERIFIED_PRODUCTION_BASELINE_REQUIRED'; end if;
     if p_snapshot#>>array['baseVersions',s] is distinct from previous then raise exception 'PRODUCTION_BASELINE_CHANGED'; end if;
     select max(case value->>'classification' when 'major' then 3 when 'minor' then 2 else 1 end) into impact
@@ -93,6 +90,15 @@ begin
   end loop;
   return versions;
 end $$;
+
+-- Resolve the pinned initial unversioned tree or an actual acknowledged production tree.
+create function super_admin_private.candidate_baseline_tree() returns text
+language sql stable set search_path='' as $$
+ select coalesce(
+   (select manifest->>'stagingTree' from public.release_candidate_promotions where deployment_sha=(select production_sha from public.release_candidate_baseline) order by first_published_at limit 1),
+   (select manifest->>'mainTree' from public.release_candidate_revisions where manifest->>'mainSha'=(select production_sha from public.release_candidate_baseline) order by created_at,key limit 1))
+$$;
+revoke all on function super_admin_private.candidate_baseline_tree() from public,anon,authenticated,service_role;
 
 create function public.release_candidate_state() returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -118,6 +124,12 @@ begin
     return jsonb_build_object('key',key,'manifest',stored.manifest,'digest',stored.digest,'readyAt',stored.ready_at);
   end if;
   versions:=super_admin_private.candidate_versions(p_snapshot);
+  if not exists(select 1 from public.release_candidate_baseline) then raise exception 'VERIFIED_PRODUCTION_BASELINE_REQUIRED'; end if;
+  if (select production_sha from public.release_candidate_baseline) is null then
+    update public.release_candidate_baseline set production_sha=p_snapshot->>'mainSha';
+  elsif super_admin_private.candidate_baseline_tree() is distinct from p_snapshot->>'mainTree' then
+    raise exception 'PRODUCTION_BASELINE_ACK_REQUIRED';
+  end if;
   for f in select value from jsonb_array_elements(p_snapshot->'changes') where value->>'disposition'='public' order by value->>'id' loop
     for s in select jsonb_array_elements_text(f->'suits') loop
       entries:=entries||jsonb_build_array(jsonb_build_object('id',md5(s||':'||(p_snapshot#>>array['baseVersions',s])||':'||(f->>'id')),
@@ -154,6 +166,8 @@ begin
     if stored.manifest<>m or stored.digest<>p_release->>'digest' or stored.deployment_sha<>p_deployment_sha then raise exception 'DIGEST_CONFLICT'; end if;
     return jsonb_build_object('key',stored.revision_key,'manifest',m,'digest',stored.digest,'deploymentSha',stored.deployment_sha,'publishedAt',stored.first_published_at);
   end if;
+  if exists(select 1 from public.release_candidate_baseline where production_sha is not null)
+    and super_admin_private.candidate_baseline_tree() is distinct from m->>'mainTree' then raise exception 'PRODUCTION_BASELINE_ACK_REQUIRED'; end if;
   for s,v in select * from jsonb_each_text(m->'baseVersions') loop
     if not exists(select 1 from public.release_candidate_versions cv join public.suit_registry sr on sr.id=cv.suit_id where sr.stable_key=s) then
       if v<>'0.0.0' or exists(select 1 from public.release_candidate_promotions)
@@ -216,7 +230,7 @@ create trigger candidate_promotion_immutable before update or delete on public.r
 -- Old entrypoints cannot allocate or advertise per-merge releases after model adoption.
 create or replace function public.release_stage_accept(p_request jsonb) returns jsonb language plpgsql set search_path='' as $$ begin raise exception 'PER_MERGE_RELEASES_RETIRED'; end $$;
 create or replace function public.release_publish(p_environment text,p_ref text,p_deployment_sha text,p_releases jsonb) returns jsonb language plpgsql set search_path='' as $$ begin raise exception 'PER_MERGE_RELEASES_RETIRED'; end $$;
-revoke all on function super_admin_private.candidate_versions(jsonb,boolean),super_admin_private.candidate_immutable() from public,anon,authenticated,service_role;
+revoke all on function super_admin_private.candidate_versions(jsonb),super_admin_private.candidate_immutable() from public,anon,authenticated,service_role;
 revoke all on function public.release_candidate_state(),public.release_candidate_refresh(jsonb),public.release_candidate_ready(text,text),public.release_candidate_promote(jsonb,text,text,text),public.release_candidate_acknowledge(jsonb) from public,anon,authenticated,service_role;
 grant execute on function public.release_candidate_state(),public.release_candidate_refresh(jsonb),public.release_candidate_ready(text,text),public.release_candidate_promote(jsonb,text,text,text),public.release_candidate_acknowledge(jsonb) to service_role;
 
