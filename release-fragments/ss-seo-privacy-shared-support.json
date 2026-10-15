@@ -1,0 +1,34 @@
+{
+  "id": "ss-seo-privacy-shared-support",
+  "task": "SS-SEO-PRIVACY-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/shop-marketing-privacy.yml",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/building-suit-docs/package.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/shop-seo-privacy-analytics.md",
+    "packages/ui/package.json",
+    "packages/ui/src/organisms/BsMarketingPricing.vue",
+    "packages/ui/src/organisms/BsPlanCard.vue",
+    "packages/ui/src/organisms/BsPlanGrid.vue",
+    "packages/ui/src/organisms/BsPrivacyConsent.vue",
+    "packages/ui/src/templates/BsAppRoot.vue",
+    "packages/ui/src/templates/BsLandingPage.vue",
+    "packages/ux/src/composables/useLocaleDocument.ts",
+    "packages/ux/src/composables/usePrivacyConsentFocus.ts",
+    "packages/ux/src/index.ts",
+    "packages/ux/src/utils/basicAnalytics.ts",
+    "packages/ux/src/utils/privacyConsent.ts",
+    "pnpm-lock.yaml"
+  ],
+  "reason": "Shared optional presentation, backward-compatible locale options, test infrastructure and documentation support the Shop-only public capability. Other Suit flows and default presentation are unchanged; root CI and lockfile changes require all dependency consumers to be classified."
+}

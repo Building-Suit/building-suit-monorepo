@@ -75,7 +75,7 @@ export const legalDocuments: Record<
     en: {
       title: 'Privacy Policy',
       intro: 'This Privacy Policy explains how Shop Suit by Building Suit collects, uses, stores, and protects information when you use our website and software service.',
-      updated: '13 October 2026',
+      updated: '15 October 2026',
       sections: [
         {
           title: '1. Information we collect',
@@ -125,13 +125,22 @@ export const legalDocuments: Record<
         },
         { title: '7. Children', paragraphs: ['Shop Suit is business software and is not intended for children.'] },
         { title: '8. Policy changes', paragraphs: ['We may update this policy when the service, providers, or applicable requirements change. The current version and its update date will remain available on this page.'] },
-        { title: '9. Contact', paragraphs: [`${publicBusiness.brand} — ${publicBusiness.addressEn}. Email: ${publicBusiness.supportEmail}.`] },
+        {
+          title: '9. Cookies, browser storage and optional analytics',
+          paragraphs: [
+            'Necessary storage keeps authentication sessions (Supabase, product/environment-scoped cookies), your selected language (building-suit-locale cookie), theme (building-suit.theme and legacy theme localStorage keys), and your privacy choice (bs-shop.privacy localStorage). Auth cookies default to an 8-hour lifetime that may renew, subject to session/token validity and runtime settings; sign-out clears the current session. the locale cookie normally lasts one year. Theme preferences stay until cleared. Privacy choices expire after 180 days or when the consent version or purposes change. Operational offline drafts and pending actions may also remain on this browser until synchronized or cleared by the application; these are not analytics.',
+            'Optional Google Analytics 4 is disabled unless this production site has been configured and you accept optional analytics. Rejecting does not prevent use. Before acceptance we do not load Google Analytics or send analytics requests, including cookieless consent pings. Staging and preview environments do not send analytics. After acceptance, Google receives allowlisted public page views, pricing CTA clicks and successful new-shop signup completion, plus its standard session and engagement metadata using sanitized page fields. We do not measure paid subscription activation in this version. We do not send account/user identifiers, names, emails, phone numbers, shop or customer records, form contents, payment identifiers, query strings, fragments or operational URLs.',
+            'Google Analytics can process browser/device and network information and assign browser identifiers. Its _ga and measurement-specific _ga_* first-party cookies are configured for up to 180 days without renewal. A consented signup deduplication marker (bs-shop.analytics.signup) lasts for the tab session and is removed on withdrawal. Analytics runs in a separate document with sanitized public URLs. Advertising signals, advertising storage and ad personalization are disabled. The provider can process data outside your country under its own policies; optional analytics is not anonymous. Server and security logs necessary to operate the service are separate from this optional analytics choice.',
+            'Use Privacy settings at any time to reject optional analytics or change your choice. Withdrawal removes the analytics document, discards pending events and attempts to expire accessible GA cookies without clearing sign-in cookies. Browser restrictions and previously sent provider data cannot be undone by this control. If local storage is unavailable, the choice lasts only in memory and will be asked again after reload. Browser settings can clear storage. Google Analytics retention and enhanced measurement must be configured by the operator before analytics is enabled.',
+          ],
+        },
+        { title: '10. Contact', paragraphs: [`${publicBusiness.brand} — ${publicBusiness.addressEn}. Email: ${publicBusiness.supportEmail}.`] },
       ],
     },
     ar: {
       title: 'سياسة الخصوصية',
       intro: 'توضح هذه السياسة كيفية جمع واستخدام وحفظ وحماية المعلومات عند استخدام موقع وخدمة Shop Suit by Building Suit.',
-      updated: '13 أكتوبر 2026',
+      updated: '15 أكتوبر 2026',
       sections: [
         {
           title: '1. المعلومات التي نجمعها',
@@ -178,7 +187,16 @@ export const legalDocuments: Record<
         },
         { title: '7. الأطفال', paragraphs: ['Shop Suit برنامج مخصص للأعمال وليس موجهًا للأطفال.'] },
         { title: '8. تحديثات السياسة', paragraphs: ['قد نحدّث هذه السياسة عند تغير الخدمة أو مزوديها أو المتطلبات المطبقة، وستظل النسخة الحالية وتاريخ تحديثها متاحين في هذه الصفحة.'] },
-        { title: '9. التواصل', paragraphs: [`${publicBusiness.brand} — ${publicBusiness.addressAr}. البريد الإلكتروني: ${publicBusiness.supportEmail}.`] },
+        {
+          title: '9. ملفات الارتباط وتخزين المتصفح والتحليلات الاختيارية',
+          paragraphs: [
+            'يحفظ التخزين الضروري جلسة الدخول عبر Supabase بملفات ارتباط خاصة بالمنتج والبيئة، واللغة المختارة بملف building-suit-locale (عادةً سنة)، والمظهر في building-suit.theme ومفاتيح المظهر السابقة في localStorage حتى مسحها. مدة ملفات الدخول الافتراضية 8 ساعات قابلة للتجديد، وتخضع لصلاحية الجلسة والرموز وإعدادات التشغيل؛ يمسح تسجيل الخروج الجلسة الحالية. يُحفظ اختيار الخصوصية في bs-shop.privacy لمدة 180 يوماً، ويُطلب مجدداً عند تغير الإصدار أو الأغراض. قد تبقى مسودات العمل والعمليات المعلقة دون اتصال في هذا المتصفح حتى مزامنتها أو مسحها بواسطة التطبيق؛ وهي ليست تحليلات.',
+            'تظل Google Analytics 4 الاختيارية متوقفة حتى تهيئة موقع الإنتاج وقبولك. يمكنك الرفض واستخدام الخدمة. لا نحمّل التحليلات ولا نرسل طلبات أو إشارات موافقة دون ملفات ارتباط قبل القبول. لا ترسل بيئات الاختبار والمعاينة تحليلات. بعد القبول نقيس زيارات الصفحات العامة والنقر على دعوة الخطط واكتمال إنشاء متجر جديد بنجاح ضمن قائمة محددة، إضافةً إلى بيانات الجلسة والتفاعل القياسية لدى Google بروابط منقّحة. لا نقيس تفعيل الاشتراك المدفوع في هذا الإصدار. لا نرسل معرّفات الحساب والمستخدم أو الأسماء أو البريد أو الهاتف أو سجلات المتجر والعملاء أو محتوى النماذج أو معرّفات الدفع أو معاملات الروابط أو أجزاءها أو مسارات التشغيل.',
+            'قد تعالج Google معلومات الجهاز والمتصفح والشبكة وتعيّن معرّفات للمتصفح. نضبط ملفات _ga و_ga_* الخاصة بالقياس لمدة تصل إلى 180 يوماً دون تجديد. تبقى علامة منع تكرار حدث التسجيل bs-shop.analytics.signup لجلسة علامة التبويب بعد الموافقة وتُزال عند السحب. تعمل التحليلات في مستند منفصل بروابط عامة منقّحة، مع تعطيل إشارات الإعلانات وتخزينها وتخصيصها. قد تعالج Google البيانات خارج بلدك وفق سياساتها؛ هذه التحليلات ليست مجهولة الهوية. سجلات الخادم والأمان الضرورية لتشغيل الخدمة منفصلة عن هذا الاختيار.',
+            'يمكنك فتح إعدادات الخصوصية في أي وقت ورفض التحليلات أو تغيير اختيارك. يسحب الرفض مستند التحليلات ويحذف الأحداث المعلقة ويحاول إنهاء ملفات GA المتاحة دون مسح ملفات تسجيل الدخول. لا يعكس هذا التحكم البيانات التي أُرسلت سابقاً، وقد تحد قيود المتصفح من إزالة الملفات. عند تعذر التخزين المحلي يبقى الاختيار في الذاكرة فقط ويُطلب بعد إعادة التحميل. يمكنك مسح التخزين من إعدادات المتصفح. يجب على المشغّل ضبط مدة الاحتفاظ لدى Google وتعطيل القياس المحسّن قبل تفعيل التحليلات.',
+          ],
+        },
+        { title: '10. التواصل', paragraphs: [`${publicBusiness.brand} — ${publicBusiness.addressAr}. البريد الإلكتروني: ${publicBusiness.supportEmail}.`] },
       ],
     },
   },
@@ -282,7 +300,7 @@ export const legalDocuments: Record<
         { title: '6. Availability and changes', paragraphs: ['We work to provide a reliable service but do not promise uninterrupted or error-free availability. We may maintain, secure, or change the service and will update applicable information when material terms change.'] },
         { title: '7. Cancellation, refunds, and records', paragraphs: ['Cancellation and refund requests follow the Refund & Cancellation Policy and applicable law. Subscription expiry or cancellation may restrict new operations while preserving authorized access to existing records. Records may be retained where needed for security, audit, billing, legal, or dispute-resolution purposes.'] },
         { title: '8. Responsibility', paragraphs: ['To the extent permitted by applicable law, you remain responsible for business decisions, source data, devices, credentials, and use of exported information. Nothing in these terms excludes rights or liability that cannot lawfully be excluded.'] },
-        { title: '9. Contact', paragraphs: [`Questions about these terms may be sent to ${publicBusiness.supportEmail}. ${publicBusiness.brand} is based in ${publicBusiness.addressEn}.`] },
+        { title: '10. Contact', paragraphs: [`Questions about these terms may be sent to ${publicBusiness.supportEmail}. ${publicBusiness.brand} is based in ${publicBusiness.addressEn}.`] },
       ],
     },
     ar: {
@@ -306,7 +324,7 @@ export const legalDocuments: Record<
         { title: '6. التوفر والتغييرات', paragraphs: ['نعمل على تقديم خدمة موثوقة، لكننا لا نعد بتوفر مستمر أو خالٍ من الأخطاء. وقد نجري أعمال صيانة أو حماية أو تغييرات على الخدمة، ونحدّث المعلومات المطبقة عند تغير الشروط الجوهرية.'] },
         { title: '7. الإلغاء والاسترداد والسجلات', paragraphs: ['تخضع طلبات الإلغاء والاسترداد لسياسة الاسترداد والإلغاء والقانون المطبق. وقد يؤدي انتهاء الاشتراك أو إلغاؤه إلى تقييد العمليات الجديدة مع الحفاظ على الوصول المصرح به للسجلات القائمة. وقد نحتفظ بسجلات لازمة للأمان أو المراجعة أو الفوترة أو الالتزامات القانونية أو حل النزاعات.'] },
         { title: '8. المسؤولية', paragraphs: ['في الحدود التي يسمح بها القانون المطبق، تظل مسؤولًا عن قرارات النشاط والبيانات الأصلية والأجهزة وبيانات الدخول واستخدام المعلومات المصدرة. ولا تستبعد هذه الشروط أي حقوق أو مسؤوليات لا يجوز قانونًا استبعادها.'] },
-        { title: '9. التواصل', paragraphs: [`يمكن إرسال الأسئلة عن هذه الشروط إلى ${publicBusiness.supportEmail}. يقع مقر ${publicBusiness.brand} في ${publicBusiness.addressAr}.`] },
+        { title: '10. التواصل', paragraphs: [`يمكن إرسال الأسئلة عن هذه الشروط إلى ${publicBusiness.supportEmail}. يقع مقر ${publicBusiness.brand} في ${publicBusiness.addressAr}.`] },
       ],
     },
   },

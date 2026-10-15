@@ -39,8 +39,10 @@ jobs:
             exit 1
           fi
       - run: node tooling/database/test-shop-eta-local.mjs
+      - run: node tooling/database/test-shop-eta-einvoice-local.mjs
       - run: node tooling/database/test-shop-tax-local.mjs
       - run: node tooling/database/test-shop-eta-concurrency.mjs
+      - run: node tooling/database/test-shop-eta-einvoice-concurrency.mjs
 
       - name: Generate verified public database contract
         run: |

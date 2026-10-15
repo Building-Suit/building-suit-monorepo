@@ -1,0 +1,41 @@
+name: Shop marketing privacy
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/shop-marketing-privacy.yml'
+      - 'apps/shop-suit/app/**'
+      - 'apps/shop-suit/shared/**'
+      - 'apps/shop-suit/server/**'
+      - 'apps/shop-suit/nuxt.config.ts'
+      - 'apps/shop-suit/tests/**/marketing-privacy*'
+      - 'packages/ui/**'
+      - 'packages/ux/**'
+permissions:
+  contents: read
+concurrency:
+  group: shop-marketing-privacy-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  marketing-privacy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node --test apps/shop-suit/tests/unit/marketing-privacy.test.mjs
+      - run: pnpm --filter @building-suit/shop-suit build
+        env:
+          NITRO_PRESET: node-server
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/marketing-privacy.config.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: shop-marketing-privacy-browser-results
+          path: test-results/marketing-privacy
+          retention-days: 7
