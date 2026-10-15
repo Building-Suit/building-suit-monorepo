@@ -372,7 +372,7 @@
       "interactionOwner": "packages/ux",
       "adapterBoundary": "Shop supplies immutable return previews, quantities, disposition choices, original-payment allocation and authorized commands; shared UI owns dialogs and audit presentation; useReviewedCommand retains review/request identity through uncertain responses",
       "task": "SS-PARTIAL-RETURNS-001",
-      "migrationStatus": "implemented; verification in progress"
+      "migrationStatus": "verified-local: shared boundaries, six workspace typechecks, Shop/docs builds and 30 browser cases passed"
     }
   ]
 }

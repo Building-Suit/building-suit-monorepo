@@ -6,7 +6,7 @@ export interface SaleReturnPlan {
   originalDocument: { invoiceId: string; invoiceNumber: string; issuedAt: string; receiptId: string | null; etaSourceAvailable: boolean }
 }
 export interface SaleReturnRecord {
-  version: 1; id: string; invoice_id: string; currency: string; total: number; tax: number; net: number; debt_reduction: number; refund_due: number; due_after: number; reason: string; actor_profile_id: string; created_at: string
+  version: 1; actorName?: string; id: string; invoice_id: string; currency: string; total: number; tax: number; net: number; debt_reduction: number; refund_due: number; due_after: number; reason: string; actor_profile_id: string; created_at: string
   original_document: SaleReturnPlan['originalDocument']
   lines: { line_id: string; quantity: number; disposition: string; total: number; net: number; tax: number; original_snapshot: Record<string, unknown> }[]
   refunds: { id: string; allocation_id: string; payment_id: string; method: string; amount: number; state: 'pending' | 'failed' | 'completed'; events: { id: string; state: string; operation: string; reference: string; reason: string; created_at: string; actor_profile_id: string }[] }[]

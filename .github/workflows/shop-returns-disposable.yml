@@ -4,6 +4,7 @@ on:
     paths:
       - '.github/workflows/shop-returns-disposable.yml'
       - 'apps/shop-suit/supabase/**'
+      - 'apps/shop-suit/app/types/database.types.ts'
       - 'tooling/database/test-shop-returns*.mjs'
 permissions:
   contents: read
@@ -42,7 +43,13 @@ jobs:
       - run: node tooling/database/test-shop-returns-concurrency.mjs
 
       - name: Generate verified public database contract
-        run: pnpm exec supabase --workdir apps/shop-suit gen types typescript --local --schema public > "$RUNNER_TEMP/shop-returns-database.types.ts"
+        run: |
+          # Reuse the official metadata image, or its official publisher mirror.
+          if ! docker image inspect public.ecr.aws/supabase/postgres-meta:v0.98.0 > /dev/null 2>&1; then
+            docker pull docker.io/supabase/postgres-meta:v0.98.0
+            docker tag docker.io/supabase/postgres-meta:v0.98.0 public.ecr.aws/supabase/postgres-meta:v0.98.0
+          fi
+          pnpm exec supabase --workdir apps/shop-suit gen types typescript --local --schema public > "$RUNNER_TEMP/shop-returns-database.types.ts"
       - name: Record reproducible schema contract evidence
         run: node tooling/database/schema-contract-evidence.mjs apps/shop-suit/app/types/database.types.ts "$RUNNER_TEMP/shop-returns-database.types.ts"
       - uses: actions/upload-artifact@v4
