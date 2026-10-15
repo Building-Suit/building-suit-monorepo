@@ -41,7 +41,15 @@ jobs:
       - run: node tooling/database/test-shop-tax-local.mjs
 
       - name: Generate verified public database contract
-        run: pnpm exec supabase --workdir apps/shop-suit gen types typescript --local --schema public > "$RUNNER_TEMP/shop-tax-database.types.ts"
+        run: |
+          # CLI 2.116.0 pins metadata v0.98.0. Reuse its local image when present;
+          # otherwise use the same official publisher mirror as the SAS workflow.
+          # This avoids the exhausted shared ECR quota without skipping generation.
+          if ! docker image inspect public.ecr.aws/supabase/postgres-meta:v0.98.0 > /dev/null 2>&1; then
+            docker pull docker.io/supabase/postgres-meta:v0.98.0
+            docker tag docker.io/supabase/postgres-meta:v0.98.0 public.ecr.aws/supabase/postgres-meta:v0.98.0
+          fi
+          pnpm exec supabase --workdir apps/shop-suit gen types typescript --local --schema public > "$RUNNER_TEMP/shop-tax-database.types.ts"
       - uses: actions/upload-artifact@v4
         with:
           name: shop-tax-database-types
