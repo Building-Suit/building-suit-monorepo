@@ -41,6 +41,7 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
     preloadRouteComponents: async () => {},
     useOfflineCounter: () => ({ online: vue.ref(true), ready: vue.ref(false), scope: vue.ref(''), busy: vue.ref(false), records: vue.ref([]), shiftClosing: vue.ref(false), cached: async () => null, cache: async () => {}, retry: async () => {} }),
     useOfflineCounterView: () => vue.ref(undefined),
+    useSaleTaxQuote: () => ({ data: vue.ref({ total: 100, tax: 0, net: 100, calculationEnabled: false }), pending: vue.ref(false), error: vue.ref(null) }),
     useCatalogMedia: () => ({ request: (_action, _args, fallback) => fallback() }),
     useI18n: () => ({ locale: vue.ref('en'), t: key => key }),
     useConfirmation: () => ({ current: vue.ref(null), ask: async () => false }), useToasts: () => ({ push: () => {} }),
