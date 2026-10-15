@@ -72,7 +72,7 @@ begin
  lines:=jsonb_build_array(jsonb_build_object('lineId',line,'quantity',0.001,'disposition','resellable'));
  begin perform public.preview_sale_return(shop,loc,sale,lines);raise exception 'Precision silently rounded';exception when invalid_parameter_value then null;end;
  -- Mixed tenders use deterministic original payment capacity and cash only on handover.
- perform public.save_tax_policy(gen_random_uuid(),shop,statement_timestamp(),'{"enabled":false,"items":[]}','Untaxed future test');
+ perform public.save_tax_policy(gen_random_uuid(),shop,statement_timestamp(),'{"enabled":false,"default":{"treatment":"vat","rate":14,"priceMode":"inclusive","subtype":"V009"},"items":[]}','Untaxed future test');
  sale:=public.save_sale_draft(gen_random_uuid(),shop,null,customer,null,jsonb_build_array(jsonb_build_object('item_type','product','source_id',product,'quantity',1)));
  select id into line from public.invoice_items where invoice_id=sale;
  perform public.issue_sale(gen_random_uuid(),shop,sale);

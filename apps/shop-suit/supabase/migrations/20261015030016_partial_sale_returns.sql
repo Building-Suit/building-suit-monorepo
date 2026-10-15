@@ -286,6 +286,19 @@ begin
 end;$$;
 create trigger aa_return_fulfillment_boundary before insert on public.service_fulfillments for each row execute function shop_private.return_service_boundary();
 
+create function shop_private.return_service_link_boundary() returns trigger language plpgsql security definer set search_path='' as $$
+declare line public.invoice_items%rowtype; returned numeric; fulfilled numeric;
+begin
+ select * into line from public.invoice_items where id=new.line_id and shop_id=new.shop_id;
+ perform 1 from public.invoices where id=line.invoice_id for update;
+ select coalesce(sum(quantity),0) into returned from public.sale_return_lines where line_id=line.id;
+ select quantity into fulfilled from public.service_fulfillments where id=new.fulfillment_id and shop_id=new.shop_id;
+ if shop_private.service_completed_quantity(line.id)+fulfilled+returned>line.quantity then raise exception 'SERVICE_RETURNED_QUANTITY' using errcode='23514';end if;
+ return new;
+end;$$;
+create trigger aa_return_fulfillment_link_boundary before insert on public.service_fulfillment_sale_links for each row execute function shop_private.return_service_link_boundary();
+revoke all on function shop_private.return_service_link_boundary() from public,anon,authenticated,service_role;
+
 -- Existing customer statements retain their original rows; add correction credits
 -- at their occurrence time instead of rewriting the original debit/cash day.
 
@@ -502,4 +515,36 @@ begin
   return v_result;
 end;
 $$;
+
+
+create or replace function shop_private.adjust_commission_return(p_snapshot_id uuid,p_event_key text,p_net_returned numeric,p_quantity_returned numeric,p_reason text)
+returns void language plpgsql security definer set search_path='' as $$
+declare s public.commission_snapshots%rowtype; fraction numeric; prior numeric; delta numeric; payable numeric; invoice_refunds numeric;
+ correction public.sale_corrections%rowtype;
+begin
+ select * into s from public.commission_snapshots where id=p_snapshot_id;
+ if not found then raise exception 'COMMISSION_SNAPSHOT_NOT_FOUND'; end if;
+ perform 1 from public.invoices where id=s.invoice_id for update;
+ if p_event_key is null or p_net_returned is null or p_quantity_returned is null or p_net_returned<0 or p_net_returned>s.net_line_amount
+  or p_quantity_returned<0 or p_quantity_returned>s.quantity or length(btrim(coalesce(p_reason,''))) not between 2 and 1000 then
+  raise exception 'INVALID_COMMISSION_RETURN' using errcode='22023'; end if;
+ select i.total_amount into payable from public.invoices i where i.id=s.invoice_id;
+ select * into correction from public.sale_corrections c where c.invoice_id=s.invoice_id;
+ select coalesce(sum(a.amount),0) into invoice_refunds from public.customer_payment_adjustments a
+ join public.customer_payment_allocations alloc on alloc.id=a.original_allocation_id where alloc.invoice_id=s.invoice_id;
+ -- A full sale correction closes the sale, even when it refunds no money or
+ -- only the paid portion. It always reverses the entire original earning.
+ fraction:=greatest(case when correction.id is not null then 1 else 0 end,
+ case when s.net_line_amount>0 then p_net_returned/s.net_line_amount else 0 end,
+ p_quantity_returned/s.quantity,case when payable>0 then least(1,invoice_refunds/payable) else 0 end);
+ if not exists(select 1 from public.commission_events where snapshot_id=s.id and kind='earned') then return; end if;
+ select coalesce(max(cumulative_fraction),0),coalesce(-sum(amount),0) into prior,delta
+ from public.commission_events where snapshot_id=s.id and kind='return';
+ if fraction<prior then raise exception 'COMMISSION_RETURN_NOT_CUMULATIVE' using errcode='22023'; end if;
+ delta:=case when fraction=1 then s.original_commission else round(s.original_commission*fraction,2) end-delta;
+ if fraction=prior then return; end if;
+ insert into public.commission_events(snapshot_id,kind,event_key,amount,cumulative_fraction,reason,actor_profile_id)
+ values(s.id,'return','return:'||p_event_key,-delta,fraction,btrim(p_reason),coalesce(correction.created_by_profile_id,(select r.actor_profile_id from public.sale_returns r where r.invoice_id=s.invoice_id order by r.created_at desc,r.id desc limit 1)));
+end; $$;
+revoke all on function shop_private.adjust_commission_return(uuid,text,numeric,numeric,text) from public,anon,authenticated,service_role;
 
