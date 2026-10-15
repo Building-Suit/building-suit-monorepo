@@ -13,7 +13,7 @@ export function useReviewedCommand<T, Q>(getInput: () => T, scope: () => string)
   let generation = 0
   const fingerprint = () => JSON.stringify(getInput())
   const reset = () => { generation++; review.value = null; reviewedInput.value = null; requestId.value = null; error.value = '' }
-  watch(scope, reset)
+  watch(scope, reset, { flush: 'sync' })
   watch(fingerprint, () => { if (!locked.value) { generation++; review.value = null; reviewedInput.value = null } }, { flush: 'sync' })
   async function preview(load: (input: T) => Promise<Q>, describe: (error: unknown) => string) {
     if (pending.value || locked.value) return

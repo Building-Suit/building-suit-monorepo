@@ -1,5 +1,34 @@
 -- Invoice-linked append-only corrections. Debt-first is a Building Suit policy.
 -- Refund reservations are obligations, never evidence of money movement.
+-- Forward-only evidence for explicitly disabled/unconfigured tax calculation.
+-- Historical receipts without tax evidence are not interpreted as zero-rated.
+create table public.sale_return_sources (
+ invoice_id uuid primary key,shop_id uuid not null,location_id uuid not null,snapshot jsonb not null,
+ created_at timestamptz not null default clock_timestamp(),
+ foreign key(invoice_id,shop_id,location_id) references public.invoices(id,shop_id,location_id)
+);
+alter table public.sale_return_sources enable row level security;
+revoke all on public.sale_return_sources from public,anon,authenticated,service_role;
+create trigger return_source_immutable before update or delete on public.sale_return_sources for each row execute function shop_private.tax_immutable();
+create trigger return_source_no_truncate before truncate on public.sale_return_sources for each statement execute function shop_private.tax_immutable();
+create function shop_private.capture_return_source() returns trigger language plpgsql security definer set search_path='' as $$
+declare policy public.tax_policy_versions%rowtype; lines jsonb; total numeric;
+begin
+ if old.status<>'draft' or new.status<>'issued' or exists(select 1 from public.sale_tax_snapshots where invoice_id=new.id) then return new;end if;
+ select * into policy from public.tax_policy_versions where shop_id=new.shop_id and effective_at<=statement_timestamp() order by effective_at desc,created_at desc,id desc limit 1;
+ if coalesce((policy.policy->>'enabled')::boolean,false) then return new;end if;
+ select jsonb_agg(jsonb_build_object('id',l.id,'itemType',l.item_type,'originalQuantity',l.quantity,'originalUnitPrice',l.unit_price,
+  'lineDiscount',l.discount_amount,'total',l.total_amount,'net',l.total_amount,'tax',0,'treatment','calculation-disabled') order by l.line_order,l.id),sum(l.total_amount)
+ into lines,total from public.invoice_items l where l.invoice_id=new.id;
+ if lines is null or total<>new.total_amount then return new;end if;
+ insert into public.sale_return_sources(invoice_id,shop_id,location_id,snapshot)
+ values(new.id,new.shop_id,new.location_id,jsonb_build_object('version',1,'source','forward-disabled-calculation','currency',new.currency,
+  'calculationEnabled',false,'policyVersionId',policy.id,'total',total,'net',total,'tax',0,'lines',lines));
+ return new;
+end;$$;
+create trigger zzz_return_source after update of status on public.invoices for each row execute function shop_private.capture_return_source();
+revoke all on function shop_private.capture_return_source() from public,anon,authenticated,service_role;
+
 create table public.sale_returns (
  id uuid primary key default gen_random_uuid(), shop_id uuid not null, location_id uuid not null, invoice_id uuid not null,
  request_id uuid not null, payload jsonb not null, currency text not null, original_document jsonb not null,
@@ -91,21 +120,12 @@ returns numeric language sql stable security definer set search_path='' as $$
  from public.invoices i where i.id=p_invoice_id;
 $$;
 
--- Frozen tax sources preferred. Legacy receipts are supported only when their
--- immutable line totals exactly explain the document total without order discount.
+-- Only immutable issuance evidence is accepted. No historical reconstruction.
 create function shop_private.return_source(p_invoice_id uuid) returns jsonb
-language plpgsql stable security definer set search_path='' as $$
-declare source jsonb; receipt jsonb; lines jsonb; amount numeric;
-begin
- select snapshot into source from public.sale_tax_snapshots where invoice_id=p_invoice_id;
- if source is not null then return source;end if;
- select snapshot into receipt from public.sale_receipt_issue_snapshots where invoice_id=p_invoice_id;
- if receipt is null then return null;end if;
- select jsonb_agg(e||jsonb_build_object('originalQuantity',e->'quantity','originalUnitPrice',e->'unitPrice','tax',0,'net',e->'total') order by e->>'id'),sum((e->>'total')::numeric)
- into lines,amount from jsonb_array_elements(receipt->'lines') e;
- if lines is null or amount is distinct from (receipt->>'total')::numeric then return null;end if;
- return jsonb_build_object('currency',receipt->'currency','total',receipt->'total','net',receipt->'total','tax',0,'lines',lines,'source','immutable-untaxed-receipt');
-end;$$;
+language sql stable security definer set search_path='' as $$
+ select snapshot from public.sale_tax_snapshots where invoice_id=p_invoice_id
+ union all select snapshot from public.sale_return_sources where invoice_id=p_invoice_id limit 1;
+$$;
 
 create function shop_private.return_plan(p_shop_id uuid,p_location_id uuid,p_invoice_id uuid,p_lines jsonb) returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -131,6 +151,7 @@ begin
    raise exception 'INVALID_RETURN_DISPOSITION' using errcode='22023';end if;
   select value into frozen from jsonb_array_elements(source->'lines') where value->>'id'=line.id::text;
   if frozen is null or (frozen->>'originalQuantity')::numeric<>line.quantity then raise exception 'RETURN_ORIGINAL_SNAPSHOT_UNSUPPORTED' using errcode='55000';end if;
+  if round(line.quantity,2)<>line.quantity then raise exception 'RETURN_ORIGINAL_QUANTITY_PRECISION_UNSUPPORTED' using errcode='55000';end if;
   select coalesce(sum(quantity),0) into prior from public.sale_return_lines where line_id=line.id;
   if qty+prior>line.quantity then raise exception 'RETURN_QUANTITY_EXCEEDED' using errcode='23514';end if;
   components:=shop_private.tax_return_components(frozen,prior+qty,prior);
@@ -244,8 +265,11 @@ begin
  if p_operation<>'failed' then
   if (r.method='cash')<>(p_operation='cash_handover') then raise exception 'REFUND_ORIGINAL_TENDER_REQUIRED' using errcode='23514';end if;
   if p_operation='external_record' and length(btrim(p_reference))<2 then raise exception 'REFUND_EXTERNAL_EVIDENCE_REQUIRED' using errcode='22023';end if;
-  if p_operation='cash_handover' and not exists(select 1 from public.cash_sessions where shop_id=p_shop_id and location_id=p_location_id and register_key='main' and status='open') then
-   raise exception 'REFUND_CASH_SHIFT_REQUIRED' using errcode='23514';end if;
+  if p_operation='cash_handover' then
+   -- Keep this shift open until the payment's cash-event trigger has run.
+   perform 1 from public.cash_sessions where shop_id=p_shop_id and location_id=p_location_id and register_key='main' and status='open' for update;
+   if not found then raise exception 'REFUND_CASH_SHIFT_REQUIRED' using errcode='23514';end if;
+  end if;
   select * into original from public.payments where id=r.payment_id and shop_id=p_shop_id;
   insert into public.payments(shop_id,location_id,payment_direction,invoice_id,client_id,amount,method,status,reference,paid_at,created_by_profile_id,notes,customer_kind,original_payment_id,sale_return_refund_id)
   values(p_shop_id,p_location_id,'out',ret.invoice_id,original.client_id,r.amount,r.method,'completed',btrim(p_reference),stamp,actor,btrim(p_reason),'refund',r.payment_id,r.id) returning id into payment;
@@ -285,6 +309,19 @@ begin
  return new;
 end;$$;
 create trigger aa_return_fulfillment_boundary before insert on public.service_fulfillments for each row execute function shop_private.return_service_boundary();
+
+create function shop_private.return_service_link_boundary() returns trigger language plpgsql security definer set search_path='' as $$
+declare line public.invoice_items%rowtype; returned numeric; fulfilled numeric;
+begin
+ select * into line from public.invoice_items where id=new.line_id and shop_id=new.shop_id;
+ perform 1 from public.invoices where id=line.invoice_id for update;
+ select coalesce(sum(quantity),0) into returned from public.sale_return_lines where line_id=line.id;
+ select quantity into fulfilled from public.service_fulfillments where id=new.fulfillment_id and shop_id=new.shop_id;
+ if shop_private.service_completed_quantity(line.id)+fulfilled+returned>line.quantity then raise exception 'SERVICE_RETURNED_QUANTITY' using errcode='23514';end if;
+ return new;
+end;$$;
+create trigger aa_return_fulfillment_link_boundary before insert on public.service_fulfillment_sale_links for each row execute function shop_private.return_service_link_boundary();
+revoke all on function shop_private.return_service_link_boundary() from public,anon,authenticated,service_role;
 
 -- Existing customer statements retain their original rows; add correction credits
 -- at their occurrence time instead of rewriting the original debit/cash day.
@@ -354,6 +391,7 @@ begin
  if not found then raise exception 'SALE_NOT_FOUND' using errcode='P0002';end if;
  begin perform shop_private.return_actor(p_shop_id,p_location_id);exception when insufficient_privilege then allowed:=false;end;
  source:=shop_private.return_source(sale.id);
+ if exists(select 1 from public.invoice_items where invoice_id=sale.id and round(quantity,2)<>quantity) then source:=null;end if;
  return jsonb_build_object('version',1,'canReturn',allowed and sale.status='issued' and source is not null and not exists(select 1 from public.sale_corrections where invoice_id=sale.id),
  'supported',source is not null,'due',shop_private.invoice_outstanding(sale.id),'currency',sale.currency,
  'lines',(select coalesce(jsonb_agg(jsonb_build_object('id',l.id,'name',l.item_name,'itemType',l.item_type,'quantity',l.quantity,
@@ -502,4 +540,36 @@ begin
   return v_result;
 end;
 $$;
+
+
+create or replace function shop_private.adjust_commission_return(p_snapshot_id uuid,p_event_key text,p_net_returned numeric,p_quantity_returned numeric,p_reason text)
+returns void language plpgsql security definer set search_path='' as $$
+declare s public.commission_snapshots%rowtype; fraction numeric; prior numeric; delta numeric; payable numeric; invoice_refunds numeric;
+ correction public.sale_corrections%rowtype;
+begin
+ select * into s from public.commission_snapshots where id=p_snapshot_id;
+ if not found then raise exception 'COMMISSION_SNAPSHOT_NOT_FOUND'; end if;
+ perform 1 from public.invoices where id=s.invoice_id for update;
+ if p_event_key is null or p_net_returned is null or p_quantity_returned is null or p_net_returned<0 or p_net_returned>s.net_line_amount
+  or p_quantity_returned<0 or p_quantity_returned>s.quantity or length(btrim(coalesce(p_reason,''))) not between 2 and 1000 then
+  raise exception 'INVALID_COMMISSION_RETURN' using errcode='22023'; end if;
+ select i.total_amount into payable from public.invoices i where i.id=s.invoice_id;
+ select * into correction from public.sale_corrections c where c.invoice_id=s.invoice_id;
+ select coalesce(sum(a.amount),0) into invoice_refunds from public.customer_payment_adjustments a
+ join public.customer_payment_allocations alloc on alloc.id=a.original_allocation_id where alloc.invoice_id=s.invoice_id;
+ -- A full sale correction closes the sale, even when it refunds no money or
+ -- only the paid portion. It always reverses the entire original earning.
+ fraction:=greatest(case when correction.id is not null then 1 else 0 end,
+ case when s.net_line_amount>0 then p_net_returned/s.net_line_amount else 0 end,
+ p_quantity_returned/s.quantity,case when payable>0 then least(1,invoice_refunds/payable) else 0 end);
+ if not exists(select 1 from public.commission_events where snapshot_id=s.id and kind='earned') then return; end if;
+ select coalesce(max(cumulative_fraction),0),coalesce(-sum(amount),0) into prior,delta
+ from public.commission_events where snapshot_id=s.id and kind='return';
+ if fraction<prior then raise exception 'COMMISSION_RETURN_NOT_CUMULATIVE' using errcode='22023'; end if;
+ delta:=case when fraction=1 then s.original_commission else round(s.original_commission*fraction,2) end-delta;
+ if fraction=prior then return; end if;
+ insert into public.commission_events(snapshot_id,kind,event_key,amount,cumulative_fraction,reason,actor_profile_id)
+ values(s.id,'return','return:'||p_event_key,-delta,fraction,btrim(p_reason),coalesce(correction.created_by_profile_id,(select r.actor_profile_id from public.sale_returns r where r.invoice_id=s.invoice_id order by r.created_at desc,r.id desc limit 1)));
+end; $$;
+revoke all on function shop_private.adjust_commission_return(uuid,text,numeric,numeric,text) from public,anon,authenticated,service_role;
 

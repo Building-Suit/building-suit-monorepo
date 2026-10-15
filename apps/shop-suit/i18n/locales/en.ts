@@ -1,5 +1,6 @@
 export default defineI18nLocale(async () => ({
   returns: {
+    settlement: 'Returns applied; see refund status',
     "title": "Returns and refunds",
     "action": "Return items",
     "loading": "Loading return history…",
