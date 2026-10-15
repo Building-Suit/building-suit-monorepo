@@ -1,0 +1,23 @@
+{
+  "id": "shop-eta-business-invoice-support-infrastructure",
+  "task": "SS-ETA-EINVOICE-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/shop-eta-disposable.yml",
+    ".github/workflows/account-provisioning-disposable.yml",
+    "packages/ui",
+    "tooling/database/test-shop-eta-einvoice-local.mjs",
+    "tooling/database/test-shop-eta-einvoice-concurrency.mjs",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/work-packages/shop-eta-b2b-submission.md"
+  ],
+  "reason": "Shared presentation exports and isolated verification infrastructure support the Shop capability; other products receive no tax submission feature."
+}

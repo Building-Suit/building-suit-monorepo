@@ -26,6 +26,8 @@ test('signup survives session establishment and provisioning while operational c
     useLocaleHead: () => ref({ htmlAttrs: { lang: 'en', dir: 'ltr' }, link: [], meta: [] }),
     useHead: () => {},
     useLocaleDocument: () => {},
+    useShopSeo: () => {},
+    useShopPrivacy: () => undefined,
   }
   const { descriptor } = parse(await readFile(new URL('../../app/app.vue', import.meta.url), 'utf8'))
   const compiled = stripTypeScriptTypes(compileScript(descriptor, { id: 'signup-session', inlineTemplate: true }).content)
@@ -75,6 +77,7 @@ test('signup survives session establishment and provisioning while operational c
   app.component('NuxtPage', defineComponent({ props: ['pageKey'], setup: (props) => () => h(Page, { key: typeof props.pageKey === 'function' ? props.pageKey(committedRoute.value ?? route) : props.pageKey }) }))
   app.component('NuxtRouteAnnouncer', defineComponent({ setup: () => () => null }))
   app.component('BsToastHost', defineComponent({ setup: () => () => null }))
+  app.component('BsPrivacyConsent', defineComponent({ setup: () => () => null }))
   app.component('BsConfirmHost', defineComponent({ setup: () => () => null }))
   let pendingVisible = 0
   app.component('BsSectionSkeleton', defineComponent({ setup() {

@@ -43,7 +43,9 @@ watch(contextKey, () => {
   toasts.value = []
 }, { flush: 'sync' })
 
-useLocaleDocument()
+useLocaleDocument({ documentLinks: false })
+useShopSeo()
+const privacy = useShopPrivacy(true)
 </script>
 
-<template><BsAppRoot :render-page="canRenderPage" :layout="pageLayout" :layout-key="layoutKey" :page-key="pageKey" /></template>
+<template><BsAppRoot :privacy="privacy" :render-page="canRenderPage" :layout="pageLayout" :layout-key="layoutKey" :page-key="pageKey" /></template>

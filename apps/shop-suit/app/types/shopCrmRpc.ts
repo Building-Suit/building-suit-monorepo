@@ -4,9 +4,16 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      queue_eta_invoice: {Args:{p_request_id:string;p_shop_id:string;p_invoice_id:string;p_receiver:{type:'B';id:string;name:string;address:{country:string;governate:string;regionCity:string;street:string;buildingNumber:string}};p_reason:string};Returns:string}
+      eta_original_document_reference: {Args:{p_shop_id:string;p_invoice_id:string};Returns:unknown}
       eta_settings: {Args:{p_shop_id:string;p_offset?:number};Returns:unknown}
       save_eta_configuration: {Args:{p_request_id:string;p_shop_id:string;p_configuration:unknown;p_reason:string};Returns:string}
       queue_eta_receipt: {Args:{p_request_id:string;p_shop_id:string;p_invoice_id:string;p_buyer:{type:string;id?:string;name?:string};p_payment_method:string};Returns:string}
+      preview_sale_return: { Args: {p_shop_id: string; p_location_id: string; p_invoice_id: string; p_lines: import('./saleReturns').SaleReturnLineInput[]}; Returns: unknown }
+      create_sale_return: { Args: {p_request_id: string; p_shop_id: string; p_location_id: string; p_invoice_id: string; p_lines: import('./saleReturns').SaleReturnLineInput[]; p_reason: string; p_expected_plan: import('./saleReturns').SaleReturnPlan}; Returns: string }
+      sale_return_context: { Args: {p_shop_id: string; p_location_id: string; p_invoice_id: string; p_offset?: number}; Returns: unknown }
+      get_sale_return: { Args: {p_shop_id: string; p_location_id: string; p_return_id: string}; Returns: unknown }
+      record_sale_return_refund: { Args: {p_request_id: string; p_shop_id: string; p_location_id: string; p_refund_id: string; p_operation: 'external_record' | 'cash_handover' | 'failed'; p_reference: string; p_reason: string}; Returns: string }
       complete_service: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_line_id: string | null; p_quantity: number; p_appointment_id?: string | null; p_materials?: Array<{productId: string; unit: string; quantity: number}> | null; p_reason?: string }; Returns: string }
       service_fulfillment_context: { Args: {p_shop_id: string; p_location_id: string; p_invoice_id?: string | null; p_offset?: number}; Returns: unknown }
       service_recipe_context: { Args: {p_shop_id: string; p_offset?: number}; Returns: unknown }

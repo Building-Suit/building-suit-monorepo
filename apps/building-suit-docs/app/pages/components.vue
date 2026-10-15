@@ -1,6 +1,15 @@
 <script setup lang="ts">
+import type { PrivacyPresentation } from '@building-suit/ux'
 import type { ChangelogFeed, ChangelogCopy } from '@building-suit/contracts'
 import type { BsBillingCopy, BsBillingForm, BsBillingView } from '@building-suit/ui/types/billingPresentation'
+const privacyExampleOpen = ref(false)
+const privacyExampleChoice = ref(false)
+const privacyExample = computed<PrivacyPresentation>(() => ({
+  ready: privacyExampleOpen.value, prompt: false, settings: privacyExampleOpen.value, analytics: privacyExampleChoice.value,
+  open: () => { privacyExampleOpen.value = true }, close: () => { privacyExampleOpen.value = false },
+  save: value => { privacyExampleChoice.value = value; privacyExampleOpen.value = false }, change: value => { privacyExampleChoice.value = value },
+  copy: { title: 'Privacy choices / خيارات الخصوصية', body: '', accept: 'Accept optional / قبول الاختياري', reject: 'Reject optional / رفض الاختياري', settings: 'Privacy settings / إعدادات الخصوصية', necessary: 'Catalogue example only. No provider or storage is connected. مثال توضيحي دون مزود أو تخزين.', analytics: 'Optional analytics / التحليلات الاختيارية', save: 'Save / حفظ', policy: 'Policy / السياسة' },
+}))
 const billingExampleForm = ref<BsBillingForm>({ paidAmount: 0, transferDate: '', transferReference: '', privateLink: '', reason: '' })
 const billingExampleBlocked = ref(false)
 const billingExampleDialogVisible = ref(false)
@@ -461,6 +470,9 @@ const invitationPreviewCopy={
     <BsContentSection :title="isArabic ? 'عمولات اختيارية'  : 'Optional commissions'">
       <BsDescriptionList><BsDescriptionItem term="BsServiceFulfillmentPage">{{ isArabic ? 'وصفات اختيارية، وتنفيذ صريح بالكميات، وسجل FIFO وتسوية الطلبات بدون اتصال وتصحيحات مدققة.' : 'Optional recipes, explicit quantity fulfillment, FIFO history, offline reconciliation and audited corrections. Product adapters own authorization and business commands.' }}</BsDescriptionItem><BsDescriptionItem term="BsCommissionPolicyPage">{{ isArabic ? 'تفعيل النشاط والموظف، ونسب أو مبالغ ثابتة، وإسناد المسودات، وفصل التقديرات والمكتسبات والتعديلات بعد التصدير.' : 'Shop and employee opt-in, percentage or fixed unit rates, draft attribution, and separate estimates, earnings and post-export adjustments. Shop owns authorized commands and financial values.' }}</BsDescriptionItem></BsDescriptionList>
     </BsContentSection>
+    <BsContentSection :title="isArabic ? 'المرتجعات المرتبطة بالفاتورة' : 'Invoice-linked returns'">
+      <BsDescriptionList><BsDescriptionItem term="BsDocumentReturns / BsCommerceDocumentPage">{{ isArabic ? 'كميات وحالة مخزون، ومراجعة تخفيض الدين وتوزيع الدفعات الأصلية، وسجل مستقل لإثبات رد المبلغ. الحساب والصلاحيات من التطبيق.' : 'Quantity and disposition inputs, reviewed debt reduction and original-tender allocation, and separate refund completion evidence/history. Product adapters own financial arithmetic and authorization.' }}</BsDescriptionItem></BsDescriptionList>
+    </BsContentSection>
     <WorkflowPatternCatalogue />
 
     <BsToastHost />
@@ -473,5 +485,9 @@ const invitationPreviewCopy={
     >
       <BsField v-slot="field" :label="isArabic ? 'الاسم' : 'Name'" for="catalogue-record-name" required><BsInput id="catalogue-record-name" v-model="name" required :aria-describedby="field.describedby" /></BsField>
     </BsRecordActionDialog>
+  <BsContentSection title="Privacy consent / خيارات الخصوصية">
+    <BsButton @click="privacyExampleOpen = true">Privacy settings / إعدادات الخصوصية</BsButton>
+    <BsPrivacyConsent :model="privacyExample" />
+  </BsContentSection>
   </div>
 </template>

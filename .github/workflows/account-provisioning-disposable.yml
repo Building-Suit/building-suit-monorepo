@@ -51,6 +51,11 @@ jobs:
         run: node tooling/database/test-shop-settings-local.mjs
       - name: Generate schema contracts from disposable databases
         run: |
+          # Reuse the official metadata image, or its official publisher mirror.
+          if ! docker image inspect public.ecr.aws/supabase/postgres-meta:v0.98.0 > /dev/null 2>&1; then
+            docker pull docker.io/supabase/postgres-meta:v0.98.0
+            docker tag docker.io/supabase/postgres-meta:v0.98.0 public.ecr.aws/supabase/postgres-meta:v0.98.0
+          fi
           mkdir -p "$RUNNER_TEMP/account-schema-contracts/shop" "$RUNNER_TEMP/account-schema-contracts/sas"
           pnpm exec supabase --workdir apps/shop-suit gen types typescript --local > "$RUNNER_TEMP/account-schema-contracts/shop/database.types.ts"
           pnpm exec supabase --workdir apps/super-admin-suit gen types typescript --local > "$RUNNER_TEMP/account-schema-contracts/sas/database.types.ts"
