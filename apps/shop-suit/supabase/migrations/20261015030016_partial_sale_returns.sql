@@ -364,7 +364,7 @@ end; $$;
 
 
 create function shop_private.return_document(p_return_id uuid) returns jsonb language sql stable security definer set search_path='' as $$
- select to_jsonb(r)-'payload'||jsonb_build_object('version',1,
+ select to_jsonb(r)-'payload'||jsonb_build_object('version',1,'actorName',(select coalesce(p.display_name,p.email_snapshot) from public.profiles p where p.id=r.actor_profile_id),
  'lines',coalesce((select jsonb_agg(to_jsonb(l) order by l.line_id) from public.sale_return_lines l where l.return_id=r.id),'[]'::jsonb),
  'stock',coalesce((select jsonb_agg(to_jsonb(s) order by s.line_id,s.movement_id) from public.sale_return_stock s where s.return_id=r.id),'[]'::jsonb),
  'refunds',coalesce((select jsonb_agg(to_jsonb(f)||jsonb_build_object('state',

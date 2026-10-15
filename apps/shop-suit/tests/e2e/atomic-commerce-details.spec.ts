@@ -48,6 +48,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       if (name === 'get_location_sale') return sale
       if (name === 'get_location_sale_receipt') return null
       if (name === 'sale_correction_state') return state
+      if (name === 'sale_return_context') return { version: 1, canReturn: false, supported: false, due: sale.outstanding, currency: 'EGP', totalCount: 0, lines: [], history: [] }
       if (name === 'record_location_customer_receipt') { sale.outstanding = 75; sale.amountPaid = 25; sale.settlementState = 'partial'; sale.payments.push({ id: 'event-1', eventType: 'receipt', paymentId: 'payment-1', allocationId: 'allocation-1', amount: 25, eventAt: String(args.p_paid_at), method: 'cash', reference: null, remainingEffective: 25 }); return 'payment-1' }
       if (name === 'correct_location_sale') { state.canCorrect = false; state.correction = { id: 'correction-1', kind: 'full_return', effectiveAt: String(args.p_effective_at), reason: String(args.p_reason), reference: null, refundAmount: 25, restoredQuantity: 2 }; sale.outstanding = 0; return 'correction-1' }
       return undefined
