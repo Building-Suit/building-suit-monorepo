@@ -244,6 +244,8 @@ declare kind text; legacy jsonb; upcoming jsonb; released jsonb;
 begin
  select e.environment_kind into kind from public.release_catalog_configuration c join public.admin_environments e on e.id=c.authority_environment_id where e.status='active';
  if kind not in ('staging','production') or kind is null then raise exception 'RELEASE_CONFIGURATION_REQUIRED'; end if;
+ if kind='staging' and exists(select 1 from public.release_manifests where first_published_at is not null)
+   and not exists(select 1 from public.release_candidate_versions) then raise exception 'LEGACY_RELEASE_HISTORY_REVIEW_REQUIRED'; end if;
  legacy:=super_admin_private.release_legacy_public_feed();
  select coalesce(jsonb_agg(super_admin_private.candidate_public_entry(e,'released',p.first_published_at) order by p.first_published_at desc,e->>'id'),'[]') into released
    from public.release_candidate_promotions p cross join lateral jsonb_array_elements(p.manifest->'entries') e;

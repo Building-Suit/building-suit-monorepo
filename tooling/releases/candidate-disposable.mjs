@@ -6,7 +6,7 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
   const jwt=`set request.jwt.claims='{"role":"service_role"}';`
   const json=x=>`'${JSON.stringify(x).replaceAll("'","''")}'::jsonb`
   const parse=x=>JSON.parse(x.split('\n').at(-1))
-  const setup=(name,kind)=>{
+  const setup=(name,kind,beforeModel)=>{
     sql(`create database ${name};`)
     const q=s=>databaseSql(name,s)
     q(`create schema extensions;create extension pgcrypto with schema extensions;create schema super_admin_private;
@@ -17,6 +17,7 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
     q(migration('20261015030053_task_release_catalog'))
     q(migration('20261015212440_first_official_release_bootstrap'))
     if(kind==='production') q(`insert into public.release_catalog_configuration values(true,'a0bb00a1-747c-4cda-8521-9927d0b53065','Building-Suit/building-suit-monorepo','${'a'.repeat(40)}','${'a'.repeat(40)}');`)
+    if(beforeModel) beforeModel(q)
     q(migration('20261015215030_upcoming_release_candidates'))
     return q
   }
@@ -99,5 +100,16 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
   assert.deepEqual(refresh(first),{...one,readyAt:state(stage).revisions.find(r=>r.key===one.key).readyAt},'An old identical revision retry after promotion returns its retained outcome without resurrecting it')
   if(outputPath) writeFileSync(outputPath,JSON.stringify(feed(stage))+'\n')
   assert.equal(stage('select version from public.release_version_heads;'),'0.0.0','Original v1 baseline/history remain unchanged')
+  let priorLegacy
+  const legacy=setup('candidate_existing_legacy','staging',q=>{
+    const oldRequest={repository:'Building-Suit/building-suit-monorepo',ref:'refs/heads/stg',parentSha:'4b4c3ca5ffed96e7d61f6eb5a60d04a52862aa0c',sourceSha:'e'.repeat(40),fragments:[change]}
+    const accepted=parse(q(`${jwt}select public.release_stage_accept(${json(oldRequest)});`))
+    q(`${jwt}select public.release_publish('staging','refs/heads/stg','${'e'.repeat(40)}',${json([accepted])});`)
+    priorLegacy=q(`${jwt}select public.release_catalog_state();`)
+  })
+  assert.equal(legacy(`${jwt}select public.release_catalog_state();`),priorLegacy,'Model migration preserves every old immutable manifest, cursor, copy and publication time')
+  assert.equal(legacy('select count(*) from public.release_candidate_versions;'),'0','Published legacy history is not guessed as a zero baseline')
+  assert.throws(()=>legacy(`${jwt}select public.release_candidate_refresh(${json(first)});`),/VERIFIED_PRODUCTION_BASELINE_REQUIRED/)
+  assert.throws(()=>feed(legacy),/LEGACY_RELEASE_HISTORY_REVIEW_REQUIRED/,'Unknown old staging publication cannot masquerade as verified production history or empty success')
   console.log('Upcoming candidate PostgreSQL passed: repeated updates, net-zero, one production freeze, retry/ack recovery, immutable history, next candidate, authorization and public boundaries')
 }
