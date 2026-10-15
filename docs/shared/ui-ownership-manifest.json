@@ -396,6 +396,16 @@
       "adapterBoundary": "Shop owns slug generation, validation, authorized RPCs and typed view projections; useRecordAction in packages/ux owns modal, pending and dirty-state behavior. Saving never publishes.",
       "task": "SS-WEB-SLUG-001",
       "migrationStatus": "additive optional settings presentation; no Suit-local components"
+    },
+    {
+      "family": "website-profile",
+      "owner": "packages/ui",
+      "components": [
+        "BsWebsiteProfileSettings"
+      ],
+      "adapterBoundary": "Shop owns private draft/publication rules, authorized tenant-scoped RPCs and typed values; useRecordAction and raster decoding in packages/ux own interaction mechanics. Catalog readiness is a server-owned integration boundary.",
+      "task": "SS-WEB-PROFILE-001",
+      "migrationStatus": "optional settings organism inside the existing registered complete business settings template; no local presentation"
     }
   ]
 }

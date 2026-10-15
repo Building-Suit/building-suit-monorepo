@@ -4,6 +4,12 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      shop_website_profile: { Args: { p_shop_id: string }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_profile_save: { Args: { p_shop_id: string; p_profile: import('../../shared/websiteProfile').WebsiteProfileDraft }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_logo_replace: { Args: { p_shop_id: string; p_data_url: string | null }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_profile_publish: { Args: { p_shop_id: string; p_owner_opt_in: boolean }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_profile_unpublish: { Args: { p_shop_id: string }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_public_profile: { Args: { p_slug: string }; Returns: unknown }
       shop_website_address: { Args: { p_shop_id: string }; Returns: import('../../shared/websiteAddress').WebsiteAddress | null }
       shop_website_address_save: { Args: { p_shop_id: string; p_slug: string }; Returns: import('../../shared/websiteAddress').WebsiteAddress }
       shop_website_host_resolve: { Args: { p_slug: string }; Returns: { canonicalSlug: string; isAlias: boolean } | null }

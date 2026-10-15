@@ -6853,6 +6853,96 @@ export type Database = {
           },
         ]
       }
+      shop_website_logos: {
+        Row: {
+          data_url: string
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          data_url: string
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          data_url?: string
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_logos_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shop_websites"
+            referencedColumns: ["shop_id"]
+          },
+        ]
+      }
+      shop_website_profile_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          id: string
+          occurred_at: string
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          id?: string
+          occurred_at?: string
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          id?: string
+          occurred_at?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_profile_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_website_profiles: {
+        Row: {
+          draft: Json
+          owner_opted_in_at: string | null
+          published: Json | null
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          draft?: Json
+          owner_opted_in_at?: string | null
+          published?: Json | null
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          draft?: Json
+          owner_opted_in_at?: string | null
+          published?: Json | null
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_profiles_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shop_websites"
+            referencedColumns: ["shop_id"]
+          },
+        ]
+      }
       shop_website_slug_claims: {
         Row: {
           claimed_at: string
@@ -10967,6 +11057,24 @@ export type Database = {
         Returns: Json
       }
       shop_website_host_resolve: { Args: { p_slug: string }; Returns: Json }
+      shop_website_logo_replace: {
+        Args: { p_data_url: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_profile: { Args: { p_shop_id: string }; Returns: Json }
+      shop_website_profile_publish: {
+        Args: { p_owner_opt_in: boolean; p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_profile_save: {
+        Args: { p_profile: Json; p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_profile_unpublish: {
+        Args: { p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_public_profile: { Args: { p_slug: string }; Returns: Json }
       shop_xpay_apply_session: {
         Args: { p_event_id?: string; p_session: Json }
         Returns: Json

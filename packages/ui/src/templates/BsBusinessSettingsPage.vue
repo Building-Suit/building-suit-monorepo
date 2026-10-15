@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import type { BsWebsiteProfileForm, BsWebsiteProfileView } from '../types/websiteProfilePresentation'
 import type { BsWebsiteAddressView } from '../types/websiteAddressPresentation'
 import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessSettingsEditor, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy, BsBusinessCurrencyView } from '../types/businessSettingsPresentation'
 defineProps<{
+  websiteProfileView?: BsWebsiteProfileView
   websiteAddressView?: BsWebsiteAddressView
   currencyView?: BsBusinessCurrencyView
   context: { name: string } | null; loading: boolean; shopError: boolean; canManage: boolean; copy: BsBusinessSettingsCopy
@@ -9,6 +11,9 @@ defineProps<{
   receiptEditor: BsBusinessSettingsEditor & { loading: boolean; loadError: boolean }; receiptSummary: BsBusinessReceiptSummary | null
   locationsView: BsBusinessLocationsView; modeOptions: { value: string; label: string; body: string }[]; modeLabel: string
 }>()
+const websiteProfileForm = defineModel<BsWebsiteProfileForm>('websiteProfileForm', { default: () => ({ publicName: '', description: '', phone: '', whatsapp: '', email: '', openingHours: '', seoTitle: '', seoDescription: '', locations: [] }) })
+const websiteProfileOpen = defineModel<boolean>('websiteProfileOpen', { default: false })
+const websiteOwnerOptIn = defineModel<boolean>('websiteOwnerOptIn', { default: false })
 const websiteSlug = defineModel<string>('websiteSlug', { default: '' })
 const websiteOpen = defineModel<boolean>('websiteOpen', { default: false })
 const profileForm = defineModel<BsBusinessProfileForm>('profileForm', { required: true })
@@ -22,6 +27,7 @@ const modeActionOpen = defineModel<boolean>('modeOpen', { required: true })
 const receiptActionOpen = defineModel<boolean>('receiptOpen', { required: true })
 const locationDialogOpen = defineModel<boolean>('locationOpen', { required: true })
 const emit = defineEmits<{
+  editWebsiteProfile: []; saveWebsiteProfile: []; retryWebsiteProfile: []; publishWebsiteProfile: []; unpublishWebsiteProfile: []; selectWebsiteLogo: [file: File | File[] | null]; removeWebsiteLogo: [];
   editWebsiteAddress: []; saveWebsiteAddress: []; retryWebsiteAddress: [];
   saveCurrency: []; retryCurrency: [];
   editProfile: []; editMode: []; editReceipt: []; retry: []; retryCash: []; retryReceipt: []
@@ -39,8 +45,9 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
     <BsBox v-else-if="shopError" role="alert">{{ copy.failed }} <BsButton @click="emit('retry')">{{ copy.retry }}</BsButton>
     </BsBox>
     <BsText v-else-if="!context" role="status" as="p">{{ copy.empty }}</BsText>
-    <BsSectionNavigation v-if="context && !loading && !shopError" :label="copy.title" :sections="[{ id: 'shop-profile', label: copy.profileTitle }, { id: 'business-mode', label: copy.modeTitle }, { id: 'locations', label: copy.locationsTitle }, { id: 'receipt-settings', label: copy.receiptTitle }, { id: 'cash-policy', label: copy.cashTitle }, ...(websiteAddressView ? [{ id: 'website-address', label: websiteAddressView.title }] : []), ...(currencyView ? [{ id: 'currency-settings', label: currencyView.title }] : [])]" />
+    <BsSectionNavigation v-if="context && !loading && !shopError" :label="copy.title" :sections="[{ id: 'shop-profile', label: copy.profileTitle }, { id: 'business-mode', label: copy.modeTitle }, { id: 'locations', label: copy.locationsTitle }, { id: 'receipt-settings', label: copy.receiptTitle }, { id: 'cash-policy', label: copy.cashTitle }, ...(websiteProfileView ? [{ id: 'website-profile', label: websiteProfileView.title }] : []), ...(websiteAddressView ? [{ id: 'website-address', label: websiteAddressView.title }] : []), ...(currencyView ? [{ id: 'currency-settings', label: currencyView.title }] : [])]" />
     <BsGrid v-if="context && !loading && !shopError" :columns="2" gap="lg">
+    <BsWebsiteProfileSettings v-if="websiteProfileView" v-model:form="websiteProfileForm" v-model:open="websiteProfileOpen" v-model:opt-in="websiteOwnerOptIn" :view="websiteProfileView" @edit="emit('editWebsiteProfile')" @save="emit('saveWebsiteProfile')" @retry="emit('retryWebsiteProfile')" @publish="emit('publishWebsiteProfile')" @unpublish="emit('unpublishWebsiteProfile')" @select-logo="emit('selectWebsiteLogo', $event)" @remove-logo="emit('removeWebsiteLogo')" />
     <BsWebsiteAddressSettings v-if="websiteAddressView" v-model="websiteSlug" v-model:open="websiteOpen" :view="websiteAddressView" @edit="emit('editWebsiteAddress')" @save="emit('saveWebsiteAddress')" @retry="emit('retryWebsiteAddress')" />
     <BsPanel v-if="currencyView" id="currency-settings" aria-labelledby="business-currency-title" padding="md">
       <BsHeading id="business-currency-title" :level="2">{{ currencyView.title }}</BsHeading>

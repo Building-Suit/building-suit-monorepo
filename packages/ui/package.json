@@ -345,7 +345,9 @@
     "./organisms/BsSaleReceipt": "./src/organisms/BsSaleReceipt.vue",
     "./utils/receiptDocument": "./src/utils/receiptDocument.ts",
     "./types/websiteAddressPresentation": "./src/types/websiteAddressPresentation.ts",
-    "./organisms/BsWebsiteAddressSettings.vue": "./src/organisms/BsWebsiteAddressSettings.vue"
+    "./organisms/BsWebsiteAddressSettings.vue": "./src/organisms/BsWebsiteAddressSettings.vue",
+    "./types/websiteProfilePresentation": "./src/types/websiteProfilePresentation.ts",
+    "./organisms/BsWebsiteProfileSettings.vue": "./src/organisms/BsWebsiteProfileSettings.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

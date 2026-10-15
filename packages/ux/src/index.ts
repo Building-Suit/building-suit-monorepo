@@ -241,3 +241,4 @@ export type { PrivacyPreference, PrivacyPresentation } from './utils/privacyCons
 export { useReviewedCommand } from './composables/useReviewedCommand.ts'
 
 export { copyDocumentImage, renderDocumentImage, downloadDocumentImage } from './utils/documentImage.ts'
+export { readPublicLogo } from './utils/readPublicLogo.ts'

@@ -91,6 +91,7 @@ const { data: permissionAccess, pending: permissionPending, error: permissionErr
   return data
 }, { watch: [currentId], default: () => ({ 'settings.manage': false }) })
 const canManage = computed(() => !permissionPending.value && !permissionError.value && permissionAccess.value?.['settings.manage'] === true)
+const { form: websiteProfileForm, optIn: websiteOwnerOptIn, open: websiteProfileOpen, view: websiteProfileView, edit: editWebsiteProfile, save: saveWebsiteProfile, logo: selectWebsiteLogo, publish: publishWebsiteProfile, unpublish: unpublishWebsiteProfile, refresh: refreshWebsiteProfile } = useWebsiteProfile(canManage)
 const { slug: websiteSlug, open: websiteOpen, view: websiteAddressView, edit: editWebsiteAddress, save: saveWebsiteAddress, refresh: refreshWebsiteAddress } = useWebsiteAddress(canManage)
 async function retrySettings() { await Promise.all([reload(), refreshPermissions()]) }
 const { data: locationUsage, refresh: refreshLocationUsage } = useAsyncData(
@@ -453,6 +454,9 @@ async function selectDocumentLogo(selection: File | File[] | null) {
 </script>
 <template>
   <BsBusinessSettingsPage
+    v-model:website-profile-form="websiteProfileForm"
+    v-model:website-profile-open="websiteProfileOpen"
+    v-model:website-owner-opt-in="websiteOwnerOptIn"
     v-model:website-slug="websiteSlug"
     v-model:website-open="websiteOpen"
     v-model:business-currency="selectedBusinessCurrency"
@@ -465,6 +469,7 @@ async function selectDocumentLogo(selection: File | File[] | null) {
     v-model:mode-open="modeActionOpen"
     v-model:receipt-open="receiptActionOpen"
     v-model:location-open="locationDialogOpen"
+    :website-profile-view="websiteProfileView"
     :website-address-view="websiteAddressView"
     :currency-view="currencyView"
     :context="current ? { name: current.name } : null"
@@ -480,8 +485,15 @@ async function selectDocumentLogo(selection: File | File[] | null) {
     :locations-view="locationsView"
     :mode-options="modeOptions"
     :mode-label="modeLabel"
+    @edit-website-profile="editWebsiteProfile"
+    @save-website-profile="saveWebsiteProfile"
+    @retry-website-profile="refreshWebsiteProfile()"
+    @publish-website-profile="publishWebsiteProfile"
+    @unpublish-website-profile="unpublishWebsiteProfile"
+    @select-website-logo="selectWebsiteLogo"
+    @remove-website-logo="selectWebsiteLogo(null)"
     @edit-website-address="editWebsiteAddress"
-    @save-website-address="saveWebsiteAddress"
+    @save-website-address="saveWebsiteAddress().then(() => refreshWebsiteProfile())"
     @retry-website-address="refreshWebsiteAddress()"
     @save-currency="saveBusinessCurrency"
     @retry-currency="refreshCurrencySettings()"
