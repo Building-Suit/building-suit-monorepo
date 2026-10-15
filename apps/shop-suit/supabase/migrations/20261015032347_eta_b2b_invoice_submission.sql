@@ -237,7 +237,7 @@ begin
  if not found then raise exception 'ETA_SALE_NOT_FOUND' using errcode='42501';end if;
  perform shop_private.assert_location_access(p_shop_id,location,false);
  select jsonb_build_object('version',1,'outboxId',o.id,'invoiceId',o.invoice_id,'snapshotId',s.invoice_id,'channel',o.channel,'adapterVersion',o.adapter_version,
- 'documentUUID',o.document_uuid,'submissionUUID',o.submission_uuid,'status',o.state,'currency',s.source->>'currency','issuedAt',s.source->>'issuedAt,'payloadHash',o.payload_hash)
+ 'documentUUID',o.document_uuid,'submissionUUID',o.submission_uuid,'status',o.state,'currency',s.source->>'currency','issuedAt',s.source->>'issuedAt','payloadHash',o.payload_hash)
  into result from public.eta_outbox o join public.eta_sale_sources s on s.invoice_id=o.invoice_id and s.shop_id=o.shop_id
  where o.invoice_id=p_invoice_id and o.shop_id=p_shop_id;
  return result;

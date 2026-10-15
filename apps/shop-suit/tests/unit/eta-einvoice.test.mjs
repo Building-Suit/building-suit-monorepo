@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { buildEinvoice, serializeEta } from '../../supabase/functions/_shared/eta-adapter.mjs'
+import { createSigningProvider } from '../../signing-provider/server.mjs'
 import { createInvoiceSigner, createInvoiceClient, createInvoiceDispatcher, createInvoiceReconciler } from '../../supabase/functions/_shared/eta-einvoice-worker.mjs'
 let fingerprint='a'.repeat(64)
 const config={shopId:'shop-1',rin:'123456789',environment:'preproduction',clientId:'synthetic-erp',clientSecret:'synthetic-secret',credentialVersion:'v1',signerUrl:'https://synthetic-signer.invalid/sign',signerToken:'synthetic-token',certificateFingerprint:fingerprint}
@@ -81,4 +82,14 @@ test('ambiguous invoice POST and duplicate response require evidence, explicit t
 test('invoice uncertain recovery requires submission, internal ID, issuer, receiver and amount evidence',async()=>{
  const f=await fixture({state:'uncertain'});assert.deepEqual(await f.recover(f.job.id,'SUBMISSION-1'),{state:'submitted'});assert.equal(f.calls.at(-1).args.p_document_uuid,'PROVIDER-DOC-1')
  const bad=await fixture({state:'uncertain',mismatch:true});await assert.rejects(bad.recover(bad.job.id,'SUBMISSION-1'),/RECOVERY_EVIDENCE_REQUIRED/)
+})
+
+test('reference provider and HTTPS adapter exercise actual CAdES signing and reject unauthenticated or mutated inputs',async()=>{
+ const handle=createSigningProvider({environment:'preproduction',rin:config.rin,token:config.signerToken,certificatePath:join(work,'cert.pem'),keyReference:join(work,'key.pem'),certificateFingerprint:fingerprint})
+ assert.equal((await handle(new Request(config.signerUrl,{method:'POST',body:'{}'}))).status,403)
+ const sign=createInvoiceSigner({fetcher:async(url,options)=>handle(new Request(url,options))})
+ const actual=await sign(config,unsigned);assert.ok(actual.length>1000)
+ const bad={protocol:'shop-eta-cades-bes-v1',document:unsigned,canonical:'mutated',documentHash:'a'.repeat(64),certificateFingerprint:fingerprint}
+ const rejected=await handle(new Request(config.signerUrl,{method:'POST',headers:{authorization:`Bearer ${config.signerToken}`},body:JSON.stringify(bad)}))
+ assert.equal(rejected.status,503);assert.deepEqual(await rejected.json(),{error:'ETA_SIGNER_FAILED'})
 })

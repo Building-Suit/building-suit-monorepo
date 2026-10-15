@@ -60,6 +60,7 @@ reset role;
 select set_config('request.jwt.claim.sub',outsider::text,true) from eta_fixture;
 set local role authenticated;
 do $$ begin
+ begin perform public.queue_eta_invoice(gen_random_uuid(),current_setting('eta_test.shop')::uuid,current_setting('eta_test.branch_b_sale')::uuid,'{"type":"B","id":"987654321","name":"Test","address":{"country":"EG","governate":"Cairo","regionCity":"Cairo","street":"Test","buildingNumber":"1"}}','Wrong location test');raise exception 'Scoped manager queued invoice in other location';exception when insufficient_privilege then null;end;
  begin perform public.eta_original_document_reference(current_setting('eta_test.shop')::uuid,current_setting('eta_test.branch_b_sale')::uuid);raise exception 'Scoped user read other location original';exception when insufficient_privilege then null;end;
 end; $$;
 reset role;
