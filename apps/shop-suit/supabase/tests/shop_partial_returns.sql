@@ -52,6 +52,10 @@ begin
  plan:=public.preview_sale_return(shop,loc,sale,lines);ret:=public.create_sale_return(gen_random_uuid(),shop,loc,sale,lines,'Damaged remainder',plan);
  select sum(remaining_quantity) into remaining from public.inventory_batches where product_id=product;
  if remaining<>stock then raise exception 'Damaged items restored stock';end if;
+ comp:=public.commission_history(shop,sale)->'lines'->0;
+ if (comp->>'earned')::numeric+(comp->>'adjustments')::numeric<>0 then raise exception 'Full cancellation retained commission %',comp;end if;
+ if (public.get_location_sale(shop,loc,sale)->>'amountPaid')::numeric<>20 then raise exception 'Debt reduction was reported as actual payment';end if;
+ if (public.customer_statement(shop,customer)->>'outstanding')::numeric<>0 then raise exception 'Statement retained cancelled debt';end if;
  if (public.sale_return_context(shop,loc,sale)->'lines'->0->>'remaining')::numeric<>0 then raise exception 'Remaining quantity wrong';end if;
  begin perform public.preview_sale_return(shop,loc,sale,lines);raise exception 'Over-return accepted';exception when check_violation then null;end;
  begin perform public.correct_location_sale(gen_random_uuid(),shop,loc,sale,clock_timestamp(),'Old full correction');raise exception 'Full correction duplicated partial';exception when check_violation then null;end;
@@ -87,8 +91,32 @@ begin
  begin perform public.record_sale_return_refund(gen_random_uuid(),shop,loc,refund,'cash_handover','','Cash handed over');raise exception 'Cash recorded with no shift';exception when check_violation then null;end;
  shift:=public.open_cash_shift(gen_random_uuid(),shop,loc,'main',20,'Refund test float');
  perform public.record_sale_return_refund(gen_random_uuid(),shop,loc,refund,'cash_handover','','Cash handed over');
- -- Service consumed stock is never restored by financial return.
- service:=public.save_service(shop,null,'Refund service',null,100,null,null,true,30,0,array[loc],array[member]);
+ -- A performed service with actual FIFO material usage retains that consumption.
+ declare material uuid; service_sale uuid; service_line uuid; before_stock numeric;
+ begin
+ material:=public.save_product(shop,null,'Consumed cream',null,null,1);
+ perform public.define_service_material_unit(shop,material,'mL');
+ perform public.adjust_stock(gen_random_uuid(),shop,material,50,2,'Material opening');
+ service:=public.save_service(shop,null,'Performed service',null,100,'percent',0,true,30,0,array[loc],array[member]);
+ perform public.save_service_recipe(gen_random_uuid(),shop,service,null,jsonb_build_array(jsonb_build_object('productId',material,'unit','mL','quantity',30)),'Actual consumed material');
+ service_sale:=public.save_sale_draft(gen_random_uuid(),shop,null,customer,null,jsonb_build_array(jsonb_build_object('item_type','service','source_id',service,'quantity',1)));
+ select id into service_line from public.invoice_items where invoice_id=service_sale;
+ perform public.assign_sale_commission(shop,service_line,member,null);perform public.issue_sale(gen_random_uuid(),shop,service_sale);
+ perform public.record_customer_receipt(gen_random_uuid(),shop,customer,100,clock_timestamp(),'card','service-card',null,jsonb_build_array(jsonb_build_object('invoice_id',service_sale,'amount',100)));
+ perform public.complete_service(gen_random_uuid(),shop,loc,service_line,1);
+ comp:=public.commission_history(shop,service_sale)->'lines'->0;
+ if (comp->>'earned')::numeric<>10 then raise exception 'Performed service did not earn original basis';end if;
+ select sum(remaining_quantity) into before_stock from public.inventory_batches where product_id=material;
+ lines:=jsonb_build_array(jsonb_build_object('lineId',service_line,'quantity',1,'disposition','service'));
+ plan:=public.preview_sale_return(shop,loc,service_sale,lines);ret:=public.create_sale_return(gen_random_uuid(),shop,loc,service_sale,lines,'Performed service refunded',plan);
+ if (select sum(remaining_quantity) from public.inventory_batches where product_id=material)<>before_stock then raise exception 'Service return restored consumed materials';end if;
+ if jsonb_array_length(public.get_sale_return(shop,loc,ret)->'stock')<>0 then raise exception 'Service refund invented stock';end if;
+ comp:=public.commission_history(shop,service_sale)->'lines'->0;
+ if (comp->>'adjustments')::numeric<>-10 then raise exception 'Service refund did not reverse original earning %',comp;end if;
+ end;
+ -- Unperformed returned quantities cannot later consume materials.
+
+ service:=public.save_service(shop,null,'Refund service',null,100,'percent',0,true,30,0,array[loc],array[member]);
  perform public.save_service_recipe(gen_random_uuid(),shop,service,null,'[]','No default material');
  sale:=public.save_sale_draft(gen_random_uuid(),shop,null,customer,null,jsonb_build_array(jsonb_build_object('item_type','service','source_id',service,'quantity',2)));
  select id into line from public.invoice_items where invoice_id=sale;perform public.issue_sale(gen_random_uuid(),shop,sale);

@@ -131,6 +131,7 @@ begin
    raise exception 'INVALID_RETURN_DISPOSITION' using errcode='22023';end if;
   select value into frozen from jsonb_array_elements(source->'lines') where value->>'id'=line.id::text;
   if frozen is null or (frozen->>'originalQuantity')::numeric<>line.quantity then raise exception 'RETURN_ORIGINAL_SNAPSHOT_UNSUPPORTED' using errcode='55000';end if;
+  if round(line.quantity,2)<>line.quantity then raise exception 'RETURN_ORIGINAL_QUANTITY_PRECISION_UNSUPPORTED' using errcode='55000';end if;
   select coalesce(sum(quantity),0) into prior from public.sale_return_lines where line_id=line.id;
   if qty+prior>line.quantity then raise exception 'RETURN_QUANTITY_EXCEEDED' using errcode='23514';end if;
   components:=shop_private.tax_return_components(frozen,prior+qty,prior);
@@ -244,8 +245,11 @@ begin
  if p_operation<>'failed' then
   if (r.method='cash')<>(p_operation='cash_handover') then raise exception 'REFUND_ORIGINAL_TENDER_REQUIRED' using errcode='23514';end if;
   if p_operation='external_record' and length(btrim(p_reference))<2 then raise exception 'REFUND_EXTERNAL_EVIDENCE_REQUIRED' using errcode='22023';end if;
-  if p_operation='cash_handover' and not exists(select 1 from public.cash_sessions where shop_id=p_shop_id and location_id=p_location_id and register_key='main' and status='open') then
-   raise exception 'REFUND_CASH_SHIFT_REQUIRED' using errcode='23514';end if;
+  if p_operation='cash_handover' then
+   -- Keep this shift open until the payment's cash-event trigger has run.
+   perform 1 from public.cash_sessions where shop_id=p_shop_id and location_id=p_location_id and register_key='main' and status='open' for update;
+   if not found then raise exception 'REFUND_CASH_SHIFT_REQUIRED' using errcode='23514';end if;
+  end if;
   select * into original from public.payments where id=r.payment_id and shop_id=p_shop_id;
   insert into public.payments(shop_id,location_id,payment_direction,invoice_id,client_id,amount,method,status,reference,paid_at,created_by_profile_id,notes,customer_kind,original_payment_id,sale_return_refund_id)
   values(p_shop_id,p_location_id,'out',ret.invoice_id,original.client_id,r.amount,r.method,'completed',btrim(p_reference),stamp,actor,btrim(p_reason),'refund',r.payment_id,r.id) returning id into payment;

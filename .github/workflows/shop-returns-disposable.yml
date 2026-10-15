@@ -43,6 +43,8 @@ jobs:
 
       - name: Generate verified public database contract
         run: pnpm exec supabase --workdir apps/shop-suit gen types typescript --local --schema public > "$RUNNER_TEMP/shop-returns-database.types.ts"
+      - name: Record reproducible schema contract evidence
+        run: node tooling/database/schema-contract-evidence.mjs apps/shop-suit/app/types/database.types.ts "$RUNNER_TEMP/shop-returns-database.types.ts"
       - uses: actions/upload-artifact@v4
         with:
           name: shop-returns-database-types
