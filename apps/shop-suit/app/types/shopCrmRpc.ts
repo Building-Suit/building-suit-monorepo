@@ -4,6 +4,14 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      complete_service: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_line_id: string | null; p_quantity: number; p_appointment_id?: string | null; p_materials?: Array<{productId: string; unit: string; quantity: number}> | null; p_reason?: string }; Returns: string }
+      service_fulfillment_context: { Args: {p_shop_id: string; p_location_id: string; p_invoice_id?: string | null; p_offset?: number}; Returns: unknown }
+      service_recipe_context: { Args: {p_shop_id: string; p_offset?: number}; Returns: unknown }
+      define_service_material_unit: { Args: {p_shop_id: string; p_product_id: string; p_unit: string}; Returns: undefined }
+      save_service_recipe: { Args: {p_request_id: string; p_shop_id: string; p_service_id: string; p_effective_at: string | null; p_materials: Array<{productId: string; unit: string; quantity: number}>; p_reason: string}; Returns: string }
+      correct_service_material: { Args: {p_request_id: string; p_shop_id: string; p_consumption_id: string; p_quantity: number; p_reason: string}; Returns: string }
+      reconcile_service_completion: { Args: {p_shop_id: string; p_args: Record<string, unknown>; p_resolution_request_id: string; p_reason: string}; Returns: {state: 'synced'; invoiceId: string} | {state: 'cancelled'; resolutionRequestId: string} }
+
       quote_sale_tax: { Args: { p_shop_id: string; p_location_id: string; p_lines: { item_type: string; source_id: string; quantity: number }[] }; Returns: unknown }
       save_tax_policy: { Args: { p_request_id: string; p_shop_id: string; p_effective_at: string; p_policy: import('./tax').TaxPolicy; p_reason: string }; Returns: string }
       tax_settings: { Args: { p_shop_id: string }; Returns: unknown }

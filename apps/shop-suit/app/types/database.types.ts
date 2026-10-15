@@ -3852,6 +3852,198 @@ export type Database = {
           },
         ]
       }
+      service_completion_cancellations: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          payload: Json
+          reason: string
+          request_id: string
+          resolution_request_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          payload: Json
+          reason: string
+          request_id: string
+          resolution_request_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          payload?: Json
+          reason?: string
+          request_id?: string
+          resolution_request_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_completion_cancellations_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_completion_cancellations_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_fulfillment_sale_links: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          fulfillment_id: string
+          line_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          fulfillment_id: string
+          line_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          fulfillment_id?: string
+          line_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_fulfillment_sale_links_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_fulfillment_sale_links_fulfillment_id_shop_id_fkey"
+            columns: ["fulfillment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "service_fulfillments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_fulfillment_sale_links_line_id_shop_id_fkey"
+            columns: ["line_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      service_fulfillments: {
+        Row: {
+          actor_profile_id: string
+          appointment_id: string | null
+          completed_at: string
+          id: string
+          line_id: string | null
+          location_id: string
+          materials: Json
+          payload: Json
+          quantity: number
+          reason: string
+          recipe_version_id: string | null
+          request_id: string
+          service_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          appointment_id?: string | null
+          completed_at?: string
+          id?: string
+          line_id?: string | null
+          location_id: string
+          materials: Json
+          payload: Json
+          quantity: number
+          reason: string
+          recipe_version_id?: string | null
+          request_id: string
+          service_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          appointment_id?: string | null
+          completed_at?: string
+          id?: string
+          line_id?: string | null
+          location_id?: string
+          materials?: Json
+          payload?: Json
+          quantity?: number
+          reason?: string
+          recipe_version_id?: string | null
+          request_id?: string
+          service_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_fulfillments_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_fulfillments_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_fulfillments_line_id_shop_id_fkey"
+            columns: ["line_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_fulfillments_location_id_shop_id_fkey"
+            columns: ["location_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_locations"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_fulfillments_recipe_version_id_shop_id_fkey"
+            columns: ["recipe_version_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "service_recipe_versions"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_fulfillments_service_id_shop_id_fkey"
+            columns: ["service_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_fulfillments_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_location_availability: {
         Row: {
           created_at: string
@@ -3881,6 +4073,246 @@ export type Database = {
           },
           {
             foreignKeyName: "service_location_availability_service_id_shop_id_fkey"
+            columns: ["service_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      service_material_consumptions: {
+        Row: {
+          batch_id: string
+          fulfillment_id: string
+          id: string
+          movement_id: string
+          product_id: string
+          quantity: number
+          shop_id: string
+          unit: string
+          unit_cost: number
+        }
+        Insert: {
+          batch_id: string
+          fulfillment_id: string
+          id?: string
+          movement_id: string
+          product_id: string
+          quantity: number
+          shop_id: string
+          unit: string
+          unit_cost: number
+        }
+        Update: {
+          batch_id?: string
+          fulfillment_id?: string
+          id?: string
+          movement_id?: string
+          product_id?: string
+          quantity?: number
+          shop_id?: string
+          unit?: string
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_material_consumptions_batch_id_shop_id_product_id_fkey"
+            columns: ["batch_id", "shop_id", "product_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_batches"
+            referencedColumns: ["id", "shop_id", "product_id"]
+          },
+          {
+            foreignKeyName: "service_material_consumptions_batch_id_shop_id_product_id_fkey"
+            columns: ["batch_id", "shop_id", "product_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_stock_batches"
+            referencedColumns: ["batch_id", "shop_id", "product_id"]
+          },
+          {
+            foreignKeyName: "service_material_consumptions_fulfillment_id_shop_id_fkey"
+            columns: ["fulfillment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "service_fulfillments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_material_consumptions_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: true
+            referencedRelation: "inventory_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_material_consumptions_product_id_shop_id_unit_fkey"
+            columns: ["product_id", "shop_id", "unit"]
+            isOneToOne: false
+            referencedRelation: "service_material_units"
+            referencedColumns: ["product_id", "shop_id", "unit"]
+          },
+        ]
+      }
+      service_material_corrections: {
+        Row: {
+          actor_profile_id: string
+          consumption_id: string
+          created_at: string
+          id: string
+          movement_id: string
+          quantity: number
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          consumption_id: string
+          created_at?: string
+          id?: string
+          movement_id: string
+          quantity: number
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          consumption_id?: string
+          created_at?: string
+          id?: string
+          movement_id?: string
+          quantity?: number
+          reason?: string
+          request_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_material_corrections_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_material_corrections_consumption_id_fkey"
+            columns: ["consumption_id"]
+            isOneToOne: false
+            referencedRelation: "service_material_consumptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_material_corrections_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_movements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_material_units: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          dimension: string | null
+          product_id: string
+          shop_id: string
+          unit: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          dimension?: string | null
+          product_id: string
+          shop_id: string
+          unit: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          dimension?: string | null
+          product_id?: string
+          shop_id?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_material_units_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_material_units_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "low_stock_products"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_material_units_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_material_units_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      service_recipe_versions: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          effective_at: string
+          id: string
+          materials: Json
+          reason: string
+          request_id: string
+          requested_effective_at: string | null
+          service_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          effective_at: string
+          id?: string
+          materials: Json
+          reason: string
+          request_id: string
+          requested_effective_at?: string | null
+          service_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          effective_at?: string
+          id?: string
+          materials?: Json
+          reason?: string
+          request_id?: string
+          requested_effective_at?: string | null
+          service_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_recipe_versions_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_recipe_versions_service_id_shop_id_fkey"
             columns: ["service_id", "shop_id"]
             isOneToOne: false
             referencedRelation: "services"
@@ -8422,6 +8854,19 @@ export type Database = {
         Args: { p_invoice_id?: string; p_offset?: number; p_shop_id: string }
         Returns: Json
       }
+      complete_service: {
+        Args: {
+          p_appointment_id?: string
+          p_line_id: string
+          p_location_id: string
+          p_materials?: Json
+          p_quantity: number
+          p_reason?: string
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
       correct_location_sale: {
         Args: {
           p_effective_at: string
@@ -8429,6 +8874,16 @@ export type Database = {
           p_location_id: string
           p_reason: string
           p_reference?: string
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
+      correct_service_material: {
+        Args: {
+          p_consumption_id: string
+          p_quantity: number
+          p_reason: string
           p_request_id: string
           p_shop_id: string
         }
@@ -8514,6 +8969,10 @@ export type Database = {
           _reference_id: string
           _shop_id: string
         }
+        Returns: undefined
+      }
+      define_service_material_unit: {
+        Args: { p_product_id: string; p_shop_id: string; p_unit: string }
         Returns: undefined
       }
       fast_pay_location_sale: {
@@ -8960,6 +9419,15 @@ export type Database = {
         }
         Returns: Json
       }
+      reconcile_service_completion: {
+        Args: {
+          p_args: Json
+          p_reason: string
+          p_resolution_request_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       record_cash_movement: {
         Args: {
           p_amount: number
@@ -9375,6 +9843,17 @@ export type Database = {
             }
             Returns: string
           }
+      save_service_recipe: {
+        Args: {
+          p_effective_at: string
+          p_materials: Json
+          p_reason: string
+          p_request_id: string
+          p_service_id: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
       save_service_with_category: {
         Args: {
           p_base_sale_price: number
@@ -9476,6 +9955,19 @@ export type Database = {
           p_vendor_id: string
         }
         Returns: string
+      }
+      service_fulfillment_context: {
+        Args: {
+          p_invoice_id?: string
+          p_location_id: string
+          p_offset?: number
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      service_recipe_context: {
+        Args: { p_offset?: number; p_shop_id: string }
+        Returns: Json
       }
       service_scheduling_options: { Args: { p_shop_id: string }; Returns: Json }
       set_catalog_item_category: {

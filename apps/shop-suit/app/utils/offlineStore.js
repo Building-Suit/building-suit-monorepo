@@ -52,7 +52,7 @@ export function createOfflineStore({ scope, indexedDB = globalThis.indexedDB, cr
     await verify(record)
     record.originalCommandHash = await commandHash(record.envelope.command)
     // Server has the immutable full command. Keep IDs/amount/status locally, not contacts, notes or references.
-    const retained = new Set(['request','p_request_id','p_save_request_id','p_issue_request_id','p_payment_request_id','p_appointment_request_id','p_shop_id','p_location_id','p_shift_id','p_session_id','p_amount','p_counted_amount','p_method','p_kind'])
+    const retained = new Set(['request','p_request_id','p_save_request_id','p_issue_request_id','p_payment_request_id','p_appointment_request_id','p_shop_id','p_location_id','p_shift_id','p_session_id','p_amount','p_counted_amount','p_method','p_kind','p_line_id','p_quantity','p_appointment_id'])
     record.envelope.command = { ...record.envelope.command, args: Object.fromEntries(Object.entries(record.envelope.command.args).filter(([key]) => retained.has(key))) }
     record.signature = Array.from(new Uint8Array(await crypto.subtle.sign('HMAC', (await keyPair()).signing, bytes(record.envelope))))
     await put(`queue:${record.envelope.localId}`, record)
@@ -71,7 +71,7 @@ export function createOfflineStore({ scope, indexedDB = globalThis.indexedDB, cr
   return {
     async cache(key, value) { return exclusive(async () => {
       // Each cache key is an owning product allowlist entry; never a URL response cache.
-      if (!['catalog', 'context', 'shift', 'categories'].includes(key)) throw new Error('OFFLINE_CACHE_FORBIDDEN')
+      if (!['catalog', 'context', 'shift', 'categories', 'service-fulfillment'].includes(key)) throw new Error('OFFLINE_CACHE_FORBIDDEN')
       await put(`cache:${key}`, { expires: now() + CACHE_TTL, value })
     }) },
     async cached(key) { return exclusive(async () => {
@@ -84,7 +84,7 @@ export function createOfflineStore({ scope, indexedDB = globalThis.indexedDB, cr
     }) },
     async clearCache() { return exclusive(async () => {
       const db = await open(); const tx = db.transaction('records', 'readwrite'); const done = finished(tx)
-      for (const key of ['catalog', 'context', 'shift', 'categories']) tx.objectStore('records').delete(`cache:${key}`)
+      for (const key of ['catalog', 'context', 'shift', 'categories', 'service-fulfillment']) tx.objectStore('records').delete(`cache:${key}`)
       await done
     }) },
     async enqueue(command, localId = crypto.randomUUID()) { return exclusive(async () => {

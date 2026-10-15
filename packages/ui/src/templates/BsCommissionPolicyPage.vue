@@ -49,8 +49,8 @@ function assign(line: BsCommissionAssignment) {
    <BsStack v-if="assignments.length"><BsHeading :level="2">{{ copy.assignments }}</BsHeading>
     <BsPanel v-for="line in assignments" :key="line.id">
      <BsHeading :level="3">{{ line.name }}</BsHeading>
-     <BsSelect v-if="line.itemType === 'product'" v-model="selection(line).member" :label="copy.employee" :options="memberOptions" option-label="name" option-value="id" />
-     <BsSelect v-else v-model="selection(line).appointment" :label="copy.appointment" :options="[{ id: '', label: copy.none }, ...line.appointments]" option-label="label" option-value="id" />
+     <BsSelect v-model="selection(line).member" :label="copy.employee" :options="memberOptions" option-label="name" option-value="id" />
+     <BsSelect v-if="line.itemType === 'service'" v-model="selection(line).appointment" :label="copy.appointment" :options="[{ id: '', label: copy.none }, ...line.appointments]" option-label="label" option-value="id" />
      <BsButton :disabled="pending" @click="assign(line)">{{ copy.assign }}</BsButton>
     </BsPanel>
    </BsStack>

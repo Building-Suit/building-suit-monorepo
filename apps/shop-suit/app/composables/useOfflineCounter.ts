@@ -54,13 +54,15 @@ export function useOfflineCounter() {
   async function execute(command: OfflineCommand, expectedUser: string, isCurrent: () => boolean) {
     // Bind the request to the vault's user even if a login/tenant switch races SDK fetch.
     const authorization = await capturedAuthorization(expectedUser, isCurrent)
-    const query = command.kind === 'sale'
+    const query = command.kind === 'service'
+      ? rpc.rpc('complete_service', command.args as Functions['complete_service']['Args'])
+      : command.kind === 'sale'
       ? rpc.rpc('replay_offline_pos_sale', command.args as Functions['replay_offline_pos_sale']['Args'])
       : rpc.rpc('replay_offline_cash_command', { p_kind: command.kind, p_shop_id: String(command.args.p_shop_id), p_args: command.args })
     const result = await query.setHeader('Authorization', authorization)
     if (result.error) {
       const transient = !result.error.code || ['PGRST000', 'PGRST001', 'PGRST002', 'PGRST003', '57014', '40001', '40P01'].includes(result.error.code)
-      const known = result.error.message.match(/\b(?:OFFLINE_CASH_CANCELLED|CASH_SHIFT_NOT_OPEN|OFFLINE_SALE_CANCELLED|OFFLINE_SHIFT_CONFLICT|INSUFFICIENT_STOCK|POS_REQUEST_CONFLICT|POS_CHECKOUT_REQUIRES_FULL_PAYMENT|SHOP_PERMISSION_DENIED|CASH_SESSION_CLOSED|INVALID_POS_STAFF|SALE_OPEN_CASH_SHIFT_REQUIRED)\b/)
+      const known = result.error.message.match(/\b(?:SERVICE_REQUEST_CANCELLED|SERVICE_REQUEST_CONFLICT|SERVICE_QUANTITY_EXCEEDED|INSUFFICIENT_SERVICE_MATERIAL_STOCK|SERVICE_SALE_NOT_FULFILLABLE|INVALID_SERVICE_APPOINTMENT|OFFLINE_CASH_CANCELLED|CASH_SHIFT_NOT_OPEN|OFFLINE_SALE_CANCELLED|OFFLINE_SHIFT_CONFLICT|INSUFFICIENT_STOCK|POS_REQUEST_CONFLICT|POS_CHECKOUT_REQUIRES_FULL_PAYMENT|SHOP_PERMISSION_DENIED|CASH_SESSION_CLOSED|INVALID_POS_STAFF|SALE_OPEN_CASH_SHIFT_REQUIRED)\b/)
       throw Object.assign(new Error('Replay failed'), { retryable: transient, code: known?.[0] ?? (transient ? 'OFFLINE_NETWORK_UNAVAILABLE' : 'OFFLINE_REPLAY_REJECTED') })
     }
     return result.data
@@ -95,6 +97,11 @@ export function useOfflineCounter() {
         if (generation !== currentGeneration || !online.value) throw new Error('OFFLINE_SCOPE_CHANGED')
         const args = command.args
         const authorization = await capturedAuthorization(JSON.parse(record.envelope.scope)[1] as string, () => generation === currentGeneration && online.value)
+        if (command.kind === 'service') {
+          const result = await rpc.rpc('reconcile_service_completion', { p_shop_id: String(args.p_shop_id), p_args: args, p_resolution_request_id: resolution.requestId, p_reason: resolution.reason }).setHeader('Authorization', authorization)
+          if (result.error) throw new Error('OFFLINE_RECONCILIATION_UNAVAILABLE')
+          return result.data
+        }
         if (command.kind !== 'sale') {
           const result = await rpc.rpc('reconcile_offline_cash_command', { p_kind: command.kind, p_shop_id: String(args.p_shop_id), p_args: args, p_resolution_request_id: resolution.requestId, p_reason: resolution.reason }).setHeader('Authorization', authorization)
           if (result.error) throw new Error('OFFLINE_RECONCILIATION_UNAVAILABLE')
@@ -108,8 +115,8 @@ export function useOfflineCounter() {
       await update(); channel?.postMessage('changed')
       if (outcome.state === 'synced') return // Existing issued receipt; use the ordinary correction workflow.
       if (outcome.resolution?.phase === 'cancelled' && await confirmation.ask(ar
-        ? record.envelope.command.kind === 'sale' ? 'أكد أن البضاعة وأي مبلغ محصل تم تسويتهما مع العميل. سيُحفظ إقرارك قبل متابعة الطابور. هذا الإجراء لا يُصدر بيعًا ولا يسجل رد أموال أو حركة مخزون.' : 'أكد تسوية حركة النقد أو العد وتوثيق أي تصحيح من خلال المسار المعتمد. سيُحفظ إقرارك قبل متابعة الطابور. لن تتغير الورديات المغلقة أو القيود السابقة.'
-        : record.envelope.command.kind === 'sale' ? 'Confirm the goods and any collected payment have been reconciled with the customer. Your acknowledgement will be retained before the queue continues. This does not issue a sale, post a refund or move stock.' : 'Confirm the physical cash movement/count has been reconciled and any required correction documented through the ordinary authorized workflow. Your acknowledgement will be retained before the queue continues. Closed shifts and prior ledger entries remain unchanged.')) {
+        ? record.envelope.command.kind === 'service' ? 'أكد توثيق الخدمة المنفذة والمواد المستخدمة من خلال مسار التنفيذ أو التصحيح المعتمد. إلغاء الطلب لا يعني عدم تنفيذ الخدمة ولا يعيد مواد تلقائيًا.' : record.envelope.command.kind === 'sale' ? 'أكد أن البضاعة وأي مبلغ محصل تم تسويتهما مع العميل. سيُحفظ إقرارك قبل متابعة الطابور. هذا الإجراء لا يُصدر بيعًا ولا يسجل رد أموال أو حركة مخزون.' : 'أكد تسوية حركة النقد أو العد وتوثيق أي تصحيح من خلال المسار المعتمد. سيُحفظ إقرارك قبل متابعة الطابور. لن تتغير الورديات المغلقة أو القيود السابقة.'
+        : record.envelope.command.kind === 'service' ? 'Confirm performed service and material usage have been documented through the authorized fulfillment or correction workflow. Cancelling this request does not undo performance or restore material automatically.' : record.envelope.command.kind === 'sale' ? 'Confirm the goods and any collected payment have been reconciled with the customer. Your acknowledgement will be retained before the queue continues. This does not issue a sale, post a refund or move stock.' : 'Confirm the physical cash movement/count has been reconciled and any required correction documented through the ordinary authorized workflow. Your acknowledgement will be retained before the queue continues. Closed shifts and prior ledger entries remain unchanged.')) {
         if (generation !== currentGeneration) return
         await activeStore.acknowledge(id); await update(); channel?.postMessage('changed')
       }

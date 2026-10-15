@@ -22,15 +22,14 @@ retain the existing line-total fallback. Applied migration 20261014181109 is unc
 the forward tax migration supplies this integration and regression fixtures.
 
 
-Employee attribution is optional and explicit on a draft line. A service requires
-an appointment for that same service, employee, shop, location and sale; one
-appointment represents one unit and may not commission multiple lines. Payment
-does not complete an appointment. The existing `in_service -> completed`
-transition is fulfillment evidence. The current adapter supports linked,
-single-unit appointments only. Materials owns the shared explicit service-line
-and quantity completion contract; commission must consume that committed contract
-before the combined lifecycle is released. This is a pending integration, not a
-permanent exclusion of ordinary walk-in barber sales.
+Employee attribution is optional and explicit on a draft line. Scheduled and walk-in
+services share the SS-SERV-002 completion ledger. A service may have multiple sold
+units; its frozen full-line commission earns only when the complete quantity has
+been explicitly performed and fully paid. A linked appointment must match its
+service, employee, shop, location and sale and represents one unit; one appointment
+cannot commission multiple lines. Ordinary walk-ins need no synthetic appointment.
+Payment never creates completion or consumes recipe stock. Appointment completion
+uses the same atomic fulfillment/consumption operation and has a duplicate guard.
 Product issuance is the existing atomic sale/stock-delivery finalization event.
 
 At issuance, snapshot employee identity, membership, appointment, rate/type,

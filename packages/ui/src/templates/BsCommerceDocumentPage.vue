@@ -20,6 +20,7 @@ function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, valu
     <template v-else>
       <BsPageHeader :title="view.title" :subtitle="view.subtitle">
         <template #actions><BsInline>
+          <BsLink v-if="view.serviceAction" :to="view.serviceAction.to">{{ view.serviceAction.label }}</BsLink>
           <BsLink v-if="view.relatedAction" :to="view.relatedAction.to">{{ view.relatedAction.label }}</BsLink>
           <BsButton v-if="view.orderDiscount?.canEdit" @click="emit('editOrderDiscount')">{{ view.orderDiscount.label }}</BsButton>
           <BsLink v-if="view.editTo" :to="view.editTo">{{ copy.edit }}</BsLink>
