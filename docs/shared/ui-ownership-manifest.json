@@ -386,6 +386,16 @@
       "adapterBoundary": "Products supply translated purposes and versioned consent state; shared UX owns validation, focus and optional analytics transport. No provider access before opt-in.",
       "task": "SS-SEO-PRIVACY-001",
       "migrationStatus": "implemented; verification recorded in Shop privacy runbook"
+    },
+    {
+      "family": "website-address",
+      "owner": "packages/ui",
+      "components": [
+        "BsWebsiteAddressSettings"
+      ],
+      "adapterBoundary": "Shop owns slug generation, validation, authorized RPCs and typed view projections; useRecordAction in packages/ux owns modal, pending and dirty-state behavior. Saving never publishes.",
+      "task": "SS-WEB-SLUG-001",
+      "migrationStatus": "additive optional settings presentation; no Suit-local components"
     }
   ]
 }

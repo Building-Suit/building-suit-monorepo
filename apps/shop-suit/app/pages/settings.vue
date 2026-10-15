@@ -91,6 +91,7 @@ const { data: permissionAccess, pending: permissionPending, error: permissionErr
   return data
 }, { watch: [currentId], default: () => ({ 'settings.manage': false }) })
 const canManage = computed(() => !permissionPending.value && !permissionError.value && permissionAccess.value?.['settings.manage'] === true)
+const { slug: websiteSlug, open: websiteOpen, view: websiteAddressView, edit: editWebsiteAddress, save: saveWebsiteAddress, refresh: refreshWebsiteAddress } = useWebsiteAddress(canManage)
 async function retrySettings() { await Promise.all([reload(), refreshPermissions()]) }
 const { data: locationUsage, refresh: refreshLocationUsage } = useAsyncData(
   () => `shop-data:settings-location-usage:${currentId.value ?? 'none'}`,
@@ -451,5 +452,54 @@ async function selectDocumentLogo(selection: File | File[] | null) {
 }
 </script>
 <template>
-  <BsBusinessSettingsPage v-model:business-currency="selectedBusinessCurrency" v-model:profile-form="profileModel" v-model:location-form="locationModel" v-model:receipt-form="receiptModel" v-model:mode="modeModel" v-model:cash-required="cashRequired" v-model:profile-open="profileActionOpen" v-model:mode-open="modeActionOpen" v-model:receipt-open="receiptActionOpen" v-model:location-open="locationDialogOpen" :currency-view="currencyView" :context="current ? { name: current.name } : null" :loading="loading || permissionPending" :shop-error="Boolean(shopError || permissionError)" :can-manage="canManage" :copy="settingsCopy" :cash="cashView" :profile-editor="profileEditor" :mode-editor="modeEditor" :receipt-editor="receiptEditor" :receipt-summary="receiptSummary" :locations-view="locationsView" :mode-options="modeOptions" :mode-label="modeLabel" @save-currency="saveBusinessCurrency" @retry-currency="refreshCurrencySettings()" @select-logo="selectDocumentLogo" @edit-profile="profileAction.edit()" @edit-mode="modeAction.edit()" @edit-receipt="receiptAction.edit()" @retry="retrySettings" @retry-cash="refreshCashPolicy()" @retry-receipt="refreshReceiptSettings()" @save-cash="saveCashPolicy" @save-profile="saveProfile" @save-mode="saveMode" @save-location="saveLocation" @save-receipt="saveReceiptSettings" @create-location="createLocation" @edit-location="editLocationById" @archive-location="archiveLocation" @restore-location="restoreLocation"/>
+  <BsBusinessSettingsPage
+    v-model:website-slug="websiteSlug"
+    v-model:website-open="websiteOpen"
+    v-model:business-currency="selectedBusinessCurrency"
+    v-model:profile-form="profileModel"
+    v-model:location-form="locationModel"
+    v-model:receipt-form="receiptModel"
+    v-model:mode="modeModel"
+    v-model:cash-required="cashRequired"
+    v-model:profile-open="profileActionOpen"
+    v-model:mode-open="modeActionOpen"
+    v-model:receipt-open="receiptActionOpen"
+    v-model:location-open="locationDialogOpen"
+    :website-address-view="websiteAddressView"
+    :currency-view="currencyView"
+    :context="current ? { name: current.name } : null"
+    :loading="loading || permissionPending"
+    :shop-error="Boolean(shopError || permissionError)"
+    :can-manage="canManage"
+    :copy="settingsCopy"
+    :cash="cashView"
+    :profile-editor="profileEditor"
+    :mode-editor="modeEditor"
+    :receipt-editor="receiptEditor"
+    :receipt-summary="receiptSummary"
+    :locations-view="locationsView"
+    :mode-options="modeOptions"
+    :mode-label="modeLabel"
+    @edit-website-address="editWebsiteAddress"
+    @save-website-address="saveWebsiteAddress"
+    @retry-website-address="refreshWebsiteAddress()"
+    @save-currency="saveBusinessCurrency"
+    @retry-currency="refreshCurrencySettings()"
+    @select-logo="selectDocumentLogo"
+    @edit-profile="profileAction.edit()"
+    @edit-mode="modeAction.edit()"
+    @edit-receipt="receiptAction.edit()"
+    @retry="retrySettings"
+    @retry-cash="refreshCashPolicy()"
+    @retry-receipt="refreshReceiptSettings()"
+    @save-cash="saveCashPolicy"
+    @save-profile="saveProfile"
+    @save-mode="saveMode"
+    @save-location="saveLocation"
+    @save-receipt="saveReceiptSettings"
+    @create-location="createLocation"
+    @edit-location="editLocationById"
+    @archive-location="archiveLocation"
+    @restore-location="restoreLocation"
+  />
 </template>

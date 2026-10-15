@@ -343,7 +343,9 @@
     "./types/documentReturns": "./src/types/documentReturns.ts",
     "./organisms/BsPrivacyConsent": "./src/organisms/BsPrivacyConsent.vue",
     "./organisms/BsSaleReceipt": "./src/organisms/BsSaleReceipt.vue",
-    "./utils/receiptDocument": "./src/utils/receiptDocument.ts"
+    "./utils/receiptDocument": "./src/utils/receiptDocument.ts",
+    "./types/websiteAddressPresentation": "./src/types/websiteAddressPresentation.ts",
+    "./organisms/BsWebsiteAddressSettings.vue": "./src/organisms/BsWebsiteAddressSettings.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

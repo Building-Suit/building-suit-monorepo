@@ -1,12 +1,16 @@
 <script setup lang="ts">
+import type { BsWebsiteAddressView } from '../types/websiteAddressPresentation'
 import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessSettingsEditor, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy, BsBusinessCurrencyView } from '../types/businessSettingsPresentation'
 defineProps<{
+  websiteAddressView?: BsWebsiteAddressView
   currencyView?: BsBusinessCurrencyView
   context: { name: string } | null; loading: boolean; shopError: boolean; canManage: boolean; copy: BsBusinessSettingsCopy
   cash: BsBusinessCashPolicyView; profileEditor: BsBusinessSettingsEditor; modeEditor: BsBusinessSettingsEditor
   receiptEditor: BsBusinessSettingsEditor & { loading: boolean; loadError: boolean }; receiptSummary: BsBusinessReceiptSummary | null
   locationsView: BsBusinessLocationsView; modeOptions: { value: string; label: string; body: string }[]; modeLabel: string
 }>()
+const websiteSlug = defineModel<string>('websiteSlug', { default: '' })
+const websiteOpen = defineModel<boolean>('websiteOpen', { default: false })
 const profileForm = defineModel<BsBusinessProfileForm>('profileForm', { required: true })
 const locationForm = defineModel<BsBusinessLocationForm>('locationForm', { required: true })
 const receiptForm = defineModel<BsBusinessReceiptForm>('receiptForm', { required: true })
@@ -18,6 +22,7 @@ const modeActionOpen = defineModel<boolean>('modeOpen', { required: true })
 const receiptActionOpen = defineModel<boolean>('receiptOpen', { required: true })
 const locationDialogOpen = defineModel<boolean>('locationOpen', { required: true })
 const emit = defineEmits<{
+  editWebsiteAddress: []; saveWebsiteAddress: []; retryWebsiteAddress: [];
   saveCurrency: []; retryCurrency: [];
   editProfile: []; editMode: []; editReceipt: []; retry: []; retryCash: []; retryReceipt: []
   saveCash: []; saveProfile: []; saveMode: []; saveLocation: []; saveReceipt: []; createLocation: []
@@ -34,8 +39,9 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
     <BsBox v-else-if="shopError" role="alert">{{ copy.failed }} <BsButton @click="emit('retry')">{{ copy.retry }}</BsButton>
     </BsBox>
     <BsText v-else-if="!context" role="status" as="p">{{ copy.empty }}</BsText>
-    <BsSectionNavigation v-if="context && !loading && !shopError" :label="copy.title" :sections="[{ id: 'shop-profile', label: copy.profileTitle }, { id: 'business-mode', label: copy.modeTitle }, { id: 'locations', label: copy.locationsTitle }, { id: 'receipt-settings', label: copy.receiptTitle }, { id: 'cash-policy', label: copy.cashTitle }, ...(currencyView ? [{ id: 'currency-settings', label: currencyView.title }] : [])]" />
+    <BsSectionNavigation v-if="context && !loading && !shopError" :label="copy.title" :sections="[{ id: 'shop-profile', label: copy.profileTitle }, { id: 'business-mode', label: copy.modeTitle }, { id: 'locations', label: copy.locationsTitle }, { id: 'receipt-settings', label: copy.receiptTitle }, { id: 'cash-policy', label: copy.cashTitle }, ...(websiteAddressView ? [{ id: 'website-address', label: websiteAddressView.title }] : []), ...(currencyView ? [{ id: 'currency-settings', label: currencyView.title }] : [])]" />
     <BsGrid v-if="context && !loading && !shopError" :columns="2" gap="lg">
+    <BsWebsiteAddressSettings v-if="websiteAddressView" v-model="websiteSlug" v-model:open="websiteOpen" :view="websiteAddressView" @edit="emit('editWebsiteAddress')" @save="emit('saveWebsiteAddress')" @retry="emit('retryWebsiteAddress')" />
     <BsPanel v-if="currencyView" id="currency-settings" aria-labelledby="business-currency-title" padding="md">
       <BsHeading id="business-currency-title" :level="2">{{ currencyView.title }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ currencyView.help }}</BsText>

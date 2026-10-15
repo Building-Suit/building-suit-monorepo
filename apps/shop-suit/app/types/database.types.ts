@@ -6853,6 +6853,68 @@ export type Database = {
           },
         ]
       }
+      shop_website_slug_claims: {
+        Row: {
+          claimed_at: string
+          shop_id: string
+          slug: string
+        }
+        Insert: {
+          claimed_at?: string
+          shop_id: string
+          slug: string
+        }
+        Update: {
+          claimed_at?: string
+          shop_id?: string
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_slug_claims_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_websites: {
+        Row: {
+          publication_state: string
+          shop_id: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          publication_state?: string
+          shop_id: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          publication_state?: string
+          shop_id?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_websites_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_websites_slug_shop_id_fkey"
+            columns: ["slug", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_website_slug_claims"
+            referencedColumns: ["slug", "shop_id"]
+          },
+        ]
+      }
       shop_xpay_inbox: {
         Row: {
           event_id: string
@@ -10899,6 +10961,12 @@ export type Database = {
         Returns: Json
       }
       shop_team_read: { Args: { p_shop_id: string }; Returns: Json }
+      shop_website_address: { Args: { p_shop_id: string }; Returns: Json }
+      shop_website_address_save: {
+        Args: { p_shop_id: string; p_slug: string }
+        Returns: Json
+      }
+      shop_website_host_resolve: { Args: { p_slug: string }; Returns: Json }
       shop_xpay_apply_session: {
         Args: { p_event_id?: string; p_session: Json }
         Returns: Json
