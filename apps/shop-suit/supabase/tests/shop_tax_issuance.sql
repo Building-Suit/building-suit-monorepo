@@ -13,18 +13,19 @@ begin
  select id into member from public.shop_memberships where shop_id=shop and role='owner';
  customer:=public.save_customer(shop,null,'Tax customer',null,null,null,null);
  product:=public.save_product(shop,null,'Tax product',null,null,114);
+ perform public.save_business_currency(shop,'USD');
  perform public.adjust_stock(gen_random_uuid(),shop,product,20,1,'Tax fixture opening');
  -- Non-EGP sales continue to work, with no ETA restriction in calculation.
- perform public.save_business_currency(shop,'EGP');
+
  policy:='{"enabled":true,"default":{"treatment":"vat","rate":14,"priceMode":"inclusive","subtype":"V009"},"items":[]}';
  version:=public.save_tax_policy(gen_random_uuid(),shop,statement_timestamp()-interval '1 minute',policy,'Initial tax policy');
- perform public.save_commission_policy(gen_random_uuid(),shop,jsonb_build_object('enabled',true,'currency','EGP','service',null,'product',jsonb_build_object('type','percentage','rate',10),'employees',jsonb_build_array(jsonb_build_object('membershipId',member,'enabled',true))),'Commission tax basis fixture');
+ perform public.save_commission_policy(gen_random_uuid(),shop,jsonb_build_object('enabled',true,'currency','USD','service',null,'product',jsonb_build_object('type','percentage','rate',10),'employees',jsonb_build_array(jsonb_build_object('membershipId',member,'enabled',true))),'Commission tax basis fixture');
  sale:=public.save_sale_draft(gen_random_uuid(),shop,null,customer,null,jsonb_build_array(jsonb_build_object('item_type','product','source_id',product,'quantity',1)));
  select id into line from public.invoice_items where invoice_id=sale;
  perform public.assign_sale_commission(shop,line,member,null);
  perform public.issue_sale(gen_random_uuid(),shop,sale);
  snap:=public.get_sale_tax_snapshot(shop,sale); original:=snap;
- if (snap->>'net')::numeric<>100 or (snap->>'tax')::numeric<>14 then raise exception 'Tax snapshot failed %',snap; end if;
+ if snap->>'currency'<>'USD' or (snap->>'net')::numeric<>100 or (snap->>'tax')::numeric<>14 then raise exception 'Tax snapshot failed %',snap; end if;
  commission:=public.commission_history(shop,sale)->'lines'->0;
  if (commission->>'netLineAmount')::numeric<>100 or (commission->>'estimate')::numeric<>10 then raise exception 'Taxed commission %',commission; end if;
  perform public.record_customer_receipt(gen_random_uuid(),shop,customer,114,now(),'cash',null,null,jsonb_build_array(jsonb_build_object('invoice_id',sale,'amount',114)));
