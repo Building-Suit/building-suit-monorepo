@@ -42,6 +42,14 @@ test('remote/untrusted logos never become image requests; merchant notes are esc
   assert.ok(html.includes('&lt;script&gt;'))
 })
 
+test('unrecognized direction metadata cannot introduce HTML attributes', () => {
+  const { view, copy } = projectReceipt(receipt, 'en', translate)
+  view.direction = 'rtl" onmouseover="alert(1)'
+  const html = renderReceiptDocument(view, copy, 'en')
+  assert.ok(html.includes('dir="ltr"'))
+  assert.ok(!html.includes('onmouseover'))
+})
+
 test('image clipboard write starts synchronously, contains only PNG, and resolves after browser confirmation', async () => {
   let finishRender, finishWrite
   const events = []

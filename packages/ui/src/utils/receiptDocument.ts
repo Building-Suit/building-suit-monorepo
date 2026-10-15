@@ -18,7 +18,7 @@ const icon = (name: string) => `<svg aria-hidden="true" viewBox="0 0 24 24" fill
 
 /** Pure shared presentation. All merchant data and financial values arrive formatted by the Suit. */
 export function renderReceiptDocument(receipt: BsReceiptView, copy: BsReceiptDocumentCopy, language: string, reprint = false): string {
-  const rtl = receipt.direction || (language === 'ar' ? 'rtl' : 'ltr')
+  const rtl = receipt.direction === 'rtl' || receipt.direction === 'ltr' ? receipt.direction : (language === 'ar' ? 'rtl' : 'ltr')
   const details = [
     [copy.invoice, receipt.invoice, 'invoice'], [copy.date, receipt.issued, 'date'],
     [copy.location, [receipt.location.code, receipt.location.name].filter(Boolean).join(' · '), 'branch'],
