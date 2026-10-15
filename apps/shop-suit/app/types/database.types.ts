@@ -2598,6 +2598,7 @@ export type Database = {
           payment_direction: Database["public"]["Enums"]["payment_direction"]
           reference: string | null
           sale_correction_id: string | null
+          sale_return_refund_id: string | null
           shop_id: string
           status: Database["public"]["Enums"]["payment_status"]
           supplier_kind:
@@ -2625,6 +2626,7 @@ export type Database = {
           payment_direction: Database["public"]["Enums"]["payment_direction"]
           reference?: string | null
           sale_correction_id?: string | null
+          sale_return_refund_id?: string | null
           shop_id: string
           status?: Database["public"]["Enums"]["payment_status"]
           supplier_kind?:
@@ -2652,6 +2654,7 @@ export type Database = {
           payment_direction?: Database["public"]["Enums"]["payment_direction"]
           reference?: string | null
           sale_correction_id?: string | null
+          sale_return_refund_id?: string | null
           shop_id?: string
           status?: Database["public"]["Enums"]["payment_status"]
           supplier_kind?:
@@ -2737,6 +2740,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sale_corrections"
             referencedColumns: ["id", "shop_id", "location_id"]
+          },
+          {
+            foreignKeyName: "payments_sale_return_refund_id_fkey"
+            columns: ["sale_return_refund_id"]
+            isOneToOne: true
+            referencedRelation: "sale_return_refunds"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "payments_shop_id_fkey"
@@ -4046,6 +4056,335 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "shops"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_return_lines: {
+        Row: {
+          disposition: string
+          line_id: string
+          net: number
+          original_snapshot: Json
+          quantity: number
+          return_id: string
+          shop_id: string
+          tax: number
+          total: number
+        }
+        Insert: {
+          disposition: string
+          line_id: string
+          net: number
+          original_snapshot: Json
+          quantity: number
+          return_id: string
+          shop_id: string
+          tax: number
+          total: number
+        }
+        Update: {
+          disposition?: string
+          line_id?: string
+          net?: number
+          original_snapshot?: Json
+          quantity?: number
+          return_id?: string
+          shop_id?: string
+          tax?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_return_lines_line_id_shop_id_fkey"
+            columns: ["line_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "sale_return_lines_return_id_shop_id_fkey"
+            columns: ["return_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "sale_returns"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      sale_return_refund_events: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          id: string
+          operation: string
+          payment_id: string | null
+          reason: string
+          reference: string
+          refund_id: string
+          request_id: string
+          shop_id: string
+          state: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          operation: string
+          payment_id?: string | null
+          reason: string
+          reference: string
+          refund_id: string
+          request_id: string
+          shop_id: string
+          state: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          operation?: string
+          payment_id?: string | null
+          reason?: string
+          reference?: string
+          refund_id?: string
+          request_id?: string
+          shop_id?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_return_refund_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_return_refund_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: true
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_return_refund_events_refund_id_fkey"
+            columns: ["refund_id"]
+            isOneToOne: false
+            referencedRelation: "sale_return_refunds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_return_refund_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_return_refunds: {
+        Row: {
+          allocation_id: string
+          amount: number
+          created_at: string
+          id: string
+          method: Database["public"]["Enums"]["payment_method"]
+          payment_id: string
+          return_id: string
+          shop_id: string
+        }
+        Insert: {
+          allocation_id: string
+          amount: number
+          created_at?: string
+          id?: string
+          method: Database["public"]["Enums"]["payment_method"]
+          payment_id: string
+          return_id: string
+          shop_id: string
+        }
+        Update: {
+          allocation_id?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          payment_id?: string
+          return_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_return_refunds_allocation_id_shop_id_payment_id_fkey"
+            columns: ["allocation_id", "shop_id", "payment_id"]
+            isOneToOne: false
+            referencedRelation: "customer_payment_allocations"
+            referencedColumns: ["id", "shop_id", "payment_id"]
+          },
+          {
+            foreignKeyName: "sale_return_refunds_return_id_shop_id_fkey"
+            columns: ["return_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "sale_returns"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      sale_return_sources: {
+        Row: {
+          created_at: string
+          invoice_id: string
+          location_id: string
+          shop_id: string
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          invoice_id: string
+          location_id: string
+          shop_id: string
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          invoice_id?: string
+          location_id?: string
+          shop_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_return_sources_invoice_id_shop_id_location_id_fkey"
+            columns: ["invoice_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+        ]
+      }
+      sale_return_stock: {
+        Row: {
+          disposition: string
+          line_id: string
+          movement_id: string
+          quantity: number
+          restoration_movement_id: string | null
+          return_id: string
+        }
+        Insert: {
+          disposition: string
+          line_id: string
+          movement_id: string
+          quantity: number
+          restoration_movement_id?: string | null
+          return_id: string
+        }
+        Update: {
+          disposition?: string
+          line_id?: string
+          movement_id?: string
+          quantity?: number
+          restoration_movement_id?: string | null
+          return_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_return_stock_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_return_stock_restoration_movement_id_fkey"
+            columns: ["restoration_movement_id"]
+            isOneToOne: true
+            referencedRelation: "inventory_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_return_stock_return_id_line_id_fkey"
+            columns: ["return_id", "line_id"]
+            isOneToOne: false
+            referencedRelation: "sale_return_lines"
+            referencedColumns: ["return_id", "line_id"]
+          },
+        ]
+      }
+      sale_returns: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          currency: string
+          debt_reduction: number
+          due_after: number
+          due_before: number
+          id: string
+          invoice_id: string
+          location_id: string
+          net: number
+          original_document: Json
+          payload: Json
+          reason: string
+          refund_due: number
+          request_id: string
+          shop_id: string
+          tax: number
+          total: number
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          currency: string
+          debt_reduction: number
+          due_after: number
+          due_before: number
+          id?: string
+          invoice_id: string
+          location_id: string
+          net: number
+          original_document: Json
+          payload: Json
+          reason: string
+          refund_due: number
+          request_id: string
+          shop_id: string
+          tax: number
+          total: number
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          currency?: string
+          debt_reduction?: number
+          due_after?: number
+          due_before?: number
+          id?: string
+          invoice_id?: string
+          location_id?: string
+          net?: number
+          original_document?: Json
+          payload?: Json
+          reason?: string
+          refund_due?: number
+          request_id?: string
+          shop_id?: string
+          tax?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_returns_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_returns_invoice_id_shop_id_location_id_fkey"
+            columns: ["invoice_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id", "shop_id", "location_id"]
           },
         ]
       }
@@ -9159,6 +9498,18 @@ export type Database = {
             }
             Returns: string
           }
+      create_sale_return: {
+        Args: {
+          p_expected_plan: Json
+          p_invoice_id: string
+          p_lines: Json
+          p_location_id: string
+          p_reason: string
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
       create_supplier_purchase: {
         Args: {
           p_invoice_number: string
@@ -9275,6 +9626,10 @@ export type Database = {
       }
       get_sale: {
         Args: { p_invoice_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      get_sale_return: {
+        Args: { p_location_id: string; p_return_id: string; p_shop_id: string }
         Returns: Json
       }
       get_sale_tax_snapshot: {
@@ -9636,6 +9991,15 @@ export type Database = {
         Args: { p_id: string; p_lease_token: string; p_payload: Json }
         Returns: Json
       }
+      preview_sale_return: {
+        Args: {
+          p_invoice_id: string
+          p_lines: Json
+          p_location_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       queue_eta_receipt: {
         Args: {
           p_buyer: Json
@@ -9741,6 +10105,18 @@ export type Database = {
           p_reference: string
           p_request_id: string
           p_returned_at: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
+      record_sale_return_refund: {
+        Args: {
+          p_location_id: string
+          p_operation: string
+          p_reason: string
+          p_reference: string
+          p_refund_id: string
+          p_request_id: string
           p_shop_id: string
         }
         Returns: string
@@ -9915,6 +10291,15 @@ export type Database = {
       sale_catalog: { Args: { p_shop_id: string }; Returns: Json }
       sale_correction_state: {
         Args: { p_invoice_id: string; p_location_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      sale_return_context: {
+        Args: {
+          p_invoice_id: string
+          p_location_id: string
+          p_offset?: number
+          p_shop_id: string
+        }
         Returns: Json
       }
       save_appointment: {
