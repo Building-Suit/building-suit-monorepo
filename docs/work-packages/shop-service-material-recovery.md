@@ -24,3 +24,7 @@ Performed-service refunds never automatically restore consumed material; restora
 No-recipe fulfillment; 30 mL FIFO from 20 + 25 leaves 15; 29.999 rejects 30 atomically; concurrent 2 × 30 against 40 permits one; replay and payload conflicts; recipe changes preserve snapshots; unpaid completion consumes without commission earnings; refund preserves consumption; exact walk-in/multi-unit fulfillment and commission; appointment duplicate protection; location/tenant/RLS denials.
 
 Initial verification: Node preflight passed with no errors. Root pnpm entry initially failed because installed pnpm 11.25.0 differs from required 10.33.0. No hosted database writes, production promotion, credential changes or workspace cleanup authorized/performed.
+
+Implementation checkpoint: unified completion migration, optional immutable recipes/units, FIFO consumption, appointment integration, walk-in/multi-unit commissions using the tax owner's pre-tax snapshot, supported offline replay/reconciliation, shared UI and Shop adapters.
+
+Local verification: Shop typecheck and changed-file lint pass; strict UI boundaries and atomic route registry pass; materials SQL suite and two-session stock race pass in disposable PostgreSQL 17 with explicit provider stubs. Actual Supabase image extraction exceeded disk capacity; no existing data/images were deleted. Real Supabase workflow added. Fresh replay identified a syntax defect in tax parent b0081657 (its subsequent d4768af1 checkpoint fixes it); parent update will be incorporated before final validation.

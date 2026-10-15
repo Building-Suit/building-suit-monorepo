@@ -52,7 +52,7 @@ export function createOfflineStore({ scope, indexedDB = globalThis.indexedDB, cr
     await verify(record)
     record.originalCommandHash = await commandHash(record.envelope.command)
     // Server has the immutable full command. Keep IDs/amount/status locally, not contacts, notes or references.
-    const retained = new Set(['request','p_request_id','p_save_request_id','p_issue_request_id','p_payment_request_id','p_appointment_request_id','p_shop_id','p_location_id','p_shift_id','p_session_id','p_amount','p_counted_amount','p_method','p_kind'])
+    const retained = new Set(['request','p_request_id','p_save_request_id','p_issue_request_id','p_payment_request_id','p_appointment_request_id','p_shop_id','p_location_id','p_shift_id','p_session_id','p_amount','p_counted_amount','p_method','p_kind','p_line_id','p_quantity','p_appointment_id'])
     record.envelope.command = { ...record.envelope.command, args: Object.fromEntries(Object.entries(record.envelope.command.args).filter(([key]) => retained.has(key))) }
     record.signature = Array.from(new Uint8Array(await crypto.subtle.sign('HMAC', (await keyPair()).signing, bytes(record.envelope))))
     await put(`queue:${record.envelope.localId}`, record)

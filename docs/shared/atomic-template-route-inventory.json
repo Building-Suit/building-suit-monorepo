@@ -2510,6 +2510,24 @@
         "~/types/shopCrmRpc"
       ],
       "purpose": "versioned-tax-settings"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/service-materials.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsServiceFulfillmentPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsServiceFulfillmentPage"
+      ],
+      "destination": "packages/ui/src/templates/BsServiceFulfillmentPage.vue",
+      "status": "implemented",
+      "domainAdapter": "apps/shop-suit/app/pages/service-materials.vue",
+      "dependencies": [
+        "@building-suit/ui/types/serviceFulfillmentPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "purpose": "service-recipes-and-explicit-fulfillment"
     }
   ],
   "verifiedSharedHeads": [
@@ -2627,6 +2645,7 @@
     "BsAccountProvisioningPage",
     "BsOwnerInvitationPage",
     "BsCommissionPolicyPage",
-    "BsShopTaxSettingsPage"
+    "BsShopTaxSettingsPage",
+    "BsServiceFulfillmentPage"
   ]
 }

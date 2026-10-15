@@ -65,7 +65,10 @@ begin
    raise exception 'Correction retry changed identity'; end if;
   if n=2 then
    -- A late explicit completion must not turn a void's zero receivable into pay.
-   perform public.transition_appointment(gen_random_uuid(),shop,appointment,'completed',null);
+   begin
+    perform public.transition_appointment(gen_random_uuid(),shop,appointment,'completed',null);
+    raise exception 'Corrected sale accepted new service fulfillment';
+   exception when check_violation then null;end;
   end if;
   snap:=public.commission_history(shop,sale)->'lines'->0;
   if n in(1,2) and ((snap->>'earned')::numeric<>0 or (snap->>'adjustments')::numeric<>0) then

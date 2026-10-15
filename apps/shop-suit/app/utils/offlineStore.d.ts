@@ -6,7 +6,7 @@ export interface OfflineRecord {
   envelope: { version: number; scope: string; localId: string; createdAt: string; command: OfflineCommand }
   signature: number[]; sequence: number; state: 'unsynced' | 'syncing' | 'failed' | 'synced'; error: string | null; result: string | null
 }
-export type OfflineCommand = { kind: 'sale'; args: Record<string, unknown> } | { kind: 'movement' | 'close'; args: Record<string, unknown> }
+export type OfflineCommand = { kind: 'sale'; args: Record<string, unknown> } | { kind: 'movement' | 'close' | 'service'; args: Record<string, unknown> }
 export function createOfflineStore(options: { scope: string }): {
   cache(key: string, value: unknown): Promise<void>
   cached<T = unknown>(key: string): Promise<T | null>

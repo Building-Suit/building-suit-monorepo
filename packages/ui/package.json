@@ -332,7 +332,9 @@
     "./templates/BsCommissionPolicyPage": "./src/templates/BsCommissionPolicyPage.vue",
     "./types/shopTaxPresentation": "./src/types/shopTaxPresentation.ts",
     "./molecules/BsShopTaxRuleFields": "./src/molecules/BsShopTaxRuleFields.vue",
-    "./templates/BsShopTaxSettingsPage": "./src/templates/BsShopTaxSettingsPage.vue"
+    "./templates/BsShopTaxSettingsPage": "./src/templates/BsShopTaxSettingsPage.vue",
+    "./templates/BsServiceFulfillmentPage": "./src/templates/BsServiceFulfillmentPage.vue",
+    "./types/serviceFulfillmentPresentation": "./src/types/serviceFulfillmentPresentation.ts"
   },
   "dependencies": {
     "primevue": "4.5.5",

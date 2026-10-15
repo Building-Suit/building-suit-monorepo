@@ -63,7 +63,7 @@ async function assign(lineId: string, membershipId: string | null, appointmentId
  pending.value = true; actionError.value = false
  try {
   const line = assignments.value.find(item => item.id === lineId)
-  const employee = line?.itemType === 'service' ? line.appointments.find(item => item.id === appointmentId)?.membershipId ?? null : membershipId
+  const employee = line?.itemType === 'service' && appointmentId ? line.appointments.find(item => item.id === appointmentId)?.membershipId ?? null : membershipId
   const fulfillment = line?.itemType === 'service' ? appointmentId : null
   const result = await rpc.rpc('assign_sale_commission', { p_shop_id: currentId.value, p_line_id: lineId, p_membership_id: employee, p_appointment_id: fulfillment })
   if (result.error) throw result.error

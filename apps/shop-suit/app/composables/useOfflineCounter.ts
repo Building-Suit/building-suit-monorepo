@@ -54,7 +54,9 @@ export function useOfflineCounter() {
   async function execute(command: OfflineCommand, expectedUser: string, isCurrent: () => boolean) {
     // Bind the request to the vault's user even if a login/tenant switch races SDK fetch.
     const authorization = await capturedAuthorization(expectedUser, isCurrent)
-    const query = command.kind === 'sale'
+    const query = command.kind === 'service'
+      ? rpc.rpc('complete_service', command.args as Functions['complete_service']['Args'])
+      : command.kind === 'sale'
       ? rpc.rpc('replay_offline_pos_sale', command.args as Functions['replay_offline_pos_sale']['Args'])
       : rpc.rpc('replay_offline_cash_command', { p_kind: command.kind, p_shop_id: String(command.args.p_shop_id), p_args: command.args })
     const result = await query.setHeader('Authorization', authorization)
@@ -95,6 +97,11 @@ export function useOfflineCounter() {
         if (generation !== currentGeneration || !online.value) throw new Error('OFFLINE_SCOPE_CHANGED')
         const args = command.args
         const authorization = await capturedAuthorization(JSON.parse(record.envelope.scope)[1] as string, () => generation === currentGeneration && online.value)
+        if (command.kind === 'service') {
+          const result = await rpc.rpc('reconcile_service_completion', { p_shop_id: String(args.p_shop_id), p_args: args, p_resolution_request_id: resolution.requestId, p_reason: resolution.reason }).setHeader('Authorization', authorization)
+          if (result.error) throw new Error('OFFLINE_RECONCILIATION_UNAVAILABLE')
+          return result.data
+        }
         if (command.kind !== 'sale') {
           const result = await rpc.rpc('reconcile_offline_cash_command', { p_kind: command.kind, p_shop_id: String(args.p_shop_id), p_args: args, p_resolution_request_id: resolution.requestId, p_reason: resolution.reason }).setHeader('Authorization', authorization)
           if (result.error) throw new Error('OFFLINE_RECONCILIATION_UNAVAILABLE')
