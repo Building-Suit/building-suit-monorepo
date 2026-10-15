@@ -6,13 +6,16 @@ grant select on eta_fixture to authenticated;
 select set_config('request.jwt.claim.sub',owner::text,true),set_config('request.jwt.claim.role','authenticated',true) from eta_fixture;
 set local role authenticated;
 do $$
-declare shop uuid; location uuid; product uuid; customer uuid; legacy uuid; usd_shop uuid; usd_product uuid; usd_sale uuid; sale uuid; req uuid:=gen_random_uuid(); version uuid; job uuid; conf jsonb; before jsonb;
+declare shop uuid; location uuid; product uuid; customer uuid; legacy uuid; branch_b uuid; draft_b uuid; usd_shop uuid; usd_product uuid; usd_sale uuid; sale uuid; req uuid:=gen_random_uuid(); version uuid; job uuid; conf jsonb; before jsonb;
 begin
  shop:=public.create_owner_shop('ETA fixture','mixed'::public.business_mode);
  select id into location from public.shop_locations where shop_id=shop and is_default;
+ branch_b:=public.save_shop_location(shop,null,'ETA restricted branch','ETA-B',null,null);
  customer:=public.save_customer(shop,null,'Synthetic customer',null,null,null,null);
  product:=public.save_product(shop,null,'ETA item',null,null,100);
  perform public.adjust_stock(gen_random_uuid(),shop,product,20,1,'Synthetic stock');
+ draft_b:=public.save_location_sale_draft(gen_random_uuid(),shop,branch_b,null,customer,null,null,jsonb_build_array(jsonb_build_object('item_type','product','source_id',product,'quantity',1)));
+ perform set_config('eta_test.branch_b_sale',draft_b::text,true);
  legacy:=public.save_sale_draft(gen_random_uuid(),shop,null,customer,null,jsonb_build_array(jsonb_build_object('item_type','product','source_id',product,'quantity',1)));
  perform public.issue_sale(gen_random_uuid(),shop,legacy);
  conf:=jsonb_build_object('profile',jsonb_build_object('legalName','Test merchant','rin','123456789','activityCode','1234'),
@@ -42,7 +45,7 @@ begin
  perform public.save_business_currency(usd_shop,'USD');
  usd_product:=public.save_product(usd_shop,null,'USD item',null,null,1);
  perform public.adjust_stock(gen_random_uuid(),usd_shop,usd_product,2,1,'Synthetic USD stock');
- customer:=public.save_customer(usd_shop,null,'USD customer',null,null,null,null,null);
+ customer:=public.save_customer(usd_shop,null,'USD customer',null,null,null,null);
  usd_sale:=public.save_sale_draft(gen_random_uuid(),usd_shop,null,customer,null,jsonb_build_array(jsonb_build_object('item_type','product','source_id',usd_product,'quantity',1)));
  perform public.issue_sale(gen_random_uuid(),usd_shop,usd_sale);
  begin perform public.queue_eta_receipt(gen_random_uuid(),usd_shop,usd_sale,'{"type":"P"}','C');raise exception 'Non-EGP export allowed';exception when invalid_parameter_value then if sqlerrm<>'ETA_EXPORT_EGP_ONLY' then raise;end if;end;
@@ -82,5 +85,25 @@ set local role authenticated;
 do $$ begin
  begin perform public.eta_settings(current_setting('eta_test.shop')::uuid);raise exception 'Outsider read ETA setup';exception when insufficient_privilege then null;end;
  begin perform public.queue_eta_receipt(gen_random_uuid(),current_setting('eta_test.shop')::uuid,current_setting('eta_test.sale')::uuid,'{"type":"P"}','C');raise exception 'Outsider queued';exception when insufficient_privilege then null;end;
+end; $$;
+reset role;
+
+-- A system manager with only location A cannot read global branch setup or queue B.
+do $$
+declare profile uuid; member uuid; role_id uuid; shop uuid:=current_setting('eta_test.shop')::uuid;
+begin
+ insert into public.profiles(user_id,portal_id,display_name,email_snapshot)
+ select f.outsider,s.portal_id,'Restricted ETA manager','manager@eta.invalid' from eta_fixture f join public.shops s on s.id=shop returning id into profile;
+ insert into public.shop_memberships(shop_id,profile_id,role) values(shop,profile,'employee') returning id into member;
+ select id into role_id from public.roles where shop_id=shop and key='manager' and is_system;
+ insert into public.membership_roles(membership_id,role_id) values(member,role_id);
+ insert into public.role_permissions(role_id,permission_id) select role_id,p.id from public.permissions p join public.shops s on s.portal_id=p.portal_id where s.id=shop and p.key='settings.manage' on conflict do nothing;
+ insert into public.membership_location_assignments(shop_id,membership_id,location_id) values(shop,member,current_setting('eta_test.location')::uuid) on conflict do nothing;
+end; $$;
+select set_config('request.jwt.claim.sub',outsider::text,true) from eta_fixture;
+set local role authenticated;
+do $$ begin
+ begin perform public.eta_settings(current_setting('eta_test.shop')::uuid);raise exception 'Scoped manager read global configuration';exception when insufficient_privilege then if sqlerrm<>'LOCATION_ACCESS_DENIED' then raise;end if;end;
+ begin perform public.queue_eta_receipt(gen_random_uuid(),current_setting('eta_test.shop')::uuid,current_setting('eta_test.branch_b_sale')::uuid,'{"type":"P"}','C');raise exception 'Scoped manager queued other location';exception when insufficient_privilege then if sqlerrm<>'LOCATION_ACCESS_DENIED' then raise;end if;end;
 end; $$;
 reset role;
