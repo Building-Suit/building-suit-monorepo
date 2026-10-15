@@ -66,6 +66,8 @@ user after the parent's merge.
   attribute-order warnings.
 - All-app typecheck initially lacked the generated docs index; generated the
   maintained catalogue and reran with concurrency 2: all six apps passed.
+- Existing receipt suites were updated for PNG semantics and the shared receipt
+  table: 12 locale/theme/viewport cases and 15 currency/print-isolation cases passed.
 - Real built-Shop Chromium coverage verifies an actual PNG clipboard write/read,
   denied-permission download, dark-mode white receipt, print invocation and A4
   selection in both languages. Only synthetic fixture services run in the cloud.
