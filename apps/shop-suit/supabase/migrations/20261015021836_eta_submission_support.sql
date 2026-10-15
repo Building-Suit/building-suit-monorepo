@@ -170,7 +170,8 @@ begin
  if sale.currency<>'EGP' then raise exception 'ETA_EXPORT_EGP_ONLY' using errcode='22023'; end if;
  if jsonb_typeof(p_buyer) is distinct from 'object' or (p_buyer-array['type','id','name'])<>'{}'::jsonb
  or coalesce(p_buyer->>'type','') not in('P','F') or coalesce(p_payment_method,'') not in('C','V','CC','VC','VO','O') then raise exception 'ETA_B2C_BUYER_PAYMENT_REQUIRED' using errcode='22023'; end if;
- select * into existing from public.eta_outbox where shop_id=p_shop_id and (request_id=p_request_id or invoice_id=sale.id);
+ select * into existing from public.eta_outbox where shop_id=p_shop_id and request_id=p_request_id;
+ if not found then select * into existing from public.eta_outbox where shop_id=p_shop_id and invoice_id=sale.id;end if;
  if found then
  if existing.invoice_id<>sale.id or existing.source->'buyer'<>p_buyer or existing.source->>'paymentMethod'<>p_payment_method then raise exception 'ETA_REQUEST_CONFLICT' using errcode='23505'; end if;
  return existing.id; end if;
