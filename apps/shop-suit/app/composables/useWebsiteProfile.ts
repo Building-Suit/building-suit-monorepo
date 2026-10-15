@@ -1,7 +1,7 @@
 import { readPublicLogo } from '@building-suit/ux'
 import type { BsWebsiteProfileView } from '@building-suit/ui/types/websiteProfilePresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
-import { emptyWebsiteProfile, type WebsiteProfileSettings } from '#shared/websiteProfile'
+import { emptyWebsiteProfile, parseWebsiteProfileSettings, type WebsiteProfileSettings } from '#shared/websiteProfile'
 import { websiteUrl } from '#shared/websiteAddress'
 
 export function useWebsiteProfile(canManage: Ref<boolean>) {
@@ -25,7 +25,7 @@ export function useWebsiteProfile(canManage: Ref<boolean>) {
       const isCurrent = captureScope()
       const response = await client.rpc('shop_website_profile', { p_shop_id: currentId.value })
       if (response.error) throw response.error
-      return isCurrent() ? response.data : null
+      return isCurrent() ? parseWebsiteProfileSettings(response.data) : null
     }, { server: false, watch: [currentId, currentLocationId, actor, canManage], default: () => null },
   )
   watch([currentId, currentLocationId, actor, canManage], () => { open.value = false; form.value = emptyWebsiteProfile(); optIn.value = false; success.value = ''; error.value = '' }, { flush: 'sync' })
@@ -34,7 +34,7 @@ export function useWebsiteProfile(canManage: Ref<boolean>) {
   function edit() {
     if (!canManage.value || loading.value || loadError.value || !data.value?.slug) return
     form.value = { ...emptyWebsiteProfile(), ...structuredClone(data.value.draft) }
-    success.value = ''; action.edit()
+    success.value = ''; optIn.value = false; action.edit()
   }
   async function save() {
     const shopId = currentId.value
@@ -43,7 +43,7 @@ export function useWebsiteProfile(canManage: Ref<boolean>) {
     const saved = await action.run(async () => {
       const response = await client.rpc('shop_website_profile_save', { p_shop_id: shopId, p_profile: form.value })
       if (response.error) throw response.error
-      if (isCurrent() && canManage.value) data.value = response.data
+      if (isCurrent() && canManage.value) data.value = parseWebsiteProfileSettings(response.data)
     }, safeError)
     if (saved && isCurrent() && canManage.value) success.value = locale.value === 'ar' ? 'تم حفظ المسودة. لم يتم نشر التغييرات.' : 'Draft saved. Changes have not been published.'
   }
@@ -52,13 +52,13 @@ export function useWebsiteProfile(canManage: Ref<boolean>) {
     const shopId = currentId.value
     const isCurrent = captureScope()
     if (!shopId || !canManage.value || pending.value || logoPending.value) return
-    logoPending.value = true; error.value = ''
+    logoPending.value = true; error.value = ''; optIn.value = false
     try {
       const image = selected ? await readPublicLogo(selected) : null
       if (!isCurrent() || !canManage.value) return
       const response = await client.rpc('shop_website_logo_replace', { p_shop_id: shopId, p_data_url: image })
       if (response.error) throw response.error
-      if (isCurrent() && canManage.value) data.value = response.data
+      if (isCurrent() && canManage.value) data.value = parseWebsiteProfileSettings(response.data)
     } catch {
       if (isCurrent()) error.value = locale.value === 'ar' ? 'اختر صورة PNG أو JPEG أو WebP صحيحة حتى 128 كيلوبايت و2048 بكسل.' : 'Choose a valid PNG, JPEG or WebP up to 128 KiB and 2048 pixels.'
     } finally { logoPending.value = false }
@@ -70,7 +70,7 @@ export function useWebsiteProfile(canManage: Ref<boolean>) {
     await action.run(async () => {
       const response = await client.rpc('shop_website_profile_publish', { p_shop_id: shopId, p_owner_opt_in: optIn.value })
       if (response.error) throw response.error
-      if (isCurrent() && canManage.value) { data.value = response.data; optIn.value = false }
+      if (isCurrent() && canManage.value) { data.value = parseWebsiteProfileSettings(response.data); optIn.value = false }
     }, safeError)
   }
   async function unpublish() {
@@ -80,7 +80,7 @@ export function useWebsiteProfile(canManage: Ref<boolean>) {
     const saved = await action.run(async () => {
       const response = await client.rpc('shop_website_profile_unpublish', { p_shop_id: shopId })
       if (response.error) throw response.error
-      if (isCurrent() && canManage.value) { data.value = response.data; optIn.value = false }
+      if (isCurrent() && canManage.value) { data.value = parseWebsiteProfileSettings(response.data); optIn.value = false }
     }, safeError)
     if (saved && isCurrent()) success.value = locale.value === 'ar' ? 'تم إلغاء النشر مع الاحتفاظ بالإعدادات.' : 'Unpublished. Your configuration is retained.'
   }

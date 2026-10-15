@@ -101,3 +101,18 @@ test('logo picker rejects SVG and oversized dimensions, decodes PNG/JPEG/WebP an
   await expect.poll(()=>calls.filter(v=>v.name==='shop_website_logo_replace').length).toBe(4)
   expect(calls.filter(v=>v.name==='shop_website_logo_replace').at(-1)?.args).toEqual({p_shop_id:'shop-1',p_data_url:null})
 })
+test('malformed profile read stays retryable and does not remove the address editor', async ({page}) => {
+  let malformed=true
+  await pilotFixture(page,'en','owner',name => {
+    if(name==='shop_permission_access') return {'settings.manage':true}
+    if(name==='shop_website_address') return {slug:'public-profile',state:'draft',aliases:[]}
+    if(name==='shop_website_profile') return malformed ? [] : initial()
+    return undefined
+  })
+  await fixtureGoto(page,'/settings')
+  await expect(page.locator('#website-profile')).toContainText('Could not load public profile.')
+  await expect(page.locator('#website-address')).toContainText('https://public-profile.shops.building-suit.com')
+  malformed=false
+  await page.locator('#website-profile').getByRole('button',{name:'Retry',exact:true}).click()
+  await expect(page.locator('#website-profile').getByRole('button',{name:'Edit draft',exact:true})).toBeEnabled()
+})

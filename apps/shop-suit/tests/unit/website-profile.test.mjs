@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { emptyWebsiteProfile } from '../../shared/websiteProfile.ts'
+import { emptyWebsiteProfile, parseWebsiteProfileSettings } from '../../shared/websiteProfile.ts'
 import { readPublicLogo } from '../../../../packages/ux/src/utils/readPublicLogo.ts'
 
 test('public drafts have independent empty contacts, locations and SEO', () => {
@@ -26,4 +26,10 @@ test('decoded logos enforce dimensions, close bitmap and reencode with no origin
     assert.equal(await readPublicLogo(file), 'data:image/png;base64,normalized')
     assert.equal(drawn, true); assert.equal(bitmap.closed, true)
   } finally { globalThis.createImageBitmap = original; globalThis.document = document }
+})
+
+test('malformed or old RPC responses fail safely before reaching settings presentation', () => {
+  const settings = { draft: {}, state: 'draft', slug: null, logoDataUrl: null, catalog: {integration:'pending',publishedItemCount:0}, missing:['address'],ownerOptedIn:false }
+  assert.equal(parseWebsiteProfileSettings(settings),settings)
+  for (const invalid of [null,[],{}, {...settings,state:['draft']}, {...settings,slug:'bad.test'}, {...settings,logoDataUrl:'https://other-tenant.invalid/logo.png'}, {...settings,catalog:[]}, {...settings,catalog:{integration:'ready',publishedItemCount:-1}}, {...settings,draft:{publicName:[]}}, {...settings,draft:{locations:[{id:'a',visible:'false'}]}}]) assert.throws(()=>parseWebsiteProfileSettings(invalid), /INVALID_WEBSITE_PROFILE_RESPONSE/)
 })
