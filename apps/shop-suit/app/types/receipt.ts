@@ -3,6 +3,7 @@ export type ReceiptPaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' 
 
 export interface SaleReceiptSnapshot {
   presentation?: { documentLabel: string | null; referenceLabel?: string | null; language: 'en' | 'ar'; direction: 'auto' | 'ltr' | 'rtl'; showDescriptions: boolean; notes: string | null; logoDataUrl: string | null }
+  tax?: import('./tax').TaxQuote | null
   version: 1
   invoiceId: string
   invoiceNumber: string

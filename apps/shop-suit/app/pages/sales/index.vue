@@ -168,7 +168,9 @@ function lineAmounts(line: DraftLine) {
   return { price, discount, total: Math.max(0, Math.round((price * quantity - discount) * 100) / 100) }
 }
 
-const previewTotal = computed(() => lines.value.reduce((sum, line) => sum + lineAmounts(line).total, 0))
+const taxLines = computed(() => lines.value.map(line => ({ item_type: line.itemType, source_id: line.sourceId, quantity: Number(line.quantity) })))
+const { data: taxQuote, pending: taxPending, error: taxError } = useSaleTaxQuote(currentId, currentLocationId, taxLines)
+const previewTotal = computed(() => Number(taxQuote.value?.total ?? lines.value.reduce((sum, line) => sum + lineAmounts(line).total, 0)))
 
 function resetEditor() {
   fastPayAttempt.value = null
@@ -325,6 +327,7 @@ async function issue() {
 }
 
 async function fastPay() {
+  if (taxPending.value || taxError.value || !taxQuote.value) return
   if (!currentId.value || !currentLocationId.value || saving.value || issuing.value
     || !salePage.value?.canManage || !salePage.value.canIssue || !paymentAccess.value.can_receive) return
   if (!validDraft() || previewTotal.value <= 0) { editorError.value = t('sales.invalid'); return }
@@ -383,7 +386,7 @@ const salesForm = computed<BsSalesDraftForm>({
 const salesStatus = computed<string>({ get: () => statusFilter.value, set: value => { if (value === 'all' || value === 'draft' || value === 'issued') statusFilter.value = value } })
 const salesRows = computed<BsSalesDirectoryRow[]>(() => (salePage.value?.items ?? []).map(sale => ({ id: sale.id, number: sale.invoice_number || t('sales.draftNumber'), lineCount: `${sale.line_count} ${t('sales.lines')}`, customer: sale.client_name_snapshot || '—', status: t(`sales.${sale.status}`), statusTone: sale.status === 'issued' ? 'success' : 'neutral', total: money(Number(sale.total_amount), sale.status === 'draft' ? businessCurrency.value : sale.currency || businessCurrency.value), date: formatDate(sale.issued_at || sale.created_at), editable: sale.status === 'draft' && !!salePage.value?.canManage, href: `/sales/${sale.id}` })))
 const salesLines = computed<BsSalesLineView[]>(() => lines.value.map(line => ({ key: line.key, options: lineCatalog(line).map(item => ({ value: item.id, label: itemLabel(item) })), total: money(lineAmounts(line).total), discount: lineAmounts(line).discount ? money(lineAmounts(line).discount) : '' })))
-const salesView = computed<BsSalesDirectoryView>(() => ({ available: !!current.value, loadingContext: shopLoading.value, denied: !!salePage.value?.permissionDenied, canManage: !!salePage.value?.canManage, canIssue: !!salePage.value?.canIssue, canFastPay: !!salePage.value?.canManage && !!salePage.value.canIssue && paymentAccess.value.can_receive, loading: pending.value, error: error.value ? t('sales.loadError') : '', total: salePage.value?.total ?? 0, pageSize, catalogLoading: catalogPending.value, catalogError: !!catalogError.value, editing: !!editingId.value, saving: saving.value, issuing: issuing.value, errorMessage: editorError.value, dirty: editorDirty.value, locked: !!fastPayAttempt.value, previewTotal: money(previewTotal.value) }))
+const salesView = computed<BsSalesDirectoryView>(() => ({ available: !!current.value, loadingContext: shopLoading.value, denied: !!salePage.value?.permissionDenied, canManage: !!salePage.value?.canManage, canIssue: !!salePage.value?.canIssue, canFastPay: !!salePage.value?.canManage && !!salePage.value.canIssue && paymentAccess.value.can_receive && !taxPending.value && !taxError.value, loading: pending.value, error: error.value ? t('sales.loadError') : '', total: salePage.value?.total ?? 0, pageSize, catalogLoading: catalogPending.value, catalogError: !!catalogError.value, editing: !!editingId.value, saving: saving.value, issuing: issuing.value, errorMessage: editorError.value || (taxError.value ? (locale.value === 'ar' ? 'تعذر تأكيد حساب الضريبة. حاول تاني.' : 'Unable to confirm tax calculation. Retry.') : ''), dirty: editorDirty.value, locked: !!fastPayAttempt.value, previewTotal: money(previewTotal.value) }))
 function updateLineType(index: number, value: string) { const line = lines.value[index]; if (!line || (value !== 'product' && value !== 'service') || !availableLineTypes.value.includes(value)) return; line.itemType = value; changeLineType(line) }
 const salesCopy = computed<BsSalesDirectoryCopy>(() => ({
   addLine: t('sales.addLine'),

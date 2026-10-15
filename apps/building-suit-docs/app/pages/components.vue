@@ -454,7 +454,10 @@ const invitationPreviewCopy={
       <BsOwnerInvitationPage v-model:password="invitationPreviewPassword" v-model:confirmation="invitationPreviewConfirmation" :copy="invitationPreviewCopy" :view="{phase:'error',pending:false,failed:false}" />
     </BsContentSection>
 
-    <BsContentSection :title="isArabic ? 'عمولات اختيارية' : 'Optional commissions'">
+    <BsContentSection :title="isArabic ? 'حساب الضريبة' : 'Tax calculation'">
+      <BsDescriptionList><BsDescriptionItem term="BsShopTaxSettingsPage / BsShopTaxRuleFields">{{ isArabic ? 'إعدادات مؤرخة وتصنيف مستقل لكل بند؛ التطبيق يملك الصلاحيات والحساب المالي. تعطيل الحساب ليس إعفاء.' : 'Versioned effective settings and per-item classification; the product owns authorization and financial arithmetic. Disabled calculation is not exemption.' }}</BsDescriptionItem></BsDescriptionList>
+    </BsContentSection>
+    <BsContentSection :title="isArabic ? 'عمولات اختيارية'  : 'Optional commissions'">
       <BsDescriptionList><BsDescriptionItem term="BsCommissionPolicyPage">{{ isArabic ? 'تفعيل النشاط والموظف، ونسب أو مبالغ ثابتة، وإسناد المسودات، وفصل التقديرات والمكتسبات والتعديلات بعد التصدير.' : 'Shop and employee opt-in, percentage or fixed unit rates, draft attribution, and separate estimates, earnings and post-export adjustments. Shop owns authorized commands and financial values.' }}</BsDescriptionItem></BsDescriptionList>
     </BsContentSection>
     <WorkflowPatternCatalogue />
