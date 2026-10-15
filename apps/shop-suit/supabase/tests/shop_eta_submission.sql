@@ -6,7 +6,7 @@ grant select on eta_fixture to authenticated;
 select set_config('request.jwt.claim.sub',owner::text,true),set_config('request.jwt.claim.role','authenticated',true) from eta_fixture;
 set local role authenticated;
 do $$
-declare shop uuid; location uuid; product uuid; customer uuid; legacy uuid; branch_b uuid; draft_b uuid; usd_shop uuid; usd_product uuid; usd_sale uuid; sale uuid; req uuid:=gen_random_uuid(); version uuid; job uuid; conf jsonb; before jsonb;
+declare shop uuid; location uuid; product uuid; customer uuid; legacy uuid; branch_b uuid; draft_b uuid; usd_shop uuid; usd_location uuid; usd_product uuid; usd_sale uuid; sale uuid; req uuid:=gen_random_uuid(); version uuid; job uuid; conf jsonb; before jsonb;
 begin
  shop:=public.create_owner_shop('ETA fixture','mixed'::public.business_mode);
  select id into location from public.shop_locations where shop_id=shop and is_default;
@@ -16,6 +16,7 @@ begin
  perform public.adjust_stock(gen_random_uuid(),shop,product,20,1,'Synthetic stock');
  draft_b:=public.save_location_sale_draft(gen_random_uuid(),shop,branch_b,null,customer,null,null,jsonb_build_array(jsonb_build_object('item_type','product','source_id',product,'quantity',1)));
  perform set_config('eta_test.branch_b_sale',draft_b::text,true);
+ perform set_config('shop.location_id',location::text,true);
  legacy:=public.save_sale_draft(gen_random_uuid(),shop,null,customer,null,jsonb_build_array(jsonb_build_object('item_type','product','source_id',product,'quantity',1)));
  perform public.issue_sale(gen_random_uuid(),shop,legacy);
  conf:=jsonb_build_object('profile',jsonb_build_object('legalName','Test merchant','rin','123456789','activityCode','1234'),
@@ -41,6 +42,8 @@ begin
  if public.get_sale_tax_snapshot(shop,sale)<>before then raise exception 'ETA setup repriced sale'; end if;
  perform set_config('request.jwt.claim.sub',(select currency_owner::text from eta_fixture),true);
  usd_shop:=public.create_owner_shop('Non-EGP ETA fixture','mixed'::public.business_mode);
+ select id into usd_location from public.shop_locations where shop_id=usd_shop and is_default;
+ perform set_config('shop.location_id',usd_location::text,true);
  perform public.save_business_currency(usd_shop,'USD');
  usd_product:=public.save_product(usd_shop,null,'USD item',null,null,1);
  perform public.adjust_stock(gen_random_uuid(),usd_shop,usd_product,2,1,'Synthetic USD stock');

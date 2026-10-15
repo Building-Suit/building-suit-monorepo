@@ -10,6 +10,7 @@ try {
  await admin.query(await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_eta_submission.sql',import.meta.url),'utf8'))
  const info=(await admin.query("select current_setting('eta_test.shop') shop,current_setting('eta_test.location') location,(select owner::text from eta_fixture) owner")).rows[0]
  await admin.query("select set_config('request.jwt.claim.sub',$1,true)",[info.owner])
+ await admin.query("select set_config('shop.location_id',$1,true)",[info.location])
  await admin.query('SET LOCAL ROLE authenticated')
  const config=(await admin.query('select public.eta_settings($1) settings',[info.shop])).rows[0].settings.configuration
  config.branches[0].deviceSerialNumber='POS-CONCURRENT'
