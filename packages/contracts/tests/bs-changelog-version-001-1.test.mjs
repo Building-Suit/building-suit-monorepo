@@ -58,3 +58,37 @@ test('transport adapter validates and filters without global cache and honors ca
   const controller = new AbortController(); controller.abort()
   await assert.rejects(client.list({},controller.signal))
 })
+test('SemVer precedence is numeric, prerelease-aware, precise and independent of build metadata', async () => {
+  const { compareSuitVersions } = await import('../src/changelog.ts')
+  const ascending = ['1.0.0-alpha','1.0.0-alpha.1','1.0.0-alpha.beta','1.0.0-beta','1.0.0-beta.2','1.0.0-beta.11','1.0.0-rc.1','1.0.0','1.0.2','1.0.10','1.9.0','1.10.0','2.0.0','10.0.0','9007199254740992.0.0','9007199254740993.0.0']
+  assert.deepEqual([...ascending].reverse().sort(compareSuitVersions),ascending)
+  assert.equal(compareSuitVersions('1.2.3+one','1.2.3+two'),0)
+  assert.ok(compareSuitVersions('1.0.0-alpha-beta.9','1.0.0-alpha-beta.10')<0)
+  assert.ok(compareSuitVersions('1.0.0-9007199254740992','1.0.0-9007199254740993')<0)
+  assert.throws(()=>compareSuitVersions('not-a-version','1.0.0'))
+})
+test('batch publication keeps semantic release order and complete groups despite opaque IDs or shuffled delivery', async () => {
+  const { selectChangelogReleases } = await import('../src/changelog.ts')
+  const versions=['1.9.0','1.10.0','2.0.0-rc.1','2.0.0']
+  const notes=versions.flatMap((version,index)=>[0,1,2].map(note=>({...entry,version,id:`${3-index}-${note}`})))
+  const feed=parseChangelogFeed(fixture({entries:[...notes].reverse()}))
+  const client=await createChangelogClient(async()=>feed).list({suit:'shop-suit'})
+  assert.deepEqual([...new Set(client.entries.map(row=>row.version))],[...versions].reverse())
+  const teaser=selectChangelogReleases(client,{suit:'shop-suit'},3)
+  assert.equal(teaser.length,9)
+  assert.deepEqual([...new Set(teaser.map(row=>row.version))],['2.0.0','2.0.0-rc.1','1.10.0'])
+  assert.deepEqual(selectChangelogReleases({...client,entries:[...client.entries].reverse()},{suit:'shop-suit'},3),teaser)
+  assert.ok(teaser.every(row=>row.publishedAt===entry.publishedAt&&isChangelogNew(row,client.serverNow)))
+  assert.ok(teaser.every(row=>!isChangelogNew(row,'2026-10-11T12:00:00Z')))
+  assert.deepEqual(selectChangelogReleases(client,{},0),[])
+  for(const limit of [-1,0.5,Infinity]) assert.throws(()=>selectChangelogReleases(client,{},limit))
+})
+test('release groups keep Suits separate and exclude internal, future and Coming Soon entries', async () => {
+  const { selectChangelogReleases } = await import('../src/changelog.ts')
+  const planned={...entry,id:'planned',status:'coming-soon',targetVersion:'9.0.0'}
+  delete planned.version;delete planned.releasedAt
+  const feed=parseChangelogFeed(fixture({entries:[entry,{...entry,id:'same-version-other-suit',suit:'ledger-suit'},planned,{...entry,id:'internal',visibility:'internal'},{...entry,id:'future',publishedAt:'2026-11-01T12:00:00Z'}]}))
+  assert.equal(selectChangelogReleases(feed,{},1).length,1)
+  assert.equal(selectChangelogReleases(feed,{},2).length,2)
+  assert.equal(selectChangelogReleases(feed,{suit:'shop-suit'},3).length,1)
+})

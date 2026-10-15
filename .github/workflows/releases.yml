@@ -1,0 +1,52 @@
+name: Publish accepted task releases
+on:
+  push:
+    branches: [stg, main]
+  workflow_run:
+    workflows: [Verify workspace]
+    types: [completed]
+    branches: [stg, main]
+  deployment_status:
+  schedule:
+    - cron: '37 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  checks: read
+  statuses: read
+jobs:
+  reconcile:
+    # Deployment events are wake-ups only. Ignore their payload as authority and re-read protected refs.
+    if: github.repository == 'Building-Suit/building-suit-monorepo'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - environment: staging
+            branch: stg
+          - environment: production
+            branch: main
+    environment: ${{ matrix.environment }}
+    concurrency:
+      group: release-catalog-${{ matrix.environment }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Reconcile durable catalog and gate publication on deployment readiness
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ENVIRONMENT: ${{ matrix.environment }}
+          RELEASE_CATALOG_URL: ${{ vars.RELEASE_CATALOG_URL }}
+          RELEASE_CATALOG_TOKEN: ${{ secrets.RELEASE_CATALOG_TOKEN }}
+          RELEASE_STAGING_URL: ${{ vars.RELEASE_STAGING_URL }}
+          RELEASE_STAGING_TOKEN: ${{ secrets.RELEASE_STAGING_TOKEN }}
+          RELEASE_REQUIRED_CONTEXTS: ${{ vars.RELEASE_REQUIRED_CONTEXTS }}
+        run: node tooling/releases/publisher.mjs

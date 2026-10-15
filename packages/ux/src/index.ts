@@ -233,3 +233,9 @@ export { useConnectivity } from './composables/useConnectivity.ts'
 export { readRasterImage } from './utils/readRasterImage.ts'
 
 export { localDateTimeInput } from "./utils/localDateTimeInput.ts"
+export { usePrivacyConsentFocus } from './composables/usePrivacyConsentFocus.ts'
+export { createBasicAnalytics } from './utils/basicAnalytics.ts'
+export { consentVersion, consentLifetime, consentKey, readPrivacyPreference, privacyPreference, removeAnalyticsCookies } from './utils/privacyConsent.ts'
+export type { PrivacyPreference, PrivacyPresentation } from './utils/privacyConsent.ts'
+
+export { useReviewedCommand } from './composables/useReviewedCommand.ts'

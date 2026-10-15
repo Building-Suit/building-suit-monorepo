@@ -1,0 +1,29 @@
+{
+  "id": "shop-partial-returns",
+  "task": "SS-PARTIAL-RETURNS-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit",
+    "packages/ui",
+    "packages/ux"
+  ],
+  "reason": "Adds invoice-linked partial returns in Shop through optional shared presentation and interaction contracts.",
+  "notes": {
+    "title": {
+      "en": "Partial item returns",
+      "ar": "الإرجاع الجزئي للأصناف"
+    },
+    "summary": {
+      "en": "Return selected items and quantities from an issued sale, with a clear breakdown of debt reduction and any refund owed.",
+      "ar": "أعد أصنافًا وكميات محددة من فاتورة بيع مُصدرة، مع توضيح تخفيض المستحق وأي مبلغ مطلوب رده."
+    },
+    "details": {
+      "en": "Returns use the original sale’s prices, discounts and taxes. Shop reduces that invoice’s outstanding amount first, then allocates any excess to the original payments. Choose resellable or damaged stock; service returns do not restore consumed materials. Cash refunds are recorded after cash handover. Recording an externally completed refund documents a refund made outside Shop; it does not initiate a card or bank transfer. Returns and refund recording require a connection. Historical sales without sufficient original records are unavailable for partial returns.",
+      "ar": "تستخدم المرتجعات أسعار البيع الأصلية وخصوماته وضرائبه. يخفض المتجر المستحق على الفاتورة نفسها أولاً، ثم يوزع أي فائض على الدفعات الأصلية. اختر مخزونًا صالحًا للبيع أو تالفًا؛ ولا تعيد مرتجعات الخدمات المواد المستهلكة. يُسجل رد النقد بعد تسليمه فعليًا. يوثق تسجيل رد مبلغ مكتمل خارج المتجر عملية تمت خارجه، ولا ينفذ تحويلاً عبر البطاقة أو البنك. يتطلب الإرجاع وتسجيل رد المبالغ اتصالاً. لا يتاح الإرجاع الجزئي للمبيعات التاريخية التي لا تتوفر لها سجلات أصلية كافية."
+    }
+  }
+}

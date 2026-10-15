@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { LandingContent } from '@building-suit/contracts'
-import type { BsLandingPreview, BsLandingPricing } from '../types/landingPresentation'
+import type { BsLandingPreview, BsLandingPricing, BsLandingChangelog } from '../types/landingPresentation'
 
-withDefaults(defineProps<{ content: LandingContent; preview: BsLandingPreview; pricing: BsLandingPricing; signupPath?: string }>(), { signupPath: '/signup' })
+withDefaults(defineProps<{ content: LandingContent; preview: BsLandingPreview; pricing: BsLandingPricing; signupPath?: string; changelog?: BsLandingChangelog }>(), { signupPath: '/signup', changelog: undefined })
 
-const emit = defineEmits<{ interval: [value: string]; variant: [planId: string, value: string]; action: [planId: string]; secondaryAction: [planId: string]; retry: [] }>()
+const emit = defineEmits<{ interval: [value: string]; variant: [planId: string, value: string]; action: [planId: string]; linkAction: [planId: string]; secondaryAction: [planId: string]; retry: []; changelogRetry: [] }>()
 const landingRoot = ref<HTMLElement | null>(null)
 useLandingMotion(landingRoot)
 </script>
@@ -20,6 +20,7 @@ useLandingMotion(landingRoot)
     </div></BsProductPreview></BsLandingHero>
     <BsLandingSection id="features" :eyebrow="content.featuresEyebrow" :title="content.featuresTitle" :body="content.featuresBody"><BsFeatureGrid :features="content.features" /></BsLandingSection>
     <BsLandingSection id="workflow" :eyebrow="content.workflowEyebrow" :title="content.workflowTitle" tone="muted" layout="workflow"><BsWorkflowSteps :steps="content.workflow" /></BsLandingSection>
-    <BsLandingSection id="pricing" :eyebrow="content.pricingEyebrow" :title="content.pricingTitle" :body="content.pricingBody"><BsBox :data-testid="pricing.sectionTestId"><BsMarketingPricing :variant="pricing.variant" :plans="pricing.plans" :interval="pricing.interval" :interval-options="pricing.intervalOptions" :copy="pricing.copy" :annual-saving="pricing.annualSaving" :intro="pricing.intro" :loading="pricing.loading" :error="pricing.error" :columns="pricing.columns" :test-id="pricing.testId" @update:interval="emit('interval', $event)" @update:variant="(planId, value) => emit('variant', planId, value)" @action="emit('action', $event)" @secondary-action="emit('secondaryAction', $event)" @retry="emit('retry')"/><BsText v-if="pricing.notice" :data-testid="pricing.noticeTestId" role="note" size="sm" tone="muted">{{ pricing.notice }}</BsText></BsBox></BsLandingSection>
+    <BsLandingSection id="pricing" :eyebrow="content.pricingEyebrow" :title="content.pricingTitle" :body="content.pricingBody"><BsBox :data-testid="pricing.sectionTestId"><BsMarketingPricing :variant="pricing.variant" :plans="pricing.plans" :interval="pricing.interval" :interval-options="pricing.intervalOptions" :copy="pricing.copy" :annual-saving="pricing.annualSaving" :intro="pricing.intro" :loading="pricing.loading" :error="pricing.error" :columns="pricing.columns" :test-id="pricing.testId" @update:interval="emit('interval', $event)" @update:variant="(planId, value) => emit('variant', planId, value)" @action="emit('action', $event)" @link-action="emit('linkAction', $event)" @secondary-action="emit('secondaryAction', $event)" @retry="emit('retry')"/><BsText v-if="pricing.notice" :data-testid="pricing.noticeTestId" role="note" size="sm" tone="muted">{{ pricing.notice }}</BsText></BsBox></BsLandingSection>
+    <BsWhatsNewSection v-if="changelog" :content="changelog" @retry="emit('changelogRetry')" />
   </main>
 </template>

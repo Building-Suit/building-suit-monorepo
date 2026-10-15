@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 const here = (path: string) => fileURLToPath(new URL(path, import.meta.url))
 export default defineNuxtConfig({
+  runtimeConfig: { releaseCatalogUrl: '', releaseCatalogPublishableKey: '' },
   compatibilityDate: '2026-08-30',
   modules: ['@nuxtjs/i18n', '@nuxt/eslint', '@primevue/nuxt-module'],
   nitro: { publicAssets: [{ dir: here('../brand/assets'), baseURL: '/brand' }] },

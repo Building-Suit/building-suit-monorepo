@@ -1,0 +1,29 @@
+{
+  "id": "shop-eta-business-invoice-support",
+  "task": "SS-ETA-EINVOICE-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit",
+    "packages/ui/src/templates/BsEtaSettingsPage.vue",
+    "packages/ui/src/types/etaPresentation.ts"
+  ],
+  "reason": "Adds configurable Shop integration support while live activation and compliance remain external decisions.",
+  "notes": {
+    "title": {
+      "en": "Prepare business eInvoice integration",
+      "ar": "تجهيز الربط بفواتير الشركات الإلكترونية"
+    },
+    "summary": {
+      "en": "Queue supported business invoices with confirmed buyer details, verified signing and a separate invoice submission flow.",
+      "ar": "أضف فواتير الشركات المدعومة ببيانات المشتري المؤكدة إلى مسار إرسال مستقل مع التحقق من التوقيع."
+    },
+    "details": {
+      "en": "Business invoices retain original sale amounts and remain pending until external validation. Invoice integration uses managed signing and ERP access rather than receipt POS authentication. Registered signing material, provider deployment, credentials and external acceptance remain required; this update does not activate live submission or claim tax compliance.",
+      "ar": "تحافظ فواتير الشركات على مبالغ البيع الأصلية وتظل قيد التحقق حتى وصول النتيجة الخارجية. يستخدم ربط الفواتير توقيعًا مُدارًا ووصول نظام تخطيط الموارد بدلًا من مصادقة أجهزة الإيصالات. تظل مواد التوقيع المسجلة ونشر المزود وبيانات الوصول والقبول الخارجي مطلوبة؛ لا يفعّل هذا التحديث الإرسال الفعلي ولا يدّعي الامتثال الضريبي."
+    }
+  }
+}

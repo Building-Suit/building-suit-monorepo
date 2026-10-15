@@ -53,6 +53,7 @@ jobs:
           pnpm exec supabase --workdir apps/super-admin-suit gen types typescript --local --schema public > "$RUNNER_TEMP/sas-live-contract/database.types.ts"
           diff -u --ignore-blank-lines apps/super-admin-suit/app/types/database.types.ts "$RUNNER_TEMP/sas-live-contract/database.types.ts"
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: sas-live-contract
           path: ${{ runner.temp }}/sas-live-contract

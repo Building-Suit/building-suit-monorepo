@@ -23,6 +23,8 @@ User instructions take priority. Scoped rules specialize these rules within thei
 - Preserve dirty and active worktrees. Never auto-stash, reset, delete, rebase or force-push others' work. Only rewrite a solely owned branch within current authorization, with an explicit expected remote SHA and `--force-with-lease`.
 - GitHub CI and PR rules do not control external provider events. Keep feature Git deployments disabled in app Vercel configuration and verify Supabase Automatic branching is off. Use the maintained provider setup in `docs/shared/git-workflow.md`; do not claim dashboard settings are active without checking them.
 
+The owner-authorized 2026-10-15 combined batch is recorded in [staging-finished-batch](docs/work-packages/staging-finished-batch.md). For that batch only, PR318 is the single integration root and the prior separate-root/provider-recovery hold is superseded. Required GitHub CI/security checks still apply to the exact combined head. The parent performs one history-preserving merge into `stg`; do not manually deploy or wait for Vercel/Supabase recovery. This exception does not weaken product release-publication readiness or authorize `main` changes.
+
 ## Navigation and ownership
 
 | Location | Responsibility |
@@ -84,6 +86,10 @@ Use manifests, package exports and the dependency graph to find interfaces and a
 - Respect provider-managed schemas. Use supported interfaces and narrowly scoped documented integration changes.
 - Run write tests in staging or an explicitly disposable environment. Never reset a hosted business database or run destructive production fixtures.
 - Keep database deployments explicit, environment-bound, serialized and uncached. Use the maintained runbook and recovery checks appropriate to the change's risk.
+
+## Task release fragments
+
+Every task PR appends curated release fragments under `release-fragments/` and runs `pnpm release:check`. Follow [the release publication runbook](docs/shared/release-publication-runbook.md). Classify breaking changes as major, compatible capabilities as minor, fixes/improvements as patch and truly internal work as internal. Cover changed paths and affected dependency consumers, supply reviewed EN/AR plain-text notes for public work and keep task references private. Agents supply classification; deterministic CI assigns versions. Never edit accepted fragments, dump raw task/commit text, invoke an LLM in CI or bypass deployment readiness. Parent/release authorization still governs staging/main integration.
 
 ## Verification and completion
 

@@ -83,11 +83,58 @@ export function isChangelogNew(entry: ChangelogEntry, authoritativeNow: string):
   const age = Date.parse(changelogTimestamp(authoritativeNow)) - Date.parse(entry.publishedAt)
   return entry.status === 'released' && age >= 0 && age < CHANGELOG_NEW_WINDOW_MS
 }
+function compareText(left: string, right: string): number { return left === right ? 0 : left < right ? -1 : 1 }
+function compareNumericIdentifier(left: string, right: string): number {
+  // SemVer permits arbitrarily large integers. Number conversion would lose precedence precision.
+  return left.length - right.length || compareText(left, right)
+}
+/** Standard SemVer precedence, ascending; build metadata does not affect precedence. */
+export function compareSuitVersions(left: string, right: string): number {
+  const a = semver.exec(version(left))!, b = semver.exec(version(right))!
+  for (const index of [1, 2, 3]) {
+    const difference = compareNumericIdentifier(a[index]!, b[index]!)
+    if (difference) return difference
+  }
+  const aPre = a[4], bPre = b[4]
+  if (aPre === undefined || bPre === undefined) return aPre === bPre ? 0 : aPre === undefined ? 1 : -1
+  const aParts = aPre.split('.'), bParts = bPre.split('.')
+  for (let index = 0; index < Math.max(aParts.length, bParts.length); index++) {
+    const aPart = aParts[index], bPart = bParts[index]
+    if (aPart === undefined || bPart === undefined) return aPart === bPart ? 0 : aPart === undefined ? -1 : 1
+    const aNumeric = /^\d+$/.test(aPart), bNumeric = /^\d+$/.test(bPart)
+    const difference = aNumeric && bNumeric ? compareNumericIdentifier(aPart, bPart)
+      : aNumeric !== bNumeric ? aNumeric ? -1 : 1 : compareText(aPart, bPart)
+    if (difference) return difference
+  }
+  return 0
+}
+function compareChangelogEntries(a: ChangelogEntry, b: ChangelogEntry): number {
+  // Independent Suits have independent versions. Use a total ordering, never compare their versions.
+  return Date.parse(b.publishedAt) - Date.parse(a.publishedAt)
+    || compareText(a.suit, b.suit)
+    || (a.status === b.status ? 0 : a.status === 'released' ? -1 : 1)
+    || compareSuitVersions(b.status === 'released' ? b.version : b.targetVersion, a.status === 'released' ? a.version : a.targetVersion)
+    || compareText(a.id, b.id)
+}
 /** Public projection is defense in depth; the service must authorize visibility before delivery. */
 export function filterChangelog(feed: ChangelogFeed, filter: ChangelogFilter = {}): ChangelogEntry[] {
   const query = filter.search?.trim().toLocaleLowerCase(), locale = filter.locale ?? 'en'
   return feed.entries.filter(entry => entry.visibility === 'public' && Date.parse(entry.publishedAt) <= Date.parse(feed.serverNow)
     && (!filter.suit || entry.suit === filter.suit) && (!filter.status || entry.status === filter.status)
     && (!query || [entry.title[locale], entry.summary[locale], entry.details[locale]].some(value => value.toLocaleLowerCase().includes(query))))
-    .sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt) || a.id.localeCompare(b.id))
+    .sort(compareChangelogEntries)
+}
+
+/** Select complete released Suit/version groups; a release with several notes consumes one place. */
+export function selectChangelogReleases(feed: ChangelogFeed, filter: Omit<ChangelogFilter, 'status'> = {}, limit = 3): ChangelogEntry[] {
+  if (!Number.isSafeInteger(limit) || limit < 0) throw new Error('Invalid changelog release limit')
+  const releases = new Map<string, ChangelogEntry[]>()
+  for (const entry of filterChangelog(feed, { ...filter, status: 'released' })) {
+    if (entry.status !== 'released') continue
+    const key = JSON.stringify([entry.suit, entry.version])
+    const notes = releases.get(key)
+    if (notes) notes.push(entry)
+    else releases.set(key, [entry])
+  }
+  return Array.from(releases.values()).slice(0, limit).flat()
 }

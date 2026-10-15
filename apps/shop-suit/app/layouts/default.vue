@@ -58,6 +58,7 @@ const groups = computed(() => {
       { to: '/customers', label: t('customers.title'), icon: 'user' },
       { to: '/team', label: copy.value.team, icon: 'user' },
       { to: '/service-materials', label: locale.value === 'ar' ? 'وصفات الخدمات' : 'Service recipes', icon: 'settings' },
+      { to: '/eta', label: locale.value === 'ar' ? 'الربط بالضرائب' : 'ETA submission', icon: 'settings' },
       { to: '/taxes', label: locale.value === 'ar' ? 'الضرائب' : 'Taxes', icon: 'settings' },
       { to: '/commissions', label: locale.value === 'ar' ? 'العمولات' : 'Commissions', icon: 'wallet' },
       { to: '/cash-shifts', label: copy.value.cashShifts, icon: 'wallet' },

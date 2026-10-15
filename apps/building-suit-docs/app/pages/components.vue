@@ -1,6 +1,15 @@
 <script setup lang="ts">
+import type { PrivacyPresentation } from '@building-suit/ux'
 import type { ChangelogFeed, ChangelogCopy } from '@building-suit/contracts'
 import type { BsBillingCopy, BsBillingForm, BsBillingView } from '@building-suit/ui/types/billingPresentation'
+const privacyExampleOpen = ref(false)
+const privacyExampleChoice = ref(false)
+const privacyExample = computed<PrivacyPresentation>(() => ({
+  ready: privacyExampleOpen.value, prompt: false, settings: privacyExampleOpen.value, analytics: privacyExampleChoice.value,
+  open: () => { privacyExampleOpen.value = true }, close: () => { privacyExampleOpen.value = false },
+  save: value => { privacyExampleChoice.value = value; privacyExampleOpen.value = false }, change: value => { privacyExampleChoice.value = value },
+  copy: { title: 'Privacy choices / خيارات الخصوصية', body: '', accept: 'Accept optional / قبول الاختياري', reject: 'Reject optional / رفض الاختياري', settings: 'Privacy settings / إعدادات الخصوصية', necessary: 'Catalogue example only. No provider or storage is connected. مثال توضيحي دون مزود أو تخزين.', analytics: 'Optional analytics / التحليلات الاختيارية', save: 'Save / حفظ', policy: 'Policy / السياسة' },
+}))
 const billingExampleForm = ref<BsBillingForm>({ paidAmount: 0, transferDate: '', transferReference: '', privateLink: '', reason: '' })
 const billingExampleBlocked = ref(false)
 const billingExampleDialogVisible = ref(false)
@@ -38,6 +47,16 @@ const changelogFeed: ChangelogFeed = {
     details: { en: 'Curated release content supplied by the owning Suit. This example is not an actual release.', ar: 'محتوى تحديث من التطبيق المسؤول. هذا المثال ليس إصداراً فعلياً.' }, links: [],
     ...(index % 2 === 0 ? { status: 'released' as const, version: '1.0.0', releasedAt: '2026-10-09T10:00:00Z' } : { status: 'coming-soon' as const, targetVersion: '1.1.0-beta.1' }),
   })),
+}
+// Synthetic batch-promotion example: equal clocks, several versions and several notes per version.
+const changelogBatchFeed: ChangelogFeed = {
+  ...changelogFeed,
+  entries: ['1.9.0', '1.10.0', '2.0.0', '2.0.1'].flatMap((version, index) => [0, 1].map(note => ({
+    id: `batch-${3 - index}-${note}`, suit: 'shop-suit', visibility: 'public' as const, status: 'released' as const, version,
+    publishedAt: '2026-10-09T12:00:00Z', releasedAt: '2026-10-09T12:00:00Z',
+    title: changelogFeed.entries[0]!.title, summary: changelogFeed.entries[0]!.summary,
+    details: changelogFeed.entries[0]!.details, links: [],
+  }))),
 }
 const changelogCopy = computed<ChangelogCopy>(() => isArabic.value ? {
   timeline: 'سجل التحديثات', suit: 'التطبيق', status: 'حالة الإصدار', allSuits: 'كل التطبيقات', allStatuses: 'كل الحالات', released: 'تم الإصدار', comingSoon: 'قريباً', targetVersion: 'الإصدار المستهدف', new: 'جديد', published: 'تاريخ النشر', releasedAt: 'تاريخ الإصدار', empty: 'لا توجد تحديثات', loading: 'جار تحميل التحديثات', error: 'تعذر تحميل التحديثات', denied: 'الوصول غير مسموح', retry: 'إعادة المحاولة',
@@ -220,6 +239,8 @@ const invitationPreviewCopy={
       <BsInline><BsButton v-for="state in (['ready', 'loading', 'error', 'denied'] as const)" :key="state" :aria-pressed="changelogState === state" @click="changelogState = state">{{ state }}</BsButton></BsInline>
       <BsChangelogTimeline :feed="changelogFeed" :locale="isArabic ? 'ar' : 'en'" :copy="changelogCopy" :state="changelogState" @retry="changelogState = 'ready'" />
     </BsContentSection>
+
+    <BsWhatsNewSection :content="{ title: isArabic ? 'ما الجديد — مثال توضيحي' : 'What’s new — demonstration', linkLabel: isArabic ? 'سجل التحديثات' : 'Full changelog', to: '/components#changelog', feed: changelogBatchFeed, copy: changelogCopy, locale: isArabic ? 'ar' : 'en', suit: 'shop-suit', state: changelogState }" @retry="changelogState = 'ready'" />
 
     <BsContentSection id="administration-shell" :title="isArabic ? 'هيكل الإدارة' : 'Administration shell'" :description="isArabic ? 'أمثلة التنقل والحالات من بيانات التطبيق.' : 'App-owned descriptors, controlled selection and normal/loading/empty/overflow examples.'">
       <BsInline>
@@ -455,10 +476,14 @@ const invitationPreviewCopy={
     </BsContentSection>
 
     <BsContentSection :title="isArabic ? 'حساب الضريبة' : 'Tax calculation'">
+      <BsDescriptionList><BsDescriptionItem term="BsEtaSettingsPage">{{ isArabic ? 'إعداد هوية التاجر وفروع وأكواد المصلحة وحالة الإرسال، مع حفظ المسودات وحالات الخطأ والإرسال المعلّق. التطبيق يملك الصلاحيات والمحول المالي.' : 'Merchant identity, branch and item-code configuration and asynchronous submission status, using shared forms, dirty-state protection and error feedback. The product owns authorization and financial adapters.' }}</BsDescriptionItem></BsDescriptionList>
       <BsDescriptionList><BsDescriptionItem term="BsShopTaxSettingsPage / BsShopTaxRuleFields">{{ isArabic ? 'إعدادات مؤرخة وتصنيف مستقل لكل بند؛ التطبيق يملك الصلاحيات والحساب المالي. تعطيل الحساب ليس إعفاء.' : 'Versioned effective settings and per-item classification; the product owns authorization and financial arithmetic. Disabled calculation is not exemption.' }}</BsDescriptionItem></BsDescriptionList>
     </BsContentSection>
     <BsContentSection :title="isArabic ? 'عمولات اختيارية'  : 'Optional commissions'">
       <BsDescriptionList><BsDescriptionItem term="BsServiceFulfillmentPage">{{ isArabic ? 'وصفات اختيارية، وتنفيذ صريح بالكميات، وسجل FIFO وتسوية الطلبات بدون اتصال وتصحيحات مدققة.' : 'Optional recipes, explicit quantity fulfillment, FIFO history, offline reconciliation and audited corrections. Product adapters own authorization and business commands.' }}</BsDescriptionItem><BsDescriptionItem term="BsCommissionPolicyPage">{{ isArabic ? 'تفعيل النشاط والموظف، ونسب أو مبالغ ثابتة، وإسناد المسودات، وفصل التقديرات والمكتسبات والتعديلات بعد التصدير.' : 'Shop and employee opt-in, percentage or fixed unit rates, draft attribution, and separate estimates, earnings and post-export adjustments. Shop owns authorized commands and financial values.' }}</BsDescriptionItem></BsDescriptionList>
+    </BsContentSection>
+    <BsContentSection :title="isArabic ? 'المرتجعات المرتبطة بالفاتورة' : 'Invoice-linked returns'">
+      <BsDescriptionList><BsDescriptionItem term="BsDocumentReturns / BsCommerceDocumentPage">{{ isArabic ? 'كميات وحالة مخزون، ومراجعة تخفيض الدين وتوزيع الدفعات الأصلية، وسجل مستقل لإثبات رد المبلغ. الحساب والصلاحيات من التطبيق.' : 'Quantity and disposition inputs, reviewed debt reduction and original-tender allocation, and separate refund completion evidence/history. Product adapters own financial arithmetic and authorization.' }}</BsDescriptionItem></BsDescriptionList>
     </BsContentSection>
     <WorkflowPatternCatalogue />
 
@@ -472,5 +497,9 @@ const invitationPreviewCopy={
     >
       <BsField v-slot="field" :label="isArabic ? 'الاسم' : 'Name'" for="catalogue-record-name" required><BsInput id="catalogue-record-name" v-model="name" required :aria-describedby="field.describedby" /></BsField>
     </BsRecordActionDialog>
+  <BsContentSection title="Privacy consent / خيارات الخصوصية">
+    <BsButton @click="privacyExampleOpen = true">Privacy settings / إعدادات الخصوصية</BsButton>
+    <BsPrivacyConsent :model="privacyExample" />
+  </BsContentSection>
   </div>
 </template>
