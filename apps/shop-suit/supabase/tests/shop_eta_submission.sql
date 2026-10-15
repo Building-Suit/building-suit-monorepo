@@ -58,6 +58,10 @@ begin
  job:=public.shop_eta_claim();lease:=(job->>'lease_id')::uuid;
  if job->>'id'<>current_setting('eta_test.first') then raise exception 'FIFO claim failed';end if;
  second:=public.shop_eta_claim();if second is not null then raise exception 'Same POS claimed twice';end if;
+ perform public.shop_eta_transition((job->>'id')::uuid,lease,'retry',null,'ETA_PROVIDER_SETUP_REQUIRED',3600);
+ if (select state from public.eta_outbox where id=(job->>'id')::uuid)<>'queued' then raise exception 'Unprepared retry became POST eligible';end if;
+ update public.eta_outbox set next_attempt_at=now()-interval '1 second' where id=(job->>'id')::uuid;
+ job:=public.shop_eta_claim();lease:=(job->>'lease_id')::uuid;
  payload:=jsonb_build_object('receipts',jsonb_build_array(jsonb_build_object('header',jsonb_build_object('uuid',doc,'previousUUID',''))))::text;
  begin perform public.shop_eta_prepare((job->>'id')::uuid,gen_random_uuid(),'',doc,payload);raise exception 'Wrong lease accepted';exception when object_not_in_prerequisite_state then null;end;
  perform public.shop_eta_prepare((job->>'id')::uuid,lease,'',doc,payload);
@@ -68,6 +72,7 @@ begin
  update public.eta_outbox set next_attempt_at=now()-interval '1 minute' where id=(job->>'id')::uuid;
  job:=public.shop_eta_claim();lease:=(job->>'lease_id')::uuid;
  if job->>'state'<>'submitted' then raise exception 'Successful submission was requeued';end if;
+ begin perform public.shop_eta_transition((job->>'id')::uuid,lease,'submitting');raise exception 'Successful batch permitted another POST';exception when object_not_in_prerequisite_state then null;end;
  perform public.shop_eta_transition((job->>'id')::uuid,lease,'valid','SUBMISSION-SYNTHETIC');
  begin update public.eta_outbox set payload='{}' where id=(job->>'id')::uuid;raise exception 'Payload mutable';exception when object_not_in_prerequisite_state then null;end;
  begin update public.eta_profile_versions set reason='Changed' where shop_id=current_setting('eta_test.shop')::uuid;raise exception 'Profile mutable';exception when object_not_in_prerequisite_state then null;end;

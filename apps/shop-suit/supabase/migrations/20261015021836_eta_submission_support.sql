@@ -196,7 +196,7 @@ begin
  select o.* into job from public.eta_outbox o
  where o.state in('queued','prepared','retry','submitted') and o.next_attempt_at<=now() and (o.lease_until is null or o.lease_until<now())
  and not exists(select 1 from public.eta_outbox earlier where earlier.shop_id=o.shop_id and earlier.device_serial=o.device_serial
- and (earlier.created_at,earlier.id)<(o.created_at,o.id) and earlier.state not in('valid','invalid','cancelled'))
+ and (earlier.created_at,earlier.id)<(o.created_at,o.id) and earlier.state not in('valid','invalid','cancelled','blocked'))
  order by o.created_at,o.id for update skip locked limit 1;
  if not found then return null; end if;
  update public.eta_outbox set lease_id=gen_random_uuid(),lease_until=now()+interval '2 minutes',updated_at=now() where id=job.id returning * into job;

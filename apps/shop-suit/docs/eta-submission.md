@@ -19,7 +19,7 @@ Saving an append-only configuration version does not activate a merchant. Format
 
 State flow: queued → prepared → submitting → submitted → valid/invalid/cancelled. HTTP 202 means **submitted**, never valid. Original source, wire payload/UUID, profile version and submission reference are immutable. Every transition/error change is audited. Durable short leases prevent competing workers; SQL serializes a POS while a predecessor remains pending. Authentication failures and explicit 401/429 responses use bounded backoff (and Retry-After); tokens are reused per tenant/POS/credential version and concurrent token requests share one authentication call. Submitted documents only poll the receipt-submission endpoint, checking individual UUID, seller and POS evidence.
 
-A network timeout, 5xx, duplicate-submission response or malformed successful response may hide an accepted POST. It becomes `uncertain`, with no automatic resubmission. A crashed `submitting` lease also becomes uncertain. This deliberately favors duplicate prevention. A blocked snapshot requires operator review; a later profile edit never mutates its original source. Failed or uncertain predecessors hold that POS to protect its chain.
+A network timeout, 5xx, duplicate-submission response or malformed successful response may hide an accepted POST. It becomes `uncertain`, with no automatic resubmission. A crashed `submitting` lease also becomes uncertain. This deliberately favors duplicate prevention. A blocked snapshot requires operator review; a later profile edit never mutates its original source. Pending or uncertain predecessors hold that POS to protect its chain. A blocked preflight with no prepared UUID does not advance or hold the chain.
 
 ## Preproduction setup still required
 
