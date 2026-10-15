@@ -142,6 +142,7 @@ end;$$;
 
 -- A historical issued row with no original snapshot is explicitly unsupported.
 -- Direct synthetic INSERT does not execute the forward issuance capture trigger.
+select set_config('request.jwt.claim.sub',owner::text,true) from return_fixture;
 do $$declare historical uuid; actor uuid;ctx jsonb;
 begin
  select profile_id into actor from public.shop_memberships where shop_id=current_setting('returns.shop')::uuid and role='owner';
