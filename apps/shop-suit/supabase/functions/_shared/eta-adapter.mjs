@@ -72,7 +72,7 @@ export async function buildReceipt(source, previousUUID = '') {
   if (!str(description,500)) fail('ETA_ITEM_DESCRIPTION_REQUIRED')
   const rule = line.rule
   const allowed = {vat:['V009','V010'],zero_rated:['V001','V002','V010'],exempt:['V003','V005','V006','V007','V008'],non_taxable:['V004']}
-  if (!rule || (rule.taxType && rule.taxType !== 'T1') || !allowed[rule.treatment]?.includes(rule.subtype) || !['inclusive','exclusive'].includes(rule.priceMode)) fail('ETA_TAX_TREATMENT_UNSUPPORTED')
+  if (!rule || Object.keys(rule).some(key=>!['treatment','rate','priceMode','subtype','taxType','itemType','sourceId'].includes(key)) || (rule.taxType && rule.taxType !== 'T1') || !allowed[rule.treatment]?.includes(rule.subtype) || !['inclusive','exclusive'].includes(rule.priceMode)) fail('ETA_TAX_TREATMENT_UNSUPPORTED')
   const rate = units(rule.rate)
   if (rate > 10000000n || rate % 1000n || (rule.treatment !== 'vat' && rate !== 0n) || (rule.treatment === 'vat' && rate === 0n)) fail('ETA_TAX_RATE_UNSUPPORTED')
   const quantity = units(line.originalQuantity), net = units(line.net5), tax = units(line.tax5), discount = units(line.discountNet5)
@@ -98,9 +98,11 @@ export async function buildReceipt(source, previousUUID = '') {
   if (source.invalidOriginal.previousUUID !== previousUUID) fail('ETA_CORRECTION_CHAIN_MISMATCH')
   header.referenceOldUUID = source.invalidOriginal.uuid
  } else if (source.kind !== 'sale') fail('ETA_DOCUMENT_KIND_UNSUPPORTED')
+ const branchAddress = Object.fromEntries(['country','governate','regionCity','street','buildingNumber'].map(key=>[key,source.branch.address[key]]))
+ const buyerProjection = {type:buyer.type,...(buyer.id?{id:buyer.id}:{}),...(buyer.name?{name:buyer.name}:{})}
  const receipt = { header, documentType:{receiptType:source.kind === 'return'?'r':'s',typeVersion:'1.2'},
-  seller:{rin:source.profile.rin,companyTradeName:source.profile.legalName,branchCode:source.branch.branchCode,branchAddress:source.branch.address,deviceSerialNumber:source.branch.deviceSerialNumber,activityCode:source.profile.activityCode},
-  buyer, itemData, totalSales:decimal(sum(itemData,'totalSale')), totalCommercialDiscount:decimal(sum(itemData,'totalSale')-net), totalItemsDiscount:0,
+  seller:{rin:source.profile.rin,companyTradeName:source.profile.legalName,branchCode:source.branch.branchCode,branchAddress,deviceSerialNumber:source.branch.deviceSerialNumber,activityCode:source.profile.activityCode},
+  buyer:buyerProjection, itemData, totalSales:decimal(sum(itemData,'totalSale')), totalCommercialDiscount:decimal(sum(itemData,'totalSale')-net), totalItemsDiscount:0,
   netAmount:decimal(net), feesAmount:0, totalAmount:decimal(net+tax), taxTotals:[{taxType:'T1',amount:decimal(tax)}], paymentMethod:source.paymentMethod, adjustment:0 }
  receipt.header.uuid = await receiptUuid(receipt)
  return {adapterVersion:ADAPTER_VERSION, uuid:receipt.header.uuid, receipt, body:JSON.stringify({receipts:[receipt]})}
@@ -116,8 +118,9 @@ export async function buildEinvoice(source, signer) {
  // Reuse exact component validation; this intermediate receipt is never sent.
  // B2B identity, envelope, signature and endpoint remain separate contracts.
  const {receipt}=await buildReceipt({...source,channel:'ereceipt',buyer:{type:'F',id:receiver.id,name:receiver.name.slice(0,100)},paymentMethod:'O'})
- const document={issuer:{type:'B',id:source.profile.rin,name:source.profile.legalName,address:{branchId:source.branch.branchCode,...source.branch.address}},
-  receiver,documentType:'i',documentTypeVersion:'1.0',dateTimeIssued:source.issuedAt,taxpayerActivityCode:source.profile.activityCode,internalId:source.receiptNumber,
+ const receiverProjection={type:'B',id:receiver.id,name:receiver.name,address:Object.fromEntries(['country','governate','regionCity','street','buildingNumber'].map(key=>[key,receiver.address[key]]))}
+ const document={issuer:{type:'B',id:source.profile.rin,name:source.profile.legalName,address:{branchId:source.branch.branchCode,...receipt.seller.branchAddress}},
+  receiver:receiverProjection,documentType:'i',documentTypeVersion:'1.0',dateTimeIssued:source.issuedAt,taxpayerActivityCode:source.profile.activityCode,internalId:source.receiptNumber,
   invoiceLines:receipt.itemData.map(line=>({description:line.description,itemType:line.itemType,itemCode:line.itemCode,unitType:line.unitType,quantity:line.quantity,
    unitValue:{currencySold:'EGP',amountEGP:line.unitPrice},salesTotal:line.totalSale,total:line.total,valueDifference:0,totalTaxableFees:0,netTotal:line.netSale,itemsDiscount:0,
    ...(line.commercialDiscountData?{discount:{amount:line.commercialDiscountData[0].amount}}:{}),taxableItems:line.taxableItems,internalCode:line.internalCode})),

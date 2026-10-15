@@ -27,7 +27,7 @@ test('merchant and item format validation exposes missing fields without claimin
 })
 for (const [name,mutate,error] of [
  ['non EGP',s=>s.currency='USD','EGP_ONLY'],['legacy',s=>s.tax=null,'LEGACY'],['disabled',s=>s.tax.calculationEnabled=false,'LEGACY'],
- ['compound',s=>s.tax.lines[0].rule.taxType='T2','TREATMENT'],['invalid subtype',s=>s.tax.lines[0].rule.subtype='W001','TREATMENT'],
+ ['compound',s=>s.tax.lines[0].rule.taxType='T2','TREATMENT'],['hidden withholding',s=>s.tax.lines[0].rule.withholding=5,'TREATMENT'],['invalid subtype',s=>s.tax.lines[0].rule.subtype='W001','TREATMENT'],
  ['three decimal rate',s=>s.tax.lines[0].rule.rate=14.001,'RATE'],['missing code',s=>s.items=[],'CODES'],
  ['money rounding',s=>s.tax.total=114.01,'ROUNDING'],['B2B',s=>s.buyer={type:'B',id:'987654321'},'B2B'],
  ['eInvoice',s=>s.channel='einvoice','EINVOICE'],['high amount buyer',s=>s.tax.total5=150000,'BUYER'],
@@ -105,4 +105,10 @@ test('Edge dispatcher rejects browser/anonymous callers and stays disabled until
   const response=await handler(new Request('https://example.invalid',{method:'POST',headers:{authorization:'Bearer synthetic-server-only'}}))
   assert.equal(response.status,503);assert.deepEqual(await response.json(),{state:'disabled'})
  } finally {globalThis.Deno=original}
+})
+
+test('versioned adapter emits the same wire format despite source property order',async()=>{
+ const a=source(),b=source();a.buyer={type:'P',id:'12345678901234',name:'Test'};b.buyer={name:'Test',id:'12345678901234',type:'P'}
+ b.branch.address=Object.fromEntries(Object.entries(b.branch.address).reverse())
+ assert.deepEqual(await buildReceipt(a),await buildReceipt(b))
 })
