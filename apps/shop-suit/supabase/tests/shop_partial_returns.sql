@@ -9,7 +9,7 @@ do $$
 declare shop uuid; loc uuid; customer uuid; product uuid; service uuid; member uuid; sale uuid; line uuid; ret uuid; request uuid; refund uuid; event uuid; shift uuid;
  lines jsonb; plan jsonb; doc jsonb; ctx jsonb; original jsonb; stock numeric; remaining numeric; paid uuid; comp jsonb; total numeric:=0; net numeric:=0; tax numeric:=0; q numeric; i integer;
 begin
- shop:=public.create_owner_shop('Partial return fixture','multi','mixed');
+ shop:=public.create_owner_shop('Partial return fixture','mixed'::public.business_mode);
  select id into loc from public.shop_locations where shop_id=shop and is_default;
  select id into member from public.shop_memberships where shop_id=shop and role='owner';
  customer:=public.save_customer(shop,null,'Return customer',null,null,null,null);
@@ -162,7 +162,7 @@ reset role;
 
 -- Refund details retain the existing payment-view capability boundary even for
 -- a valid sales-view member assigned to this sale's location.
-do $$declare shop uuid:=current_setting('returns.shop')::uuid; person uuid; member uuid; custom_role uuid;
+do $$declare shop uuid:=current_setting('returns.shop')::uuid; person uuid; member uuid; custom_role uuid; other_loc uuid;
 begin
  insert into public.profiles(user_id,portal_id,display_name,email_snapshot)
  select f.sales_reader,s.portal_id,'Sales-only reader','sales-reader@returns.invalid'
@@ -180,15 +180,16 @@ begin
  insert into public.membership_roles(membership_id,role_id)
  select member,id from public.roles where shop_id=shop and key='manager' and is_system;
  perform set_config('returns.manager_member',member::text,true);
+ -- Isolated alternate-location fixture: this tests read scope, not paid-plan provisioning.
+ insert into public.shop_locations(shop_id,name,code) values(shop,'Unassigned return branch','RETURN-OTHER') returning id into other_loc;
+ perform set_config('returns.other_loc',other_loc::text,true);
 end;$$;
 select set_config('request.jwt.claim.sub',owner::text,true) from return_fixture;
 set local role authenticated;
-do $$declare shop uuid:=current_setting('returns.shop')::uuid;loc uuid:=current_setting('returns.loc')::uuid;other_loc uuid;
+do $$declare shop uuid:=current_setting('returns.shop')::uuid;loc uuid:=current_setting('returns.loc')::uuid;other_loc uuid:=current_setting('returns.other_loc')::uuid;
 begin
  perform public.assign_membership_locations(shop,current_setting('returns.reader_member')::uuid,array[loc]);
  perform public.assign_membership_locations(shop,current_setting('returns.manager_member')::uuid,array[loc]);
- other_loc:=public.save_shop_location(shop,null,'Unassigned return branch','RETURN-OTHER',null,null);
- perform set_config('returns.other_loc',other_loc::text,true);
  -- A correctly authorized owner still cannot substitute another location scope.
  begin perform public.get_sale_return(shop,other_loc,current_setting('returns.read_return')::uuid);raise exception 'Wrong-scope return document read';exception when no_data_found then
   if sqlerrm<>'RETURN_NOT_FOUND' then raise;end if;end;
