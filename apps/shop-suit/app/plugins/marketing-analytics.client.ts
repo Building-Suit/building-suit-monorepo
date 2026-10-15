@@ -16,14 +16,14 @@ export default defineNuxtPlugin(() => {
   async function track(event: MarketingEvent) {
     const path = router.currentRoute.value.path
     if (!consented() || (user.value && event !== 'signup_complete')) return
-    const envelope = analyticsEnvelope(event, path)
+    const envelope = analyticsEnvelope(event, path, config.public.changelogAvailable)
     if (!envelope) return
     const key = `${event}:${path}`
     if (seen.has(key)) return
     if (event === 'signup_complete') {
       try { if (sessionStorage.getItem('bs-shop.analytics.signup')) return } catch { /* in-memory deduplication remains */ }
     }
-    transport ??= createBasicAnalytics(config.public.gaMeasurementId, productionOrigin)
+    try { transport ??= createBasicAnalytics(config.public.gaMeasurementId, productionOrigin) } catch { return }
     seen.add(key)
     const delivery = transport.send(envelope.name, envelope.params, event === 'signup_complete')
     if (event === 'signup_complete') {
@@ -32,11 +32,11 @@ export default defineNuxtPlugin(() => {
     await delivery
   }
   watch([preference, () => router.currentRoute.value.path, user], () => {
-    if (!consented() || user.value || !isPublicPath(router.currentRoute.value.path)) stop()
+    if (!consented() || user.value || !isPublicPath(router.currentRoute.value.path, config.public.changelogAvailable)) stop()
     else void track('page_view')
   }, { immediate: true, flush: 'sync' })
   // Suspend on document exit; consent restoration rechecks expiry on return.
   window.addEventListener('pagehide', stop)
-  window.addEventListener('pageshow', () => { if (!user.value && isPublicPath(router.currentRoute.value.path)) void track('page_view') })
+  window.addEventListener('pageshow', () => { if (!user.value && isPublicPath(router.currentRoute.value.path, config.public.changelogAvailable)) void track('page_view') })
   return { provide: { marketingAnalytics: { track } } }
 })

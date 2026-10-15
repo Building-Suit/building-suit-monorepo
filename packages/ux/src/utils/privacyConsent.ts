@@ -14,11 +14,13 @@ export function privacyPreference(analytics: boolean, now = Date.now()): Privacy
 }
 /** Remove only our GA cookies, including supported parent-domain/path variants. */
 export function removeAnalyticsCookies(doc: Document, hostname: string) {
-  const names = doc.cookie.split(';').map(cookie => cookie.split('=')[0]?.trim() || '').filter(name => name === '_ga' || name.startsWith('_ga_'))
+  let cookies = ''
+  try { cookies = doc.cookie } catch { return }
+  const names = cookies.split(';').map(cookie => cookie.split('=')[0]?.trim() || '').filter(name => name === '_ga' || name.startsWith('_ga_'))
   const labels = hostname.split('.')
   const domains = ['', ...labels.map((_, index) => labels.slice(index).join('.')).filter(domain => domain.includes('.'))]
   for (const name of names) for (const domain of domains) {
-    doc.cookie = `${name}=; Max-Age=0; Path=/; SameSite=Lax${domain ? `; Domain=${domain}` : ''}`
+    try { doc.cookie = `${name}=; Max-Age=0; Path=/; SameSite=Lax${domain ? `; Domain=${domain}` : ''}` } catch { /* Browser policy may block cookie access. */ }
   }
 }
 export interface PrivacyPresentation {

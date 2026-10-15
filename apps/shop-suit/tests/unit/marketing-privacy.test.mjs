@@ -18,6 +18,8 @@ test('only exact production environment and public canonical documents can index
   for (const origin of ['https://stg.shop.building-suit.com', 'https://preview.vercel.app', 'http://shop.building-suit.com', 'https://shop.building-suit.com.evil.test']) assert.equal(seo.canIndex('production', origin), false)
   assert.equal(seo.canIndex('production', seo.productionOrigin), true)
   for (const path of ['/dashboard', '/billing', '/auth/signup', '/customers/123', '/pricing', '/changelog']) assert.equal(seo.isPublicPath(path), false)
+  assert.equal(seo.isPublicPath('/changelog', true), true)
+  assert.equal((seo.publicSitemap(true, true).match(/<loc>/g) || []).length, 8)
   assert.equal((seo.publicSitemap(true).match(/<url>/g) || []).length, 7)
   assert.doesNotMatch(seo.publicSitemap(false), /<loc>/)
   for (const path of seo.publicPaths) assert.match(seo.publicSitemap(true), new RegExp(seo.productionOrigin + path))
@@ -54,6 +56,7 @@ test('GA transport hides parent content, queues only explicit events and discard
   loaded()
   assert.equal(sent.length, 1)
   client.stop()
+  assert.equal(frame.contentWindow['ga-disable-G-TESTONLY'], true)
   await client.send('page_view', {})
   loaded()
   assert.equal(sent.length, 1)
@@ -63,6 +66,8 @@ test('cookie removal leaves authentication, locale and unrelated storage intact'
   const writes = []
   const doc = { get cookie() { return '_ga=one; _ga_TESTONLY=two; bs-shop-production-auth-token=private; building-suit-locale=ar; other=value' }, set cookie(value) { writes.push(value) } }
   consent.removeAnalyticsCookies(doc, 'shop.building-suit.com')
+  assert.doesNotThrow(() => consent.removeAnalyticsCookies({ get cookie() { throw new Error('denied') } }, 'shop.building-suit.com'))
+  assert.doesNotThrow(() => consent.removeAnalyticsCookies({ get cookie() { return '_ga=one' }, set cookie(_) { throw new Error('denied') } }, 'shop.building-suit.com'))
   assert.ok(writes.length > 0)
   assert.ok(writes.every(value => /^_ga(?:_TESTONLY)?=; Max-Age=0;/.test(value)))
 })

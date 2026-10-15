@@ -1,11 +1,16 @@
 import { consentKey, readPrivacyPreference, privacyPreference, removeAnalyticsCookies } from '@building-suit/ux'
 import type { PrivacyPreference, PrivacyPresentation } from '@building-suit/ux'
+import { isPublicPath } from '#shared/publicSeo'
 export function useShopPrivacy(initialize = false) {
   const preference = useState<PrivacyPreference | null>('shop-privacy', () => null)
   const ready = useState('shop-privacy-ready', () => false)
   const settings = useState('shop-privacy-settings', () => false)
   const draft = useState('shop-privacy-draft', () => false)
   const { locale } = useI18n()
+  const router = useRouter()
+  const user = useSupabaseUser()
+  const config = useRuntimeConfig()
+  let memoryOnly = false
   let expiryTimer: ReturnType<typeof setTimeout> | undefined
   function scheduleExpiry() {
     clearTimeout(expiryTimer)
@@ -19,7 +24,10 @@ export function useShopPrivacy(initialize = false) {
     try { sessionStorage.removeItem('bs-shop.analytics.signup') } catch { /* storage may be blocked */ }
   }
   function restore() {
-    try { preference.value = readPrivacyPreference(localStorage.getItem(consentKey)) } catch { preference.value = null }
+    if (memoryOnly) preference.value = readPrivacyPreference(JSON.stringify(preference.value))
+    else {
+      try { preference.value = readPrivacyPreference(localStorage.getItem(consentKey)) } catch { preference.value = null }
+    }
     if (!preference.value?.analytics) clearOptionalStorage()
     if (!settings.value) draft.value = preference.value?.analytics === true
     ready.value = true
@@ -27,7 +35,7 @@ export function useShopPrivacy(initialize = false) {
   }
   function save(analytics: boolean) {
     preference.value = privacyPreference(analytics)
-    try { localStorage.setItem(consentKey, JSON.stringify(preference.value)) } catch { /* Memory-only choice when storage is unavailable. */ }
+    try { localStorage.setItem(consentKey, JSON.stringify(preference.value)); memoryOnly = false } catch { memoryOnly = true }
     draft.value = analytics
     settings.value = false
     scheduleExpiry()
@@ -45,7 +53,7 @@ export function useShopPrivacy(initialize = false) {
     })
   }
   return computed<PrivacyPresentation>(() => ({
-    ready: ready.value, prompt: !preference.value, settings: settings.value, analytics: draft.value,
+    ready: ready.value, prompt: !preference.value && !user.value && isPublicPath(router.currentRoute.value.path, config.public.changelogAvailable), settings: settings.value, analytics: draft.value,
     open: () => { draft.value = preference.value?.analytics === true; settings.value = true },
     close: () => { settings.value = false }, save, change: value => { draft.value = value },
     copy: locale.value === 'ar' ? {

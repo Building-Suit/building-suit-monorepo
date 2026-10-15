@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs'
+
 export default defineNuxtConfig({
   extends: ['@building-suit/nuxt-layer'],
   modules: ['@nuxtjs/supabase'],
@@ -12,6 +14,8 @@ export default defineNuxtConfig({
   runtimeConfig: { public: {
     appUrl: process.env.APP_URL, portalKey: 'shop-crm',
     appEnvironment: process.env.APP_ENV || 'local',
+    // #318 owns the route. Include it only in builds where that file exists.
+    changelogAvailable: existsSync(new URL('./app/pages/changelog.vue', import.meta.url)),
     gaMeasurementId: '', searchConsoleVerification: '',
   } },
   supabase: {

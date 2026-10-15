@@ -13,7 +13,7 @@ export function createBasicAnalytics(measurementId: string, origin: string, doc:
   const settings = JSON.stringify({
     send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false,
     allow_enhanced_conversions: false, cookie_expires: 15552000, cookie_update: false,
-    cookie_domain: 'none', page_location: origin + '/', page_referrer: '', page_title: 'Shop Suit',
+    cookie_domain: 'none', cookie_flags: 'SameSite=Lax;Secure', page_location: origin + '/', page_referrer: '', page_title: 'Shop Suit',
   })
   // No parent document or route reads. No postMessage listener: the parent calls
   // this document's narrow dispatch function with already validated envelopes.
@@ -46,6 +46,16 @@ export function createBasicAnalytics(measurementId: string, origin: string, doc:
         dispatch(name, { ...params, event_timeout: 1200, event_callback: () => { window.clearTimeout(timeout); resolve() } })
       })
     },
-    stop() { active = false; pending.length = 0; frame.remove() },
+    stop() {
+      active = false
+      pending.length = 0
+      // Suppress provider unload/engagement handlers before disposing the frame.
+      // Do not send a denied-consent update (basic mode has no denied pings).
+      try {
+        const target = frame.contentWindow as unknown as Record<string, unknown> | null
+        if (target) { target[`ga-disable-${measurementId}`] = true; target.dispatchAnalytics = () => {} }
+      } catch { /* An unavailable document is still removed below. */ }
+      frame.remove()
+    },
   }
 }
