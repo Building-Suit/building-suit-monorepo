@@ -1,0 +1,9 @@
+{
+  "id": "shop-receipt-image-support",
+  "task": "SS-RECEIPT-IMAGE-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["packages/testing", "packages/ui", "packages/ux", "packages/design-tokens", "apps/building-suit-docs", "docs/shared/ui-ownership-manifest.json", "docs/work-packages/shop-receipt-image.md", "pnpm-lock.yaml"],
+  "reason": "Adds optional shared receipt presentation, local image handling, a self-hosted document font, catalogue coverage and deterministic visual/clipboard regressions for Shop. Other Suit workflows retain their current behavior."
+}

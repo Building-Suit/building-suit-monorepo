@@ -1,3 +1,4 @@
+@import '@fontsource-variable/roboto-condensed/index.css';
 @import 'tailwindcss';
 @import '../../../design-tokens/generated/tokens.css';
 @source '../../../../apps/*/app';

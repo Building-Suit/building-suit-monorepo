@@ -239,3 +239,5 @@ export { consentVersion, consentLifetime, consentKey, readPrivacyPreference, pri
 export type { PrivacyPreference, PrivacyPresentation } from './utils/privacyConsent.ts'
 
 export { useReviewedCommand } from './composables/useReviewedCommand.ts'
+
+export { copyDocumentImage, renderDocumentImage, downloadDocumentImage } from './utils/documentImage.ts'

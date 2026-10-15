@@ -2,6 +2,15 @@
 import type { PrivacyPresentation } from '@building-suit/ux'
 import type { ChangelogFeed, ChangelogCopy } from '@building-suit/contracts'
 import type { BsBillingCopy, BsBillingForm, BsBillingView } from '@building-suit/ui/types/billingPresentation'
+const receiptExample = computed(() => ({
+  issuer: isArabic.value ? 'المتجر' : 'Merchant shop', issuerDetails: [], invoice: 'SALE-000001', issued: '2026/10/15 12:00',
+  location: { name: isArabic.value ? 'الفرع' : 'Branch', code: '01', address: null, phone: null }, staff: '—', customer: '—',
+  lines: [{ id: '1', label: isArabic.value ? 'خدمة' : 'Service', quantity: '1', unitPrice: 'EGP 100.00', total: 'EGP 100.00' }],
+  totals: [{ id: 'paid', label: isArabic.value ? 'إجمالي المدفوع' : 'Total paid', value: 'EGP 100.00', emphasis: true }], payments: [{ id: '1', summary: 'EGP 100.00', reference: null }], footer: null,
+}))
+const receiptExampleCopy = computed(() => ({
+  title: isArabic.value ? 'إيصال بيع' : 'Sales Receipt', reprintLabel: '', invoice: 'Sale / البيع', date: 'Date / التاريخ', location: 'Branch / الفرع', address: 'Address / العنوان', phone: 'Phone / الهاتف', staff: 'Cashier / الموظف', customer: 'Customer / العميل', items: 'Items / الأصناف', item: 'Product / الخدمة', quantity: 'Qty', unitPrice: 'Unit', lineTotal: 'Amount', total: 'Total', payment: 'Payment / الدفع', reference: 'Reference / المرجع', thankYou: isArabic.value ? 'شكرًا لزيارتكم' : 'Thank you', greeting: '', issuedVia: 'Issued via Shop Suit by Building Suit', compliance: isArabic.value ? 'إثبات بيع فقط — ليس إيصالًا ضريبيًا معتمدًا.' : 'Proof of sale only — not an approved tax receipt.',
+}))
 const privacyExampleOpen = ref(false)
 const privacyExampleChoice = ref(false)
 const privacyExample = computed<PrivacyPresentation>(() => ({
@@ -200,6 +209,7 @@ const invitationPreviewCopy={
     />
 
     <BsContentSection :title="isArabic ? 'حالة العمليات المحلية' : 'Local transaction status'">
+      <BsSaleReceipt :receipt="receiptExample" :copy="receiptExampleCopy" :language="isArabic ? 'ar' : 'en'" :printed="false" />
       <BsOfflineCounterStatus :view="{ notice: isArabic ? 'مثال توضيحي لحالات المزامنة؛ لا ينفذ عمليات.' : 'Illustrative synchronization states; no transactions are executed.', retry: isArabic ? 'إعادة المحاولة' : 'Retry', records: ['unsynced','syncing','failed','synced'].map((state, index) => ({ id: String(index), label: isArabic ? 'عملية محلية' : 'Local transaction', state: state as 'unsynced' | 'syncing' | 'failed' | 'synced', status: state, detail: '', receipt: null })) }" />
     </BsContentSection>
 

@@ -102,7 +102,7 @@ const { currentId, currentLocationId } = useShop()
 const { t, locale } = useI18n()
 const confirmation = useConfirmation()
 const { push: pushToast } = useToasts()
-const { sharing: sharingReceipt, shareError, shareReceipt } = useSaleReceiptShare()
+const { sharing: sharingReceipt, shareError, shareReceipt, downloadReceiptImage } = useSaleReceiptShare()
 const saleId = computed(() => String(route.params.id ?? ''))
 const issuing = ref(false)
 const actionError = ref('')
@@ -384,7 +384,7 @@ const commerceForm = computed<BsCommerceDocumentForm>({ get: () => ({ amount: pa
 const commerceCorrectionForm = computed<BsCommerceCorrectionForm>({ get: () => ({ date: correctionDate.value, reference: correctionReference.value, reason: correctionReason.value }), set: value => { correctionDate.value = value.date; correctionReference.value = value.reference; correctionReason.value = value.reason } })
 const { returnOpen, refundRecordOpen, returnForm, refundRecordForm, returnsCopy, returnsView, startReturn, previewReturn, confirmReturn, recordReturnRefund, completeReturnRefund, failReturnRefund, retryReturns, previousReturns, nextReturns, context: returnContext } = useSaleReturns(saleId, () => sale.value?.status === 'issued', async () => { await Promise.all([refresh(), refreshCorrection(), refreshTax()]) })
 const commerceCopy = computed<BsCommerceDocumentCopy>(() => ({
-  back: t('sales.back'), loading: t('common.loading'), loadError: t('sales.loadError'), retry: t('sales.retry'), notFound: t('sales.notFound'), party: t('sales.customerSnapshot'), date: t('sales.issuedAt'), created: t('sales.createdAt'), notes: t('sales.notes'), total: t('sales.total'), balance: t('payments.outstanding'), discount: t('sales.discount'), paid: t('payments.paid'), due: t('sales.dueDate'), settlement: t('payments.title'), lines: t('sales.lines'), item: t('sales.item'), quantity: t('sales.quantity'), price: t('sales.unitPrice'), available: '', payments: t('payments.history'), credits: '', inventory: t('sales.inventoryTrace'), empty: t('payments.empty'), noInventory: t('sales.noInventoryEffect'), noParty: t('sales.noCustomer'), details: t('sales.details'), batch: t('sales.batch'), open: t('sales.open'), recordPayment: t('payments.recordReceipt'), recordCredit: '', recordReturn: '', reverse: t('payments.reverse'), refund: t('payments.refund'), issue: t('sales.issue'), issuing: t('sales.issuing'), edit: t('sales.editDraft'), reprint: t('receipt.reprint'), share: t('receipt.share'), amount: t('payments.amount'), method: t('payments.method'), reference: t('payments.reference'), reason: t('payments.reason'), save: t('payments.save'), cancel: t('sales.cancel'), correction: t('saleCorrections.title'), correctionLoading: t('saleCorrections.loading'), correctionError: t('saleCorrections.loadError'), refunded: t('saleCorrections.refunded'), restored: t('saleCorrections.restored'), correct: t('saleCorrections.action'), correctionDialog: t('saleCorrections.dialogTitle'), correctionSubmit: t('saleCorrections.submit'),
+  back: t('sales.back'), loading: t('common.loading'), loadError: t('sales.loadError'), retry: t('sales.retry'), notFound: t('sales.notFound'), party: t('sales.customerSnapshot'), date: t('sales.issuedAt'), created: t('sales.createdAt'), notes: t('sales.notes'), total: t('sales.total'), balance: t('payments.outstanding'), discount: t('sales.discount'), paid: t('payments.paid'), due: t('sales.dueDate'), settlement: t('payments.title'), lines: t('sales.lines'), item: t('sales.item'), quantity: t('sales.quantity'), price: t('sales.unitPrice'), available: '', payments: t('payments.history'), credits: '', inventory: t('sales.inventoryTrace'), empty: t('payments.empty'), noInventory: t('sales.noInventoryEffect'), noParty: t('sales.noCustomer'), details: t('sales.details'), batch: t('sales.batch'), open: t('sales.open'), recordPayment: t('payments.recordReceipt'), recordCredit: '', recordReturn: '', reverse: t('payments.reverse'), refund: t('payments.refund'), issue: t('sales.issue'), issuing: t('sales.issuing'), edit: t('sales.editDraft'), reprint: t('receipt.reprint'), share: t('receipt.share'), downloadReceipt: t('receipt.download'), amount: t('payments.amount'), method: t('payments.method'), reference: t('payments.reference'), reason: t('payments.reason'), save: t('payments.save'), cancel: t('sales.cancel'), correction: t('saleCorrections.title'), correctionLoading: t('saleCorrections.loading'), correctionError: t('saleCorrections.loadError'), refunded: t('saleCorrections.refunded'), restored: t('saleCorrections.restored'), correct: t('saleCorrections.action'), correctionDialog: t('saleCorrections.dialogTitle'), correctionSubmit: t('saleCorrections.submit'),
 }))
 const commerceView = computed<BsCommerceDocumentView>(() => {
   const value = sale.value
@@ -392,7 +392,7 @@ const commerceView = computed<BsCommerceDocumentView>(() => {
   const issued = value?.status === 'issued'
   const draft = value?.status === 'draft'
   return {
-    loading: pending.value, error: Boolean(error.value), found: Boolean(value), title: value?.invoice_number || t('sales.draftNumber'), subtitle: t('sales.details'), status: value ? t(`sales.${value.status}`) : '', actionError: [actionError.value, shareError.value].filter(Boolean).join(' · '), success: '', notice: [issued ? t('sales.immutable') : t('sales.paymentBoundary'), issued && !value?.client_id ? t('payments.customerlessPaid') : ''].filter(Boolean).join(' '),
+    loading: pending.value, error: Boolean(error.value), found: Boolean(value), title: value?.invoice_number || t('sales.draftNumber'), subtitle: t('sales.details'), status: value ? t(`sales.${value.status}`) : '', receiptImageError: Boolean(shareError.value), actionError: [actionError.value, shareError.value].filter(Boolean).join(' · '), success: '', notice: [issued ? t('sales.immutable') : t('sales.paymentBoundary'), issued && !value?.client_id ? t('payments.customerlessPaid') : ''].filter(Boolean).join(' '),
     party: { name: value?.client_name_snapshot || '', to: value?.client_id ? `/customers/${value.client_id}` : '', phone: value?.client_phone_snapshot || '—', email: value?.client_email_snapshot || '—', address: value?.client_address_snapshot || '—' },
     amountBreakdown: saleTax.value?.calculationEnabled ? [{ label: locale.value === 'ar' ? 'قبل الضريبة' : 'Before tax', value: money(saleTax.value.net) }, { label: locale.value === 'ar' ? 'الضريبة' : 'Tax', value: money(saleTax.value.tax) }] : [],
     orderDiscount: { label: locale.value === 'ar' ? 'خصم على الطلب' : 'Order discount', canEdit: Boolean(draft && value?.canManage), pending: discountPending.value, dirty: discountDirty.value },
@@ -447,7 +447,7 @@ function shareCommerceReceipt() { if (receiptSnapshot.value) return shareReceipt
     @save-order-discount="saveOrderDiscount"
     @retry="refresh(); refreshTax()"
     @issue="issue"
-    @share="shareCommerceReceipt"
+    @share="shareCommerceReceipt" @download-receipt="downloadReceiptImage"
     @payment="openReceipt"
     @reverse="reverseCommerceEvent"
     @refund="refundCommerceEvent"
