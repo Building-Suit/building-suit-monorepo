@@ -189,6 +189,7 @@ begin
    usage:=usage||jsonb_build_array(jsonb_set(material,'{quantity}',to_jsonb(needed)));
   end loop;
  end if;
+ usage:=shop_private.validate_service_materials(p_shop_id,usage);
  -- Same product lock and stable order as the existing inventory writers.
  perform p.id from public.products p join jsonb_array_elements(usage)m on p.id=(m->>'productId')::uuid
   where p.shop_id=p_shop_id order by p.id for update of p;
@@ -367,24 +368,30 @@ begin
  return shop_private.link_appointment_sale(p_request_id,p_shop_id,p_appointment_id,p_sale_id);
 end;$$;
 
-create function public.service_fulfillment_context(p_shop_id uuid,p_location_id uuid,p_invoice_id uuid default null) returns jsonb
+create function public.service_fulfillment_context(p_shop_id uuid,p_location_id uuid,p_invoice_id uuid default null,p_offset integer default 0) returns jsonb
 language plpgsql security definer set search_path='' as $$
+declare page_ids uuid[]; total bigint;
 begin
  perform shop_private.assert_shop_write_access(p_shop_id,'sales.manage');
  perform shop_private.assert_location_access(p_shop_id,p_location_id,true);
  if p_invoice_id is not null and not exists(select 1 from public.invoices where id=p_invoice_id and shop_id=p_shop_id and location_id=p_location_id) then
   raise exception 'SERVICE_SALE_NOT_FOUND' using errcode='P0002';end if;
- return jsonb_build_object('lines',coalesce((select jsonb_agg(jsonb_build_object('id',i.id,'name',i.item_name,'quantity',i.quantity,
+ select count(*) into total from public.service_fulfillments f left join public.service_fulfillment_sale_links l on l.fulfillment_id=f.id
+  join public.invoice_items i on i.id=coalesce(f.line_id,l.line_id) where i.invoice_id=p_invoice_id and f.shop_id=p_shop_id;
+ select array_agg(id) into page_ids from (select f.id from public.service_fulfillments f
+  left join public.service_fulfillment_sale_links l on l.fulfillment_id=f.id join public.invoice_items i on i.id=coalesce(f.line_id,l.line_id)
+  where i.invoice_id=p_invoice_id and f.shop_id=p_shop_id order by f.completed_at desc,f.id desc limit 50 offset greatest(0,coalesce(p_offset,0)))paged;
+ return jsonb_build_object('totalCount',total,'lines',coalesce((select jsonb_agg(jsonb_build_object('id',i.id,'name',i.item_name,'quantity',i.quantity,
   'completedQuantity',shop_private.service_completed_quantity(i.id),
-  'history',coalesce((select jsonb_agg(to_jsonb(f) || jsonb_build_object('allocations',(select coalesce(jsonb_agg(to_jsonb(c)),'[]')
+  'history',coalesce((select jsonb_agg(to_jsonb(f) || jsonb_build_object('allocations',(select coalesce(jsonb_agg(to_jsonb(c)||jsonb_build_object('corrections',(select coalesce(jsonb_agg(to_jsonb(x) order by x.created_at,x.id),'[]') from public.service_material_corrections x where x.consumption_id=c.id))),'[]')
     from public.service_material_consumptions c where c.fulfillment_id=f.id)) order by f.completed_at,f.id)
    from public.service_fulfillments f left join public.service_fulfillment_sale_links l on l.fulfillment_id=f.id
-   where coalesce(f.line_id,l.line_id)=i.id),'[]')) order by i.line_order,i.id)
+   where coalesce(f.line_id,l.line_id)=i.id and f.id=any(page_ids)),'[]')) order by i.line_order,i.id)
   from public.invoice_items i join public.invoices sale on sale.id=i.invoice_id
   where i.shop_id=p_shop_id and sale.location_id=p_location_id and sale.id=p_invoice_id and i.item_type='service'),'[]'));
 end;$$;
-revoke all on function public.service_fulfillment_context(uuid,uuid,uuid) from public,anon;
-grant execute on function public.service_fulfillment_context(uuid,uuid,uuid) to authenticated;
+revoke all on function public.service_fulfillment_context(uuid,uuid,uuid,integer) from public,anon;
+grant execute on function public.service_fulfillment_context(uuid,uuid,uuid,integer) to authenticated;
 
 create function public.service_recipe_context(p_shop_id uuid,p_offset integer default 0) returns jsonb
 language plpgsql security definer set search_path='' as $$

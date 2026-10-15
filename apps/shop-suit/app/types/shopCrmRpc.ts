@@ -5,7 +5,7 @@ export type ShopRpcDatabase = {
     Views: Record<string, never>
     Functions: {
       complete_service: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_line_id: string | null; p_quantity: number; p_appointment_id?: string | null; p_materials?: Array<{productId: string; unit: string; quantity: number}> | null; p_reason?: string }; Returns: string }
-      service_fulfillment_context: { Args: {p_shop_id: string; p_location_id: string; p_invoice_id?: string | null}; Returns: unknown }
+      service_fulfillment_context: { Args: {p_shop_id: string; p_location_id: string; p_invoice_id?: string | null; p_offset?: number}; Returns: unknown }
       service_recipe_context: { Args: {p_shop_id: string; p_offset?: number}; Returns: unknown }
       define_service_material_unit: { Args: {p_shop_id: string; p_product_id: string; p_unit: string}; Returns: undefined }
       save_service_recipe: { Args: {p_request_id: string; p_shop_id: string; p_service_id: string; p_effective_at: string | null; p_materials: Array<{productId: string; unit: string; quantity: number}>; p_reason: string}; Returns: string }

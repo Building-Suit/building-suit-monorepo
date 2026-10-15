@@ -4,7 +4,7 @@ import type { BsServiceWorkCopy, BsServiceWorkForm, BsServiceWorkView, BsService
 const props = defineProps<{ copy: BsServiceWorkCopy; view: BsServiceWorkView; dirty: boolean; backTo: string }>()
 const form = defineModel<BsServiceWorkForm>('form', { required: true })
 const editor = defineModel<boolean>('editor', { required: true })
-const emit = defineEmits<{ retry: []; save: []; edit: []; defineUnit: []; page: [offset: number]; retryOffline: [id: string]; reconcileOffline: [id: string] }>()
+const emit = defineEmits<{ retry: []; save: []; edit: []; correct: []; defineUnit: []; page: [offset: number]; retryOffline: [id: string]; reconcileOffline: [id: string] }>()
 const columns = computed<BsDataTableColumn<BsServiceWorkRow>[]>(() => [
  { key: 'name', field: 'name', header: props.copy.service }, { key: 'quantity', field: 'quantity', header: props.copy.quantity },
  { key: 'detail', field: 'detail', header: props.copy.detail }, { key: 'date', field: 'date', header: props.copy.date },
@@ -16,7 +16,7 @@ const unitProduct = ref<string | number | null>(null)
 <template>
  <BsStack gap="lg">
   <BsLink :to="backTo">{{ copy.back }}</BsLink>
-  <BsPageHeader :title="copy.title" :subtitle="copy.help"><template #actions><BsButton v-if="view.available && !view.loading && !view.error" :disabled="view.pending" @click="emit('edit')">{{ view.saleMode ? copy.complete : copy.configure }}</BsButton></template></BsPageHeader>
+  <BsPageHeader :title="copy.title" :subtitle="copy.help"><template #actions><BsButton v-if="view.saleMode && view.manager && !view.loading && !view.error" :disabled="view.pending" @click="emit('correct')">{{ copy.correction }}</BsButton><BsButton v-if="view.available && !view.loading && !view.error" :disabled="view.pending" @click="emit('edit')">{{ view.saleMode ? copy.complete : copy.configure }}</BsButton></template></BsPageHeader>
   <BsOfflineCounterStatus v-if="view.saleMode" :view="view.offline" @retry="emit('retryOffline', $event)" @reconcile="emit('reconcileOffline', $event)" />
   <BsText v-if="view.success" role="status">{{ view.success }}</BsText>
   <BsText v-if="view.actionError && !editor" role="alert">{{ view.actionError }}</BsText>
@@ -24,12 +24,12 @@ const unitProduct = ref<string | number | null>(null)
   <BsBox v-else-if="view.error" role="alert"><BsText>{{ copy.error }}</BsText><BsButton @click="emit('retry')">{{ copy.retry }}</BsButton></BsBox>
   <BsText v-else-if="!view.available">{{ copy.noContext }}</BsText>
   <template v-else>
-   <BsRecordActionDialog v-model:visible="editor" :title="view.saleMode ? copy.complete : copy.configure" :dirty="dirty" :pending="view.pending" :error="view.actionError || undefined" :submit-label="copy.save" @submit="emit('save')">
-    <BsSelect v-model="form.target" :label="copy.service" :options="view.choices" option-label="name" option-value="id" required />
+   <BsRecordActionDialog v-model:visible="editor" :title="view.correctionMode ? copy.correction : view.saleMode ? copy.complete : copy.configure" :dirty="dirty" :pending="view.pending" :error="view.actionError || undefined" :submit-label="copy.save" @submit="emit('save')">
+    <BsSelect v-model="form.target" :label="view.correctionMode ? copy.product : copy.service" :options="view.choices" option-label="name" option-value="id" required />
     <BsField v-if="view.saleMode" :label="copy.quantity"><BsInput v-model="form.quantity" type="number" min="0.01" max="1000000" step="0.01" required :aria-label="copy.quantity" /></BsField>
     <BsField v-else :label="copy.effectiveAt"><BsInput v-model="form.effectiveAt" type="datetime-local" :aria-label="copy.effectiveAt" /><BsText>{{ copy.immediate }}</BsText></BsField>
-    <BsCheckbox v-if="view.saleMode && view.manager" v-model="form.override" :label="copy.override" />
-    <BsStack v-if="!view.saleMode || (view.manager && form.override)">
+    <BsCheckbox v-if="view.saleMode && view.manager && !view.correctionMode" v-model="form.override" :label="copy.override" />
+    <BsStack v-if="!view.correctionMode && (!view.saleMode || (view.manager && form.override))">
      <BsPanel v-for="(item, index) in form.materials" :key="index">
       <BsSelect v-model="item.productId" :label="copy.product" :options="materialOptions" option-label="label" option-value="id" required />
       <BsField :label="copy.quantity"><BsInput v-model="item.quantity" type="number" min="0.01" max="1000000" step="0.01" required :aria-label="copy.quantity" /></BsField>

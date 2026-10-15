@@ -70,6 +70,17 @@ begin
  if (public.commission_history(shop,sale)->'lines'->0->>'earned')::numeric<>0 then raise exception 'Partial fulfillment earned full line';end if;
  perform public.complete_service(gen_random_uuid(),shop,loc,line,1);
  if (public.commission_history(shop,sale)->'lines'->0->>'earned')::numeric<>16 then raise exception 'Multi-unit commission wrong';end if;
+ -- Inclusive tax basis is supplied by tax snapshots, never reconstructed here.
+ perform public.save_tax_policy(gen_random_uuid(),shop,statement_timestamp(),'{"enabled":true,"default":{"treatment":"vat","rate":25,"priceMode":"inclusive","subtype":"V009"},"items":[]}','Taxed service integration');
+ sale:=public.save_sale_draft(gen_random_uuid(),shop,null,customer,null,jsonb_build_array(jsonb_build_object('item_type','service','source_id',service,'quantity',1)));
+ select id into line from public.invoice_items where invoice_id=sale;
+ perform public.assign_sale_commission(shop,line,member,null);
+ perform public.issue_sale(gen_random_uuid(),shop,sale);
+ if (public.commission_history(shop,sale)->'lines'->0->>'netLineAmount')::numeric<>64 then raise exception 'Tax owner pre-tax basis not used';end if;
+ perform public.complete_service(gen_random_uuid(),shop,loc,line,1);
+ perform public.record_customer_receipt(gen_random_uuid(),shop,customer,80,now(),'cash',null,null,jsonb_build_array(jsonb_build_object('invoice_id',sale,'amount',80)));
+ if (public.commission_history(shop,sale)->'lines'->0->>'earned')::numeric<>6.40 then raise exception 'Taxed fulfilled commission incorrect';end if;
+ perform public.save_tax_policy(gen_random_uuid(),shop,clock_timestamp(),'{"enabled":false,"default":{"treatment":"vat","rate":25,"priceMode":"inclusive","subtype":"V009"},"items":[]}','Disable test tax');
  -- Scheduled completion before sale: consume once, link later without reconsumption.
  perform public.save_staff_schedule(shop,loc,member,'Etc/UTC',(select jsonb_agg(jsonb_build_object('weekday',d,'startsLocal','00:00','endsLocal','23:59')) from generate_series(0,6)d),'[]');
  ap:=public.save_appointment(gen_random_uuid(),shop,null,loc,member,service,date_trunc('day',now())+interval '1 day 10 hours','customer',customer,null,null,null);
