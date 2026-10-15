@@ -6,7 +6,7 @@ for (const locale of ['en','ar']) test(`ETA setup and submitted status: ${locale
  await page.setViewportSize({width:ar?390:1440,height:1000})
  let configuration:unknown=null
  const {calls}=await pilotFixture(page,locale,'owner',(name,args)=>{
-  if(name==='eta_settings')return {configuration,locations:[],items:[],documents:[{id:'job-1',invoice_id:'sale-1',state:'submitted',document_uuid:null,submission_uuid:'ETA-SUBMISSION-1',error_code:null}]}
+  if(name==='eta_settings')return {configuration,locations:[],items:[],sales:[],documents:[{id:'job-1',invoice_id:'sale-1',invoice_number:'SALE-001',state:'submitted',document_uuid:null,submission_uuid:'ETA-SUBMISSION-1',error_code:null}]}
   if(name==='save_eta_configuration'){configuration=args.p_configuration;return 'version-1'}
   return undefined
  })

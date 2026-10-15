@@ -15,9 +15,10 @@ try {
  config.branches[0].deviceSerialNumber='POS-CONCURRENT'
  await admin.query('select public.save_eta_configuration($1,$2,$3,$4)',[randomUUID(),info.shop,config,'Synthetic concurrency'])
  const product=config.items[0].sourceId
+ const customer=(await admin.query('select id from public.clients where shop_id=$1 limit 1',[info.shop])).rows[0].id
  const sales=[]
  for(let index=0;index<2;index++) {
-  const sale=(await admin.query('select public.save_sale_draft($1,$2,null,null,null,$3) id',[randomUUID(),info.shop,JSON.stringify([{item_type:'product',source_id:product,quantity:1}])])).rows[0].id
+  const sale=(await admin.query('select public.save_sale_draft($1,$2,null,$3,null,$4) id',[randomUUID(),info.shop,customer,JSON.stringify([{item_type:'product',source_id:product,quantity:1}])])).rows[0].id
   await admin.query('select public.issue_sale($1,$2,$3)',[randomUUID(),info.shop,sale]);sales.push(sale)
  }
  await admin.query('COMMIT')

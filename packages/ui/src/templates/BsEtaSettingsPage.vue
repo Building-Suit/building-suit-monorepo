@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BsEtaCopy, BsEtaForm, BsEtaRow } from '../types/etaPresentation'
 import type { BsDataTableColumn } from '@building-suit/ux'
-const props = defineProps<{copy:BsEtaCopy;available:boolean;loading:boolean;error:boolean;pending:boolean;dirty:boolean;message:string;setupStatus:string;records:BsEtaRow[];canPrevious:boolean;canNext:boolean}>()
+const props = defineProps<{copy:BsEtaCopy;available:boolean;loading:boolean;error:boolean;pending:boolean;dirty:boolean;message:string;setupStatus:string;records:BsEtaRow[];sales:{id:string;label:string}[];canPrevious:boolean;canNext:boolean}>()
 const form=defineModel<BsEtaForm>('form',{required:true})
 const editor=defineModel<boolean>('editor',{required:true})
 const invoice=defineModel<string>('invoice',{required:true})
@@ -27,7 +27,7 @@ const columns=computed<BsDataTableColumn<BsEtaRow>[]>(()=>[
    <BsPanel>
     <BsHeading :level="2">{{copy.queue}}</BsHeading>
     <BsForm :pending="pending" @submit="emit('queue')">
-     <BsField :label="copy.invoice"><BsInput v-model="invoice" required :aria-label="copy.invoice" /></BsField>
+     <BsField :label="copy.invoice"><BsSelect v-model="invoice" :options="sales" option-label="label" option-value="id" :aria-label="copy.invoice" /></BsField>
      <BsField :label="copy.buyerName"><BsInput v-model="buyerName" maxlength="100" :aria-label="copy.buyerName" /></BsField>
      <BsField :label="copy.buyerId"><BsInput v-model="buyerId" maxlength="14" :aria-label="copy.buyerId" /></BsField>
      <BsField :label="copy.paymentMethod"><BsSelect v-model="paymentMethod" :options="[{label:'C',value:'C'},{label:'V',value:'V'},{label:'O',value:'O'}]" option-label="label" option-value="value" :aria-label="copy.paymentMethod" /></BsField>
