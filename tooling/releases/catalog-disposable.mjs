@@ -127,4 +127,4 @@ try {
     migration: new URL('../../apps/super-admin-suit/supabase/migrations/20261015212440_first_official_release_bootstrap.sql', import.meta.url) })
   await testCandidates({ outputPath: outputArgs[0] === '--candidate-feed' ? outputArgs[1] : undefined, sql, parallelDatabaseSql: (database, statement) => parallelSql(statement, database), databaseSql: (database, statement) => docker(['exec','-i',container,'psql','-U','postgres','-d',database,'-v','ON_ERROR_STOP=1','-At'], statement) })
   console.log('Disposable PostgreSQL release acceptance passed: atomic allocation, concurrent retry, ordering, recovery, authorization, immutable timestamps, projection and batch promotion')
-} finally { docker(['rm','-f',container]) }
+} finally { docker(['rm','-fv',container]) }
