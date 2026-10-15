@@ -38,5 +38,6 @@ jobs:
           PY
             exit 1
           fi
+      - run: node tooling/database/test-shop-service-materials-local.mjs
+      - run: node tooling/database/test-shop-service-material-concurrency.mjs
       - run: pnpm db:test:shop:commission
-      - run: node tooling/database/test-shop-service-materials-concurrency.mjs
