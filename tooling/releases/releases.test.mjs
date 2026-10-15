@@ -31,7 +31,7 @@ test('publication fails closed on missing, pending or failed deployment gates', 
   assertReady(state)
   for (const patch of [{required:[]},{contexts:[]},{checks:[]},{contexts:[{context:'Vercel staging',state:'failure'}]}]) assert.throws(()=>assertReady({...state,...patch}))
 })
-test('production imports multiple exact staging releases and rejects missing, changed, unshipped or out-of-order provenance', () => {
+test('legacy v1 production history imports multiple exact staging releases and rejects missing, changed, unshipped or out-of-order provenance', () => {
   const second = {...fragment,id:'second-release'}
   const rows=[{manifest:{sourceSha:'one',fragments:[fragment]},digest:'same',publishedAt:'now'}, {manifest:{sourceSha:'two',fragments:[second]},digest:'same2',publishedAt:'later'}]
   assert.deepEqual(selectPromotion(rows,[fragment,second],()=>true),rows)

@@ -123,6 +123,7 @@ for (const locale of ['en','ar'] as const) test(`${locale}: actual evolving cand
   await page.goto('/')
   const section=page.locator('#whats-new')
   await expect(section.locator('article')).toHaveCount(3)
+  await expect(section.locator('[data-release]')).toHaveCount(2)
   await expect(section.getByText(locale==='ar'?'قريباً':'Coming Soon',{exact:true})).toHaveCount(1)
   await expect(section.getByText(locale==='ar'?'تم الإصدار':'Released',{exact:true})).toHaveCount(2)
   await expect(section.locator('article').first().getByText(locale==='ar'?'مراجعة العمل القادم':'Review upcoming work',{exact:true}).first()).toBeVisible()

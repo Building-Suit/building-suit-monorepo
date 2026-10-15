@@ -14,6 +14,16 @@ const filter = computed<ChangelogFilter>(() => ({ suit: props.suit ?? selectedSu
 const entries = computed(() => props.releaseLimit === undefined
   ? filterChangelog(validated.value, filter.value)
   : props.releasedOnly ? selectChangelogReleases(validated.value, filter.value, props.releaseLimit) : selectChangelogOverview(validated.value, filter.value, props.releaseLimit))
+const groups = computed(() => {
+  const byRelease = new Map<string, { id: string; items: ChangelogEntry[] }>()
+  for (const entry of entries.value) {
+    const id = JSON.stringify([entry.suit, entry.status, entry.status === 'released' ? entry.version : entry.targetVersion])
+    const group = byRelease.get(id)
+    if (group) group.items.push(entry)
+    else byRelease.set(id, { id, items: [entry] })
+  }
+  return [...byRelease.values()]
+})
 const elapsed = ref(0)
 let baseline = 0, timer: ReturnType<typeof setInterval> | undefined
 // Advance a server snapshot by monotonic elapsed time. Browser wall-clock changes have no effect.
@@ -37,9 +47,12 @@ const stateTitle = computed(() => props.copy[props.state === 'ready' ? 'empty' :
       </BsSelect>
     </div>
     <BsStateSurface v-if="state !== 'ready' || !entries.length" :state="state === 'ready' ? 'empty' : state" :title="stateTitle" :action-label="state === 'error' ? copy.retry : undefined" @action="$emit('retry')" />
-    <BsTimeline v-else :entries="entries" :label="copy.timeline" item-key="id">
-      <template #default="{ entry }">
-        <BsChangelogCard :entry="entry" :suit-name="validated.suits.find(item => item.id === entry.suit)!.name[locale]" :locale="locale" :copy="copy" :is-new="isChangelogNew(entry, now)" />
+    <BsTimeline v-else :entries="groups" :label="copy.timeline" item-key="id">
+      <template #default="{ entry: group }">
+        <BsStack gap="lg" :data-release="group.id">
+          <BsHeading :level="2" size="body">{{ group.items[0]!.status === 'released' ? copy.released : copy.comingSoon }} · <BsText as="bdi" dir="ltr">{{ group.items[0]!.status === 'released' ? group.items[0]!.version : group.items[0]!.targetVersion }}</BsText></BsHeading>
+          <BsChangelogCard v-for="entry in group.items" :key="entry.id" :entry="entry" :suit-name="validated.suits.find(item => item.id === entry.suit)!.name[locale]" :locale="locale" :copy="copy" :is-new="isChangelogNew(entry, now)" />
+        </BsStack>
       </template>
     </BsTimeline>
   </section>

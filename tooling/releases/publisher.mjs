@@ -20,6 +20,7 @@ export function requiredContexts(config, releases) {
   }
   return [...contexts]
 }
+/** Legacy v1 retained-history compatibility only; the live publisher uses promotionCandidate. */
 export function selectPromotion(releases, mainFragments, ancestor) {
   const eligible = releases.filter(row => ancestor(row.manifest.sourceSha))
   const consumed = new Map()

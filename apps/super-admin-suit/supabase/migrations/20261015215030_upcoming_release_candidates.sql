@@ -46,6 +46,7 @@ create function super_admin_private.candidate_versions(p_snapshot jsonb, p_first
 language plpgsql security definer set search_path='' as $$
 declare f jsonb; s text; suit uuid; previous text; impact integer; parts bigint[]; versions jsonb:='{}';
 begin
+  if p_snapshot->>'stagingRef' is distinct from 'refs/heads/stg' or p_snapshot->>'productionRef' is distinct from 'refs/heads/main' then raise exception 'WRONG_REFERENCE'; end if;
   if p_snapshot->>'schemaVersion' is distinct from '2' or p_snapshot->>'repository' is distinct from 'Building-Suit/building-suit-monorepo'
     or jsonb_typeof(p_snapshot->'changes') is distinct from 'array' or jsonb_typeof(p_snapshot->'baseVersions') is distinct from 'object' then raise exception 'INVALID_CANDIDATE'; end if;
   foreach s in array array['mainSha','mainTree','stagingSha','stagingTree'] loop
@@ -53,11 +54,15 @@ begin
   end loop;
   if (select count(*)<>count(distinct value->>'id') from jsonb_array_elements(p_snapshot->'changes')) then raise exception 'DUPLICATE_CHANGE_ITEM'; end if;
   for f in select value from jsonb_array_elements(p_snapshot->'changes') loop
-    if coalesce(f->>'id','') !~ '^[a-z0-9][a-z0-9-]{2,100}$' or coalesce(f->>'task','') !~ '^[A-Z][A-Z0-9-]{2,100}$'
+    if not (f ?& array['id','task','classification','disposition','suits','paths','reason'])
+      or jsonb_typeof(f->'paths') is distinct from 'array' or jsonb_array_length(f->'paths')=0
+      or jsonb_typeof(f->'reason') is distinct from 'string'
+      or jsonb_array_length(f->'suits') is distinct from (select count(distinct value) from jsonb_array_elements_text(f->'suits'))
+      or coalesce(f->>'id','') !~ '^[a-z0-9][a-z0-9-]{2,100}$' or coalesce(f->>'task','') !~ '^[A-Z][A-Z0-9-]{2,100}$'
       or coalesce(f->>'classification','') not in ('major','minor','patch','internal')
       or f->>'disposition' is distinct from (case when f->>'classification'='internal' then 'internal' else 'public' end)
       or jsonb_typeof(f->'suits') is distinct from 'array' or jsonb_array_length(f->'suits')=0 then raise exception 'INVALID_CHANGE_ITEM'; end if;
-    if f->>'disposition'='public' and (not super_admin_private.release_copy_valid(f->'notes') or (f->'notes')::text like '%'||(f->>'task')||'%') then raise exception 'INVALID_COPY'; end if;
+    if f->>'disposition'='public' and (not super_admin_private.release_copy_valid(f->'notes') or (f->'notes')::text like '%'||(f->>'task')||'%' or (f->'notes')::text ~* '\m(BS|SS|SAS|LS|IS|AS)-[A-Z0-9-]+\M') then raise exception 'INVALID_COPY'; end if;
     for s in select jsonb_array_elements_text(f->'suits') loop
       if f->>'disposition'='public' then
         if not exists(select 1 from public.suit_registry where stable_key=s and status='active') then raise exception 'UNREGISTERED_SUIT'; end if;

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { git, validateFragment, workspaceGraph, affectedSuits } from './fragments.mjs'
+import { git, validateFragment, affectedSuits } from './fragments.mjs'
 
 /** Evidence is reviewed semantic text, compared directly between the two branch trees.
  * Commit lists, merge-base-only diffs and fragment accumulation are never release authority. */
@@ -10,10 +10,11 @@ export function readTree(ref, file) {
 export function netCandidate({ main, staging, items, graph, read = readTree, diff = (a,b) => git('diff','--no-renames','--name-only',a,b).split('\n').filter(Boolean) }) {
   const files = diff(main, staging).filter(file => !file.startsWith('release-fragments/') && !file.startsWith('release-changes/'))
   const registry = graph.filter(row => row.suit).map(row => row.suit)
-  const ids = new Set(), active = [], covered = new Set()
+  const ids = new Set(), active = [], covered = new Map()
   for (const item of items) {
-    const { evidence, ...fragment } = item
+    const { evidence, sources, ...fragment } = item
     validateFragment(fragment, registry)
+    if (sources !== undefined && (!Array.isArray(sources) || new Set(sources).size !== sources.length || sources.some(id => typeof id !== 'string' || !/^[a-z0-9][a-z0-9-]{2,100}$/.test(id)))) throw new Error('Invalid inventory provenance sources')
     if (ids.has(item.id)) throw new Error('Duplicate candidate change item')
     ids.add(item.id)
     const changed = files.filter(file => item.paths.some(path => file === path || file.startsWith(`${path}/`)))
@@ -34,16 +35,29 @@ export function netCandidate({ main, staging, items, graph, read = readTree, dif
     if (!changed.length) continue
     const affected = affectedSuits(changed, graph)
     if (item.disposition === 'public' && affected.length && item.suits.some(suit => !affected.includes(suit))) throw new Error('Unrelated candidate consumer')
-    active.push(item.disposition === 'internal' && affected.length ? { ...fragment, suits: fragment.suits.filter(suit => affected.includes(suit)) } : fragment)
-    changed.forEach(file => covered.add(file))
+    const selected = item.disposition === 'internal' && affected.length ? { ...fragment, suits: fragment.suits.filter(suit => affected.includes(suit)) } : fragment
+    active.push(selected)
+    for (const file of changed) {
+      if (!covered.has(file)) covered.set(file,new Set())
+      selected.suits.forEach(suit=>covered.get(file).add(suit))
+    }
   }
-  for (const file of files) if (!covered.has(file)) throw new Error(`Unreviewed main-to-stg net path: ${file}`)
+  for (const file of files) {
+    if (!covered.has(file)) throw new Error(`Unreviewed main-to-stg net path: ${file}`)
+    for (const suit of affectedSuits([file],graph)) if (!covered.get(file).has(suit)) throw new Error(`Unclassified net consumer: ${suit} for ${file}`)
+  }
   return active.sort((a,b) => a.id.localeCompare(b.id))
+}
+export function workspaceGraphAt(ref, run = git) {
+  return run('ls-tree','-r','--name-only',ref,'--','apps','packages').split('\n').filter(file=>/^(apps|packages)\/[^/]+\/package.json$/.test(file)).map(file=>{
+    const manifest=JSON.parse(run('show',`${ref}:${file}`)), dir=file.slice(0,-'/package.json'.length)
+    return {dir,name:manifest.name,suit:dir.startsWith('apps/')&&dir.endsWith('-suit')?dir.slice(5):null,dependencies:Object.keys({...manifest.dependencies,...manifest.devDependencies})}
+  })
 }
 export function buildCandidate(main, staging) {
   const items = JSON.parse(readTree(staging, 'release-changes/items.json'))
-  return { schemaVersion: 2, repository: 'Building-Suit/building-suit-monorepo', mainSha: git('rev-parse',main), mainTree: git('rev-parse',`${main}^{tree}`),
-    stagingSha: git('rev-parse',staging), stagingTree: git('rev-parse',`${staging}^{tree}`), changes: netCandidate({main,staging,items,graph:workspaceGraph(process.cwd())}) }
+  return { schemaVersion: 2, repository: 'Building-Suit/building-suit-monorepo', stagingRef: 'refs/heads/stg', productionRef: 'refs/heads/main', mainSha: git('rev-parse',main), mainTree: git('rev-parse',`${main}^{tree}`),
+    stagingSha: git('rev-parse',staging), stagingTree: git('rev-parse',`${staging}^{tree}`), changes: netCandidate({main,staging,items,graph:workspaceGraphAt(staging)}) }
 }
 export function promotionCandidate(revisions, { mainParent, tree, ancestor }) {
   const match = revisions.filter(row => row.readyAt && row.manifest.mainSha === mainParent && row.manifest.stagingTree === tree && ancestor(row.manifest.stagingSha)).at(-1)

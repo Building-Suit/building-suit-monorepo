@@ -213,6 +213,9 @@
         "path": "apps/shop-suit/app/composables/useSaleReturns.ts",
         "contains": "export function useSaleReturns"
       }
+    ],
+    "sources": [
+      "shop-partial-returns"
     ]
   },
   {
@@ -249,6 +252,9 @@
         "path": "apps/shop-suit/app/utils/receiptPresentation.ts",
         "contains": "export function projectReceipt"
       }
+    ],
+    "sources": [
+      "shop-receipt-image"
     ]
   },
   {
@@ -285,6 +291,9 @@
         "path": "apps/shop-suit/app/composables/useShopPrivacy.ts",
         "contains": "export function useShopPrivacy"
       }
+    ],
+    "sources": [
+      "ss-seo-privacy-analytics"
     ]
   },
   {
@@ -321,6 +330,10 @@
         "path": "apps/shop-suit/supabase/functions/_shared/eta-worker.mjs",
         "contains": "export function createEtaDispatcher"
       }
+    ],
+    "sources": [
+      "shop-eta-business-invoice-support",
+      "shop-eta-submission-support"
     ]
   },
   {
@@ -357,6 +370,10 @@
         "path": "apps/shop-suit/app/composables/usePublicChangelog.ts",
         "contains": "client.list"
       }
+    ],
+    "sources": [
+      "bs-task-release-publication",
+      "upcoming-net-release-preview"
     ]
   },
   {
