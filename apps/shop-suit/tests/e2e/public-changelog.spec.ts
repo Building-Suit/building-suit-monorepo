@@ -15,8 +15,10 @@ const entries = [entry,
   { ...entry, id: 'other-suit', suit: 'ledger-suit', title: {en:'Ledger only',ar:'ليدجر فقط'} },
   { id: 'planned', suit: 'shop-suit', visibility: 'public', status: 'coming-soon', targetVersion: '3.0.0', publishedAt: entry.publishedAt, title: {en:'Planned claim',ar:'مخطط'}, summary:text,details:text,links:[] },
 ]
+// More than three notes in one target release exercises entry limiting independently of grouping.
+for (let index = 0; index < 4; index++) entries.push({ ...entries.at(-1)!, id: `planned-${index}` })
 for (const locale of ['en','ar'] as const) for (const theme of ['light','dark'] as const) {
-  test(`${locale} ${theme}: landing discovers the upcoming Shop release and frozen history`, async ({ page }, testInfo) => {
+  test(`${locale} ${theme}: landing defaults to released entries and separates upcoming work`, async ({ page }, testInfo) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.context().addCookies([{name:'building-suit-locale',value:locale,url:'http://127.0.0.1:4393'}])
     await page.addInitScript(theme => { localStorage.setItem('building-suit.theme',theme); Date.now=()=>0 },theme)
@@ -26,20 +28,34 @@ for (const locale of ['en','ar'] as const) for (const theme of ['light','dark'] 
     await section.scrollIntoViewIfNeeded()
     await expect(section.getByRole('heading',{name:locale==='ar'?'ما الجديد':'What’s new',exact:true})).toBeVisible()
     await expect(section.locator('article')).toHaveCount(3)
-    await expect(section.locator('[data-entry="planned"]')).toHaveCount(1)
+    await expect(section.locator('[data-entry="planned"]')).toHaveCount(0)
     await expect(section.locator('[data-entry="planned"] [data-status="new"]')).toHaveCount(0)
     await expect(section.getByText(locale==='ar'?'جديد':'New',{exact:true})).toHaveCount(1)
     await expect(section.locator('.bs-changelog')).toHaveAttribute('dir',locale==='ar'?'rtl':'ltr')
-    for(const id of ['internal','future','other-suit','old','older']) await expect(section.locator(`[data-entry="${id}"]`)).toHaveCount(0)
+    for(const id of ['internal','future','other-suit','older']) await expect(section.locator(`[data-entry="${id}"]`)).toHaveCount(0)
+    const tabs = section.getByRole('tab')
+    await tabs.nth(0).focus()
+    await page.keyboard.press(locale === 'ar' ? 'ArrowLeft' : 'ArrowRight')
+    await expect(tabs.nth(1)).toBeFocused()
+    await expect(section.locator('article')).toHaveCount(3)
+    await expect(section.locator('bdi, time')).toHaveCount(0)
+    await page.keyboard.press('Home')
+    await expect(section.locator('article')).toHaveCount(3)
+    const fullLink = section.getByRole('link', { name: locale === 'ar' ? 'عرض سجل التحديثات الكامل' : 'View the full changelog' })
+    await expect(fullLink).toHaveCSS('color', 'rgb(216, 155, 66)')
     await page.setViewportSize({width:390,height:844})
     expect(await section.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBeTruthy()
     await section.screenshot({path:testInfo.outputPath(`${locale}-${theme}-landing.png`)})
     await section.getByRole('link',{name:locale==='ar'?'عرض سجل التحديثات الكامل':'View the full changelog'}).click()
     await expect(page).toHaveURL(/\/changelog$/)
-    await expect(page.locator('main .bs-changelog article')).toHaveCount(5)
+    await expect(page.locator('main .bs-changelog article')).toHaveCount(4)
     await expect(page.locator('main .bs-changelog [data-entry="older"]')).toHaveCount(1)
     await expect(page.locator('main .bs-changelog').getByText(locale==='ar'?'جديد':'New',{exact:true})).toHaveCount(1)
     for(const id of ['internal','future','other-suit']) await expect(page.locator(`main [data-entry="${id}"]`)).toHaveCount(0)
+    await page.locator('main .bs-changelog').getByRole('tab').nth(1).click()
+    await expect(page.locator('main .bs-changelog article')).toHaveCount(5)
+    await expect(page.locator('main .bs-changelog bdi, main .bs-changelog time')).toHaveCount(0)
+
   })
 }
 test('landing failure retries to an empty public feed without fixture announcements',async({page})=>{
@@ -77,7 +93,7 @@ test('resuming and navigating refreshes the trusted clock without resetting firs
   await expect(page.locator('main .bs-changelog').getByText('New',{exact:true})).toHaveCount(0)
 })
 
-for (const locale of ['en','ar'] as const) test(`${locale}: actual batch promotion feed keeps three complete newest releases in the teaser`,async({page},testInfo)=>{
+for (const locale of ['en','ar'] as const) test(`${locale}: actual batch promotion feed keeps at most three newest entries in the teaser`,async({page},testInfo)=>{
   test.setTimeout(60000)
   const output=testInfo.outputPath('promoted-public-feed.json')
   // This creates only uniquely named disposable Docker databases; the output is the actual anon RPC projection.
@@ -94,10 +110,10 @@ for (const locale of ['en','ar'] as const) test(`${locale}: actual batch promoti
   await page.route('**/api/changelog',route=>route.fulfill({json:{...feed,entries:[...feed.entries].reverse()}}))
   await page.goto('/')
   const section=page.locator('#whats-new')
-  await expect(section.locator('article')).toHaveCount(7)
-  await expect(section.locator('article bdi')).toHaveText(['3.0.3','3.0.3','3.0.2','3.0.2','3.0.2','3.0.1','3.0.1'])
-  await expect(section.getByText(locale==='ar'?'جديد':'New',{exact:true})).toHaveCount(7)
-  expect(await section.locator('time[datetime]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('datetime')))).toEqual(Array(14).fill(publishedAt))
+  await expect(section.locator('article')).toHaveCount(3)
+  await expect(section.locator('article bdi')).toHaveText(['3.0.3','3.0.3','3.0.2'])
+  await expect(section.getByText(locale==='ar'?'جديد':'New',{exact:true})).toHaveCount(3)
+  expect(await section.locator('time[datetime]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('datetime')))).toEqual(Array(3).fill(publishedAt))
   await section.getByRole('link',{name:locale==='ar'?'عرض سجل التحديثات الكامل':'View the full changelog'}).click()
   await expect(page.locator('main .bs-changelog article')).toHaveCount(10)
   await expect(page.locator('main .bs-changelog article bdi')).toHaveText(['3.0.3','3.0.3','3.0.2','3.0.2','3.0.2','3.0.1','3.0.1','3.0.0','3.0.0','2.8.0'])
@@ -110,7 +126,7 @@ for (const locale of ['en','ar'] as const) test(`${locale}: actual batch promoti
   expect(await page.locator('main .bs-changelog time').first().getAttribute('datetime')).toBe(publishedAt)
 })
 
-for (const locale of ['en','ar'] as const) test(`${locale}: actual evolving candidate is Coming Soon beside one frozen production release`,async({page},testInfo)=>{
+for (const locale of ['en','ar'] as const) test(`${locale}: actual evolving candidate stays in its separate tab`,async({page},testInfo)=>{
   test.setTimeout(60000)
   const output=testInfo.outputPath('candidate-public-feed.json')
   execFileSync(process.execPath,['tooling/releases/catalog-disposable.mjs','--candidate-feed',output],{
@@ -122,14 +138,17 @@ for (const locale of ['en','ar'] as const) test(`${locale}: actual evolving cand
   await page.route('**/api/changelog',route=>route.fulfill({json:feed}))
   await page.goto('/')
   const section=page.locator('#whats-new')
-  await expect(section.locator('article')).toHaveCount(3)
-  await expect(section.locator('[data-release]')).toHaveCount(2)
-  await expect(section.getByText(locale==='ar'?'قريباً':'Coming Soon',{exact:true})).toHaveCount(1)
-  await expect(section.getByText(locale==='ar'?'تم الإصدار':'Released',{exact:true})).toHaveCount(2)
-  await expect(section.locator('article').first().getByText(locale==='ar'?'مراجعة العمل القادم':'Review upcoming work',{exact:true}).first()).toBeVisible()
-  await expect(section.locator('article').first().getByText(locale==='ar'?'جديد':'New',{exact:true})).toHaveCount(0)
+  await expect(section.locator('article')).toHaveCount(2)
+  await expect(section.locator('[data-release]')).toHaveCount(1)
+  await section.getByRole('tab').nth(1).click()
+  await expect(section.locator('article')).toHaveCount(1)
+  await expect(section.locator('bdi, time')).toHaveCount(0)
+  await expect(section.locator('article').first().getByText(locale==='ar'?'مراجعة العمل القادم':'Review upcoming work',{exact:true})).toHaveCount(1)
   await section.getByRole('link').last().click()
-  await expect(page.locator('main .bs-changelog article')).toHaveCount(3)
+  const timeline = page.locator('main .bs-changelog')
+  await expect(timeline.locator('article')).toHaveCount(2)
+  await timeline.getByRole('tab').nth(1).click()
+  await expect(timeline.locator('article')).toHaveCount(1)
   await page.getByRole('button',{name:locale==='en'?'Language · Theme':'اللغة · المظهر',exact:true}).first().click()
   await page.getByRole('menuitemradio',{name:locale==='en'?'العربية':'English',exact:true}).click()
   await expect(page.locator('main .bs-changelog')).toHaveAttribute('dir',locale==='en'?'rtl':'ltr')
