@@ -19,12 +19,13 @@ export function useCustomerPortal() {
  const unavailable=()=>ar?'تعذر التحقق من الوصول. حاول مرة أخرى.':'Could not check access. Please try again.'
  function clearHistory(){generation++;read?.abort();read=undefined;history.value=null;loading.value=false}
  function clearSession(){clearHistory();expiresAt.value=null;form.value={code:'',phone:''}}
+ function suspend(){write?.abort();clearSession();command.error.value=null;error.value=''}
  function expire(){clearSession();error.value=ended()}
  async function refresh(){
-  clearHistory();const attempt=generation,controller=new AbortController();read=controller;loading.value=true
+  clearHistory();if(document.hidden)return;const attempt=generation,controller=new AbortController();read=controller;loading.value=true
   try{
    const raw=await $fetch('/api/website/customer-portal',{method:'POST',body:{bucket:bucket.value,page:page.value},cache:'no-store',signal:controller.signal})
-   if(attempt!==generation)return
+   if(attempt!==generation||document.hidden)return
    const data=parseCustomerPortal(raw)
    if(!data){const hadAccess=Boolean(expiresAt.value);clearSession();error.value=hadAccess?ended():'';return}
    if(data.bucket!==bucket.value||data.page!==page.value)throw Error('INVALID_PORTAL_RESPONSE')
@@ -33,11 +34,11 @@ export function useCustomerPortal() {
   finally{if(attempt===generation)loading.value=false}
  }
  async function verify(){
-  if(busy.value)return
+  if(busy.value||document.hidden)return
   const payload={...form.value};clearSession();error.value='';const attempt=generation;write=new AbortController()
   await command.run(async()=>{
    const result=await $fetch('/api/website/appointment-access/verify',{method:'POST',body:payload,cache:'no-store',signal:write!.signal}) as {ok?:boolean;expiresAt?:unknown}
-   if(attempt!==generation)return
+   if(attempt!==generation||document.hidden)return
    const expiry=typeof result.expiresAt==='string'?Date.parse(result.expiresAt):NaN
    if(result.ok!==true||!Number.isFinite(expiry)||expiry<=Date.now()||expiry>Date.now()+600000)throw Error('ACCESS_UNAVAILABLE')
    expiresAt.value=result.expiresAt as string;bucket.value='upcoming';page.value=1;await refresh()
@@ -46,7 +47,7 @@ export function useCustomerPortal() {
  async function logout(){if(busy.value)return;clearSession();error.value='';const attempt=generation;write=new AbortController()
   await command.run(async()=>{const result=await $fetch('/api/website/appointment-access/logout',{method:'POST',body:{},cache:'no-store',signal:write!.signal}) as {ok?:boolean};if(attempt===generation&&result.ok!==true)throw Error('ACCESS_UNAVAILABLE')},()=>attempt===generation?unavailable():'')
  }
- usePrivateSessionLifecycle(expiresAt,busy,{clear:clearHistory,expire,refresh})
+ usePrivateSessionLifecycle(expiresAt,busy,{clear:clearHistory,suspend,expire,refresh})
  useFreshPageOnRestore()
  usePageExitCleanup(()=>{write?.abort();clearSession();command.error.value=null;error.value=''})
  onMounted(()=>{void refresh()})

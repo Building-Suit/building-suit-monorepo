@@ -46,3 +46,49 @@ test('suspension clears history, focus revalidates and page exit removes the pri
  await expect(page.getByRole('textbox',{name:'Access code',exact:true})).toBeVisible();await expect(page.locator('ol > li')).toHaveCount(0)
  await login(page);await page.evaluate(()=>window.dispatchEvent(new Event('pagehide')));await expect(page.locator('ol > li')).toHaveCount(0)
 })
+
+for(const operation of ['initial','verify'])for(const returnWhileBusy of [false,true])test(`delayed ${operation} cannot restore suspended history; return while busy ${returnWhileBusy}`,async({page})=>{
+ // Emulate a transport that completes despite cancellation; generation checks
+ // must protect the view even when AbortController cannot stop the response.
+ await page.addInitScript(()=>{window.AbortController=class extends AbortController{override abort(){}}})
+ let holdPath='',release=()=>{},started=()=>{},held=Promise.resolve(),requests=0
+ const arrived=new Promise<void>(resolve=>{started=resolve})
+ await page.route('https://*.shops.building-suit.com/**',async route=>{
+  const request=route.request(),url=new URL(request.url())
+  const response=await route.fetch({url:'http://127.0.0.1:4333'+url.pathname+url.search,headers:{...request.headers(),host:url.host},maxRedirects:0})
+  if(url.pathname==='/api/website/customer-portal')requests++
+  if(holdPath&&url.pathname===holdPath){
+   holdPath='';const stale=operation==='initial'?await response.json():null
+   if(stale)for(const row of stale.items)row.service='Stale suspended response'
+   started();await held
+   await route.fulfill(stale?{response,json:stale}:{response});return
+  }
+  await route.fulfill({response})
+ })
+ const hidden=async(value:boolean)=>page.evaluate(v=>{Object.defineProperty(document,'hidden',{configurable:true,value:v});document.dispatchEvent(new Event('visibilitychange'))},value)
+ const url='https://beta-tools.shops.building-suit.com/my-appointments?lang=en'
+ await page.goto(url);await mounted(page);await expect(page.getByRole('textbox',{name:'Access code',exact:true})).toBeVisible()
+ if(operation==='initial'){
+  expect(await page.evaluate(async()=>{const response=await fetch('/api/website/appointment-access/verify',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:'0123ABCDEFGH',phone:'+201000000002'})});return(await response.json()).ok})).toBe(true)
+ }
+ held=new Promise<void>(resolve=>{release=resolve});holdPath=operation==='initial'?'/api/website/customer-portal':'/api/website/appointment-access/verify'
+ if(operation==='initial'){await page.reload();await mounted(page)}else{
+  await page.getByRole('textbox',{name:'Access code',exact:true}).fill('0123ABCDEFGH')
+  await page.getByRole('textbox',{name:'Phone saved with the appointment',exact:true}).fill('+201000000002')
+  await page.getByRole('button',{name:'View my appointments',exact:true}).click()
+ }
+ await arrived;await hidden(true);await expect(page.locator('ol > li')).toHaveCount(0)
+ const count=requests
+ if(returnWhileBusy){await hidden(false);if(operation==='initial')await expect(page.getByRole('heading',{name:'Beta consultation',exact:true}).first()).toBeVisible()}
+ release()
+ if(!returnWhileBusy){
+  // Give the held response time to commit if the visibility/generation guard is absent.
+  await page.waitForTimeout(150);await expect(page.locator('ol > li')).toHaveCount(0)
+  await expect(page.getByRole('textbox',{name:'Access code',exact:true})).toBeVisible()
+  await hidden(false)
+ }
+ await expect(page.getByRole('heading',{name:'Beta consultation',exact:true}).first()).toBeVisible()
+ expect(requests).toBe(count+1)
+ await page.waitForTimeout(150);await expect(page.getByRole('heading',{name:'Stale suspended response',exact:true})).toHaveCount(0)
+ await expect(page.getByRole('heading',{name:'Alpha haircut',exact:true})).toHaveCount(0)
+})
