@@ -18,7 +18,8 @@
     "docs/shared/ui-ownership-manifest.json",
     "docs/work-packages/shop-website-customer-portal-001.md",
     ".github/workflows/shop-customer-portal-disposable.yml",
-    "tooling/database/test-shop-customer-portal-local.mjs"
+    "tooling/database/test-shop-customer-portal-local.mjs",
+    "release-changes/items.json"
   ],
   "reason": "Shared complete customer portal presentation and session lifecycle with bilingual documentation and disposable verification; no operational activation."
 }
