@@ -107,6 +107,31 @@
         "appUrl": "https://stg.super-admin.building-suit.com",
         "status": "verified 2026-10-14 through deployed staging configuration, management metadata and SAS schema"
       }
+    },
+    "doctor-suit": {
+      "organizationId": "",
+      "ownerEmail": "",
+      "managementRole": "Owner",
+      "plan": "unprovisioned",
+      "schema": "public",
+      "cliWorkdir": "apps/doctor-suit",
+      "appUrlVariable": "APP_URL",
+      "local": {
+        "projectId": "building-suit-doctor",
+        "apiUrl": "http://127.0.0.1:65321",
+        "databasePort": 65322,
+        "emailInboxUrl": "http://127.0.0.1:65324"
+      },
+      "production": {
+        "projectRef": "",
+        "appUrl": "",
+        "status": "unprovisioned; user-managed connections"
+      },
+      "staging": {
+        "projectRef": "",
+        "appUrl": "",
+        "status": "unprovisioned; user-managed connections"
+      }
     }
   },
   "sources": {

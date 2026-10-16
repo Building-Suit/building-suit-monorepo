@@ -1,0 +1,32 @@
+name: Doctor synthetic data authorization
+on:
+  pull_request:
+    paths:
+      - 'apps/doctor-suit/**'
+      - 'docs/architecture/environments.json'
+      - '.github/workflows/doctor-disposable.yml'
+  push:
+    branches: [stg]
+    paths:
+      - 'apps/doctor-suit/**'
+      - 'docs/architecture/environments.json'
+      - '.github/workflows/doctor-disposable.yml'
+permissions:
+  contents: read
+concurrency:
+  group: doctor-data-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  doctor-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Verify isolated local target and lifecycle guards
+        run: node --test apps/doctor-suit/tests/unit/dos-m1-003.test.mjs
+      - name: Apply actual migrations and assert SQL/RLS authorization with synthetic fixtures
+        # A minimal provider Auth contract is scaffolding, not full Supabase service acceptance.
+        run: node apps/doctor-suit/tests/disposable-postgres.mjs

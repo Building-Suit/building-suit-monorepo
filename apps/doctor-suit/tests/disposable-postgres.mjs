@@ -1,0 +1,78 @@
+// SQL/RLS fallback for small executors. This is not a Supabase service integration test.
+import { createHash, randomUUID } from 'node:crypto'
+import { mkdtemp, readFile, readdir, rm, writeFile, mkdir } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { spawnSync } from 'node:child_process'
+import { validateLocalDoctorTarget } from './local-lifecycle.mjs'
+
+const root = fileURLToPath(new URL('../../../', import.meta.url))
+const app = `${root}apps/doctor-suit/`
+const generate = process.argv.slice(2)
+if (generate.length && (generate.length !== 1 || generate[0] !== '--types')) throw new Error('Only --types is supported')
+validateLocalDoctorTarget(JSON.parse(await readFile(`${root}docs/architecture/environments.json`, 'utf8')), await readFile(`${app}supabase/config.toml`, 'utf8'), process.env)
+const container = `doctor-sql-${randomUUID()}`
+const directory = await mkdtemp(path.join(tmpdir(), 'doctor-sql-'))
+const pgImage = 'postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24'
+const pgtapCommit = '968eb53a33114e83042b3bdb0c664b5b80cf8bdf'
+function docker(args, input) {
+  const result = spawnSync('docker', args, { input, encoding: 'utf8', timeout: 120000, maxBuffer: 8 * 1024 * 1024 })
+  if (result.error || result.status !== 0) throw new Error(`Disposable Docker step failed: ${args[0]}\n${result.stderr || ''}`)
+  return result.stdout
+}
+function sql(input) { return docker(['exec', '-i', container, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At'], input) }
+async function source(name, hash) {
+  const response = spawnSync('curl', ['--fail', '--silent', '--show-error', '--location', '--max-time', '30',
+    `https://raw.githubusercontent.com/theory/pgtap/${pgtapCommit}/${name}`], { encoding: 'utf8', timeout: 35000, maxBuffer: 2 * 1024 * 1024 })
+  if (response.error || response.status !== 0) throw new Error('Pinned pgTAP source unavailable')
+  const value = response.stdout
+  if (createHash('sha256').update(value).digest('hex') !== hash) throw new Error('Pinned pgTAP source mismatch')
+  return value
+}
+try {
+  const definition = await source('sql/pgtap.sql.in', '383ecd73edfd1c7ed5f3b835134ee1fe74e201ee31599346c92ea029b65dcdce')
+  const control = await source('pgtap.control', 'b073089908333a1522c925ca9968cebb04d9fa0b1f99e932bda635ffaecdca55')
+  // These are the upstream Makefile's PostgreSQL >= 10 substitutions, without legacy compatibility patches.
+  await writeFile(`${directory}/pgtap--1.3.4.sql`, definition.replaceAll('MODULE_PATHNAME', 'pgtap').replaceAll('__OS__', 'linux').replaceAll('__VERSION__', '1.3'), { mode: 0o644 })
+  await writeFile(`${directory}/pgtap.control`, control, { mode: 0o644 })
+  docker(['run', '-d', '--name', container, '--network', 'none', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', pgImage])
+  let ready = false
+  for (let n = 0; n < 60; n++) {
+    if (spawnSync('docker', ['exec', container, 'pg_isready', '-U', 'postgres'], { stdio: 'ignore' }).status === 0) { ready = true; break }
+    await new Promise(resolve => setTimeout(resolve, 250))
+  }
+  if (!ready) throw new Error('Disposable PostgreSQL did not become ready')
+  for (const file of ['pgtap.control', 'pgtap--1.3.4.sql']) docker(['cp', `${directory}/${file}`, `${container}:/usr/local/share/postgresql/extension/${file}`])
+  docker(['exec', container, 'chmod', '644', '/usr/local/share/postgresql/extension/pgtap.control', '/usr/local/share/postgresql/extension/pgtap--1.3.4.sql'])
+  sql(`create role anon; create role authenticated; create schema auth; create schema extensions;
+    create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,is_anonymous boolean default false,banned_until timestamptz,raw_user_meta_data jsonb);
+    create function auth.uid() returns uuid language sql stable as $$select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid$$;
+    grant usage on schema auth,extensions to anon,authenticated;
+    grant execute on function auth.uid() to anon,authenticated;`)
+  const migrations = (await readdir(`${app}supabase/migrations`)).filter(file => file.endsWith('.sql')).sort()
+  for (const file of migrations) sql(await readFile(`${app}supabase/migrations/${file}`, 'utf8'))
+  const suites = (await readdir(`${app}supabase/tests`)).filter(file => file.endsWith('.sql')).sort()
+  if (!suites.length) throw new Error('No Doctor SQL suites found')
+  for (const file of suites) {
+    const result = sql(await readFile(`${app}supabase/tests/${file}`, 'utf8'))
+    const plan = result.match(/^1\.\.(\d+)$/m)
+    const passed = result.match(/^ok \d+\b/gm) ?? []
+    if (!plan || Number(plan[1]) < 1 || Number(plan[1]) !== passed.length || /^not ok\b|^Bail out!/m.test(result)) throw new Error(`${file}: SQL assertions failed\n${result}`)
+    console.log(`${file}: ${passed.length} SQL assertions passed`)
+  }
+  if (generate.length) {
+    const output = docker(['run', '--rm', '--network', `container:${container}`,
+      '-e', 'PG_META_DB_HOST=127.0.0.1', '-e', 'PG_META_DB_NAME=postgres', '-e', 'PG_META_DB_USER=postgres',
+      '-e', 'PG_META_GENERATE_TYPES=typescript', '-e', 'PG_META_GENERATE_TYPES_INCLUDED_SCHEMAS=public',
+      '-e', 'PG_META_GENERATE_TYPES_DETECT_ONE_TO_ONE_RELATIONSHIPS=true', 'public.ecr.aws/supabase/postgres-meta:v0.98.0'])
+    if (!output.startsWith('export type Json') || !output.includes('doctor_onboard:')) throw new Error('Unexpected PostgreSQL Meta type output')
+    await mkdir(`${app}app/types`, { recursive: true })
+    await writeFile(`${app}app/types/database.types.ts`, output)
+    console.log('Generated public schema types from the migrated disposable database using CLI-pinned PostgreSQL Meta v0.98.0')
+  }
+  console.log('SQL/RLS verification only. Full Supabase Auth, Storage and Realtime integration: UNRUN.')
+} finally {
+  spawnSync('docker', ['rm', '-f', '-v', container], { stdio: 'ignore' })
+  await rm(directory, { recursive: true, force: true })
+}
