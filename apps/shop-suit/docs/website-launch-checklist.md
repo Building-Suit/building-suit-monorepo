@@ -1,8 +1,8 @@
 # SS-WEB-LAUNCH-001 qualification
 
-Status: **NOT DEPLOYED; launch prerequisites remain blocked.** This is a synthetic code qualification, not permission to publish a customer website or promote an environment.
+Status: **WEBSITE STACK NOT DEPLOYED; combined integration candidate pending parent merge.** Changelog readiness is cleared by the parent-confirmed public EN/AR verification of staging `c6774d47907f7b09aa0a0e9aa2c45c5687a71c50` (PR340). Website wildcard/provider smoke remains unverified. This qualification does not authorize real customer publication or environment promotion.
 
-Candidate: reviewed website stack through PR339 (`e009102b448062602496e11978a2aad60717c2fd`), with a history-preserving merge of reviewed staging `ff568402698a1a79703d323db8b59f39e10bf0c0` (PR337/338). The launch draft targets PR339. Parent owns the eventual single combined staging merge; no parent branch, staging, main, provider or hosted data is changed here.
+Candidate: PR325 is the single combined Shop integration root targeting `stg`. It contains reviewed PR341 (`a12f43d5445926959a8f6263c4adb74b7e87aba2`) and the full website stack, plus current reviewed staging `c6774d47907f7b09aa0a0e9aa2c45c5687a71c50` (PR340), incorporated with merge commits. All source heads and branch histories are preserved. Parent owns the final single merge into staging; no staging/main merge, provider change, hosted write, direct deployment or branch deletion is performed by this task.
 
 ## Acceptance matrix
 
@@ -28,20 +28,20 @@ Candidate: reviewed website stack through PR339 (`e009102b448062602496e11978a2aa
 - `pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-web-launch-001.config.ts`: 12 end-to-end browser journeys, no assertion/mutation retries. Changelog UI uses a synthetic public release contract; actual reader contract and disposable SAS catalog replay remain separate checks. The strict SAS origin allowlist is unchanged.
 - `pnpm test`, `pnpm docs:generate`, `pnpm exec turbo run typecheck --concurrency=1`, `pnpm --filter @building-suit/shop-suit lint`, `pnpm check`, `pnpm --filter @building-suit/shop-suit build`, `pnpm release:check`, `git diff --check`.
 
-Consult the draft PR exact head/check links for the final executed CI result; command inclusion alone is not a passing result.
+Reviewed PR341 exact-head evidence: 12 successful checks and three expected skips, including 41 maintained Shop SQL suites, three operational race gates, seven website SQL suites, six built HTTP suites and 96 browser cases. PR325 must pass its own exact combined-head checks; source-head success is not a substitute. Consult the integration PR checks for final executed results; command inclusion alone is not a passing result.
 
 ## Launch prerequisite ledger
 
 | Stage | Status | Required evidence/action |
 | --- | --- | --- |
 | Website/portal/booking implementation | Implemented in reviewed stack | Preserve exact reviewed parents and merge history |
-| Synthetic application/database qualification | Local evidence and exact-head CI recorded on PR | CI success is required before integration |
-| BS-CHANGELOG-VERSION-001 hosted baseline | **BLOCKED, owned separately** | PR338 fixes diagnostics and PostgREST void success; its hosted BASELINE_PIN failure explicitly remains unresolved pending administrator read-only metadata inventory. Open draft PR340 narrows runtime evidence but explicitly does not repair the hosted cause. Do not bypass/reset controls or describe this as launch-ready |
+| Synthetic application/database qualification | Reviewed PR341 passed; combined PR325 is separately requalified | Exact combined-head CI success is required before the parent merge |
+| BS-CHANGELOG-VERSION-001 hosted baseline | **CLEARED: parent-confirmed public EN/AR verification** | Reviewed PR340 is merged at `c6774d47907f7b09aa0a0e9aa2c45c5687a71c50`. Its qualified singleton UPDATE repair preserves the safeupdate guard and affected-row checks. Parent reports the public bilingual changelog working. This task performs no hosted inspection/write and does not alter separately owned changelog tabs/UI work |
 | Wildcard DNS, TLS and trusted host ingress | **UNVERIFIED** | Separately authorized provider owner verifies wildcard binding, delegation, private/public origin separation and forwarded-host trust |
 | Feature deployment flags/provider branching | **UNVERIFIED** | Authorized owner checks actual provider state; repository configuration does not prove dashboard settings |
-| Forward migrations / environment deployment | **NOT DEPLOYED** | Only approved CI deployment path after prerequisites; never manual hosted writes |
+| Website forward migrations / environment deployment | **NOT DEPLOYED BY THIS TASK** | Parent owns final staging merge and normal approved CI/provider migration path; no direct deployment or hosted write. Separately verified changelog deployment is not evidence that this website stack is deployed |
 | Actual CDN/cache and public hostname smoke | **NOT RUN** | Separately authorized deployed-candidate host/tenant/unpublish/robots tests |
 | Real customer publication / messages | **NOT PERFORMED** | No customer opt-in, real publication or delivery is part of this qualification |
 | Production promotion | **NOT AUTHORIZED** | No main merge or production promotion |
 
-Passing this draft establishes code evidence only. The unresolved changelog baseline and provider/deployment/smoke stages prevent a go-live conclusion. Parent controls integration and any further authorization.
+Passing the integration candidate establishes combined code evidence. The changelog baseline blocker is cleared; unverified website provider/deployment/smoke stages still prevent a website go-live conclusion. Parent controls the final staging merge and further authorization. See [integration record](../../../docs/work-packages/shop-website-integration.md).
