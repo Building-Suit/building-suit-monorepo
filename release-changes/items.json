@@ -1,0 +1,519 @@
+[
+  {
+    "id": "shop-service-recipes",
+    "task": "SS-SERV-002",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "Service recipes and material fulfillment",
+        "ar": "وصفات الخدمات وتنفيذ المواد"
+      },
+      "summary": {
+        "en": "Configure optional versioned service recipes and record material use when work is completed.",
+        "ar": "إعداد وصفات اختيارية للخدمات بإصدارات وتسجيل استخدام المواد عند إتمام العمل."
+      },
+      "details": {
+        "en": "Ordinary services need no recipe. Payment does not complete work; authorized fulfillment records actual quantities and materials.",
+        "ar": "لا تتطلب الخدمات العادية وصفة. لا يعني الدفع إتمام العمل؛ يسجل التنفيذ المصرح به الكميات والمواد الفعلية."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/service-materials.vue",
+        "contains": "<BsServiceFulfillmentPage"
+      }
+    ]
+  },
+  {
+    "id": "shop-configurable-taxes",
+    "task": "SS-TAX-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "Configurable taxes",
+        "ar": "ضرائب قابلة للإعداد"
+      },
+      "summary": {
+        "en": "Manage tax rates and retain the original tax calculation on issued documents.",
+        "ar": "إدارة معدلات الضرائب والاحتفاظ بالحساب الضريبي الأصلي للمستندات الصادرة."
+      },
+      "details": {
+        "en": "Manage tax rates and retain the original tax calculation on issued documents.",
+        "ar": "إدارة معدلات الضرائب والاحتفاظ بالحساب الضريبي الأصلي للمستندات الصادرة."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/taxes.vue",
+        "contains": "<BsShopTaxSettingsPage"
+      }
+    ]
+  },
+  {
+    "id": "shop-staff-commissions",
+    "task": "SS-BARBER-COMP-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "Optional staff commissions",
+        "ar": "عمولات اختيارية للموظفين"
+      },
+      "summary": {
+        "en": "Configure service commissions and review earned amounts, adjustments and reversals.",
+        "ar": "إعداد عمولات الخدمات ومراجعة المبالغ المكتسبة والتسويات والعكوس."
+      },
+      "details": {
+        "en": "Commission history remains separate from wages and preserves the original sale and fulfillment basis.",
+        "ar": "يبقى سجل العمولات منفصلاً عن الأجور ويحفظ أساس البيع والتنفيذ الأصلي."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/commissions.vue",
+        "contains": "<BsCommissionPolicyPage"
+      }
+    ]
+  },
+  {
+    "id": "shop-offline-reconciliation",
+    "task": "SS-OFFLINE-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "Offline counter reconciliation",
+        "ar": "تسوية عمليات نقطة البيع دون اتصال"
+      },
+      "summary": {
+        "en": "Keep counter work durable and reconcile queued operations with authoritative results after reconnection.",
+        "ar": "حفظ عمل نقطة البيع بشكل دائم وتسوية العمليات المؤجلة مع النتائج المعتمدة بعد عودة الاتصال."
+      },
+      "details": {
+        "en": "Keep counter work durable and reconcile queued operations with authoritative results after reconnection.",
+        "ar": "حفظ عمل نقطة البيع بشكل دائم وتسوية العمليات المؤجلة مع النتائج المعتمدة بعد عودة الاتصال."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useOfflineCounter.ts",
+        "contains": "rpc.rpc('replay_offline_pos_sale'"
+      }
+    ]
+  },
+  {
+    "id": "shop-document-settings",
+    "task": "SS-SET-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "Business and document settings",
+        "ar": "إعدادات النشاط والمستندات"
+      },
+      "summary": {
+        "en": "Configure business document presentation while preserving historical currency and issued document evidence.",
+        "ar": "إعداد عرض مستندات النشاط مع الحفاظ على العملة التاريخية وأدلة المستندات الصادرة."
+      },
+      "details": {
+        "en": "Configure business document presentation while preserving historical currency and issued document evidence.",
+        "ar": "إعداد عرض مستندات النشاط مع الحفاظ على العملة التاريخية وأدلة المستندات الصادرة."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/types/receipt.ts",
+        "contains": "presentation?: { documentLabel:"
+      }
+    ]
+  },
+  {
+    "id": "shop-partial-returns",
+    "task": "SS-PARTIAL-RETURNS-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Adds invoice-linked partial returns in Shop through optional shared presentation and interaction contracts.",
+    "notes": {
+      "title": {
+        "en": "Partial item returns",
+        "ar": "الإرجاع الجزئي للأصناف"
+      },
+      "summary": {
+        "en": "Return selected items and quantities from an issued sale, with a clear breakdown of debt reduction and any refund owed.",
+        "ar": "أعد أصنافًا وكميات محددة من فاتورة بيع مُصدرة، مع توضيح تخفيض المستحق وأي مبلغ مطلوب رده."
+      },
+      "details": {
+        "en": "Returns use the original sale’s prices, discounts and taxes. Shop reduces that invoice’s outstanding amount first, then allocates any excess to the original payments. Choose resellable or damaged stock; service returns do not restore consumed materials. Cash refunds are recorded after cash handover. Recording an externally completed refund documents a refund made outside Shop; it does not initiate a card or bank transfer. Returns and refund recording require a connection. Historical sales without sufficient original records are unavailable for partial returns.",
+        "ar": "تستخدم المرتجعات أسعار البيع الأصلية وخصوماته وضرائبه. يخفض المتجر المستحق على الفاتورة نفسها أولاً، ثم يوزع أي فائض على الدفعات الأصلية. اختر مخزونًا صالحًا للبيع أو تالفًا؛ ولا تعيد مرتجعات الخدمات المواد المستهلكة. يُسجل رد النقد بعد تسليمه فعليًا. يوثق تسجيل رد مبلغ مكتمل خارج المتجر عملية تمت خارجه، ولا ينفذ تحويلاً عبر البطاقة أو البنك. يتطلب الإرجاع وتسجيل رد المبالغ اتصالاً. لا يتاح الإرجاع الجزئي للمبيعات التاريخية التي لا تتوفر لها سجلات أصلية كافية."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useSaleReturns.ts",
+        "contains": "export function useSaleReturns"
+      }
+    ],
+    "sources": [
+      "shop-partial-returns"
+    ]
+  },
+  {
+    "id": "shop-receipt-image",
+    "task": "SS-RECEIPT-IMAGE-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Improves issued receipt layout and replaces text copying with a local PNG clipboard flow.",
+    "notes": {
+      "title": {
+        "en": "Receipt images",
+        "ar": "صور الإيصالات"
+      },
+      "summary": {
+        "en": "Copy an issued receipt as a clear image for pasting into WhatsApp, with an image download option when copying is unavailable.",
+        "ar": "انسخ الإيصال المُصدر كصورة واضحة للصقها في واتساب، مع إمكانية تنزيل الصورة عند تعذر النسخ."
+      },
+      "details": {
+        "en": "Arabic and English receipts share a monochrome thermal layout for preview, printing and images. Merchant and branch names, issued amounts and payment references are retained. Existing thermal and A4 print sizes remain available.",
+        "ar": "تستخدم الإيصالات العربية والإنجليزية تنسيقًا حراريًا أحادي اللون للمعاينة والطباعة والصور، مع الاحتفاظ بأسماء المتجر والفرع والمبالغ المُصدرة ومراجع الدفع. تظل مقاسات الطباعة الحرارية وA4 متاحة."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/utils/receiptPresentation.ts",
+        "contains": "export function projectReceipt"
+      }
+    ],
+    "sources": [
+      "shop-receipt-image"
+    ]
+  },
+  {
+    "id": "ss-seo-privacy-analytics",
+    "task": "SS-SEO-PRIVACY-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Compatible public-page SEO and voluntary privacy controls are enabled only in Shop. Analytics remains configuration- and consent-gated; paid conversion measurement is disabled.",
+    "notes": {
+      "title": {
+        "en": "Privacy choices and public-page improvements",
+        "ar": "خيارات الخصوصية وتحسينات الصفحات العامة"
+      },
+      "summary": {
+        "en": "Choose whether to allow optional visitor analytics and review clearer privacy information.",
+        "ar": "اختر السماح بتحليلات الزيارات الاختيارية أو رفضها، وراجع معلومات أوضح عن الخصوصية."
+      },
+      "details": {
+        "en": "Privacy settings let you accept, reject or change optional analytics choices. Analytics stays off until configured and accepted, and business records are excluded. Public pages gain sharing information and a sitemap; payment activation is not measured.",
+        "ar": "تتيح إعدادات الخصوصية قبول التحليلات الاختيارية أو رفضها أو تغيير الاختيار لاحقاً. تظل التحليلات متوقفة حتى تهيئتها والموافقة عليها، وتُستبعد سجلات العمل منها. تتضمن الصفحات العامة معلومات للمشاركة وخريطة للموقع، ولا يتم قياس تفعيل الدفع."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useShopPrivacy.ts",
+        "contains": "export function useShopPrivacy"
+      }
+    ],
+    "sources": [
+      "ss-seo-privacy-analytics"
+    ]
+  },
+  {
+    "id": "shop-eta-preparation",
+    "task": "SS-ETA-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "ETA submission preparation",
+        "ar": "تجهيز إرسال مستندات الضرائب المصرية"
+      },
+      "summary": {
+        "en": "Prepare eligible tax documents and review submission attempts and status.",
+        "ar": "تجهيز المستندات الضريبية المؤهلة ومراجعة محاولات الإرسال وحالتها."
+      },
+      "details": {
+        "en": "Preparation is not an activated or certified compliant integration. Live submission requires separately verified issuer configuration, signing, credentials and explicit server-side enablement.",
+        "ar": "لا يعني التجهيز تفعيل التكامل أو اعتماده متوافقاً. يتطلب الإرسال الفعلي التحقق بشكل منفصل من إعدادات الممول والتوقيع وبيانات الاعتماد والتفعيل الصريح على الخادم."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/functions/_shared/eta-worker.mjs",
+        "contains": "export function createEtaDispatcher"
+      }
+    ],
+    "sources": [
+      "shop-eta-business-invoice-support",
+      "shop-eta-submission-support"
+    ]
+  },
+  {
+    "id": "shop-upcoming-release",
+    "task": "BS-CHANGELOG-VERSION-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "One upcoming release",
+        "ar": "إصدار قادم واحد"
+      },
+      "summary": {
+        "en": "Review the combined changes awaiting production in English or Arabic.",
+        "ar": "مراجعة التغييرات المجمعة التي تنتظر النشر الفعلي بالإنجليزية أو العربية."
+      },
+      "details": {
+        "en": "The upcoming release refreshes from the current production-to-staging difference. Its version and notes freeze only after production deployment succeeds.",
+        "ar": "يتحدث الإصدار القادم وفق الفرق الحالي بين فرع الإنتاج وبيئة الاختبار. يثبت إصداره وملاحظاته بعد نجاح النشر الفعلي فقط."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/usePublicChangelog.ts",
+        "contains": "client.list"
+      }
+    ],
+    "sources": [
+      "bs-task-release-publication",
+      "upcoming-net-release-preview"
+    ]
+  },
+  {
+    "id": "shop-permission-menu-alignment",
+    "task": "SS-PERMISSION-MENU-ALIGNMENT",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Corrects bilingual role permission grouping to match the actual navigation while preserving existing grants.",
+    "notes": {
+      "title": {
+        "en": "Permissions follow the menu",
+        "ar": "الصلاحيات تتبع القائمة"
+      },
+      "summary": {
+        "en": "Role permissions use the same page names and order as the Arabic and English menus.",
+        "ar": "تستخدم صلاحيات الأدوار أسماء الصفحات وترتيبها نفسه في القائمتين العربية والإنجليزية."
+      },
+      "details": {
+        "en": "Actions are grouped under their relevant pages. Shared capabilities stay synchronized, locked grants remain protected, and existing saved permissions are retained.",
+        "ar": "تُجمع الإجراءات تحت صفحاتها المناسبة، وتظل الصلاحيات المشتركة متزامنة والصلاحيات المقيدة محمية، مع الاحتفاظ بالصلاحيات المحفوظة."
+      }
+    },
+    "sources": [
+      "shop-permission-menu-alignment"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/team.vue",
+        "contains": "permissions: shopPermissionMenu("
+      }
+    ]
+  },
+  {
+    "id": "reviewed-internal-net-support",
+    "task": "BS-CHANGELOG-VERSION-001",
+    "suits": [
+      "automation-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      ".github",
+      "AGENTS.md",
+      "docs",
+      "tooling",
+      "package.json",
+      "pnpm-lock.yaml",
+      "apps",
+      "packages"
+    ],
+    "reason": "Reviewed shared scaffolding, operational control-plane changes, tests, configuration and support paths. Public Shop capabilities are separately curated with net evidence; this record grants no operational activation."
+  },
+  {
+    "id": "ss-web-customer-portal-001",
+    "task": "SS-WEB-CUSTOMER-PORTAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Adds read-only, narrowly scoped customer appointment and service history with short-lived access.",
+    "notes": {
+      "title": {
+        "en": "View your appointments securely",
+        "ar": "عرض مواعيدك بأمان"
+      },
+      "summary": {
+        "en": "Customers can verify access to their appointments and service history at a shop.",
+        "ar": "يمكن للعملاء التحقق من الوصول إلى مواعيدهم وسجل خدماتهم لدى المتجر."
+      },
+      "details": {
+        "en": "Short-lived access shows appointment times, service, staff display name, status and explicitly public locations. Walk-in access covers one appointment. Expiry, revocation and logout clear the view; private notes and financial data stay excluded.",
+        "ar": "يعرض الوصول قصير المدة أوقات المواعيد والخدمة واسم الموظف والحالة والمواقع العامة المحددة. يقتصر وصول الزائر على موعد واحد. يمسح انتهاء الوصول أو إلغاؤه العرض، وتبقى الملاحظات الخاصة والبيانات المالية مستبعدة."
+      }
+    },
+    "sources": [
+      "ss-web-customer-portal-001"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/my-appointments.vue",
+        "contains": "<BsShopCustomerPortalPage"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261016114826_shop_customer_appointment_portal.sql",
+        "contains": "scope:=shop_private.appointment_access_scope(p_slug,p_token);"
+      }
+    ]
+  },
+  {
+    "id": "ss-appt-002",
+    "task": "SS-APPT-002",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Adds explicit public booking and scoped appointment management, preserving transactional availability, privacy and disabled reminder delivery.",
+    "notes": {
+      "title": {
+        "en": "Book and manage appointments online",
+        "ar": "حجز المواعيد وإدارتها عبر الموقع"
+      },
+      "summary": {
+        "en": "Shops can explicitly enable booking for published services, locations and staff.",
+        "ar": "يمكن للمتاجر تفعيل الحجز صراحةً للخدمات والمواقع والموظفين المنشورين."
+      },
+      "details": {
+        "en": "Customers choose available times and can reschedule or cancel within shop rules. Guest access covers one appointment; verified customers retain their own scope. Concurrent bookings are checked transactionally. Reminders stay disabled until an approved messaging channel is configured.",
+        "ar": "يختار العملاء أوقاتاً متاحة ويمكنهم تعديل الموعد أو إلغاؤه وفق سياسة المتجر. يقتصر وصول الزائر على موعد واحد، ويحتفظ العميل الموثّق بنطاقه الخاص. تُفحص الحجوزات المتزامنة داخل المعاملة، وتبقى التذكيرات معطلة حتى إعداد قناة رسائل معتمدة."
+      }
+    },
+    "sources": [
+      "ss-appt-002"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/book.vue",
+        "contains": "<BsPublicAppointmentBookingPage"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261016131316_public_appointment_booking.sql",
+        "contains": "create function public.appointment_booking_command("
+      }
+    ]
+  }
+]

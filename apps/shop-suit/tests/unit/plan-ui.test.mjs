@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { readPresentationTree } from '../../../../packages/testing/presentation-source.mjs'
 
 const billing = await readFile(new URL('../../app/pages/billing.vue', import.meta.url), 'utf8')
-const pricing = await readFile(new URL('../../app/pages/index.vue', import.meta.url), 'utf8')
+const pricing = await readFile(new URL('../../app/composables/useShopLandingEntry.ts', import.meta.url), 'utf8')
 const billingTree = await readPresentationTree(fileURLToPath(new URL('../../../../', import.meta.url)), 'apps/shop-suit/app/pages/billing.vue')
 const pricingTree = await readPresentationTree(fileURLToPath(new URL('../../../../', import.meta.url)), 'apps/shop-suit/app/pages/index.vue')
 const cards = await readFile(new URL('../../app/composables/useShopPlanPresentation.ts', import.meta.url), 'utf8')

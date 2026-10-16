@@ -50,8 +50,16 @@ do $$declare a uuid; begin
   begin perform public.shop_website_address_save(a,'website-first'); raise exception 'canonical takeover'; exception when unique_violation then null; end;
 end$$;
 reset role;
--- Only the fixture administrator simulates a future reviewed publishing layer.
+-- Foundation fixtures do not bypass the real PROFILE opt-in boundary. The PUBLIC
+-- suite separately exercises ready aliases against actual published snapshots.
 update public.shop_websites set publication_state = 'published';
+do $$begin
+ if public.shop_website_host_resolve('website-first') is not null or public.shop_website_host_resolve('website-second') is not null then raise exception 'publication flag bypassed owner opt-in';end if;
+end$$;
+-- Isolate the original slug/alias resolution contract inside this rollback-only test.
+create or replace function public.shop_website_public_profile(p_slug text) returns jsonb language sql stable security definer set search_path='' as $fixture$
+ select '{}'::jsonb from public.shop_website_slug_claims c join public.shop_websites w on w.shop_id=c.shop_id join public.shops s on s.id=w.shop_id where c.slug=p_slug and w.publication_state='published' and s.status='active';
+$fixture$;
 set local role anon;
 do $$begin
   if public.shop_website_host_resolve('website-second') <> '{"canonicalSlug":"website-first","isAlias":true}'::jsonb then raise exception 'wrong alias target'; end if;

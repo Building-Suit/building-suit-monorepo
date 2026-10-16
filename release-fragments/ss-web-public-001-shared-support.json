@@ -1,0 +1,24 @@
+{
+  "id": "ss-web-public-001-shared-support",
+  "task": "SS-WEB-PUBLIC-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui",
+    "packages/ux",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/shop-website-public-001.md",
+    ".github/workflows/shop-website-public-disposable.yml",
+    "tooling/database/test-shop-website-public-local.mjs"
+  ],
+  "reason": "Shared public entry/showcase and private inbox presentation, typed interaction boundaries and disposable verification. Existing marketing/pricing and other Suit flows retain their contracts."
+}

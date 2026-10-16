@@ -1,0 +1,21 @@
+{
+  "id": "ss-web-launch-001",
+  "task": "SS-WEB-LAUNCH-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/tests",
+    "apps/shop-suit/docs/website-launch-checklist.md",
+    "tooling/database/test-shop-website-launch-local.mjs",
+    ".github/workflows/shop-website-launch-disposable.yml",
+    "docs/work-packages/shop-website-launch-001.md"
+  ],
+  "reason": "Qualifies the reviewed public website stack with cross-tenant production-built journeys, bilingual responsive keyboard coverage and a combined disposable regression gate; records unresolved launch prerequisites without deployment or public product changes."
+}

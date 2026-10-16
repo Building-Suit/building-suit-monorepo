@@ -1,0 +1,7 @@
+// Only loopback synthetic services; no real provider connection or publication.
+import {createServer} from 'node:http'
+import {spawn} from 'node:child_process'
+import {createWebsiteLaunchFixture} from '../fixtures/website-launch.mjs'
+const fixture=createWebsiteLaunchFixture(),port=process.env.LAUNCH_TEST_PORT??'4341',apiPort=Number(process.env.LAUNCH_TEST_API_PORT??46931)
+const api=createServer(async(req,res)=>{let body='';for await(const part of req)body+=part;const args=JSON.parse(body||'{}'),name=req.url.split('/').at(-1);res.setHeader('content-type','application/json');try{res.end(JSON.stringify(req.url==='/control'?fixture.control(args):fixture.rpc(name,args,req.headers)))}catch{res.statusCode=500;res.end('{"ok":false}')}})
+api.listen(apiPort,'127.0.0.1',()=>{const child=spawn(process.execPath,['apps/shop-suit/.output/server/index.mjs'],{stdio:'inherit',env:{...process.env,HOST:'127.0.0.1',PORT:port,NUXT_PUBLIC_APP_URL:'https://shop.building-suit.com',NUXT_PUBLIC_APP_ENVIRONMENT:'production',NUXT_PUBLIC_SUPABASE_URL:`http://127.0.0.1:${apiPort}`,SUPABASE_URL:`http://127.0.0.1:${apiPort}`,NUXT_PUBLIC_SUPABASE_KEY:'local-fixture-publishable-key',NUXT_RELEASE_CATALOG_URL:'',NUXT_RELEASE_CATALOG_PUBLISHABLE_KEY:''}});for(const signal of ['SIGTERM','SIGINT'])process.on(signal,()=>{child.kill(signal);api.close()});child.on('exit',code=>{api.close();process.exitCode=code??1})})

@@ -7,7 +7,7 @@ defineEmits<{ retry: [] }>()
   <main class="bs-public-changelog" :dir="locale === 'ar' ? 'rtl' : 'ltr'" :lang="locale">
     <BsStack gap="lg">
       <BsHeading :level="1" size="h1">{{ title }}</BsHeading>
-      <BsChangelogTimeline :feed="feed" :locale="locale" :copy="copy" :suit="suit" :state="state" released-only hide-filters @retry="$emit('retry')" />
+      <BsChangelogTimeline :feed="feed" :locale="locale" :copy="copy" :suit="suit" :state="state" @retry="$emit('retry')" />
     </BsStack>
   </main>
 </template>

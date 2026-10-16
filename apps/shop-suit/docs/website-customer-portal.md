@@ -1,0 +1,11 @@
+# Customer appointment portal
+
+Published shops expose `/my-appointments` (Arabic) and `?lang=en`. The existing public site links to it. An alias redirects to the canonical portal URL; private hosts and unpublished shops do not expose it. The page and API are private/no-store and noindex. Server rendering serializes public shop identity only.
+
+Access uses the existing code-plus-saved-phone verification and host-only Secure HttpOnly SameSite Strict cookie. Each read validates the token through the private appointment-access scope. Saved customers see only their same-shop customer-ID appointments. Walk-ins see only the verified appointment, regardless of matching names or phones. Every response reconstructs a bounded field allowlist; no customer/appointment IDs, notes, staff contacts, financials, purchases or audit fields are returned.
+
+Upcoming includes appointments whose end has not passed and which are not completed, cancelled or no-show. History is its complement. Both use server pagination of 20 rows with deterministic ordering. Rows show service, staff display name, status, date/time in the configured appointment location's timezone and public location details only when independently visible in the published profile and operationally active. Private/hidden locations use a contact-shop message.
+
+Browser history remains in component-scoped memory, outside Nuxt payload/state, browser storage and URLs. Requests clear prior history and suppress stale responses. Absolute expiry clears the view; visibility suspension invalidates pending reads and verification even before a session is known, hidden responses cannot commit, and page exit clears it. Visible return queues a fresh read after any busy command settles, and visible sessions revalidate every 15 seconds. Revocation is enforced on each read. Logout immediately clears the view and revokes through the existing endpoint even if the website is unpublished. No booking, appointment writes or automated delivery are introduced.
+
+Forward migration adds one customer lookup index and a narrowly granted read-only RPC. Existing appointment tables remain inaccessible to anonymous callers. Only synthetic disposable fixtures publish; no hosted or customer configuration is changed.

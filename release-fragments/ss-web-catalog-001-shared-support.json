@@ -1,0 +1,22 @@
+{
+  "id": "ss-web-catalog-001-shared-support",
+  "task": "SS-WEB-CATALOG-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/shop-website-catalog-disposable.yml",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/shop-website-catalog-001.md",
+    "packages/ui",
+    "tooling/database/test-shop-website-catalog-local.mjs"
+  ],
+  "reason": "Optional shared selective catalog settings presentation, typed disclosure inputs, documentation and disposable verification; other Suit flows remain unchanged."
+}

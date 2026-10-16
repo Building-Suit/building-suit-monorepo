@@ -24,7 +24,7 @@ export interface ChangelogFilter { suit?: string; status?: ChangelogEntry['statu
 export interface ChangelogCopy {
   timeline: string; suit: string; status: string; allSuits: string; allStatuses: string
   released: string; comingSoon: string; targetVersion: string; new: string
-  published: string; releasedAt: string; empty: string; loading: string; error: string; denied: string; retry: string
+  updated?: string; published: string; releasedAt: string; empty: string; loading: string; error: string; denied: string; retry: string
 }
 const semver = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/
 export function isSuitVersion(value: unknown): value is string { return typeof value === 'string' && semver.test(value) }
@@ -137,4 +137,18 @@ export function selectChangelogReleases(feed: ChangelogFeed, filter: Omit<Change
     else releases.set(key, [entry])
   }
   return Array.from(releases.values()).slice(0, limit).flat()
+}
+
+/** One upcoming group first, followed by complete frozen production releases. */
+export function selectChangelogOverview(feed: ChangelogFeed, filter: ChangelogFilter = {}, limit = 3): ChangelogEntry[] {
+  if (!Number.isSafeInteger(limit) || limit < 0) throw new Error('Invalid changelog release limit')
+  const groups = new Map<string, ChangelogEntry[]>()
+  const entries = filter.status ? filterChangelog(feed, filter) : [...filterChangelog(feed, { ...filter, status: 'coming-soon' }), ...filterChangelog(feed, { ...filter, status: 'released' })]
+  for (const entry of entries) {
+    const key = JSON.stringify([entry.status, entry.suit, entry.status === 'released' ? entry.version : entry.targetVersion])
+    const items = groups.get(key)
+    if (items) items.push(entry)
+    else groups.set(key, [entry])
+  }
+  return [...groups.values()].slice(0, limit).flat()
 }

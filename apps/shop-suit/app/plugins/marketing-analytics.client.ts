@@ -4,6 +4,7 @@ import { canIndex, isPublicPath, productionOrigin } from '#shared/publicSeo'
 import { analyticsEnvelope } from '#shared/marketingAnalytics'
 import type { MarketingEvent } from '#shared/marketingAnalytics'
 export default defineNuxtPlugin(() => {
+  if (isTenantWebsiteRequest()) return
   const config = useRuntimeConfig()
   const router = useRouter()
   const user = useSupabaseUser()

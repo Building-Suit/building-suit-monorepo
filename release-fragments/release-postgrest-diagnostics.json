@@ -1,0 +1,9 @@
+{
+  "id": "release-postgrest-diagnostics",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["tooling/releases/catalog-diagnostics.mjs", "tooling/releases/catalog-diagnostics.test.mjs", "tooling/releases/catalog-postgrest-disposable.mjs", ".github/workflows/ci.yml", "docs/shared/release-publication-runbook.md"],
+  "reason": "Differentiate safe REST error categories and require real PostgREST regression against every SAS migration without weakening publication gates or changing hosted state."
+}
