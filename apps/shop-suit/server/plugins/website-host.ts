@@ -28,6 +28,10 @@ export default defineNitroPlugin(nitroApp=>{
   const asset=/^\/_nuxt\/[A-Za-z0-9_.-]{8,}\.(js|css|woff|woff2)$/.test(url.pathname)||/^\/_i18n\/[a-f0-9]{8}\/(ar|en)\/messages\.json$/.test(url.pathname)||/^\/_nuxt\/builds\/(latest\.json|meta\/[a-f0-9-]{36}\.json)$/.test(url.pathname)
   const inquiry=(url.pathname==='/api/website/inquiries'||/^\/api\/website\/appointment-access\/(verify|validate|rotate|logout)$/.test(url.pathname))&&event.method==='POST'
   if(!inquiry&&!['GET','HEAD'].includes(event.method))return unavailable()
+  // Giving up a bearer capability must remain possible after publication ends.
+  // The logout handler still checks Origin/body/cookie and the revocation RPC
+  // resolves this exact immutable tenant claim without exposing any site data.
+  if(event.method==='POST'&&url.pathname==='/api/website/appointment-access/logout'){event.context.appointmentAccessLogout=true;return}
   try{
    const rpc={url:config.public.supabase.url,key:config.public.supabase.key}
    const resolved=await publicWebsiteRpc(rpc,'shop_website_host_resolve',{p_slug:host.slug})

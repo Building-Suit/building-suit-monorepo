@@ -7,7 +7,8 @@ const allowed=createInquiryRateLimit(20)
 export default defineEventHandler(async event=>{
  const host=event.context.websiteHost,action=getRouterParam(event,'action'),config=useRuntimeConfig(event)
  setResponseHeader(event,'Cache-Control','private, no-store');setResponseHeader(event,'X-Robots-Tag','noindex, nofollow')
- if(host?.kind!=='website'||!validWebsiteSlug(event.context.websiteCanonicalSlug)||!action||!['verify','validate','rotate','logout'].includes(action))throw createError({statusCode:404,statusMessage:'Not Found'})
+ const logout=action==='logout'&&event.context.appointmentAccessLogout===true
+ if(host?.kind!=='website'||!logout&&!validWebsiteSlug(event.context.websiteCanonicalSlug)||!action||!['verify','validate','rotate','logout'].includes(action))throw createError({statusCode:404,statusMessage:'Not Found'})
  if(getHeader(event,'origin')!==websiteUrl(host.slug))throw createError({statusCode:403,statusMessage:'Access unavailable'})
  const cookieName=`bs-shop-${config.public.appEnvironment}-appointment-access`
  // Public host middleware strips private auth cookies, but retains this host-only
