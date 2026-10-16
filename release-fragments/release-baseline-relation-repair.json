@@ -1,9 +1,0 @@
-{
-  "id": "release-baseline-relation-repair",
-  "task": "BS-CHANGELOG-VERSION-001",
-  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
-  "classification": "internal",
-  "disposition": "internal",
-  "paths": ["apps/super-admin-suit/supabase/migrations/20261016130037_canonical_release_baseline_relation.sql", "tooling/releases/baseline-relation-disposable.mjs", "tooling/releases/catalog-disposable.mjs", "tooling/releases/candidate-disposable.mjs", "tooling/releases/catalog-postgrest-disposable.mjs", "tooling/releases/publisher.mjs", "tooling/releases/catalog-diagnostics.test.mjs", "docs/shared/release-publication-runbook.md"],
-  "reason": "Repair the proven staging baseline UPDATE boundary by preserving the original relation and restoring its canonical control-plane shape; handle demonstrated PostgREST void success and verify complete readiness/public read without changing release history or guards."
-}

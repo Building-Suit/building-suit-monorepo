@@ -46,9 +46,7 @@ create function realtime.send(jsonb,text,text,boolean) returns void language sql
 const migrations=new URL('../../apps/super-admin-suit/supabase/migrations/',import.meta.url)
 const names=readdirSync(migrations).filter(name=>name.endsWith('.sql')).sort()
 let retainedSource
-const relationRepair=names.find(name=>name.endsWith('_canonical_release_baseline_relation.sql'))
-assert.ok(relationRepair)
-for(const name of names.filter(name=>name!==relationRepair)) {
+for(const name of names) {
   if(name.endsWith('_release_cardinality_location.sql')) retainedSource=sql("select md5(prosrc) from pg_proc where oid='public.release_candidate_refresh(jsonb)'::regprocedure;")
   console.log(`Apply SAS migration ${name}`)
   sql(readFileSync(new URL(name,migrations),'utf8'))
@@ -96,33 +94,37 @@ for(const [code,guard,reason] of [
     return true
   })
 }
+// Inventory must expose scalar parsed-body consumers, external policies and
+// effective publication membership without reading any baseline/customer rows.
+sql(`create function super_admin_private.fixture_atomic_baseline_consumer() returns text language sql begin atomic
+  select production_sha from public.release_candidate_baseline;
+end;
+create table super_admin_private.fixture_inventory_rows(value integer);
+alter table super_admin_private.fixture_inventory_rows enable row level security;
+create policy fixture_external_baseline_policy on super_admin_private.fixture_inventory_rows using(exists(select 1 from public.release_candidate_baseline where singleton));
+create publication fixture_baseline_publication for table public.release_candidate_baseline;`)
+const inventorySql=readFileSync(new URL('./baseline-relation-inventory.sql',import.meta.url),'utf8')
+const inventoryBefore=sql('select row_to_json(b) from public.release_candidate_baseline b;')
+const inventory=JSON.parse(sql(`begin read only;${inventorySql}commit;`).split('\n').find(line=>line.startsWith('{')))
+assert.ok(inventory.consumers.some(row=>row.catalog==='pg_proc'&&row.referenceCatalog==='pg_class'&&row.identity.includes('fixture_atomic_baseline_consumer')))
+assert.ok(!inventory.consumers.some(row=>row.catalog==='pg_proc'&&row.referenceCatalog==='pg_type'&&row.identity.includes('fixture_atomic_baseline_consumer')),'Scalar parsed-body dependency is direct to the table, not its row type')
+assert.ok(inventory.consumers.some(row=>row.catalog==='pg_policy'&&row.identity.includes('fixture_external_baseline_policy')))
+assert.ok(inventory.publications.some(row=>row.name==='fixture_baseline_publication'))
+assert.ok(!Object.hasOwn(inventory.relation,'production_sha'))
+assert.equal(sql('select row_to_json(b) from public.release_candidate_baseline b;'),inventoryBefore)
+assert.equal(sql("select to_regclass('super_admin_private.release_candidate_baseline_before_relation_repair') is null;"),'t')
+console.log('Read-only metadata inventory passed: scalar BEGIN ATOMIC table dependency, external policy, publication membership and unchanged baseline')
 const snapshot={...buildCandidate('origin/main','HEAD'),baseVersions:state.baseVersions}
-// Reproduce the decisive hosted statement through the already warmed REST pool.
-const baselineOid=sql("select 'public.release_candidate_baseline'::regclass::oid;")
-const baselineBefore=sql('select row_to_json(b) from public.release_candidate_baseline b;')
-sql(`create function super_admin_private.fixture_failed_baseline_pin() returns trigger language plpgsql as $$begin perform (select value from (values(1),(2)) v(value));return new;end$$;
-create trigger fixture_failed_baseline_pin before update on public.release_candidate_baseline for each row execute function super_admin_private.fixture_failed_baseline_pin();`)
-assert.equal((await catalog('release_candidate_state')).productionSha,null)
-await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:snapshot}),/CANDIDATE_CARDINALITY_BASELINE_PIN/)
-assert.equal(sql('select row_to_json(b) from public.release_candidate_baseline b;'),baselineBefore)
-assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'0')
-sql(readFileSync(new URL(relationRepair,migrations),'utf8'))
-assert.equal(sql('select row_to_json(b) from public.release_candidate_baseline b;'),baselineBefore)
-assert.equal(sql("select 'super_admin_private.release_candidate_baseline_before_relation_repair'::regclass::oid;"),baselineOid)
-assert.equal(sql("select count(*) from pg_trigger where tgrelid='super_admin_private.release_candidate_baseline_before_relation_repair'::regclass and tgname='fixture_failed_baseline_pin';"),'1')
 const first=await catalog('release_candidate_refresh',{p_snapshot:snapshot})
-assert.equal((await catalog('release_candidate_state')).productionSha,snapshot.mainSha)
-assert.equal(sql('select production_sha is null from super_admin_private.release_candidate_baseline_before_relation_repair;'),'t','Warmed backend plans must use the canonical relation')
-// Local-only readiness verifies the complete public read path after the repair;
-// real CI still requires all existing deployment contexts before this operation.
+// The void readiness RPC returns204; successful acknowledgment must not parse JSON.
 await catalog('release_candidate_ready',{p_key:first.key,p_digest:first.digest})
 const publicResponse=await fetch(status.API_URL+'/rpc/release_public_feed',{method:'POST',headers:{authorization:`Bearer ${status.ANON_KEY}`,'content-type':'application/json'},body:'{}',redirect:'error'})
 assert.equal(publicResponse.status,200)
-const repairedFeed=parseChangelogFeed(await publicResponse.json())
-assert.equal(repairedFeed.entries.length,snapshot.changes.filter(row=>row.disposition==='public').length)
-assert.ok(repairedFeed.entries.length>0)
-assert.ok(repairedFeed.entries.every(entry=>entry.status==='coming-soon'&&entry.targetVersion==='0.1.0'))
-
+const readyFeed=parseChangelogFeed(await publicResponse.json())
+assert.ok(readyFeed.entries.length>0)
+assert.equal(readyFeed.entries.length,snapshot.changes.filter(row=>row.disposition==='public').length)
+assert.ok(readyFeed.entries.every(entry=>entry.status==='coming-soon'&&entry.targetVersion==='0.1.0'))
+assert.equal(sql('select super_admin_private.fixture_atomic_baseline_consumer();'),snapshot.mainSha,'Parsed scalar consumer still reads the active authority')
 const retries=await Promise.all([0,1].map(()=>catalog('release_candidate_refresh',{p_snapshot:snapshot})))
 assert.ok(retries.every(row=>row.key===first.key&&row.digest===first.digest))
 assert.equal(first.manifest.versions['shop-suit'],'0.1.0')
@@ -190,7 +192,7 @@ assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'3'
 
 assert.equal(sql('select count(*) from public.release_candidate_promotions;'),'0')
 assert.equal(sql('select version from public.release_candidate_versions;'),'0.0.0')
-console.log('Full SAS PostgREST catalog passed: real createCatalog state/refresh, concurrent retry, invalid-ref denial, anonymous denial and successful repaired BASELINE_PIN and public read, unchanged production history and safe cardinality locations')
+console.log('Full SAS PostgREST catalog passed: real createCatalog state/refresh, concurrent retry, invalid-ref denial, anonymous denial and unchanged production baseline/history and safe cardinality locations')
 
 } finally {
   // Names are generated by this invocation; unrelated stacks/volumes are untouched.
