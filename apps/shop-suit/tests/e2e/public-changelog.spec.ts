@@ -170,7 +170,7 @@ for(const locale of ['en','ar'] as const) test(`${locale}: empty state describes
   await expect(timeline.getByText(locale==='ar'?'لا توجد تحديثات قادمة في هذا التبويب':'No upcoming updates in this tab',{exact:true})).toBeVisible()
 })
 
-for(const locale of ['en','ar'] as const) test(`${locale}: retrospective milestones show version, verified date and explicit numbering label`,async({page})=>{
+for(const locale of ['en','ar'] as const) test(`${locale}: retrospective milestones show version, verified date and explicit numbering label`,async({page},testInfo)=>{
   await page.emulateMedia({reducedMotion:'reduce'})
   const plan=JSON.parse(readFileSync(new URL('../../../../tooling/releases/retrospective-shop.json',import.meta.url),'utf8'))
   const history=plan.releases.map((row:{version:string;releasedAt:string;notes:object})=>({id:`history-${row.version}`,suit:'shop-suit',visibility:'public',status:'released',version:row.version,versionOrigin:'retrospective',releasedAt:row.releasedAt,publishedAt:'2026-10-16T18:00:00Z',...row.notes,links:[]}))
@@ -185,6 +185,10 @@ for(const locale of ['en','ar'] as const) test(`${locale}: retrospective milesto
   await expect(section.getByText(locale==='ar'?'ترقيم بأثر رجعي':'Retrospective version',{exact:true})).toHaveCount(3)
   await expect(section.getByText(locale==='ar'?'جديد':'New',{exact:true})).toHaveCount(0)
   await expect(section.locator('article time').first()).toHaveAttribute('datetime','2026-10-14T11:29:16.099Z')
+  await page.setViewportSize({width:390,height:844})
+  await section.scrollIntoViewIfNeeded()
+  expect(await section.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBeTruthy()
+  await section.screenshot({path:testInfo.outputPath(`history-${locale}-mobile.png`)})
   await section.getByRole('link').last().click()
   const timeline=page.locator('main .bs-changelog')
   await expect(timeline.locator('article')).toHaveCount(4)

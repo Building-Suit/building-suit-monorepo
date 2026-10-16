@@ -163,7 +163,9 @@ create trigger fixture_skip_history_head before update on public.release_candida
   assert.deepEqual(await catalog('release_candidate_state'),before)
   assert.equal(sql('select count(*) from public.release_retrospective_imports;'),'0')
   sql('drop trigger fixture_skip_history_head on public.release_candidate_versions;drop function super_admin_private.fixture_skip_history_head();')
-  const imported=await catalog('release_history_import',{p_history:retrospectivePlan})
+  const imports=await Promise.all([0,1].map(()=>catalog('release_history_import',{p_history:retrospectivePlan})))
+  assert.deepEqual(imports[0],imports[1],'Concurrent first imports retain one clock/digest and advance the baseline once')
+  const imported=imports[0]
   assert.deepEqual(await catalog('release_history_import',{p_history:retrospectivePlan}),imported)
   assert.equal((await catalog('release_candidate_state')).baseVersions['shop-suit'],'0.4.0')
   const reserved=await catalog('release_candidate_refresh',{p_snapshot:{...snapshot,baseVersions:{'shop-suit':'0.4.0'}}})
