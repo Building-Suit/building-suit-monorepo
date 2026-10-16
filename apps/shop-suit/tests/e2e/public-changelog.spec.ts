@@ -171,12 +171,14 @@ for(const locale of ['en','ar'] as const) test(`${locale}: empty state describes
 })
 
 for(const locale of ['en','ar'] as const) test(`${locale}: retrospective milestones show version, verified date and explicit numbering label`,async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'})
   const plan=JSON.parse(readFileSync(new URL('../../../../tooling/releases/retrospective-shop.json',import.meta.url),'utf8'))
   const history=plan.releases.map((row:{version:string;releasedAt:string;notes:object})=>({id:`history-${row.version}`,suit:'shop-suit',visibility:'public',status:'released',version:row.version,versionOrigin:'retrospective',releasedAt:row.releasedAt,publishedAt:'2026-10-16T18:00:00Z',...row.notes,links:[]}))
   await page.context().addCookies([{name:'building-suit-locale',value:locale,url:'http://127.0.0.1:4393'}])
   await page.route('**/api/changelog',route=>route.fulfill({json:{serverNow:'2026-10-16T18:00:00Z',suits,entries:history}}))
   await page.goto('/')
   const section=page.locator('#whats-new')
+  await section.scrollIntoViewIfNeeded()
   await expect(section.locator('article')).toHaveCount(3)
   await page.getByRole('button',{name:locale==='ar'?'رفض الاختياري':'Reject optional',exact:true}).click()
   await expect(section.locator('article bdi')).toHaveText(['0.4.0','0.3.0','0.2.0'])
