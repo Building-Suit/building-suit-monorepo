@@ -42,6 +42,11 @@ begin
     end if;
   end loop;
   select version into current_version from public.release_candidate_versions where suit_id=suit;
+  if (current_version is null or current_version='0.0.0') and (
+    exists(select 1 from public.release_manifests where first_published_at is not null and manifest#>>'{versions,shop-suit}' is not null)
+    or exists(select 1 from public.release_candidate_promotions where manifest#>>'{versions,shop-suit}' is not null)) then
+    raise exception 'HISTORICAL_BASELINE_REVIEW_REQUIRED';
+  end if;
   if current_version is not null and current_version<>'0.0.0'
     and string_to_array(current_version,'.')::bigint[] < string_to_array(approved->>'baselineVersion','.')::bigint[] then
     raise exception 'HISTORICAL_BASELINE_REVIEW_REQUIRED';

@@ -214,5 +214,13 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
   assert.equal(legacy('select count(*) from public.release_candidate_versions;'),'0','Published legacy history is not guessed as a zero baseline')
   assert.throws(()=>legacy(`${jwt}select public.release_candidate_refresh(${json(first)});`),/VERIFIED_PRODUCTION_BASELINE_REQUIRED/)
   assert.throws(()=>feed(legacy),/LEGACY_RELEASE_HISTORY_REVIEW_REQUIRED/,'Unknown old staging publication cannot masquerade as verified production history or empty success')
+  const publishedMajor=setup('candidate_unknown_published_baseline','staging',q=>{
+    const request={repository:'Building-Suit/building-suit-monorepo',ref:'refs/heads/stg',parentSha:'4b4c3ca5ffed96e7d61f6eb5a60d04a52862aa0c',sourceSha:'e'.repeat(40),fragments:[{...change,classification:'major'}]}
+    const accepted=parse(q(`${jwt}select public.release_stage_accept(${json(request)});`))
+    q(`${jwt}select public.release_publish('staging','refs/heads/stg','${'e'.repeat(40)}',${json([accepted])});`)
+  })
+  assert.throws(()=>importHistory(publishedMajor),/HISTORICAL_BASELINE_REVIEW_REQUIRED/,'Published legacy history without an acknowledged model-two head cannot be silently reset to the retrospective baseline')
+  assert.equal(publishedMajor('select count(*) from public.release_retrospective_imports;'),'0')
+  assert.equal(publishedMajor('select count(*) from public.release_candidate_versions;'),'0')
   console.log('Upcoming candidate PostgreSQL passed: repeated updates, net-zero, one production freeze, retry/ack recovery, immutable history, next candidate, authorization and public boundaries')
 }
