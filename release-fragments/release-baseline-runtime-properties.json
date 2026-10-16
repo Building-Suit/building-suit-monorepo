@@ -1,0 +1,9 @@
+{
+  "id": "release-baseline-runtime-properties",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["tooling/releases/catalog-postgrest-disposable.mjs", "tooling/releases/catalog-diagnostics.mjs", "tooling/releases/catalog-diagnostics.test.mjs", "tooling/releases/baseline-runtime-properties.sql", "docs/shared/release-publication-runbook.md"],
+  "reason": "Verify native conditional/update attribution and generated-expression reproduction, decode the compound condition accurately and request only missing RLS/generated-column metadata without altering any hosted control."
+}

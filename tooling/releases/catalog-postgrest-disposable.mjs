@@ -115,6 +115,44 @@ assert.equal(sql('select row_to_json(b) from public.release_candidate_baseline b
 assert.equal(sql("select to_regclass('super_admin_private.release_candidate_baseline_before_relation_repair') is null;"),'t')
 console.log('Read-only metadata inventory passed: scalar BEGIN ATOMIC table dependency, external policy, publication membership and unchanged baseline')
 const snapshot={...buildCandidate('origin/main','HEAD'),baseVersions:state.baseVersions}
+sql(`create function public.release_candidate_trace(p_snapshot jsonb) returns jsonb language plpgsql security definer set search_path='' as $$declare ctx text; frame text[];begin
+perform super_admin_private.release_candidate_refresh_retained(p_snapshot);return jsonb_build_object('unexpectedSuccess',true);
+exception when cardinality_violation then get stacked diagnostics ctx=pg_exception_context;
+frame:=regexp_match(ctx,'PL/pgSQL function (?:super_admin_private[.])?release_candidate_refresh_retained[(]jsonb[)] line ([0-9]+) at ([A-Za-z ]+)');
+return jsonb_build_object('line',frame[1]::integer,'operation',frame[2]);end$$;
+revoke all on function public.release_candidate_trace(jsonb) from public,anon,authenticated;grant execute on function public.release_candidate_trace(jsonb) to service_role;`)
+const traceFrame=request=>JSON.parse(sql("set request.jwt.claims='{\"role\":\"service_role\"}';select public.release_candidate_trace('"+JSON.stringify(request).replaceAll("'","''")+"'::jsonb);").split('\n').at(-1))
+
+const propertiesSql=readFileSync(new URL('./baseline-runtime-properties.sql',import.meta.url),'utf8')
+const properties=()=>JSON.parse(sql(`begin read only;${propertiesSql}commit;`).split('\n').find(line=>line.startsWith('{')))
+assert.equal(properties().rlsWouldApplyToRetained,false)
+const constraintHashes=sql("select jsonb_agg(md5(pg_get_constraintdef(oid)) order by oid) from pg_constraint where conrelid='public.release_candidate_baseline'::regclass;")
+assert.deepEqual(JSON.parse(constraintHashes).sort(),['7511e9a8e50c073e1d6eff73afcc0f24','9a7edf924a60685a990eb8cc48ba9653','ae6f6dfbe38290d5bfa8f3e96d1aff91'].sort(),'Exact three reported canonical hashes')
+sql(`create function super_admin_private.fixture_generated_baseline_guard(p_sha text) returns boolean language plpgsql immutable as $$begin
+if p_sha is null then return true;end if;return (select value from (values(true),(false)) v(value));end$$;
+alter table public.release_candidate_baseline add column fixture_generated boolean generated always as (super_admin_private.fixture_generated_baseline_guard(production_sha)) stored;`)
+assert.equal((await catalog('release_candidate_state')).productionSha,null)
+assert.equal(sql("select count(*) from pg_trigger where tgrelid='public.release_candidate_baseline'::regclass and not tgisinternal;"),'0')
+assert.equal(sql("select count(*) from pg_rewrite where ev_class='public.release_candidate_baseline'::regclass;"),'0')
+assert.equal(sql("select jsonb_agg(md5(pg_get_constraintdef(oid)) order by oid) from pg_constraint where conrelid='public.release_candidate_baseline'::regclass;"),constraintHashes)
+assert.deepEqual(traceFrame(snapshot),{line:16,operation:'SQL statement'})
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:snapshot}),/CANDIDATE_CARDINALITY_BASELINE_PIN/)
+assert.equal((await catalog('release_candidate_state')).productionSha,null)
+const generated=properties().columns.find(column=>column.name==='fixture_generated')
+assert.equal(generated.generated,'s')
+assert.ok(generated.generatedFunctions.some(fn=>fn.identity.includes('fixture_generated_baseline_guard')))
+sql('alter table public.release_candidate_baseline drop column fixture_generated;drop function super_admin_private.fixture_generated_baseline_guard(text);')
+console.log('BASELINE_PIN reproduced at native line16 SQL statement: canonical constraints/no hooks, generated-expression fault; metadata follow-up identifies it')
+sql(`create function super_admin_private.fixture_baseline_index_guard(p_sha text) returns text language plpgsql immutable as $$begin
+if p_sha is null then return null;end if;return (select value from (values('one'),('two')) v(value));end$$;
+create index fixture_baseline_expression on public.release_candidate_baseline(super_admin_private.fixture_baseline_index_guard(production_sha));`)
+assert.deepEqual(traceFrame(snapshot),{line:16,operation:'SQL statement'})
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:snapshot}),/CANDIDATE_CARDINALITY_BASELINE_PIN/)
+assert.equal(sql("select jsonb_agg(md5(pg_get_constraintdef(oid)) order by oid) from pg_constraint where conrelid='public.release_candidate_baseline'::regclass;"),constraintHashes)
+assert.ok(properties().indexes.some(index=>index.expression&&index.functions.some(fn=>fn.identity.includes('fixture_baseline_index_guard'))))
+sql('drop index public.fixture_baseline_expression;drop function super_admin_private.fixture_baseline_index_guard(text);')
+console.log('BASELINE_PIN also reproduced by an expression index with the same canonical constraints and no generated columns')
+
 const first=await catalog('release_candidate_refresh',{p_snapshot:snapshot})
 // The void readiness RPC returns204; successful acknowledgment must not parse JSON.
 await catalog('release_candidate_ready',{p_key:first.key,p_digest:first.digest})
@@ -154,6 +192,17 @@ const retainedDefinition=sql("select pg_get_functiondef('super_admin_private.rel
 sql(`create or replace function super_admin_private.release_candidate_refresh_retained(p_snapshot jsonb) returns jsonb language plpgsql security definer set search_path='' as $$begin return (select value from (values('{}'::jsonb),('{}'::jsonb)) v(value));end$$;`)
 await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/CANDIDATE_CARDINALITY_REFRESH_CONTRACT_MISMATCH/)
 sql(retainedDefinition)
+const inlineBaselineDefinition=sql("select pg_get_functiondef('super_admin_private.candidate_baseline_tree()'::regprocedure);")
+sql(`create function super_admin_private.fixture_inline_baseline_guard() returns text language plpgsql stable as $$begin return (select manifest->>'mainTree' from public.release_candidate_revisions);end$$;
+create or replace function super_admin_private.candidate_baseline_tree() returns text language sql stable as $$select super_admin_private.fixture_inline_baseline_guard()$$;
+alter function super_admin_private.candidate_baseline_tree() reset all;
+`)
+assert.deepEqual(traceFrame({...snapshot,stagingSha:'d'.repeat(40)}),{line:15,operation:'IF'})
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/CANDIDATE_CARDINALITY_BASELINE_CONDITION/)
+sql(inlineBaselineDefinition)
+sql('drop function super_admin_private.fixture_inline_baseline_guard();')
+console.log('Native attribution verified: inlined ELSIF fault reports line15 IF/legacy BASELINE_READ, decoded as BASELINE_CONDITION; not BASELINE_PIN')
+
 const baselineDefinition=sql("select pg_get_functiondef('super_admin_private.candidate_baseline_tree()'::regprocedure);")
 sql(`create or replace function super_admin_private.candidate_baseline_tree() returns text language plpgsql stable set search_path='' as $$begin return (select value from (values('private-sentinel'),('private-sentinel')) v(value));end$$;`)
 await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),error=>{
