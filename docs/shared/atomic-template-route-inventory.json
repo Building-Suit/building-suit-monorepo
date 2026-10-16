@@ -84,11 +84,11 @@
     "routes": 74
   },
   "currentInventory": {
-    "suitVueFiles": 90,
+    "suitVueFiles": 93,
     "localComponents": 0,
-    "routes": 76,
-    "layouts": 9,
-    "roots": 5
+    "routes": 77,
+    "layouts": 10,
+    "roots": 6
   },
   "acceptance": "verified-local: all 76 routes, strict zero-debt architecture, cross-Suit parity and regressions; publication pending provider suppression verification",
   "entries": [
@@ -2604,6 +2604,34 @@
       ],
       "verification": "SS-APPT-002: scoped booking, transactional availability and EN/AR responsive browser regressions",
       "purpose": "shop-public-appointment-booking"
+    },
+    {
+      "source": "apps/doctor-suit/app/app.vue",
+      "kind": "root",
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "domainAdapter": "apps/doctor-suit/app/app.vue",
+      "status": "generated; product acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/layouts/default.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "domainAdapter": "apps/doctor-suit/app/layouts/default.vue",
+      "status": "generated; product acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/index.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsStarterWorkflowPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/index.vue",
+      "purpose": "starter-workflow",
+      "status": "generated; product acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [

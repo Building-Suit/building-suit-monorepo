@@ -1,0 +1,11 @@
+{
+  "product": {
+    "name": "Doctor Suit"
+  },
+  "welcome": "Doctor Suit synthetic preview",
+  "description": "Administrative browser workflows are being built with synthetic data only.",
+  "feature": "Doctor-owned practice",
+  "featureBody": "One doctor can work across locations and invite a secretary with independent permissions.",
+  "workflow": "View preview scope",
+  "workflowBody": "Preview scope: administrative web first. Clinical workflows, payment and mobile applications remain unavailable."
+}

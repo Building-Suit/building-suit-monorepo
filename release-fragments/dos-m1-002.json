@@ -1,0 +1,23 @@
+{
+  "id": "dos-m1-002",
+  "task": "DOS-M1-002",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit",
+    "package.json",
+    "pnpm-lock.yaml",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/work-packages/doctor-suit/scaffold-generation.json",
+    "tooling/checks/dos-m1-contract.test.mjs"
+  ],
+  "reason": "Add an isolated synthetic Doctor app from the maintained shared-template starter and a loopback-only browser harness. Workspace script and lockfile changes affect existing tooling consumers; no existing product behavior or operational Doctor release registration changes."
+}

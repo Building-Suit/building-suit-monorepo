@@ -1,0 +1,19 @@
+{
+  "task": "DOS-M1-002",
+  "generator": "tooling/new-platform/generate.mjs",
+  "dry_run": true,
+  "files": [
+    "AGENTS.md",
+    "README.md",
+    "app/app.vue",
+    "app/layouts/default.vue",
+    "app/pages/index.vue",
+    "eslint.config.mjs",
+    "i18n/locales/ar.json",
+    "i18n/locales/en.json",
+    "nuxt.config.ts",
+    "package.json",
+    "tsconfig.json",
+    "vercel.json"
+  ]
+}
