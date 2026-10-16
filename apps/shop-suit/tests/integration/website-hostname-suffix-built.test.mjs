@@ -83,10 +83,10 @@ test('built production and staging deployments bind every URL, Origin, tenant an
  }finally{await Promise.all([production.stop(),staging.stop()])}
 })
 test('invalid/missing/mismatched deployment config denies public and static requests before backend access while private login survives',async()=>{
- for(const [environment,suffix] of [['staging',''],['staging',prod],['staging','https://evil.test/path'],['production',stage],['null',prod]]){
+ for(const [environment,suffix] of [['staging',''],['staging',prod],['staging','https://evil.test/path'],['production',stage],['unknown-environment',prod]]){
   const app=await runtime(4353,environment,suffix)
   try{
-   for(const host of ['alpha-tools.'+stage,'alpha-tools.'+prod])for(const path of ['/','/book','/my-appointments','/_nuxt/fake.js','/api/website/booking/options']){const response=await app.request(host,path,path.startsWith('/api/')?{}:undefined);assert.equal(response.status,404);assert.equal(response.text,'Not Found');assert.equal(response.headers['set-cookie'],undefined)}
+   for(const host of ['alpha-tools.'+stage,'alpha-tools.'+prod])for(const path of ['/','/book','/my-appointments','/_nuxt/fake.js','/api/website/booking/options']){const response=await app.request(host,path,path.startsWith('/api/')?{}:undefined);assert.equal(response.status,404,`${environment}/${suffix}/${host}${path}`);assert.equal(response.text,'Not Found');assert.equal(response.headers['set-cookie'],undefined)}
    assert.equal(app.calls.length,0);assert.equal((await app.request(app.privateHost,'/auth/login')).status,200)
   }finally{await app.stop()}
  }

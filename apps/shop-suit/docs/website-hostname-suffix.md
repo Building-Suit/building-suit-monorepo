@@ -8,7 +8,7 @@ Deployment configuration selects exactly one owned public namespace. It never co
 | Staging | `stg.shops.building-suit.com` (explicitly required) | `https://{slug}.stg.shops.building-suit.com` |
 | Local fixture/development | Either owned suffix; empty defaults to production | Loopback transport only in tests |
 
-Only these two exact lowercase ASCII suffix strings are accepted. URLs, wildcard strings, ports, trailing dots, whitespace, Unicode/punycode variants, IPs and arbitrary domains are rejected. Production cannot select staging, and staging cannot select production. Missing staging configuration fails closed for public hosts; the configured private app and loopback health/test authority remain available. Unknown environment names also deny public hosts.
+Only these two exact lowercase ASCII suffix strings are accepted. URLs, wildcard strings, ports, trailing dots, whitespace, Unicode/punycode variants, IPs and arbitrary domains are rejected. Production cannot select staging, and staging cannot select production. Missing staging configuration fails closed for public hosts; the configured private app and loopback health/test authority remain available. Unknown effective environment values also deny public hosts.
 
 ## Exact application configuration
 
@@ -36,7 +36,7 @@ NUXT_PUBLIC_WEBSITE_HOSTNAME_SUFFIX=stg.shops.building-suit.com
 
 Private origins above are the maintained [environment registry](../../../docs/architecture/environments.json) values; do not set `APP_URL` to a public tenant or wildcard. Keep build-time `APP_ENV`/`APP_URL` and runtime `NUXT_PUBLIC_APP_ENVIRONMENT`/`NUXT_PUBLIC_APP_URL` consistent. Existing private Auth cookie-prefix configuration is built from `APP_ENV`; this task does not change it. Keep each deployment's existing Supabase endpoint, publishable key, Auth and data in its own environment; do not copy production credentials/data into staging.
 
-`runtimeConfig.public.websiteHostnameSuffix` is declared with an empty default and receives its native `NUXT_PUBLIC_WEBSITE_HOSTNAME_SUFFIX` override at runtime. Production/local preserve the previous default; staging requires an explicit value. A differently named unprefixed runtime variable is not an alias. Nuxt documents [runtime overrides and public configuration](https://nuxt.com/docs/4.x/guide/going-further/runtime-config#environment-variables).
+`runtimeConfig.public.websiteHostnameSuffix` is declared with an empty default and receives its native `NUXT_PUBLIC_WEBSITE_HOSTNAME_SUFFIX` override at runtime. Production/local preserve the previous default; staging requires an explicit value. A differently named unprefixed runtime variable is not an alias. Use the listed string values, not placeholders such as `null`: Nuxt can normalize null overrides back to declared defaults. Building staging with `APP_ENV=staging` is required alongside its runtime values. Nuxt documents [runtime overrides and public configuration](https://nuxt.com/docs/4.x/guide/going-further/runtime-config#environment-variables).
 
 Changing a deployment suffix requires a normal approved configuration/deployment cycle and fresh host smoke checks. It does not rename stored slugs or reclaim another Shop's aliases. Public owner previews, canonical/hreflang/pagination, robots/sitemap, booking/portal links, redirects and POST Origin checks all use the same validated suffix. Staging remains noindex with a disallowed robots policy and empty sitemap; production indexing behavior is unchanged. Invalid configuration produces no invented production preview URL in owner settings.
 
