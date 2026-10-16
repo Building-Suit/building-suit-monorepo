@@ -14,7 +14,8 @@ function date(value: string, locale: string) { return new Intl.DateTimeFormat(lo
       <BsText as="span" size="sm" emphasis="semibold">{{ suitName }}</BsText>
       <BsText v-if="entry.status === 'released'" as="bdi" dir="ltr" size="sm">{{ entry.version }}</BsText>
       <BsStatusBadge :status="entry.status" :label="entry.status === 'released' ? copy.released : copy.comingSoon" :tone="entry.status === 'released' ? 'success' : 'info'" :icon="false" />
-      <BsStatusBadge v-if="isNew" status="new" :label="copy.new" tone="neutral" :icon="false" />
+      <BsStatusBadge v-if="entry.status === 'released' && entry.versionOrigin === 'retrospective'" status="retrospective" :label="copy.retrospective" tone="neutral" :icon="false" />
+      <BsStatusBadge v-if="isNew && !(entry.status === 'released' && entry.versionOrigin === 'retrospective')" status="new" :label="copy.new" tone="neutral" :icon="false" />
     </div>
     <BsHeading :level="3" size="h3">{{ entry.title[locale] }}</BsHeading>
     <BsText v-if="distinct(entry.summary[locale], entry.title[locale])">{{ entry.summary[locale] }}</BsText>

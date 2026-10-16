@@ -1141,6 +1141,29 @@ export type Database = {
           },
         ]
       }
+      release_candidate_preview: {
+        Row: {
+          revision_key: string | null
+          singleton: boolean
+        }
+        Insert: {
+          revision_key?: string | null
+          singleton?: boolean
+        }
+        Update: {
+          revision_key?: string | null
+          singleton?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_candidate_preview_revision_key_fkey"
+            columns: ["revision_key"]
+            isOneToOne: false
+            referencedRelation: "release_candidate_revisions"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       release_candidate_promotions: {
         Row: {
           deployment_sha: string
@@ -1306,6 +1329,27 @@ export type Database = {
           ordinal?: never
           request?: Json
           source_sha?: string
+        }
+        Relationships: []
+      }
+      release_retrospective_imports: {
+        Row: {
+          digest: string
+          history: Json
+          imported_at: string
+          plan_id: string
+        }
+        Insert: {
+          digest: string
+          history: Json
+          imported_at?: string
+          plan_id: string
+        }
+        Update: {
+          digest?: string
+          history?: Json
+          imported_at?: string
+          plan_id?: string
         }
         Relationships: []
       }
@@ -1502,6 +1546,7 @@ export type Database = {
       release_candidate_refresh: { Args: { p_snapshot: Json }; Returns: Json }
       release_candidate_state: { Args: never; Returns: Json }
       release_catalog_state: { Args: never; Returns: Json }
+      release_history_import: { Args: { p_history: Json }; Returns: Json }
       release_public_feed: { Args: never; Returns: Json }
       release_publish: {
         Args: {

@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process'
 import { randomUUID, createHmac, createHash } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
 import { readdirSync, readFileSync, existsSync } from 'node:fs'
+import { retrospectivePlan } from './retrospective.mjs'
 import { buildCandidate } from './candidate.mjs'
 import { parseChangelogFeed } from '../../packages/contracts/src/changelog.ts'
 import { createCatalog } from './publisher.mjs'
@@ -57,9 +58,12 @@ create function realtime.send(jsonb,text,text,boolean) returns void language sql
 const migrations=new URL('../../apps/super-admin-suit/supabase/migrations/',import.meta.url)
 const names=readdirSync(migrations).filter(name=>name.endsWith('.sql')).sort()
 let retainedSource
+const previewRepair=names.find(name=>name.endsWith('_durable_release_preview.sql'))
+assert.ok(previewRepair)
 const qualifiedRepair=names.find(name=>name.endsWith('_qualified_release_baseline_pin.sql'))
 assert.ok(qualifiedRepair)
-for(const name of names.filter(name=>name!==qualifiedRepair)) {
+const laterMigrations=names.filter(name=>name>qualifiedRepair)
+for(const name of names.filter(name=>name!==qualifiedRepair && !laterMigrations.includes(name))) {
   if(name.endsWith('_release_cardinality_location.sql')) retainedSource=sql("select md5(prosrc) from pg_proc where oid='public.release_candidate_refresh(jsonb)'::regprocedure;")
   console.log(`Apply SAS migration ${name}`)
   sql(readFileSync(new URL(name,migrations),'utf8'))
@@ -97,7 +101,7 @@ const ref='abcdefghijklmnopqrst'
 const transport=(url,options)=>{
   const parsed=new URL(url)
   assert.equal(parsed.origin,`https://${ref}.supabase.co`)
-  assert.match(parsed.pathname,/^\/rest\/v1\/rpc\/release_candidate_[a-z]+$/)
+  assert.match(parsed.pathname,/^\/rest\/v1\/rpc\/release_(?:candidate_[a-z]+|history_import)$/)
   return fetch(status.API_URL+parsed.pathname.replace('/rest/v1',''),options)
 }
 const catalog=createCatalog(`https://${ref}.supabase.co`,status.SERVICE_ROLE_KEY,ref,transport)
@@ -142,7 +146,47 @@ await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:snapshot}),
 assert.deepEqual(await catalog('release_candidate_state'),state,'Original guard rejection rolls back without consuming history/version')
 console.log('Confirmed real pg-safeupdate/authenticator/PostgREST reproduces original BASELINE_PIN on canonical relation')
 sql(readFileSync(new URL(qualifiedRepair,migrations),'utf8'))
+for(const name of laterMigrations) sql(readFileSync(new URL(name,migrations),'utf8'))
 assert.deepEqual(await catalog('release_candidate_state'),state,'Forward function-only repair preserves all release state')
+// New RPCs must be present in the reloaded schema cache before exercising them.
+for(let attempt=0;;attempt++) {
+  const response=await fetch(status.API_URL+'/',{headers:{authorization:`Bearer ${status.SERVICE_ROLE_KEY}`}})
+  const schema=await response.json()
+  if(schema.paths?.['/rpc/release_history_import']) break
+  assert.ok(attempt<50,'New history RPC did not enter the disposable schema cache');await delay(100)
+}
+if(process.env.RELEASE_HISTORY_DISPOSABLE==='1') {
+  const before=await catalog('release_candidate_state')
+  sql(`create function super_admin_private.fixture_skip_history_head() returns trigger language plpgsql as $$begin return null;end$$;
+create trigger fixture_skip_history_head before update on public.release_candidate_versions for each row execute function super_admin_private.fixture_skip_history_head();`)
+  await assert.rejects(catalog('release_history_import',{p_history:retrospectivePlan}),/HISTORICAL_BASELINE_REVIEW_REQUIRED/)
+  assert.deepEqual(await catalog('release_candidate_state'),before)
+  assert.equal(sql('select count(*) from public.release_retrospective_imports;'),'0')
+  sql('drop trigger fixture_skip_history_head on public.release_candidate_versions;drop function super_admin_private.fixture_skip_history_head();')
+  const imports=await Promise.all([0,1].map(()=>catalog('release_history_import',{p_history:retrospectivePlan})))
+  assert.deepEqual(imports[0],imports[1],'Concurrent first imports retain one clock/digest and advance the baseline once')
+  const imported=imports[0]
+  assert.deepEqual(await catalog('release_history_import',{p_history:retrospectivePlan}),imported)
+  assert.equal((await catalog('release_candidate_state')).baseVersions['shop-suit'],'0.4.0')
+  const reserved=await catalog('release_candidate_refresh',{p_snapshot:{...snapshot,baseVersions:{'shop-suit':'0.4.0'}}})
+  assert.equal(reserved.manifest.versions['shop-suit'],'0.5.0')
+  await catalog('release_candidate_ready',{p_key:reserved.key,p_digest:reserved.digest})
+  const response=await fetch(status.API_URL+'/rpc/release_public_feed',{method:'POST',headers:{authorization:`Bearer ${status.ANON_KEY}`,'content-type':'application/json'},body:'{}'})
+  assert.equal(response.status,200)
+  const feed=parseChangelogFeed(await response.json())
+  assert.equal(feed.entries.filter(row=>row.status==='released'&&row.versionOrigin==='retrospective').length,4)
+  assert.equal(feed.entries.filter(row=>row.status==='coming-soon').length,reserved.manifest.entries.length)
+  await assert.rejects(catalog('release_history_import',{p_history:{...retrospectivePlan,baselineVersion:'9.0.0'}}),/HISTORY_IMPORT_REVIEW_REQUIRED/)
+  const denied=createCatalog(`https://${ref}.supabase.co`,status.ANON_KEY,ref,transport)
+  await assert.rejects(denied('release_history_import',{p_history:retrospectivePlan}),/HTTP (401|403)/)
+  await catalog('release_candidate_acknowledge',{p_receipt:{...reserved,deploymentSha:'f'.repeat(40),publishedAt:new Date().toISOString()}})
+  await catalog('release_history_import',{p_history:retrospectivePlan})
+  assert.equal((await catalog('release_candidate_state')).baseVersions['shop-suit'],'0.5.0')
+  assert.equal(sql('select count(*) from public.release_retrospective_imports;'),'1')
+  await assert.rejects(catalog('release_candidate_unsafe'),/CANDIDATE_UPDATE_REQUIRES_WHERE/)
+  assert.deepEqual(await catalog('release_candidate_safety'),{authenticatorSession:true,guardEnabled:true})
+  console.log('Retrospective history passes actual authenticator/PostgREST with pg-safeupdate: atomic import, retry, suppression rollback, approved provenance, anonymous denial, unchanged real releases and baseline advancement without double credit')
+} else {
 // A legitimate update trigger that suppresses the row must remain effective.
 sql(`create function super_admin_private.fixture_skip_pin() returns trigger language plpgsql as $$begin return null;end$$;
 create trigger fixture_skip_pin before update on public.release_candidate_baseline for each row execute function super_admin_private.fixture_skip_pin();`)
@@ -154,6 +198,20 @@ await assert.rejects(catalog('release_candidate_unsafe'),/CANDIDATE_UPDATE_REQUI
 assert.deepEqual(await catalog('release_candidate_safety'),{authenticatorSession:true,guardEnabled:true},'The safety gate remains active')
 console.log('Qualified initial pin succeeds with guard still enabled; unqualified writes remain denied')
 
+const readFeed=async()=>{
+  const response=await fetch(status.API_URL+'/rpc/release_public_feed',{method:'POST',headers:{authorization:`Bearer ${status.ANON_KEY}`,'content-type':'application/json'},body:'{}',redirect:'error'})
+  assert.equal(response.status,200,'A verified preview must remain readable throughout refresh/retry')
+  return parseChangelogFeed(await response.json())
+}
+const initial=await fetch(status.API_URL+'/rpc/release_public_feed',{method:'POST',headers:{authorization:`Bearer ${status.ANON_KEY}`,'content-type':'application/json'},body:'{}',redirect:'error'})
+assert.equal(initial.status,400,'First initialization still fails closed until readiness; no fake empty feed')
+// Existing database controls may suppress an update; publication must then roll back and remain uninitialized.
+sql(`create function super_admin_private.fixture_skip_ready() returns trigger language plpgsql as $$begin return null;end$$;
+create trigger fixture_skip_ready before update on public.release_candidate_revisions for each row execute function super_admin_private.fixture_skip_ready();`)
+await assert.rejects(catalog('release_candidate_ready',{p_key:first.key,p_digest:first.digest}),/STAGING_CANDIDATE_NOT_READY/)
+assert.equal(sql('select count(*) from public.release_candidate_preview;'),'0')
+assert.equal(sql('select count(*) from public.release_candidate_revisions where ready_at is not null;'),'0')
+sql('drop trigger fixture_skip_ready on public.release_candidate_revisions;drop function super_admin_private.fixture_skip_ready();')
 // The void readiness RPC returns204; successful acknowledgment must not parse JSON.
 await catalog('release_candidate_ready',{p_key:first.key,p_digest:first.digest})
 const publicResponse=await fetch(status.API_URL+'/rpc/release_public_feed',{method:'POST',headers:{authorization:`Bearer ${status.ANON_KEY}`,'content-type':'application/json'},body:'{}',redirect:'error'})
@@ -171,7 +229,11 @@ await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapsho
 const denied=createCatalog(`https://${ref}.supabase.co`,status.ANON_KEY,ref,transport)
 await assert.rejects(denied('release_candidate_refresh',{p_snapshot:snapshot}),/HTTP (401|403)/)
 // Multiple ordinary revisions are valid; no duplicate baseline assumption.
-await catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'e'.repeat(40)}})
+const second=await catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'e'.repeat(40)}})
+assert.deepEqual((await readFeed()).entries,readyFeed.entries,'Full SAS/PostgREST preserves last-good notes while a newer candidate is unready')
+await assert.rejects(catalog('release_candidate_ready',{p_key:first.key,p_digest:first.digest}))
+await assert.rejects(catalog('release_candidate_ready',{p_key:second.key,p_digest:'0'.repeat(64)}))
+assert.deepEqual((await readFeed()).entries,readyFeed.entries,'Superseded and invalid readiness do not swap the preview')
 assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'2')
 // Persisted-state reproduction: legitimate revisions can expose a scalar helper
 // defect while state and the singleton baseline remain valid.
@@ -235,18 +297,61 @@ assert.equal(sql('select version from public.release_candidate_versions;'),'0.0.
 const accepted=await catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}})
 await catalog('release_candidate_ready',{p_key:accepted.key,p_digest:accepted.digest})
 const fixtureReceipt={...accepted,deploymentSha:'f'.repeat(40),publishedAt:new Date().toISOString()}
+const beforeAck=await catalog('release_candidate_state')
+const beforeAckFeed=await readFeed()
+sql(`create function super_admin_private.fixture_skip_retirement() returns trigger language plpgsql as $$begin return null;end$$;
+create trigger fixture_skip_retirement before insert or update on public.release_candidate_preview for each row execute function super_admin_private.fixture_skip_retirement();`)
+await assert.rejects(catalog('release_candidate_acknowledge',{p_receipt:fixtureReceipt}),/STAGING_CANDIDATE_NOT_READY/)
+assert.deepEqual(await catalog('release_candidate_state'),beforeAck,'Suppressed preview retirement rolls back acknowledgment, versions, receipt and baseline')
+assert.deepEqual((await readFeed()).entries,beforeAckFeed.entries)
+sql('drop trigger fixture_skip_retirement on public.release_candidate_preview;drop function super_admin_private.fixture_skip_retirement();')
 await catalog('release_candidate_acknowledge',{p_receipt:fixtureReceipt})
 const acknowledged=await catalog('release_candidate_state')
 assert.equal(acknowledged.baseVersions['shop-suit'],'0.1.0')
 assert.equal(acknowledged.promotions.length,1)
 await catalog('release_candidate_acknowledge',{p_receipt:fixtureReceipt})
 assert.equal((await catalog('release_candidate_state')).promotions.length,1)
+assert.ok((await readFeed()).entries.every(row=>row.status==='released'),'Acknowledgment retires the preview atomically')
+await catalog('release_candidate_refresh',{p_snapshot:snapshot})
+await assert.rejects(catalog('release_candidate_ready',{p_key:accepted.key,p_digest:accepted.digest}))
+assert.ok((await readFeed()).entries.every(row=>row.status==='released'),'Old refresh/readiness retries cannot resurrect an acknowledged preview')
+const nextSnapshot={...snapshot,mainSha:fixtureReceipt.deploymentSha,mainTree:accepted.manifest.stagingTree,baseVersions:{'shop-suit':'0.1.0'},stagingSha:'8'.repeat(40),changes:[]}
+const zero=await catalog('release_candidate_refresh',{p_snapshot:nextSnapshot})
+await catalog('release_candidate_ready',{p_key:zero.key,p_digest:zero.digest})
+const zeroFeed=await readFeed()
+assert.ok(zeroFeed.entries.every(row=>row.status==='released'))
+const successor=await catalog('release_candidate_refresh',{p_snapshot:{...nextSnapshot,stagingSha:'7'.repeat(40),changes:snapshot.changes}})
+assert.deepEqual((await readFeed()).entries,zeroFeed.entries,'A ready net-zero preview is retained while its nonempty successor waits')
+sql(`create function super_admin_private.fixture_skip_preview() returns trigger language plpgsql as $$begin return null;end$$;
+create trigger fixture_skip_preview before insert or update on public.release_candidate_preview for each row execute function super_admin_private.fixture_skip_preview();`)
+await assert.rejects(catalog('release_candidate_ready',{p_key:successor.key,p_digest:successor.digest}),/STAGING_CANDIDATE_NOT_READY/)
+assert.deepEqual((await readFeed()).entries,zeroFeed.entries,'A suppressed preview write rolls back readiness and keeps the previous publication')
+assert.equal(sql(`select ready_at is null from public.release_candidate_revisions where key='${successor.key}';`),'t')
+sql('drop trigger fixture_skip_preview on public.release_candidate_preview;drop function super_admin_private.fixture_skip_preview();')
+await catalog('release_candidate_ready',{p_key:successor.key,p_digest:successor.digest})
+const successorFeed=await readFeed()
+assert.ok(successorFeed.entries.some(row=>row.status==='coming-soon'))
+await catalog('release_candidate_acknowledge',{p_receipt:fixtureReceipt})
+assert.deepEqual((await readFeed()).entries,successorFeed.entries,'Replayed acknowledgment preserves a new ready preview')
+await assert.rejects(catalog('release_candidate_unsafe'),/CANDIDATE_UPDATE_REQUIRES_WHERE/)
 assert.deepEqual(await catalog('release_candidate_safety'),{authenticatorSession:true,guardEnabled:true})
+console.log('Last-good preview survives unready refresh, supersession, update suppression, net-zero, acknowledgment and retries under pg-safeupdate')
 console.log('Safeupdate remains enabled across refresh, readiness, public feed and idempotent fixture acknowledgment')
 console.log('Full SAS PostgREST catalog passed: real createCatalog state/refresh, concurrent retry, invalid-ref denial, anonymous denial and unchanged production baseline/history and safe cardinality locations')
+
+await assert.rejects(catalog('release_history_import',{p_history:retrospectivePlan}),/HISTORICAL_VERSION_COLLISION/)
+assert.equal(sql('select count(*) from public.release_retrospective_imports;'),'0','A real existing version collision never rewrites history')
+}
 
 } finally {
   // Names are generated by this invocation; unrelated stacks/volumes are untouched.
   for(const name of [rest,db]) spawnSync('docker',['rm','-fv',name],{stdio:'ignore'})
   spawnSync('docker',['network','rm',network],{stdio:'ignore'})
+}
+
+// Every normal CI invocation also runs the import branch in its own independent disposable catalog.
+if(process.env.RELEASE_HISTORY_DISPOSABLE!=='1') {
+  const child=spawnSync(process.execPath,[process.argv[1]],{encoding:'utf8',env:{...process.env,RELEASE_HISTORY_DISPOSABLE:'1'},timeout:120000})
+  if(child.status!==0) throw new Error('Disposable retrospective catalog failed; '+child.stderr)
+  console.log(child.stdout.trim())
 }

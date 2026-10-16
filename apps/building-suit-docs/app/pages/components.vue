@@ -62,15 +62,16 @@ const changelogBatchFeed: ChangelogFeed = {
   ...changelogFeed,
   entries: ['1.9.0', '1.10.0', '2.0.0', '2.0.1'].flatMap((version, index) => [0, 1].map(note => ({
     id: `batch-${3 - index}-${note}`, suit: 'shop-suit', visibility: 'public' as const, status: 'released' as const, version,
+    ...(index === 3 && note === 0 ? { versionOrigin: 'retrospective' as const } : {}),
     publishedAt: '2026-10-09T12:00:00Z', releasedAt: '2026-10-09T12:00:00Z',
     title: changelogFeed.entries[0]!.title, summary: changelogFeed.entries[0]!.summary,
     details: changelogFeed.entries[0]!.details, links: [],
   }))),
 }
 const changelogCopy = computed<ChangelogCopy>(() => isArabic.value ? {
-  timeline: 'سجل التحديثات', suit: 'التطبيق', status: 'حالة الإصدار', allSuits: 'كل التطبيقات', allStatuses: 'كل الحالات', released: 'تم الإصدار', comingSoon: 'قريباً', targetVersion: 'الإصدار المستهدف', new: 'جديد', published: 'تاريخ النشر', releasedAt: 'تاريخ الإصدار', empty: 'لا توجد تحديثات', loading: 'جار تحميل التحديثات', error: 'تعذر تحميل التحديثات', denied: 'الوصول غير مسموح', retry: 'إعادة المحاولة',
+  timeline: 'سجل التحديثات', suit: 'التطبيق', status: 'حالة الإصدار', allSuits: 'كل التطبيقات', allStatuses: 'كل الحالات', released: 'تم الإصدار', comingSoon: 'قريباً', targetVersion: 'الإصدار المستهدف', retrospective: 'ترقيم بأثر رجعي', emptyReleased: 'لا توجد إصدارات منشورة بعد', emptyComingSoon: 'لا توجد تحديثات قادمة في هذا التبويب', new: 'جديد', published: 'تاريخ النشر', releasedAt: 'تاريخ الإصدار', empty: 'لا توجد تحديثات', loading: 'جار تحميل التحديثات', error: 'تعذر تحميل التحديثات', denied: 'الوصول غير مسموح', retry: 'إعادة المحاولة',
 } : {
-  timeline: 'Changelog', suit: 'Suit', status: 'Release status', allSuits: 'All Suits', allStatuses: 'All statuses', released: 'Released', comingSoon: 'Coming Soon', targetVersion: 'Target version', new: 'New', published: 'Published', releasedAt: 'Released', empty: 'No updates', loading: 'Loading updates', error: 'Unable to load updates', denied: 'Access denied', retry: 'Retry',
+  timeline: 'Changelog', suit: 'Suit', status: 'Release status', allSuits: 'All Suits', allStatuses: 'All statuses', released: 'Released', comingSoon: 'Coming Soon', targetVersion: 'Target version', retrospective: 'Retrospective version', emptyReleased: 'No released updates yet', emptyComingSoon: 'No upcoming updates in this tab', new: 'New', published: 'Published', releasedAt: 'Released', empty: 'No updates', loading: 'Loading updates', error: 'Unable to load updates', denied: 'Access denied', retry: 'Retry',
 })
 const shellSuit = ref('alpha')
 const shellContext = ref('overview')
