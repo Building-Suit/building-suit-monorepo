@@ -37,7 +37,7 @@ No values are supplied or changed by this task.
 
 Follow the existing Supabase scheduling architecture: an approved `pg_cron` job calls the Edge endpoint through `pg_net`, with endpoint/JWT/worker token read from Vault rather than SQL literals. The task deliberately does not create extensions, secrets or an enabled cron job. After configuration approval, CI must install the separately reviewed environment-bound schedule/migration; start with a once-per-minute schedule for the test allowlist (at most 44,640 invocations in a 31-day month, below the documented Free Edge allowance). Verify extension availability and aggregate project usage first. Do not schedule this through a personal machine, n8n or a second service. Pause the schedule and remove/disable delivery mode to stop new dispatch; terminal receipts and configuration remain retained.
 
-Official references: [scheduled Edge functions](https://supabase.com/docs/guides/functions/schedule-functions), [Resend idempotency](https://resend.com/docs/dashboard/emails/idempotency-keys), [usage limits](https://resend.com/docs/api-reference/usage-limits), [Resend pricing](https://resend.com/pricing), [Supabase pricing](https://supabase.com/pricing).
+Official references: [scheduled Edge functions](https://supabase.com/docs/guides/functions/schedule-functions), [Resend idempotency](https://resend.com/docs/dashboard/emails/idempotency-keys), [usage limits](https://resend.com/docs/api-reference/rate-limit), [Resend pricing](https://resend.com/pricing), [Supabase pricing](https://supabase.com/pricing).
 
 ## Verification
 

@@ -9,7 +9,7 @@ Read root/Shop/Supabase/UI agent rules, root README, ongoing Git/database/UI wor
 - New forward migration, generated schema contracts, explicit owner policy opt-in, separate phone-verified customer consent for each saved-email appointment, no guest enrollment or public contact projection.
 - Private tenant-bound consent/audit/outbox records; fenced two-minute leases, eligibility recheck at prepare, exact frozen payload and deterministic provider key, five-attempt/23-hour retry bounds, conservative atomic global/day/month/tenant/rate budgets.
 - Cancellation, rescheduling, contact change, reassignment, unpublish and policy disable prevent later authorization. A cancelled possible send cannot restart; only a zero-attempt, unfrozen intent can be requested again before due time. A late acceptance receipt can be retained without reviving a cancelled queue.
-- Private AR/EN email includes Shop name and appointment instant in the schedule IANA timezone, without notes/customer identity/codes/links/tracking assets. Scope verification does not independently verify an email inbox.
+- Private AR/EN email includes the independent published Shop name and appointment instant in the schedule IANA timezone, without notes/customer identity/codes/links/tracking assets. Scope verification does not independently verify an email inbox.
 - New Edge entry point passes Deno checking; default platform JWT verification stays enabled, plus a dedicated worker token. Only explicit test mode and exact allowlisted recipients can send. No live mode, installed scheduler, provider/credential/settings change or actual outbound email.
 - [Activation and scheduling handoff](../../apps/shop-suit/docs/appointment-email-reminders.md) names every key and destination, budgets, free-account shared-usage review, dormant `pg_cron`/`pg_net`/Vault scheduling design and cancellation/in-flight limits. Approval/configuration and separately reviewed CI-only scheduling activation remain external prerequisites, not actions performed here.
 
@@ -23,6 +23,10 @@ On 2026-10-16, disposable local PostgreSQL only (no hosted database):
 - Public booking browser suite: 17 passed across EN/AR, responsive widths and themes, including consent/withdrawal. Owner settings browser suite: 3 passed, including explicit opt-in and ordinary-staff denial.
 - Shop typecheck/build pass. Shop lint has zero errors and two pre-existing owner-invitation attribute-order warnings. Shared changed-file lint and strict workspace/token/template checks pass.
 - Generated types come from CLI introspection of the disposable migration, normalized only with the maintained schema-contract evidence tool. Deno 2.9.7 checks the actual worker entry point. Supabase security advisor reports no issues at error level.
+
+The maintained booking SQL suite now verifies the approved owner opt-in contract while retaining explicit no-consent/no-queue/no-send assertions. An initial GitHub replay exposed its old blanket rejection assertion; both the original SQL races and new reminder suite pass after updating that expectation.
+
+Publication preflight identifies unrelated duplicate shared roots #344 and #346. Shop has no competing root; their owner must reconcile that shared stack and rerun branch-policy/full workspace verification. Those shared branches are preserved.
 
 A first reminder browser attempt exposed a missing explicit host-route registration; registration was fixed and the full suite passes. Early SQL iterations found ambiguous PL/pgSQL names and were corrected before final migration replay. Tests never weaken authorization/readiness/provider bounds to pass.
 

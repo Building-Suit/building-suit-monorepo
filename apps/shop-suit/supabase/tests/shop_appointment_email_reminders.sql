@@ -42,6 +42,7 @@ do $$declare f record;g record;r jsonb;p jsonb;begin
  update public.appointment_email_outbox set due_at=clock_timestamp()-interval '1 minute' where id=f.queue;
  assert public.claim_appointment_email(array['other@example.test']) is null,'allowlist enforced in database';
  r:=public.claim_appointment_email(array[f.email]);assert (r->>'id')::uuid=f.queue and r->>'to'=f.email;
+ assert r->>'shopName'=(select published->>'publicName' from public.shop_website_profiles where shop_id=f.shop),'email uses independent published name only';
  assert public.claim_appointment_email(array[f.email]) is null,'live lease prevents a second worker claim';
  p:=jsonb_build_object('from','reminders@building-suit.com','to',jsonb_build_array(f.email),'subject','Synthetic','text','private synthetic','html','<p>synthetic</p>');
  assert public.prepare_appointment_email(f.queue,gen_random_uuid(),p,array[f.email]) is null,'wrong fence denied';

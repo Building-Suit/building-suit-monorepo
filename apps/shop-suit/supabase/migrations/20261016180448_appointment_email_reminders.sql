@@ -182,7 +182,7 @@ declare o public.appointment_email_outbox;s uuid;begin
  where id=o.id returning * into o;
  return jsonb_build_object('id',o.id,'leaseToken',o.lease_token,'payload',o.payload,'to',shop_private.reminder_contact(o.appointment_id),
  'startsAt',o.appointment_starts_at,'locale',(select locale from public.appointment_email_consents where appointment_id=o.appointment_id),
- 'shopName',(select name from public.shops where id=o.shop_id),
+ 'shopName',(select published->>'publicName' from public.shop_website_profiles where shop_id=o.shop_id),
  'timeZone',coalesce((select h.timezone from public.appointment_working_hours h join public.appointments a on a.id=o.appointment_id and a.shop_id=h.shop_id
  and a.location_id=h.location_id and a.assigned_membership_id=h.membership_id order by h.weekday limit 1),'UTC'));
 end$$;

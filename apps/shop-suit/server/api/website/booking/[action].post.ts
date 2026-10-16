@@ -29,7 +29,7 @@ export default defineEventHandler(async event=>{
    const data=parseBookingManagement(await rpc('appointment_booking_manage',{p_page:body.page}));if(!data){clear();return{authenticated:false}};if(data.page!==body.page)return denied();return data
   }
   if(action==='reminder'){
-   if(keys.some(k=>!['reference','enabled','locale'].includes(k))||!bookingUuid(body.reference)||typeof body.enabled!=='boolean'||!['en','ar'].includes(String(body.locale)))return denied()
+   if(keys.some(k=>!['reference','enabled','locale'].includes(k))||!bookingUuid(body.reference)||typeof body.enabled!=='boolean'||typeof body.locale!=='string'||!['en','ar'].includes(body.locale))return denied()
    const result=await rpc('appointment_reminder_preference',{p_reference:body.reference,p_enabled:body.enabled,p_locale:body.locale}) as {ok?:boolean}|null
    return{ok:result?.ok===true}
   }
