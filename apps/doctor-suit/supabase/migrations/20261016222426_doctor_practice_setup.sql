@@ -49,7 +49,6 @@ create function doctor_private.save_onboarding_draft(p_key uuid,p_expected_versi
 language plpgsql security definer set search_path='' as $$
 declare actor uuid:=doctor_private.current_actor(); draft public.onboarding_drafts;
 begin
-  perform doctor_private.require_owner_enrollment();
   if p_key is null or p_display_name is null or p_practice_name is null or p_location_name is null or p_timezone is null
     or length(p_display_name)>120 or length(p_practice_name)>160 or length(p_location_name)>160 or length(p_timezone)>100 then
     raise exception using errcode='22023',message='DOCTOR_PROFILE_INVALID';
@@ -58,6 +57,7 @@ begin
     raise exception using errcode='22023',message='DOCTOR_TIMEZONE_INVALID';
   end if;
   perform pg_advisory_xact_lock(hashtextextended(actor::text,0));
+  perform doctor_private.require_owner_enrollment();
   if exists(select 1 from public.practices where owner_user_id=actor) then raise exception using errcode='23505',message='DOCTOR_PRACTICE_EXISTS'; end if;
   select * into draft from public.onboarding_drafts where user_id=actor for update;
   if found then
@@ -80,9 +80,9 @@ language plpgsql security definer set search_path='' as $$
 declare actor uuid:=doctor_private.current_actor(); draft public.onboarding_drafts; prior doctor_private.command_receipts;
   request jsonb; result jsonb; practice uuid; location uuid;
 begin
-  perform doctor_private.require_owner_enrollment();
   if p_key is null or p_draft_version is null or p_draft_version<1 then raise exception using errcode='22023',message='DOCTOR_COMMAND_KEY_REQUIRED'; end if;
   perform pg_advisory_xact_lock(hashtextextended(actor::text,0));
+  perform doctor_private.require_owner_enrollment();
   select * into prior from doctor_private.command_receipts where actor_user_id=actor and command_key=p_key;
   if found then
     if prior.request->>'command'<>'onboard-v2' or (prior.request->>'draft_version')::integer is distinct from p_draft_version then
@@ -153,9 +153,9 @@ declare actor uuid:=doctor_private.current_actor(); prior doctor_private.command
   request jsonb:=jsonb_build_object('command','onboard','name',p_name,'location',p_location_name,'timezone',p_timezone);
   practice uuid; location uuid; result jsonb;
 begin
-  perform doctor_private.require_owner_enrollment();
   if p_key is null then raise exception using errcode='22023',message='DOCTOR_COMMAND_KEY_REQUIRED'; end if;
   perform pg_advisory_xact_lock(hashtextextended(actor::text,0));
+  perform doctor_private.require_owner_enrollment();
   select * into prior from doctor_private.command_receipts where actor_user_id=actor and command_key=p_key;
   if found then
     if prior.request<>request then raise exception using errcode='22023',message='DOCTOR_IDEMPOTENCY_CONFLICT'; end if;

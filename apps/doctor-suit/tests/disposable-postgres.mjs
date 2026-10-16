@@ -6,6 +6,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { validateLocalDoctorTarget } from './local-lifecycle.mjs'
+import { verifyOnboardingConcurrency } from './onboarding-concurrency.mjs'
 
 const root = fileURLToPath(new URL('../../../', import.meta.url))
 const app = `${root}apps/doctor-suit/`
@@ -70,6 +71,7 @@ try {
     if (!plan || Number(plan[1]) < 1 || Number(plan[1]) !== passed.length || /^not ok\b|^Bail out!/m.test(result)) throw new Error(`${file}: SQL assertions failed\n${result}`)
     console.log(`${file}: ${passed.length} SQL assertions passed`)
   }
+  await verifyOnboardingConcurrency(container)
   if (generate.length) {
     const output = docker(['run', '--rm', '--network', `container:${container}`,
       '-e', 'PG_META_DB_HOST=127.0.0.1', '-e', 'PG_META_DB_NAME=postgres', '-e', 'PG_META_DB_USER=postgres',
