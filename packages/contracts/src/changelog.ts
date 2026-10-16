@@ -15,7 +15,7 @@ interface ChangelogContent {
   links: ChangelogLink[]
 }
 export type ChangelogEntry = ChangelogContent & (
-  | { status: 'released'; version: string; releasedAt: string; targetVersion?: never }
+  | { status: 'released'; versionOrigin?: 'retrospective'; version: string; releasedAt: string; targetVersion?: never }
   | { status: 'coming-soon'; targetVersion: string; releasedAt?: never; version?: never }
 )
 /** serverNow must be supplied by the trusted publishing/read service, never the browser. */
@@ -24,7 +24,7 @@ export interface ChangelogFilter { suit?: string; status?: ChangelogEntry['statu
 export interface ChangelogCopy {
   timeline: string; suit: string; status: string; allSuits: string; allStatuses: string
   released: string; comingSoon: string; targetVersion: string; new: string
-  updated?: string; published: string; releasedAt: string; empty: string; loading: string; error: string; denied: string; retry: string
+  retrospective: string; emptyReleased?: string; emptyComingSoon?: string; updated?: string; published: string; releasedAt: string; empty: string; loading: string; error: string; denied: string; retry: string
 }
 const semver = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/
 export function isSuitVersion(value: unknown): value is string { return typeof value === 'string' && semver.test(value) }
@@ -68,10 +68,11 @@ export function parseChangelogFeed(value: unknown): ChangelogFeed {
       if (entry.targetVersion !== undefined) throw new Error('Released entry has a target version')
       const releasedAt = changelogTimestamp(entry.releasedAt)
       if (Date.parse(releasedAt) > Date.parse(publishedAt)) throw new Error('Publication precedes release')
-      return { ...content, status: 'released', version: version(entry.version), releasedAt }
+      if (entry.versionOrigin !== undefined && entry.versionOrigin !== 'retrospective') throw new Error('Invalid version origin')
+      return { ...content, status: 'released', version: version(entry.version), releasedAt, ...(entry.versionOrigin === 'retrospective' ? { versionOrigin: 'retrospective' as const } : {}) }
     }
     if (entry.status === 'coming-soon') {
-      if (entry.releasedAt !== undefined || entry.version !== undefined) throw new Error('Coming Soon is not released')
+      if (entry.releasedAt !== undefined || entry.version !== undefined || entry.versionOrigin !== undefined) throw new Error('Coming Soon is not released')
       return { ...content, status: 'coming-soon', targetVersion: version(entry.targetVersion) }
     }
     throw new Error('Invalid changelog status')
@@ -81,7 +82,7 @@ export function parseChangelogFeed(value: unknown): ChangelogFeed {
 }
 export function isChangelogNew(entry: ChangelogEntry, authoritativeNow: string): boolean {
   const age = Date.parse(changelogTimestamp(authoritativeNow)) - Date.parse(entry.publishedAt)
-  return entry.status === 'released' && age >= 0 && age < CHANGELOG_NEW_WINDOW_MS
+  return entry.status === 'released' && entry.versionOrigin !== 'retrospective' && age >= 0 && age < CHANGELOG_NEW_WINDOW_MS
 }
 function compareText(left: string, right: string): number { return left === right ? 0 : left < right ? -1 : 1 }
 function compareNumericIdentifier(left: string, right: string): number {

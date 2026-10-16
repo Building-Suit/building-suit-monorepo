@@ -26,6 +26,18 @@ test('built public booking binds canonical Host, cookie scope and strict bodies 
   assert.equal(JSON.parse((await request(shop,api('command'),{...body,requestKey:'b'.repeat(64)},auth)).text).ok,false)
   const cancelled=await request(shop,api('command'),{operation:'cancel',requestKey:'c'.repeat(64),reference:result.reference},auth);assert.equal(JSON.parse(cancelled.text).ok,true)
   assert.equal(JSON.parse((await request(shop,api('manage'),{page:1},auth)).text).items.length,0)
+  const verified=await request(shop,'/api/website/appointment-access/verify',{code:'5678ABCDEFGH',phone:'+201000000002'})
+  const savedAuth={cookie:verified.headers['set-cookie'][0].split(';')[0]}
+  const savedRows=JSON.parse((await request(shop,api('manage'),{page:1},savedAuth)).text).items
+  assert.equal(savedRows[0].reminderEligible,true);assert.equal(savedRows[0].reminderEnabled,false)
+  const consent={reference:savedRows[0].reference,enabled:true,locale:'ar'}
+  assert.equal((await request(shop,api('reminder'),consent,{...savedAuth,origin:'https://beta-tools.shops.building-suit.com'})).status,403)
+  assert.equal(JSON.parse((await request(shop,api('reminder'),{...consent,email:'injected@example.test'},savedAuth)).text).ok,false)
+  assert.equal(JSON.parse((await request(shop,api('reminder'),consent,auth)).text).ok,false,'guest cannot consent saved customer email')
+  assert.equal(JSON.parse((await request('beta-tools',api('reminder'),consent,savedAuth)).text).ok,false,'cross-host cookie denied')
+  assert.equal(JSON.parse((await request(shop,api('reminder'),consent,savedAuth)).text).ok,true)
+  assert.equal(JSON.parse((await request(shop,api('manage'),{page:1},savedAuth)).text).items[0].reminderEnabled,true)
+  assert.equal(JSON.parse((await request(shop,api('reminder'),{...consent,enabled:false},savedAuth)).text).ok,true)
   assert.ok(!logs.includes(cookie.split('=')[1]))
  }finally{child.kill('SIGTERM');await once(child,'exit')}
 })

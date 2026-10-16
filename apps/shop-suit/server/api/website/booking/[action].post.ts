@@ -9,12 +9,12 @@ export default defineEventHandler(async event=>{
  const host=event.context.websiteHost,action=getRouterParam(event,'action'),config=useRuntimeConfig(event)
  const domain=configuredWebsiteDomain(config.public)
  setResponseHeader(event,'Cache-Control','private, no-store');setResponseHeader(event,'X-Robots-Tag','noindex, nofollow')
- if(!domain||host?.kind!=='website'||!validWebsiteSlug(event.context.websiteCanonicalSlug)||!action||!['options','slots','manage','command'].includes(action))throw createError({statusCode:404,statusMessage:'Not Found'})
+ if(!domain||host?.kind!=='website'||!validWebsiteSlug(event.context.websiteCanonicalSlug)||!action||!['options','slots','manage','command','reminder'].includes(action))throw createError({statusCode:404,statusMessage:'Not Found'})
  if(getHeader(event,'origin')!==websiteUrl(host.slug,domain))throw createError({statusCode:403,statusMessage:'Access unavailable'})
  const token=event.context.appointmentAccessToken as string|undefined,cookieName=`bs-shop-${config.public.appEnvironment}-appointment-access`
  const clear=()=>{event.context.appointmentAccessCookieName=cookieName;deleteCookie(event,cookieName,{path:'/api/website',httpOnly:true,secure:true,sameSite:'strict'})}
  const denied=()=>action==='options'?{enabled:false}:action==='slots'?{slots:[]}:action==='manage'?{authenticated:false}:{ok:false}
- if(!(action==='command'?writes:reads)(`${event.context.websiteCanonicalSlug}:${event.node.req.socket?.remoteAddress??'unknown'}`))return denied()
+ if(!(action==='command'||action==='reminder'?writes:reads)(`${event.context.websiteCanonicalSlug}:${event.node.req.socket?.remoteAddress??'unknown'}`))return denied()
  const rpc=(name:string,args:Record<string,unknown>)=>publicWebsiteRpc({url:config.public.supabase.url,key:config.public.supabase.key},name,{p_slug:host.slug,p_token:token??null,...args})
  try{
   if(!getHeader(event,'content-type')?.startsWith('application/json'))return denied()
@@ -27,6 +27,11 @@ export default defineEventHandler(async event=>{
   if(action==='manage'){
    if(keys.some(k=>k!=='page')||!Number.isSafeInteger(body.page)||Number(body.page)<1||Number(body.page)>100000)return denied()
    const data=parseBookingManagement(await rpc('appointment_booking_manage',{p_page:body.page}));if(!data){clear();return{authenticated:false}};if(data.page!==body.page)return denied();return data
+  }
+  if(action==='reminder'){
+   if(keys.some(k=>!['reference','enabled','locale'].includes(k))||!bookingUuid(body.reference)||typeof body.enabled!=='boolean'||typeof body.locale!=='string'||!['en','ar'].includes(body.locale))return denied()
+   const result=await rpc('appointment_reminder_preference',{p_reference:body.reference,p_enabled:body.enabled,p_locale:body.locale}) as {ok?:boolean}|null
+   return{ok:result?.ok===true}
   }
   if(action==='slots'){
    if(keys.some(k=>!['service','location','staff','date','reference'].includes(k))||!bookingUuid(body.service)||!bookingUuid(body.location)||!bookingUuid(body.staff)||typeof body.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(body.date)||!Number.isFinite(Date.parse(body.date))||new Date(body.date).toISOString().slice(0,10)!==body.date||body.reference!==undefined&&body.reference!==null&&!bookingUuid(body.reference))return denied()

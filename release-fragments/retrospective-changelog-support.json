@@ -1,0 +1,25 @@
+{
+  "id": "retrospective-changelog-support",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows",
+    "tooling/releases",
+    "apps/super-admin-suit",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/shop-suit",
+    "packages/contracts",
+    "packages/ui",
+    "docs/shared",
+    "release-changes"
+  ],
+  "reason": "Reviewed retrospective provenance and idempotent authenticated history import, private baseline correction, preserved reservations and normal-release gates, generated schema contract and shared bilingual regression coverage."
+}

@@ -23,10 +23,15 @@ export function createBookingFixture(){
    if(!enabled||a.p_service!==combo.service||a.p_location!==combo.location||a.p_staff!==combo.staff||a.p_reference&&(!s||!appointments.has(a.p_reference)||!own(s,appointments.get(a.p_reference))))return{slots:[]}
    return{slots:[8,9,10,11].map(h=>({startsAt:a.p_date+`T${String(h).padStart(2,'0')}:00:00.000Z`,endsAt:a.p_date+`T${String(h).padStart(2,'0')}:30:00.000Z`,timeZone:'Africa/Cairo'})).filter(slot=>![...appointments.values()].some(r=>r.shop===a.p_slug&&r.reference!==a.p_reference&&r.status==='booked'&&r.startsAt===slot.startsAt))}
   }
+  if(name==='appointment_reminder_preference'){
+   const row=appointments.get(a.p_reference)
+   if(!s?.customer||!row||!own(s,row)||row.status!=='booked'||typeof a.p_enabled!=='boolean'||!['en','ar'].includes(a.p_locale))return{ok:false}
+   row.reminderEnabled=a.p_enabled;return{ok:true}
+  }
   if(name==='appointment_booking_manage'){
    if(!s||!enabled)return{authenticated:false}
    const rows=[...appointments.values()].filter(r=>own(s,r)&&r.status==='booked').sort((a,b)=>a.startsAt.localeCompare(b.startsAt))
-   return{authenticated:true,expiresAt:s.expiresAt,scope:s.customer?'customer':'appointment',page:a.p_page,total:rows.length,items:rows.slice((a.p_page-1)*20,a.p_page*20).map(r=>({...r,notes:'PRIVATE-NOTES',payments:'PRIVATE-PAYMENTS'}))}
+   return{authenticated:true,expiresAt:s.expiresAt,scope:s.customer?'customer':'appointment',page:a.p_page,total:rows.length,items:rows.slice((a.p_page-1)*20,a.p_page*20).map(r=>({...r,reminderEligible:Boolean(s.customer),reminderEnabled:r.reminderEnabled??false,notes:'PRIVATE-NOTES',payments:'PRIVATE-PAYMENTS'}))}
   }
   if(name==='appointment_booking_command'){
    if(!enabled||a.p_token&&!s)return{ok:false,accessEnded:true}
@@ -46,7 +51,7 @@ export function createBookingFixture(){
   if(name==='appointment_customer_portal'){
    if(!s)return{authenticated:false}
    const rows=[...appointments.values()].filter(r=>own(s,r)&&(a.p_bucket==='past'?r.status!=='booked':r.status==='booked'))
-   return{authenticated:true,expiresAt:s.expiresAt,scope:s.customer?'customer':'appointment',bucket:a.p_bucket,page:a.p_page,pageSize:20,total:rows.length,items:rows.map(r=>({...r,notes:'PRIVATE'}))}
+   return{authenticated:true,expiresAt:s.expiresAt,scope:s.customer?'customer':'appointment',bucket:a.p_bucket,page:a.p_page,pageSize:20,total:rows.length,items:rows.map(r=>({...r,reminderEligible:Boolean(s.customer),reminderEnabled:r.reminderEnabled??false,notes:'PRIVATE'}))}
   }
   return{ok:false}
  }

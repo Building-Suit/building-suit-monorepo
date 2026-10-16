@@ -9,6 +9,7 @@ for (const locale of ['en','ar'] as const) {
       await expect(timeline).toHaveAttribute('dir',locale === 'ar' ? 'rtl' : 'ltr')
       await expect(timeline.locator('article')).toHaveCount(3)
       await expect(timeline.getByText(locale === 'ar' ? 'جديد' : 'New',{exact:true})).toHaveCount(3)
+      await expect(page.locator('#whats-new').getByText(locale === 'ar' ? 'ترقيم بأثر رجعي' : 'Retrospective version', { exact: true })).toHaveCount(1)
       const filters = timeline.locator('select')
       const tabs = timeline.getByRole('tab')
       await expect(tabs.nth(0)).toHaveAttribute('aria-selected', 'true')

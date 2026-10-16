@@ -441,3 +441,8 @@ verify_jwt = false
 # Server-only, preproduction invoice dispatcher; distinct ERP/signing setup.
 [functions.shop-eta-einvoice-dispatch]
 verify_jwt = false
+
+# Declared for the existing GitHub integration deploy step. Runtime mode and
+# scheduler default disabled; keep the platform JWT boundary enabled.
+[functions.shop-appointment-reminder-sender]
+verify_jwt = true

@@ -115,6 +115,8 @@ jobs:
     if: always() && github.event_name == 'push' && needs.verify.result == 'success'
     permissions:
       contents: read
+      deployments: read
+      actions: read
       checks: read
       statuses: read
     environment: ${{ github.ref_name == 'stg' && 'staging' || 'production' }}

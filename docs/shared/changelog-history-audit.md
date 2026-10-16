@@ -1,5 +1,7 @@
 # Released history evidence — 16 October 2026
 
+**Resolution:** The owner subsequently delegated retrospective version selection. [The reviewed production milestone plan](retrospective-shop-history.md) resolves the version-policy decision below; the original evidence audit remains retained for provenance. Retrospective numbering is explicitly labeled and does not represent recovered historical tags.
+
 This audit accompanies the changelog tab correction on top of staging `c6774d47907f7b09aa0a0e9aa2c45c5687a71c50`. It does not authorize a release, deployment or hosted write.
 
 ## Observed evidence

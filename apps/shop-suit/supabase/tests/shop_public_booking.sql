@@ -164,7 +164,13 @@ do $$declare f record;b record;owner_actor uuid;member uuid;other_shop uuid;t ti
  update public.shop_locations set status='active',archived_at=null,is_default=true where id=b.location;
  select shop into other_shop from booking_fixture where shop<>b.shop limit 1;
  denied:=false;begin perform public.shop_booking_settings(other_shop);exception when insufficient_privilege then denied:=true;end;assert denied,'foreign owner settings denied';
- denied:=false;begin perform public.shop_booking_settings_save(b.shop,'{"enabled":false,"lead_minutes":0,"horizon_days":30,"change_notice_minutes":60,"allow_reschedule":true,"allow_cancel":true,"reminder_lead_minutes":1440,"reminders_enabled":true}','[]');exception when others then denied:=true;end;assert denied,'no unconfigured reminder enable';
+ -- The reviewed email integration now permits explicit owner policy opt-in.
+ -- Policy alone still cannot enroll anyone or authorize a provider request.
+ perform public.shop_booking_settings_save(b.shop,'{"enabled":false,"lead_minutes":0,"horizon_days":30,"change_notice_minutes":60,"allow_reschedule":true,"allow_cancel":true,"reminder_lead_minutes":1440,"reminders_enabled":true}','[]');
+ assert public.shop_booking_settings(b.shop)->'policy'->>'reminders_enabled'='true','owner may explicitly opt in to the email policy';
+ assert not exists(select 1 from public.appointment_email_consents where shop_id=b.shop),'owner setting never implies customer consent';
+ assert not exists(select 1 from public.appointment_email_outbox where shop_id=b.shop),'no queue without customer consent';
+ assert public.claim_appointment_email(array['not-enrolled@example.test']) is null,'policy is not delivery activation';
  perform public.shop_website_profile_unpublish(b.shop);
  assert public.appointment_booking_options(b.slug)->>'enabled'='false','unpublish immediately hides booking';
  assert public.appointment_booking_manage(b.slug,b.token)->>'authenticated'='false','unpublish hides private management read';

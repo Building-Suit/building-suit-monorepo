@@ -11,6 +11,8 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  deployments: read
+  actions: read
   checks: read
   statuses: read
 jobs:

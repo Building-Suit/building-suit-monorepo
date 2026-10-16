@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "id": "shop-retrospective-20261016",
+  "suit": "shop-suit",
+  "numberingOrigin": "retrospective",
+  "baselineVersion": "0.4.0",
+  "baselineSha": "5fb461fe8d74c8aee6bd1bc37962c05080204034",
+  "releases": [
+    {
+      "version": "0.1.0",
+      "releasedAt": "2026-09-22T12:29:13.607Z",
+      "notes": {
+        "title": {
+          "en": "Product and service catalog",
+          "ar": "دليل المنتجات والخدمات"
+        },
+        "summary": {
+          "en": "Organize products and services in your shop workspace.",
+          "ar": "نظّم المنتجات والخدمات في مساحة عمل متجرك."
+        },
+        "details": {
+          "en": "Review stock alongside your catalog.",
+          "ar": "راجع المخزون إلى جانب الدليل."
+        }
+      },
+      "sourceSha": "7df512f7e008dbf47b19b2c425640248a88506cf",
+      "sourceTree": "8bd61d773b0ac322b26f03d0ad4f55f65abd74fd",
+      "evidence": [
+        {
+          "path": "apps/shop-suit/app/pages/products/index.vue",
+          "contains": "openEdit(product)"
+        },
+        {
+          "path": "apps/shop-suit/app/pages/services/index.vue",
+          "contains": "supabase.from('services')"
+        },
+        {
+          "path": "apps/shop-suit/app/pages/inventory/index.vue",
+          "contains": "quantity_on_hand"
+        }
+      ],
+      "deployment": {
+        "id": "dpl_CaC5acSHm3wpT9QaFgqiPfaGafBm",
+        "url": "shop-suit-9jcxttfff-building-suit.vercel.app",
+        "projectId": "prj_VPY9PDKkvtLJhXJyQk09hoXyfCl0",
+        "branch": "main",
+        "target": "production",
+        "state": "READY",
+        "readyAt": "2026-09-22T12:29:13.607Z",
+        "githubDeploymentId": 6590623724
+      }
+    },
+    {
+      "version": "0.2.0",
+      "releasedAt": "2026-09-27T20:54:27.948Z",
+      "notes": {
+        "title": {
+          "en": "Sales, customer payments and stock counts",
+          "ar": "المبيعات ودفعات العملاء وجرد المخزون"
+        },
+        "summary": {
+          "en": "Issue sales and review customer payments.",
+          "ar": "أصدر المبيعات وراجع دفعات العملاء."
+        },
+        "details": {
+          "en": "Record stock counts and follow inventory movements and low-stock thresholds.",
+          "ar": "سجّل الجرد وتابع حركات المخزون وحدود التنبيه عند انخفاضه."
+        }
+      },
+      "sourceSha": "ecb546c0ccfb4c6874884cf8fe87eb27c8b0afb4",
+      "sourceTree": "890dc4d4b55b9017a663155124447b500c4d08ea",
+      "evidence": [
+        {
+          "path": "apps/shop-suit/app/pages/inventory/index.vue",
+          "contains": "rpc.rpc('record_stock_count'"
+        },
+        {
+          "path": "apps/shop-suit/app/pages/sales/index.vue",
+          "contains": "shopRpc.rpc('issue_sale'"
+        },
+        {
+          "path": "apps/shop-suit/app/pages/customers/[id].vue",
+          "contains": "shopRpc.rpc('record_customer_receipt'"
+        }
+      ],
+      "deployment": {
+        "id": "dpl_4eo7eX1pDhLGegs724TBB3yJ76Ly",
+        "url": "shop-suit-ljsvu4xht-building-suit.vercel.app",
+        "projectId": "prj_VPY9PDKkvtLJhXJyQk09hoXyfCl0",
+        "branch": "main",
+        "target": "production",
+        "state": "READY",
+        "readyAt": "2026-09-27T20:54:27.948Z",
+        "githubDeploymentId": 6697760360
+      }
+    },
+    {
+      "version": "0.3.0",
+      "releasedAt": "2026-10-04T14:26:40.081Z",
+      "notes": {
+        "title": {
+          "en": "Plans, usage and operational reports",
+          "ar": "الباقات والاستخدام والتقارير التشغيلية"
+        },
+        "summary": {
+          "en": "Compare plans and review your business resource usage.",
+          "ar": "قارن الباقات وراجع استخدام موارد نشاطك."
+        },
+        "details": {
+          "en": "Explore operational reports with location and date filters.",
+          "ar": "استعرض التقارير التشغيلية حسب الفرع والفترة الزمنية."
+        }
+      },
+      "sourceSha": "a7a8872ed850ecc0e195498657579611801f2069",
+      "sourceTree": "8cc39c02ae637e7ef730d2422c6b66b327fa7e93",
+      "evidence": [
+        {
+          "path": "apps/shop-suit/app/pages/billing.vue",
+          "contains": "usageResources"
+        },
+        {
+          "path": "apps/shop-suit/app/pages/reports/index.vue",
+          "contains": "rpc.rpc('shop_operational_report'"
+        }
+      ],
+      "deployment": {
+        "id": "dpl_AvGAE2rSwRVm3egfzaWS36EHQi7n",
+        "url": "shop-suit-e6z8who81-building-suit.vercel.app",
+        "projectId": "prj_VPY9PDKkvtLJhXJyQk09hoXyfCl0",
+        "branch": "main",
+        "target": "production",
+        "state": "READY",
+        "readyAt": "2026-10-04T14:26:40.081Z",
+        "githubDeploymentId": 6842221669
+      }
+    },
+    {
+      "version": "0.4.0",
+      "releasedAt": "2026-10-14T11:29:16.099Z",
+      "notes": {
+        "title": {
+          "en": "Clearer customer and reporting workflows",
+          "ar": "تحسين وضوح إجراءات العملاء والتقارير"
+        },
+        "summary": {
+          "en": "See clearer feedback while reviewing customer records and payments.",
+          "ar": "اطّلع على رسائل أوضح عند مراجعة سجلات العملاء ودفعاتهم."
+        },
+        "details": {
+          "en": "Report exports respect the selected filters and current loading or error state.",
+          "ar": "يراعي تصدير التقارير المرشحات المحددة وحالة التحميل أو الخطأ الحالية."
+        }
+      },
+      "sourceSha": "5fb461fe8d74c8aee6bd1bc37962c05080204034",
+      "sourceTree": "2fd81ee4316fd87ec2d0f2c6ffffa4746fa1f40e",
+      "evidence": [
+        {
+          "path": "apps/shop-suit/app/pages/reports/index.vue",
+          "contains": "accessPending.value || pending.value || accessError.value || error.value"
+        },
+        {
+          "path": "apps/shop-suit/app/pages/customers/[id].vue",
+          "contains": "shop-data:customer-outstanding:${currentId.value"
+        }
+      ],
+      "deployment": {
+        "id": "dpl_5Cggf24PuKZifm9j35moyEbcnBLf",
+        "url": "shop-suit-eyjyw9qnn-building-suit.vercel.app",
+        "projectId": "prj_VPY9PDKkvtLJhXJyQk09hoXyfCl0",
+        "branch": "main",
+        "target": "production",
+        "state": "READY",
+        "readyAt": "2026-10-14T11:29:16.099Z",
+        "githubDeploymentId": 7064077577
+      }
+    }
+  ]
+}
