@@ -5,6 +5,7 @@ import { randomUUID, createHmac } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
 import { readdirSync, readFileSync } from 'node:fs'
 import { buildCandidate } from './candidate.mjs'
+import { parseChangelogFeed } from '../../packages/contracts/src/changelog.ts'
 import { createCatalog } from './publisher.mjs'
 import { dockerFailureReason, ensureDisposableImage } from './docker-harness.mjs'
 assert.equal(process.env.RELEASE_POSTGREST_DISPOSABLE, '1', 'Explicit disposable validation required')
@@ -51,7 +52,7 @@ for(const name of names) {
   sql(readFileSync(new URL(name,migrations),'utf8'))
   if(name.startsWith('20261015030053')) {
 sql(`insert into public.admin_environments(id,stable_key,environment_kind,display_name,status) values('a0bb00a1-747c-4cda-8521-9927d0b53065','sas-staging','staging','{}','active');
-insert into public.suit_registry(id,stable_key,display_name,asset_reference,adapter_contract_version,status) values('7924a9af-a970-4360-a0d0-76df4e18dbfc','shop-suit','{}','/brand/fixture.svg','1.0','active');
+insert into public.suit_registry(id,stable_key,display_name,asset_reference,adapter_contract_version,status) values('7924a9af-a970-4360-a0d0-76df4e18dbfc','shop-suit','{"en":"Shop","ar":"المتجر"}','/brand/fixture.svg','1.0','active');
 `)
   }
 }
@@ -93,8 +94,37 @@ for(const [code,guard,reason] of [
     return true
   })
 }
+// Inventory must expose scalar parsed-body consumers, external policies and
+// effective publication membership without reading any baseline/customer rows.
+sql(`create function super_admin_private.fixture_atomic_baseline_consumer() returns text language sql begin atomic
+  select production_sha from public.release_candidate_baseline;
+end;
+create table super_admin_private.fixture_inventory_rows(value integer);
+alter table super_admin_private.fixture_inventory_rows enable row level security;
+create policy fixture_external_baseline_policy on super_admin_private.fixture_inventory_rows using(exists(select 1 from public.release_candidate_baseline where singleton));
+create publication fixture_baseline_publication for table public.release_candidate_baseline;`)
+const inventorySql=readFileSync(new URL('./baseline-relation-inventory.sql',import.meta.url),'utf8')
+const inventoryBefore=sql('select row_to_json(b) from public.release_candidate_baseline b;')
+const inventory=JSON.parse(sql(`begin read only;${inventorySql}commit;`).split('\n').find(line=>line.startsWith('{')))
+assert.ok(inventory.consumers.some(row=>row.catalog==='pg_proc'&&row.referenceCatalog==='pg_class'&&row.identity.includes('fixture_atomic_baseline_consumer')))
+assert.ok(!inventory.consumers.some(row=>row.catalog==='pg_proc'&&row.referenceCatalog==='pg_type'&&row.identity.includes('fixture_atomic_baseline_consumer')),'Scalar parsed-body dependency is direct to the table, not its row type')
+assert.ok(inventory.consumers.some(row=>row.catalog==='pg_policy'&&row.identity.includes('fixture_external_baseline_policy')))
+assert.ok(inventory.publications.some(row=>row.name==='fixture_baseline_publication'))
+assert.ok(!Object.hasOwn(inventory.relation,'production_sha'))
+assert.equal(sql('select row_to_json(b) from public.release_candidate_baseline b;'),inventoryBefore)
+assert.equal(sql("select to_regclass('super_admin_private.release_candidate_baseline_before_relation_repair') is null;"),'t')
+console.log('Read-only metadata inventory passed: scalar BEGIN ATOMIC table dependency, external policy, publication membership and unchanged baseline')
 const snapshot={...buildCandidate('origin/main','HEAD'),baseVersions:state.baseVersions}
 const first=await catalog('release_candidate_refresh',{p_snapshot:snapshot})
+// The void readiness RPC returns204; successful acknowledgment must not parse JSON.
+await catalog('release_candidate_ready',{p_key:first.key,p_digest:first.digest})
+const publicResponse=await fetch(status.API_URL+'/rpc/release_public_feed',{method:'POST',headers:{authorization:`Bearer ${status.ANON_KEY}`,'content-type':'application/json'},body:'{}',redirect:'error'})
+assert.equal(publicResponse.status,200)
+const readyFeed=parseChangelogFeed(await publicResponse.json())
+assert.ok(readyFeed.entries.length>0)
+assert.equal(readyFeed.entries.length,snapshot.changes.filter(row=>row.disposition==='public').length)
+assert.ok(readyFeed.entries.every(entry=>entry.status==='coming-soon'&&entry.targetVersion==='0.1.0'))
+assert.equal(sql('select super_admin_private.fixture_atomic_baseline_consumer();'),snapshot.mainSha,'Parsed scalar consumer still reads the active authority')
 const retries=await Promise.all([0,1].map(()=>catalog('release_candidate_refresh',{p_snapshot:snapshot})))
 assert.ok(retries.every(row=>row.key===first.key&&row.digest===first.digest))
 assert.equal(first.manifest.versions['shop-suit'],'0.1.0')
@@ -105,6 +135,25 @@ await assert.rejects(denied('release_candidate_refresh',{p_snapshot:snapshot}),/
 // Multiple ordinary revisions are valid; no duplicate baseline assumption.
 await catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'e'.repeat(40)}})
 assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'2')
+// Persisted-state reproduction: legitimate revisions can expose a scalar helper
+// defect while state and the singleton baseline remain valid.
+assert.equal((await catalog('release_candidate_state')).model,2)
+assert.equal(sql('select count(*) from public.release_candidate_baseline;'),'1')
+const digestDefinition=sql("select pg_get_functiondef('super_admin_private.release_digest(jsonb)'::regprocedure);")
+sql(`create or replace function super_admin_private.release_digest(p_value jsonb) returns text language sql stable set search_path='' as $$select (select key from public.release_candidate_revisions)$$;`)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/CANDIDATE_CARDINALITY_DIGEST_CONTRACT_MISMATCH/)
+sql(digestDefinition)
+console.log('Persisted-state digest scalar fault reproduces state success and identifies the previously unrecognized digest contract mismatch without duplicate baseline data')
+// Unknown deeper extension frame under a matching digest helper is still classified.
+const cryptoDefinition=sql("select pg_get_functiondef('extensions.digest(bytea,text)'::regprocedure);")
+sql(`create or replace function extensions.digest(bytea,text) returns bytea language plpgsql immutable strict as $$begin return (select value from (values('private-sentinel'::bytea),('private-sentinel'::bytea)) v(value));end$$;`)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/reason CANDIDATE_CARDINALITY_DIGEST\)/)
+sql(cryptoDefinition)
+// Never interpret canonical line positions for an altered retained body.
+const retainedDefinition=sql("select pg_get_functiondef('super_admin_private.release_candidate_refresh_retained(jsonb)'::regprocedure);")
+sql(`create or replace function super_admin_private.release_candidate_refresh_retained(p_snapshot jsonb) returns jsonb language plpgsql security definer set search_path='' as $$begin return (select value from (values('{}'::jsonb),('{}'::jsonb)) v(value));end$$;`)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/CANDIDATE_CARDINALITY_REFRESH_CONTRACT_MISMATCH/)
+sql(retainedDefinition)
 const baselineDefinition=sql("select pg_get_functiondef('super_admin_private.candidate_baseline_tree()'::regprocedure);")
 sql(`create or replace function super_admin_private.candidate_baseline_tree() returns text language plpgsql stable set search_path='' as $$begin return (select value from (values('private-sentinel'),('private-sentinel')) v(value));end$$;`)
 await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),error=>{
@@ -131,8 +180,12 @@ for(const [signature,returns,attributes,expression,reason] of [
 // An unrelated trigger's private message must reduce to the refresh boundary.
 sql(`create function public.release_fixture_cardinality() returns trigger language plpgsql as $$begin raise exception 'private-sentinel' using errcode='21000';end$$;
 create trigger release_fixture_cardinality before insert on public.release_candidate_revisions for each row execute function public.release_fixture_cardinality();`)
-await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/CANDIDATE_CARDINALITY_REFRESH/)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/CANDIDATE_CARDINALITY_REVISION_WRITE_TRIGGER_PRESENT/)
 sql('drop trigger release_fixture_cardinality on public.release_candidate_revisions;drop function public.release_fixture_cardinality();')
+sql(`create function public.release_fixture_cardinality() returns trigger language plpgsql as $$begin raise exception 'private-sentinel' using errcode='21000';end$$;
+create trigger release_fixture_cardinality before insert on public.release_candidate_pointer for each row execute function public.release_fixture_cardinality();`)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/CANDIDATE_CARDINALITY_POINTER_WRITE_TRIGGER_PRESENT/)
+sql('drop trigger release_fixture_cardinality on public.release_candidate_pointer;drop function public.release_fixture_cardinality();')
 assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'2','Failed writes roll back without deleting prior history')
 await catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}})
 assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'3')
