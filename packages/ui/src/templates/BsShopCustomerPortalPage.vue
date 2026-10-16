@@ -35,7 +35,7 @@ function update(key:keyof BsCustomerPortalForm,value:string|number){form.value={
     </ol>
     <BsPagination :page="view.page" :page-size="20" :total="view.total" :label="view.copy.title" :previous-label="view.copy.previous" :next-label="view.copy.next" @update:page="emit('page',$event)"/>
    </template>
-   <a :href="view.homeHref">{{view.copy.home}}</a>
+   <BsInline wrap><a :href="view.homeHref">{{view.copy.home}}</a><a v-if="view.bookingHref" :href="view.bookingHref">{{view.copy.booking}}</a></BsInline>
   </main>
  </div>
 </template>

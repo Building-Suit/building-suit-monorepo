@@ -357,7 +357,10 @@
     "./organisms/BsWebsiteInquiryInbox.vue": "./src/organisms/BsWebsiteInquiryInbox.vue",
     "./types/appointmentAccessPresentation": "./src/types/appointmentAccessPresentation.ts",
     "./types/customerPortalPresentation": "./src/types/customerPortalPresentation.ts",
-    "./templates/BsShopCustomerPortalPage.vue": "./src/templates/BsShopCustomerPortalPage.vue"
+    "./templates/BsShopCustomerPortalPage.vue": "./src/templates/BsShopCustomerPortalPage.vue",
+    "./types/appointmentBookingPresentation": "./src/types/appointmentBookingPresentation.ts",
+    "./templates/BsPublicAppointmentBookingPage.vue": "./src/templates/BsPublicAppointmentBookingPage.vue",
+    "./organisms/BsBookingPolicySettings.vue": "./src/organisms/BsBookingPolicySettings.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

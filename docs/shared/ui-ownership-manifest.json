@@ -449,6 +449,17 @@
       "adapterBoundary": "Shop owns session-scoped allowlisted history and typed localized data. Shared UI owns complete verification/history presentation and semantic actions; UX owns expiry, suspension cleanup and revalidation timing. No customer IDs, financial data, private notes or booking commands cross the template contract.",
       "task": "SS-WEB-CUSTOMER-PORTAL-001",
       "migrationStatus": "registered complete public route; no Suit-local composition"
+    },
+    {
+      "family": "public-appointment-booking",
+      "owner": "packages/ui",
+      "components": [
+        "BsPublicAppointmentBookingPage",
+        "BsBookingPolicySettings"
+      ],
+      "adapterBoundary": "Shop owns publication policy, scoped booking data and atomic commands. Shared UI owns complete booking/settings presentation; UX owns record dialogs, overlays and suspension/expiry lifecycle. Customer identifiers, contacts and tokens never become template authority.",
+      "task": "SS-APPT-002",
+      "migrationStatus": "registered complete public route; settings extend the canonical business template"
     }
   ]
 }

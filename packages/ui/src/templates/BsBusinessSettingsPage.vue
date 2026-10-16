@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import type {BsBookingPolicyForm,BsBookingPolicyView} from '../types/appointmentBookingPresentation'
 import type { BsWebsiteInquiryInboxView } from '../types/websiteInquiriesPresentation'
 import type { BsWebsiteCatalogForm, BsWebsiteCatalogView } from '../types/websiteCatalogPresentation'
 import type { BsWebsiteProfileForm, BsWebsiteProfileView } from '../types/websiteProfilePresentation'
 import type { BsWebsiteAddressView } from '../types/websiteAddressPresentation'
 import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessSettingsEditor, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy, BsBusinessCurrencyView } from '../types/businessSettingsPresentation'
 defineProps<{
+  bookingPolicyView?:BsBookingPolicyView
   websiteInquiryView?: BsWebsiteInquiryInboxView
   websiteCatalogView?: BsWebsiteCatalogView
   websiteProfileView?: BsWebsiteProfileView
@@ -15,6 +17,8 @@ defineProps<{
   receiptEditor: BsBusinessSettingsEditor & { loading: boolean; loadError: boolean }; receiptSummary: BsBusinessReceiptSummary | null
   locationsView: BsBusinessLocationsView; modeOptions: { value: string; label: string; body: string }[]; modeLabel: string
 }>()
+const bookingPolicyForm=defineModel<BsBookingPolicyForm>('bookingPolicyForm',{default:()=>({enabled:false,lead_minutes:60,horizon_days:30,change_notice_minutes:120,allow_reschedule:true,allow_cancel:true,reminder_lead_minutes:1440,staff:[]})})
+const bookingPolicyOpen=defineModel<boolean>('bookingPolicyOpen',{default:false})
 const websiteInquiryOpen = defineModel<boolean>('websiteInquiryOpen', { default: false })
 const websiteInquiryStatus = defineModel<string>('websiteInquiryStatus', { default: 'new' })
 const websiteInquiryFilter = defineModel<string>('websiteInquiryFilter', { default: 'all' })
@@ -37,6 +41,7 @@ const modeActionOpen = defineModel<boolean>('modeOpen', { required: true })
 const receiptActionOpen = defineModel<boolean>('receiptOpen', { required: true })
 const locationDialogOpen = defineModel<boolean>('locationOpen', { required: true })
 const emit = defineEmits<{
+  editBookingPolicy:[];saveBookingPolicy:[];retryBookingPolicy:[];
   editWebsiteInquiry: [id: string]; saveWebsiteInquiry: []; retryWebsiteInquiries: []; websiteInquiryPage: [page: number];
   editWebsiteCatalog: [id: string]; saveWebsiteCatalog: []; retryWebsiteCatalog: []; publishWebsiteCatalog: [id: string]; unpublishWebsiteCatalog: [id: string]; websiteCatalogPage: [page: number]; selectWebsiteCatalogImage: [file: File | File[] | null];
   editWebsiteProfile: []; saveWebsiteProfile: []; retryWebsiteProfile: []; publishWebsiteProfile: []; unpublishWebsiteProfile: []; selectWebsiteLogo: [file: File | File[] | null]; removeWebsiteLogo: [];
@@ -57,8 +62,9 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
     <BsBox v-else-if="shopError" role="alert">{{ copy.failed }} <BsButton @click="emit('retry')">{{ copy.retry }}</BsButton>
     </BsBox>
     <BsText v-else-if="!context" role="status" as="p">{{ copy.empty }}</BsText>
-    <BsSectionNavigation v-if="context && !loading && !shopError" :label="copy.title" :sections="[{ id: 'shop-profile', label: copy.profileTitle }, { id: 'business-mode', label: copy.modeTitle }, { id: 'locations', label: copy.locationsTitle }, { id: 'receipt-settings', label: copy.receiptTitle }, { id: 'cash-policy', label: copy.cashTitle }, ...(websiteInquiryView ? [{ id: 'website-inquiries', label: websiteInquiryView.title }] : []), ...(websiteCatalogView ? [{ id: 'website-catalog', label: websiteCatalogView.title }] : []), ...(websiteProfileView ? [{ id: 'website-profile', label: websiteProfileView.title }] : []), ...(websiteAddressView ? [{ id: 'website-address', label: websiteAddressView.title }] : []), ...(currencyView ? [{ id: 'currency-settings', label: currencyView.title }] : [])]" />
+    <BsSectionNavigation v-if="context && !loading && !shopError" :label="copy.title" :sections="[{ id: 'shop-profile', label: copy.profileTitle }, { id: 'business-mode', label: copy.modeTitle }, { id: 'locations', label: copy.locationsTitle }, { id: 'receipt-settings', label: copy.receiptTitle }, { id: 'cash-policy', label: copy.cashTitle }, ...(bookingPolicyView ? [{id:'public-booking-settings',label:bookingPolicyView.title}] : []), ...(websiteInquiryView ? [{ id: 'website-inquiries', label: websiteInquiryView.title }] : []), ...(websiteCatalogView ? [{ id: 'website-catalog', label: websiteCatalogView.title }] : []), ...(websiteProfileView ? [{ id: 'website-profile', label: websiteProfileView.title }] : []), ...(websiteAddressView ? [{ id: 'website-address', label: websiteAddressView.title }] : []), ...(currencyView ? [{ id: 'currency-settings', label: currencyView.title }] : [])]" />
     <BsGrid v-if="context && !loading && !shopError" :columns="2" gap="lg">
+    <BsBookingPolicySettings v-if="bookingPolicyView" v-model:form="bookingPolicyForm" v-model:open="bookingPolicyOpen" :view="bookingPolicyView" @edit="emit('editBookingPolicy')" @save="emit('saveBookingPolicy')" @retry="emit('retryBookingPolicy')" />
     <BsWebsiteInquiryInbox v-if="websiteInquiryView" v-model:open="websiteInquiryOpen" v-model:status="websiteInquiryStatus" v-model:filter="websiteInquiryFilter" :view="websiteInquiryView" @edit="emit('editWebsiteInquiry',$event)" @save="emit('saveWebsiteInquiry')" @retry="emit('retryWebsiteInquiries')" @page="emit('websiteInquiryPage',$event)" />
     <BsWebsiteCatalogSettings v-if="websiteCatalogView" v-model:form="websiteCatalogForm" v-model:open="websiteCatalogOpen" v-model:search="websiteCatalogSearch" :view="websiteCatalogView" @edit="emit('editWebsiteCatalog',$event)" @save="emit('saveWebsiteCatalog')" @retry="emit('retryWebsiteCatalog')" @publish="emit('publishWebsiteCatalog',$event)" @unpublish="emit('unpublishWebsiteCatalog',$event)" @page="emit('websiteCatalogPage',$event)" @select-image="emit('selectWebsiteCatalogImage',$event)" />
     <BsWebsiteProfileSettings v-if="websiteProfileView" v-model:form="websiteProfileForm" v-model:open="websiteProfileOpen" v-model:opt-in="websiteOwnerOptIn" :view="websiteProfileView" @edit="emit('editWebsiteProfile')" @save="emit('saveWebsiteProfile')" @retry="emit('retryWebsiteProfile')" @publish="emit('publishWebsiteProfile')" @unpublish="emit('unpublishWebsiteProfile')" @select-logo="emit('selectWebsiteLogo', $event)" @remove-logo="emit('removeWebsiteLogo')" />

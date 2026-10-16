@@ -75,7 +75,8 @@
     "BsEtaSettingsPage": "packages/ui/src/templates/BsEtaSettingsPage.vue",
     "BsShopPublicEntryPage": "packages/ui/src/templates/BsShopPublicEntryPage.vue",
     "BsShopWebsitePage": "packages/ui/src/templates/BsShopWebsitePage.vue",
-    "BsShopCustomerPortalPage": "packages/ui/src/templates/BsShopCustomerPortalPage.vue"
+    "BsShopCustomerPortalPage": "packages/ui/src/templates/BsShopCustomerPortalPage.vue",
+    "BsPublicAppointmentBookingPage": "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2585,6 +2586,24 @@
       ],
       "verification": "SS-WEB-CUSTOMER-PORTAL-001: scoped SQL/API and EN/AR responsive portal regressions",
       "purpose": "shop-customer-appointment-portal"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/book.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicAppointmentBookingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/book.vue",
+      "dependencies": [
+        "@building-suit/ui/types/appointmentBookingPresentation"
+      ],
+      "verification": "SS-APPT-002: scoped booking, transactional availability and EN/AR responsive browser regressions",
+      "purpose": "shop-public-appointment-booking"
     }
   ],
   "verifiedSharedHeads": [
@@ -2708,6 +2727,7 @@
     "BsEtaSettingsPage",
     "BsShopPublicEntryPage",
     "BsShopWebsitePage",
-    "BsShopCustomerPortalPage"
+    "BsShopCustomerPortalPage",
+    "BsPublicAppointmentBookingPage"
   ]
 }

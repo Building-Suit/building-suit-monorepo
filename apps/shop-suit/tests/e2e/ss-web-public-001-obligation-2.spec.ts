@@ -2,7 +2,7 @@ import {expect,test,type Page} from '@playwright/test'
 import {expectNoPageOverflow} from '../../../../packages/testing/browser-foundation'
 async function transport(page:Page){await page.route('https://*.shops.building-suit.com/**',async route=>{
  const request=route.request(),url=new URL(request.url())
- const response=await route.fetch({url:'http://127.0.0.1:4329'+url.pathname+url.search,headers:{...request.headers(),host:url.host},maxRedirects:0})
+ const response=await route.fetch({url:'http://127.0.0.1:4329'+url.pathname+url.search,headers:{...request.headers(),host:url.host},maxRedirects:0,maxRetries:request.method()==='GET'?1:0})
  await route.fulfill({response})
 })}
 for(const locale of ['en','ar'])for(const width of [390,820,1440])for(const theme of ['light','dark'])test(`public showcase ${locale} ${width} ${theme}`,async({page})=>{

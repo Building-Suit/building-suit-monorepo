@@ -475,5 +475,45 @@
         "contains": "scope:=shop_private.appointment_access_scope(p_slug,p_token);"
       }
     ]
+  },
+  {
+    "id": "ss-appt-002",
+    "task": "SS-APPT-002",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Adds explicit public booking and scoped appointment management, preserving transactional availability, privacy and disabled reminder delivery.",
+    "notes": {
+      "title": {
+        "en": "Book and manage appointments online",
+        "ar": "حجز المواعيد وإدارتها عبر الموقع"
+      },
+      "summary": {
+        "en": "Shops can explicitly enable booking for published services, locations and staff.",
+        "ar": "يمكن للمتاجر تفعيل الحجز صراحةً للخدمات والمواقع والموظفين المنشورين."
+      },
+      "details": {
+        "en": "Customers choose available times and can reschedule or cancel within shop rules. Guest access covers one appointment; verified customers retain their own scope. Concurrent bookings are checked transactionally. Reminders stay disabled until an approved messaging channel is configured.",
+        "ar": "يختار العملاء أوقاتاً متاحة ويمكنهم تعديل الموعد أو إلغاؤه وفق سياسة المتجر. يقتصر وصول الزائر على موعد واحد، ويحتفظ العميل الموثّق بنطاقه الخاص. تُفحص الحجوزات المتزامنة داخل المعاملة، وتبقى التذكيرات معطلة حتى إعداد قناة رسائل معتمدة."
+      }
+    },
+    "sources": [
+      "ss-appt-002"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/book.vue",
+        "contains": "<BsPublicAppointmentBookingPage"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261016131316_public_appointment_booking.sql",
+        "contains": "create function public.appointment_booking_command("
+      }
+    ]
   }
 ]

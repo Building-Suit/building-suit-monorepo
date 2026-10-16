@@ -13,7 +13,7 @@ function update(key:keyof BsWebsiteInquiryForm,value:string|number){inquiry.valu
   </header>
   <main id="main" class="bs-shop-website__main">
    <section class="bs-shop-website__intro">
-    <div><h1>{{view.name}}</h1><p>{{view.description}}</p><BsInline wrap><a class="bs-shop-website__inquiry-link" href="#inquiry">{{view.copy.inquiry}}</a><a :href="view.portalLink.href">{{view.portalLink.label}}</a></BsInline></div>
+    <div><h1>{{view.name}}</h1><p>{{view.description}}</p><BsInline wrap><a class="bs-shop-website__inquiry-link" href="#inquiry">{{view.copy.inquiry}}</a><a v-if="view.bookingLink" :href="view.bookingLink.href">{{view.bookingLink.label}}</a><a :href="view.portalLink.href">{{view.portalLink.label}}</a></BsInline></div>
     <img :src="view.logo" :alt="view.name" width="176" height="176">
    </section>
    <section id="catalog" aria-labelledby="website-catalog-heading">
