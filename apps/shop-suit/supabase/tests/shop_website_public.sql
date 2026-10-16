@@ -47,6 +47,7 @@ do $$declare a record; b record; slug text; v jsonb; i int;begin
  begin perform public.shop_website_inquiries(a.shop);raise exception 'anon inbox';exception when insufficient_privilege then null;end;
  begin perform 1 from public.shop_website_inquiries;raise exception 'anon storage';exception when insufficient_privilege then null;end;
  begin perform public.shop_website_inquiry_submit(slug,'Visitor','bad-contact','Message','en','');raise exception 'invalid contact';exception when invalid_parameter_value then null;end;
+ begin perform public.shop_website_inquiry_submit(slug,'Visitor','visitor@example.invalid',E'\n\t','en','');raise exception 'blank message';exception when invalid_parameter_value then null;end;
  begin perform public.shop_website_inquiry_submit(slug,repeat('a',121),'visitor@example.invalid','Message','en','');raise exception 'unbounded name';exception when invalid_parameter_value then null;end;
  v:=public.shop_website_inquiry_submit(slug,'','','','en','bot');
  if v<>'{"ok":true}' then raise exception 'honeypot response';end if;

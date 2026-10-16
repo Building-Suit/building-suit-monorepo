@@ -68,7 +68,7 @@ begin
  if p_honeypot<>'' then return '{"ok":true}'::jsonb;end if;
  if p_name is null or length(btrim(p_name)) not between 1 and 120 or p_name ~ '[[:cntrl:]]'
    or p_contact is null or length(contact)>254 or contact ~ '[[:cntrl:]]'
-   or p_message is null or length(btrim(p_message)) not between 1 and 2000
+   or p_message is null or length(btrim(p_message)) not between 1 and 2000 or p_message !~ '[^[:space:]]'
    or p_locale is null or p_locale not in ('ar','en') then raise exception 'INVALID_WEBSITE_INQUIRY' using errcode='22023';end if;
  if contact ~ '^[A-Za-z0-9.!#$%&''*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$' then identity:=lower(contact);
  elsif contact ~ '^\+?[0-9][0-9 ()-]{5,30}$' then
