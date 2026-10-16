@@ -1,4 +1,4 @@
-import { validWebsiteSlug,websiteUrl } from './websiteAddress.ts'
+import { validWebsiteSlug,websiteUrl,websiteDomain } from './websiteAddress.ts'
 import type { PublicWebsiteCatalog,PublicWebsiteCatalogItem } from './websiteCatalog'
 export type WebsiteLocale='ar'|'en'
 export type PublicWebsiteProfile={canonicalSlug:string;publicName:string;description:string;phone:string;whatsapp:string;email:string;openingHours:string;seoTitle:string;seoDescription:string;logoDataUrl:string;locations:Array<{publicName:string;address:string}>}
@@ -25,8 +25,8 @@ export function parsePublicWebsite(value:unknown,canonicalSlug:string):PublicWeb
  })
  return{profile,catalog:{canonicalSlug,items,total:Number(c.total),page:Number(c.page),pageSize:20}}
 }
-export function websitePageUrl(slug:string,locale:WebsiteLocale,page=1):string {
- const url=new URL(websiteUrl(slug)+'/');if(locale==='en')url.searchParams.set('lang','en');if(page>1)url.searchParams.set('page',String(page));return url.href
+export function websitePageUrl(slug:string,locale:WebsiteLocale,page=1,domain:string=websiteDomain):string {
+ const url=new URL(websiteUrl(slug,domain)+'/');if(locale==='en')url.searchParams.set('lang','en');if(page>1)url.searchParams.set('page',String(page));return url.href
 }
 export function publicWebsiteQuery(query:URLSearchParams):{locale:WebsiteLocale;page:number} {
  if([...query.keys()].some(k=>!['lang','page'].includes(k))||query.getAll('lang').length>1||query.getAll('page').length>1)throw Error('INVALID_WEBSITE_QUERY')

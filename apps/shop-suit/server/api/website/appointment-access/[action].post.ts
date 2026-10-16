@@ -2,14 +2,15 @@ import {normalizeAppointmentAccessCode,normalizeAppointmentAccessPhone,parseAppo
 import {readBoundedInquiryBody} from '../../../utils/readBoundedInquiryBody'
 import {createInquiryRateLimit} from '../../../utils/inquiryRateLimit'
 import {publicWebsiteRpc} from '../../../utils/publicWebsiteRpc'
-import {websiteUrl,validWebsiteSlug} from '../../../../shared/websiteAddress'
+import {websiteUrl,validWebsiteSlug,configuredWebsiteDomain} from '../../../../shared/websiteAddress'
 const allowed=createInquiryRateLimit(20)
 export default defineEventHandler(async event=>{
  const host=event.context.websiteHost,action=getRouterParam(event,'action'),config=useRuntimeConfig(event)
+ const domain=configuredWebsiteDomain(config.public)
  setResponseHeader(event,'Cache-Control','private, no-store');setResponseHeader(event,'X-Robots-Tag','noindex, nofollow')
  const logout=action==='logout'&&event.context.appointmentAccessLogout===true
- if(host?.kind!=='website'||!logout&&!validWebsiteSlug(event.context.websiteCanonicalSlug)||!action||!['verify','validate','rotate','logout'].includes(action))throw createError({statusCode:404,statusMessage:'Not Found'})
- if(getHeader(event,'origin')!==websiteUrl(host.slug))throw createError({statusCode:403,statusMessage:'Access unavailable'})
+ if(!domain||host?.kind!=='website'||!logout&&!validWebsiteSlug(event.context.websiteCanonicalSlug)||!action||!['verify','validate','rotate','logout'].includes(action))throw createError({statusCode:404,statusMessage:'Not Found'})
+ if(getHeader(event,'origin')!==websiteUrl(host.slug,domain))throw createError({statusCode:403,statusMessage:'Access unavailable'})
  const cookieName=`bs-shop-${config.public.appEnvironment}-appointment-access`
  // Public host middleware strips private auth cookies, but retains this host-only
  // HttpOnly capability in a separate context field for this narrowly scoped API.

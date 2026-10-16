@@ -1,12 +1,13 @@
 import {parseCustomerPortal} from '../../../shared/customerPortal'
-import {websiteUrl,validWebsiteSlug} from '../../../shared/websiteAddress'
+import {websiteUrl,validWebsiteSlug,configuredWebsiteDomain} from '../../../shared/websiteAddress'
 import {readBoundedInquiryBody} from '../../utils/readBoundedInquiryBody'
 import {publicWebsiteRpc} from '../../utils/publicWebsiteRpc'
 export default defineEventHandler(async event=>{
  const host=event.context.websiteHost,config=useRuntimeConfig(event)
+ const domain=configuredWebsiteDomain(config.public)
  setResponseHeader(event,'Cache-Control','private, no-store');setResponseHeader(event,'X-Robots-Tag','noindex, nofollow')
- if(host?.kind!=='website'||!validWebsiteSlug(event.context.websiteCanonicalSlug))throw createError({statusCode:404,statusMessage:'Not Found'})
- if(getHeader(event,'origin')!==websiteUrl(host.slug))throw createError({statusCode:403,statusMessage:'Access unavailable'})
+ if(!domain||host?.kind!=='website'||!validWebsiteSlug(event.context.websiteCanonicalSlug))throw createError({statusCode:404,statusMessage:'Not Found'})
+ if(getHeader(event,'origin')!==websiteUrl(host.slug,domain))throw createError({statusCode:403,statusMessage:'Access unavailable'})
  const token=event.context.appointmentAccessToken as string|undefined
  const denied=()=>{const name=`bs-shop-${config.public.appEnvironment}-appointment-access`;event.context.appointmentAccessCookieName=name;deleteCookie(event,name,{path:'/api/website',httpOnly:true,secure:true,sameSite:'strict'});return{authenticated:false}}
  try{

@@ -1,15 +1,16 @@
 import {bookingUuid,bookingExpiry,parseBookingOptions,parseBookingSlots,parseBookingManagement} from '../../../../shared/appointmentBooking'
 import {parseAppointmentAccessSession,normalizeAppointmentAccessPhone,normalizeAppointmentAccessCode} from '../../../../shared/appointmentAccess'
-import {websiteUrl,validWebsiteSlug} from '../../../../shared/websiteAddress'
+import {websiteUrl,validWebsiteSlug,configuredWebsiteDomain} from '../../../../shared/websiteAddress'
 import {readBoundedInquiryBody} from '../../../utils/readBoundedInquiryBody'
 import {publicWebsiteRpc} from '../../../utils/publicWebsiteRpc'
 import {createInquiryRateLimit} from '../../../utils/inquiryRateLimit'
 const reads=createInquiryRateLimit(100),writes=createInquiryRateLimit(20)
 export default defineEventHandler(async event=>{
  const host=event.context.websiteHost,action=getRouterParam(event,'action'),config=useRuntimeConfig(event)
+ const domain=configuredWebsiteDomain(config.public)
  setResponseHeader(event,'Cache-Control','private, no-store');setResponseHeader(event,'X-Robots-Tag','noindex, nofollow')
- if(host?.kind!=='website'||!validWebsiteSlug(event.context.websiteCanonicalSlug)||!action||!['options','slots','manage','command'].includes(action))throw createError({statusCode:404,statusMessage:'Not Found'})
- if(getHeader(event,'origin')!==websiteUrl(host.slug))throw createError({statusCode:403,statusMessage:'Access unavailable'})
+ if(!domain||host?.kind!=='website'||!validWebsiteSlug(event.context.websiteCanonicalSlug)||!action||!['options','slots','manage','command'].includes(action))throw createError({statusCode:404,statusMessage:'Not Found'})
+ if(getHeader(event,'origin')!==websiteUrl(host.slug,domain))throw createError({statusCode:403,statusMessage:'Access unavailable'})
  const token=event.context.appointmentAccessToken as string|undefined,cookieName=`bs-shop-${config.public.appEnvironment}-appointment-access`
  const clear=()=>{event.context.appointmentAccessCookieName=cookieName;deleteCookie(event,cookieName,{path:'/api/website',httpOnly:true,secure:true,sameSite:'strict'})}
  const denied=()=>action==='options'?{enabled:false}:action==='slots'?{slots:[]}:action==='manage'?{authenticated:false}:{ok:false}

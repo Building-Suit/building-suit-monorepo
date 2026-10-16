@@ -1,13 +1,15 @@
 import type { BsWebsiteAddressView } from '@building-suit/ui/types/websiteAddressPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
-import { suggestWebsiteSlug, validWebsiteSlug, websiteUrl } from '#shared/websiteAddress'
+import { suggestWebsiteSlug, validWebsiteSlug, websiteUrl, configuredWebsiteDomain } from '#shared/websiteAddress'
 
 export function useWebsiteAddress(canManage: Ref<boolean>) {
   const { currentId, current, currentLocationId } = useShop()
   const { locale } = useI18n()
   const user = useSupabaseUser()
   const actor = computed(() => user.value?.id ?? null)
-  const environment = useRuntimeConfig().public.supabase.url
+  const config = useRuntimeConfig()
+  const domain = configuredWebsiteDomain(config.public)
+  const environment = config.public.supabase.url
   const captureScope = useShopTaskScope()
   const client = useSupabaseClient<ShopRpcDatabase>().schema('public')
   const slug = ref('')
@@ -47,8 +49,8 @@ export function useWebsiteAddress(canManage: Ref<boolean>) {
       title: ar ? 'عنوان موقع المتجر' : 'Shop website address',
       help: ar ? 'العنوان مستقل عن اسم المتجر. الموقع غير منشور في هذه المرحلة. العناوين السابقة تظل محجوزة لنفس المتجر.' : 'The address is separate from your display name. Websites are unpublished in this phase. Previous addresses stay reserved to this Shop.',
       label: ar ? 'العنوان المختصر' : 'Address slug',
-      currentUrl: canManage.value && data.value ? websiteUrl(data.value.slug) : '',
-      aliases: canManage.value ? (data.value?.aliases ?? []).map(websiteUrl) : [],
+      currentUrl: canManage.value && data.value && domain ? websiteUrl(data.value.slug, domain) : '',
+      aliases: canManage.value && domain ? (data.value?.aliases ?? []).map(slug => websiteUrl(slug, domain)) : [],
       loading: loading.value, failed: Boolean(loadError.value), denied: !canManage.value,
       pending: pending.value, dirty: dirty.value, error: error.value ?? '', success: success.value,
       submitDisabled: !canManage.value || !validWebsiteSlug(slug.value) || slug.value === data.value?.slug,
