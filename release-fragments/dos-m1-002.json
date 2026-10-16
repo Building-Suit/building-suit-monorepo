@@ -28,7 +28,9 @@
     "tooling",
     "release-changes/items.json",
     "docs/shared/realtime-adoption.json",
-    "docs/shared/realtime-adoption.md"
+    "docs/shared/realtime-adoption.md",
+    "apps/super-admin-suit/supabase/migrations/20261016210711_release_internal_doctor_consumer.sql",
+    "docs/work-packages/doctor-suit/scaffold-release-consumer.md"
   ],
-  "reason": "Add an isolated synthetic Doctor app from the maintained shared-template starter and a loopback-only browser harness. Workspace script and lockfile changes affect existing tooling consumers; no existing product behavior or operational Doctor release registration changes."
+  "reason": "Add an isolated synthetic Doctor app from the maintained shared-template starter and a loopback-only browser harness. Workspace script and lockfile changes affect existing tooling consumers; no existing product behavior or operational Doctor release registration changes. A forward private release-consumer entry recognizes synthetic provenance without changing operational registration, baselines or privileges; required exact-candidate REST regression remains enforced."
 }
