@@ -1,9 +1,9 @@
 // Full migrated SAS + real PostgREST, local-only; no keys or error bodies logged.
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { randomUUID, createHmac } from 'node:crypto'
+import { randomUUID, createHmac, createHash } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
-import { readdirSync, readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { buildCandidate } from './candidate.mjs'
 import { parseChangelogFeed } from '../../packages/contracts/src/changelog.ts'
 import { createCatalog } from './publisher.mjs'
@@ -31,9 +31,20 @@ for(let n=0;;n++) {
   if(spawnSync('docker',['exec',db,'pg_isready','-h','127.0.0.1','-U','postgres'],{stdio:'ignore'}).status===0) break
   assert.ok(n<100,'Disposable PostgreSQL startup timeout');await delay(100)
 }
+// Compile the actual pinned extension only inside this owned disposable DB.
+const extensionDir=new URL('./fixtures/pg-safeupdate/',import.meta.url)
+const extensionSource=JSON.parse(readFileSync(new URL('source.json',extensionDir),'utf8'))
+for(const [name,expected] of Object.entries(extensionSource.sha256)) assert.equal(createHash('sha256').update(readFileSync(new URL(name,extensionDir))).digest('hex'),expected)
+command('docker',['exec',db,'mkdir','-p','/tmp/pg-safeupdate'])
+for(const name of ['safeupdate.c','Makefile','LICENSE']) command('docker',['cp',new URL(name,extensionDir).pathname,`${db}:/tmp/pg-safeupdate/${name}`])
+// Preserve TLS verification; use the platform's public CA bundle in this disposable container.
+if(existsSync('/etc/ssl/certs/ca-certificates.crt')) command('docker',['cp','/etc/ssl/certs/ca-certificates.crt',`${db}:/etc/ssl/certs/ca-certificates.crt`])
+command('docker',['exec',db,'sh','-c','apk add --no-cache build-base >/dev/null && cd /tmp/pg-safeupdate && make with_llvm=no >/dev/null && make install with_llvm=no >/dev/null'])
 // Provider contracts only; every SAS-owned object below comes from its actual migration.
 // Auth/Realtime/Vault service implementation is outside this REST regression.
 sql(`create role anon;create role authenticated;create role service_role;
+create role authenticator login noinherit;grant anon,authenticated,service_role to authenticator;
+alter role authenticator set session_preload_libraries='safeupdate';
 create schema extensions;create extension pgcrypto with schema extensions;
 create schema auth;create table auth.users(id uuid primary key);create table auth.sessions(id uuid primary key,user_id uuid,not_after timestamptz);
 create function auth.jwt() returns jsonb language sql as $$select coalesce(current_setting('request.jwt.claims',true),'{}')::jsonb$$;
@@ -46,7 +57,9 @@ create function realtime.send(jsonb,text,text,boolean) returns void language sql
 const migrations=new URL('../../apps/super-admin-suit/supabase/migrations/',import.meta.url)
 const names=readdirSync(migrations).filter(name=>name.endsWith('.sql')).sort()
 let retainedSource
-for(const name of names) {
+const qualifiedRepair=names.find(name=>name.endsWith('_qualified_release_baseline_pin.sql'))
+assert.ok(qualifiedRepair)
+for(const name of names.filter(name=>name!==qualifiedRepair)) {
   if(name.endsWith('_release_cardinality_location.sql')) retainedSource=sql("select md5(prosrc) from pg_proc where oid='public.release_candidate_refresh(jsonb)'::regprocedure;")
   console.log(`Apply SAS migration ${name}`)
   sql(readFileSync(new URL(name,migrations),'utf8'))
@@ -63,7 +76,15 @@ assert.equal(sql("select has_function_privilege('service_role','super_admin_priv
 sql(`create function public.release_candidate_diagnostic(p_code text,p_guard text) returns void language plpgsql as $$begin raise exception '%',p_guard using errcode=p_code;end$$;
 revoke all on function public.release_candidate_diagnostic(text,text) from public,anon,authenticated;
 grant execute on function public.release_candidate_diagnostic(text,text) to service_role;`)
-command('docker',['run','-d','--name',rest,'--network',network,'-p','127.0.0.1::3000','-e','PGRST_DB_URI=postgresql://postgres@release-db/postgres','-e','PGRST_DB_SCHEMAS=public','-e','PGRST_DB_ANON_ROLE=anon','-e',`PGRST_JWT_SECRET=${jwtSecret}`,'public.ecr.aws/supabase/postgrest:v16.1'])
+sql(`create function public.release_candidate_safety() returns jsonb language sql security definer set search_path='' as $$select jsonb_build_object('authenticatorSession',session_user='authenticator','guardEnabled',current_setting('safeupdate.enabled',true)='on')$$;
+create function public.release_candidate_trace(p_snapshot jsonb) returns jsonb language plpgsql security definer set search_path='' as $$declare msg text;begin
+perform super_admin_private.release_candidate_refresh_retained(p_snapshot);return jsonb_build_object('guardRejected',false);
+exception when cardinality_violation then get stacked diagnostics msg=message_text;
+return jsonb_build_object('guardRejected',msg='UPDATE requires a WHERE clause');end$$;
+create function public.release_candidate_unsafe() returns void language plpgsql security definer set search_path='' as $$begin update public.release_candidate_baseline set production_sha=production_sha;end$$;
+revoke all on function public.release_candidate_safety(),public.release_candidate_trace(jsonb),public.release_candidate_unsafe() from public,anon,authenticated;
+grant execute on function public.release_candidate_safety(),public.release_candidate_trace(jsonb),public.release_candidate_unsafe() to service_role;`)
+command('docker',['run','-d','--name',rest,'--network',network,'-p','127.0.0.1::3000','-e','PGRST_DB_URI=postgresql://authenticator@release-db/postgres','-e','PGRST_DB_SCHEMAS=public','-e','PGRST_DB_ANON_ROLE=anon','-e',`PGRST_JWT_SECRET=${jwtSecret}`,'public.ecr.aws/supabase/postgrest:v16.1'])
 const port=command('docker',['port',rest,'3000/tcp']).split(':').at(-1)
 status.API_URL=`http://127.0.0.1:${port}`
 for(let n=0;;n++) {
@@ -80,6 +101,7 @@ const transport=(url,options)=>{
   return fetch(status.API_URL+parsed.pathname.replace('/rest/v1',''),options)
 }
 const catalog=createCatalog(`https://${ref}.supabase.co`,status.SERVICE_ROLE_KEY,ref,transport)
+assert.deepEqual(await catalog('release_candidate_safety'),{authenticatorSession:true,guardEnabled:true})
 const state=await catalog('release_candidate_state')
 assert.equal(state.model,2);assert.equal(state.environment,'staging')
 for(const [code,guard,reason] of [
@@ -115,7 +137,23 @@ assert.equal(sql('select row_to_json(b) from public.release_candidate_baseline b
 assert.equal(sql("select to_regclass('super_admin_private.release_candidate_baseline_before_relation_repair') is null;"),'t')
 console.log('Read-only metadata inventory passed: scalar BEGIN ATOMIC table dependency, external policy, publication membership and unchanged baseline')
 const snapshot={...buildCandidate('origin/main','HEAD'),baseVersions:state.baseVersions}
+assert.deepEqual(await catalog('release_candidate_trace',{p_snapshot:snapshot}),{guardRejected:true})
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:snapshot}),/CANDIDATE_CARDINALITY_BASELINE_PIN/)
+assert.deepEqual(await catalog('release_candidate_state'),state,'Original guard rejection rolls back without consuming history/version')
+console.log('Confirmed real pg-safeupdate/authenticator/PostgREST reproduces original BASELINE_PIN on canonical relation')
+sql(readFileSync(new URL(qualifiedRepair,migrations),'utf8'))
+assert.deepEqual(await catalog('release_candidate_state'),state,'Forward function-only repair preserves all release state')
+// A legitimate update trigger that suppresses the row must remain effective.
+sql(`create function super_admin_private.fixture_skip_pin() returns trigger language plpgsql as $$begin return null;end$$;
+create trigger fixture_skip_pin before update on public.release_candidate_baseline for each row execute function super_admin_private.fixture_skip_pin();`)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:snapshot}),/PRODUCTION_BASELINE_CHANGED/)
+assert.deepEqual(await catalog('release_candidate_state'),state,'Zero affected rows abort without overwriting/advertising state')
+sql('drop trigger fixture_skip_pin on public.release_candidate_baseline;drop function super_admin_private.fixture_skip_pin();')
 const first=await catalog('release_candidate_refresh',{p_snapshot:snapshot})
+await assert.rejects(catalog('release_candidate_unsafe'),/CANDIDATE_UPDATE_REQUIRES_WHERE/)
+assert.deepEqual(await catalog('release_candidate_safety'),{authenticatorSession:true,guardEnabled:true},'The safety gate remains active')
+console.log('Qualified initial pin succeeds with guard still enabled; unqualified writes remain denied')
+
 // The void readiness RPC returns204; successful acknowledgment must not parse JSON.
 await catalog('release_candidate_ready',{p_key:first.key,p_digest:first.digest})
 const publicResponse=await fetch(status.API_URL+'/rpc/release_public_feed',{method:'POST',headers:{authorization:`Bearer ${status.ANON_KEY}`,'content-type':'application/json'},body:'{}',redirect:'error'})
@@ -192,6 +230,19 @@ assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'3'
 
 assert.equal(sql('select count(*) from public.release_candidate_promotions;'),'0')
 assert.equal(sql('select version from public.release_candidate_versions;'),'0.0.0')
+// Matching local fixture receipt exercises void acknowledgment under the same
+// loaded authenticator gate; real promotion authorization is tested separately.
+const accepted=await catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}})
+await catalog('release_candidate_ready',{p_key:accepted.key,p_digest:accepted.digest})
+const fixtureReceipt={...accepted,deploymentSha:'f'.repeat(40),publishedAt:new Date().toISOString()}
+await catalog('release_candidate_acknowledge',{p_receipt:fixtureReceipt})
+const acknowledged=await catalog('release_candidate_state')
+assert.equal(acknowledged.baseVersions['shop-suit'],'0.1.0')
+assert.equal(acknowledged.promotions.length,1)
+await catalog('release_candidate_acknowledge',{p_receipt:fixtureReceipt})
+assert.equal((await catalog('release_candidate_state')).promotions.length,1)
+assert.deepEqual(await catalog('release_candidate_safety'),{authenticatorSession:true,guardEnabled:true})
+console.log('Safeupdate remains enabled across refresh, readiness, public feed and idempotent fixture acknowledgment')
 console.log('Full SAS PostgREST catalog passed: real createCatalog state/refresh, concurrent retry, invalid-ref denial, anonymous denial and unchanged production baseline/history and safe cardinality locations')
 
 } finally {

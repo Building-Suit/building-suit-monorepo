@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import { catalogRejectionReason, cardinalityReasons } from './catalog-diagnostics.mjs'
@@ -67,7 +68,7 @@ test('cardinality location diagnostics retain SQLSTATE and exact safe tokens onl
 test('statement and contract evidence accepts only fixed SQLSTATE-21000 tokens', async () => {
   const sql=readFileSync(new URL('../../apps/super-admin-suit/supabase/migrations/20261016122230_release_refresh_statement_evidence.sql',import.meta.url),'utf8')
   for(const [token] of sql.matchAll(/CANDIDATE_CARDINALITY_[A-Z_]+/g)) assert.ok(cardinalityReasons.has(token),token)
-  for(const message of cardinalityReasons) assert.equal(await catalogRejectionReason(response({code:'21000',message,details:'private-sentinel'})),message)
+  for(const message of cardinalityReasons) assert.equal(await catalogRejectionReason(response({code:'21000',message,details:'private-sentinel'})),message==='CANDIDATE_CARDINALITY_BASELINE_READ'?'CANDIDATE_CARDINALITY_BASELINE_CONDITION':message)
   for(const message of ['CANDIDATE_CARDINALITY_POINTER_WRITE private-sentinel','CANDIDATE_CARDINALITY_REFRESH_LINE_99','CANDIDATE_CARDINALITY_DIGEST_CONTRACT_MISMATCH\nprivate-sentinel']) {
     assert.equal(await catalogRejectionReason(response({code:'21000',message})),'CATALOG_SQLSTATE_21000_CARDINALITY_VIOLATION')
   }
@@ -84,4 +85,15 @@ test('PostgREST void success is accepted only for the declared void publisher op
     assert.doesNotMatch(error.stack,/private-payload-sentinel|credential-sentinel/)
     return true
   })
+})
+
+
+test('native safeupdate diagnostic is exact and qualified-body fingerprint is intentionally updated', async () => {
+  assert.equal(await catalogRejectionReason(response({code:'21000',message:'UPDATE requires a WHERE clause'})),'CANDIDATE_UPDATE_REQUIRES_WHERE')
+  assert.equal(await catalogRejectionReason(response({code:'21000',message:'UPDATE requires a WHERE clause private-sentinel'})),'CATALOG_SQLSTATE_21000_CARDINALITY_VIOLATION')
+  const sql=readFileSync(new URL('../../apps/super-admin-suit/supabase/migrations/20261016144255_qualified_release_baseline_pin.sql',import.meta.url),'utf8')
+  const body=sql.match(/create or replace function super_admin_private\.release_candidate_refresh_retained\(p_snapshot jsonb\)[\s\S]*?as \$\$([\s\S]*?)\$\$;/)[1]
+  const fingerprint=createHash('md5').update(body).digest('hex')
+  assert.ok(sql.includes(`'CANDIDATE_CARDINALITY_REFRESH','${fingerprint}'`),'Diagnostic contract must match the repaired body')
+  assert.ok(!sql.includes("safeupdate.enabled=off"))
 })
