@@ -15,7 +15,7 @@ function date(value: string, locale: string) { return new Intl.DateTimeFormat(lo
     <BsText>{{ entry.summary[locale] }}</BsText>
     <BsText wrap="preserve" size="sm" tone="muted">{{ entry.details[locale] }}</BsText>
     <div class="bs-changelog-card__dates">
-      <BsText as="span" size="xs" tone="muted">{{ copy.published }} <BsText as="time" :datetime="entry.publishedAt" size="xs">{{ date(entry.publishedAt, locale) }}</BsText></BsText>
+      <BsText as="span" size="xs" tone="muted">{{ entry.status === 'coming-soon' ? (copy.updated ?? copy.published) : copy.published }} <BsText as="time" :datetime="entry.publishedAt" size="xs">{{ date(entry.publishedAt, locale) }}</BsText></BsText>
       <BsText v-if="entry.status === 'released'" as="span" size="xs" tone="muted">{{ copy.releasedAt }} <BsText as="time" :datetime="entry.releasedAt" size="xs">{{ date(entry.releasedAt, locale) }}</BsText></BsText>
     </div>
     <BsLink v-for="link in entry.links" :key="link.href" :to="link.href" external>{{ link.label[locale] }}</BsLink>

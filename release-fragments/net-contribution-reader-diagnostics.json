@@ -1,0 +1,9 @@
+{
+  "id": "net-contribution-reader-diagnostics",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["AGENTS.md", "docs/shared/release-publication-runbook.md", "tooling/releases/candidate.mjs", "tooling/releases/check.mjs", "tooling/releases/public-contribution.test.mjs", "packages/nuxt-layer/server/api/changelog.get.ts", "packages/nuxt-layer/server/utils/changelogReader.ts", "packages/nuxt-layer/tests/changelog-reader.test.mjs"],
+  "reason": "Review fixes for deterministic surviving public-change validation and sanitized server diagnostics. No new public capability, release history change or hosted configuration."
+}

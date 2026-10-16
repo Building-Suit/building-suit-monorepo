@@ -1103,6 +1103,121 @@ export type Database = {
           },
         ]
       }
+      release_candidate_baseline: {
+        Row: {
+          production_sha: string | null
+          singleton: boolean
+        }
+        Insert: {
+          production_sha?: string | null
+          singleton?: boolean
+        }
+        Update: {
+          production_sha?: string | null
+          singleton?: boolean
+        }
+        Relationships: []
+      }
+      release_candidate_pointer: {
+        Row: {
+          revision_key: string | null
+          singleton: boolean
+        }
+        Insert: {
+          revision_key?: string | null
+          singleton?: boolean
+        }
+        Update: {
+          revision_key?: string | null
+          singleton?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_candidate_pointer_revision_key_fkey"
+            columns: ["revision_key"]
+            isOneToOne: false
+            referencedRelation: "release_candidate_revisions"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      release_candidate_promotions: {
+        Row: {
+          deployment_sha: string
+          digest: string
+          first_published_at: string
+          manifest: Json
+          revision_key: string
+        }
+        Insert: {
+          deployment_sha: string
+          digest: string
+          first_published_at: string
+          manifest: Json
+          revision_key: string
+        }
+        Update: {
+          deployment_sha?: string
+          digest?: string
+          first_published_at?: string
+          manifest?: Json
+          revision_key?: string
+        }
+        Relationships: []
+      }
+      release_candidate_revisions: {
+        Row: {
+          created_at: string
+          digest: string
+          key: string
+          manifest: Json
+          ready_at: string | null
+          request: Json
+        }
+        Insert: {
+          created_at?: string
+          digest: string
+          key: string
+          manifest: Json
+          ready_at?: string | null
+          request: Json
+        }
+        Update: {
+          created_at?: string
+          digest?: string
+          key?: string
+          manifest?: Json
+          ready_at?: string | null
+          request?: Json
+        }
+        Relationships: []
+      }
+      release_candidate_versions: {
+        Row: {
+          evidence: string
+          suit_id: string
+          version: string
+        }
+        Insert: {
+          evidence: string
+          suit_id: string
+          version: string
+        }
+        Update: {
+          evidence?: string
+          suit_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_candidate_versions_suit_id_fkey"
+            columns: ["suit_id"]
+            isOneToOne: true
+            referencedRelation: "suit_registry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       release_catalog_configuration: {
         Row: {
           anchor_sha: string
@@ -1367,6 +1482,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      release_candidate_acknowledge: {
+        Args: { p_receipt: Json }
+        Returns: undefined
+      }
+      release_candidate_promote: {
+        Args: {
+          p_deployment_sha: string
+          p_main_parent: string
+          p_main_tree: string
+          p_release: Json
+        }
+        Returns: Json
+      }
+      release_candidate_ready: {
+        Args: { p_digest: string; p_key: string }
+        Returns: undefined
+      }
+      release_candidate_refresh: { Args: { p_snapshot: Json }; Returns: Json }
+      release_candidate_state: { Args: never; Returns: Json }
       release_catalog_state: { Args: never; Returns: Json }
       release_public_feed: { Args: never; Returns: Json }
       release_publish: {

@@ -92,3 +92,17 @@ test('release groups keep Suits separate and exclude internal, future and Coming
   assert.equal(selectChangelogReleases(feed,{},2).length,2)
   assert.equal(selectChangelogReleases(feed,{suit:'shop-suit'},3).length,1)
 })
+
+test('overview keeps the complete single upcoming release ahead of frozen production history in both languages', async()=>{
+  const {selectChangelogOverview}=await import('../src/changelog.ts')
+  const planned={...entry,id:'upcoming-first',status:'coming-soon',targetVersion:'1.1.0',title:{en:'Service recipes',ar:'وصفات الخدمات'}}
+  delete planned.version;delete planned.releasedAt
+  const other={...planned,id:'upcoming-second',title:{en:'Taxes',ar:'الضرائب'}}
+  const feed=parseChangelogFeed(fixture({entries:[entry,planned,other]}))
+  const selected=selectChangelogOverview(feed,{suit:'shop-suit'},1)
+  assert.equal(selected.length,2)
+  assert.ok(selected.every(row=>row.status==='coming-soon'&&!isChangelogNew(row,feed.serverNow)))
+  assert.equal(selected[0].title.ar,'وصفات الخدمات')
+  assert.equal(selectChangelogOverview(feed,{suit:'shop-suit'},2).length,3)
+  assert.throws(()=>selectChangelogOverview(feed,{},-1))
+})

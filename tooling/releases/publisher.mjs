@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process'
-import { canonical, collectBatch, fragmentTree, git, workspaceGraph } from './fragments.mjs'
+import { canonical, git } from './fragments.mjs'
+import { buildCandidate, promotionCandidate } from './candidate.mjs'
 
 export function assertReady({ contexts, required, checks }) {
   if (!Array.isArray(required) || !required.length || required.some(name => typeof name !== 'string' || !name.trim())) throw new Error('Deployment readiness configuration required')
@@ -19,6 +20,7 @@ export function requiredContexts(config, releases) {
   }
   return [...contexts]
 }
+/** Legacy v1 retained-history compatibility only; the live publisher uses promotionCandidate. */
 export function selectPromotion(releases, mainFragments, ancestor) {
   const eligible = releases.filter(row => ancestor(row.manifest.sourceSha))
   const consumed = new Map()
@@ -61,47 +63,49 @@ export async function runPublisher() {
   const tip = git('rev-parse', `origin/${branch}`)
   if (git('rev-parse', 'HEAD') !== tip) throw new Error('Stale run; later run reconciles pending history')
   const map = JSON.parse(await (await import('node:fs/promises')).readFile('docs/architecture/environments.json','utf8'))
+  const policy = JSON.parse(await (await import('node:fs/promises')).readFile('tooling/releases/policy.json','utf8'))
+  if (policy.releaseModel !== 2) throw new Error('Upcoming release model is not adopted on this branch')
   const refs = map.products['super-admin-suit']
   const catalog = createCatalog(process.env.RELEASE_CATALOG_URL, process.env.RELEASE_CATALOG_TOKEN, refs[environment].projectRef)
-  let state = await catalog('release_catalog_state')
-  if (state.environment !== environment || !ancestor(state.anchorSha, tip)) throw new Error('Wrong catalog environment/anchor')
-  const policy = JSON.parse(await (await import('node:fs/promises')).readFile('tooling/releases/policy.json','utf8'))
-  if (state.anchorSha !== policy.activationAnchor) throw new Error('Catalog anchor differs from reviewed activation boundary')
-  const graph = workspaceGraph(process.cwd())
-  let releases
+  const state = await catalog('release_candidate_state')
+  if (state.model !== 2 || state.environment !== environment) throw new Error('Wrong catalog model/environment')
+  const main = git('rev-parse','origin/main')
+  let upcoming, staging
   if (environment === 'staging') {
-    if (!ancestor(state.cursorSha, tip)) throw new Error('Out-of-order ref or rollback: cursor is not an ancestor; no versions recycled')
-    const commits = git('rev-list', '--first-parent', '--reverse', `${state.cursorSha}..${tip}`).split('\n').filter(Boolean)
-    let parent = state.cursorSha
-    for (const sha of commits) {
-      if (git('rev-parse', `${sha}^1`) !== parent) throw new Error('Nonlinear staging provenance')
-      const fragments = collectBatch(sha, parent, graph)
-      await catalog('release_stage_accept', { p_request: { repository: process.env.GITHUB_REPOSITORY, ref: 'refs/heads/stg', sourceSha: sha, parentSha: parent, fragments } })
-      parent = sha
-    }
-    state = await catalog('release_catalog_state')
-    releases = state.manifests.filter(row => !row.publishedAt && ancestor(row.manifest.sourceSha, tip))
+    if (state.productionSha && git('rev-parse',`${state.productionSha}^{tree}`) !== git('rev-parse',`${main}^{tree}`)) throw new Error('Production baseline acknowledgment required before refreshing upcoming release')
+    const snapshot = { ...buildCandidate(main, tip), baseVersions: state.baseVersions }
+    upcoming = await catalog('release_candidate_refresh', { p_snapshot: snapshot })
   } else {
-    const staging = createCatalog(process.env.RELEASE_STAGING_URL, process.env.RELEASE_STAGING_TOKEN, refs.staging.projectRef)
-    const accepted = await staging('release_catalog_state')
-    if (accepted.environment !== 'staging' || accepted.anchorSha !== policy.activationAnchor) throw new Error('Missing staging catalog or mismatched activation boundary')
-    if (git('rev-list', '--no-merges', tip, '^origin/stg', `^${policy.activationAnchor}`)) throw new Error('Main contains commits without staging ancestry; route hotfixes through stg')
-    // Include all post-anchor fragments, not only HEAD's delta: multiple staging releases may ship together.
-    const baseline = new Set(fragmentTree(accepted.anchorSha).map(({row}) => row.id))
-    const fragments = fragmentTree(tip).map(({row})=>row).filter(row => !baseline.has(row.id))
-    releases = selectPromotion(accepted.manifests, fragments, sha => ancestor(sha, tip))
-    const stagedTip = releases.at(-1)?.manifest.sourceSha
-    if (!stagedTip || git('rev-parse', `${stagedTip}^{tree}`) !== git('rev-parse', `${tip}^{tree}`)) throw new Error('Production tree lacks an exact accepted staging snapshot')
+    staging = createCatalog(process.env.RELEASE_STAGING_URL, process.env.RELEASE_STAGING_TOKEN, refs.staging.projectRef)
+    // Recover a committed production write whose staging acknowledgment failed, before considering new work.
+    for (const receipt of state.promotions) await staging('release_candidate_acknowledge', { p_receipt: receipt })
+    const accepted = await staging('release_candidate_state')
+    if (accepted.model !== 2 || accepted.environment !== 'staging') throw new Error('Missing staging candidate authority')
+    upcoming = promotionCandidate(accepted.revisions, { mainParent: git('rev-parse',`${tip}^1`), tree: git('rev-parse',`${tip}^{tree}`), ancestor: sha => ancestor(sha,tip) })
   }
-  // Reservation may succeed while deployments fail. A later trusted event resumes publication.
   const [statuses, checkRuns] = await Promise.all([github(`commits/${tip}/status?per_page=100`), github(`commits/${tip}/check-runs?per_page=100`)] )
   if (checkRuns.total_count > 100 || statuses.total_count > 100) throw new Error('Readiness pagination requires explicit review')
-  const required = requiredContexts(JSON.parse(process.env.RELEASE_REQUIRED_CONTEXTS || 'null'), releases)
+  const required = requiredContexts(JSON.parse(process.env.RELEASE_REQUIRED_CONTEXTS || 'null'), [upcoming])
   assertReady({ contexts: statuses.statuses, checks: checkRuns.check_runs, required })
-  // Observe the live branch immediately before writing. Publishing advertises a deployed ancestor only.
-  if ((await github(`git/ref/heads/${branch}`)).object.sha !== tip) throw new Error('Branch advanced; resume on later reconciliation')
-  if (releases.length) await catalog('release_publish', { p_environment: environment, p_ref: `refs/heads/${branch}`, p_deployment_sha: tip, p_releases: releases })
-  console.log(`Release reconciliation completed: ${releases.length} immutable manifests; ${environment}`)
+  if ((await github(`git/ref/heads/${branch}`)).object.sha !== tip || (await github('git/ref/heads/main')).object.sha !== main) throw new Error('Branch advanced; reconcile the actual new branch diff')
+  if (environment === 'staging') {
+    await catalog('release_candidate_ready', { p_key: upcoming.key, p_digest: upcoming.digest })
+  } else {
+    const receipt = await catalog('release_candidate_promote', { p_release: upcoming, p_deployment_sha: tip,
+      p_main_parent: git('rev-parse',`${tip}^1`), p_main_tree: git('rev-parse',`${tip}^{tree}`) })
+    await staging('release_candidate_acknowledge', { p_receipt: receipt })
+    // Start the next private candidate immediately; only the staging runner may mark its preview ready.
+    git('fetch','origin','stg','main')
+    if (git('rev-parse','origin/main') === tip) {
+      const nextState = await staging('release_candidate_state')
+      const nextTip = git('rev-parse','origin/stg')
+      const nextSnapshot = { ...buildCandidate(tip,nextTip), baseVersions: nextState.baseVersions }
+      if ((await github('git/ref/heads/stg')).object.sha === nextTip && (await github('git/ref/heads/main')).object.sha === tip) {
+        await staging('release_candidate_refresh',{p_snapshot:nextSnapshot})
+      }
+    }
+  }
+  console.log(`Upcoming release reconciliation completed: ${environment}`)
 }
 if (process.argv[1] && import.meta.url === (await import('node:url')).pathToFileURL(process.argv[1]).href) {
   for (let attempt = 0; ; attempt++) {

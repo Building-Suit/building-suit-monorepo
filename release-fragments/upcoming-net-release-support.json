@@ -1,0 +1,9 @@
+{
+  "id": "upcoming-net-release-support",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [".github", "AGENTS.md", "docs", "tooling/releases", "release-changes", "apps/super-admin-suit", "packages/contracts", "packages/ui", "apps/shop-suit"],
+  "reason": "Private net-diff reconciliation, reviewed baseline and provenance preservation, forward-compatible catalog and shared presentation support. Only Shop enables the separate customer-facing upcoming-release projection."
+}
