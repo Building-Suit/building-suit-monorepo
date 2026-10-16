@@ -6973,6 +6973,98 @@ export type Database = {
           },
         ]
       }
+      shop_website_inquiries: {
+        Row: {
+          contact_key: string
+          created_at: string
+          id: string
+          locale: string
+          message: string
+          sender_contact: string
+          sender_name: string
+          shop_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          contact_key: string
+          created_at?: string
+          id?: string
+          locale: string
+          message: string
+          sender_contact: string
+          sender_name: string
+          shop_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          contact_key?: string
+          created_at?: string
+          id?: string
+          locale?: string
+          message?: string
+          sender_contact?: string
+          sender_name?: string
+          shop_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_inquiries_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_website_inquiry_events: {
+        Row: {
+          actor_user_id: string
+          id: string
+          inquiry_id: string
+          new_status: string
+          occurred_at: string
+          previous_status: string
+          shop_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          id?: string
+          inquiry_id: string
+          new_status: string
+          occurred_at?: string
+          previous_status: string
+          shop_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          id?: string
+          inquiry_id?: string
+          new_status?: string
+          occurred_at?: string
+          previous_status?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_inquiry_events_inquiry_id_shop_id_fkey"
+            columns: ["inquiry_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_website_inquiries"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_inquiry_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_website_logos: {
         Row: {
           data_url: string
@@ -11199,6 +11291,25 @@ export type Database = {
         Returns: undefined
       }
       shop_website_host_resolve: { Args: { p_slug: string }; Returns: Json }
+      shop_website_inquiries: {
+        Args: { p_page?: number; p_shop_id: string; p_status?: string }
+        Returns: Json
+      }
+      shop_website_inquiry_status: {
+        Args: { p_inquiry_id: string; p_shop_id: string; p_status: string }
+        Returns: undefined
+      }
+      shop_website_inquiry_submit: {
+        Args: {
+          p_contact: string
+          p_honeypot?: string
+          p_locale: string
+          p_message: string
+          p_name: string
+          p_slug: string
+        }
+        Returns: Json
+      }
       shop_website_logo_replace: {
         Args: { p_data_url: string; p_shop_id: string }
         Returns: Json
@@ -11221,6 +11332,10 @@ export type Database = {
         Returns: Json
       }
       shop_website_public_profile: { Args: { p_slug: string }; Returns: Json }
+      shop_website_showcase: {
+        Args: { p_page?: number; p_slug: string }
+        Returns: Json
+      }
       shop_xpay_apply_session: {
         Args: { p_event_id?: string; p_session: Json }
         Returns: Json

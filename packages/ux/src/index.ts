@@ -242,3 +242,4 @@ export { useReviewedCommand } from './composables/useReviewedCommand.ts'
 
 export { copyDocumentImage, renderDocumentImage, downloadDocumentImage } from './utils/documentImage.ts'
 export { readPublicLogo } from './utils/readPublicLogo.ts'
+export { useFreshPageOnRestore } from './composables/useFreshPageOnRestore.ts'

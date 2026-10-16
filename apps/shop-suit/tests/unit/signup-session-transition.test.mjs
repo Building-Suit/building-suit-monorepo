@@ -34,6 +34,8 @@ test('signup survives session establishment and provisioning while operational c
     .replace(/from (['"])vue\1/g, `from '${import.meta.resolve('vue')}'`)
   const code = `import { computed, watch } from '${import.meta.resolve('vue')}';
     const { ${Object.keys(env).join(', ')} } = globalThis.__signupSessionFixture;
+    const isTenantWebsiteRequest = () => false;
+    ${stripTypeScriptTypes(await readFile(new URL('../../app/composables/useShopPrivateApplication.ts', import.meta.url), 'utf8')).replace('export function', 'function')}
     ${compiled}`
   globalThis.__signupSessionFixture = env
   const { default: Root } = await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`)

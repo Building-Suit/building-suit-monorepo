@@ -92,6 +92,7 @@ const { data: permissionAccess, pending: permissionPending, error: permissionErr
 }, { watch: [currentId], default: () => ({ 'settings.manage': false }) })
 const canManage = computed(() => !permissionPending.value && !permissionError.value && permissionAccess.value?.['settings.manage'] === true)
 const { form: websiteProfileForm, optIn: websiteOwnerOptIn, open: websiteProfileOpen, view: websiteProfileView, edit: editWebsiteProfile, save: saveWebsiteProfile, logo: selectWebsiteLogo, publish: publishWebsiteProfile, unpublish: unpublishWebsiteProfile, refresh: refreshWebsiteProfile } = useWebsiteProfile(canManage)
+const { view: websiteInquiryView, filter: websiteInquiryFilter, status: websiteInquiryStatus, open: websiteInquiryOpen, edit: editWebsiteInquiry, save: saveWebsiteInquiry, refresh: refreshWebsiteInquiries, setPage: setWebsiteInquiryPage } = useWebsiteInquiries(canManage)
 const { form: websiteCatalogForm, open: websiteCatalogOpen, search: websiteCatalogSearch, view: websiteCatalogView, edit: editWebsiteCatalog, save: saveWebsiteCatalog, publish: publishWebsiteCatalog, image: selectWebsiteCatalogImage, refresh: refreshWebsiteCatalog, setPage: setWebsiteCatalogPage } = useWebsiteCatalog(canManage, refreshWebsiteProfile)
 const { slug: websiteSlug, open: websiteOpen, view: websiteAddressView, edit: editWebsiteAddress, save: saveWebsiteAddress, refresh: refreshWebsiteAddress } = useWebsiteAddress(canManage)
 async function retrySettings() { await Promise.all([reload(), refreshPermissions()]) }
@@ -455,6 +456,9 @@ async function selectDocumentLogo(selection: File | File[] | null) {
 </script>
 <template>
   <BsBusinessSettingsPage
+    v-model:website-inquiry-open="websiteInquiryOpen"
+    v-model:website-inquiry-status="websiteInquiryStatus"
+    v-model:website-inquiry-filter="websiteInquiryFilter"
     v-model:website-catalog-form="websiteCatalogForm"
     v-model:website-catalog-open="websiteCatalogOpen"
     v-model:website-catalog-search="websiteCatalogSearch"
@@ -473,6 +477,7 @@ async function selectDocumentLogo(selection: File | File[] | null) {
     v-model:mode-open="modeActionOpen"
     v-model:receipt-open="receiptActionOpen"
     v-model:location-open="locationDialogOpen"
+    :website-inquiry-view="websiteInquiryView"
     :website-catalog-view="websiteCatalogView"
     :website-profile-view="websiteProfileView"
     :website-address-view="websiteAddressView"
@@ -490,6 +495,10 @@ async function selectDocumentLogo(selection: File | File[] | null) {
     :locations-view="locationsView"
     :mode-options="modeOptions"
     :mode-label="modeLabel"
+    @edit-website-inquiry="editWebsiteInquiry"
+    @save-website-inquiry="saveWebsiteInquiry"
+    @retry-website-inquiries="refreshWebsiteInquiries()"
+    @website-inquiry-page="setWebsiteInquiryPage"
     @edit-website-catalog="editWebsiteCatalog"
     @save-website-catalog="saveWebsiteCatalog"
     @retry-website-catalog="refreshWebsiteCatalog()"

@@ -349,7 +349,12 @@
     "./types/websiteProfilePresentation": "./src/types/websiteProfilePresentation.ts",
     "./organisms/BsWebsiteProfileSettings.vue": "./src/organisms/BsWebsiteProfileSettings.vue",
     "./types/websiteCatalogPresentation": "./src/types/websiteCatalogPresentation.ts",
-    "./organisms/BsWebsiteCatalogSettings.vue": "./src/organisms/BsWebsiteCatalogSettings.vue"
+    "./organisms/BsWebsiteCatalogSettings.vue": "./src/organisms/BsWebsiteCatalogSettings.vue",
+    "./types/shopWebsitePresentation": "./src/types/shopWebsitePresentation.ts",
+    "./templates/BsShopWebsitePage.vue": "./src/templates/BsShopWebsitePage.vue",
+    "./templates/BsShopPublicEntryPage.vue": "./src/templates/BsShopPublicEntryPage.vue",
+    "./types/websiteInquiriesPresentation": "./src/types/websiteInquiriesPresentation.ts",
+    "./organisms/BsWebsiteInquiryInbox.vue": "./src/organisms/BsWebsiteInquiryInbox.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

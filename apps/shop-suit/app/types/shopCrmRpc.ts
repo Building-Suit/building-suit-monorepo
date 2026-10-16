@@ -4,6 +4,10 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      shop_website_showcase: {Args:{p_slug:string;p_page?:number};Returns:import('../../shared/publicWebsite').PublicWebsitePayload|null}
+      shop_website_inquiry_submit: {Args:{p_slug:string;p_name:string;p_contact:string;p_message:string;p_locale:string;p_honeypot?:string};Returns:{ok:boolean}}
+      shop_website_inquiries: {Args:{p_shop_id:string;p_status?:string;p_page?:number};Returns:import('../../shared/websiteInquiries').WebsiteInquiryInbox}
+      shop_website_inquiry_status: {Args:{p_shop_id:string;p_inquiry_id:string;p_status:string};Returns:undefined}
       shop_website_catalog: { Args: {p_shop_id:string;p_search?:string;p_page?:number}; Returns: import('../../shared/websiteCatalog').WebsiteCatalogSettings }
       shop_website_catalog_save: { Args: {p_shop_id:string;p_kind:import('../../shared/websiteCatalog').WebsiteCatalogKind;p_item_id:string;p_entry:import('../../shared/websiteCatalog').WebsiteCatalogEntry};Returns:undefined }
       shop_website_catalog_publish: { Args: {p_shop_id:string;p_kind:import('../../shared/websiteCatalog').WebsiteCatalogKind;p_item_id:string;p_published:boolean};Returns:undefined }
