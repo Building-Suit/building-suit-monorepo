@@ -364,7 +364,8 @@
     "./utils/appointmentReminderEmail": "./src/utils/appointmentReminderEmail.ts",
     "./templates/BsProductPreviewPage.vue": "./src/templates/BsProductPreviewPage.vue",
     "./templates/BsAccountSessionPage.vue": "./src/templates/BsAccountSessionPage.vue",
-    "./templates/BsPracticeOverviewPage.vue": "./src/templates/BsPracticeOverviewPage.vue"
+    "./templates/BsPracticeOverviewPage.vue": "./src/templates/BsPracticeOverviewPage.vue",
+    "./templates/BsLocationManagementPage.vue": "./src/templates/BsLocationManagementPage.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

@@ -38,6 +38,6 @@ export function doctorSetupForm(setup: DoctorPracticeSetup): DoctorSetupForm {
 export function validDoctorSetupForm(form: DoctorSetupForm, complete = false, profileOnly = false): boolean {
   if (form.displayName.length > 120 || form.practiceName.length > 160 || (!profileOnly && (form.locationName.length > 160 || form.timezone.length > 100))) return false
   if (complete && (!form.displayName.trim() || !form.practiceName.trim() || (!profileOnly && (!form.locationName.trim() || !form.timezone)))) return false
-  if (!profileOnly && form.timezone) { try { new Intl.DateTimeFormat('en', { timeZone: form.timezone }).format(0) } catch { return false } }
+  if (!profileOnly && form.timezone) { if (/^[+-]/.test(form.timezone)) return false; try { new Intl.DateTimeFormat('en', { timeZone: form.timezone }).format(0) } catch { return false } }
   return true
 }

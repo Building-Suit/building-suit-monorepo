@@ -79,7 +79,8 @@
     "BsPublicAppointmentBookingPage": "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue",
     "BsProductPreviewPage": "packages/ui/src/templates/BsProductPreviewPage.vue",
     "BsAccountSessionPage": "packages/ui/src/templates/BsAccountSessionPage.vue",
-    "BsPracticeOverviewPage": "packages/ui/src/templates/BsPracticeOverviewPage.vue"
+    "BsPracticeOverviewPage": "packages/ui/src/templates/BsPracticeOverviewPage.vue",
+    "BsLocationManagementPage": "packages/ui/src/templates/BsLocationManagementPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2733,6 +2734,16 @@
       "status": "implemented; synthetic owner-setup verification pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/locations.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsLocationManagementPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/locations.vue",
+      "purpose": "location-management",
+      "status": "implemented; synthetic location/context verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -2860,6 +2871,7 @@
     "BsPublicAppointmentBookingPage",
     "BsProductPreviewPage",
     "BsAccountSessionPage",
-    "BsPracticeOverviewPage"
+    "BsPracticeOverviewPage",
+    "BsLocationManagementPage"
   ]
 }

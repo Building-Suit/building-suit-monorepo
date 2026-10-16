@@ -68,6 +68,8 @@ export type Database = {
       locations: {
         Row: {
           archived_at: string | null
+          contact_address: string
+          contact_phone: string
           created_at: string
           id: string
           name: string
@@ -77,6 +79,8 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
+          contact_address?: string
+          contact_phone?: string
           created_at?: string
           id?: string
           name: string
@@ -86,6 +90,8 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          contact_address?: string
+          contact_phone?: string
           created_at?: string
           id?: string
           name?: string
@@ -244,8 +250,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      doctor_archive_location: {
+        Args: {
+          p_expected_version: number
+          p_key: string
+          p_location: string
+          p_practice: string
+        }
+        Returns: Json
+      }
       doctor_complete_onboarding: {
         Args: { p_draft_version: number; p_key: string }
+        Returns: Json
+      }
+      doctor_contexts: { Args: never; Returns: Json }
+      doctor_location_archive_status: {
+        Args: { p_location: string; p_practice: string }
+        Returns: Json
+      }
+      doctor_locations: {
+        Args: {
+          p_page?: number
+          p_practice: string
+          p_search?: string
+          p_size?: number
+        }
         Returns: Json
       }
       doctor_onboard: {
@@ -258,6 +287,14 @@ export type Database = {
         Returns: Json
       }
       doctor_practice_setup: { Args: never; Returns: Json }
+      doctor_resolve_context: {
+        Args: {
+          p_expected_version?: number
+          p_location: string
+          p_practice: string
+        }
+        Returns: Json
+      }
       doctor_runtime_contract: { Args: never; Returns: Json }
       doctor_save_onboarding_draft: {
         Args: {
@@ -278,6 +315,19 @@ export type Database = {
           p_key: string
           p_practice: string
           p_practice_name: string
+        }
+        Returns: Json
+      }
+      doctor_write_location: {
+        Args: {
+          p_address: string
+          p_expected_version?: number
+          p_key: string
+          p_location?: string
+          p_name: string
+          p_phone: string
+          p_practice: string
+          p_timezone: string
         }
         Returns: Json
       }

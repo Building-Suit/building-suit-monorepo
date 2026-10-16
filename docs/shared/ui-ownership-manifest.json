@@ -493,6 +493,16 @@
       "adapterBoundary": "Typed profile/location summaries and semantic navigation; Doctor owns verified enrollment, persisted draft, optimistic commands and all data access. Shared signup enrollment adds opt-in approved-field and draft-action presentation.",
       "task": "DOS-M1-007",
       "migrationStatus": "registered complete synthetic owner workspace"
+    },
+    {
+      "family": "location-management",
+      "owner": "packages/ui",
+      "components": [
+        "BsLocationManagementPage"
+      ],
+      "adapterBoundary": "Complete typed location directory and record-action dialogs. Doctor owns queries, explicit scope/capabilities, draft values, idempotent commands and archive policy. Shared UX owns modal lifecycle and scope reset.",
+      "task": "DOS-M1-008",
+      "migrationStatus": "registered complete administrative route"
     }
   ]
 }
