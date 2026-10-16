@@ -62,11 +62,27 @@ const previewRepair=names.find(name=>name.endsWith('_durable_release_preview.sql
 assert.ok(previewRepair)
 const qualifiedRepair=names.find(name=>name.endsWith('_qualified_release_baseline_pin.sql'))
 assert.ok(qualifiedRepair)
-const laterMigrations=names.filter(name=>name>qualifiedRepair)
+const internalConsumerMigration=names.find(name=>name.endsWith('_release_internal_doctor_consumer.sql'))
+assert.ok(internalConsumerMigration)
+// Current-candidate provenance prerequisites must be present even in the
+// intentionally pre-repair BASELINE_PIN reproduction. Do not filter the candidate.
+const laterMigrations=names.filter(name=>name>qualifiedRepair && name!==internalConsumerMigration)
+const registrationTables=['suit_registry','admin_environments','suit_environment_bindings','adapter_capability_policy','navigation_items','release_candidate_baseline','release_candidate_versions','release_manifests','release_candidate_revisions','release_candidate_pointer','release_candidate_promotions']
+const registrationSnapshot=()=>sql(`select jsonb_build_object(${registrationTables.map(name=>`'${name}',(select coalesce(jsonb_agg(to_jsonb(r) order by to_jsonb(r)::text),'[]'::jsonb) from public.${name} r)`).join(',')});`)
 for(const name of names.filter(name=>name!==qualifiedRepair && !laterMigrations.includes(name))) {
   if(name.endsWith('_release_cardinality_location.sql')) retainedSource=sql("select md5(prosrc) from pg_proc where oid='public.release_candidate_refresh(jsonb)'::regprocedure;")
   console.log(`Apply SAS migration ${name}`)
+  const beforeRegistration=name===internalConsumerMigration?registrationSnapshot():null
   sql(readFileSync(new URL(name,migrations),'utf8'))
+  if(beforeRegistration!==null) {
+    assert.equal(registrationSnapshot(),beforeRegistration,'Internal consumer recognition cannot change operational registration or release history/baselines')
+    assert.equal(sql("select count(*) from super_admin_private.release_internal_consumers where stable_key='doctor-suit';"),'1')
+    assert.equal(sql("select count(*) from public.suit_registry where stable_key='doctor-suit';"),'0','Doctor is not an operational/public product')
+    for(const role of ['anon','authenticated','service_role']) assert.equal(sql(`select has_table_privilege('${role}','super_admin_private.release_internal_consumers','SELECT');`),'f')
+    sql(readFileSync(new URL(name,migrations),'utf8'))
+    assert.equal(registrationSnapshot(),beforeRegistration,'Idempotent replay preserves every registration and release record')
+    console.log('Doctor private provenance recognized without operational/public registration, baseline or privilege changes')
+  }
   if(name.startsWith('20261015030053')) {
 sql(`insert into public.admin_environments(id,stable_key,environment_kind,display_name,status) values('a0bb00a1-747c-4cda-8521-9927d0b53065','sas-staging','staging','{}','active');
 insert into public.suit_registry(id,stable_key,display_name,asset_reference,adapter_contract_version,status) values('7924a9af-a970-4360-a0d0-76df4e18dbfc','shop-suit','{"en":"Shop","ar":"المتجر"}','/brand/fixture.svg','1.0','active');
@@ -141,6 +157,9 @@ assert.equal(sql('select row_to_json(b) from public.release_candidate_baseline b
 assert.equal(sql("select to_regclass('super_admin_private.release_candidate_baseline_before_relation_repair') is null;"),'t')
 console.log('Read-only metadata inventory passed: scalar BEGIN ATOMIC table dependency, external policy, publication membership and unchanged baseline')
 const snapshot={...buildCandidate('origin/main','HEAD'),baseVersions:state.baseVersions}
+const publicDoctor={id:'fixture-public-doctor',task:'DOS-M1-002',suits:['doctor-suit'],classification:'minor',disposition:'public',paths:['apps/doctor-suit'],reason:'Attempt public allocation for an internal-only consumer',notes:{title:{en:'Doctor preview',ar:'معاينة الطبيب'},summary:{en:'Doctor preview',ar:'معاينة الطبيب'},details:{en:'Doctor preview',ar:'معاينة الطبيب'}}}
+await assert.rejects(catalog('release_candidate_trace',{p_snapshot:{...snapshot,changes:[publicDoctor]}}),/UNREGISTERED_SUIT/,'Private recognition never grants Doctor public release authority')
+assert.deepEqual(await catalog('release_candidate_state'),state,'Rejected Doctor public allocation preserves release state')
 assert.deepEqual(await catalog('release_candidate_trace',{p_snapshot:snapshot}),{guardRejected:true})
 await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:snapshot}),/CANDIDATE_CARDINALITY_BASELINE_PIN/)
 assert.deepEqual(await catalog('release_candidate_state'),state,'Original guard rejection rolls back without consuming history/version')
