@@ -64,6 +64,10 @@ jobs:
           retention-days: 7
       - name: Verify disposable release catalog transactions and authorization
         run: node tooling/releases/catalog-disposable.mjs
+      - name: Verify actual catalog adapter over disposable PostgREST and full SAS schema
+        env:
+          RELEASE_POSTGREST_DISPOSABLE: '1'
+        run: node tooling/releases/catalog-postgrest-disposable.mjs
   verify:
     needs: [review, branch-policy]
     # Stacked feature PRs get review checks and relevant local tests. Build the combined batch once.
