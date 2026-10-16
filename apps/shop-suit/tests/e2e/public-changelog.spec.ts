@@ -43,6 +43,7 @@ for (const locale of ['en','ar'] as const) for (const theme of ['light','dark'] 
     await expect(section.locator('article')).toHaveCount(3)
     const fullLink = section.getByRole('link', { name: locale === 'ar' ? 'عرض سجل التحديثات الكامل' : 'View the full changelog' })
     await expect(fullLink).toHaveCSS('color', 'rgb(216, 155, 66)')
+    await page.getByRole('button', { name: locale === 'ar' ? 'رفض الاختياري' : 'Reject optional', exact: true }).click()
     await page.setViewportSize({width:390,height:844})
     expect(await section.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBeTruthy()
     await section.screenshot({path:testInfo.outputPath(`${locale}-${theme}-landing.png`)})
