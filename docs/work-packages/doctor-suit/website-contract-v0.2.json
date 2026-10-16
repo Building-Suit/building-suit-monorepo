@@ -1,0 +1,458 @@
+{
+  "version": 1,
+  "task": "DOS-M1-001",
+  "source_commit": "4ca7110f4d6efa828e0b41213e5c059bf02ba9db",
+  "authorization": {
+    "source": "2026-10-16 direct delegation",
+    "milestones": [
+      "DOS-M1",
+      "DOS-M2",
+      "DOS-M3"
+    ],
+    "storage": "parent-reported independently verified: 104 tasks, 117 requirements, 37 decisions, 244 edges",
+    "execution": "direct GitHub implementation; no Automation activation",
+    "automation_registration": "unverified; inactive per parent; not required for direct implementation",
+    "publication": "focused GitHub PRs; parent coordinates reviewed passing staging merges",
+    "providers": "user-managed connections; no hosted operations"
+  },
+  "scope": {
+    "data": "synthetic-only",
+    "M1": [
+      "public preview",
+      "doctor administrative portal",
+      "secretary administrative portal"
+    ],
+    "excluded": [
+      "real patient data",
+      "clinical prescribing in M1",
+      "payments",
+      "mobile apps",
+      "production availability"
+    ]
+  },
+  "ownership": {
+    "owner": "doctor",
+    "practice_spans_locations": true,
+    "location_owns_chart": false,
+    "matching_contacts_merge_identity": false,
+    "secretary_memberships": "independent per practice; explicit location and capability grants"
+  },
+  "routes": [
+    {
+      "path": "/",
+      "audience": "public",
+      "template": "BsLandingPage",
+      "capability": "public.read",
+      "task": "DOS-M1-005",
+      "status": "planned"
+    },
+    {
+      "path": "/sign-in",
+      "audience": "auth",
+      "template": "BsSignInPage",
+      "capability": "auth.self",
+      "task": "DOS-M1-006",
+      "status": "planned"
+    },
+    {
+      "path": "/recover",
+      "audience": "auth",
+      "template": "BsPasswordRecoveryPage",
+      "capability": "auth.self",
+      "task": "DOS-M1-006",
+      "status": "planned"
+    },
+    {
+      "path": "/verify",
+      "audience": "auth",
+      "template": "BsEmailVerificationPage",
+      "capability": "auth.self",
+      "task": "DOS-M1-006",
+      "status": "planned"
+    },
+    {
+      "path": "/onboarding",
+      "audience": "doctor",
+      "template": "BsSignupPage",
+      "capability": "practice.create",
+      "task": "DOS-M1-007",
+      "status": "planned"
+    },
+    {
+      "path": "/workspace",
+      "audience": "member",
+      "template": "BsOperationsDashboardPage",
+      "capability": "dashboard.read",
+      "task": "DOS-M1-015",
+      "status": "planned"
+    },
+    {
+      "path": "/locations",
+      "audience": "member",
+      "template": "BsOperationalRecordsPage",
+      "capability": "locations.manage",
+      "task": "DOS-M1-008",
+      "status": "planned"
+    },
+    {
+      "path": "/team",
+      "audience": "doctor",
+      "template": "BsAccessManagementPage",
+      "capability": "members.manage",
+      "task": "DOS-M1-009",
+      "status": "planned"
+    },
+    {
+      "path": "/invitations/accept",
+      "audience": "auth",
+      "template": "BsInvitationAcceptancePage",
+      "capability": "invitation.accept",
+      "task": "DOS-M1-009",
+      "status": "planned"
+    },
+    {
+      "path": "/patients",
+      "audience": "member",
+      "template": "BsCustomerDirectoryPage",
+      "capability": "patients.read",
+      "task": "DOS-M1-011",
+      "status": "planned"
+    },
+    {
+      "path": "/patients/[id]",
+      "audience": "member",
+      "template": "BsCustomerProfilePage",
+      "capability": "patients.read",
+      "task": "DOS-M1-012",
+      "status": "planned"
+    },
+    {
+      "path": "/availability",
+      "audience": "member",
+      "template": "BsBusinessSettingsPage",
+      "capability": "availability.manage",
+      "task": "DOS-M1-013",
+      "status": "planned"
+    },
+    {
+      "path": "/appointments",
+      "audience": "member",
+      "template": "BsAppointmentsPage",
+      "capability": "appointments.read",
+      "task": "DOS-M1-014",
+      "status": "planned"
+    },
+    {
+      "path": "/settings",
+      "audience": "member",
+      "template": "BsBusinessSettingsPage",
+      "capability": "profile.self",
+      "task": "DOS-M1-016",
+      "status": "planned"
+    },
+    {
+      "path": "/audit",
+      "audience": "doctor",
+      "template": "BsAuditHistoryPage",
+      "capability": "audit.read",
+      "task": "DOS-M1-017",
+      "status": "planned"
+    }
+  ],
+  "permissions": [
+    {
+      "capability": "public.read",
+      "doctor": "public",
+      "secretary": "public",
+      "enforcement": "server"
+    },
+    {
+      "capability": "auth.self",
+      "doctor": "self",
+      "secretary": "self",
+      "enforcement": "server"
+    },
+    {
+      "capability": "practice.create",
+      "doctor": "self",
+      "secretary": "deny",
+      "enforcement": "server"
+    },
+    {
+      "capability": "dashboard.read",
+      "doctor": "practice",
+      "secretary": "grant",
+      "enforcement": "server"
+    },
+    {
+      "capability": "locations.manage",
+      "doctor": "practice",
+      "secretary": "grant",
+      "enforcement": "server"
+    },
+    {
+      "capability": "members.manage",
+      "doctor": "practice",
+      "secretary": "deny",
+      "enforcement": "server"
+    },
+    {
+      "capability": "invitation.accept",
+      "doctor": "recipient",
+      "secretary": "recipient",
+      "enforcement": "server"
+    },
+    {
+      "capability": "patients.read",
+      "doctor": "practice",
+      "secretary": "grant",
+      "enforcement": "server"
+    },
+    {
+      "capability": "patients.write",
+      "doctor": "practice",
+      "secretary": "grant",
+      "enforcement": "server"
+    },
+    {
+      "capability": "documents.read",
+      "doctor": "practice",
+      "secretary": "grant",
+      "enforcement": "server"
+    },
+    {
+      "capability": "documents.write",
+      "doctor": "practice",
+      "secretary": "grant",
+      "enforcement": "server"
+    },
+    {
+      "capability": "availability.manage",
+      "doctor": "practice",
+      "secretary": "grant",
+      "enforcement": "server"
+    },
+    {
+      "capability": "appointments.read",
+      "doctor": "practice",
+      "secretary": "grant",
+      "enforcement": "server"
+    },
+    {
+      "capability": "appointments.write",
+      "doctor": "practice",
+      "secretary": "grant",
+      "enforcement": "server"
+    },
+    {
+      "capability": "queue.manage",
+      "doctor": "practice",
+      "secretary": "grant",
+      "enforcement": "server"
+    },
+    {
+      "capability": "profile.self",
+      "doctor": "self",
+      "secretary": "self",
+      "enforcement": "server"
+    },
+    {
+      "capability": "audit.read",
+      "doctor": "practice",
+      "secretary": "deny",
+      "enforcement": "server"
+    },
+    {
+      "capability": "clinical.sign",
+      "doctor": "unavailable",
+      "secretary": "deny",
+      "enforcement": "server"
+    },
+    {
+      "capability": "prescriptions.sign",
+      "doctor": "unavailable",
+      "secretary": "deny",
+      "enforcement": "server"
+    }
+  ],
+  "journeys": [
+    {
+      "id": "doctor-alone",
+      "actors": [
+        "doctor-a"
+      ],
+      "practice_owner": "doctor-a",
+      "locations": [
+        "location-a1",
+        "location-a2"
+      ],
+      "steps": [
+        "authenticate",
+        "onboard-idempotently",
+        "create-two-locations",
+        "create-patient",
+        "book",
+        "check-in",
+        "review-queue",
+        "review-profile"
+      ],
+      "acceptance": [
+        "DOS-M1-007",
+        "DOS-M1-008",
+        "DOS-M1-011",
+        "DOS-M1-014",
+        "DOS-M1-020"
+      ]
+    },
+    {
+      "id": "shared-secretary",
+      "actors": [
+        "doctor-a",
+        "doctor-b",
+        "secretary"
+      ],
+      "practice_owner": [
+        "doctor-a",
+        "doctor-b"
+      ],
+      "locations": [
+        "location-a1",
+        "location-b1"
+      ],
+      "steps": [
+        "accept-recipient-bound-invitation-a",
+        "accept-recipient-bound-invitation-b",
+        "switch-context-clear-drafts",
+        "query-granted-location",
+        "deny-other-practice",
+        "revoke-and-deny-next-request"
+      ],
+      "acceptance": [
+        "DOS-M1-009",
+        "DOS-M1-010",
+        "DOS-M1-020"
+      ]
+    }
+  ],
+  "synthetic_policy": {
+    "identities": "deterministic disposable two-doctor/shared-secretary/outsider fixtures; example.test contacts",
+    "data_source": "generated fixtures only; no customer imports",
+    "backend": "loopback disposable Doctor instance only",
+    "external_delivery": false,
+    "logs": "fixed safe errors, IDs and counts; no tokens or patient payloads",
+    "documents": "private bucket; current backend authorization on every access",
+    "retention": "archive linked records; real erasure/retention remains M7"
+  },
+  "open_decisions": [
+    "DOS-M1-D005",
+    "DOS-M2-GATE-CLINICAL",
+    "DOS-M2-GATE-CATALOGUE",
+    "DOS-M3-GATE-PROVIDER"
+  ],
+  "historical_reconciliation": {
+    "result": "no maintained Clinic/Doctor app found in inspected stg; historical counts remain unverified",
+    "policy": "preserve all recovered IDs; absence is not proof of no historical implementation"
+  },
+  "acceptance": [
+    {
+      "task_id": "DOS-M1-001",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-001"
+    },
+    {
+      "task_id": "DOS-M1-002",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-002"
+    },
+    {
+      "task_id": "DOS-M1-003",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-003"
+    },
+    {
+      "task_id": "DOS-M1-004",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-004"
+    },
+    {
+      "task_id": "DOS-M1-005",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-005"
+    },
+    {
+      "task_id": "DOS-M1-006",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-006"
+    },
+    {
+      "task_id": "DOS-M1-007",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-007"
+    },
+    {
+      "task_id": "DOS-M1-008",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-008"
+    },
+    {
+      "task_id": "DOS-M1-009",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-009"
+    },
+    {
+      "task_id": "DOS-M1-010",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-010"
+    },
+    {
+      "task_id": "DOS-M1-011",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-011"
+    },
+    {
+      "task_id": "DOS-M1-012",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-012"
+    },
+    {
+      "task_id": "DOS-M1-013",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-013"
+    },
+    {
+      "task_id": "DOS-M1-014",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-014"
+    },
+    {
+      "task_id": "DOS-M1-015",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-015"
+    },
+    {
+      "task_id": "DOS-M1-016",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-016"
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-017"
+    },
+    {
+      "task_id": "DOS-M1-018",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-018"
+    },
+    {
+      "task_id": "DOS-M1-019",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-019"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "status": "pending",
+      "source": "planning-v0.4/DOS-M1.json#DOS-M1-020"
+    }
+  ]
+}
