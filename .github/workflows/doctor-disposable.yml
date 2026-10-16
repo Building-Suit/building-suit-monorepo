@@ -100,12 +100,8 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Build for the loopback synthetic protocol fixture
+      - name: Build with provider configuration absent
         run: pnpm --filter @building-suit/doctor-suit build
-        env:
-          APP_URL: http://127.0.0.1:4337
-          DOCTOR_SUPABASE_URL: http://127.0.0.1:4338
-          DOCTOR_SUPABASE_PUBLISHABLE_KEY: sb_publishable_synthetic_protocol_fixture
       - run: pnpm exec playwright install --with-deps chromium
       - name: Verify account protocol journeys without external mail or credential artifacts
         # The HTTP fixture does not prove actual Supabase Auth service acceptance.

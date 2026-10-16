@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { doctorProviderConfiguration, doctorReturnPath, doctorPkceCallback } from '../../app/utils/authConfiguration.ts'
 import { authFailure, createDoctorAuthController, doctorAuthState } from '../../app/utils/authController.ts'
+import { assertLocalFixtureEnvironment } from '../e2e/safety.mjs'
 
 const identity = { userId: 'doctor-a', sessionId: 'session-a', practiceId: null }
 function fixture(overrides = {}) {
@@ -18,6 +19,12 @@ test('DOS-M1-006: missing own provider variables never reuse another product con
   const config = doctorProviderConfiguration({ SUPABASE_URL: 'https://other-product.example', SUPABASE_KEY: 'sb_publishable_other' })
   assert.equal(config.enabled, false)
   assert.equal(config.key, '')
+})
+test('DOS-M1-006: browser fixture guards reject both build-time and runtime remote Doctor targets', () => {
+  for (const key of ['DOCTOR_SUPABASE_URL', 'NUXT_PUBLIC_DOCTOR_AUTH_URL', 'NUXT_PUBLIC_DOCTOR_AUTH_ORIGIN']) {
+    assert.throws(() => assertLocalFixtureEnvironment({ [key]: 'https://remote.example.test' }), /Remote or ambiguous fixture target rejected/)
+    assert.doesNotThrow(() => assertLocalFixtureEnvironment({ [key]: 'http://127.0.0.1:4338' }))
+  }
 })
 test('DOS-M1-006: publishable keys, environment-bound cookies and callback origins are explicit', () => {
   const values = { DOCTOR_SUPABASE_URL: 'http://127.0.0.1:65321', DOCTOR_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_synthetic' }

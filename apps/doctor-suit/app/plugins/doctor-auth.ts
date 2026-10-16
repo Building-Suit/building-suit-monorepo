@@ -3,28 +3,30 @@ import { createBrowserClient, createServerClient, parseCookieHeader, serializeCo
 import type { Database } from '../types/database.types'
 import { createDoctorAuthController, doctorAuthState } from '../utils/authController'
 import { doctorAuthBackend } from '../utils/authBackend'
+import { doctorProviderConfiguration } from '../utils/authConfiguration'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig()
   const settings = config.public.doctorAuth
+  const provider = doctorProviderConfiguration({ APP_ENV: settings.environment, APP_URL: settings.origin, DOCTOR_SUPABASE_URL: settings.url, DOCTOR_SUPABASE_PUBLISHABLE_KEY: settings.key })
   let client: SupabaseClient<Database> | undefined
-  if (settings.configured) {
+  if (settings.configured && provider.enabled) {
     const options = {
-      cookieOptions: { name: settings.cookiePrefix, sameSite: 'lax' as const, path: '/', secure: settings.origin.startsWith('https:') },
+      cookieOptions: { name: provider.cookiePrefix, sameSite: 'lax' as const, path: '/', secure: provider.origin.startsWith('https:') },
       auth: { flowType: 'pkce' as const, detectSessionInUrl: false },
     }
     if (import.meta.server) {
       const incoming = useRequestHeader('cookie') || ''
       const outgoing = useResponseHeader('set-cookie')
-      client = createServerClient<Database>(settings.url, settings.key, { ...options, cookies: {
-        getAll: () => parseCookieHeader(incoming).filter(cookie => cookie.name.startsWith(settings.cookiePrefix)).map(cookie => ({ name: cookie.name, value: cookie.value || '' })),
+      client = createServerClient<Database>(provider.url, provider.key, { ...options, cookies: {
+        getAll: () => parseCookieHeader(incoming).filter(cookie => cookie.name.startsWith(provider.cookiePrefix)).map(cookie => ({ name: cookie.name, value: cookie.value || '' })),
         setAll: cookies => {
           const previous = outgoing.value
           outgoing.value = [...(Array.isArray(previous) ? previous : previous ? [String(previous)] : []), ...cookies.map(({ name, value, options }) => serializeCookieHeader(name, value, options))]
         },
       } })
     } else {
-      client = createBrowserClient<Database>(settings.url, settings.key, { ...options, isSingleton: false })
+      client = createBrowserClient<Database>(provider.url, provider.key, { ...options, isSingleton: false })
     }
   }
   const locked = useCookie<string | null>(`bs-doctor-${settings.environment}-locked`, { sameSite: 'lax', path: '/', secure: settings.origin.startsWith('https:') })
