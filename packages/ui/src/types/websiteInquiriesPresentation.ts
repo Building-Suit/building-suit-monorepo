@@ -1,0 +1,2 @@
+export type BsWebsiteInquiryRow={id:string;name:string;contact:string;message:string;createdLabel:string;statusLabel:string}
+export type BsWebsiteInquiryInboxView={title:string;help:string;loading:boolean;denied:boolean;failed:boolean;pending:boolean;dirty:boolean;error:string;rows:BsWebsiteInquiryRow[];selected:BsWebsiteInquiryRow|null;page:number;total:number;statusOptions:Array<{value:string;label:string}>;copy:Record<'loading'|'denied'|'failed'|'retry'|'name'|'contact'|'message'|'created'|'status'|'open'|'save'|'cancel'|'all'|'previous'|'next',string>}

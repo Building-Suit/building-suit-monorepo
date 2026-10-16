@@ -386,6 +386,59 @@
       "adapterBoundary": "Products supply translated purposes and versioned consent state; shared UX owns validation, focus and optional analytics transport. No provider access before opt-in.",
       "task": "SS-SEO-PRIVACY-001",
       "migrationStatus": "implemented; verification recorded in Shop privacy runbook"
+    },
+    {
+      "family": "website-address",
+      "owner": "packages/ui",
+      "components": [
+        "BsWebsiteAddressSettings"
+      ],
+      "adapterBoundary": "Shop owns slug generation, validation, authorized RPCs and typed view projections; useRecordAction in packages/ux owns modal, pending and dirty-state behavior. Saving never publishes.",
+      "task": "SS-WEB-SLUG-001",
+      "migrationStatus": "additive optional settings presentation; no Suit-local components"
+    },
+    {
+      "family": "website-profile",
+      "owner": "packages/ui",
+      "components": [
+        "BsWebsiteProfileSettings"
+      ],
+      "adapterBoundary": "Shop owns private draft/publication rules, authorized tenant-scoped RPCs and typed values; useRecordAction and raster decoding in packages/ux own interaction mechanics. Catalog readiness is a server-owned integration boundary.",
+      "task": "SS-WEB-PROFILE-001",
+      "migrationStatus": "optional settings organism inside the existing registered complete business settings template; no local presentation"
+    },
+    {
+      "family": "website-catalog",
+      "owner": "packages/ui",
+      "components": [
+        "BsWebsiteCatalogSettings"
+      ],
+      "adapterBoundary": "Shop owns owner-only selective publication, source adapters, public allowlisting and cache/readiness invalidation. Shared presentation accepts typed rows/forms and emits semantic actions; useRecordAction and bounded raster decoding remain in packages/ux.",
+      "task": "SS-WEB-CATALOG-001",
+      "migrationStatus": "optional organism inside existing registered complete business settings template; no local presentation"
+    },
+    {
+      "family": "tenant-public-showcase",
+      "owner": "packages/ui",
+      "components": [
+        "BsShopPublicEntryPage",
+        "BsShopWebsitePage",
+        "BsWebsiteInquiryInbox"
+      ],
+      "adapterBoundary": "Shop owns trusted Host resolution, anonymous allowlisted reads, inquiry validation/rate limits, owner permissions and SEO. Shared complete entry template selects the existing marketing template or tenant showcase from a finite typed union. UX owns record/form interaction and BFCache refresh mechanics.",
+      "task": "SS-WEB-PUBLIC-001",
+      "migrationStatus": "registered host-aware root page and optional private owner inbox; no app-local presentation"
+    },
+    {
+      "family": "appointment-access",
+      "owner": "packages/ui",
+      "components": [
+        "BsAppointmentsPage",
+        "BsAppointmentCalendar"
+      ],
+      "adapterBoundary": "Shared appointment templates show controlled one-time credential presentation and semantic issue/rotate/revoke commands. Shop owns appointment permissions, secret lifetime, normalized phone binding and request-scoped commands. Existing shared overlay and record-action controllers remain in packages/ux.",
+      "task": "SS-WEB-APPT-ACCESS-001",
+      "migrationStatus": "optional typed access panel inside existing registered complete appointments template; no new customer portal or booking route"
     }
   ]
 }

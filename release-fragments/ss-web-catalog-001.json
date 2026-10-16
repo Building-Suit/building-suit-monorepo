@@ -1,0 +1,27 @@
+{
+  "id": "ss-web-catalog-001",
+  "task": "SS-WEB-CATALOG-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit"
+  ],
+  "reason": "Adds explicit owner-managed selective public product/service configuration with private defaults, independent operational state and actual profile publication readiness.",
+  "notes": {
+    "title": {
+      "en": "Choose your public catalog",
+      "ar": "اختر عناصر الكتالوج العام"
+    },
+    "summary": {
+      "en": "Publish selected products and services independently from your internal catalog.",
+      "ar": "انشر منتجات وخدمات مختارة بشكل مستقل عن الكتالوج الداخلي."
+    },
+    "details": {
+      "en": "Owners can configure public details, an optional image, display order and whether prices appear. Hidden prices use Contact for price. Archived items disappear while their settings are retained, and a published item now counts toward profile readiness. Website rendering follows separately.",
+      "ar": "يمكن للمالك ضبط البيانات العامة وصورة اختيارية وترتيب العرض وإظهار الأسعار. عند إخفاء السعر يظهر تواصل لمعرفة السعر. تختفي العناصر المؤرشفة مع الاحتفاظ بإعداداتها، ويُحتسب العنصر المنشور ضمن جاهزية الملف العام. يأتي عرض الموقع في خطوة منفصلة."
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "ss-web-slug-001",
+  "task": "SS-WEB-SLUG-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit"
+  ],
+  "reason": "Adds a private website-address reservation editor and secure URL foundation. Saving an address never publishes a customer website.",
+  "notes": {
+    "title": {
+      "en": "Reserve your shop website address",
+      "ar": "احجز عنوان موقع متجرك"
+    },
+    "summary": {
+      "en": "Choose a website address separately from your shop name before publishing becomes available.",
+      "ar": "اختر عنواناً مستقلاً عن اسم متجرك قبل إتاحة نشر الموقع."
+    },
+    "details": {
+      "en": "Review or edit your suggested address in business settings. Renaming your shop keeps its address, and previous addresses remain reserved to your shop after an address change. Websites remain unpublished in this phase.",
+      "ar": "راجع العنوان المقترح أو عدّله من إعدادات النشاط. تغيير اسم المتجر لا يغيّر عنوانه، وتظل العناوين السابقة محجوزة لنفس المتجر عند تغيير العنوان. تظل المواقع غير منشورة في هذه المرحلة."
+    }
+  }
+}

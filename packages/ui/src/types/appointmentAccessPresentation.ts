@@ -1,0 +1,1 @@
+export type BsAppointmentAccessView={title:string;help:string;loading:boolean;pending:boolean;error:string;code:string;enabled:boolean;usablePhone:boolean;copy:Record<'loading'|'issue'|'rotate'|'revoke'|'close'|'code'|'phoneRequired'|'enabled'|'disabled'|'oneTime',string>}

@@ -15,6 +15,7 @@ async function fixture(path = '/dashboard') {
   let callback, cleanup, resets = 0, unsubscribed = false
   const navigation = [], timers = [], removed = []
   const env = {
+    isTenantWebsiteRequest: () => false,
     defineNuxtPlugin: plugin => plugin.setup,
     useSupabaseClient: () => ({ auth: { onAuthStateChange: fn => {
       callback = fn

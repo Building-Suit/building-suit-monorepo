@@ -72,7 +72,9 @@
     "BsCommissionPolicyPage": "packages/ui/src/templates/BsCommissionPolicyPage.vue",
     "BsShopTaxSettingsPage": "packages/ui/src/templates/BsShopTaxSettingsPage.vue",
     "BsChangelogPage": "packages/ui/src/templates/BsChangelogPage.vue",
-    "BsEtaSettingsPage": "packages/ui/src/templates/BsEtaSettingsPage.vue"
+    "BsEtaSettingsPage": "packages/ui/src/templates/BsEtaSettingsPage.vue",
+    "BsShopPublicEntryPage": "packages/ui/src/templates/BsShopPublicEntryPage.vue",
+    "BsShopWebsitePage": "packages/ui/src/templates/BsShopWebsitePage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -1610,7 +1612,8 @@
       "domainAdapter": "apps/shop-suit/app/pages/appointments/index.vue",
       "dependencies": [
         "@building-suit/ui/types/appointmentsPresentation",
-        "~/types/shopCrmRpc"
+        "~/types/shopCrmRpc",
+        "@building-suit/ui/types/appointmentAccessPresentation"
       ],
       "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
       "purpose": "appointments",
@@ -1932,20 +1935,19 @@
       "source": "apps/shop-suit/app/pages/index.vue",
       "kind": "route",
       "currentSharedTemplates": [
-        "packages/ui/src/templates/BsLandingPage.vue"
+        "packages/ui/src/templates/BsShopPublicEntryPage.vue"
       ],
       "renderedBsComponents": [
-        "BsLandingPage"
+        "BsShopPublicEntryPage"
       ],
-      "destination": "packages/ui/src/templates/BsLandingPage.vue",
+      "destination": "packages/ui/src/templates/BsShopPublicEntryPage.vue",
       "status": "verified-local",
       "domainAdapter": "apps/shop-suit/app/pages/index.vue",
       "dependencies": [
-        "@building-suit/contracts",
-        "~/types/plans"
+        "@building-suit/ui/types/shopWebsitePresentation"
       ],
-      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
-      "purpose": "product-landing"
+      "verification": "SS-WEB-PUBLIC-001: exact task browser/API and marketing parity coverage",
+      "purpose": "host-aware-shop-public-entry"
     },
     {
       "source": "apps/shop-suit/app/pages/inventory/index.vue",
@@ -2684,6 +2686,8 @@
     "BsShopTaxSettingsPage",
     "BsServiceFulfillmentPage",
     "BsChangelogPage",
-    "BsEtaSettingsPage"
+    "BsEtaSettingsPage",
+    "BsShopPublicEntryPage",
+    "BsShopWebsitePage"
   ]
 }

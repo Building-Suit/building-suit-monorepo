@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BsAppointmentsCopy, BsAppointmentsView } from '../types/appointmentsPresentation'
 defineProps<{ days: BsAppointmentsView['days']; view: string; copy: Pick<BsAppointmentsCopy, 'title' | 'empty' | 'actions' | 'edit' | 'reschedule' | 'saving' | 'history'>; transitioning: boolean }>()
-const emit = defineEmits<{ edit: [id: string]; transition: [id: string, status: string]; day: [date: string]; block: [id: string] }>()
+const emit = defineEmits<{ access: [id:string]; edit: [id: string]; transition: [id: string, status: string]; day: [date: string]; block: [id: string] }>()
 </script>
 <template>
   <section class="bs-appointment-calendar" :class="[`bs-appointment-calendar--${view}`]" :aria-label="copy.title">
@@ -13,8 +13,9 @@ const emit = defineEmits<{ edit: [id: string]; transition: [id: string, status: 
         <li v-for="appointment in day.appointments" :key="appointment.id" class="bs-appointment-event" :data-tone="appointment.tone">
           <div class="bs-appointment-event__summary"><strong class="bs-appointment-event__time">{{ appointment.time }}</strong><BsStatusBadge :status="appointment.status" :label="appointment.statusLabel" :tone="appointment.tone" /></div>
           <p class="bs-appointment-event__name">{{ appointment.customerName }}</p><p class="bs-appointment-event__detail">{{ appointment.detail }}</p>
-          <BsDisclosure v-if="appointment.canEdit || appointment.actions.length || appointment.history.length || appointment.link" :summary="copy.actions || copy.edit" density="compact">
+          <BsDisclosure v-if="appointment.access || appointment.canEdit || appointment.actions.length || appointment.history.length || appointment.link" :summary="copy.actions || copy.edit" density="compact">
             <BsInline v-if="appointment.canEdit || appointment.actions.length" :aria-busy="appointment.pending"><BsButton v-if="appointment.canEdit" variant="link" :disabled="transitioning" @click="emit('edit', appointment.id)">{{ copy.reschedule }}</BsButton><BsButton v-for="action in appointment.actions" :key="action.id" :variant="action.text ? 'text' : 'link'" :disabled="transitioning" @click="emit('transition', appointment.id, action.id)">{{ action.label }}</BsButton><BsText v-if="appointment.pending" role="status" size="xs">{{ copy.saving }}</BsText></BsInline>
+            <BsButton v-if="appointment.access" variant="link" :disabled="transitioning" @click="emit('access',appointment.id)">{{appointment.access.label}}</BsButton>
             <BsDisclosure v-if="appointment.history.length" :summary="copy.history"><BsList ordered><BsListItem v-for="event in appointment.history" :key="event.id">{{ event.label }}</BsListItem></BsList></BsDisclosure>
             <BsLink v-if="appointment.link" :to="appointment.link.to">{{ appointment.link.label }}</BsLink>
           </BsDisclosure>

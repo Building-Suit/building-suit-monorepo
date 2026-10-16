@@ -1,0 +1,27 @@
+{
+  "id": "ss-web-profile-001",
+  "task": "SS-WEB-PROFILE-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit"
+  ],
+  "reason": "Adds an independent public-profile draft and explicit publication readiness; customer publishing stays blocked pending catalog integration.",
+  "notes": {
+    "title": {
+      "en": "Prepare your public shop profile",
+      "ar": "جهّز الملف العام لمتجرك"
+    },
+    "summary": {
+      "en": "Save public details separately from private business information.",
+      "ar": "احفظ البيانات العامة بشكل مستقل عن بيانات النشاط الخاصة."
+    },
+    "details": {
+      "en": "Prepare public contacts, visible locations, a raster logo, opening hours and search details. Publishing requires owner consent and a published catalog item; it remains unavailable until catalog integration.",
+      "ar": "جهّز وسائل الاتصال العامة والمواقع الظاهرة والشعار ومواعيد العمل وبيانات البحث. يتطلب النشر موافقة المالك وعنصراً منشوراً في الكتالوج، ويظل غير متاح حتى ربط الكتالوج."
+    }
+  }
+}
