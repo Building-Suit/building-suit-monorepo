@@ -1,0 +1,24 @@
+{
+  "id": "ss-web-appt-access-001-shared-support",
+  "task": "SS-WEB-APPT-ACCESS-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/work-packages/shop-website-appointment-access-001.md",
+    ".github/workflows/shop-appointment-access-disposable.yml",
+    "tooling/database/test-shop-appointment-access-local.mjs",
+    "packages/ux"
+  ],
+  "reason": "Optional typed appointment access dialog and semantic calendar actions reuse shared interaction policies; documents and disposable validation preserve all affected consumers."
+}

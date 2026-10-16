@@ -1612,7 +1612,8 @@
       "domainAdapter": "apps/shop-suit/app/pages/appointments/index.vue",
       "dependencies": [
         "@building-suit/ui/types/appointmentsPresentation",
-        "~/types/shopCrmRpc"
+        "~/types/shopCrmRpc",
+        "@building-suit/ui/types/appointmentAccessPresentation"
       ],
       "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
       "purpose": "appointments",

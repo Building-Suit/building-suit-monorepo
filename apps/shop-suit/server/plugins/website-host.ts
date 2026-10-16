@@ -4,20 +4,29 @@ import {parsePublicWebsite,publicWebsiteQuery,websitePageUrl} from '../../shared
 
 export default defineNitroPlugin(nitroApp=>{
  nitroApp.hooks.hook('beforeResponse',event=>{
-  if(event.context.websiteHost)event.node.res.removeHeader('set-cookie')
+  if(event.context.websiteHost){
+   const name=event.context.appointmentAccessCookieName as string|undefined
+   const cookies=event.node.res.getHeader('set-cookie')
+   const allowed=name?(Array.isArray(cookies)?cookies:typeof cookies==='string'?[cookies]:[]).filter(cookie=>cookie.startsWith(name+'=')):[]
+   event.node.res.removeHeader('set-cookie');if(allowed.length)event.node.res.setHeader('set-cookie',allowed)
+  }
  })
  nitroApp.hooks.hook('request',async event=>{
   const config=useRuntimeConfig(event)
   const host=classifyWebsiteHost(getHeader(event,'host'),config.public.appUrl||'',config.public.appEnvironment)
   if(host.kind==='private')return
   event.context.websiteHost=host
+  if(host.kind==='website'&&event.method==='POST'&&/^\/api\/website\/appointment-access\/(verify|validate|rotate|logout)(\?|$)/.test(event.node.req.url??'')){
+   const token=getCookie(event,`bs-shop-${config.public.appEnvironment}-appointment-access`)
+   if(token&&/^[A-Za-z0-9_-]{43}$/.test(token))event.context.appointmentAccessToken=token
+  }
   delete event.node.req.headers.cookie;delete event.node.req.headers.authorization
   setResponseHeader(event,'Cache-Control','private, no-store');setResponseHeader(event,'Vary','Host, Accept-Language');setResponseHeader(event,'X-Robots-Tag','noindex, nofollow')
   const unavailable=async()=>{setResponseStatus(event,404);await send(event,'Not Found','text/plain; charset=utf-8')}
   if(host.kind!=='website')return unavailable()
   const url=new URL(event.node.req.url??'/','https://'+host.slug+'.shops.building-suit.com')
   const asset=/^\/_nuxt\/[A-Za-z0-9_.-]{8,}\.(js|css|woff|woff2)$/.test(url.pathname)||/^\/_i18n\/[a-f0-9]{8}\/(ar|en)\/messages\.json$/.test(url.pathname)||/^\/_nuxt\/builds\/(latest\.json|meta\/[a-f0-9-]{36}\.json)$/.test(url.pathname)
-  const inquiry=url.pathname==='/api/website/inquiries'&&event.method==='POST'
+  const inquiry=(url.pathname==='/api/website/inquiries'||/^\/api\/website\/appointment-access\/(verify|validate|rotate|logout)$/.test(url.pathname))&&event.method==='POST'
   if(!inquiry&&!['GET','HEAD'].includes(event.method))return unavailable()
   try{
    const rpc={url:config.public.supabase.url,key:config.public.supabase.key}

@@ -428,6 +428,17 @@
       "adapterBoundary": "Shop owns trusted Host resolution, anonymous allowlisted reads, inquiry validation/rate limits, owner permissions and SEO. Shared complete entry template selects the existing marketing template or tenant showcase from a finite typed union. UX owns record/form interaction and BFCache refresh mechanics.",
       "task": "SS-WEB-PUBLIC-001",
       "migrationStatus": "registered host-aware root page and optional private owner inbox; no app-local presentation"
+    },
+    {
+      "family": "appointment-access",
+      "owner": "packages/ui",
+      "components": [
+        "BsAppointmentsPage",
+        "BsAppointmentCalendar"
+      ],
+      "adapterBoundary": "Shared appointment templates show controlled one-time credential presentation and semantic issue/rotate/revoke commands. Shop owns appointment permissions, secret lifetime, normalized phone binding and request-scoped commands. Existing shared overlay and record-action controllers remain in packages/ux.",
+      "task": "SS-WEB-APPT-ACCESS-001",
+      "migrationStatus": "optional typed access panel inside existing registered complete appointments template; no new customer portal or booking route"
     }
   ]
 }

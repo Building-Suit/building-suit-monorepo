@@ -223,6 +223,7 @@ const invitationPreviewCopy={
 
     <BsContentSection :title="isArabic ? 'تقويم المواعيد' : 'Appointment calendar'">
       <BsText size="sm" tone="muted">{{ isArabic ? 'مثال توضيحي على خلية فارغة وحالة اليوم.' : 'Illustrative empty calendar cell and today marker.' }}</BsText>
+      <BsDescriptionList><BsDescriptionItem term="BsAppointmentsPage customer access">{{ isArabic ? 'إجراء اختياري لإصدار رمز وصول لمرة عرض واحدة أو تغييره أو إلغائه داخل قالب المواعيد المسجل. يملك التطبيق الصلاحيات والبيانات وعمر الرمز، وتوفر واجهة المستخدم حواراً مضبوط الحالة دون إرسال رسائل.' : 'Optional staff action issues, rotates or revokes a one-time-display access code inside the registered appointment template. The product owns permissions, data and secret lifetime; shared presentation provides a controlled dialog without sending messages.' }}</BsDescriptionItem></BsDescriptionList>
       <BsAppointmentCalendar view="day" :transitioning="false" :copy="{ title: isArabic ? 'تقويم المواعيد' : 'Appointment calendar', empty: isArabic ? 'لا توجد مواعيد' : 'No appointments', edit: isArabic ? 'تعديل' : 'Edit', reschedule: isArabic ? 'تعديل الموعد' : 'Reschedule', saving: isArabic ? 'جارٍ الحفظ' : 'Saving', history: isArabic ? 'السجل' : 'History' }" :days="[{ id: '2026-10-12', label: isArabic ? 'الاثنين ١٢ أكتوبر' : 'Monday 12 October', today: true, appointments: [] }]" />
     </BsContentSection>
 

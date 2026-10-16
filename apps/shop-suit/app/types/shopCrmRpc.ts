@@ -4,6 +4,9 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      appointment_access_status: {Args:{p_shop_id:string;p_appointment_id:string};Returns:import('../../shared/appointmentAccess').AppointmentAccessStatus}
+      appointment_access_issue: {Args:{p_shop_id:string;p_appointment_id:string};Returns:{code:string}}
+      appointment_access_revoke: {Args:{p_shop_id:string;p_appointment_id:string};Returns:undefined}
       shop_website_showcase: {Args:{p_slug:string;p_page?:number};Returns:import('../../shared/publicWebsite').PublicWebsitePayload|null}
       shop_website_inquiry_submit: {Args:{p_slug:string;p_name:string;p_contact:string;p_message:string;p_locale:string;p_honeypot?:string};Returns:{ok:boolean}}
       shop_website_inquiries: {Args:{p_shop_id:string;p_status?:string;p_page?:number};Returns:import('../../shared/websiteInquiries').WebsiteInquiryInbox}
