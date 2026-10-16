@@ -688,5 +688,21 @@
     "sources": [
       "dos-m1-002"
     ]
+  },
+  {
+    "id": "doctor-private-release-consumer",
+    "task": "DOS-M1-002",
+    "suits": [
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/super-admin-suit/supabase/migrations/20261016210711_release_internal_doctor_consumer.sql"
+    ],
+    "reason": "Recognize Doctor only in private synthetic-consumer provenance. Operational registration, public enumeration, baselines, history, privileges, navigation and provider bindings remain unchanged.",
+    "sources": [
+      "dos-m1-002"
+    ]
   }
 ]

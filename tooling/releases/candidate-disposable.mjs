@@ -24,6 +24,7 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
     if(beforePreview) beforePreview(q)
     q(migration('20261016173321_durable_release_preview'))
     q(migration('20261016175503_retrospective_shop_history'))
+    q(migration('20261016210711_release_internal_doctor_consumer'))
     return q
   }
   // Opt-in local diagnosis: replay current repository data, not a hosted catalog.
