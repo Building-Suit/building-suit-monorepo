@@ -6,6 +6,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { generatePlatform } from '../../../../tooling/new-platform/generate.mjs'
 import { assertLocalFixtureEnvironment } from '../e2e/safety.mjs'
+import { workspaceGraphAt } from '../../../../tooling/releases/candidate.mjs'
 
 const root = fileURLToPath(new URL('../../../../', import.meta.url))
 const app = path.join(root, 'apps/doctor-suit')
@@ -48,4 +49,12 @@ test('DOS-M1-002-C05: fixture harness rejects remote, credentialed and ambiguous
     assert.throws(() => assertLocalFixtureEnvironment({ NUXT_PUBLIC_SUPABASE_URL: value }))
   }
   for (const value of ['http://127.0.0.1:65321', 'http://localhost:65321', 'http://[::1]:65321', '']) assert.doesNotThrow(() => assertLocalFixtureEnvironment({ SUPABASE_URL: value }))
+})
+
+test('new scaffold does not retroactively add consumers to preserved release trees', () => {
+  const historical = workspaceGraphAt('ecd74b1f5e3f6758bb618e67ca930b5f5f3eadd4')
+  const current = workspaceGraphAt('HEAD')
+  assert.equal(historical.some(row => row.suit === 'doctor-suit'), false)
+  assert.equal(current.some(row => row.suit === 'doctor-suit'), true)
+  assert.equal(current.find(row => row.suit === 'doctor-suit').dir, 'apps/doctor-suit')
 })
