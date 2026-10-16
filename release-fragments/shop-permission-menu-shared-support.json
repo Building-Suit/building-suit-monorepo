@@ -1,0 +1,19 @@
+{
+  "id": "shop-permission-menu-shared-support",
+  "task": "SS-PERMISSION-MENU-ALIGNMENT",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui",
+    "apps/building-suit-docs/app/pages/templates/access.vue",
+    "release-changes"
+  ],
+  "reason": "Shared permission table row identities distinguish repeated page occurrences while retaining backend keys; catalogue and release evidence support the Shop correction."
+}

@@ -59,3 +59,16 @@ test('page delegates presentation while preserving saved key and owner contracts
   assert.match(matrix, /row-key="rowId"/)
   assert.match(matrix, /emit\('toggle', row.key,/)
 })
+
+test('website stack keeps existing settings and appointment grants under their actual menu pages', () => {
+  const settings = readFileSync(new URL('../../app/pages/settings.vue', import.meta.url), 'utf8')
+  assert.match(settings, /p_permission_keys: \['settings.manage'\]/)
+  for (const adapter of ['useWebsiteAddress', 'useWebsiteProfile', 'useWebsiteCatalog', 'useWebsiteInquiries']) assert.match(settings, new RegExp(`${adapter}\\(canManage`))
+  assert.ok(SHOP_PAGE_PERMISSIONS['/settings'].includes('settings.manage'))
+  assert.ok(SHOP_PAGE_PERMISSIONS['/appointments'].includes('appointments.manage'))
+  const access = readFileSync(new URL('../../supabase/migrations/20261016020824_shop_appointment_access_credentials.sql', import.meta.url), 'utf8')
+  assert.match(access, /appointments\.manage/)
+  const pages = shopNavigation('mixed', 'en', translate('en')).flatMap(group => group.links.map(page => page.to))
+  assert.ok(!pages.some(page => page.startsWith('/website')), 'website controls remain inside Business settings')
+  assert.equal(pages.at(-1), '/settings')
+})

@@ -9,3 +9,7 @@ A capability can affect several pages. For example, `settings.manage` is used fo
 Subscription & billing remains owner-only and has no assignable permission row. No synthetic billing permission is introduced. Pages with no returned assignable actions produce no empty permission section.
 
 Regression coverage in `tests/unit/permission-menu.test.mjs` checks English/Arabic menu order, mapping coverage, business-mode navigation filtering, disabled/unknown grant retention and the owner/save contracts. Shared UI coverage checks repeated grants have unique row identities and emit the original backend key; existing shared UX coverage protects immutable selection and pending/disabled behavior.
+
+## Website stack compatibility
+
+The merge parent is appointment-access PR #333 at `314bcce87e1c7a5fcd9215bfde16d149825ef4c2`. Its address/profile/catalog/inquiry controls are inside the existing Business settings page; it adds no top-level navigation items or assignable permission identifiers. Their existing `settings.manage` prerequisite remains under `/settings`, and appointment access issuance/revocation retains `appointments.manage` under `/appointments`. Owner-only consent, publication/inquiry checks and public session boundaries remain backend-enforced. Later customer-portal navigation must update the canonical menu and page mapping together; public portal sessions must not become staff role grants.

@@ -377,6 +377,42 @@
     ]
   },
   {
+    "id": "shop-permission-menu-alignment",
+    "task": "SS-PERMISSION-MENU-ALIGNMENT",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Corrects bilingual role permission grouping to match the actual navigation while preserving existing grants.",
+    "notes": {
+      "title": {
+        "en": "Permissions follow the menu",
+        "ar": "الصلاحيات تتبع القائمة"
+      },
+      "summary": {
+        "en": "Role permissions use the same page names and order as the Arabic and English menus.",
+        "ar": "تستخدم صلاحيات الأدوار أسماء الصفحات وترتيبها نفسه في القائمتين العربية والإنجليزية."
+      },
+      "details": {
+        "en": "Actions are grouped under their relevant pages. Shared capabilities stay synchronized, locked grants remain protected, and existing saved permissions are retained.",
+        "ar": "تُجمع الإجراءات تحت صفحاتها المناسبة، وتظل الصلاحيات المشتركة متزامنة والصلاحيات المقيدة محمية، مع الاحتفاظ بالصلاحيات المحفوظة."
+      }
+    },
+    "sources": [
+      "shop-permission-menu-alignment"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/team.vue",
+        "contains": "permissions: shopPermissionMenu("
+      }
+    ]
+  },
+  {
     "id": "reviewed-internal-net-support",
     "task": "BS-CHANGELOG-VERSION-001",
     "suits": [
