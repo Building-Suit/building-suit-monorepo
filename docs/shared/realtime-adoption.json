@@ -141,6 +141,23 @@
       "unblock": [
         "Revisit after the owning Super Admin workstream publishes its operational readers and authorizes an isolated browser event transport."
       ]
+    },
+    {
+      "suit": "doctor-suit",
+      "status": "not-needed",
+      "workflows": [
+        "synthetic scaffold scope disclosure"
+      ],
+      "reason": "The generated synthetic preview has no business readers, authenticated session or concurrent writes. No Realtime delivery is claimed by scaffold availability.",
+      "evidence": [
+        {
+          "path": "apps/doctor-suit/README.md",
+          "anchor": "It has no authenticated session or database access"
+        }
+      ],
+      "unblock": [
+        "Reassess when administrative appointment/queue readers exist. Verify Doctor table eligibility, RLS, grant revocation and scoped session/practice/location reconnect before claiming live updates."
+      ]
     }
   ]
 }

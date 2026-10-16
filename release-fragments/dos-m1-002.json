@@ -26,7 +26,9 @@
     "packages/ui",
     "packages/ux",
     "tooling",
-    "release-changes/items.json"
+    "release-changes/items.json",
+    "docs/shared/realtime-adoption.json",
+    "docs/shared/realtime-adoption.md"
   ],
   "reason": "Add an isolated synthetic Doctor app from the maintained shared-template starter and a loopback-only browser harness. Workspace script and lockfile changes affect existing tooling consumers; no existing product behavior or operational Doctor release registration changes."
 }
