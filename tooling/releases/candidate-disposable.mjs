@@ -20,6 +20,7 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
     if(kind==='production') q(`insert into public.release_catalog_configuration values(true,'a0bb00a1-747c-4cda-8521-9927d0b53065','Building-Suit/building-suit-monorepo','${'a'.repeat(40)}','${'a'.repeat(40)}');`)
     if(beforeModel) beforeModel(q)
     q(migration('20261015215030_upcoming_release_candidates'))
+    for(const file of ['20261016112949_release_cardinality_location','20261016122230_release_refresh_statement_evidence','20261016144255_qualified_release_baseline_pin']) q(migration(file))
     return q
   }
   // Opt-in local diagnosis: replay current repository data, not a hosted catalog.

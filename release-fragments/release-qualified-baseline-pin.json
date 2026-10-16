@@ -1,0 +1,9 @@
+{
+  "id": "release-qualified-baseline-pin",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/super-admin-suit/supabase/migrations/20261016144255_qualified_release_baseline_pin.sql", "tooling/releases/catalog-postgrest-disposable.mjs", "tooling/releases/catalog-diagnostics.mjs", "tooling/releases/catalog-diagnostics.test.mjs", "tooling/releases/candidate-disposable.mjs", "tooling/releases/fixtures/pg-safeupdate", "docs/shared/release-publication-runbook.md"],
+  "reason": "Repair the actual unqualified-write failure reproduced with native pg-safeupdate in authenticator PostgREST sessions, using bounded predicates/affected-row checks while preserving every safety gate, control, baseline and release-history invariant."
+}

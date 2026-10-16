@@ -2,6 +2,7 @@ import { standardCatalogReasons } from './catalog-standard-reasons.mjs'
 // Only exact server-authored guard tokens and fixed SQLSTATE categories may reach logs.
 // Never return PostgREST message/detail/hint/body, even when it resembles a token.
 export const cardinalityReasons = new Set([
+  'CANDIDATE_UPDATE_REQUIRES_WHERE',
   'CANDIDATE_CARDINALITY_BASELINE_CONDITION',
   'CANDIDATE_CARDINALITY_REVISION_WRITE_TRIGGER_PRESENT',
   'CANDIDATE_CARDINALITY_POINTER_WRITE_TRIGGER_PRESENT',
@@ -84,6 +85,7 @@ export async function catalogRejectionReason(response) {
     try { body = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)) }
     catch { return 'CATALOG_ERROR_JSON_INVALID' }
     if (typeof body?.code !== 'string' || !body.code) return 'CATALOG_ERROR_CODE_MISSING'
+    if (body.code === '21000' && body.message === 'UPDATE requires a WHERE clause') return 'CANDIDATE_UPDATE_REQUIRES_WHERE'
     // PL/pgSQL attributes an ELSIF expression failure to the enclosing IF line.
     if (body.code === '21000' && body.message === 'CANDIDATE_CARDINALITY_BASELINE_READ') return 'CANDIDATE_CARDINALITY_BASELINE_CONDITION'
     if (body.code === '21000' && cardinalityReasons.has(body.message)) return body.message

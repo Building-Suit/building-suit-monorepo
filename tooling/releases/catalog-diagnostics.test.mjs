@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import { catalogRejectionReason, cardinalityReasons } from './catalog-diagnostics.mjs'
@@ -84,4 +85,15 @@ test('PostgREST void success is accepted only for the declared void publisher op
     assert.doesNotMatch(error.stack,/private-payload-sentinel|credential-sentinel/)
     return true
   })
+})
+
+
+test('native safeupdate diagnostic is exact and qualified-body fingerprint is intentionally updated', async () => {
+  assert.equal(await catalogRejectionReason(response({code:'21000',message:'UPDATE requires a WHERE clause'})),'CANDIDATE_UPDATE_REQUIRES_WHERE')
+  assert.equal(await catalogRejectionReason(response({code:'21000',message:'UPDATE requires a WHERE clause private-sentinel'})),'CATALOG_SQLSTATE_21000_CARDINALITY_VIOLATION')
+  const sql=readFileSync(new URL('../../apps/super-admin-suit/supabase/migrations/20261016144255_qualified_release_baseline_pin.sql',import.meta.url),'utf8')
+  const body=sql.match(/create or replace function super_admin_private\.release_candidate_refresh_retained\(p_snapshot jsonb\)[\s\S]*?as \$\$([\s\S]*?)\$\$;/)[1]
+  const fingerprint=createHash('md5').update(body).digest('hex')
+  assert.ok(sql.includes(`'CANDIDATE_CARDINALITY_REFRESH','${fingerprint}'`),'Diagnostic contract must match the repaired body')
+  assert.ok(!sql.includes("safeupdate.enabled=off"))
 })
