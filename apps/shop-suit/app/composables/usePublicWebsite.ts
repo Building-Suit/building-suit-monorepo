@@ -3,7 +3,7 @@ import type {BsShopWebsiteView} from '@building-suit/ui/types/shopWebsitePresent
 import {emptyWebsiteInquiry,publicWebsiteQuery,websitePageUrl,type PublicWebsitePayload} from '#shared/publicWebsite'
 export function usePublicWebsite() {
  const route=useRoute(),config=useRuntimeConfig(),event=useRequestEvent()
- const query=publicWebsiteQuery(new URLSearchParams(route.fullPath.split('?')[1]??''))
+ const query=publicWebsiteQuery(new URL(route.fullPath,'https://website.invalid').searchParams)
  const authority=import.meta.server?event?.node.req.headers.host:window.location.host
  const slug=String(authority).split('.')[0]!.toLowerCase()
  const page=useState<{payload:PublicWebsitePayload;locale:'ar'|'en';page:number;index:boolean}>(`website:${config.public.appEnvironment}:${slug}:${query.locale}:${query.page}`,()=>event?.context.websitePage)

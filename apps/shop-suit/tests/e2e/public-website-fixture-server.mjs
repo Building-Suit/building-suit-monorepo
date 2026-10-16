@@ -6,9 +6,17 @@ const api=createServer(async(req,res)=>{
  let body='';for await(const part of req)body+=part
  const args=JSON.parse(body||'{}'),name=req.url.split('/').at(-1)
  res.setHeader('content-type','application/json')
- if(!['alpha-tools','beta-tools'].includes(args.p_slug)){res.end('null');return}
+ if(!['alpha-tools','beta-tools','paged-tools'].includes(args.p_slug)){res.end('null');return}
  if(name==='shop_website_host_resolve')res.end(JSON.stringify({canonicalSlug:args.p_slug,isAlias:false}))
- else if(name==='shop_website_showcase')res.end(JSON.stringify(showcase(args.p_slug)))
+ else if(name==='shop_website_showcase'){
+  const value=showcase(args.p_slug)
+  if(args.p_slug==='paged-tools'){
+   value.profile.publicName='Paged Tools'
+   value.catalog.page=Number(args.p_page??1);value.catalog.total=21
+   value.catalog.items=Array.from({length:value.catalog.page===1?20:1},(_,i)=>({...value.catalog.items[0],publicId:`page-${value.catalog.page}-${i}`,name:value.catalog.page===1?`Page one service ${i+1}`:'Page two repair'}))
+  }
+  res.end(JSON.stringify(value))
+ }
  else if(name==='shop_website_inquiry_submit')res.end('{"ok":true}')
  else{res.statusCode=404;res.end('{}')}
 })
