@@ -1,5 +1,7 @@
 import {expect,test,type Page} from '@playwright/test'
 import {expectNoPageOverflow} from '../../../../packages/testing/browser-foundation'
+// Drain background loopback prefetches before Playwright disposes responses.
+test.afterEach(async({page},info)=>{await page.context().route('https://*.shops.building-suit.com/**',route=>route.abort());await page.unrouteAll({behavior:info.status===info.expectedStatus?'wait':'ignoreErrors'})})
 async function transport(page:Page){await page.route('https://*.shops.building-suit.com/**',async route=>{const request=route.request(),url=new URL(request.url());const response=await route.fetch({url:'http://127.0.0.1:4333'+url.pathname+url.search,headers:{...request.headers(),host:url.host},maxRedirects:0,maxRetries:request.method()==='GET'?1:0});await route.fulfill({response})})}
 async function mounted(page:Page){await page.waitForFunction(()=>{const root=document.getElementById('__nuxt') as HTMLElement & {__vue_app__?:{config:{globalProperties:{$nuxt:{isHydrating:boolean}}}}};return root?.__vue_app__?.config.globalProperties.$nuxt.isHydrating===false})}
 async function login(page:Page,ar=false,code='0123ABCDEFGH'){
