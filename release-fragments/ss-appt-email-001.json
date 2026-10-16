@@ -1,0 +1,27 @@
+{
+  "id": "ss-appt-email-001",
+  "task": "SS-APPT-EMAIL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit"
+  ],
+  "reason": "Adds explicit owner and per-appointment customer control for private email reminders; delivery remains disabled or test-allowlisted.",
+  "notes": {
+    "title": {
+      "en": "Control appointment email reminders",
+      "ar": "التحكم في تذكيرات المواعيد بالبريد"
+    },
+    "summary": {
+      "en": "Owners can opt in, and eligible customers can request or stop one private reminder per appointment.",
+      "ar": "يمكن للمالك تفعيل الخيار وللعميل المؤهل طلب تذكير خاص لكل موعد أو إيقافه."
+    },
+    "details": {
+      "en": "Reminders use the saved customer email, respect the appointment timezone and stop on cancellation or contact changes. Delivery remains disabled or limited to approved test recipients until operator configuration is approved.",
+      "ar": "تستخدم التذكيرات بريد العميل المحفوظ وتراعي المنطقة الزمنية للموعد وتتوقف عند الإلغاء أو تغيير بيانات التواصل. يظل الإرسال معطلاً أو مقتصراً على عناوين اختبار معتمدة حتى الموافقة على إعداد المشغل."
+    }
+  }
+}
