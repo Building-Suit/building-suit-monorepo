@@ -1,6 +1,6 @@
-SELECT 1 FROM control.workstreams WHERE project_id='f71b3b2b-d56b-4f7e-94f5-0b8c379a1088' AND slug='doctor-suit' FOR SHARE;
-SELECT pg_temp.doctor_assert(EXISTS(SELECT 1 FROM control.workstreams w,doctor_import_input i WHERE w.project_id='f71b3b2b-d56b-4f7e-94f5-0b8c379a1088' AND w.slug='doctor-suit' AND w.suit_slug='doctor-suit' AND w.stack_key='doctor-suit' AND w.application_path='apps/doctor-suit' AND w.active AND w.model_profile='deep' AND w.retry_policy_id=i.bindings->>'retry_policy_id' AND w.verification_config=i.doc->'verification_config' AND w.publication_config=i.doc->'publication_config'),'Workstream binding/config drift');
-SELECT pg_temp.doctor_assert(EXISTS(SELECT 1 FROM control.suits WHERE slug='doctor-suit' AND stack_key='doctor-suit' AND app_path='apps/doctor-suit' AND status='planning'),'Suit is not storage-only planning');
+SELECT 1 FROM control.workstreams WHERE project_id='f71b3b2b-d56b-4f7e-94f5-0b8c379a1088' AND slug='doctor-suit' FOR UPDATE;
+SELECT pg_temp.doctor_assert(EXISTS(SELECT 1 FROM control.workstreams w,doctor_import_input i WHERE w.project_id='f71b3b2b-d56b-4f7e-94f5-0b8c379a1088' AND w.slug='doctor-suit' AND w.suit_slug='doctor-suit' AND w.stack_key='doctor-suit' AND w.application_path IS NULL AND NOT w.active AND w.model_profile IS NULL AND w.retry_policy_id IS NULL AND w.verification_config='{}'::jsonb AND w.metadata->'verification_config_proposal'=i.doc->'verification_config_proposal' AND w.metadata->'planning_storage'=i.doc->'planning_storage' AND w.publication_config=i.doc->'publication_config'),'Workstream binding/config drift');
+SELECT pg_temp.doctor_assert(EXISTS(SELECT 1 FROM control.suits WHERE slug='doctor-suit' AND stack_key='doctor-suit' AND app_path IS NULL AND status='planning'),'Suit is not storage-only planning');
 SELECT pg_temp.doctor_assert((SELECT count(*) FROM control.tasks WHERE suit_slug='doctor-suit')=(SELECT jsonb_array_length(doc->'previous_tasks') FROM doctor_import_input),'Earlier milestone task count differs');
 SELECT pg_temp.doctor_assert(NOT EXISTS(SELECT 1 FROM doctor_import_input i,jsonb_array_elements(i.doc->'previous_tasks') a LEFT JOIN control.tasks t ON t.task_id=a->>'task_id' WHERE t.task_id IS NULL OR t.suit_slug<>'doctor-suit' OR t.metadata->>'canonical_task_sha256' IS DISTINCT FROM a->>'canonical_task_sha256'),'Earlier milestone identities/hashes differ');
 SELECT pg_temp.doctor_assert(NOT EXISTS(SELECT 1 FROM control.tasks t,doctor_import_input i,jsonb_array_elements(i.doc->'proposal'->'create_task_calls') c WHERE t.task_id=c->'arguments'->>'p_task_id'),'Existing milestone task collision: read back, never overwrite');
@@ -12,6 +12,9 @@ FROM doctor_import_input i,jsonb_array_elements(i.doc->'proposal'->'requirements
 INSERT INTO control.decisions(suit_slug,decision_id,title,decision_text,status,source,metadata)
 SELECT 'doctor-suit',d->>'decision_id',d->>'title',d->>'decision_text',d->>'status',d->>'source',coalesce(d->'metadata','{}')||jsonb_build_object('canonical_decision_contract',d)
 FROM doctor_import_input i,jsonb_array_elements(i.doc->'proposal'->'decisions') d WHERE d->>'decision_id'<>i.doc->'proposal'->>'milestone_id'||'-GATE-START';
+-- The supported creation routine requires active=true inside this transaction.
+-- No other transaction sees this transient value; the persisted workstream stays inactive.
+UPDATE control.workstreams SET active=true WHERE project_id='f71b3b2b-d56b-4f7e-94f5-0b8c379a1088' AND slug='doctor-suit' AND active=false;
 DO $$
 DECLARE c jsonb; a jsonb; i record;
 BEGIN
@@ -21,13 +24,14 @@ BEGIN
   PERFORM control.create_task_with_publication_contract(
    p_project_slug=>a->>'p_project_slug',p_workstream_slug=>'doctor-suit',p_task_id=>a->>'p_task_id',
    p_sequence=>(a->>'p_sequence')::integer,p_priority=>(a->>'p_priority')::integer,p_title=>a->>'p_title',p_description=>a->>'p_description',
-   p_task_type=>a->>'p_task_type',p_risk_level=>a->>'p_risk_level',p_model_profile=>'deep',
-   p_acceptance_criteria=>a->'p_acceptance_criteria',p_verification_plan=>a->'p_verification_plan',p_retry_policy_id=>i.bindings->>'retry_policy_id',p_metadata=>a->'p_metadata');
+   p_task_type=>a->>'p_task_type',p_risk_level=>a->>'p_risk_level',p_model_profile=>'no_ai',
+   p_acceptance_criteria=>a->'p_acceptance_criteria',p_verification_plan=>'[]'::jsonb,p_retry_policy_id=>NULL,p_metadata=>(a->'p_metadata')||jsonb_build_object('planning_storage',i.doc->'planning_storage'));
   -- The real OPEN blocking gate is linked immediately in this same transaction.
   INSERT INTO control.task_decisions(task_id,suit_slug,decision_id,blocking)
   VALUES(a->>'p_task_id','doctor-suit',i.doc->'proposal'->>'milestone_id'||'-GATE-START',true);
  END LOOP;
 END $$;
+UPDATE control.workstreams SET active=false WHERE project_id='f71b3b2b-d56b-4f7e-94f5-0b8c379a1088' AND slug='doctor-suit';
 INSERT INTO control.task_requirements(task_id,suit_slug,requirement_id)
 SELECT x->>'task_id',x->>'suit_slug',x->>'requirement_id' FROM doctor_import_input i,jsonb_array_elements(i.doc->'proposal'->'task_requirements') x;
 INSERT INTO control.task_dependencies(task_id,depends_on_task_id,dependency_type)
@@ -39,12 +43,12 @@ SELECT control.refresh_publication_readiness_contract(c->'arguments'->>'p_task_i
 -- Full canonical metadata and supported top-level fields must round-trip exactly.
 SELECT pg_temp.doctor_assert(NOT EXISTS(
  SELECT 1 FROM doctor_import_input i,jsonb_array_elements(i.doc->'proposal'->'create_task_calls') c JOIN control.tasks t ON t.task_id=c->'arguments'->>'p_task_id'
- WHERE t.metadata IS DISTINCT FROM c->'arguments'->'p_metadata'
+ WHERE (t.metadata-'planning_storage') IS DISTINCT FROM c->'arguments'->'p_metadata' OR t.metadata->'planning_storage' IS DISTINCT FROM i.doc->'planning_storage'
  OR t.title IS DISTINCT FROM c->'arguments'->>'p_title' OR t.description IS DISTINCT FROM c->'arguments'->>'p_description'
  OR t.sequence IS DISTINCT FROM (c->'arguments'->>'p_sequence')::integer OR t.priority IS DISTINCT FROM (c->'arguments'->>'p_priority')::integer
  OR t.task_type IS DISTINCT FROM c->'arguments'->>'p_task_type' OR t.risk_level IS DISTINCT FROM c->'arguments'->>'p_risk_level'
- OR t.acceptance_criteria IS DISTINCT FROM c->'arguments'->'p_acceptance_criteria' OR t.verification_plan IS DISTINCT FROM c->'arguments'->'p_verification_plan'
- OR t.project_id<>'f71b3b2b-d56b-4f7e-94f5-0b8c379a1088' OR t.workstream_slug<>'doctor-suit' OR t.suit_slug<>'doctor-suit' OR t.model_profile<>'deep' OR t.retry_policy_id IS DISTINCT FROM i.bindings->>'retry_policy_id'
+ OR t.acceptance_criteria IS DISTINCT FROM c->'arguments'->'p_acceptance_criteria' OR t.verification_plan IS DISTINCT FROM '[]'::jsonb
+ OR t.project_id<>'f71b3b2b-d56b-4f7e-94f5-0b8c379a1088' OR t.workstream_slug<>'doctor-suit' OR t.suit_slug<>'doctor-suit' OR t.model_profile<>'no_ai' OR t.retry_policy_id IS NOT NULL
 ),'Task argument/canonical metadata mismatch');
 SELECT pg_temp.doctor_assert((SELECT count(*) FROM control.tasks WHERE suit_slug='doctor-suit')=(SELECT jsonb_array_length(doc->'previous_tasks')+jsonb_array_length(doc->'proposal'->'task_ids') FROM doctor_import_input),'Partial milestone task batch');
 DO $$

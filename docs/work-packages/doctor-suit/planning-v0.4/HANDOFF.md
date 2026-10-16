@@ -1,5 +1,7 @@
 # Parent handoff — nine Doctor Suit milestone contracts
 
+Storage correction: [the current adapter](import-delivery/README.md) keeps Doctor inactive, leaves the entire shared project unchanged, stores execution proposals only in metadata, and asserts zero batch admissions. It requires no model-route or retry evidence. This supersedes the e47bdba8 execution-configuring adapter; canonical packets remain unchanged.
+
 Current delivery update: the parent reports renewed continuation and one successful read-only fingerprint check after the earlier cancellation. No hosted writes were performed here. [Exact import delivery and offline adapter](import-delivery/README.md) preserve the approved 7a6dcc20 packets/proposals byte-for-byte and supersede the earlier pending-read status recorded below.
 
 Prepared all nine milestones sequentially from the actual Library inputs. No duplicate task inventory, database writes, imports, runtime activation, app implementation, credentials, hosted product migrations, deployment or main promotion occurred. Cloud executor only; the user's network was not used.

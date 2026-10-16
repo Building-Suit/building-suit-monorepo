@@ -39,17 +39,16 @@ def load():
 
 def validate_bindings(b,step):
  assert b['source_head']==SOURCE_HEAD and b['automation_project_ref']==TARGET
- assert b['workstream_slug']=='doctor-suit' and b['model_profile']=='deep'
- assert re.fullmatch(r'[a-z][a-z0-9-]*',b['retry_policy_id'])
- for k in ['review_receipt','live_read_receipt','model_route_receipt','consumer_review_receipt']:
+ assert b['workstream_slug']=='doctor-suit'
+ assert not any(k in b for k in ['model_profile','retry_policy_id','model_route_receipt']), 'Planning storage must not bind an execution route'
+ for k in ['review_receipt','live_read_receipt','consumer_review_receipt']:
   assert isinstance(b[k],str) and len(b[k].strip())>=8,f'Missing reviewed evidence: {k}'
  for k in ['create_function_md5','refresh_function_md5','ready_view_md5','catalog_md5']:
   assert re.fullmatch('[0-9a-f]{32}',b[k]),f'Missing observed fingerprint: {k}'
  p=b['project_snapshot'];assert p['project_id']==PROJECT and p['slug']=='building-suit' and p['github_repository']=='Building-Suit/building-suit-monorepo' and p['active'] is True
  assert 'created_at' not in p and 'updated_at' not in p
  assert isinstance(p['application_paths'],dict) and isinstance(p['allowed_publication_paths'],list)
- if step=='registration':assert 'doctor-suit' not in p['application_paths']
- else:assert p['application_paths'].get('doctor-suit')=='apps/doctor-suit'
+ assert 'doctor-suit' not in p['application_paths'], 'Storage does not add an operational application mapping'
  return b
 
 def quote_json(v):return "'"+json.dumps(v,ensure_ascii=False,separators=(',',':')).replace("'","''")+"'::jsonb"
@@ -65,7 +64,8 @@ def render(step,bindings,readback=False):
    commands[c['name']]=c
  database=json.loads((BASE.parent/'DOS-M1.json').read_text())['verification_config_proposal']['database']
  payload={'source_head':SOURCE_HEAD,'milestone_id':step,'all_start_decisions':[next(d for d in p['decisions'] if d['decision_id']==p['milestone_id']+'-GATE-START') for p in proposals],
- 'verification_config':{'commands':list(commands.values()),'database':database},
+ 'verification_config_proposal':{'commands':list(commands.values()),'database':database},
+ 'planning_storage':{'storage_only':True,'execution_method':'explicit-cloud-tasks-after-parent-confirms-all-nine-saved','runtime_model_profile':'no_ai','runtime_retry_policy_id':None,'runtime_verification_plan':[],'model_route_bound':False,'canonical_execution_proposals':'preserved in canonical_task_contract; not installed or activated'},
  'publication_config':{'merge_authorized':False,'deployment_authorized':False,'hosted_database_changes_authorized':False,'review_required_before_integration':True}}
  payload['expected_counts']={'tasks':0,'requirements':0,'decisions':9}
  if step!='registration':
