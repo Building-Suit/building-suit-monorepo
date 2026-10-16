@@ -2,14 +2,19 @@
   "id": "ss-web-launch-001-integration",
   "task": "SS-WEB-LAUNCH-001",
   "suits": [
-    "shop-suit"
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
   ],
   "classification": "internal",
   "disposition": "internal",
   "paths": [
     "apps/shop-suit/docs/website-launch-checklist.md",
     "docs/work-packages/shop-website-launch-001.md",
-    "docs/work-packages/shop-website-integration.md"
+    "docs/work-packages/shop-website-integration.md",
+    "release-changes/items.json"
   ],
   "reason": "Combines reviewed Shop website history with current reviewed staging for one parent-owned integration, refreshes the parent-verified bilingual changelog prerequisite and records exact-head qualification without deployment or publication."
 }

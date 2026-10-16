@@ -515,5 +515,96 @@
         "contains": "create function public.appointment_booking_command("
       }
     ]
+  },
+  {
+    "id": "shop-public-website",
+    "task": "SS-WEB-LAUNCH-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Curates the combined reviewed address, profile, selective catalog and public showcase/inquiry capabilities with surviving current-code evidence.",
+    "notes": {
+      "title": {
+        "en": "Publish a website for your shop",
+        "ar": "نشر موقع إلكتروني لمتجرك"
+      },
+      "summary": {
+        "en": "Choose a shop address and publish an independent profile with selected products and services.",
+        "ar": "اختر عنواناً للمتجر وانشر ملفاً عاماً مستقلاً مع منتجات وخدمات محددة."
+      },
+      "details": {
+        "en": "Owners explicitly opt in after adding a logo, public contact, visible location and a published item. Public pages show selected descriptions, prices, opening hours and contact actions; visitor inquiries reach the shop privately. Unpublishing hides the website immediately while retaining its configuration. Operational and private data stay excluded.",
+        "ar": "يوافق المالك صراحةً على النشر بعد إضافة شعار ووسيلة اتصال عامة وموقع ظاهر وعنصر منشور. تعرض الصفحات الأوصاف والأسعار وساعات العمل ووسائل التواصل المحددة، وتصل استفسارات الزوار إلى المتجر بشكل خاص. يخفي إلغاء النشر الموقع فوراً مع الاحتفاظ بإعداداته، وتبقى البيانات التشغيلية والخاصة مستبعدة."
+      }
+    },
+    "sources": [
+      "ss-web-slug-001",
+      "ss-web-profile-001",
+      "ss-web-catalog-001",
+      "ss-web-public-001"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261015225136_shop_website_slug_foundation.sql",
+        "contains": "insert into public.shop_website_slug_claims(slug,shop_id) values(p_slug,p_shop_id)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261015233546_shop_website_public_profile.sql",
+        "contains": "p_owner_opt_in is distinct from true then raise exception 'WEBSITE_OWNER_OPT_IN_REQUIRED'"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261016001743_shop_website_selective_catalog.sql",
+        "contains": "where c.shop_id=p_shop_id and c.published and s.active"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/usePublicWebsite.ts",
+        "contains": "const canonical=websitePageUrl(page.value.payload.profile.canonicalSlug,page.value.locale,page.value.page)"
+      }
+    ]
+  },
+  {
+    "id": "shop-appointment-access",
+    "task": "SS-WEB-APPT-ACCESS-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Curates reviewed staff-managed appointment access credentials and their scoped short-lived verification contract.",
+    "notes": {
+      "title": {
+        "en": "Manage private appointment access",
+        "ar": "إدارة الوصول الخاص للمواعيد"
+      },
+      "summary": {
+        "en": "Authorized staff can issue, rotate and revoke appointment access codes.",
+        "ar": "يمكن للموظف المخوّل إصدار رموز الوصول للمواعيد وتغييرها وإلغاؤها."
+      },
+      "details": {
+        "en": "Codes appear once and require the saved phone number to verify. Access sessions are short-lived and scoped to the customer or one walk-in appointment. Revocation and phone changes end prior access. No messages are sent automatically.",
+        "ar": "يظهر الرمز مرة واحدة ويتطلب رقم الهاتف المحفوظ للتحقق. جلسات الوصول قصيرة ومحددة بنطاق العميل أو موعد الزائر الواحد. ينهي إلغاء الرمز أو تغيير الهاتف الوصول السابق، ولا تُرسل رسائل تلقائياً."
+      }
+    },
+    "sources": [
+      "ss-web-appt-access-001"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useAppointmentAccess.ts",
+        "contains": "const result=await client.rpc('appointment_access_issue',{p_shop_id:shop,p_appointment_id:id})"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useAppointmentAccess.ts",
+        "contains": "client.rpc('appointment_access_revoke',{p_shop_id:shop,p_appointment_id:id})"
+      }
+    ]
   }
 ]
