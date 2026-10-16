@@ -223,12 +223,12 @@ declare shop uuid;scope jsonb;result jsonb;begin
 exception when others then return '{"enabled":false}'::jsonb;end$$;
 
 create function shop_private.booking_slot_available(p_shop uuid,p_service uuid,p_location uuid,p_staff uuid,p_start timestamptz,p_exclude uuid default null) returns boolean
-language sql stable set search_path='' as $$
+language sql volatile set search_path='' as $$
  select exists(select 1 from shop_private.booking_combinations(p_shop) c
  join public.shop_booking_policies policy on policy.shop_id=p_shop and policy.enabled
  join public.appointment_working_hours h on h.shop_id=p_shop and h.location_id=c.location_ref and h.membership_id=c.membership_id
  where c.service_ref=p_service and c.location_ref=p_location and c.staff_ref=p_staff
- and p_start>=statement_timestamp()+make_interval(mins=>policy.lead_minutes) and p_start<=statement_timestamp()+make_interval(days=>policy.horizon_days)
+ and p_start>=clock_timestamp()+make_interval(mins=>policy.lead_minutes) and p_start<=clock_timestamp()+make_interval(days=>policy.horizon_days)
  and extract(dow from p_start at time zone h.timezone)=h.weekday
  and (p_start at time zone h.timezone)::time>=h.starts_local
  and ((p_start+make_interval(mins=>c.duration+c.cleanup)) at time zone h.timezone)::date=(p_start at time zone h.timezone)::date
@@ -374,6 +374,7 @@ begin
   else
    appointment_id:=shop_private.booking_own(scope,p_reference);
    select * into appointment from public.appointments where id=appointment_id and shop_id=shop for update;
+   if shop_private.appointment_access_scope(p_slug,p_token) is null then return '{"ok":false,"accessEnded":true}'::jsonb;end if;
    if appointment.id is null or shop_private.booking_own(scope,p_reference) is distinct from appointment.id or appointment.status<>'booked' or appointment.starts_at<clock_timestamp()+make_interval(mins=>policy.change_notice_minutes)
    or p_operation='reschedule' and not policy.allow_reschedule or p_operation='cancel' and not policy.allow_cancel then return '{"ok":false}'::jsonb;end if;
   end if;

@@ -30,13 +30,14 @@ const f=JSON.parse(rows.split('\n').find(v=>v.startsWith('{')))
 const requestKey=()=>randomBytes(32).toString('hex')
 const create=(start,phone)=>`select public.appointment_booking_command('${f.slug}',null,'create','${requestKey()}',null,'${f.service}','${f.location}','${f.staff}','${start}','Concurrent guest','${phone}');`
 const staff=start=>`select set_config('request.jwt.claim.sub','${f.actor}',true);select public.save_appointment('${randomUUID()}','${f.shop}',null,'${f.location}','${f.member}','${f.serviceId}','${start}','walk_in',null,'Concurrent staff',null,null);`
-async function race(firstCommand,secondCommand,waitFragment){
+async function race(firstCommand,secondCommand,waitFragment,beforeCommit){
  const first=spawn('docker',args);let output='',error='';first.stdout.on('data',v=>output+=v);first.stderr.on('data',v=>error+=v);const done=new Promise(resolve=>first.on('close',resolve));first.stdin.write('BEGIN;'+firstCommand+"select 'RESERVATION_READY';\n")
  try{
   const deadline=Date.now()+10000;while(!output.includes('RESERVATION_READY')){assert.ok(Date.now()<deadline,error||'Reservation did not acquire its lock');await new Promise(r=>setTimeout(r,20))}
   assert.ok(!output.includes('"ok": false'),'First booking must succeed')
   const second=asyncSql(secondCommand)
   const until=Date.now()+10000;while(sql(`select count(*) from pg_stat_activity where wait_event_type='Lock' and query like '%${waitFragment}%' and pid<>pg_backend_pid()`)==='0'){assert.ok(Date.now()<until,'Competitor did not reach a real database lock');await new Promise(r=>setTimeout(r,20))}
+  if(beforeCommit)await beforeCommit()
   first.stdin.end('COMMIT;\n');assert.equal(await done,0,error)
   const loser=await second;assert.equal(loser.code,0,loser.error);assert.equal(JSON.parse(loser.output.trim().split('\n').at(-1)).ok,false)
  }finally{if(first.exitCode===null)first.stdin.end('ROLLBACK;\n')}
@@ -46,10 +47,16 @@ assert.equal(sql(`select count(*) from public.appointments where shop_id='${f.sh
 const next=new Date(Date.parse(f.start)+7200000).toISOString()
 await race(staff(next),create(next,'+201000000012'),'appointment_booking_command')
 assert.equal(sql(`select count(*) from public.appointments where shop_id='${f.shop}' and starts_at='${next}' and status='booked'`),'1')
+// A target row can remain locked after its caller's session deadline. Do not
+// authorize the eventual cancellation using the pre-wait capability snapshot.
+sql(`update public.appointment_access_sessions set expires_at=clock_timestamp()+interval '3 seconds' where token_hash=shop_private.appointment_access_hash('${f.savedToken}')`)
+await race(`select id from public.appointments where id='${f.target}' for update;`,`select public.appointment_booking_command('${f.slug}','${f.savedToken}','cancel','${requestKey()}','${f.targetReference}');`,'appointment_booking_command',()=>new Promise(resolve=>setTimeout(resolve,3500)))
+assert.equal(sql(`select status from public.appointments where id='${f.target}'`),'booked')
+sql(`update public.appointment_access_sessions set expires_at=created_at+interval '10 minutes' where token_hash=shop_private.appointment_access_hash('${f.savedToken}')`)
 const targetStart=sql(`select starts_at from public.appointments where id='${f.target}'`)
 const reassign=`select set_config('request.jwt.claim.sub','${f.actor}',true);select public.save_appointment('${randomUUID()}','${f.shop}','${f.target}','${f.location}','${f.member}','${f.serviceId}','${targetStart}','customer','${f.otherCustomer}',null,null,null);`
 await race(reassign,`select public.appointment_booking_command('${f.slug}','${f.savedToken}','cancel','${requestKey()}','${f.targetReference}');`,'appointment_booking_command')
 assert.equal(sql(`select status from public.appointments where id='${f.target}' and client_id='${f.otherCustomer}'`),'booked')
 const revoke=`select set_config('request.jwt.claim.sub','${f.actor}',true);select public.appointment_access_revoke('${f.shop}','${f.sourceAppointment}');`
 await race(revoke,`select public.appointment_booking_command('${f.slug}','${f.savedToken}','create','${requestKey()}',null,'${f.service}','${f.location}','${f.staff}','${new Date(Date.parse(f.start)+86400000+7200000).toISOString()}');`,'appointment_booking_command')
-console.log('Booking SQL scope/privacy/policy/idempotency/reminder invariants passed. Real public/public and staff/public conflicts preserve one reservation; concurrent customer reassignment and credential revocation deny stale authority after lock waits.')
+console.log('Booking SQL scope/privacy/policy/idempotency/reminder invariants passed. Real public/public and staff/public conflicts preserve one reservation; concurrent customer reassignment, credential revocation and session expiry deny stale authority after lock waits.')
