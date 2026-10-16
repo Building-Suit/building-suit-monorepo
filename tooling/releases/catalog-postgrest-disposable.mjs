@@ -6,10 +6,11 @@ import { setTimeout as delay } from 'node:timers/promises'
 import { readdirSync, readFileSync } from 'node:fs'
 import { buildCandidate } from './candidate.mjs'
 import { createCatalog } from './publisher.mjs'
+import { dockerFailureReason, ensureDisposableImage } from './docker-harness.mjs'
 assert.equal(process.env.RELEASE_POSTGREST_DISPOSABLE, '1', 'Explicit disposable validation required')
 function command(program, args, input) {
   const result=spawnSync(program,args,{input,encoding:'utf8',timeout:120000})
-  if(result.status!==0) throw new Error(`Disposable command failed (exit ${result.status}; SQLSTATE ${result.stderr.match(/ERROR:\s+([A-Z0-9]{5})/)?.[1] ?? 'UNKNOWN'}); credentials and raw errors omitted`)
+  if(result.status!==0) throw new Error(`Disposable command failed (exit ${result.status}; SQLSTATE ${result.stderr.match(/ERROR:\s+([A-Z0-9]{5})/)?.[1] ?? 'UNKNOWN'}); ${program==='docker'?dockerFailureReason(result.stderr):'COMMAND_FAILED'}; credentials and raw errors omitted`)
   return result.stdout.trim()
 }
 const suffix=randomUUID(), db=`bs-release-db-${suffix}`, rest=`bs-release-rest-${suffix}`, network=`bs-release-net-${suffix}`
@@ -20,6 +21,8 @@ const token=role=>{
 }
 const status={SERVICE_ROLE_KEY:token('service_role'),ANON_KEY:token('anon')}
 const sql=statement=>command('docker',['exec','-i',db,'psql','-h','127.0.0.1','-U','postgres','-d','postgres','-At','-v','ON_ERROR_STOP=1','-v','VERBOSITY=sqlstate'],statement)
+ensureDisposableImage('postgres:17-alpine')
+ensureDisposableImage('public.ecr.aws/supabase/postgrest:v16.1','docker.io/postgrest/postgrest:v16.1')
 try {
 command('docker',['network','create',network])
 command('docker',['run','-d','--name',db,'--network',network,'--network-alias','release-db','-e','POSTGRES_HOST_AUTH_METHOD=trust','postgres:17-alpine'])
@@ -41,7 +44,9 @@ create function realtime.topic() returns text language sql as $$select current_s
 create function realtime.send(jsonb,text,text,boolean) returns void language sql as $$insert into realtime.messages(payload,event,topic,private,extension) values($1,$2,$3,$4,'broadcast')$$;`)
 const migrations=new URL('../../apps/super-admin-suit/supabase/migrations/',import.meta.url)
 const names=readdirSync(migrations).filter(name=>name.endsWith('.sql')).sort()
+let retainedSource
 for(const name of names) {
+  if(name.endsWith('_release_cardinality_location.sql')) retainedSource=sql("select md5(prosrc) from pg_proc where oid='public.release_candidate_refresh(jsonb)'::regprocedure;")
   console.log(`Apply SAS migration ${name}`)
   sql(readFileSync(new URL(name,migrations),'utf8'))
   if(name.startsWith('20261015030053')) {
@@ -50,6 +55,8 @@ insert into public.suit_registry(id,stable_key,display_name,asset_reference,adap
 `)
   }
 }
+assert.equal(sql("select md5(prosrc) from pg_proc where oid='super_admin_private.release_candidate_refresh_retained(jsonb)'::regprocedure;"),retainedSource,'Exact deployed body retained')
+assert.equal(sql("select has_function_privilege('service_role','super_admin_private.release_candidate_refresh_retained(jsonb)','EXECUTE');"),'f')
 // Test-only RPC demonstrates exact SQLSTATE/guard classification through PostgREST.
 // It is created solely in this invocation's disposable database, never a migration.
 sql(`create function public.release_candidate_diagnostic(p_code text,p_guard text) returns void language plpgsql as $$begin raise exception '%',p_guard using errcode=p_code;end$$;
@@ -95,10 +102,44 @@ await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapsho
 await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'f'.repeat(40),productionRef:'refs/heads/stg'}}),/WRONG_REFERENCE/)
 const denied=createCatalog(`https://${ref}.supabase.co`,status.ANON_KEY,ref,transport)
 await assert.rejects(denied('release_candidate_refresh',{p_snapshot:snapshot}),/HTTP (401|403)/)
-assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'1')
+// Multiple ordinary revisions are valid; no duplicate baseline assumption.
+await catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'e'.repeat(40)}})
+assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'2')
+const baselineDefinition=sql("select pg_get_functiondef('super_admin_private.candidate_baseline_tree()'::regprocedure);")
+sql(`create or replace function super_admin_private.candidate_baseline_tree() returns text language plpgsql stable set search_path='' as $$begin return (select value from (values('private-sentinel'),('private-sentinel')) v(value));end$$;`)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),error=>{
+  assert.match(error.message,/CANDIDATE_CARDINALITY_BASELINE_TREE/)
+  assert.doesNotMatch(error.stack,/private-sentinel/)
+  return true
+})
+sql(baselineDefinition)
+for(const [signature,returns,attributes,expression,reason] of [
+  ['super_admin_private.release_copy_valid(jsonb)','boolean','immutable','(values(true),(false))','CANDIDATE_CARDINALITY_COPY_VALIDATOR'],
+  ['super_admin_private.candidate_versions(jsonb)','jsonb','',"(values('{}'::jsonb),('{}'::jsonb))",'CANDIDATE_CARDINALITY_VERSION_VALIDATOR'],
+  ['super_admin_private.release_context()','text','',"(values('staging'),('staging'))",'CANDIDATE_CARDINALITY_AUTHORITY'],
+]) {
+  const definition=sql(`select pg_get_functiondef('${signature}'::regprocedure);`)
+  const declaration=signature.replace('(jsonb)','(p_snapshot jsonb)')
+  // Keep the original input argument name when CREATE OR REPLACE requires it.
+  const named=declaration.replace('release_copy_valid(p_snapshot','release_copy_valid(p_copy')
+  sql(`create or replace function ${named} returns ${returns} language plpgsql ${attributes} security definer set search_path='' as $$begin return (select value from ${expression} v(value));end$$;`)
+  await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),error=>{
+    assert.ok(error.message.includes(reason));assert.ok(!error.stack.includes('private-sentinel'));return true
+  })
+  sql(definition)
+}
+// An unrelated trigger's private message must reduce to the refresh boundary.
+sql(`create function public.release_fixture_cardinality() returns trigger language plpgsql as $$begin raise exception 'private-sentinel' using errcode='21000';end$$;
+create trigger release_fixture_cardinality before insert on public.release_candidate_revisions for each row execute function public.release_fixture_cardinality();`)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/CANDIDATE_CARDINALITY_REFRESH/)
+sql('drop trigger release_fixture_cardinality on public.release_candidate_revisions;drop function public.release_fixture_cardinality();')
+assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'2','Failed writes roll back without deleting prior history')
+await catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}})
+assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'3')
+
 assert.equal(sql('select count(*) from public.release_candidate_promotions;'),'0')
 assert.equal(sql('select version from public.release_candidate_versions;'),'0.0.0')
-console.log('Full SAS PostgREST catalog passed: real createCatalog state/refresh, concurrent retry, invalid-ref denial, anonymous denial and unchanged production baseline/history')
+console.log('Full SAS PostgREST catalog passed: real createCatalog state/refresh, concurrent retry, invalid-ref denial, anonymous denial and unchanged production baseline/history and safe cardinality locations')
 
 } finally {
   // Names are generated by this invocation; unrelated stacks/volumes are untouched.

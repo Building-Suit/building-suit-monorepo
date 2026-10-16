@@ -54,3 +54,11 @@ test('every current model-2 SQL guard has an exact safe diagnostic', async () =>
   assert.ok(guards.size>20)
   for(const message of guards) assert.equal(await catalogRejectionReason(response({code:'P0001',message,details:'private-sentinel'})),message)
 })
+
+
+test('cardinality location diagnostics retain SQLSTATE and exact safe tokens only', async () => {
+  for(const message of ['CANDIDATE_CARDINALITY_REFRESH','CANDIDATE_CARDINALITY_BASELINE_TREE','CANDIDATE_CARDINALITY_COPY_VALIDATOR','CANDIDATE_CARDINALITY_VERSION_VALIDATOR','CANDIDATE_CARDINALITY_AUTHORITY']) {
+    assert.equal(await catalogRejectionReason(response({code:'21000',message,details:'private-sentinel'})),message)
+  }
+  assert.equal(await catalogRejectionReason(response({code:'21000',message:'CANDIDATE_CARDINALITY_REFRESH private-sentinel'})),'CATALOG_SQLSTATE_21000_CARDINALITY_VIOLATION')
+})
