@@ -6,7 +6,7 @@ export function validWebsiteHostnameSuffix(value: unknown): value is string {
   return value === websiteDomain || value === stagingWebsiteDomain
 }
 export function configuredWebsiteDomain(config: { websiteHostnameSuffix?: unknown; appEnvironment?: unknown }): string | null {
-  const environment = config.appEnvironment ?? 'local'
+  const environment = config.appEnvironment === undefined ? 'local' : config.appEnvironment
   if (typeof environment !== 'string' || !['local', 'staging', 'production'].includes(environment)) return null
   const domain = config.websiteHostnameSuffix === '' || config.websiteHostnameSuffix === undefined ? (environment === 'staging' ? null : websiteDomain) : config.websiteHostnameSuffix
   if (!validWebsiteHostnameSuffix(domain)) return null

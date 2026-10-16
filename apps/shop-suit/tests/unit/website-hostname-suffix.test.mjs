@@ -18,7 +18,7 @@ test('deployment config is owned, canonical and environment bound; staging never
   assert.equal(configuredWebsiteDomain({appEnvironment:'staging',websiteHostnameSuffix:value}),null)
   assert.throws(()=>websiteUrl('alpha-tools',value),/INVALID_WEBSITE_HOSTNAME_SUFFIX/)
  }
- assert.equal(configuredWebsiteDomain({appEnvironment:'stg',websiteHostnameSuffix:stage}),null)
+ for(const environment of [null,false,42,{},[],'','stg','production\n']){assert.equal(configuredWebsiteDomain({appEnvironment:environment,websiteHostnameSuffix:prod}),null);assert.equal(classifyWebsiteHost('alpha-tools.'+prod,privateOrigin,environment,prod).kind,'denied')}
 })
 test('exact staging and production authority resolve one slug with no cross-environment/private fallback',()=>{
  assert.deepEqual(classifyWebsiteHost('ALPHA-TOOLS.STG.SHOPS.BUILDING-SUIT.COM',privateOrigin,'staging',stage),{kind:'website',slug:'alpha-tools'})
