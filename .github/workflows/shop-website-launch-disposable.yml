@@ -24,6 +24,10 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Prepare maintained disposable legacy upgrade baseline
+        env:
+          ACCOUNT_PROVISION_DISPOSABLE: '1'
+        run: node tooling/database/account-provisioning-disposable.mjs --prepare-baseline
       - name: Start disposable Shop backend
         run: |
           test "$RUNNER_ENVIRONMENT" = github-hosted
@@ -45,6 +49,10 @@ jobs:
           LAUNCH_FULL_SHOP_DB: '1'
           SUPABASE_HOME: ${{ runner.temp }}/shop-website-launch-supabase
         run: node tooling/database/test-shop-website-launch-local.mjs
+      - name: Remove temporary upgrade fixture after regression
+        run: |
+          git restore -- apps/shop-suit/supabase/config.toml
+          rm apps/shop-suit/supabase/migrations/20260929185959_disposable_legacy_catalog.sql
       - run: pnpm docs:generate
       - run: pnpm --filter @building-suit/shop-suit typecheck
       - run: pnpm --filter @building-suit/shop-suit lint
