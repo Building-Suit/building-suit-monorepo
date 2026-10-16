@@ -2,14 +2,16 @@ import { readPublicLogo } from '@building-suit/ux'
 import type { BsWebsiteProfileView } from '@building-suit/ui/types/websiteProfilePresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { emptyWebsiteProfile, parseWebsiteProfileSettings, type WebsiteProfileSettings } from '#shared/websiteProfile'
-import { websiteUrl } from '#shared/websiteAddress'
+import { websiteUrl, configuredWebsiteDomain } from '#shared/websiteAddress'
 
 export function useWebsiteProfile(canManage: Ref<boolean>) {
   const { currentId, currentLocationId, activeLocations, isOwner } = useShop()
   const { locale } = useI18n()
   const user = useSupabaseUser()
   const actor = computed(() => user.value?.id ?? null)
-  const environment = useRuntimeConfig().public.supabase.url
+  const config = useRuntimeConfig()
+  const domain = configuredWebsiteDomain(config.public)
+  const environment = config.public.supabase.url
   const client = useSupabaseClient<ShopRpcDatabase>().schema('public')
   const captureScope = useShopTaskScope()
   const form = ref(emptyWebsiteProfile())
@@ -94,7 +96,7 @@ export function useWebsiteProfile(canManage: Ref<boolean>) {
       title: ar ? 'الملف العام للمتجر' : 'Public shop profile',
       help: ar ? 'ابدأ بمسودة مستقلة. لا يتم نسخ بيانات التشغيل أو الاتصال الخاصة. يتطلب النشر موافقة المالك واستيفاء متطلبات النشر.' : 'Start with a separate draft. Private operational and contact details are never copied. Publishing requires owner consent and all publishing requirements.',
       state: result?.state === 'published' ? (ar ? 'منشور' : 'Published') : result?.state === 'suspended' ? (ar ? 'موقوف' : 'Suspended') : (ar ? 'مسودة غير منشورة' : 'Unpublished draft'),
-      url: result?.slug ? websiteUrl(result.slug) : '', logo: result?.logoDataUrl ?? '',
+      url: result?.slug && domain ? websiteUrl(result.slug, domain) : '', logo: result?.logoDataUrl ?? '',
       missing: (result?.missing ?? []).map(key => missingLabels[key] ?? key),
       loading: loading.value, failed: Boolean(loadError.value), denied: !canManage.value,
       pending: pending.value || logoPending.value, dirty: dirty.value, error: error.value ?? '', success: success.value,

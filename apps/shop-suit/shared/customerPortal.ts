@@ -1,4 +1,4 @@
-import {websiteUrl} from './websiteAddress.ts'
+import {websiteUrl,websiteDomain} from './websiteAddress.ts'
 export type PortalBucket='upcoming'|'past'
 export type PortalStatus='booked'|'arrived'|'waiting'|'in_service'|'completed'|'cancelled'|'no_show'
 export type PortalAppointment={startsAt:string;endsAt:string;timeZone:string;service:string;staff:string|null;status:PortalStatus;location:{name:string;address:string}|null}
@@ -24,4 +24,4 @@ export function parseCustomerPortal(value:unknown,now=Date.now()):CustomerPortal
  if(value.scope==='appointment'&&(Number(value.total)>1||items.length>1))throw Error('INVALID_PORTAL_RESPONSE')
  return{authenticated:true,expiresAt,scope:value.scope as CustomerPortal['scope'],bucket:value.bucket as PortalBucket,page:Number(value.page),pageSize:20,total:Number(value.total),items}
 }
-export function websitePortalUrl(slug:string,locale:'ar'|'en'):string {const url=new URL('/my-appointments',websiteUrl(slug));if(locale==='en')url.searchParams.set('lang','en');return url.href}
+export function websitePortalUrl(slug:string,locale:'ar'|'en',domain:string=websiteDomain):string {const url=new URL('/my-appointments',websiteUrl(slug,domain));if(locale==='en')url.searchParams.set('lang','en');return url.href}

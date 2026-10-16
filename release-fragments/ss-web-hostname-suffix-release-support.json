@@ -1,0 +1,17 @@
+{
+  "id": "ss-web-hostname-suffix-release-support",
+  "task": "SS-WEB-HOSTNAME-SUFFIX-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "release-changes/items.json"
+  ],
+  "reason": "Refreshes the existing public website canonical-URL evidence probe after adding the validated deployment suffix; public notes, sources, classification and release machinery are unchanged."
+}

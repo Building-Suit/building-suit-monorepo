@@ -1,4 +1,4 @@
-import {websiteUrl} from './websiteAddress.ts'
+import {websiteUrl,websiteDomain} from './websiteAddress.ts'
 export const bookingUuid=(v:unknown):v is string=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
 const object=(v:unknown):v is Record<string,unknown>=>Boolean(v&&typeof v==='object'&&!Array.isArray(v))
 const text=(v:unknown,max:number)=>{if(typeof v!=='string'||Array.from(v).length>max)throw Error('INVALID_BOOKING_RESPONSE');return v}
@@ -37,4 +37,4 @@ export function parseBookingSettings(v:unknown):BookingSettings{
  if(!object(v)||!object(v.policy)||!Array.isArray(v.staff)||v.staff.length>2000||v.policy.reminders_enabled!==false||v.policy.reminder_channel!==null)throw Error('INVALID_BOOKING_RESPONSE')
  const p=v.policy;return{policy:{enabled:bool(p.enabled),lead_minutes:integer(p.lead_minutes,0,10080),horizon_days:integer(p.horizon_days,1,90),change_notice_minutes:integer(p.change_notice_minutes,0,10080),allow_reschedule:bool(p.allow_reschedule),allow_cancel:bool(p.allow_cancel),reminder_lead_minutes:integer(p.reminder_lead_minutes,15,10080)},staff:v.staff.map(s=>{if(!object(s))throw Error('INVALID_BOOKING_RESPONSE');return{membershipId:uuid(s.membershipId),name:text(s.name,160),publicName:text(s.publicName,120),published:bool(s.published)}})}
 }
-export function websiteBookingUrl(slug:string,locale:'en'|'ar'){const u=new URL('/book',websiteUrl(slug));if(locale==='en')u.searchParams.set('lang','en');return u.href}
+export function websiteBookingUrl(slug:string,locale:'en'|'ar',domain:string=websiteDomain){const u=new URL('/book',websiteUrl(slug,domain));if(locale==='en')u.searchParams.set('lang','en');return u.href}

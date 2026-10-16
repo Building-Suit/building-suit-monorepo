@@ -1,0 +1,19 @@
+{
+  "id": "ss-web-hostname-suffix-001",
+  "task": "SS-WEB-HOSTNAME-SUFFIX-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit",
+    ".github/workflows/shop-website-hostname-disposable.yml",
+    "docs/work-packages/shop-website-hostname-suffix.md"
+  ],
+  "reason": "Adds deployment-bound staging hostname configuration, strict authority/Origin isolation and deterministic qualification while preserving production customer URLs, tenant/database contracts and inactive publication; documents unperformed staging DNS/TLS/provider follow-on."
+}

@@ -568,7 +568,7 @@
       },
       {
         "path": "apps/shop-suit/app/composables/usePublicWebsite.ts",
-        "contains": "const canonical=websitePageUrl(page.value.payload.profile.canonicalSlug,page.value.locale,page.value.page)"
+        "contains": "const canonical=websitePageUrl(page.value.payload.profile.canonicalSlug,page.value.locale,page.value.page,domain)"
       }
     ]
   },
