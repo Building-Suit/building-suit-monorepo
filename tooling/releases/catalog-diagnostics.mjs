@@ -1,6 +1,11 @@
+import { standardCatalogReasons } from './catalog-standard-reasons.mjs'
 // Only exact server-authored guard tokens and fixed SQLSTATE categories may reach logs.
 // Never return PostgREST message/detail/hint/body, even when it resembles a token.
 const guardReasons = new Set([
+  'IMMUTABLE_CANDIDATE_HISTORY', 'PER_MERGE_RELEASES_RETIRED', 'IMMUTABLE_RELEASE',
+  'UNREADY_OR_WRONG_PROMOTION_PROVENANCE', 'VERSION_CONFLICT', 'INVALID_GENERATED_ENTRIES',
+  'MISSING_EXACT_CANDIDATE_RECEIPT', 'LEGACY_RELEASE_HISTORY_REVIEW_REQUIRED',
+  'CANDIDATE_RECONCILIATION_REQUIRED', 'STAGING_CANDIDATE_NOT_READY',
   'SERVER_REQUIRED', 'RELEASE_CONFIGURATION_REQUIRED', 'WRONG_ENVIRONMENT', 'WRONG_REFERENCE',
   'INVALID_CANDIDATE', 'INVALID_CANDIDATE_REF', 'DUPLICATE_CHANGE_ITEM', 'INVALID_CHANGE_ITEM',
   'INVALID_COPY', 'UNREGISTERED_SUIT', 'UNREGISTERED_INTERNAL_CONSUMER',
@@ -53,8 +58,8 @@ export async function catalogRejectionReason(response) {
     try { body = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)) }
     catch { return 'CATALOG_ERROR_JSON_INVALID' }
     if (typeof body?.code !== 'string' || !body.code) return 'CATALOG_ERROR_CODE_MISSING'
-    if (body?.code === 'P0001' && guardReasons.has(body.message)) return body.message
-    return sqlReasons.get(body.code) ?? 'CATALOG_REJECTED'
+    if (body.code === 'P0001') return guardReasons.has(body.message) ? body.message : 'CATALOG_GUARD_UNRECOGNIZED'
+    return sqlReasons.get(body.code) ?? standardCatalogReasons.get(body.code) ?? 'CATALOG_ERROR_CODE_UNRECOGNIZED'
   } catch { return 'CATALOG_ERROR_READ_FAILED' }
   finally { try { await reader?.cancel() } catch { /* No upstream exception is logged. */ } }
 }
