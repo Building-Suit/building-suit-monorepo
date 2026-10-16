@@ -355,7 +355,9 @@
     "./templates/BsShopPublicEntryPage.vue": "./src/templates/BsShopPublicEntryPage.vue",
     "./types/websiteInquiriesPresentation": "./src/types/websiteInquiriesPresentation.ts",
     "./organisms/BsWebsiteInquiryInbox.vue": "./src/organisms/BsWebsiteInquiryInbox.vue",
-    "./types/appointmentAccessPresentation": "./src/types/appointmentAccessPresentation.ts"
+    "./types/appointmentAccessPresentation": "./src/types/appointmentAccessPresentation.ts",
+    "./types/customerPortalPresentation": "./src/types/customerPortalPresentation.ts",
+    "./templates/BsShopCustomerPortalPage.vue": "./src/templates/BsShopCustomerPortalPage.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

@@ -2,6 +2,7 @@ import type {LandingContent} from '@building-suit/contracts'
 import type {BsLandingPreview,BsLandingPricing,BsLandingChangelog} from './landingPresentation'
 export type BsWebsiteInquiryForm={name:string;contact:string;message:string;company:string}
 export type BsShopWebsiteView={
+ portalLink:{href:string;label:string};
  name:string;description:string;logo:string;locale:'ar'|'en';languageLinks:Array<{locale:string;label:string;href:string}>
  contacts:Array<{kind:string;label:string;href:string}>;openingHours:string;locations:Array<{name:string;address:string}>
  items:Array<{id:string;kind:string;name:string;description:string;image:string|null;price:string}>;page:number;total:number;previous:string|null;next:string|null

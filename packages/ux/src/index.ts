@@ -244,3 +244,4 @@ export { copyDocumentImage, renderDocumentImage, downloadDocumentImage } from '.
 export { readPublicLogo } from './utils/readPublicLogo.ts'
 export { useFreshPageOnRestore } from './composables/useFreshPageOnRestore.ts'
 export { usePageExitCleanup } from './composables/usePageExitCleanup.ts'
+export { usePrivateSessionLifecycle } from './composables/usePrivateSessionLifecycle.ts'

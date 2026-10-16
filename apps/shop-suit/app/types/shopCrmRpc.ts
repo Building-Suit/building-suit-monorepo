@@ -4,6 +4,7 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      appointment_customer_portal: {Args:{p_slug:string;p_token:string;p_bucket?:string;p_page?:number};Returns:import('../../shared/customerPortal').CustomerPortal|{authenticated:false}}
       appointment_access_status: {Args:{p_shop_id:string;p_appointment_id:string};Returns:import('../../shared/appointmentAccess').AppointmentAccessStatus}
       appointment_access_issue: {Args:{p_shop_id:string;p_appointment_id:string};Returns:{code:string}}
       appointment_access_revoke: {Args:{p_shop_id:string;p_appointment_id:string};Returns:undefined}

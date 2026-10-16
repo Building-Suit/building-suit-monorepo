@@ -9895,6 +9895,15 @@ export type Database = {
         }
         Returns: Json
       }
+      appointment_customer_portal: {
+        Args: {
+          p_bucket?: string
+          p_page?: number
+          p_slug: string
+          p_token: string
+        }
+        Returns: Json
+      }
       appointment_options: { Args: { p_shop_id: string }; Returns: Json }
       archive_customer: {
         Args: { p_customer_id: string; p_shop_id: string }

@@ -1,3 +1,4 @@
+import {websitePortalUrl} from '#shared/customerPortal'
 import {useFreshPageOnRestore} from '@building-suit/ux'
 import type {BsShopWebsiteView} from '@building-suit/ui/types/shopWebsitePresentation'
 import {emptyWebsiteInquiry,publicWebsiteQuery,websitePageUrl,type PublicWebsitePayload} from '#shared/publicWebsite'
@@ -30,7 +31,7 @@ export function usePublicWebsite() {
  }
  const view=computed<BsShopWebsiteView>(()=>{
   const {profile,catalog}=page.value.payload,locale=page.value.locale,ar=locale==='ar'
-  return{name:profile.publicName,description:profile.description,logo:profile.logoDataUrl,locale,
+  return{portalLink:{href:websitePortalUrl(profile.canonicalSlug,locale),label:ar?'مواعيدي':'My appointments'},name:profile.publicName,description:profile.description,logo:profile.logoDataUrl,locale,
    languageLinks:[{locale:'ar',label:'العربية',href:websitePageUrl(profile.canonicalSlug,'ar',catalog.page)},{locale:'en',label:'English',href:websitePageUrl(profile.canonicalSlug,'en',catalog.page)}],
    contacts:[...(profile.phone?[{kind:'phone',label:profile.phone,href:`tel:${profile.phone.replace(/[^+0-9]/g,'')}`}]:[]),...(profile.whatsapp?[{kind:'whatsapp',label:ar?'واتساب':'WhatsApp',href:`https://wa.me/${profile.whatsapp.replace(/\D/g,'')}`}]:[]),...(profile.email?[{kind:'email',label:profile.email,href:`mailto:${profile.email.split('@').map(encodeURIComponent).join('@')}`}]:[])],
    openingHours:profile.openingHours,locations:profile.locations.map(l=>({name:l.publicName,address:l.address})),

@@ -1,5 +1,6 @@
 import {classifyWebsiteHost,websiteAliasRedirect} from '../utils/websiteHost'
 import {publicWebsiteRpc} from '../utils/publicWebsiteRpc'
+import {websitePortalUrl} from '../../shared/customerPortal'
 import {parsePublicWebsite,publicWebsiteQuery,websitePageUrl} from '../../shared/publicWebsite'
 
 export default defineNitroPlugin(nitroApp=>{
@@ -14,9 +15,9 @@ export default defineNitroPlugin(nitroApp=>{
  nitroApp.hooks.hook('request',async event=>{
   const config=useRuntimeConfig(event)
   const host=classifyWebsiteHost(getHeader(event,'host'),config.public.appUrl||'',config.public.appEnvironment)
-  if(host.kind==='private')return
+  if(host.kind==='private'){if(new URL(event.node.req.url??'/','https://private.invalid').pathname==='/my-appointments'){setResponseHeader(event,'Cache-Control','private, no-store');setResponseHeader(event,'X-Robots-Tag','noindex, nofollow');setResponseStatus(event,404);await send(event,'Not Found','text/plain; charset=utf-8')}return}
   event.context.websiteHost=host
-  if(host.kind==='website'&&event.method==='POST'&&/^\/api\/website\/appointment-access\/(verify|validate|rotate|logout)(\?|$)/.test(event.node.req.url??'')){
+  if(host.kind==='website'&&event.method==='POST'&&/^\/api\/website\/(appointment-access\/(verify|validate|rotate|logout)|customer-portal)(\?|$)/.test(event.node.req.url??'')){
    const token=getCookie(event,`bs-shop-${config.public.appEnvironment}-appointment-access`)
    if(token&&/^[A-Za-z0-9_-]{43}$/.test(token))event.context.appointmentAccessToken=token
   }
@@ -26,7 +27,7 @@ export default defineNitroPlugin(nitroApp=>{
   if(host.kind!=='website')return unavailable()
   const url=new URL(event.node.req.url??'/','https://'+host.slug+'.shops.building-suit.com')
   const asset=/^\/_nuxt\/[A-Za-z0-9_.-]{8,}\.(js|css|woff|woff2)$/.test(url.pathname)||/^\/_i18n\/[a-f0-9]{8}\/(ar|en)\/messages\.json$/.test(url.pathname)||/^\/_nuxt\/builds\/(latest\.json|meta\/[a-f0-9-]{36}\.json)$/.test(url.pathname)
-  const inquiry=(url.pathname==='/api/website/inquiries'||/^\/api\/website\/appointment-access\/(verify|validate|rotate|logout)$/.test(url.pathname))&&event.method==='POST'
+  const inquiry=(url.pathname==='/api/website/inquiries'||url.pathname==='/api/website/customer-portal'||/^\/api\/website\/appointment-access\/(verify|validate|rotate|logout)$/.test(url.pathname))&&event.method==='POST'
   if(!inquiry&&!['GET','HEAD'].includes(event.method))return unavailable()
   // Giving up a bearer capability must remain possible after publication ends.
   // The logout handler still checks Origin/body/cookie and the revocation RPC
@@ -39,12 +40,15 @@ export default defineNitroPlugin(nitroApp=>{
    const redirect=websiteAliasRedirect(host.slug,resolved)
    if(inquiry){event.context.websiteCanonicalSlug=resolved.canonicalSlug;return}
    // Preserve the established alias contract: private paths collapse to the canonical root.
-   if(redirect&&!['/','/robots.txt','/sitemap.xml'].includes(url.pathname)&&!asset){await sendRedirect(event,redirect,308);return}
-   if(!['/','/robots.txt','/sitemap.xml'].includes(url.pathname)&&!asset)return unavailable()
+   if(redirect&&!['/','/my-appointments','/robots.txt','/sitemap.xml'].includes(url.pathname)&&!asset){await sendRedirect(event,redirect,308);return}
+   if(!['/','/my-appointments','/robots.txt','/sitemap.xml'].includes(url.pathname)&&!asset)return unavailable()
    if(asset)return
    const query=publicWebsiteQuery(url.searchParams)
+   const portal=url.pathname==='/my-appointments'
+   if(portal&&query.page!==1)return unavailable()
+   if(portal&&redirect){await sendRedirect(event,websitePortalUrl(resolved.canonicalSlug,query.locale),308);return}
    if(redirect&&url.pathname==='/'){await sendRedirect(event,query.locale==='ar'&&query.page===1?redirect:websitePageUrl(resolved.canonicalSlug,query.locale,query.page),308);return}
-   const index=config.public.appEnvironment==='production'
+   const index=config.public.appEnvironment==='production'&&!portal
    const canonical=websitePageUrl(resolved.canonicalSlug,query.locale,query.page)
    if(url.pathname==='/robots.txt'){await send(event,`User-agent: *\n${index?'Allow: /':'Disallow: /'}\nSitemap: ${new URL('/sitemap.xml',canonical).href}\n`,'text/plain; charset=utf-8');return}
    if(url.pathname==='/sitemap.xml'){const root=websitePageUrl(resolved.canonicalSlug,'ar');await send(event,`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${index?`<url><loc>${root}</loc></url><url><loc>${websitePageUrl(resolved.canonicalSlug,'en').replaceAll('&','&amp;')}</loc></url>`:''}</urlset>`,'application/xml; charset=utf-8');return}

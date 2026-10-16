@@ -439,6 +439,16 @@
       "adapterBoundary": "Shared appointment templates show controlled one-time credential presentation and semantic issue/rotate/revoke commands. Shop owns appointment permissions, secret lifetime, normalized phone binding and request-scoped commands. Existing shared overlay and record-action controllers remain in packages/ux.",
       "task": "SS-WEB-APPT-ACCESS-001",
       "migrationStatus": "optional typed access panel inside existing registered complete appointments template; no new customer portal or booking route"
+    },
+    {
+      "family": "customer-appointment-portal",
+      "owner": "packages/ui",
+      "components": [
+        "BsShopCustomerPortalPage"
+      ],
+      "adapterBoundary": "Shop owns session-scoped allowlisted history and typed localized data. Shared UI owns complete verification/history presentation and semantic actions; UX owns expiry, suspension cleanup and revalidation timing. No customer IDs, financial data, private notes or booking commands cross the template contract.",
+      "task": "SS-WEB-CUSTOMER-PORTAL-001",
+      "migrationStatus": "registered complete public route; no Suit-local composition"
     }
   ]
 }

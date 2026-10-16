@@ -74,7 +74,8 @@
     "BsChangelogPage": "packages/ui/src/templates/BsChangelogPage.vue",
     "BsEtaSettingsPage": "packages/ui/src/templates/BsEtaSettingsPage.vue",
     "BsShopPublicEntryPage": "packages/ui/src/templates/BsShopPublicEntryPage.vue",
-    "BsShopWebsitePage": "packages/ui/src/templates/BsShopWebsitePage.vue"
+    "BsShopWebsitePage": "packages/ui/src/templates/BsShopWebsitePage.vue",
+    "BsShopCustomerPortalPage": "packages/ui/src/templates/BsShopCustomerPortalPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2566,6 +2567,24 @@
         "~/types/shopCrmRpc"
       ],
       "purpose": "eta-merchant-setup-and-submission"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/my-appointments.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsShopCustomerPortalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsShopCustomerPortalPage"
+      ],
+      "destination": "packages/ui/src/templates/BsShopCustomerPortalPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/my-appointments.vue",
+      "dependencies": [
+        "@building-suit/ui/types/customerPortalPresentation"
+      ],
+      "verification": "SS-WEB-CUSTOMER-PORTAL-001: scoped SQL/API and EN/AR responsive portal regressions",
+      "purpose": "shop-customer-appointment-portal"
     }
   ],
   "verifiedSharedHeads": [
@@ -2688,6 +2707,7 @@
     "BsChangelogPage",
     "BsEtaSettingsPage",
     "BsShopPublicEntryPage",
-    "BsShopWebsitePage"
+    "BsShopWebsitePage",
+    "BsShopCustomerPortalPage"
   ]
 }
