@@ -58,6 +58,7 @@ export async function catalogRejectionReason(response) {
     try { body = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)) }
     catch { return 'CATALOG_ERROR_JSON_INVALID' }
     if (typeof body?.code !== 'string' || !body.code) return 'CATALOG_ERROR_CODE_MISSING'
+    if (body.code === '21000' && ['CANDIDATE_CARDINALITY_REFRESH', 'CANDIDATE_CARDINALITY_BASELINE_TREE', 'CANDIDATE_CARDINALITY_COPY_VALIDATOR', 'CANDIDATE_CARDINALITY_VERSION_VALIDATOR', 'CANDIDATE_CARDINALITY_AUTHORITY'].includes(body.message)) return body.message
     if (body.code === 'P0001') return guardReasons.has(body.message) ? body.message : 'CATALOG_GUARD_UNRECOGNIZED'
     return sqlReasons.get(body.code) ?? standardCatalogReasons.get(body.code) ?? 'CATALOG_ERROR_CODE_UNRECOGNIZED'
   } catch { return 'CATALOG_ERROR_READ_FAILED' }
