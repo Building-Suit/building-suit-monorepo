@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { shopPermissionMenu } from '~/utils/shopPermissionMenu'
 import type { BsAccessIdentityForm, BsAccessRoleForm, BsAccessPageCopy, BsAccessRoleView, BsAccessInvitationView, BsAccessMemberView, BsAccessMemberAction  } from '@building-suit/ui/access-presentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { TeamMember, TeamSnapshot, TeamRole } from '~/types/team'
@@ -9,7 +10,7 @@ const route = useRoute()
 const sessionUser = useSupabaseUser()
 const runtime = useRuntimeConfig()
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const { current, currentId, currentMembership, loading: shopLoading, reload, selectShop } = useShop()
 const confirmation = useConfirmation()
 const { push: pushToast } = useToasts()
@@ -336,7 +337,7 @@ const identityCopy = computed(() => ({ name: copy.value.name, jobTitle: copy.val
 const identityRoles = computed(() => assignableRoles.value.map(role => ({ value: role.key, label: roleLabel(role.key), disabled: false })))
 const invitationEditor = computed(() => ({ state: { visible: showInvite.value, title: copy.value.inviteTitle, dirty: inviteDirty.value && !invitationLink.value, pending: actionPending.value, error: actionError.value, submitLabel: copy.value.save, cancelLabel: invitationLink.value ? copy.value.close : copy.value.cancel }, copy: { ...identityCopy.value, help: copy.value.claimHelp, ready: copy.value.invitationReady }, roles: identityRoles.value, locations: activeLocations.value.map(location => ({ id: location.id, name: location.name })), link: invitationLink.value }))
 const memberEditor = computed(() => ({ state: { visible: showEdit.value, title: copy.value.edit, dirty: editDirty.value, pending: actionPending.value, error: actionError.value, submitLabel: copy.value.save, cancelLabel: copy.value.cancel }, copy: identityCopy.value, roles: identityRoles.value, locations: activeLocations.value.map(location => ({ id: location.id, name: location.name })), roleDisabled: !team.value.canManagePermissions }))
-const roleEditor = computed(() => ({ state: { visible: showRole.value, title: roleForm.key ? copy.value.editRole : copy.value.newRole, dirty: roleDirty.value, pending: actionPending.value, error: actionError.value, submitLabel: copy.value.save, cancelLabel: copy.value.cancel }, names: { english: copy.value.nameEn, arabic: copy.value.nameAr, maxLength: 160, minLength: 2 }, permissionLabel: copy.value.permissions, permissions: team.value.permissionKeys.map(key => ({ key, label: permissionLabel(key), disabled: !team.value.grantablePermissionKeys.includes(key) })), archiveLabel: roleForm.key && !team.value.roles.find(role => role.key === roleForm.key)?.isSystem ? copy.value.archiveRole : undefined }))
+const roleEditor = computed(() => ({ state: { visible: showRole.value, title: roleForm.key ? copy.value.editRole : copy.value.newRole, dirty: roleDirty.value, pending: actionPending.value, error: actionError.value, submitLabel: copy.value.save, cancelLabel: copy.value.cancel }, names: { english: copy.value.nameEn, arabic: copy.value.nameAr, maxLength: 160, minLength: 2 }, permissionLabel: copy.value.permissions, permissions: shopPermissionMenu(team.value.permissionKeys, team.value.grantablePermissionKeys, locale.value, t, permissionLabel), archiveLabel: roleForm.key && !team.value.roles.find(role => role.key === roleForm.key)?.isSystem ? copy.value.archiveRole : undefined }))
 const transferEditor = computed(() => ({ state: { visible: showTransfer.value, title: copy.value.transfer, dirty: transferDirty.value, pending: actionPending.value, error: actionError.value, submitLabel: copy.value.transfer, cancelLabel: copy.value.cancel }, help: copy.value.transferHelp, reasonLabel: copy.value.reason }))
 const acceptancePresentation = computed(() => inviteCode.value ? ({ title: copy.value.acceptTitle, help: copy.value.acceptHelp, error: acceptError.value, pending: accepting.value, actionLabel: accepting.value ? copy.value.accepting : copy.value.accept }) : undefined)
 </script>
