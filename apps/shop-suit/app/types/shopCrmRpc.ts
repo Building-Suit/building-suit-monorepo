@@ -4,6 +4,29 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      shop_booking_settings:{Args:{p_shop_id:string};Returns:unknown}
+      shop_booking_settings_save:{Args:{p_shop_id:string;p_policy:import('../../shared/appointmentBooking').BookingPolicy;p_staff:{membershipId:string;publicName:string}[]};Returns:undefined}
+      appointment_customer_portal: {Args:{p_slug:string;p_token:string;p_bucket?:string;p_page?:number};Returns:import('../../shared/customerPortal').CustomerPortal|{authenticated:false}}
+      appointment_access_status: {Args:{p_shop_id:string;p_appointment_id:string};Returns:import('../../shared/appointmentAccess').AppointmentAccessStatus}
+      appointment_access_issue: {Args:{p_shop_id:string;p_appointment_id:string};Returns:{code:string}}
+      appointment_access_revoke: {Args:{p_shop_id:string;p_appointment_id:string};Returns:undefined}
+      shop_website_showcase: {Args:{p_slug:string;p_page?:number};Returns:import('../../shared/publicWebsite').PublicWebsitePayload|null}
+      shop_website_inquiry_submit: {Args:{p_slug:string;p_name:string;p_contact:string;p_message:string;p_locale:string;p_honeypot?:string};Returns:{ok:boolean}}
+      shop_website_inquiries: {Args:{p_shop_id:string;p_status?:string;p_page?:number};Returns:import('../../shared/websiteInquiries').WebsiteInquiryInbox}
+      shop_website_inquiry_status: {Args:{p_shop_id:string;p_inquiry_id:string;p_status:string};Returns:undefined}
+      shop_website_catalog: { Args: {p_shop_id:string;p_search?:string;p_page?:number}; Returns: import('../../shared/websiteCatalog').WebsiteCatalogSettings }
+      shop_website_catalog_save: { Args: {p_shop_id:string;p_kind:import('../../shared/websiteCatalog').WebsiteCatalogKind;p_item_id:string;p_entry:import('../../shared/websiteCatalog').WebsiteCatalogEntry};Returns:undefined }
+      shop_website_catalog_publish: { Args: {p_shop_id:string;p_kind:import('../../shared/websiteCatalog').WebsiteCatalogKind;p_item_id:string;p_published:boolean};Returns:undefined }
+      shop_website_public_catalog: { Args: {p_slug:string;p_page?:number};Returns: import('../../shared/websiteCatalog').PublicWebsiteCatalog|null }
+      shop_website_profile: { Args: { p_shop_id: string }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_profile_save: { Args: { p_shop_id: string; p_profile: import('../../shared/websiteProfile').WebsiteProfileDraft }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_logo_replace: { Args: { p_shop_id: string; p_data_url: string | null }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_profile_publish: { Args: { p_shop_id: string; p_owner_opt_in: boolean }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_profile_unpublish: { Args: { p_shop_id: string }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_public_profile: { Args: { p_slug: string }; Returns: unknown }
+      shop_website_address: { Args: { p_shop_id: string }; Returns: import('../../shared/websiteAddress').WebsiteAddress | null }
+      shop_website_address_save: { Args: { p_shop_id: string; p_slug: string }; Returns: import('../../shared/websiteAddress').WebsiteAddress }
+      shop_website_host_resolve: { Args: { p_slug: string }; Returns: { canonicalSlug: string; isAlias: boolean } | null }
       queue_eta_invoice: {Args:{p_request_id:string;p_shop_id:string;p_invoice_id:string;p_receiver:{type:'B';id:string;name:string;address:{country:string;governate:string;regionCity:string;street:string;buildingNumber:string}};p_reason:string};Returns:string}
       eta_original_document_reference: {Args:{p_shop_id:string;p_invoice_id:string};Returns:unknown}
       eta_settings: {Args:{p_shop_id:string;p_offset?:number};Returns:unknown}

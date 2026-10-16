@@ -41,6 +41,7 @@ async function fulfillFetchedResponse(route: Route, response: APIResponse) {
   finally { await response.dispose() }
 }
 const origin = 'https://shop.building-suit.com'
+const stagingOrigin = 'https://stg.shop.building-suit.com'
 const dispatched = new WeakMap<BrowserContext, unknown[][]>()
 async function fixture(context: BrowserContext, port = 4337, host = origin) {
   const requests: string[] = []
@@ -135,9 +136,10 @@ test('staging and missing ID stay silent after consent; staging is crawlable noi
   for (const port of [4338, 4339]) {
     const context = await browser.newContext()
     try {
-      const requests = await fixture(context, port)
+      const serverOrigin = port === 4338 ? stagingOrigin : origin
+      const requests = await fixture(context, port, serverOrigin)
       const page = await context.newPage()
-      await page.goto(origin)
+      await page.goto(serverOrigin)
       await page.getByRole('button', { name: 'Accept optional', exact: true }).click()
       await expect(page.locator('iframe[title="Optional analytics"]')).toHaveCount(0)
       expect(requests).toEqual([])

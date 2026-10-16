@@ -91,6 +91,11 @@ const { data: permissionAccess, pending: permissionPending, error: permissionErr
   return data
 }, { watch: [currentId], default: () => ({ 'settings.manage': false }) })
 const canManage = computed(() => !permissionPending.value && !permissionError.value && permissionAccess.value?.['settings.manage'] === true)
+const {form:bookingPolicyForm,open:bookingPolicyOpen,view:bookingPolicyView,edit:editBookingPolicy,save:saveBookingPolicy,refresh:refreshBookingPolicy}=useBookingPolicy(canManage)
+const { form: websiteProfileForm, optIn: websiteOwnerOptIn, open: websiteProfileOpen, view: websiteProfileView, edit: editWebsiteProfile, save: saveWebsiteProfile, logo: selectWebsiteLogo, publish: publishWebsiteProfile, unpublish: unpublishWebsiteProfile, refresh: refreshWebsiteProfile } = useWebsiteProfile(canManage)
+const { view: websiteInquiryView, filter: websiteInquiryFilter, status: websiteInquiryStatus, open: websiteInquiryOpen, edit: editWebsiteInquiry, save: saveWebsiteInquiry, refresh: refreshWebsiteInquiries, setPage: setWebsiteInquiryPage } = useWebsiteInquiries(canManage)
+const { form: websiteCatalogForm, open: websiteCatalogOpen, search: websiteCatalogSearch, view: websiteCatalogView, edit: editWebsiteCatalog, save: saveWebsiteCatalog, publish: publishWebsiteCatalog, image: selectWebsiteCatalogImage, refresh: refreshWebsiteCatalog, setPage: setWebsiteCatalogPage } = useWebsiteCatalog(canManage, refreshWebsiteProfile)
+const { slug: websiteSlug, open: websiteOpen, view: websiteAddressView, edit: editWebsiteAddress, save: saveWebsiteAddress, refresh: refreshWebsiteAddress } = useWebsiteAddress(canManage)
 async function retrySettings() { await Promise.all([reload(), refreshPermissions()]) }
 const { data: locationUsage, refresh: refreshLocationUsage } = useAsyncData(
   () => `shop-data:settings-location-usage:${currentId.value ?? 'none'}`,
@@ -451,5 +456,90 @@ async function selectDocumentLogo(selection: File | File[] | null) {
 }
 </script>
 <template>
-  <BsBusinessSettingsPage v-model:business-currency="selectedBusinessCurrency" v-model:profile-form="profileModel" v-model:location-form="locationModel" v-model:receipt-form="receiptModel" v-model:mode="modeModel" v-model:cash-required="cashRequired" v-model:profile-open="profileActionOpen" v-model:mode-open="modeActionOpen" v-model:receipt-open="receiptActionOpen" v-model:location-open="locationDialogOpen" :currency-view="currencyView" :context="current ? { name: current.name } : null" :loading="loading || permissionPending" :shop-error="Boolean(shopError || permissionError)" :can-manage="canManage" :copy="settingsCopy" :cash="cashView" :profile-editor="profileEditor" :mode-editor="modeEditor" :receipt-editor="receiptEditor" :receipt-summary="receiptSummary" :locations-view="locationsView" :mode-options="modeOptions" :mode-label="modeLabel" @save-currency="saveBusinessCurrency" @retry-currency="refreshCurrencySettings()" @select-logo="selectDocumentLogo" @edit-profile="profileAction.edit()" @edit-mode="modeAction.edit()" @edit-receipt="receiptAction.edit()" @retry="retrySettings" @retry-cash="refreshCashPolicy()" @retry-receipt="refreshReceiptSettings()" @save-cash="saveCashPolicy" @save-profile="saveProfile" @save-mode="saveMode" @save-location="saveLocation" @save-receipt="saveReceiptSettings" @create-location="createLocation" @edit-location="editLocationById" @archive-location="archiveLocation" @restore-location="restoreLocation"/>
+  <BsBusinessSettingsPage
+    v-model:booking-policy-form="bookingPolicyForm"
+    v-model:booking-policy-open="bookingPolicyOpen"
+    v-model:website-inquiry-open="websiteInquiryOpen"
+    v-model:website-inquiry-status="websiteInquiryStatus"
+    v-model:website-inquiry-filter="websiteInquiryFilter"
+    v-model:website-catalog-form="websiteCatalogForm"
+    v-model:website-catalog-open="websiteCatalogOpen"
+    v-model:website-catalog-search="websiteCatalogSearch"
+    v-model:website-profile-form="websiteProfileForm"
+    v-model:website-profile-open="websiteProfileOpen"
+    v-model:website-owner-opt-in="websiteOwnerOptIn"
+    v-model:website-slug="websiteSlug"
+    v-model:website-open="websiteOpen"
+    v-model:business-currency="selectedBusinessCurrency"
+    v-model:profile-form="profileModel"
+    v-model:location-form="locationModel"
+    v-model:receipt-form="receiptModel"
+    v-model:mode="modeModel"
+    v-model:cash-required="cashRequired"
+    v-model:profile-open="profileActionOpen"
+    v-model:mode-open="modeActionOpen"
+    v-model:receipt-open="receiptActionOpen"
+    v-model:location-open="locationDialogOpen"
+    :booking-policy-view="bookingPolicyView"
+    :website-inquiry-view="websiteInquiryView"
+    :website-catalog-view="websiteCatalogView"
+    :website-profile-view="websiteProfileView"
+    :website-address-view="websiteAddressView"
+    :currency-view="currencyView"
+    :context="current ? { name: current.name } : null"
+    :loading="loading || permissionPending"
+    :shop-error="Boolean(shopError || permissionError)"
+    :can-manage="canManage"
+    :copy="settingsCopy"
+    :cash="cashView"
+    :profile-editor="profileEditor"
+    :mode-editor="modeEditor"
+    :receipt-editor="receiptEditor"
+    :receipt-summary="receiptSummary"
+    :locations-view="locationsView"
+    :mode-options="modeOptions"
+    :mode-label="modeLabel"
+    @edit-booking-policy="editBookingPolicy"
+    @save-booking-policy="saveBookingPolicy"
+    @retry-booking-policy="refreshBookingPolicy"
+    @edit-website-inquiry="editWebsiteInquiry"
+    @save-website-inquiry="saveWebsiteInquiry"
+    @retry-website-inquiries="refreshWebsiteInquiries()"
+    @website-inquiry-page="setWebsiteInquiryPage"
+    @edit-website-catalog="editWebsiteCatalog"
+    @save-website-catalog="saveWebsiteCatalog"
+    @retry-website-catalog="refreshWebsiteCatalog()"
+    @publish-website-catalog="publishWebsiteCatalog($event,true)"
+    @unpublish-website-catalog="publishWebsiteCatalog($event,false)"
+    @website-catalog-page="setWebsiteCatalogPage"
+    @select-website-catalog-image="selectWebsiteCatalogImage"
+    @edit-website-profile="editWebsiteProfile"
+    @save-website-profile="saveWebsiteProfile"
+    @retry-website-profile="refreshWebsiteProfile()"
+    @publish-website-profile="publishWebsiteProfile"
+    @unpublish-website-profile="unpublishWebsiteProfile"
+    @select-website-logo="selectWebsiteLogo"
+    @remove-website-logo="selectWebsiteLogo(null)"
+    @edit-website-address="editWebsiteAddress"
+    @save-website-address="saveWebsiteAddress().then(() => refreshWebsiteProfile())"
+    @retry-website-address="refreshWebsiteAddress()"
+    @save-currency="saveBusinessCurrency"
+    @retry-currency="refreshCurrencySettings()"
+    @select-logo="selectDocumentLogo"
+    @edit-profile="profileAction.edit()"
+    @edit-mode="modeAction.edit()"
+    @edit-receipt="receiptAction.edit()"
+    @retry="retrySettings"
+    @retry-cash="refreshCashPolicy()"
+    @retry-receipt="refreshReceiptSettings()"
+    @save-cash="saveCashPolicy"
+    @save-profile="saveProfile"
+    @save-mode="saveMode"
+    @save-location="saveLocation"
+    @save-receipt="saveReceiptSettings"
+    @create-location="createLocation"
+    @edit-location="editLocationById"
+    @archive-location="archiveLocation"
+    @restore-location="restoreLocation"
+  />
 </template>

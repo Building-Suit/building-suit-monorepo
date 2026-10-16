@@ -377,6 +377,42 @@
     ]
   },
   {
+    "id": "shop-permission-menu-alignment",
+    "task": "SS-PERMISSION-MENU-ALIGNMENT",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Corrects bilingual role permission grouping to match the actual navigation while preserving existing grants.",
+    "notes": {
+      "title": {
+        "en": "Permissions follow the menu",
+        "ar": "الصلاحيات تتبع القائمة"
+      },
+      "summary": {
+        "en": "Role permissions use the same page names and order as the Arabic and English menus.",
+        "ar": "تستخدم صلاحيات الأدوار أسماء الصفحات وترتيبها نفسه في القائمتين العربية والإنجليزية."
+      },
+      "details": {
+        "en": "Actions are grouped under their relevant pages. Shared capabilities stay synchronized, locked grants remain protected, and existing saved permissions are retained.",
+        "ar": "تُجمع الإجراءات تحت صفحاتها المناسبة، وتظل الصلاحيات المشتركة متزامنة والصلاحيات المقيدة محمية، مع الاحتفاظ بالصلاحيات المحفوظة."
+      }
+    },
+    "sources": [
+      "shop-permission-menu-alignment"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/team.vue",
+        "contains": "permissions: shopPermissionMenu("
+      }
+    ]
+  },
+  {
     "id": "reviewed-internal-net-support",
     "task": "BS-CHANGELOG-VERSION-001",
     "suits": [
@@ -399,5 +435,176 @@
       "packages"
     ],
     "reason": "Reviewed shared scaffolding, operational control-plane changes, tests, configuration and support paths. Public Shop capabilities are separately curated with net evidence; this record grants no operational activation."
+  },
+  {
+    "id": "ss-web-customer-portal-001",
+    "task": "SS-WEB-CUSTOMER-PORTAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Adds read-only, narrowly scoped customer appointment and service history with short-lived access.",
+    "notes": {
+      "title": {
+        "en": "View your appointments securely",
+        "ar": "عرض مواعيدك بأمان"
+      },
+      "summary": {
+        "en": "Customers can verify access to their appointments and service history at a shop.",
+        "ar": "يمكن للعملاء التحقق من الوصول إلى مواعيدهم وسجل خدماتهم لدى المتجر."
+      },
+      "details": {
+        "en": "Short-lived access shows appointment times, service, staff display name, status and explicitly public locations. Walk-in access covers one appointment. Expiry, revocation and logout clear the view; private notes and financial data stay excluded.",
+        "ar": "يعرض الوصول قصير المدة أوقات المواعيد والخدمة واسم الموظف والحالة والمواقع العامة المحددة. يقتصر وصول الزائر على موعد واحد. يمسح انتهاء الوصول أو إلغاؤه العرض، وتبقى الملاحظات الخاصة والبيانات المالية مستبعدة."
+      }
+    },
+    "sources": [
+      "ss-web-customer-portal-001"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/my-appointments.vue",
+        "contains": "<BsShopCustomerPortalPage"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261016114826_shop_customer_appointment_portal.sql",
+        "contains": "scope:=shop_private.appointment_access_scope(p_slug,p_token);"
+      }
+    ]
+  },
+  {
+    "id": "ss-appt-002",
+    "task": "SS-APPT-002",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Adds explicit public booking and scoped appointment management, preserving transactional availability, privacy and disabled reminder delivery.",
+    "notes": {
+      "title": {
+        "en": "Book and manage appointments online",
+        "ar": "حجز المواعيد وإدارتها عبر الموقع"
+      },
+      "summary": {
+        "en": "Shops can explicitly enable booking for published services, locations and staff.",
+        "ar": "يمكن للمتاجر تفعيل الحجز صراحةً للخدمات والمواقع والموظفين المنشورين."
+      },
+      "details": {
+        "en": "Customers choose available times and can reschedule or cancel within shop rules. Guest access covers one appointment; verified customers retain their own scope. Concurrent bookings are checked transactionally. Reminders stay disabled until an approved messaging channel is configured.",
+        "ar": "يختار العملاء أوقاتاً متاحة ويمكنهم تعديل الموعد أو إلغاؤه وفق سياسة المتجر. يقتصر وصول الزائر على موعد واحد، ويحتفظ العميل الموثّق بنطاقه الخاص. تُفحص الحجوزات المتزامنة داخل المعاملة، وتبقى التذكيرات معطلة حتى إعداد قناة رسائل معتمدة."
+      }
+    },
+    "sources": [
+      "ss-appt-002"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/book.vue",
+        "contains": "<BsPublicAppointmentBookingPage"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261016131316_public_appointment_booking.sql",
+        "contains": "create function public.appointment_booking_command("
+      }
+    ]
+  },
+  {
+    "id": "shop-public-website",
+    "task": "SS-WEB-LAUNCH-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Curates the combined reviewed address, profile, selective catalog and public showcase/inquiry capabilities with surviving current-code evidence.",
+    "notes": {
+      "title": {
+        "en": "Publish a website for your shop",
+        "ar": "نشر موقع إلكتروني لمتجرك"
+      },
+      "summary": {
+        "en": "Choose a shop address and publish an independent profile with selected products and services.",
+        "ar": "اختر عنواناً للمتجر وانشر ملفاً عاماً مستقلاً مع منتجات وخدمات محددة."
+      },
+      "details": {
+        "en": "Owners explicitly opt in after adding a logo, public contact, visible location and a published item. Public pages show selected descriptions, prices, opening hours and contact actions; visitor inquiries reach the shop privately. Unpublishing hides the website immediately while retaining its configuration. Operational and private data stay excluded.",
+        "ar": "يوافق المالك صراحةً على النشر بعد إضافة شعار ووسيلة اتصال عامة وموقع ظاهر وعنصر منشور. تعرض الصفحات الأوصاف والأسعار وساعات العمل ووسائل التواصل المحددة، وتصل استفسارات الزوار إلى المتجر بشكل خاص. يخفي إلغاء النشر الموقع فوراً مع الاحتفاظ بإعداداته، وتبقى البيانات التشغيلية والخاصة مستبعدة."
+      }
+    },
+    "sources": [
+      "ss-web-slug-001",
+      "ss-web-profile-001",
+      "ss-web-catalog-001",
+      "ss-web-public-001"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261015225136_shop_website_slug_foundation.sql",
+        "contains": "insert into public.shop_website_slug_claims(slug,shop_id) values(p_slug,p_shop_id)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261015233546_shop_website_public_profile.sql",
+        "contains": "p_owner_opt_in is distinct from true then raise exception 'WEBSITE_OWNER_OPT_IN_REQUIRED'"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261016001743_shop_website_selective_catalog.sql",
+        "contains": "where c.shop_id=p_shop_id and c.published and s.active"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/usePublicWebsite.ts",
+        "contains": "const canonical=websitePageUrl(page.value.payload.profile.canonicalSlug,page.value.locale,page.value.page)"
+      }
+    ]
+  },
+  {
+    "id": "shop-appointment-access",
+    "task": "SS-WEB-APPT-ACCESS-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Curates reviewed staff-managed appointment access credentials and their scoped short-lived verification contract.",
+    "notes": {
+      "title": {
+        "en": "Manage private appointment access",
+        "ar": "إدارة الوصول الخاص للمواعيد"
+      },
+      "summary": {
+        "en": "Authorized staff can issue, rotate and revoke appointment access codes.",
+        "ar": "يمكن للموظف المخوّل إصدار رموز الوصول للمواعيد وتغييرها وإلغاؤها."
+      },
+      "details": {
+        "en": "Codes appear once and require the saved phone number to verify. Access sessions are short-lived and scoped to the customer or one walk-in appointment. Revocation and phone changes end prior access. No messages are sent automatically.",
+        "ar": "يظهر الرمز مرة واحدة ويتطلب رقم الهاتف المحفوظ للتحقق. جلسات الوصول قصيرة ومحددة بنطاق العميل أو موعد الزائر الواحد. ينهي إلغاء الرمز أو تغيير الهاتف الوصول السابق، ولا تُرسل رسائل تلقائياً."
+      }
+    },
+    "sources": [
+      "ss-web-appt-access-001"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useAppointmentAccess.ts",
+        "contains": "const result=await client.rpc('appointment_access_issue',{p_shop_id:shop,p_appointment_id:id})"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useAppointmentAccess.ts",
+        "contains": "client.rpc('appointment_access_revoke',{p_shop_id:shop,p_appointment_id:id})"
+      }
+    ]
   }
 ]

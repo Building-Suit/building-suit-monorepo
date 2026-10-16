@@ -1,0 +1,27 @@
+{
+  "id": "ss-web-appt-access-001",
+  "task": "SS-WEB-APPT-ACCESS-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit"
+  ],
+  "reason": "Adds explicit staff-managed appointment access credentials and short-lived code-plus-phone session foundation without customer history, delivery or booking.",
+  "notes": {
+    "title": {
+      "en": "Manage appointment access codes",
+      "ar": "إدارة رموز الوصول للمواعيد"
+    },
+    "summary": {
+      "en": "Authorized staff can issue, rotate and revoke a customer access code for an existing appointment.",
+      "ar": "يمكن للموظف المخوّل إصدار رمز وصول للعميل لموعد قائم وتغييره أو إلغاؤه."
+    },
+    "details": {
+      "en": "Codes appear once and require the saved phone to verify. Access sessions are short-lived and narrowly scoped; changing a phone or revoking a code ends prior access. Customer portal screens and public booking follow separately. No messages are sent automatically.",
+      "ar": "يظهر الرمز مرة واحدة ويتطلب الهاتف المحفوظ للتحقق. جلسات الوصول قصيرة ومحددة النطاق، وينهي تغيير الهاتف أو إلغاء الرمز الوصول السابق. تأتي شاشات بوابة العميل والحجز العام في خطوات منفصلة، ولا تُرسل رسائل تلقائياً."
+    }
+  }
+}

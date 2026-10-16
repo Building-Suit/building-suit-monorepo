@@ -2,6 +2,7 @@ export default defineNuxtPlugin({
   name: 'shop-session-loss',
   enforce: 'post',
   setup(nuxtApp) {
+    if (isTenantWebsiteRequest()) return
     const client = useSupabaseClient()
     const user = useSupabaseUser()
     const shop = useShop()

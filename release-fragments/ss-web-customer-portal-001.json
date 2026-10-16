@@ -1,0 +1,27 @@
+{
+  "id": "ss-web-customer-portal-001",
+  "task": "SS-WEB-CUSTOMER-PORTAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit"
+  ],
+  "reason": "Adds read-only, narrowly scoped customer appointment and service history with short-lived access.",
+  "notes": {
+    "title": {
+      "en": "View your appointments securely",
+      "ar": "عرض مواعيدك بأمان"
+    },
+    "summary": {
+      "en": "Customers can verify access to their appointments and service history at a shop.",
+      "ar": "يمكن للعملاء التحقق من الوصول إلى مواعيدهم وسجل خدماتهم لدى المتجر."
+    },
+    "details": {
+      "en": "Short-lived access shows appointment times, service, staff display name, status and explicitly public locations. Walk-in access covers one appointment. Expiry, revocation and logout clear the view; private notes and financial data stay excluded.",
+      "ar": "يعرض الوصول قصير المدة أوقات المواعيد والخدمة واسم الموظف والحالة والمواقع العامة المحددة. يقتصر وصول الزائر على موعد واحد. يمسح انتهاء الوصول أو إلغاؤه العرض، وتبقى الملاحظات الخاصة والبيانات المالية مستبعدة."
+    }
+  }
+}

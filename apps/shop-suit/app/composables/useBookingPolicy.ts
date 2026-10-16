@@ -1,0 +1,22 @@
+import type {BsBookingPolicyForm,BsBookingPolicyView} from '@building-suit/ui/types/appointmentBookingPresentation'
+import type {ShopRpcDatabase} from '~/types/shopCrmRpc'
+import {emptyBookingPolicy,parseBookingSettings} from '#shared/appointmentBooking'
+export function useBookingPolicy(canManage:Ref<boolean>){
+ const {currentId,currentLocationId,isOwner}=useShop(),user=useSupabaseUser(),{locale}=useI18n(),config=useRuntimeConfig(),captureScope=useShopTaskScope(),client=useSupabaseClient<ShopRpcDatabase>().schema('public')
+ const canEdit=computed(()=>canManage.value&&isOwner.value),form=ref<BsBookingPolicyForm>({...emptyBookingPolicy(),staff:[]}),success=ref(''),action=useRecordAction(()=>form.value)
+ const {data,pending:loading,error:loadError,refresh}=useAsyncData(()=>`shop-data:booking-policy:${JSON.stringify([config.public.appEnvironment,'shop-crm',user.value?.id,currentId.value])}`,async()=>{
+  if(!canEdit.value||!currentId.value||!user.value?.id)return null
+  const current=captureScope(),response=await client.rpc('shop_booking_settings',{p_shop_id:currentId.value});if(response.error)throw response.error
+  return current()?parseBookingSettings(response.data):null
+ },{server:false,watch:[currentId,currentLocationId,()=>user.value?.id,canEdit],default:()=>null})
+ watch([currentId,currentLocationId,()=>user.value?.id,canEdit],()=>{action.visible.value=false;form.value={...emptyBookingPolicy(),staff:[]};success.value='';action.error.value=null},{flush:'sync'})
+ function edit(){if(!canEdit.value||!data.value||loading.value)return;form.value={...data.value.policy,staff:structuredClone(data.value.staff)};success.value='';action.edit()}
+ async function save(){const shop=currentId.value;if(!shop||!canEdit.value)return;const current=captureScope();const saved=await action.run(async()=>{
+  const {staff,...policy}=form.value
+  if(!staff.some(s=>s.published)&&policy.enabled)throw Error('BOOKING_STAFF_REQUIRED')
+  const response=await client.rpc('shop_booking_settings_save',{p_shop_id:shop,p_policy:policy,p_staff:staff.filter(s=>s.published).map(s=>({membershipId:s.membershipId,publicName:s.publicName}))});if(response.error)throw response.error
+  if(current())await refresh()
+ },()=>locale.value==='ar'?'تعذر حفظ سياسة الحجز. راجع الحقول والصلاحيات.':'Could not save booking policy. Check fields and permissions.');if(saved&&current())success.value=locale.value==='ar'?'تم حفظ سياسة الحجز.':'Booking policy saved.'}
+ const view=computed<BsBookingPolicyView>(()=>{const ar=locale.value==='ar';return{title:ar?'الحجز العام':'Public booking',help:ar?'فعّل الحجز صراحةً وحدد أسماء الموظفين العامة. لا تظهر إلا الخدمات والمواقع المنشورة والمواعيد المتاحة.':'Enable booking explicitly and choose public staff names. Only published services, locations and available times appear.',loading:loading.value,failed:Boolean(loadError.value),denied:!canEdit.value,pending:action.pending.value,dirty:action.dirty.value,error:action.error.value??'',success:success.value,enabled:data.value?.policy.enabled??false,copy:ar?{edit:'تعديل سياسة الحجز',save:'حفظ',cancel:'إلغاء',retry:'إعادة المحاولة',failed:'تعذر تحميل سياسة الحجز.',loading:'جارٍ التحميل…',denied:'المالك فقط يمكنه إدارة الحجز العام.',enabled:'تفعيل الحجز العام',disabled:'الحجز العام معطل',staff:'الموظفون المنشورون للحجز',publishStaff:'إظهار الموظف للحجز',publicName:'اسم الموظف العام',lead_minutes:'الحد الأدنى قبل الحجز بالدقائق',horizon_days:'عدد الأيام المتاحة للحجز',change_notice_minutes:'مهلة التعديل والإلغاء بالدقائق',allow_reschedule:'السماح بتعديل الموعد',allow_cancel:'السماح بإلغاء الموعد',reminder_lead_minutes:'وقت التذكير المفضل قبل الموعد بالدقائق',remindersDisabled:'التذكيرات معطلة حتى إعداد قناة رسائل معتمدة. لا تُرسل رسائل.'}:{edit:'Edit booking policy',save:'Save',cancel:'Cancel',retry:'Try again',failed:'Could not load booking policy.',loading:'Loading…',denied:'Only the owner can manage public booking.',enabled:'Enable public booking',disabled:'Public booking disabled',staff:'Staff published for booking',publishStaff:'Show staff for booking',publicName:'Public staff name',lead_minutes:'Minimum booking lead time (minutes)',horizon_days:'Booking horizon (days)',change_notice_minutes:'Change and cancellation notice (minutes)',allow_reschedule:'Allow rescheduling',allow_cancel:'Allow cancellation',reminder_lead_minutes:'Preferred reminder lead time (minutes)',remindersDisabled:'Reminders are disabled until an approved messaging channel is configured. No messages are sent.'}}})
+ return{form,open:action.visible,view,edit,save,refresh}
+}

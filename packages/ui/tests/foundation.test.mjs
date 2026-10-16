@@ -641,3 +641,29 @@ test('billing displays its page heading by default and suppresses it only for em
   assert.match(await heading(), /<h1[^>]*>Subscription<\/h1>/)
   assert.doesNotMatch(await heading(false), /<h1\b/)
 })
+
+
+test('shared permission occurrences have distinct row identities and preserve the backend toggle key', async () => {
+  const items = [
+    { key: 'shared.manage', label: 'Manage', section: '/a', sectionLabel: 'Page A' },
+    { key: 'shared.manage', label: 'Manage', section: '/b', sectionLabel: 'Page B' },
+  ]
+  let rows, rowKey
+  const toggles = [], controls = []
+  const app = vue.createSSRApp({ render: () => vue.h(component('organisms/BsPermissionMatrix.vue'), {
+    items, label: 'Permission', editable: true, selected: ['shared.manage'],
+    onToggle: (key, checked) => toggles.push({ key, checked }),
+  }) })
+  app.component('BsDataTable', { props: ['value', 'rowKey'], setup(props, { slots }) {
+    rows = props.value; rowKey = props.rowKey
+    return () => vue.h('section', props.value.map(row => slots['cell-permission']?.({ row })))
+  } })
+  for (const name of ['BsFieldLabel', 'BsText']) app.component(name, { setup(_, { slots }) { return () => vue.h('span', slots.default?.()) } })
+  app.component('BsCheckbox', { setup(_, { attrs }) { controls.push(attrs); return () => vue.h('input', { type: 'checkbox', checked: attrs.checked }) } })
+  await renderToString(app)
+  assert.equal(new Set(rows.map(row => row[rowKey])).size, 2)
+  assert.ok(controls.every(control => control.checked))
+  controls[1].onNativeChange({ target: { checked: false } })
+  assert.deepEqual(toggles, [{ key: 'shared.manage', checked: false }])
+  assert.ok(items.every(item => !('rowId' in item)))
+})

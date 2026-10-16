@@ -57,6 +57,336 @@ export type Database = {
           },
         ]
       }
+      appointment_access_credentials: {
+        Row: {
+          appointment_id: string
+          code_hash: string
+          customer_id: string | null
+          id: string
+          issuance_origin: string
+          issued_at: string
+          issued_by_profile_id: string | null
+          phone_hash: string
+          revoked_at: string | null
+          shop_id: string
+        }
+        Insert: {
+          appointment_id: string
+          code_hash: string
+          customer_id?: string | null
+          id?: string
+          issuance_origin?: string
+          issued_at?: string
+          issued_by_profile_id?: string | null
+          phone_hash: string
+          revoked_at?: string | null
+          shop_id: string
+        }
+        Update: {
+          appointment_id?: string
+          code_hash?: string
+          customer_id?: string | null
+          id?: string
+          issuance_origin?: string
+          issued_at?: string
+          issued_by_profile_id?: string | null
+          phone_hash?: string
+          revoked_at?: string | null
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_access_credentials_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_access_credentials_customer_id_shop_id_fkey"
+            columns: ["customer_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "client_balances"
+            referencedColumns: ["client_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_access_credentials_customer_id_shop_id_fkey"
+            columns: ["customer_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_access_credentials_issued_by_profile_id_fkey"
+            columns: ["issued_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_access_credentials_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_access_events: {
+        Row: {
+          action: string
+          actor_profile_id: string | null
+          appointment_id: string | null
+          credential_id: string | null
+          id: string
+          occurred_at: string
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_profile_id?: string | null
+          appointment_id?: string | null
+          credential_id?: string | null
+          id?: string
+          occurred_at?: string
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_profile_id?: string | null
+          appointment_id?: string | null
+          credential_id?: string | null
+          id?: string
+          occurred_at?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_access_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_access_events_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_access_events_credential_id_shop_id_fkey"
+            columns: ["credential_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_access_credentials"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_access_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_access_rate_windows: {
+        Row: {
+          attempts: number
+          scope_key: string
+          window_started_at: string
+        }
+        Insert: {
+          attempts: number
+          scope_key: string
+          window_started_at: string
+        }
+        Update: {
+          attempts?: number
+          scope_key?: string
+          window_started_at?: string
+        }
+        Relationships: []
+      }
+      appointment_access_sessions: {
+        Row: {
+          created_at: string
+          credential_id: string
+          expires_at: string
+          id: string
+          revoked_at: string | null
+          shop_id: string
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          credential_id: string
+          expires_at: string
+          id?: string
+          revoked_at?: string | null
+          shop_id: string
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          credential_id?: string
+          expires_at?: string
+          id?: string
+          revoked_at?: string | null
+          shop_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_access_sessions_credential_id_shop_id_fkey"
+            columns: ["credential_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_access_credentials"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_access_sessions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_booking_commands: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          credential_id: string | null
+          guest: boolean
+          key_hash: string
+          operation: string
+          payload_hash: string
+          shop_id: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          credential_id?: string | null
+          guest?: boolean
+          key_hash: string
+          operation: string
+          payload_hash: string
+          shop_id: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          credential_id?: string | null
+          guest?: boolean
+          key_hash?: string
+          operation?: string
+          payload_hash?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_booking_commands_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_booking_commands_credential_id_shop_id_fkey"
+            columns: ["credential_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_access_credentials"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_booking_commands_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_booking_events: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          appointment_id: string | null
+          credential_id: string | null
+          id: string
+          occurred_at: string
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          appointment_id?: string | null
+          credential_id?: string | null
+          id?: string
+          occurred_at?: string
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          appointment_id?: string | null
+          credential_id?: string | null
+          id?: string
+          occurred_at?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_booking_events_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_booking_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_booking_references: {
+        Row: {
+          appointment_id: string
+          reference: string
+          shop_id: string
+        }
+        Insert: {
+          appointment_id: string
+          reference?: string
+          shop_id: string
+        }
+        Update: {
+          appointment_id?: string
+          reference?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_booking_references_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_booking_references_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_commands: {
         Row: {
           actor_profile_id: string
@@ -112,7 +442,8 @@ export type Database = {
       appointment_events: {
         Row: {
           action: string
-          actor_profile_id: string
+          actor_kind: string
+          actor_profile_id: string | null
           after_state: Json
           appointment_id: string
           before_state: Json | null
@@ -123,7 +454,8 @@ export type Database = {
         }
         Insert: {
           action: string
-          actor_profile_id: string
+          actor_kind?: string
+          actor_profile_id?: string | null
           after_state: Json
           appointment_id: string
           before_state?: Json | null
@@ -134,7 +466,8 @@ export type Database = {
         }
         Update: {
           action?: string
-          actor_profile_id?: string
+          actor_kind?: string
+          actor_profile_id?: string | null
           after_state?: Json
           appointment_id?: string
           before_state?: Json | null
@@ -160,6 +493,51 @@ export type Database = {
           },
           {
             foreignKeyName: "appointment_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_reminder_intents: {
+        Row: {
+          appointment_id: string
+          appointment_starts_at: string
+          created_at: string
+          id: string
+          scheduled_for: string
+          shop_id: string
+          state: string
+        }
+        Insert: {
+          appointment_id: string
+          appointment_starts_at: string
+          created_at?: string
+          id?: string
+          scheduled_for: string
+          shop_id: string
+          state?: string
+        }
+        Update: {
+          appointment_id?: string
+          appointment_starts_at?: string
+          created_at?: string
+          id?: string
+          scheduled_for?: string
+          shop_id?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_reminder_intents_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_reminder_intents_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
@@ -344,12 +722,13 @@ export type Database = {
       appointments: {
         Row: {
           assigned_membership_id: string | null
+          booking_origin: string
           cancellation_reason: string | null
           cancelled_at: string | null
           client_id: string | null
           completed_at: string | null
           created_at: string
-          created_by_profile_id: string
+          created_by_profile_id: string | null
           customer_name_snapshot: string | null
           customer_phone_snapshot: string | null
           ends_at: string
@@ -369,12 +748,13 @@ export type Database = {
         }
         Insert: {
           assigned_membership_id?: string | null
+          booking_origin?: string
           cancellation_reason?: string | null
           cancelled_at?: string | null
           client_id?: string | null
           completed_at?: string | null
           created_at?: string
-          created_by_profile_id: string
+          created_by_profile_id?: string | null
           customer_name_snapshot?: string | null
           customer_phone_snapshot?: string | null
           ends_at: string
@@ -394,12 +774,13 @@ export type Database = {
         }
         Update: {
           assigned_membership_id?: string | null
+          booking_origin?: string
           cancellation_reason?: string | null
           cancelled_at?: string | null
           client_id?: string | null
           completed_at?: string | null
           created_at?: string
-          created_by_profile_id?: string
+          created_by_profile_id?: string | null
           customer_name_snapshot?: string | null
           customer_phone_snapshot?: string | null
           ends_at?: string
@@ -5544,6 +5925,95 @@ export type Database = {
           },
         ]
       }
+      shop_booking_policies: {
+        Row: {
+          allow_cancel: boolean
+          allow_reschedule: boolean
+          change_notice_minutes: number
+          enabled: boolean
+          horizon_days: number
+          lead_minutes: number
+          reminder_channel: string | null
+          reminder_lead_minutes: number
+          reminders_enabled: boolean
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          allow_cancel?: boolean
+          allow_reschedule?: boolean
+          change_notice_minutes?: number
+          enabled?: boolean
+          horizon_days?: number
+          lead_minutes?: number
+          reminder_channel?: string | null
+          reminder_lead_minutes?: number
+          reminders_enabled?: boolean
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          allow_cancel?: boolean
+          allow_reschedule?: boolean
+          change_notice_minutes?: number
+          enabled?: boolean
+          horizon_days?: number
+          lead_minutes?: number
+          reminder_channel?: string | null
+          reminder_lead_minutes?: number
+          reminders_enabled?: boolean
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_booking_policies_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_booking_staff: {
+        Row: {
+          membership_id: string
+          public_id: string
+          public_name: string
+          published: boolean
+          shop_id: string
+        }
+        Insert: {
+          membership_id: string
+          public_id?: string
+          public_name: string
+          published?: boolean
+          shop_id: string
+        }
+        Update: {
+          membership_id?: string
+          public_id?: string
+          public_name?: string
+          published?: boolean
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_booking_staff_membership_id_shop_id_fkey"
+            columns: ["membership_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_memberships"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_booking_staff_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_business_mode_changes: {
         Row: {
           changed_at: string
@@ -6850,6 +7320,370 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "shops"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_website_catalog_entries: {
+        Row: {
+          description: string
+          display_order: number
+          id: string
+          image_data_url: string | null
+          product_id: string | null
+          public_name: string
+          published: boolean
+          service_id: string | null
+          shop_id: string
+          show_price: boolean
+          updated_at: string
+        }
+        Insert: {
+          description?: string
+          display_order?: number
+          id?: string
+          image_data_url?: string | null
+          product_id?: string | null
+          public_name: string
+          published?: boolean
+          service_id?: string | null
+          shop_id: string
+          show_price?: boolean
+          updated_at?: string
+        }
+        Update: {
+          description?: string
+          display_order?: number
+          id?: string
+          image_data_url?: string | null
+          product_id?: string | null
+          public_name?: string
+          published?: boolean
+          service_id?: string | null
+          shop_id?: string
+          show_price?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_catalog_entries_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_product_shop_fk"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "low_stock_products"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_product_shop_fk"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_product_shop_fk"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_service_shop_fk"
+            columns: ["service_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      shop_website_catalog_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          entry_id: string
+          id: string
+          occurred_at: string
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          entry_id: string
+          id?: string
+          occurred_at?: string
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          entry_id?: string
+          id?: string
+          occurred_at?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_catalog_event_shop_fk"
+            columns: ["entry_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_website_catalog_entries"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_website_inquiries: {
+        Row: {
+          contact_key: string
+          created_at: string
+          id: string
+          locale: string
+          message: string
+          sender_contact: string
+          sender_name: string
+          shop_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          contact_key: string
+          created_at?: string
+          id?: string
+          locale: string
+          message: string
+          sender_contact: string
+          sender_name: string
+          shop_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          contact_key?: string
+          created_at?: string
+          id?: string
+          locale?: string
+          message?: string
+          sender_contact?: string
+          sender_name?: string
+          shop_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_inquiries_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_website_inquiry_events: {
+        Row: {
+          actor_user_id: string
+          id: string
+          inquiry_id: string
+          new_status: string
+          occurred_at: string
+          previous_status: string
+          shop_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          id?: string
+          inquiry_id: string
+          new_status: string
+          occurred_at?: string
+          previous_status: string
+          shop_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          id?: string
+          inquiry_id?: string
+          new_status?: string
+          occurred_at?: string
+          previous_status?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_inquiry_events_inquiry_id_shop_id_fkey"
+            columns: ["inquiry_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_website_inquiries"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_inquiry_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_website_logos: {
+        Row: {
+          data_url: string
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          data_url: string
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          data_url?: string
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_logos_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shop_websites"
+            referencedColumns: ["shop_id"]
+          },
+        ]
+      }
+      shop_website_profile_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          id: string
+          occurred_at: string
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          id?: string
+          occurred_at?: string
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          id?: string
+          occurred_at?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_profile_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_website_profiles: {
+        Row: {
+          draft: Json
+          owner_opted_in_at: string | null
+          published: Json | null
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          draft?: Json
+          owner_opted_in_at?: string | null
+          published?: Json | null
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          draft?: Json
+          owner_opted_in_at?: string | null
+          published?: Json | null
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_profiles_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shop_websites"
+            referencedColumns: ["shop_id"]
+          },
+        ]
+      }
+      shop_website_slug_claims: {
+        Row: {
+          claimed_at: string
+          shop_id: string
+          slug: string
+        }
+        Insert: {
+          claimed_at?: string
+          shop_id: string
+          slug: string
+        }
+        Update: {
+          claimed_at?: string
+          shop_id?: string
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_slug_claims_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_websites: {
+        Row: {
+          publication_state: string
+          shop_id: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          publication_state?: string
+          shop_id: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          publication_state?: string
+          shop_id?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_websites_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_websites_slug_shop_id_fkey"
+            columns: ["slug", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_website_slug_claims"
+            referencedColumns: ["slug", "shop_id"]
           },
         ]
       }
@@ -9299,6 +10133,70 @@ export type Database = {
         }
         Returns: string
       }
+      appointment_access_issue: {
+        Args: { p_appointment_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      appointment_access_revoke: {
+        Args: { p_appointment_id: string; p_shop_id: string }
+        Returns: undefined
+      }
+      appointment_access_session_revoke: {
+        Args: { p_slug: string; p_token: string }
+        Returns: Json
+      }
+      appointment_access_session_rotate: {
+        Args: { p_slug: string; p_token: string }
+        Returns: Json
+      }
+      appointment_access_session_validate: {
+        Args: { p_slug: string; p_token: string }
+        Returns: Json
+      }
+      appointment_access_status: {
+        Args: { p_appointment_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      appointment_access_verify: {
+        Args: { p_code: string; p_phone: string; p_slug: string }
+        Returns: Json
+      }
+      appointment_booking_command: {
+        Args: {
+          p_location?: string
+          p_name?: string
+          p_operation: string
+          p_phone?: string
+          p_reference?: string
+          p_request_key: string
+          p_service?: string
+          p_slug: string
+          p_staff?: string
+          p_starts_at?: string
+          p_token: string
+        }
+        Returns: Json
+      }
+      appointment_booking_manage: {
+        Args: { p_page?: number; p_slug: string; p_token: string }
+        Returns: Json
+      }
+      appointment_booking_options: {
+        Args: { p_slug: string; p_token?: string }
+        Returns: Json
+      }
+      appointment_booking_slots: {
+        Args: {
+          p_date: string
+          p_location: string
+          p_reference?: string
+          p_service: string
+          p_slug: string
+          p_staff: string
+          p_token?: string
+        }
+        Returns: Json
+      }
       appointment_calendar: {
         Args: {
           p_from: string
@@ -9306,6 +10204,15 @@ export type Database = {
           p_membership_id?: string
           p_shop_id: string
           p_to: string
+        }
+        Returns: Json
+      }
+      appointment_customer_portal: {
+        Args: {
+          p_bucket?: string
+          p_page?: number
+          p_slug: string
+          p_token: string
         }
         Returns: Json
       }
@@ -10706,6 +11613,11 @@ export type Database = {
         Returns: Json
       }
       shop_billing_read: { Args: { p_shop_id: string }; Returns: Json }
+      shop_booking_settings: { Args: { p_shop_id: string }; Returns: Json }
+      shop_booking_settings_save: {
+        Args: { p_policy: Json; p_shop_id: string; p_staff: Json }
+        Returns: undefined
+      }
       shop_cash_policy: { Args: { p_shop_id: string }; Returns: boolean }
       shop_catalog_media: {
         Args: { p_action: string; p_payload: Json; p_shop_id: string }
@@ -10899,6 +11811,79 @@ export type Database = {
         Returns: Json
       }
       shop_team_read: { Args: { p_shop_id: string }; Returns: Json }
+      shop_website_address: { Args: { p_shop_id: string }; Returns: Json }
+      shop_website_address_save: {
+        Args: { p_shop_id: string; p_slug: string }
+        Returns: Json
+      }
+      shop_website_catalog: {
+        Args: { p_page?: number; p_search?: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_catalog_publish: {
+        Args: {
+          p_item_id: string
+          p_kind: string
+          p_published: boolean
+          p_shop_id: string
+        }
+        Returns: undefined
+      }
+      shop_website_catalog_save: {
+        Args: {
+          p_entry: Json
+          p_item_id: string
+          p_kind: string
+          p_shop_id: string
+        }
+        Returns: undefined
+      }
+      shop_website_host_resolve: { Args: { p_slug: string }; Returns: Json }
+      shop_website_inquiries: {
+        Args: { p_page?: number; p_shop_id: string; p_status?: string }
+        Returns: Json
+      }
+      shop_website_inquiry_status: {
+        Args: { p_inquiry_id: string; p_shop_id: string; p_status: string }
+        Returns: undefined
+      }
+      shop_website_inquiry_submit: {
+        Args: {
+          p_contact: string
+          p_honeypot?: string
+          p_locale: string
+          p_message: string
+          p_name: string
+          p_slug: string
+        }
+        Returns: Json
+      }
+      shop_website_logo_replace: {
+        Args: { p_data_url: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_profile: { Args: { p_shop_id: string }; Returns: Json }
+      shop_website_profile_publish: {
+        Args: { p_owner_opt_in: boolean; p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_profile_save: {
+        Args: { p_profile: Json; p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_profile_unpublish: {
+        Args: { p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_public_catalog: {
+        Args: { p_page?: number; p_slug: string }
+        Returns: Json
+      }
+      shop_website_public_profile: { Args: { p_slug: string }; Returns: Json }
+      shop_website_showcase: {
+        Args: { p_page?: number; p_slug: string }
+        Returns: Json
+      }
       shop_xpay_apply_session: {
         Args: { p_event_id?: string; p_session: Json }
         Returns: Json

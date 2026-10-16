@@ -72,7 +72,11 @@
     "BsCommissionPolicyPage": "packages/ui/src/templates/BsCommissionPolicyPage.vue",
     "BsShopTaxSettingsPage": "packages/ui/src/templates/BsShopTaxSettingsPage.vue",
     "BsChangelogPage": "packages/ui/src/templates/BsChangelogPage.vue",
-    "BsEtaSettingsPage": "packages/ui/src/templates/BsEtaSettingsPage.vue"
+    "BsEtaSettingsPage": "packages/ui/src/templates/BsEtaSettingsPage.vue",
+    "BsShopPublicEntryPage": "packages/ui/src/templates/BsShopPublicEntryPage.vue",
+    "BsShopWebsitePage": "packages/ui/src/templates/BsShopWebsitePage.vue",
+    "BsShopCustomerPortalPage": "packages/ui/src/templates/BsShopCustomerPortalPage.vue",
+    "BsPublicAppointmentBookingPage": "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -1610,7 +1614,8 @@
       "domainAdapter": "apps/shop-suit/app/pages/appointments/index.vue",
       "dependencies": [
         "@building-suit/ui/types/appointmentsPresentation",
-        "~/types/shopCrmRpc"
+        "~/types/shopCrmRpc",
+        "@building-suit/ui/types/appointmentAccessPresentation"
       ],
       "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
       "purpose": "appointments",
@@ -1932,20 +1937,19 @@
       "source": "apps/shop-suit/app/pages/index.vue",
       "kind": "route",
       "currentSharedTemplates": [
-        "packages/ui/src/templates/BsLandingPage.vue"
+        "packages/ui/src/templates/BsShopPublicEntryPage.vue"
       ],
       "renderedBsComponents": [
-        "BsLandingPage"
+        "BsShopPublicEntryPage"
       ],
-      "destination": "packages/ui/src/templates/BsLandingPage.vue",
+      "destination": "packages/ui/src/templates/BsShopPublicEntryPage.vue",
       "status": "verified-local",
       "domainAdapter": "apps/shop-suit/app/pages/index.vue",
       "dependencies": [
-        "@building-suit/contracts",
-        "~/types/plans"
+        "@building-suit/ui/types/shopWebsitePresentation"
       ],
-      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
-      "purpose": "product-landing"
+      "verification": "SS-WEB-PUBLIC-001: exact task browser/API and marketing parity coverage",
+      "purpose": "host-aware-shop-public-entry"
     },
     {
       "source": "apps/shop-suit/app/pages/inventory/index.vue",
@@ -2564,6 +2568,42 @@
         "~/types/shopCrmRpc"
       ],
       "purpose": "eta-merchant-setup-and-submission"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/my-appointments.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsShopCustomerPortalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsShopCustomerPortalPage"
+      ],
+      "destination": "packages/ui/src/templates/BsShopCustomerPortalPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/my-appointments.vue",
+      "dependencies": [
+        "@building-suit/ui/types/customerPortalPresentation"
+      ],
+      "verification": "SS-WEB-CUSTOMER-PORTAL-001: scoped SQL/API and EN/AR responsive portal regressions",
+      "purpose": "shop-customer-appointment-portal"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/book.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicAppointmentBookingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/book.vue",
+      "dependencies": [
+        "@building-suit/ui/types/appointmentBookingPresentation"
+      ],
+      "verification": "SS-APPT-002: scoped booking, transactional availability and EN/AR responsive browser regressions",
+      "purpose": "shop-public-appointment-booking"
     }
   ],
   "verifiedSharedHeads": [
@@ -2684,6 +2724,10 @@
     "BsShopTaxSettingsPage",
     "BsServiceFulfillmentPage",
     "BsChangelogPage",
-    "BsEtaSettingsPage"
+    "BsEtaSettingsPage",
+    "BsShopPublicEntryPage",
+    "BsShopWebsitePage",
+    "BsShopCustomerPortalPage",
+    "BsPublicAppointmentBookingPage"
   ]
 }
