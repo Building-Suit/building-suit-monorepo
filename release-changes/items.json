@@ -378,7 +378,8 @@
     "sources": [
       "bs-task-release-publication",
       "upcoming-net-release-preview",
-      "changelog-status-tabs"
+      "changelog-status-tabs",
+      "retrospective-changelog-history"
     ]
   },
   {

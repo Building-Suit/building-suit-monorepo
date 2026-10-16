@@ -31,7 +31,9 @@ watch(() => props.feed.serverNow, () => { elapsed.value = 0; baseline = typeof p
 onMounted(() => { baseline = performance.now(); timer = setInterval(() => { elapsed.value = Math.max(0, performance.now() - baseline) }, 1000) })
 onBeforeUnmount(() => clearInterval(timer))
 const now = computed(() => new Date(Date.parse(validated.value.serverNow) + elapsed.value).toISOString())
-const stateTitle = computed(() => props.copy[props.state === 'ready' ? 'empty' : props.state])
+const stateTitle = computed(() => props.state === 'ready'
+  ? ((props.releasedOnly || status.value === 'released' ? props.copy.emptyReleased : props.copy.emptyComingSoon) ?? props.copy.empty)
+  : props.copy[props.state])
 </script>
 <template>
   <section class="bs-changelog" :dir="locale === 'ar' ? 'rtl' : 'ltr'" :lang="locale" :aria-label="copy.timeline">

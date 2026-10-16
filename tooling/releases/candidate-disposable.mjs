@@ -23,6 +23,7 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
     for(const file of ['20261016112949_release_cardinality_location','20261016122230_release_refresh_statement_evidence','20261016144255_qualified_release_baseline_pin']) q(migration(file))
     if(beforePreview) beforePreview(q)
     q(migration('20261016173321_durable_release_preview'))
+    q(migration('20261016175503_retrospective_shop_history'))
     return q
   }
   // Opt-in local diagnosis: replay current repository data, not a hosted catalog.
@@ -167,6 +168,41 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
     q(`${jwt}select public.release_candidate_acknowledge(${json({...accepted,deploymentSha:'9'.repeat(40),publishedAt:'2026-10-16T00:00:00Z'})});`)
   })
   assert.ok(feed(retired).entries.every(row=>row.status==='released'),'Upgrade never searches behind an acknowledged retirement boundary')
+  const historyPlan=JSON.parse(readFileSync(new URL('./retrospective-shop.json',import.meta.url),'utf8'))
+  const historic=setup('candidate_history_stage','staging'), historicProd=setup('candidate_history_prod','production')
+  const latestHistory=historyPlan.releases.at(-1)
+  const historicSnapshot={...first,mainSha:historyPlan.baselineSha,mainTree:latestHistory.sourceTree}
+  const historyRefresh=row=>parse(historic(`${jwt}select public.release_candidate_refresh(${json(row)});`))
+  const reserved=historyRefresh(historicSnapshot)
+  historic(`${jwt}select public.release_candidate_ready('${reserved.key}','${reserved.digest}');`)
+  const beforeImport=state(historic)
+  const importHistory=q=>parse(q(`${jwt}select public.release_history_import(${json(historyPlan)});`))
+  const imported=importHistory(historic)
+  assert.deepEqual(importHistory(historic),imported,'History import preserves first import time and digest on retries')
+  assert.deepEqual(state(historic).revisions,beforeImport.revisions,'Retrospective correction never rewrites prior candidate reservations or their target versions')
+  assert.equal(state(historic).baseVersions['shop-suit'],'0.4.0')
+  assert.equal(feed(historic).entries.filter(row=>row.status==='released').length,4)
+  for(const row of feed(historic).entries.filter(row=>row.status==='released')) {
+    assert.equal(row.versionOrigin,'retrospective');assert.equal(isChangelogNew(row,feed(historic).serverNow),false)
+    assert.equal(row.releasedAt,historyPlan.releases.find(item=>item.version===row.version).releasedAt)
+  }
+  const corrected=historyRefresh({...historicSnapshot,baseVersions:{'shop-suit':'0.4.0'}})
+  assert.equal(corrected.manifest.versions['shop-suit'],'0.5.0','Only actual current net changes contribute to the next version after correcting the production baseline')
+  historic(`${jwt}select public.release_candidate_ready('${corrected.key}','${corrected.digest}');`)
+  importHistory(historicProd)
+  const correctedReady=state(historic).revisions.find(row=>row.key===corrected.key)
+  const actualReceipt=parse(historicProd(`${jwt}select public.release_candidate_promote(${json(correctedReady)},'${'9'.repeat(40)}','${historyPlan.baselineSha}','${corrected.manifest.stagingTree}');`))
+  historic(`${jwt}select public.release_candidate_acknowledge(${json(actualReceipt)});`)
+  importHistory(historic);importHistory(historicProd)
+  assert.equal(state(historic).baseVersions['shop-suit'],'0.5.0','Repeated imports never reset a subsequently released version')
+  assert.equal(feed(historic).entries.length,5,'Four historical milestones plus one real current release; no double credit')
+  assert.deepEqual(feed(historic).entries,feed(historicProd).entries.map(row=>row.versionOrigin==='retrospective'?{...row,publishedAt:feed(historic).entries.find(x=>x.id===row.id).publishedAt}:row))
+  assert.throws(()=>historic(`${jwt}select public.release_history_import(${json({...historyPlan,baselineVersion:'9.0.0'})});`),/HISTORY_IMPORT_REVIEW_REQUIRED/)
+  for(const role of ['anon','authenticated']) {
+    assert.throws(()=>historic(`set role ${role};select public.release_history_import(${json(historyPlan)});`),/permission denied/)
+    assert.throws(()=>historic(`set role ${role};select * from public.release_retrospective_imports;`),/permission denied/)
+  }
+  assert.throws(()=>historic('update public.release_retrospective_imports set imported_at=clock_timestamp();'),/IMMUTABLE_RELEASE_HISTORY/)
   let priorLegacy
   const legacy=setup('candidate_existing_legacy','staging',q=>{
     const oldRequest={repository:'Building-Suit/building-suit-monorepo',ref:'refs/heads/stg',parentSha:'4b4c3ca5ffed96e7d61f6eb5a60d04a52862aa0c',sourceSha:'e'.repeat(40),fragments:[change]}

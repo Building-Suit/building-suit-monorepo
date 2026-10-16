@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { canonical, git } from './fragments.mjs'
 import { buildCandidate, promotionCandidate } from './candidate.mjs'
+import { importRetrospective } from './retrospective.mjs'
 import { catalogRejectionReason } from './catalog-diagnostics.mjs'
 
 export function assertReady({ contexts, required, checks }) {
@@ -92,9 +93,10 @@ export async function runPublisher() {
   if (policy.releaseModel !== 2) throw new Error('Upcoming release model is not adopted on this branch')
   const refs = map.products['super-admin-suit']
   const catalog = createCatalog(process.env.RELEASE_CATALOG_URL, process.env.RELEASE_CATALOG_TOKEN, refs[environment].projectRef)
+  const main = git('rev-parse','origin/main')
+  await importRetrospective(catalog, github, main)
   const state = await catalog('release_candidate_state')
   if (state.model !== 2 || state.environment !== environment) throw new Error('Wrong catalog model/environment')
-  const main = git('rev-parse','origin/main')
   let upcoming, staging
   if (environment === 'staging') {
     if (state.productionSha && git('rev-parse',`${state.productionSha}^{tree}`) !== git('rev-parse',`${main}^{tree}`)) throw new Error('Production baseline acknowledgment required before refreshing upcoming release')

@@ -1332,6 +1332,27 @@ export type Database = {
         }
         Relationships: []
       }
+      release_retrospective_imports: {
+        Row: {
+          digest: string
+          history: Json
+          imported_at: string
+          plan_id: string
+        }
+        Insert: {
+          digest: string
+          history: Json
+          imported_at?: string
+          plan_id: string
+        }
+        Update: {
+          digest?: string
+          history?: Json
+          imported_at?: string
+          plan_id?: string
+        }
+        Relationships: []
+      }
       release_version_heads: {
         Row: {
           baseline_evidence: string
@@ -1525,6 +1546,7 @@ export type Database = {
       release_candidate_refresh: { Args: { p_snapshot: Json }; Returns: Json }
       release_candidate_state: { Args: never; Returns: Json }
       release_catalog_state: { Args: never; Returns: Json }
+      release_history_import: { Args: { p_history: Json }; Returns: Json }
       release_public_feed: { Args: never; Returns: Json }
       release_publish: {
         Args: {

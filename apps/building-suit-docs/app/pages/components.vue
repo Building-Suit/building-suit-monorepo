@@ -68,9 +68,9 @@ const changelogBatchFeed: ChangelogFeed = {
   }))),
 }
 const changelogCopy = computed<ChangelogCopy>(() => isArabic.value ? {
-  timeline: 'سجل التحديثات', suit: 'التطبيق', status: 'حالة الإصدار', allSuits: 'كل التطبيقات', allStatuses: 'كل الحالات', released: 'تم الإصدار', comingSoon: 'قريباً', targetVersion: 'الإصدار المستهدف', new: 'جديد', published: 'تاريخ النشر', releasedAt: 'تاريخ الإصدار', empty: 'لا توجد تحديثات', loading: 'جار تحميل التحديثات', error: 'تعذر تحميل التحديثات', denied: 'الوصول غير مسموح', retry: 'إعادة المحاولة',
+  timeline: 'سجل التحديثات', suit: 'التطبيق', status: 'حالة الإصدار', allSuits: 'كل التطبيقات', allStatuses: 'كل الحالات', released: 'تم الإصدار', comingSoon: 'قريباً', targetVersion: 'الإصدار المستهدف', retrospective: 'ترقيم بأثر رجعي', emptyReleased: 'لا توجد إصدارات منشورة بعد', emptyComingSoon: 'لا توجد تحديثات قادمة في هذا التبويب', new: 'جديد', published: 'تاريخ النشر', releasedAt: 'تاريخ الإصدار', empty: 'لا توجد تحديثات', loading: 'جار تحميل التحديثات', error: 'تعذر تحميل التحديثات', denied: 'الوصول غير مسموح', retry: 'إعادة المحاولة',
 } : {
-  timeline: 'Changelog', suit: 'Suit', status: 'Release status', allSuits: 'All Suits', allStatuses: 'All statuses', released: 'Released', comingSoon: 'Coming Soon', targetVersion: 'Target version', new: 'New', published: 'Published', releasedAt: 'Released', empty: 'No updates', loading: 'Loading updates', error: 'Unable to load updates', denied: 'Access denied', retry: 'Retry',
+  timeline: 'Changelog', suit: 'Suit', status: 'Release status', allSuits: 'All Suits', allStatuses: 'All statuses', released: 'Released', comingSoon: 'Coming Soon', targetVersion: 'Target version', retrospective: 'Retrospective version', emptyReleased: 'No released updates yet', emptyComingSoon: 'No upcoming updates in this tab', new: 'New', published: 'Published', releasedAt: 'Released', empty: 'No updates', loading: 'Loading updates', error: 'Unable to load updates', denied: 'Access denied', retry: 'Retry',
 })
 const shellSuit = ref('alpha')
 const shellContext = ref('overview')

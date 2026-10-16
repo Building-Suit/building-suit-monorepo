@@ -25,7 +25,8 @@ const feed = { serverNow: '2026-10-11T00:00:00Z', suits: [{ id: 'shop-suit', nam
 const copy = { timeline: 'Changelog', status: 'Release status', released: 'Released', comingSoon: 'Coming Soon', releasedAt: 'Released' }
 async function render(component, props) {
   const app = vue.createSSRApp({ render: () => vue.h(component, props) })
-  for (const name of ['BsText', 'BsHeading', 'BsStack', 'BsSelect', 'BsSelectOption', 'BsStateSurface', 'BsLink']) app.component(name, { setup: (_, { slots }) => () => vue.h('div', slots.default?.()) })
+  for (const name of ['BsText', 'BsHeading', 'BsStack', 'BsSelect', 'BsSelectOption', 'BsLink']) app.component(name, { setup: (_, { slots }) => () => vue.h('div', slots.default?.()) })
+  app.component('BsStateSurface', { props: ['title'], setup: props => () => vue.h('p', props.title) })
   app.component('BsStatusBadge', { props: ['label'], setup: props => () => vue.h('span', props.label) })
   app.component('BsTabs', { props: ['modelValue', 'tabs'], setup: props => () => vue.h('nav', { 'data-selected': props.modelValue }, props.tabs.map(t => vue.h('button', t.label))) })
   app.component('BsTimeline', { props: ['entries'], setup: (props, { slots }) => () => vue.h('div', props.entries.map(entry => slots.default({ entry }))) })
@@ -52,6 +53,19 @@ for (const locale of ['en', 'ar']) {
     assert.doesNotMatch(soon, /9\.9\.9|<time|2026-10/)
   })
 }
+for (const locale of ['en', 'ar']) test(`${locale}: released empty state does not deny upcoming work`, async () => {
+  const releasedEmpty = locale === 'ar' ? 'لا توجد إصدارات منشورة بعد' : 'No released updates yet'
+  const html = await render(Timeline, { feed: { ...feed, entries: [upcoming] }, copy: { ...copy, emptyReleased: releasedEmpty, emptyComingSoon: 'No upcoming updates in this tab' }, locale, suit: 'shop-suit' })
+  assert.match(html, new RegExp(releasedEmpty))
+  assert.doesNotMatch(html, /No upcoming updates in this tab|data-entry="upcoming"/)
+})
+test('retrospective numbering is explicitly labeled without changing version or actual release date', async () => {
+  const html = await render(Card, { entry: { ...released, versionOrigin: 'retrospective' }, locale: 'en', copy: { ...copy, retrospective: 'Retrospective version', new: 'New' }, suitName: 'Shop', isNew: true })
+  assert.doesNotMatch(html, />New</)
+  assert.match(html, /Retrospective version/)
+  assert.match(html, /1\.2\.3/)
+  assert.match(html, /2026-10-09T00:00:00Z/)
+})
 test('curated public EN/AR fields have distinct copy', () => {
   const items = JSON.parse(readFileSync(new URL('../../../release-changes/items.json', import.meta.url)))
   for (const item of items.filter(item => item.disposition === 'public')) for (const locale of ['en', 'ar']) {
