@@ -483,6 +483,16 @@
       "adapterBoundary": "App-owned verified identity lifecycle, provider gates and localized copy; shared templates own complete credential and current-session presentation. No metadata authority or provider calls inside UI.",
       "task": "DOS-M1-006",
       "migrationStatus": "registered complete synthetic account route"
+    },
+    {
+      "family": "practice-setup-overview",
+      "owner": "packages/ui",
+      "components": [
+        "BsPracticeOverviewPage"
+      ],
+      "adapterBoundary": "Typed profile/location summaries and semantic navigation; Doctor owns verified enrollment, persisted draft, optimistic commands and all data access. Shared signup enrollment adds opt-in approved-field and draft-action presentation.",
+      "task": "DOS-M1-007",
+      "migrationStatus": "registered complete synthetic owner workspace"
     }
   ]
 }

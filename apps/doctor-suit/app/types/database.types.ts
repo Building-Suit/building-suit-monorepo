@@ -174,6 +174,39 @@ export type Database = {
           },
         ]
       }
+      onboarding_drafts: {
+        Row: {
+          command_key: string
+          display_name: string
+          location_name: string
+          practice_name: string
+          timezone: string
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          command_key: string
+          display_name?: string
+          location_name?: string
+          practice_name?: string
+          timezone?: string
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          command_key?: string
+          display_name?: string
+          location_name?: string
+          practice_name?: string
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
       practices: {
         Row: {
           created_at: string
@@ -211,6 +244,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      doctor_complete_onboarding: {
+        Args: { p_draft_version: number; p_key: string }
+        Returns: Json
+      }
       doctor_onboard: {
         Args: {
           p_key: string
@@ -220,8 +257,30 @@ export type Database = {
         }
         Returns: Json
       }
+      doctor_practice_setup: { Args: never; Returns: Json }
       doctor_runtime_contract: { Args: never; Returns: Json }
+      doctor_save_onboarding_draft: {
+        Args: {
+          p_display_name: string
+          p_expected_version: number
+          p_key: string
+          p_location_name: string
+          p_practice_name: string
+          p_timezone: string
+        }
+        Returns: Json
+      }
       doctor_session_context: { Args: never; Returns: Json }
+      doctor_update_practice_profile: {
+        Args: {
+          p_display_name: string
+          p_expected_version: number
+          p_key: string
+          p_practice: string
+          p_practice_name: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

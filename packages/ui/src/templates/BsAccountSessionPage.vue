@@ -7,6 +7,7 @@ defineProps<{
   statusDescription: string
   signOut: string
   pending?: boolean
+  links?: { label: string; to: string }[]
   error?: string | null
   availability?: { state: 'loading' | 'error' | 'permission'; title: string; description: string }
 }>()
@@ -20,6 +21,7 @@ const emit = defineEmits<{ signOut: [] }>()
       <BsText as="p">{{ description }}</BsText>
       <BsStateSurface state="success" :title="status" :description="statusDescription" />
       <BsAlert v-if="error" tone="error" :description="error" />
+      <BsLink v-for="link in links" :key="link.to" :to="link.to">{{ link.label }}</BsLink>
       <BsButton :pending="pending" :disabled="pending" @click="emit('signOut')">{{ signOut }}</BsButton>
     </BsStack>
   </BsProductAuthFrame>

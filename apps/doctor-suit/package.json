@@ -16,7 +16,8 @@
     "@building-suit/nuxt-layer": "workspace:*",
     "@building-suit/ui": "workspace:*",
     "@supabase/supabase-js": "2.116.0",
-    "@supabase/ssr": "0.12.7"
+    "@supabase/ssr": "0.12.7",
+    "@building-suit/ux": "workspace:*"
   },
   "devDependencies": {
     "typescript": "5.9.3",

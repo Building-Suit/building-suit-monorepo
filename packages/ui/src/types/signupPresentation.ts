@@ -4,7 +4,7 @@ export interface BsSignupForm {
   locationName: string; locationCode: string; locationAddress: string; locationPhone: string; businessMode: string
 }
 export interface BsSignupChoice { value: string | number; label: string }
-export interface BsSignupFeatures { phone: boolean; jobTitle: boolean; organizationDetails: boolean; mainLocation: boolean; businessMode: boolean; passwordMinLength: number; workspaceMinLength: number | null; workspaceMaxLength: number | null; locationMinLength: number | null; locationMaxLength: number | null; locationCodeMaxLength: number | null; locationAddressMaxLength: number | null; locationPhoneMaxLength: number | null }
+export interface BsSignupFeatures { profileName?: boolean; profileNameMaxLength?: number; standaloneTimezone?: boolean; locationContactFields?: boolean; phone: boolean; jobTitle: boolean; organizationDetails: boolean; mainLocation: boolean; businessMode: boolean; passwordMinLength: number; workspaceMinLength: number | null; workspaceMaxLength: number | null; locationMinLength: number | null; locationMaxLength: number | null; locationCodeMaxLength: number | null; locationAddressMaxLength: number | null; locationPhoneMaxLength: number | null }
 export interface BsSignupView { stage: 'account' | 'workspace' | 'verification' | 'recovery'; step: number; pending: boolean; error: string; notice: string; existingAccount: boolean; hydrated: boolean | undefined; submitDisabled: boolean; submitLabel: string; pendingLabel: string; expired: boolean; resendDisabled: boolean; verified: boolean; canStartOver: boolean }
 export interface BsSignupCopy {
   eyebrow: string; title: string; description: string; name: string; phone: string; jobTitle: string; email: string; password: string; passwordHint: string

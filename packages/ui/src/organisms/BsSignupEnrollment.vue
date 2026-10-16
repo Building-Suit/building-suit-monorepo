@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { BsSignupForm, BsSignupFeatures, BsSignupView, BsSignupCopy, BsSignupVerificationCopy, BsSignupLegalConsent, BsSignupChoices, BsSignupLinks } from '../types/signupPresentation'
-defineProps<{ features: BsSignupFeatures; view: BsSignupView; copy: BsSignupCopy; verificationCopy: BsSignupVerificationCopy; choices: BsSignupChoices; links: BsSignupLinks; legalConsent: BsSignupLegalConsent | null }>()
+defineProps<{ draftAction?: string;  features: BsSignupFeatures; view: BsSignupView; copy: BsSignupCopy; verificationCopy: BsSignupVerificationCopy; choices: BsSignupChoices; links: BsSignupLinks; legalConsent: BsSignupLegalConsent | null }>()
 const form = defineModel<BsSignupForm>('form', { required: true })
 const otp = defineModel<string>('otp', { required: true })
 const consent = defineModel<boolean>('consent', { required: true })
-const emit = defineEmits<{ submit: []; back: []; verify: []; resend: []; startOver: []; signIn: []; clearDraft: [] }>()
+const emit = defineEmits<{ submit: []; back: []; verify: []; resend: []; startOver: []; signIn: []; clearDraft: []; saveDraft: [] }>()
 function updateText(key: Exclude<keyof BsSignupForm, 'fiscalMonth'>, value: string | number | boolean | (string | number)[] | null | undefined) { if (Array.isArray(value)) return; form.value = { ...form.value, [key]: String(value ?? '') } }
 </script>
 <template>
@@ -24,6 +24,8 @@ function updateText(key: Exclude<keyof BsSignupForm, 'fiscalMonth'>, value: stri
       </BsGrid>
       <BsStack v-else>
         <BsGrid :columns="2">
+          <BsField v-if="features.profileName" v-slot="field" :label="copy.name" required><BsInput :id="field.id" :model-value="form.name" autocomplete="name" required :maxlength="features.profileNameMaxLength" @update:model-value="updateText('name', $event)" /></BsField>
+          <BsField v-if="features.standaloneTimezone && !features.organizationDetails" v-slot="field" :label="copy.timezone" required><BsInput :id="field.id" :model-value="form.timezone" dir="ltr" required @update:model-value="updateText('timezone', $event)" /></BsField>
           <BsField v-slot="field" :label="copy.workspaceName" required><BsInput :id="field.id" :model-value="form.workspaceName" :minlength="features.workspaceMinLength ?? undefined" :maxlength="features.workspaceMaxLength ?? undefined" required @update:model-value="updateText('workspaceName', $event)" /></BsField>
           <template v-if="features.organizationDetails">
             <BsField v-slot="field" :label="copy.legalName" required><BsInput :id="field.id" :model-value="form.legalName" required @update:model-value="updateText('legalName', $event)" /></BsField>
@@ -37,15 +39,15 @@ function updateText(key: Exclude<keyof BsSignupForm, 'fiscalMonth'>, value: stri
         </BsGrid>
         <BsFieldGroup v-if="features.mainLocation" :legend="copy.mainLocation" layout="grid" :columns="2">
           <BsField v-slot="field" :label="copy.locationName" required><BsInput :id="field.id" :model-value="form.locationName" :minlength="features.locationMinLength ?? undefined" :maxlength="features.locationMaxLength ?? undefined" required @update:model-value="updateText('locationName', $event)" /></BsField>
-          <BsField v-slot="field" :label="copy.locationCode"><BsInput :id="field.id" :model-value="form.locationCode" :maxlength="features.locationCodeMaxLength ?? undefined" @update:model-value="updateText('locationCode', $event)" /></BsField>
-          <BsField v-slot="field" :label="copy.locationAddress"><BsInput :id="field.id" :model-value="form.locationAddress" :maxlength="features.locationAddressMaxLength ?? undefined" @update:model-value="updateText('locationAddress', $event)" /></BsField>
-          <BsField v-slot="field" :label="copy.locationPhone"><BsInput :id="field.id" :model-value="form.locationPhone" :maxlength="features.locationPhoneMaxLength ?? undefined" dir="auto" @update:model-value="updateText('locationPhone', $event)" /></BsField>
+          <BsField v-if="features.locationContactFields !== false" v-slot="field" :label="copy.locationCode"><BsInput :id="field.id" :model-value="form.locationCode" :maxlength="features.locationCodeMaxLength ?? undefined" @update:model-value="updateText('locationCode', $event)" /></BsField>
+          <BsField v-if="features.locationContactFields !== false" v-slot="field" :label="copy.locationAddress"><BsInput :id="field.id" :model-value="form.locationAddress" :maxlength="features.locationAddressMaxLength ?? undefined" @update:model-value="updateText('locationAddress', $event)" /></BsField>
+          <BsField v-if="features.locationContactFields !== false" v-slot="field" :label="copy.locationPhone"><BsInput :id="field.id" :model-value="form.locationPhone" :maxlength="features.locationPhoneMaxLength ?? undefined" dir="auto" @update:model-value="updateText('locationPhone', $event)" /></BsField>
         </BsFieldGroup>
         <BsAlert v-if="copy.trialTitle" tone="info" :title="copy.trialTitle" :description="copy.trialBody" />
         <BsChoiceGroup v-if="features.businessMode" :model-value="form.businessMode" type="radio" name="signup-business-mode" :legend="copy.businessMode" :description="copy.businessModeHelp" :options="choices.businessModes" @update:model-value="updateText('businessMode', $event)" />
         <BsLegalConsent v-if="legalConsent" v-model="consent" :keypath="legalConsent.keypath" :terms-label="legalConsent.termsLabel" :terms-to="legalConsent.termsTo" :refund-label="legalConsent.refundLabel" :refund-to="legalConsent.refundTo" :privacy-label="legalConsent.privacyLabel" :privacy-to="legalConsent.privacyTo" required />
       </BsStack>
-      <template v-if="view.stage === 'workspace' && copy.formFooter" #footer>{{ copy.formFooter }}</template>
+      <template v-if="view.stage === 'workspace' && (copy.formFooter || draftAction)" #footer><BsText v-if="copy.formFooter">{{ copy.formFooter }}</BsText><BsButton v-if="draftAction" type="button" variant="secondary" :disabled="view.pending" @click="emit('saveDraft')">{{ draftAction }}</BsButton></template>
     </BsSignupWizard>
     <template v-if="links.formSignInLabel" #footer><BsLink :to="links.signInTo">{{ links.formSignInLabel }}</BsLink></template>
   </BsAuthForm>

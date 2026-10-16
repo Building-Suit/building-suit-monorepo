@@ -146,13 +146,13 @@
       "suit": "doctor-suit",
       "status": "not-needed",
       "workflows": [
-        "synthetic preview and verified account lifecycle"
+        "synthetic account lifecycle and owner profile/setup"
       ],
-      "reason": "The synthetic account lifecycle has no operational business readers or Realtime subscriptions. Account verification does not establish live synchronization.",
+      "reason": "Owner profile and setup reads use explicit request refresh. No live queue or Realtime subscription is implemented.",
       "evidence": [
         {
           "path": "apps/doctor-suit/README.md",
-          "anchor": "There are no operational business readers or Realtime subscriptions"
+          "anchor": "Owner profile and setup reads use explicit request refresh"
         }
       ],
       "unblock": [

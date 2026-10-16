@@ -78,7 +78,8 @@
     "BsShopCustomerPortalPage": "packages/ui/src/templates/BsShopCustomerPortalPage.vue",
     "BsPublicAppointmentBookingPage": "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue",
     "BsProductPreviewPage": "packages/ui/src/templates/BsProductPreviewPage.vue",
-    "BsAccountSessionPage": "packages/ui/src/templates/BsAccountSessionPage.vue"
+    "BsAccountSessionPage": "packages/ui/src/templates/BsAccountSessionPage.vue",
+    "BsPracticeOverviewPage": "packages/ui/src/templates/BsPracticeOverviewPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2703,6 +2704,35 @@
       "status": "implemented; synthetic authentication browser verification pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/onboarding.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsSignupPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/onboarding.vue",
+      "status": "implemented; synthetic owner-setup verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "signup"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/workspace.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPracticeOverviewPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/workspace.vue",
+      "status": "implemented; synthetic owner-setup verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "practice-overview"
+    },
+    {
+      "source": "apps/doctor-suit/app/layouts/practice.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "domainAdapter": "apps/doctor-suit/app/layouts/practice.vue",
+      "status": "implemented; synthetic owner-setup verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -2829,6 +2859,7 @@
     "BsShopCustomerPortalPage",
     "BsPublicAppointmentBookingPage",
     "BsProductPreviewPage",
-    "BsAccountSessionPage"
+    "BsAccountSessionPage",
+    "BsPracticeOverviewPage"
   ]
 }

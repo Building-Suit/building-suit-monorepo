@@ -4,6 +4,8 @@ import type { Database } from '../types/database.types'
 import { createDoctorAuthController, doctorAuthState } from '../utils/authController'
 import { doctorAuthBackend } from '../utils/authBackend'
 import { doctorProviderConfiguration } from '../utils/authConfiguration'
+import { doctorPracticeRepository } from '../utils/practiceRepository'
+import { createDoctorPracticeController, doctorPracticeState } from '../utils/practiceController'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig()
@@ -31,8 +33,9 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
   const locked = useCookie<string | null>(`bs-doctor-${settings.environment}-locked`, { sameSite: 'lax', path: '/', secure: settings.origin.startsWith('https:') })
   const state = reactive(doctorAuthState())
+  const practice = createDoctorPracticeController(client ? doctorPracticeRepository(client) : null, reactive(doctorPracticeState()), () => controller.state.identity)
   const controller = createDoctorAuthController(client ? doctorAuthBackend(client, settings.origin) : null, state, {
-    clear: () => nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))),
+    clear: () => { practice.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) },
     locked: () => locked.value === '1', lock: () => { locked.value = '1' }, unlock: () => { locked.value = null },
   })
   if (import.meta.client && client) {
@@ -42,5 +45,5 @@ export default defineNuxtPlugin((nuxtApp) => {
     })
     nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh() })
   }
-  return { provide: { doctorAuth: controller } }
+  return { provide: { doctorAuth: controller, doctorPractice: practice } }
 })
