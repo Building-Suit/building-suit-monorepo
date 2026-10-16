@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { buildCandidate } from './candidate.mjs'
 import {readFileSync,writeFileSync} from 'node:fs'
 import {parseChangelogFeed,isChangelogNew} from '../../packages/contracts/src/changelog.ts'
 export async function testCandidates({sql,databaseSql,parallelDatabaseSql,outputPath}) {
@@ -20,6 +21,16 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
     if(beforeModel) beforeModel(q)
     q(migration('20261015215030_upcoming_release_candidates'))
     return q
+  }
+  // Opt-in local diagnosis: replay current repository data, not a hosted catalog.
+  if (process.env.RELEASE_TEST_GIT_CANDIDATE === '1') {
+    // Exercise the real Git-derived candidate as well as synthetic policy fixtures.
+    const actual=setup('candidate_repository','staging')
+    const actualSnapshot={...buildCandidate('origin/main','HEAD'),baseVersions:{'shop-suit':'0.0.0'}}
+    const actualRelease=JSON.parse(actual(`${jwt}select public.release_candidate_refresh(${json(actualSnapshot)});`).split('\n').at(-1))
+    assert.equal(actualRelease.manifest.versions['shop-suit'],'0.1.0')
+    assert.equal(actualRelease.manifest.entries.length,actualSnapshot.changes.filter(row=>row.disposition==='public').length)
+    assert.equal(actual(`${jwt}select public.release_candidate_state();`).includes(actualRelease.key),true)
   }
   const stage=setup('candidate_stage','staging'),prod=setup('candidate_prod','production')
   const copy={en:'Review upcoming work',ar:'مراجعة العمل القادم'}

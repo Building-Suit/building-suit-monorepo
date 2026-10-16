@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { canonical, git } from './fragments.mjs'
 import { buildCandidate, promotionCandidate } from './candidate.mjs'
+import { catalogRejectionReason } from './catalog-diagnostics.mjs'
 
 export function assertReady({ contexts, required, checks }) {
   if (!Array.isArray(required) || !required.length || required.some(name => typeof name !== 'string' || !name.trim())) throw new Error('Deployment readiness configuration required')
@@ -39,13 +40,16 @@ export function assertBinding(url, projectRef) {
 function ancestor(sha, tip) {
   try { execFileSync('git', ['merge-base', '--is-ancestor', sha, tip], { stdio: 'ignore' }); return true } catch { return false }
 }
-export function createCatalog(url, token, projectRef) {
+export function createCatalog(url, token, projectRef, request = fetch) {
   assertBinding(url, projectRef)
   if (!token) throw new Error('Server publishing credential required')
   return async (name, args = {}) => {
-    const response = await fetch(`${url}/rest/v1/rpc/${name}`, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(30000),
+    const response = await request(`${url}/rest/v1/rpc/${name}`, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(30000),
       headers: { apikey: token, authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify(args) })
-    if (!response.ok) throw new Error(`Catalog operation ${name} rejected (HTTP ${response.status}); payload and credentials omitted`)
+    if (!response.ok) {
+      const reason = await catalogRejectionReason(response)
+      throw new Error(`Catalog operation ${name} rejected (HTTP ${response.status}; reason ${reason}); payload and credentials omitted`)
+    }
     return response.json()
   }
 }
