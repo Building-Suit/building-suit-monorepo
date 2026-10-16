@@ -95,6 +95,7 @@ const THEMES: Array<{ value: 'light' | 'dark' | 'system', labelKey: 'themeLight'
     <button
       type="button"
       class="ls-btn ls-btn-sm w-full"
+      :disabled="!hydrated"
       :aria-expanded="open"
       :aria-label="`${ui('language')} · ${ui('theme')}`"
       aria-haspopup="menu"

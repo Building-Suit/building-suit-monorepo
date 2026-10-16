@@ -762,8 +762,8 @@
         "ar": "\u062a\u0646\u0642\u0651\u0644 \u0628\u064a\u0646 \u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u0644\u063a\u0629 \u0648\u0627\u0644\u0645\u0638\u0647\u0631 \u0648\u0623\u0639\u062f \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0646\u062f \u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a."
       },
       "details": {
-        "en": "Opening settings focuses the first choice. Arrow keys, Home and End navigate the menu; Escape or choosing a language returns focus to the settings control.",
-        "ar": "\u064a\u0636\u0639 \u0641\u062a\u062d \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0644\u0649 \u0627\u0644\u062e\u064a\u0627\u0631 \u0627\u0644\u0623\u0648\u0644. \u062a\u062a\u0646\u0642\u0644 \u0645\u0641\u0627\u062a\u064a\u062d \u0627\u0644\u0623\u0633\u0647\u0645 \u0648Home \u0648End \u062f\u0627\u062e\u0644 \u0627\u0644\u0642\u0627\u0626\u0645\u0629\u060c \u0648\u064a\u0639\u064a\u062f Escape \u0623\u0648 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0644\u063a\u0629 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0625\u0644\u0649 \u0632\u0631 \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a."
+        "en": "Opening settings focuses the first choice. Arrow keys, Home and End navigate the menu; Escape or choosing a language returns focus to the settings control. The control waits for client handlers before accepting the first activation.",
+        "ar": "\u064a\u0636\u0639 \u0641\u062a\u062d \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0644\u0649 \u0627\u0644\u062e\u064a\u0627\u0631 \u0627\u0644\u0623\u0648\u0644. \u062a\u062a\u0646\u0642\u0644 \u0645\u0641\u0627\u062a\u064a\u062d \u0627\u0644\u0623\u0633\u0647\u0645 \u0648Home \u0648End \u062f\u0627\u062e\u0644 \u0627\u0644\u0642\u0627\u0626\u0645\u0629\u060c \u0648\u064a\u0639\u064a\u062f Escape \u0623\u0648 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0644\u063a\u0629 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0625\u0644\u0649 \u0632\u0631 \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a. \u064a\u0646\u062a\u0638\u0631 \u0627\u0644\u0632\u0631 \u062c\u0627\u0647\u0632\u064a\u0629 \u0645\u0639\u0627\u0644\u062c\u0627\u062a\u0647 \u0642\u0628\u0644 \u0642\u0628\u0648\u0644 \u0623\u0648\u0644 \u062a\u0646\u0634\u064a\u0637."
       }
     },
     "evidence": [
@@ -774,10 +774,15 @@
       {
         "path": "packages/ux/src/composables/useFloatingMenu.ts",
         "contains": "closeMenu: menu.close, onKeydown"
+      },
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": ":disabled=\"!hydrated\""
       }
     ],
     "sources": [
-      "dos-m1-004-settings-focus"
+      "dos-m1-004-settings-focus",
+      "dos-m1-008-settings-hydration"
     ]
   },
   {
@@ -902,9 +907,11 @@
       "docs/shared/ui-ownership-manifest.json",
       "docs/shared/realtime-adoption.json",
       "docs/shared/realtime-adoption.md",
-      "docs/work-packages/doctor-suit/locations-evidence.md"
+      "docs/work-packages/doctor-suit/locations-evidence.md",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/testing/e2e/settings-menu-focus.spec.ts"
     ],
-    "reason": "Add synthetic doctor-owned working-location CRUD, retained archive rows, scoped secretary projections and explicit context selection with stale-read/draft/dialog invalidation. The shared location template and shell controls are opt-in. Shared record actions gain an explicit reset operation; existing consumers retain their default behavior. Doctor remains an internal preview without clinical authority or operational registration. Patient/appointment integration acceptance remains deferred to its real schema features.",
+    "reason": "Add synthetic doctor-owned working-location CRUD, retained archive rows, scoped secretary projections and explicit context selection with stale-read/draft/dialog invalidation. The shared location template and shell controls are opt-in. Shared record actions gain an explicit reset operation; existing consumers retain their default behavior. Doctor remains an internal preview without clinical authority or operational registration. Patient/appointment integration acceptance remains deferred to its real schema features. Internal consumers also retain provenance for the shared pre-hydration settings guard; its visible Shop behavior is separately classified as a public patch.",
     "sources": [
       "dos-m1-008"
     ]

@@ -8,7 +8,7 @@ for (const app of [
   { name: 'Automation', port: 4324, path: '/' },
   { name: 'Super Admin', port: 4325, path: '/' },
 ]) for (const width of [390, 1280]) {
-  test(`${app.name} ${width}px: settings keyboard focus and locale/theme transitions`, async ({ page, context }, info) => {
+  test(`${app.name} ${width}px: settings keyboard focus and locale/theme transitions`, async ({ page, context, browser }, info) => {
     const denied: string[] = []
     await page.route('**/*', route => {
       const url = new URL(route.request().url())
@@ -18,6 +18,19 @@ for (const app of [
       }
       return route.continue()
     })
+    if (width === 390) {
+      const staticContext = await browser.newContext({ javaScriptEnabled: false })
+      try {
+        const staticPage = await staticContext.newPage()
+        await staticPage.route('**/*', route => {
+          const url = new URL(route.request().url())
+          return ['127.0.0.1', 'localhost'].includes(url.hostname) && !/n8n/i.test(url.pathname) ? route.continue() : route.abort()
+        })
+        await staticPage.goto(`http://127.0.0.1:${app.port}${app.path}`)
+        const staticRoot = app.name === 'Docs' ? staticPage.getByRole('banner') : staticPage
+        await expect(staticRoot.getByRole('button', { name: 'Language · Theme', exact: true }).first()).toBeDisabled()
+      } finally { await staticContext.close() }
+    }
     await context.addCookies([{ name: 'building-suit-locale', value: 'en', url: `http://127.0.0.1:${app.port}` }])
     await page.addInitScript(() => localStorage.setItem('building-suit.theme', 'light'))
     await page.setViewportSize({ width, height: 900 })
@@ -26,6 +39,7 @@ for (const app of [
     const root = app.name === 'Docs' ? page.getByRole('banner') : page
     const settings = root.getByRole('button', { name: 'Language · Theme', exact: true }).first()
     await expect(settings).toBeVisible()
+    await expect(settings).toBeEnabled()
     await settings.focus()
     await page.keyboard.press('Enter')
     await expect(page.getByRole('menu')).toBeVisible()
