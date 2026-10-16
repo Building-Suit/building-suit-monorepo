@@ -1,5 +1,7 @@
 # Parent handoff — nine Doctor Suit milestone contracts
 
+Current delivery update: the parent reports renewed continuation and one successful read-only fingerprint check after the earlier cancellation. No hosted writes were performed here. [Exact import delivery and offline adapter](import-delivery/README.md) preserve the approved 7a6dcc20 packets/proposals byte-for-byte and supersede the earlier pending-read status recorded below.
+
 Prepared all nine milestones sequentially from the actual Library inputs. No duplicate task inventory, database writes, imports, runtime activation, app implementation, credentials, hosted product migrations, deployment or main promotion occurred. Cloud executor only; the user's network was not used.
 
 Worktree: `/workspace/doctor-planning`. Branch: `codex/doctor-suit/milestone-contracts`. Draft PR: https://github.com/Building-Suit/building-suit-monorepo/pull/345. Stack: `doctor-suit`; root target `stg`, no same-stack parent. Inspected base: `1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d`. M1 was reported and first published at `71b1e59f`; subsequent updates retain the same PR.

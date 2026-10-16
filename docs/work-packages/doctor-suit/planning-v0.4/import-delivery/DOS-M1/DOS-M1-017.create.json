@@ -1,0 +1,554 @@
+{
+  "function": "control.create_task_with_publication_contract",
+  "review_only": true,
+  "bindings_required": [
+    "p_workstream_slug",
+    "p_model_profile",
+    "p_retry_policy_id"
+  ],
+  "arguments": {
+    "p_project_slug": "building-suit",
+    "p_workstream_slug": null,
+    "p_task_id": "DOS-M1-017",
+    "p_sequence": 170,
+    "p_priority": 100,
+    "p_title": "Audit visibility and administrative data-preservation controls",
+    "p_description": "Expose a permission-scoped audit view and safe archival/correction behavior for M1 administrative records, while preparing the explicit real-data governance gate.\n\nRequirements\n- DOS-M1-R002: Doctors can work in multiple clinics with multiple secretaries. A secretary has independently scoped invited memberships with multiple doctors and only the permissions each doctor grants.\n- DOS-M1-R003: M1 is the public product website plus administrative doctor/secretary browser portal, synthetic data only; clinical prescribing starts M2 and mobile remains later.\n- DOS-M1-R004: Backend-enforced access, product/session isolation, audit attribution and synthetic-only development must precede any real-patient pilot. Public copy cannot claim unimplemented or unverified capabilities.\n- DOS-M1-R005: Use Building-Suit/building-suit-monorepo, pinned stack, shared packages/ui templates and packages/ux interactions; Doctor app adapters own logic/data. Independent runtime verification and publication remain control-plane owned.\n- DOS-M1-F017: Expose a permission-scoped audit view and safe archival/correction behavior for M1 administrative records, while preparing the explicit real-data governance gate. Acceptance: Audit covers administrative writes, invitations/grants and document access according to approved policy. Client users cannot modify audit events or silently erase linked history. No clinical bulk export, erasure or retention period is guessed; unresolved policies remain disabled and documented. Audit view is scoped, searchable and excludes credentials or unnecessary sensitive payloads.\n\nDependencies: DOS-M1-010, DOS-M1-012, DOS-M1-014, DOS-M1-016\nBlocking decisions: DOS-M1-GATE-START, DOS-M1-D001, DOS-M1-D002, DOS-M1-D003\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/supabase/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/src/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-changes/items.json\n- release-fragments/dos-m1-017.json\n\nAcceptance\n1. Audit covers administrative writes, invitations/grants and document access according to approved policy.\n2. Client users cannot modify audit events or silently erase linked history.\n3. No clinical bulk export, erasure or retention period is guessed; unresolved policies remain disabled and documented.\n4. Audit view is scoped, searchable and excludes credentials or unnecessary sensitive payloads.\n\nVerification scenarios\n- Attempt client mutation/deletion of audit entries.\n- Reconcile representative create/edit/archive/invite/permission actions to attributed events.\n- Test cross-practice audit queries and document-access history.\n\nExpected outputs\n- apps/doctor-suit/tests/unit/dos-m1-017.test.mjs\n- apps/doctor-suit/supabase/tests/dos-m1-017.sql\n- apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts\n- release-fragments/dos-m1-017.json\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check workspace and template boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Create and execute meaningful task-owned regression coverage\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m1-017.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m1-017-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Prove database tenant authorization and write integrity using disposable fixtures\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-017.sql\"\n    ],\n    \"commands\": [\n      \"dos-m1-017-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify the browser user journey and denial/recovery states\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts\"\n    ],\n    \"commands\": [\n      \"dos-m1-017-browser\"\n    ],\n    \"requires\": [\n      \"browser\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression including affected shared consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence\",\n    \"commands\": [\n      \"doctor-release-check\"\n    ],\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"release_check_receipt_must_match_candidate_head_and_reviewed_classification\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.\",\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"independent_automated_verifier_receipt_required\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.\n- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.\n- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.\n\nCriterion-specific coverage\n[\n  {\n    \"case_id\": \"DOS-M1-017-C01\",\n    \"criterion_ids\": [\n      1\n    ],\n    \"assertion\": \"Audit covers administrative writes, invitations/grants and document access according to approved policy.\",\n    \"procedure\": \"Perform administrative writes, grant changes and document reads; reconcile the approved audit events and actors.\",\n    \"test_case_name\": \"DOS-M1-017-C01\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-017.sql\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-017-data\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-017-C02\",\n    \"criterion_ids\": [\n      2\n    ],\n    \"assertion\": \"Client users cannot modify audit events or silently erase linked history.\",\n    \"procedure\": \"Attempt client audit mutation and deletion of linked history; verify denial and unchanged originals.\",\n    \"test_case_name\": \"DOS-M1-017-C02\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-017.sql\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-017-data\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-017-C03\",\n    \"criterion_ids\": [\n      3\n    ],\n    \"assertion\": \"No clinical bulk export, erasure or retention period is guessed; unresolved policies remain disabled and documented.\",\n    \"procedure\": \"Verify unresolved retention/export policy remains explicitly unresolved and confirm the corresponding live-data operations remain disabled.\",\n    \"test_case_name\": \"DOS-M1-017-C03\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m1-017.test.mjs\",\n      \"apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-017-unit\",\n      \"dos-m1-017-browser\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"independent-exact-candidate-automated-verifier\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": true,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\",\n      \"automated_receipt_fields\": [\n        \"independent verifier execution ID\",\n        \"exact candidate SHA and base SHA\",\n        \"case ID and evaluated input artifact hashes\",\n        \"existing authorization/decision references where relevant\",\n        \"executed command argv, exit codes and immutable logs or reproducible document-comparison assertions\",\n        \"per-assertion result with failed, skipped, unavailable and unrun obligations distinguished\"\n      ],\n      \"missing_evidence_behavior\": \"Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-017-C04\",\n    \"criterion_ids\": [\n      4\n    ],\n    \"assertion\": \"Audit view is scoped, searchable and excludes credentials or unnecessary sensitive payloads.\",\n    \"procedure\": \"Filter/page the permitted audit view and inspect results for outsider data, credentials and excessive payloads.\",\n    \"test_case_name\": \"DOS-M1-017-C04\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-017.sql\",\n      \"apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-017-data\",\n      \"dos-m1-017-browser\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-017-RELEASE\",\n    \"criterion_ids\": [],\n    \"assertion\": \"Task-scoped release provenance and, when applicable, public inventory are complete.\",\n    \"procedure\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [\n      \"release-fragments/dos-m1-017.json\"\n    ],\n    \"command_refs\": [\n      \"doctor-release-check\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"exact-candidate-release-review\"\n    ],\n    \"acceptance_rule\": \"Preserve unrelated inventory and all accepted fragments; do not activate an operational product.\"\n  }\n]\n\nRelease ownership\n{\n  \"fragment_path\": \"release-fragments/dos-m1-017.json\",\n  \"accepted_fragments\": \"append-only; never rewrite accepted provenance\",\n  \"inventory_path\": \"release-changes/items.json\",\n  \"inventory_write_scope\": \"Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.\",\n  \"registration_rule\": \"Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.\",\n  \"receipt_rule\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\"\n}\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable.",
+    "p_task_type": "feature",
+    "p_risk_level": "critical",
+    "p_model_profile": null,
+    "p_acceptance_criteria": [
+      "Audit covers administrative writes, invitations/grants and document access according to approved policy.",
+      "Client users cannot modify audit events or silently erase linked history.",
+      "No clinical bulk export, erasure or retention period is guessed; unresolved policies remain disabled and documented.",
+      "Audit view is scoped, searchable and excludes credentials or unnecessary sensitive payloads."
+    ],
+    "p_verification_plan": [
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Check diff hygiene",
+        "command": "git diff --check"
+      },
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Check workspace and template boundaries",
+        "command": "pnpm check"
+      },
+      {
+        "version": 2,
+        "kind": "planned_test",
+        "description": "Create and execute meaningful task-owned regression coverage",
+        "expected_outputs": [
+          "apps/doctor-suit/tests/unit/dos-m1-017.test.mjs"
+        ],
+        "commands": [
+          "dos-m1-017-unit"
+        ]
+      },
+      {
+        "version": 2,
+        "kind": "planned_test",
+        "description": "Prove database tenant authorization and write integrity using disposable fixtures",
+        "expected_outputs": [
+          "apps/doctor-suit/supabase/tests/dos-m1-017.sql"
+        ],
+        "commands": [
+          "dos-m1-017-data"
+        ],
+        "requires": [
+          "database",
+          "rls-authorization"
+        ]
+      },
+      {
+        "version": 2,
+        "kind": "planned_test",
+        "description": "Verify the browser user journey and denial/recovery states",
+        "expected_outputs": [
+          "apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts"
+        ],
+        "commands": [
+          "dos-m1-017-browser"
+        ],
+        "requires": [
+          "browser"
+        ]
+      },
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Run full repository unit regression including affected shared consumers",
+        "command": "pnpm test"
+      },
+      {
+        "version": 2,
+        "kind": "external_gate",
+        "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+        "commands": [
+          "doctor-release-check"
+        ],
+        "phase": "pre_publication",
+        "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+      },
+      {
+        "version": 2,
+        "kind": "external_gate",
+        "description": "Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.",
+        "phase": "pre_publication",
+        "blocker": "independent_automated_verifier_receipt_required"
+      }
+    ],
+    "p_retry_policy_id": null,
+    "p_metadata": {
+      "business_priority": "launch-critical-for-web-preview",
+      "launch_gate": "synthetic-web-preview",
+      "verification_mode": "focused",
+      "scope_approval": "planning-authorized-execution-gated",
+      "clinical_live_data_allowed": false,
+      "allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/supabase/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/src/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-changes/items.json",
+        "release-fragments/dos-m1-017.json"
+      ],
+      "source_allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/supabase/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/src/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-changes/items.json",
+        "release-fragments/dos-m1-017.json"
+      ],
+      "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+      "artifact_revision": "doctor-suit-planning-v0.4-review-3",
+      "handoff_source": "current user intake and inspected source; not an execution authorization",
+      "milestone_id": "DOS-M1",
+      "publication_policy": {
+        "merge_authorized": false,
+        "deployment_authorized": false,
+        "hosted_database_changes_authorized": false,
+        "review_required_before_integration": true
+      },
+      "canonical_task_contract": {
+        "task_id": "DOS-M1-017",
+        "milestone_id": "DOS-M1",
+        "sequence": 170,
+        "priority": 100,
+        "title": "Audit visibility and administrative data-preservation controls",
+        "description": "Expose a permission-scoped audit view and safe archival/correction behavior for M1 administrative records, while preparing the explicit real-data governance gate.\n\nRequirements\n- DOS-M1-R002: Doctors can work in multiple clinics with multiple secretaries. A secretary has independently scoped invited memberships with multiple doctors and only the permissions each doctor grants.\n- DOS-M1-R003: M1 is the public product website plus administrative doctor/secretary browser portal, synthetic data only; clinical prescribing starts M2 and mobile remains later.\n- DOS-M1-R004: Backend-enforced access, product/session isolation, audit attribution and synthetic-only development must precede any real-patient pilot. Public copy cannot claim unimplemented or unverified capabilities.\n- DOS-M1-R005: Use Building-Suit/building-suit-monorepo, pinned stack, shared packages/ui templates and packages/ux interactions; Doctor app adapters own logic/data. Independent runtime verification and publication remain control-plane owned.\n- DOS-M1-F017: Expose a permission-scoped audit view and safe archival/correction behavior for M1 administrative records, while preparing the explicit real-data governance gate. Acceptance: Audit covers administrative writes, invitations/grants and document access according to approved policy. Client users cannot modify audit events or silently erase linked history. No clinical bulk export, erasure or retention period is guessed; unresolved policies remain disabled and documented. Audit view is scoped, searchable and excludes credentials or unnecessary sensitive payloads.\n\nDependencies: DOS-M1-010, DOS-M1-012, DOS-M1-014, DOS-M1-016\nBlocking decisions: DOS-M1-GATE-START, DOS-M1-D001, DOS-M1-D002, DOS-M1-D003\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/supabase/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/src/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-changes/items.json\n- release-fragments/dos-m1-017.json\n\nAcceptance\n1. Audit covers administrative writes, invitations/grants and document access according to approved policy.\n2. Client users cannot modify audit events or silently erase linked history.\n3. No clinical bulk export, erasure or retention period is guessed; unresolved policies remain disabled and documented.\n4. Audit view is scoped, searchable and excludes credentials or unnecessary sensitive payloads.\n\nVerification scenarios\n- Attempt client mutation/deletion of audit entries.\n- Reconcile representative create/edit/archive/invite/permission actions to attributed events.\n- Test cross-practice audit queries and document-access history.\n\nExpected outputs\n- apps/doctor-suit/tests/unit/dos-m1-017.test.mjs\n- apps/doctor-suit/supabase/tests/dos-m1-017.sql\n- apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts\n- release-fragments/dos-m1-017.json\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check workspace and template boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Create and execute meaningful task-owned regression coverage\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m1-017.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m1-017-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Prove database tenant authorization and write integrity using disposable fixtures\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-017.sql\"\n    ],\n    \"commands\": [\n      \"dos-m1-017-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify the browser user journey and denial/recovery states\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts\"\n    ],\n    \"commands\": [\n      \"dos-m1-017-browser\"\n    ],\n    \"requires\": [\n      \"browser\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression including affected shared consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence\",\n    \"commands\": [\n      \"doctor-release-check\"\n    ],\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"release_check_receipt_must_match_candidate_head_and_reviewed_classification\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.\",\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"independent_automated_verifier_receipt_required\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.\n- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.\n- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.\n\nCriterion-specific coverage\n[\n  {\n    \"case_id\": \"DOS-M1-017-C01\",\n    \"criterion_ids\": [\n      1\n    ],\n    \"assertion\": \"Audit covers administrative writes, invitations/grants and document access according to approved policy.\",\n    \"procedure\": \"Perform administrative writes, grant changes and document reads; reconcile the approved audit events and actors.\",\n    \"test_case_name\": \"DOS-M1-017-C01\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-017.sql\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-017-data\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-017-C02\",\n    \"criterion_ids\": [\n      2\n    ],\n    \"assertion\": \"Client users cannot modify audit events or silently erase linked history.\",\n    \"procedure\": \"Attempt client audit mutation and deletion of linked history; verify denial and unchanged originals.\",\n    \"test_case_name\": \"DOS-M1-017-C02\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-017.sql\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-017-data\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-017-C03\",\n    \"criterion_ids\": [\n      3\n    ],\n    \"assertion\": \"No clinical bulk export, erasure or retention period is guessed; unresolved policies remain disabled and documented.\",\n    \"procedure\": \"Verify unresolved retention/export policy remains explicitly unresolved and confirm the corresponding live-data operations remain disabled.\",\n    \"test_case_name\": \"DOS-M1-017-C03\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m1-017.test.mjs\",\n      \"apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-017-unit\",\n      \"dos-m1-017-browser\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"independent-exact-candidate-automated-verifier\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": true,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\",\n      \"automated_receipt_fields\": [\n        \"independent verifier execution ID\",\n        \"exact candidate SHA and base SHA\",\n        \"case ID and evaluated input artifact hashes\",\n        \"existing authorization/decision references where relevant\",\n        \"executed command argv, exit codes and immutable logs or reproducible document-comparison assertions\",\n        \"per-assertion result with failed, skipped, unavailable and unrun obligations distinguished\"\n      ],\n      \"missing_evidence_behavior\": \"Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-017-C04\",\n    \"criterion_ids\": [\n      4\n    ],\n    \"assertion\": \"Audit view is scoped, searchable and excludes credentials or unnecessary sensitive payloads.\",\n    \"procedure\": \"Filter/page the permitted audit view and inspect results for outsider data, credentials and excessive payloads.\",\n    \"test_case_name\": \"DOS-M1-017-C04\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-017.sql\",\n      \"apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-017-data\",\n      \"dos-m1-017-browser\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-017-RELEASE\",\n    \"criterion_ids\": [],\n    \"assertion\": \"Task-scoped release provenance and, when applicable, public inventory are complete.\",\n    \"procedure\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [\n      \"release-fragments/dos-m1-017.json\"\n    ],\n    \"command_refs\": [\n      \"doctor-release-check\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"exact-candidate-release-review\"\n    ],\n    \"acceptance_rule\": \"Preserve unrelated inventory and all accepted fragments; do not activate an operational product.\"\n  }\n]\n\nRelease ownership\n{\n  \"fragment_path\": \"release-fragments/dos-m1-017.json\",\n  \"accepted_fragments\": \"append-only; never rewrite accepted provenance\",\n  \"inventory_path\": \"release-changes/items.json\",\n  \"inventory_write_scope\": \"Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.\",\n  \"registration_rule\": \"Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.\",\n  \"receipt_rule\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\"\n}\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable.",
+        "task_type": "feature",
+        "risk_level": "critical",
+        "model_profile_strategy": "require_verified_high_capability_deep_route",
+        "status": "planned",
+        "engine_stage": "pending",
+        "acceptance_criteria": [
+          "Audit covers administrative writes, invitations/grants and document access according to approved policy.",
+          "Client users cannot modify audit events or silently erase linked history.",
+          "No clinical bulk export, erasure or retention period is guessed; unresolved policies remain disabled and documented.",
+          "Audit view is scoped, searchable and excludes credentials or unnecessary sensitive payloads."
+        ],
+        "verification_plan": [
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Check diff hygiene",
+            "command": "git diff --check"
+          },
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Check workspace and template boundaries",
+            "command": "pnpm check"
+          },
+          {
+            "version": 2,
+            "kind": "planned_test",
+            "description": "Create and execute meaningful task-owned regression coverage",
+            "expected_outputs": [
+              "apps/doctor-suit/tests/unit/dos-m1-017.test.mjs"
+            ],
+            "commands": [
+              "dos-m1-017-unit"
+            ]
+          },
+          {
+            "version": 2,
+            "kind": "planned_test",
+            "description": "Prove database tenant authorization and write integrity using disposable fixtures",
+            "expected_outputs": [
+              "apps/doctor-suit/supabase/tests/dos-m1-017.sql"
+            ],
+            "commands": [
+              "dos-m1-017-data"
+            ],
+            "requires": [
+              "database",
+              "rls-authorization"
+            ]
+          },
+          {
+            "version": 2,
+            "kind": "planned_test",
+            "description": "Verify the browser user journey and denial/recovery states",
+            "expected_outputs": [
+              "apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts"
+            ],
+            "commands": [
+              "dos-m1-017-browser"
+            ],
+            "requires": [
+              "browser"
+            ]
+          },
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Run full repository unit regression including affected shared consumers",
+            "command": "pnpm test"
+          },
+          {
+            "version": 2,
+            "kind": "external_gate",
+            "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+            "commands": [
+              "doctor-release-check"
+            ],
+            "phase": "pre_publication",
+            "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+          },
+          {
+            "version": 2,
+            "kind": "external_gate",
+            "description": "Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.",
+            "phase": "pre_publication",
+            "blocker": "independent_automated_verifier_receipt_required"
+          }
+        ],
+        "task_dependencies": [
+          "DOS-M1-010",
+          "DOS-M1-012",
+          "DOS-M1-014",
+          "DOS-M1-016"
+        ],
+        "linked_requirement_ids": [
+          "DOS-M1-F017",
+          "DOS-M1-R002",
+          "DOS-M1-R003",
+          "DOS-M1-R004",
+          "DOS-M1-R005"
+        ],
+        "blocking_decision_ids": [
+          "DOS-M1-GATE-START",
+          "DOS-M1-D001",
+          "DOS-M1-D002",
+          "DOS-M1-D003"
+        ],
+        "allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/src/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-changes/items.json",
+          "release-fragments/dos-m1-017.json"
+        ],
+        "expected_outputs": [
+          "apps/doctor-suit/tests/unit/dos-m1-017.test.mjs",
+          "apps/doctor-suit/supabase/tests/dos-m1-017.sql",
+          "apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts",
+          "release-fragments/dos-m1-017.json"
+        ],
+        "verification_scenarios": [
+          "Attempt client mutation/deletion of audit entries.",
+          "Reconcile representative create/edit/archive/invite/permission actions to attributed events.",
+          "Test cross-practice audit queries and document-access history."
+        ],
+        "objective": "Expose a permission-scoped audit view and safe archival/correction behavior for M1 administrative records, while preparing the explicit real-data governance gate.",
+        "metadata": {
+          "business_priority": "launch-critical-for-web-preview",
+          "launch_gate": "synthetic-web-preview",
+          "verification_mode": "focused",
+          "scope_approval": "planning-authorized-execution-gated",
+          "clinical_live_data_allowed": false,
+          "allowed_paths": [
+            "apps/building-suit-docs/app/pages/components.vue",
+            "apps/doctor-suit/app/",
+            "apps/doctor-suit/supabase/",
+            "apps/doctor-suit/tests/",
+            "docs/shared/atomic-template-route-inventory.json",
+            "docs/shared/ui-ownership-manifest.json",
+            "docs/work-packages/doctor-suit/",
+            "packages/contracts/src/",
+            "packages/ui/package.json",
+            "packages/ui/src/organisms/",
+            "packages/ui/src/templates/",
+            "packages/ui/tests/",
+            "packages/ux/src/",
+            "packages/ux/tests/",
+            "release-changes/items.json",
+            "release-fragments/dos-m1-017.json"
+          ],
+          "source_allowed_paths": [
+            "apps/building-suit-docs/app/pages/components.vue",
+            "apps/doctor-suit/app/",
+            "apps/doctor-suit/supabase/",
+            "apps/doctor-suit/tests/",
+            "docs/shared/atomic-template-route-inventory.json",
+            "docs/shared/ui-ownership-manifest.json",
+            "docs/work-packages/doctor-suit/",
+            "packages/contracts/src/",
+            "packages/ui/package.json",
+            "packages/ui/src/organisms/",
+            "packages/ui/src/templates/",
+            "packages/ui/tests/",
+            "packages/ux/src/",
+            "packages/ux/tests/",
+            "release-changes/items.json",
+            "release-fragments/dos-m1-017.json"
+          ],
+          "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+          "artifact_revision": "doctor-suit-planning-v0.4-review-3",
+          "handoff_source": "current user intake and inspected source; not an execution authorization",
+          "milestone_id": "DOS-M1",
+          "publication_policy": {
+            "merge_authorized": false,
+            "deployment_authorized": false,
+            "hosted_database_changes_authorized": false,
+            "review_required_before_integration": true
+          }
+        },
+        "specific_evidence": [
+          "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+        ],
+        "model_profile": "deep",
+        "retry_policy_id": null,
+        "release_contract": {
+          "fragment_path": "release-fragments/dos-m1-017.json",
+          "accepted_fragments": "append-only; never rewrite accepted provenance",
+          "inventory_path": "release-changes/items.json",
+          "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+          "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+          "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+        },
+        "evidence_requirements": [
+          "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+          "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+          "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+          "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+          "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+        ],
+        "source_reading": [
+          "AGENTS.md",
+          "README.md",
+          "docs/agent-workflows.md",
+          "docs/shared/git-workflow.md",
+          "packages/ui/AGENTS.md",
+          "docs/shared/design-system.md",
+          "docs/shared/interactions.md",
+          "docs/shared/data-table.md",
+          "docs/architecture/identity.md",
+          "docs/shared/database.md",
+          "docs/shared/future-suit-administration.md",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "tooling/control-plane/runner/task-prompt.mjs",
+          "tooling/control-plane/runner/verification-mode.mjs"
+        ],
+        "verification_cases": [
+          {
+            "case_id": "DOS-M1-017-C01",
+            "criterion_ids": [
+              1
+            ],
+            "assertion": "Audit covers administrative writes, invitations/grants and document access according to approved policy.",
+            "procedure": "Perform administrative writes, grant changes and document reads; reconcile the approved audit events and actors.",
+            "test_case_name": "DOS-M1-017-C01",
+            "required_outputs": [
+              "apps/doctor-suit/supabase/tests/dos-m1-017.sql"
+            ],
+            "command_refs": [
+              "dos-m1-017-data"
+            ],
+            "external_evidence_required": false,
+            "evidence_types": [],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
+          },
+          {
+            "case_id": "DOS-M1-017-C02",
+            "criterion_ids": [
+              2
+            ],
+            "assertion": "Client users cannot modify audit events or silently erase linked history.",
+            "procedure": "Attempt client audit mutation and deletion of linked history; verify denial and unchanged originals.",
+            "test_case_name": "DOS-M1-017-C02",
+            "required_outputs": [
+              "apps/doctor-suit/supabase/tests/dos-m1-017.sql"
+            ],
+            "command_refs": [
+              "dos-m1-017-data"
+            ],
+            "external_evidence_required": false,
+            "evidence_types": [],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
+          },
+          {
+            "case_id": "DOS-M1-017-C03",
+            "criterion_ids": [
+              3
+            ],
+            "assertion": "No clinical bulk export, erasure or retention period is guessed; unresolved policies remain disabled and documented.",
+            "procedure": "Verify unresolved retention/export policy remains explicitly unresolved and confirm the corresponding live-data operations remain disabled.",
+            "test_case_name": "DOS-M1-017-C03",
+            "required_outputs": [
+              "apps/doctor-suit/tests/unit/dos-m1-017.test.mjs",
+              "apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts"
+            ],
+            "command_refs": [
+              "dos-m1-017-unit",
+              "dos-m1-017-browser"
+            ],
+            "external_evidence_required": true,
+            "evidence_types": [
+              "independent-exact-candidate-automated-verifier"
+            ],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": true,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.",
+              "automated_receipt_fields": [
+                "independent verifier execution ID",
+                "exact candidate SHA and base SHA",
+                "case ID and evaluated input artifact hashes",
+                "existing authorization/decision references where relevant",
+                "executed command argv, exit codes and immutable logs or reproducible document-comparison assertions",
+                "per-assertion result with failed, skipped, unavailable and unrun obligations distinguished"
+              ],
+              "missing_evidence_behavior": "Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification."
+          },
+          {
+            "case_id": "DOS-M1-017-C04",
+            "criterion_ids": [
+              4
+            ],
+            "assertion": "Audit view is scoped, searchable and excludes credentials or unnecessary sensitive payloads.",
+            "procedure": "Filter/page the permitted audit view and inspect results for outsider data, credentials and excessive payloads.",
+            "test_case_name": "DOS-M1-017-C04",
+            "required_outputs": [
+              "apps/doctor-suit/supabase/tests/dos-m1-017.sql",
+              "apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts"
+            ],
+            "command_refs": [
+              "dos-m1-017-data",
+              "dos-m1-017-browser"
+            ],
+            "external_evidence_required": false,
+            "evidence_types": [],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
+          },
+          {
+            "case_id": "DOS-M1-017-RELEASE",
+            "criterion_ids": [],
+            "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+            "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+            "test_case_name": null,
+            "required_outputs": [
+              "release-fragments/dos-m1-017.json"
+            ],
+            "command_refs": [
+              "doctor-release-check"
+            ],
+            "external_evidence_required": true,
+            "evidence_types": [
+              "exact-candidate-release-review"
+            ],
+            "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+          }
+        ],
+        "acceptance_mapping": [
+          {
+            "criterion": 1,
+            "text": "Audit covers administrative writes, invitations/grants and document access according to approved policy.",
+            "verification_case_ids": [
+              "DOS-M1-017-C01"
+            ]
+          },
+          {
+            "criterion": 2,
+            "text": "Client users cannot modify audit events or silently erase linked history.",
+            "verification_case_ids": [
+              "DOS-M1-017-C02"
+            ]
+          },
+          {
+            "criterion": 3,
+            "text": "No clinical bulk export, erasure or retention period is guessed; unresolved policies remain disabled and documented.",
+            "verification_case_ids": [
+              "DOS-M1-017-C03"
+            ]
+          },
+          {
+            "criterion": 4,
+            "text": "Audit view is scoped, searchable and excludes credentials or unnecessary sensitive payloads.",
+            "verification_case_ids": [
+              "DOS-M1-017-C04"
+            ]
+          }
+        ]
+      },
+      "canonical_task_sha256": "53d1904fab3b05b8a49eac491005f1d68a79dd81b7f0202012b271a5c77d9224",
+      "canonical_task_schema": "review-only-task-contract-v1",
+      "source_packet_sha256": "137747121e80a74f693301f2ae854fd0ae798319c61a82142b4ee024e4b4dd83"
+    }
+  },
+  "binding_rule": "Fill required runtime values only from renewed, reviewed live evidence. Do not create a model/retry policy, fall back to a cheaper route or widen project scopes. Preserve the canonical object byte-for-byte under metadata; record resolved runtime values separately."
+}

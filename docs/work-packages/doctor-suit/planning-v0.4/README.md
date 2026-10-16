@@ -1,5 +1,7 @@
 # Doctor Suit milestone contracts
 
+Current delivery update: the parent reports renewed continuation and one successful read-only fingerprint check after the earlier cancellation. No hosted writes were performed here. [Exact import delivery and offline adapter](import-delivery/README.md) preserve the approved 7a6dcc20 packets/proposals byte-for-byte and supersede the earlier pending-read status recorded below.
+
 Review artifacts only. No product implementation, database import, task admission, credentials, provider setup or deployment has been performed by this change.
 
 The supplied roadmap defines 104 stable tasks: M1 20, M2 14, M3 10, M4 10, M5 14, M6 10, M7 10, M8 8 and optional M9 8. Milestones are prepared and validated sequentially. A milestone JSON is the canonical contract; its Markdown packet is the human-readable projection, its import proposal contains exact links and the transaction requirements, and its validation JSON records local artifact checks. Product tests are future obligations, not claimed passes.
