@@ -725,7 +725,8 @@
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/shared/atomic-template-route-inventory.json",
       "docs/shared/ui-ownership-manifest.json",
-      ".github/workflows/doctor-disposable.yml"
+      ".github/workflows/doctor-disposable.yml",
+      ".github/workflows/ci.yml"
     ],
     "reason": "Add a data-only complete shared preview contract for synthetic Doctor implementation and document it in the component catalogue; existing operational product pages are unchanged. Doctor remains unavailable for clinical care or production signup.",
     "sources": [

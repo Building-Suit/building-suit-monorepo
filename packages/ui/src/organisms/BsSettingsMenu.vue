@@ -108,8 +108,8 @@ const THEMES: Array<{ value: 'light' | 'dark' | 'system', labelKey: 'themeLight'
     </button>
 
     <div
-      ref="panel"
       v-show="open"
+      ref="panel"
       :class="[
         'ls-card absolute start-0 z-30 my-1 w-56 p-2 shadow-overlay',
         position === 'bottom'

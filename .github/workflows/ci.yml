@@ -95,7 +95,7 @@ jobs:
       - run: pnpm run setup
       - run: pnpm typecheck
       - run: pnpm lint
-      - run: pnpm build
+      - run: pnpm build --concurrency=2
         env:
           SUPABASE_URL: http://127.0.0.1:60321
           SUPABASE_KEY: local-development-publishable-key

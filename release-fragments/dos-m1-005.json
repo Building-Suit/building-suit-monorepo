@@ -22,7 +22,8 @@
     "docs/shared/ui-ownership-manifest.json",
     "apps/building-suit-docs/app/pages/components.vue",
     "release-changes/items.json",
-    ".github/workflows/doctor-disposable.yml"
+    ".github/workflows/doctor-disposable.yml",
+    ".github/workflows/ci.yml"
   ],
-  "reason": "Add a complete shared synthetic-preview template and bilingual Doctor-owned scope copy with planned feature labels and actual internal preview navigation. Existing product rendering is unchanged; new shared exports and catalogue documentation are internal support. No operational Doctor release is activated."
+  "reason": "Add a complete shared synthetic-preview template and bilingual Doctor-owned scope copy with planned feature labels and actual internal preview navigation. Existing product rendering is unchanged; new shared exports and catalogue documentation are internal support. No operational Doctor release is activated. Bound build concurrency to two apps after the seven-app executor exhausted memory; all build and verification tasks remain required."
 }
