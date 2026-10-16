@@ -1,6 +1,6 @@
 // SQL/RLS fallback for small executors. This is not a Supabase service integration test.
 import { createHash, randomUUID } from 'node:crypto'
-import { mkdtemp, readFile, readdir, rm, writeFile, mkdir } from 'node:fs/promises'
+import { mkdtemp, readFile, readdir, rm, writeFile, mkdir, chmod } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -21,7 +21,7 @@ function docker(args, input) {
   if (result.error || result.status !== 0) throw new Error(`Disposable Docker step failed: ${args[0]}\n${result.stderr || ''}`)
   return result.stdout
 }
-function sql(input) { return docker(['exec', '-i', container, 'psql', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At'], input) }
+function sql(input) { return docker(['exec', '-i', container, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At'], input) }
 async function source(name, hash) {
   const response = spawnSync('curl', ['--fail', '--silent', '--show-error', '--location', '--max-time', '30',
     `https://raw.githubusercontent.com/theory/pgtap/${pgtapCommit}/${name}`], { encoding: 'utf8', timeout: 35000, maxBuffer: 2 * 1024 * 1024 })
@@ -36,13 +36,20 @@ try {
   // These are the upstream Makefile's PostgreSQL >= 10 substitutions, without legacy compatibility patches.
   await writeFile(`${directory}/pgtap--1.3.4.sql`, definition.replaceAll('MODULE_PATHNAME', 'pgtap').replaceAll('__OS__', 'linux').replaceAll('__VERSION__', '1.3'), { mode: 0o644 })
   await writeFile(`${directory}/pgtap.control`, control, { mode: 0o644 })
-  docker(['run', '-d', '--name', container, '--network', 'none', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', pgImage])
+  // The image briefly runs a socket-only initialization server before restarting.
+  // Delay that phase deliberately so every run exercises the readiness boundary.
+  await writeFile(`${directory}/doctor-readiness.sql`, 'select pg_sleep(1);\n', { mode: 0o644 })
+  await chmod(`${directory}/doctor-readiness.sql`, 0o644)
+  docker(['create', '--name', container, '--network', 'none', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', pgImage])
+  docker(['cp', `${directory}/doctor-readiness.sql`, `${container}:/docker-entrypoint-initdb.d/doctor-readiness.sql`])
+  docker(['start', container])
   let ready = false
   for (let n = 0; n < 60; n++) {
-    if (spawnSync('docker', ['exec', container, 'pg_isready', '-U', 'postgres'], { stdio: 'ignore' }).status === 0) { ready = true; break }
+    if (spawnSync('docker', ['exec', container, 'pg_isready', '-h', '127.0.0.1', '-U', 'postgres'], { stdio: 'ignore' }).status === 0) { ready = true; break }
     await new Promise(resolve => setTimeout(resolve, 250))
   }
   if (!ready) throw new Error('Disposable PostgreSQL did not become ready')
+  console.log('Final TCP server ready after the deliberately delayed socket-only initialization phase')
   for (const file of ['pgtap.control', 'pgtap--1.3.4.sql']) docker(['cp', `${directory}/${file}`, `${container}:/usr/local/share/postgresql/extension/${file}`])
   docker(['exec', container, 'chmod', '644', '/usr/local/share/postgresql/extension/pgtap.control', '/usr/local/share/postgresql/extension/pgtap--1.3.4.sql'])
   sql(`create role anon; create role authenticated; create schema auth; create schema extensions;
