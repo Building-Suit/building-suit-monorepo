@@ -5,6 +5,7 @@ import { randomUUID, createHmac } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
 import { readdirSync, readFileSync } from 'node:fs'
 import { buildCandidate } from './candidate.mjs'
+import { parseChangelogFeed } from '../../packages/contracts/src/changelog.ts'
 import { createCatalog } from './publisher.mjs'
 import { dockerFailureReason, ensureDisposableImage } from './docker-harness.mjs'
 assert.equal(process.env.RELEASE_POSTGREST_DISPOSABLE, '1', 'Explicit disposable validation required')
@@ -45,13 +46,15 @@ create function realtime.send(jsonb,text,text,boolean) returns void language sql
 const migrations=new URL('../../apps/super-admin-suit/supabase/migrations/',import.meta.url)
 const names=readdirSync(migrations).filter(name=>name.endsWith('.sql')).sort()
 let retainedSource
-for(const name of names) {
+const relationRepair=names.find(name=>name.endsWith('_canonical_release_baseline_relation.sql'))
+assert.ok(relationRepair)
+for(const name of names.filter(name=>name!==relationRepair)) {
   if(name.endsWith('_release_cardinality_location.sql')) retainedSource=sql("select md5(prosrc) from pg_proc where oid='public.release_candidate_refresh(jsonb)'::regprocedure;")
   console.log(`Apply SAS migration ${name}`)
   sql(readFileSync(new URL(name,migrations),'utf8'))
   if(name.startsWith('20261015030053')) {
 sql(`insert into public.admin_environments(id,stable_key,environment_kind,display_name,status) values('a0bb00a1-747c-4cda-8521-9927d0b53065','sas-staging','staging','{}','active');
-insert into public.suit_registry(id,stable_key,display_name,asset_reference,adapter_contract_version,status) values('7924a9af-a970-4360-a0d0-76df4e18dbfc','shop-suit','{}','/brand/fixture.svg','1.0','active');
+insert into public.suit_registry(id,stable_key,display_name,asset_reference,adapter_contract_version,status) values('7924a9af-a970-4360-a0d0-76df4e18dbfc','shop-suit','{"en":"Shop","ar":"المتجر"}','/brand/fixture.svg','1.0','active');
 `)
   }
 }
@@ -94,7 +97,32 @@ for(const [code,guard,reason] of [
   })
 }
 const snapshot={...buildCandidate('origin/main','HEAD'),baseVersions:state.baseVersions}
+// Reproduce the decisive hosted statement through the already warmed REST pool.
+const baselineOid=sql("select 'public.release_candidate_baseline'::regclass::oid;")
+const baselineBefore=sql('select row_to_json(b) from public.release_candidate_baseline b;')
+sql(`create function super_admin_private.fixture_failed_baseline_pin() returns trigger language plpgsql as $$begin perform (select value from (values(1),(2)) v(value));return new;end$$;
+create trigger fixture_failed_baseline_pin before update on public.release_candidate_baseline for each row execute function super_admin_private.fixture_failed_baseline_pin();`)
+assert.equal((await catalog('release_candidate_state')).productionSha,null)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:snapshot}),/CANDIDATE_CARDINALITY_BASELINE_PIN/)
+assert.equal(sql('select row_to_json(b) from public.release_candidate_baseline b;'),baselineBefore)
+assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'0')
+sql(readFileSync(new URL(relationRepair,migrations),'utf8'))
+assert.equal(sql('select row_to_json(b) from public.release_candidate_baseline b;'),baselineBefore)
+assert.equal(sql("select 'super_admin_private.release_candidate_baseline_before_relation_repair'::regclass::oid;"),baselineOid)
+assert.equal(sql("select count(*) from pg_trigger where tgrelid='super_admin_private.release_candidate_baseline_before_relation_repair'::regclass and tgname='fixture_failed_baseline_pin';"),'1')
 const first=await catalog('release_candidate_refresh',{p_snapshot:snapshot})
+assert.equal((await catalog('release_candidate_state')).productionSha,snapshot.mainSha)
+assert.equal(sql('select production_sha is null from super_admin_private.release_candidate_baseline_before_relation_repair;'),'t','Warmed backend plans must use the canonical relation')
+// Local-only readiness verifies the complete public read path after the repair;
+// real CI still requires all existing deployment contexts before this operation.
+await catalog('release_candidate_ready',{p_key:first.key,p_digest:first.digest})
+const publicResponse=await fetch(status.API_URL+'/rpc/release_public_feed',{method:'POST',headers:{authorization:`Bearer ${status.ANON_KEY}`,'content-type':'application/json'},body:'{}',redirect:'error'})
+assert.equal(publicResponse.status,200)
+const repairedFeed=parseChangelogFeed(await publicResponse.json())
+assert.equal(repairedFeed.entries.length,snapshot.changes.filter(row=>row.disposition==='public').length)
+assert.ok(repairedFeed.entries.length>0)
+assert.ok(repairedFeed.entries.every(entry=>entry.status==='coming-soon'&&entry.targetVersion==='0.1.0'))
+
 const retries=await Promise.all([0,1].map(()=>catalog('release_candidate_refresh',{p_snapshot:snapshot})))
 assert.ok(retries.every(row=>row.key===first.key&&row.digest===first.digest))
 assert.equal(first.manifest.versions['shop-suit'],'0.1.0')
@@ -162,7 +190,7 @@ assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'3'
 
 assert.equal(sql('select count(*) from public.release_candidate_promotions;'),'0')
 assert.equal(sql('select version from public.release_candidate_versions;'),'0.0.0')
-console.log('Full SAS PostgREST catalog passed: real createCatalog state/refresh, concurrent retry, invalid-ref denial, anonymous denial and unchanged production baseline/history and safe cardinality locations')
+console.log('Full SAS PostgREST catalog passed: real createCatalog state/refresh, concurrent retry, invalid-ref denial, anonymous denial and successful repaired BASELINE_PIN and public read, unchanged production history and safe cardinality locations')
 
 } finally {
   // Names are generated by this invocation; unrelated stacks/volumes are untouched.

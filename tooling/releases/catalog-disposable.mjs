@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { testBootstrap } from './bootstrap-disposable.mjs'
+import { testBaselineRelationRepair } from './baseline-relation-disposable.mjs'
 import { testCandidates } from './candidate-disposable.mjs'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createChangelogClient } from '../../packages/data-access/src/changelog.ts'
@@ -126,5 +127,6 @@ try {
   await testBootstrap({ sql, parallelDatabaseSql: (database, statement) => parallelSql(statement, database), databaseSql: (database, statement) => docker(['exec','-i',container,'psql','-U','postgres','-d',database,'-v','ON_ERROR_STOP=1','-At'], statement),
     migration: new URL('../../apps/super-admin-suit/supabase/migrations/20261015212440_first_official_release_bootstrap.sql', import.meta.url) })
   await testCandidates({ outputPath: outputArgs[0] === '--candidate-feed' ? outputArgs[1] : undefined, sql, parallelDatabaseSql: (database, statement) => parallelSql(statement, database), databaseSql: (database, statement) => docker(['exec','-i',container,'psql','-U','postgres','-d',database,'-v','ON_ERROR_STOP=1','-At'], statement) })
+  await testBaselineRelationRepair({sql,databaseSql:(database,statement)=>docker(['exec','-i',container,'psql','-U','postgres','-d',database,'-v','ON_ERROR_STOP=1','-At'],statement)})
   console.log('Disposable PostgreSQL release acceptance passed: atomic allocation, concurrent retry, ordering, recovery, authorization, immutable timestamps, projection and batch promotion')
 } finally { docker(['rm','-fv',container]) }

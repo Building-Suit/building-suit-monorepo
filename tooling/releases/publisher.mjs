@@ -50,7 +50,12 @@ export function createCatalog(url, token, projectRef, request = fetch) {
       const reason = await catalogRejectionReason(response)
       throw new Error(`Catalog operation ${name} rejected (HTTP ${response.status}; reason ${reason}); payload and credentials omitted`)
     }
-    return response.json()
+    if (response.status === 204) {
+      if (['release_candidate_ready', 'release_candidate_acknowledge'].includes(name)) return null
+      throw new Error(`Catalog operation ${name} returned an unexpected empty response; payload and credentials omitted`)
+    }
+    try { return await response.json() }
+    catch { throw new Error(`Catalog operation ${name} returned invalid JSON; payload and credentials omitted`) }
   }
 }
 async function github(path) {
