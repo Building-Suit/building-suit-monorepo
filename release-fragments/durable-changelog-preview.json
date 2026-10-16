@@ -4,6 +4,6 @@
   "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
   "classification": "internal",
   "disposition": "internal",
-  "paths": ["apps/super-admin-suit/supabase/migrations/20261016173321_durable_release_preview.sql", "tooling/releases", ".github/workflows/ci.yml", ".github/workflows/releases.yml", "docs/shared/release-publication-runbook.md"],
+  "paths": ["apps/super-admin-suit/supabase/migrations/20261016173321_durable_release_preview.sql", "tooling/releases", ".github/workflows/ci.yml", ".github/workflows/releases.yml", "docs/shared/release-publication-runbook.md", "apps/super-admin-suit/app/types/database.types.ts"],
   "reason": "Keep the authenticated last-good preview available while candidate readiness is pending, retire it atomically on production acknowledgment, and bind verification readiness to the authoritative protected-push workflow rather than duplicate same-SHA release-PR checks. Preserve every version, history, deployment and safeupdate gate."
 }

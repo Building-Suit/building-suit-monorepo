@@ -1141,6 +1141,29 @@ export type Database = {
           },
         ]
       }
+      release_candidate_preview: {
+        Row: {
+          revision_key: string | null
+          singleton: boolean
+        }
+        Insert: {
+          revision_key?: string | null
+          singleton?: boolean
+        }
+        Update: {
+          revision_key?: string | null
+          singleton?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_candidate_preview_revision_key_fkey"
+            columns: ["revision_key"]
+            isOneToOne: false
+            referencedRelation: "release_candidate_revisions"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       release_candidate_promotions: {
         Row: {
           deployment_sha: string
