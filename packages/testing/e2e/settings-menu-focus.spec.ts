@@ -42,7 +42,7 @@ for (const app of [
     await page.keyboard.press('Escape')
     await expect(settings).toBeFocused()
     await page.keyboard.press('Enter')
-    await page.getByRole('menuitemradio', { name: 'العربية', exact: true }).click()
+    await page.getByRole('menuitemradio', { name: /^(العربية|ar)$/ }).click()
     const arabicSettings = root.getByRole('button', { name: 'اللغة · المظهر', exact: true }).first()
     await expect(arabicSettings).toBeFocused()
     await expect(page.getByRole('menu')).toHaveCount(0)

@@ -32,6 +32,7 @@ The owner-authorized 2026-10-15 combined batch is recorded in [staging-finished-
 | `apps/ledger-suit/` | Ledger routes, features, financial rules, content and tests |
 | `apps/shop-suit/` | Shop routes, features, inventory/shop rules, content and tests |
 | `apps/inventory-suit/` | Inventory routes, stock domain rules, content and tests |
+| `apps/doctor-suit/` | Doctor web routes, practice/location/membership and patient domain orchestration; synthetic implementation with explicit clinical/legal gates |
 | `apps/super-admin-suit/` | Super Admin control-plane routes, configuration orchestration, content and tests |
 | `apps/building-suit-docs/` | Building documentation, documentation rendering and component catalogue |
 | `packages/design-tokens/`, `packages/brand/` | Canonical tokens, generated outputs, fonts, icons and brand assets |
