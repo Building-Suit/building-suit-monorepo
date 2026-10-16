@@ -20,7 +20,7 @@ The requested deliverable is a draft planning PR on `codex/doctor-suit/milestone
 
 ## Prepared milestone inventory
 
-All nine milestones are now prepared, in order, with 104 task contracts, 117 requirement records and 36 decision records. Each milestone's start decision remains open and is linked to every task. These are artifact counts, not imported database counts or completed product work.
+All nine milestones are now prepared, in order, with 104 task contracts, 117 requirement records and 37 decision records. Each milestone's start decision remains open and is linked to every task. These are artifact counts, not imported database counts or completed product work.
 
 | Milestone | Tasks | Contract / requirements | Import proposal | Validation |
 |---|---:|---|---|---|
@@ -41,3 +41,5 @@ The validator checks source bytes, packet fingerprints, exact counts/IDs, depend
 Per-task SQL commands run from `apps/doctor-suit`, name the exact future `supabase/tests/<task>.sql`, and use `--local`. Start/reset/full-regression phases are separately declared in the proposed local lifecycle. [Supabase's CLI reference](https://supabase.com/docs/reference/cli/supabase-test-db) documents the pgTAP file argument and local target; no database test was executed during planning. The executor's supplied Supabase wrapper could not display help because it attempted to create a directory under a read-only home, so pinned CLI execution still needs environment verification before admission.
 
 The final parent handoff is [HANDOFF.md](HANDOFF.md). All live import actions remain pending review, not denied and not attempted.
+
+The [independent review corrections](REVIEW-2.md) split synthetic-preview approval from the still-open live-public decision, restore task-scoped release ownership, add M1-004 Playwright requirements and replace blanket coverage with criterion-specific procedures. [The concrete registration/adapter proposal](registration-adapter.proposal.json) leaves live runtime bindings unresolved and preserves the complete canonical task object in import metadata. The live-schema refresh was explicitly cancelled and has not been retried; imports remain held pending renewed permission.

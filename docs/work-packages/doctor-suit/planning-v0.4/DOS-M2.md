@@ -17,7 +17,7 @@ Blocking decisions: DOS-M2-GATE-START
 
 Allowed paths
 - docs/work-packages/doctor-suit/
-- release-fragments/
+- release-fragments/dos-m2-001.json
 
 Acceptance
 1. Record accountable clinician, review date, encounter state transitions and which actions may be drafted by staff versus signed by a doctor; unresolved professional authority remains explicit.
@@ -31,6 +31,7 @@ Verification scenarios
 
 Expected outputs
 - docs/work-packages/doctor-suit/implementation/dos-m2-001.md
+- release-fragments/dos-m2-001.json
 
 Executable verification obligations
 [
@@ -52,6 +53,23 @@ Executable verification obligations
     "description": "Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions",
     "blocker": "reviewer_identity_scope_candidate_and_decision_evidence_required",
     "phase": "pre_publication"
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Criterion-specific accountable review/device/verifier evidence listed in coverage cases",
+    "phase": "pre_publication",
+    "blocker": "criterion_review_evidence_required"
   }
 ]
 
@@ -62,6 +80,103 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-001-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Record accountable clinician, review date, encounter state transitions and which actions may be drafted by staff versus signed by a doctor; unresolved professional authority remains explicit.",
+    "procedure": "Qualified clinician reviews the state/role matrix including delegated drafting and doctor-only signing.",
+    "test_case_name": null,
+    "required_outputs": [],
+    "command_refs": [],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "accountable-human-review"
+    ],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-001-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Define amendment/revocation, patient release and conflict rules for synthetic workflows; retain original signed material and audit actor/time.",
+    "procedure": "Review an amended/revoked synthetic record and its patient-release/conflict policy.",
+    "test_case_name": null,
+    "required_outputs": [],
+    "command_refs": [],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "accountable-human-review"
+    ],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-001-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Produce a signed decision record or leave clinical governance OPEN; neither a developer nor a test run can supply clinical approval.",
+    "procedure": "Verify reviewer identity, date and signed policy; unsigned evidence leaves the governance decision open.",
+    "test_case_name": null,
+    "required_outputs": [],
+    "command_refs": [],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "accountable-human-review"
+    ],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-001-C04",
+    "criterion_ids": [
+      4
+    ],
+    "assertion": "Prepare evidence for DOS-M2-GATE-CLINICAL. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+    "procedure": "Verify accountable approval for the named produced decisions before the dependent native/provider/live-data action; a prepared document alone is not approval.",
+    "test_case_name": null,
+    "required_outputs": [],
+    "command_refs": [],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "accountable-human-review"
+    ],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-001-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-001.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-001.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": null,
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.
@@ -102,7 +217,8 @@ Allowed paths
 - packages/ui/tests/
 - packages/ux/src/
 - packages/ux/tests/
-- release-fragments/
+- release-changes/items.json
+- release-fragments/dos-m2-002.json
 
 Acceptance
 1. Create distinct encounter identity referencing the practice-patient relationship, responsible doctor and encounter location; never make a location the chart owner.
@@ -118,6 +234,7 @@ Expected outputs
 - apps/doctor-suit/tests/unit/dos-m2-002.test.mjs
 - apps/doctor-suit/supabase/tests/dos-m2-002.sql
 - apps/doctor-suit/tests/e2e/dos-m2-002.spec.ts
+- release-fragments/dos-m2-002.json
 
 Executable verification obligations
 [
@@ -178,6 +295,16 @@ Executable verification obligations
     "requires": [
       "browser"
     ]
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
   }
 ]
 
@@ -188,6 +315,93 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-002-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Create distinct encounter identity referencing the practice-patient relationship, responsible doctor and encounter location; never make a location the chart owner.",
+    "procedure": "Reject cross-practice patient/encounter references and preserve doctor/location foreign-key attribution.",
+    "test_case_name": "DOS-M2-002-C01",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-002.sql"
+    ],
+    "command_refs": [
+      "dos-m2-002-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-002-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Authorize draft/in-progress/finalized/amended transitions on the server with version comparison and idempotency keys; finalized content cannot be overwritten.",
+    "procedure": "Race finalize and stale update, replay finalize and attempt overwrite of a finalized version.",
+    "test_case_name": "DOS-M2-002-C02",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-002.sql"
+    ],
+    "command_refs": [
+      "dos-m2-002-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-002-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Persist actor, event time, originating encounter/version and amendment reason; archived locations and patients retain referenced history.",
+    "procedure": "Amend an encounter at an archived location and verify actor/time/reason plus retained history.",
+    "test_case_name": "DOS-M2-002-C03",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-002.sql"
+    ],
+    "command_refs": [
+      "dos-m2-002-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-002-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-002.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-002.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": "release-changes/items.json",
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.
@@ -228,7 +442,8 @@ Allowed paths
 - packages/ui/tests/
 - packages/ux/src/
 - packages/ux/tests/
-- release-fragments/
+- release-changes/items.json
+- release-fragments/dos-m2-003.json
 
 Acceptance
 1. Represent patient-reported, staff-entered and clinician-reviewed observations separately with source, timestamp and unit; distinguish unknown, none-reported and missing allergy/history fields.
@@ -244,6 +459,7 @@ Expected outputs
 - apps/doctor-suit/tests/unit/dos-m2-003.test.mjs
 - apps/doctor-suit/supabase/tests/dos-m2-003.sql
 - apps/doctor-suit/tests/e2e/dos-m2-003.spec.ts
+- release-fragments/dos-m2-003.json
 
 Executable verification obligations
 [
@@ -304,6 +520,16 @@ Executable verification obligations
     "requires": [
       "browser"
     ]
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
   }
 ]
 
@@ -314,6 +540,95 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-003-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Represent patient-reported, staff-entered and clinician-reviewed observations separately with source, timestamp and unit; distinguish unknown, none-reported and missing allergy/history fields.",
+    "procedure": "Persist and render unknown versus none-reported history and distinguish patient/staff/clinician provenance.",
+    "test_case_name": "DOS-M2-003-C01",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-003.sql",
+      "apps/doctor-suit/tests/e2e/dos-m2-003.spec.ts"
+    ],
+    "command_refs": [
+      "dos-m2-003-data",
+      "dos-m2-003-browser"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-003-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Correct observations through a traceable revision; unreviewed data must not render as verified and no values or diagnoses are inferred.",
+    "procedure": "Correct a versioned observation and reject invalid units or a stale write without inferring values.",
+    "test_case_name": "DOS-M2-003-C02",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-003.sql"
+    ],
+    "command_refs": [
+      "dos-m2-003-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-003-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Apply encounter/practice and delegated intake permissions consistently to history, allergies and observations; clinician review requires the approved actor capability.",
+    "procedure": "An administrative intake grant cannot mark data clinically reviewed or read another practice.",
+    "test_case_name": "DOS-M2-003-C03",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-003.sql"
+    ],
+    "command_refs": [
+      "dos-m2-003-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-003-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-003.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-003.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": "release-changes/items.json",
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.
@@ -353,7 +668,8 @@ Allowed paths
 - packages/ui/tests/
 - packages/ux/src/
 - packages/ux/tests/
-- release-fragments/
+- release-changes/items.json
+- release-fragments/dos-m2-004.json
 
 Acceptance
 1. Define versioned neutral note sections and typed field schemas with explicit optional/required fields approved by governance; do not silently claim specialty coverage.
@@ -368,6 +684,7 @@ Expected outputs
 - docs/work-packages/doctor-suit/implementation/dos-m2-004.md
 - apps/doctor-suit/tests/unit/dos-m2-004.test.mjs
 - apps/doctor-suit/tests/e2e/dos-m2-004.spec.ts
+- release-fragments/dos-m2-004.json
 
 Executable verification obligations
 [
@@ -413,6 +730,16 @@ Executable verification obligations
     "requires": [
       "browser"
     ]
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
   }
 ]
 
@@ -423,6 +750,95 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-004-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Define versioned neutral note sections and typed field schemas with explicit optional/required fields approved by governance; do not silently claim specialty coverage.",
+    "procedure": "Render the approved typed note schema and reject missing required fields in both locales.",
+    "test_case_name": "DOS-M2-004-C01",
+    "required_outputs": [
+      "apps/doctor-suit/tests/unit/dos-m2-004.test.mjs",
+      "apps/doctor-suit/tests/e2e/dos-m2-004.spec.ts"
+    ],
+    "command_refs": [
+      "dos-m2-004-unit",
+      "dos-m2-004-browser"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-004-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Persist the template version with each note so later template edits do not rewrite historical content.",
+    "procedure": "Open a note using its original template after a schema version change and compare field meanings.",
+    "test_case_name": "DOS-M2-004-C02",
+    "required_outputs": [
+      "apps/doctor-suit/tests/unit/dos-m2-004.test.mjs"
+    ],
+    "command_refs": [
+      "dos-m2-004-unit"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-004-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Use shared page templates for editing/review, retain unsaved content on validation/network failure and require explicit conflict resolution.",
+    "procedure": "Interrupt a save and race an update; retain the draft and require explicit conflict resolution.",
+    "test_case_name": "DOS-M2-004-C03",
+    "required_outputs": [
+      "apps/doctor-suit/tests/e2e/dos-m2-004.spec.ts"
+    ],
+    "command_refs": [
+      "dos-m2-004-browser"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-004-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-004.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-004.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": "release-changes/items.json",
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.
@@ -445,7 +861,7 @@ Blocking decisions: DOS-M2-GATE-START, DOS-M2-GATE-CLINICAL
 
 Allowed paths
 - docs/work-packages/doctor-suit/
-- release-fragments/
+- release-fragments/dos-m2-005.json
 
 Acceptance
 1. Record candidate catalogue owner, license/redistribution restrictions, allowed fields, version, provenance, update cadence and access evidence; unavailable APIs remain unavailable.
@@ -459,6 +875,7 @@ Verification scenarios
 
 Expected outputs
 - docs/work-packages/doctor-suit/implementation/dos-m2-005.md
+- release-fragments/dos-m2-005.json
 
 Executable verification obligations
 [
@@ -480,6 +897,23 @@ Executable verification obligations
     "description": "Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions",
     "blocker": "reviewer_identity_scope_candidate_and_decision_evidence_required",
     "phase": "pre_publication"
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Criterion-specific accountable review/device/verifier evidence listed in coverage cases",
+    "phase": "pre_publication",
+    "blocker": "criterion_review_evidence_required"
   }
 ]
 
@@ -490,6 +924,103 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-005-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Record candidate catalogue owner, license/redistribution restrictions, allowed fields, version, provenance, update cadence and access evidence; unavailable APIs remain unavailable.",
+    "procedure": "Inspect actual license/access evidence and catalogue owner/version/redistribution terms.",
+    "test_case_name": null,
+    "required_outputs": [],
+    "command_refs": [],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "accountable-human-review"
+    ],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-005-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Define explicit clinician-entered manual entries and unverified identity labeling where approved; no scraping, EDA access or commercial license is assumed.",
+    "procedure": "Review permitted manual entry and withdrawal/update handling without claiming an unavailable API.",
+    "test_case_name": null,
+    "required_outputs": [],
+    "command_refs": [],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "accountable-human-review"
+    ],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-005-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Approve a versioned catalogue/manual-entry contract with withdrawal/update behavior and retain the licensing decision OPEN until evidence is supplied.",
+    "procedure": "Accept only an accountable signed catalogue policy; missing evidence preserves the open licensing gate.",
+    "test_case_name": null,
+    "required_outputs": [],
+    "command_refs": [],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "accountable-human-review"
+    ],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-005-C04",
+    "criterion_ids": [
+      4
+    ],
+    "assertion": "Prepare evidence for DOS-M2-GATE-CATALOGUE. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+    "procedure": "Verify accountable approval for the named produced decisions before the dependent native/provider/live-data action; a prepared document alone is not approval.",
+    "test_case_name": null,
+    "required_outputs": [],
+    "command_refs": [],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "accountable-human-review"
+    ],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-005-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-005.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-005.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": null,
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.
@@ -530,7 +1061,8 @@ Allowed paths
 - packages/ui/tests/
 - packages/ux/src/
 - packages/ux/tests/
-- release-fragments/
+- release-changes/items.json
+- release-fragments/dos-m2-006.json
 
 Acceptance
 1. Persist medicine identity/provenance, entered strength/form/dose/unit/route, start/end, structured frequency and clinician-authored instructions without filling clinical values automatically.
@@ -546,6 +1078,7 @@ Expected outputs
 - apps/doctor-suit/tests/unit/dos-m2-006.test.mjs
 - apps/doctor-suit/supabase/tests/dos-m2-006.sql
 - apps/doctor-suit/tests/e2e/dos-m2-006.spec.ts
+- release-fragments/dos-m2-006.json
 
 Executable verification obligations
 [
@@ -606,6 +1139,16 @@ Executable verification obligations
     "requires": [
       "browser"
     ]
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
   }
 ]
 
@@ -616,6 +1159,97 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-006-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Persist medicine identity/provenance, entered strength/form/dose/unit/route, start/end, structured frequency and clinician-authored instructions without filling clinical values automatically.",
+    "procedure": "Round-trip all entered prescription fields and catalogue/manual provenance with no generated clinical defaults.",
+    "test_case_name": "DOS-M2-006-C01",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-006.sql",
+      "apps/doctor-suit/tests/unit/dos-m2-006.test.mjs"
+    ],
+    "command_refs": [
+      "dos-m2-006-data",
+      "dos-m2-006-unit"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-006-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Validate required shape and internal consistency, associate each draft with encounter and responsible doctor, and surface unresolved medicine identity explicitly.",
+    "procedure": "Reject missing/inconsistent field shapes and show unresolved medicine identity explicitly.",
+    "test_case_name": "DOS-M2-006-C02",
+    "required_outputs": [
+      "apps/doctor-suit/tests/unit/dos-m2-006.test.mjs",
+      "apps/doctor-suit/tests/e2e/dos-m2-006.spec.ts"
+    ],
+    "command_refs": [
+      "dos-m2-006-unit",
+      "dos-m2-006-browser"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-006-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Retain draft edits with version checks; save is not signing and no validation result implies that a dose or medicine is clinically appropriate.",
+    "procedure": "Replay a save and race edits; save never creates a signed version.",
+    "test_case_name": "DOS-M2-006-C03",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-006.sql"
+    ],
+    "command_refs": [
+      "dos-m2-006-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-006-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-006.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-006.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": "release-changes/items.json",
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.
@@ -655,7 +1289,8 @@ Allowed paths
 - packages/ui/tests/
 - packages/ux/src/
 - packages/ux/tests/
-- release-fragments/
+- release-changes/items.json
+- release-fragments/dos-m2-007.json
 
 Acceptance
 1. Model explicit schedule segments for tapering, interval, selected weekdays and as-needed instructions with boundaries, timezone semantics and versioned representation.
@@ -669,6 +1304,7 @@ Verification scenarios
 Expected outputs
 - docs/work-packages/doctor-suit/implementation/dos-m2-007.md
 - apps/doctor-suit/tests/unit/dos-m2-007.test.mjs
+- release-fragments/dos-m2-007.json
 
 Executable verification obligations
 [
@@ -700,6 +1336,23 @@ Executable verification obligations
     "kind": "command",
     "description": "Run full repository unit regression for affected consumers",
     "command": "pnpm test"
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Criterion-specific accountable review/device/verifier evidence listed in coverage cases",
+    "phase": "pre_publication",
+    "blocker": "criterion_review_evidence_required"
   }
 ]
 
@@ -710,6 +1363,95 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-007-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Model explicit schedule segments for tapering, interval, selected weekdays and as-needed instructions with boundaries, timezone semantics and versioned representation.",
+    "procedure": "Round-trip taper, interval, weekday and as-needed segments with fixed anchors and version.",
+    "test_case_name": "DOS-M2-007-C01",
+    "required_outputs": [
+      "apps/doctor-suit/tests/unit/dos-m2-007.test.mjs"
+    ],
+    "command_refs": [
+      "dos-m2-007-unit"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-007-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Detect overlapping/contradictory segments and ambiguous time anchors for clinician correction; never calculate a replacement dose or infer an as-needed dosing cadence.",
+    "procedure": "Reject overlaps and ambiguous anchors and verify no replacement dose or inferred as-needed cadence.",
+    "test_case_name": "DOS-M2-007-C02",
+    "required_outputs": [
+      "apps/doctor-suit/tests/unit/dos-m2-007.test.mjs"
+    ],
+    "command_refs": [
+      "dos-m2-007-unit"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-007-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Preserve exact entered regimen through serialization and amendments; provide deterministic test vectors reviewed under the prescribing policy.",
+    "procedure": "Replay clinician-reviewed fixed-clock vectors after amendment and compare exact entered regimen.",
+    "test_case_name": "DOS-M2-007-C03",
+    "required_outputs": [
+      "apps/doctor-suit/tests/unit/dos-m2-007.test.mjs"
+    ],
+    "command_refs": [
+      "dos-m2-007-unit"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "accountable-human-review"
+    ],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-007-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-007.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-007.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": "release-changes/items.json",
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.
@@ -750,7 +1492,8 @@ Allowed paths
 - packages/ui/tests/
 - packages/ux/src/
 - packages/ux/tests/
-- release-fragments/
+- release-changes/items.json
+- release-fragments/dos-m2-008.json
 
 Acceptance
 1. Require the approved accountable doctor and current authorization for signing; invitations, editable metadata and staff grants cannot confer signing authority.
@@ -766,6 +1509,7 @@ Expected outputs
 - apps/doctor-suit/tests/unit/dos-m2-008.test.mjs
 - apps/doctor-suit/supabase/tests/dos-m2-008.sql
 - apps/doctor-suit/tests/e2e/dos-m2-008.spec.ts
+- release-fragments/dos-m2-008.json
 
 Executable verification obligations
 [
@@ -826,6 +1570,16 @@ Executable verification obligations
     "requires": [
       "browser"
     ]
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
   }
 ]
 
@@ -836,6 +1590,93 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-008-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Require the approved accountable doctor and current authorization for signing; invitations, editable metadata and staff grants cannot confer signing authority.",
+    "procedure": "Try signing as secretary, outsider and revoked doctor; require current accountable doctor authority.",
+    "test_case_name": "DOS-M2-008-C01",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-008.sql"
+    ],
+    "command_refs": [
+      "dos-m2-008-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-008-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Atomically store immutable signed version, signer and time, source draft/version and integrity reference; repeated signing is idempotent and stale signing fails.",
+    "procedure": "Race signing with an edit and replay success; persist one immutable signed snapshot.",
+    "test_case_name": "DOS-M2-008-C02",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-008.sql"
+    ],
+    "command_refs": [
+      "dos-m2-008-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-008-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Revocation/amendment creates a linked version and reason with old content preserved; downstream consumers can distinguish active, superseded and stopped versions.",
+    "procedure": "Stop/amend a signed version and verify original bytes, linked successor and current-status projection.",
+    "test_case_name": "DOS-M2-008-C03",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-008.sql"
+    ],
+    "command_refs": [
+      "dos-m2-008-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-008-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-008.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-008.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": "release-changes/items.json",
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.
@@ -875,7 +1716,9 @@ Allowed paths
 - packages/ui/tests/
 - packages/ux/src/
 - packages/ux/tests/
-- release-fragments/
+- release-changes/items.json
+- release-fragments/dos-m2-009.json
+- apps/doctor-suit/supabase/tests/
 
 Acceptance
 1. Render print output from one signed structured version with doctor, patient, location, date, version/status and unmodified instructions; bilingual layout must remain legible.
@@ -890,6 +1733,8 @@ Expected outputs
 - docs/work-packages/doctor-suit/implementation/dos-m2-009.md
 - apps/doctor-suit/tests/unit/dos-m2-009.test.mjs
 - apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts
+- release-fragments/dos-m2-009.json
+- apps/doctor-suit/supabase/tests/dos-m2-009.sql
 
 Executable verification obligations
 [
@@ -935,6 +1780,31 @@ Executable verification obligations
     "requires": [
       "browser"
     ]
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+  },
+  {
+    "version": 2,
+    "kind": "planned_test",
+    "description": "Verify scoped database criteria with actual disposable authorization/write assertions",
+    "expected_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-009.sql"
+    ],
+    "commands": [
+      "dos-m2-009-data"
+    ],
+    "requires": [
+      "database",
+      "rls-authorization"
+    ]
   }
 ]
 
@@ -945,6 +1815,96 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-009-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Render print output from one signed structured version with doctor, patient, location, date, version/status and unmodified instructions; bilingual layout must remain legible.",
+    "procedure": "Print long EN/AR signed instructions and compare every field/version/status to the source.",
+    "test_case_name": "DOS-M2-009-C01",
+    "required_outputs": [
+      "apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts"
+    ],
+    "command_refs": [
+      "dos-m2-009-browser"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-009-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Use shared pure print presentation and UX-owned download behavior; app adapters perform current permission checks.",
+    "procedure": "Verify pure print presentation boundaries and permission-checked app adapter behavior.",
+    "test_case_name": "DOS-M2-009-C02",
+    "required_outputs": [
+      "apps/doctor-suit/tests/unit/dos-m2-009.test.mjs"
+    ],
+    "command_refs": [
+      "pnpm check",
+      "dos-m2-009-unit"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-009-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Sharing is scoped, revocable and expiry-aware with no public patient metadata, static storage URL or analytics payload; a stopped/superseded version is visibly labeled.",
+    "procedure": "Expire/revoke sharing and test outsider document access and public metadata leakage.",
+    "test_case_name": "DOS-M2-009-C03",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-009.sql",
+      "apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts"
+    ],
+    "command_refs": [
+      "dos-m2-009-data",
+      "dos-m2-009-browser"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-009-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-009.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-009.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": "release-changes/items.json",
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.
@@ -985,7 +1945,8 @@ Allowed paths
 - packages/ui/tests/
 - packages/ux/src/
 - packages/ux/tests/
-- release-fragments/
+- release-changes/items.json
+- release-fragments/dos-m2-010.json
 
 Acceptance
 1. Store clinician-authored follow-up, lab, imaging and referral requests with encounter/doctor attribution, due context and explicit lifecycle.
@@ -1001,6 +1962,7 @@ Expected outputs
 - apps/doctor-suit/tests/unit/dos-m2-010.test.mjs
 - apps/doctor-suit/supabase/tests/dos-m2-010.sql
 - apps/doctor-suit/tests/e2e/dos-m2-010.spec.ts
+- release-fragments/dos-m2-010.json
 
 Executable verification obligations
 [
@@ -1061,6 +2023,16 @@ Executable verification obligations
     "requires": [
       "browser"
     ]
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
   }
 ]
 
@@ -1071,6 +2043,95 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-010-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Store clinician-authored follow-up, lab, imaging and referral requests with encounter/doctor attribution, due context and explicit lifecycle.",
+    "procedure": "Create follow-up/order requests with exact encounter/doctor/time attribution.",
+    "test_case_name": "DOS-M2-010-C01",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-010.sql"
+    ],
+    "command_refs": [
+      "dos-m2-010-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-010-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Separate request creation, operational tracking and clinical interpretation; a result or referral never silently creates a diagnosis.",
+    "procedure": "Receive a result and verify it does not imply review, diagnosis or clinical release.",
+    "test_case_name": "DOS-M2-010-C02",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-010.sql",
+      "apps/doctor-suit/tests/e2e/dos-m2-010.spec.ts"
+    ],
+    "command_refs": [
+      "dos-m2-010-data",
+      "dos-m2-010-browser"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-010-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Allow only authorized transitions and cancellation with history; external provider calls remain absent until M9 approval.",
+    "procedure": "Replay/cancel requests and deny staff clinical edits; verify no external dispatch without adapter approval.",
+    "test_case_name": "DOS-M2-010-C03",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-010.sql"
+    ],
+    "command_refs": [
+      "dos-m2-010-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-010-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-010.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-010.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": "release-changes/items.json",
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.
@@ -1111,7 +2172,8 @@ Allowed paths
 - packages/ui/tests/
 - packages/ux/src/
 - packages/ux/tests/
-- release-fragments/
+- release-changes/items.json
+- release-fragments/dos-m2-011.json
 
 Acceptance
 1. Track requested/uploaded/received/reviewed/released states with explicit actor/time and source-file provenance.
@@ -1127,6 +2189,7 @@ Expected outputs
 - apps/doctor-suit/tests/unit/dos-m2-011.test.mjs
 - apps/doctor-suit/supabase/tests/dos-m2-011.sql
 - apps/doctor-suit/tests/e2e/dos-m2-011.spec.ts
+- release-fragments/dos-m2-011.json
 
 Executable verification obligations
 [
@@ -1187,6 +2250,16 @@ Executable verification obligations
     "requires": [
       "browser"
     ]
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
   }
 ]
 
@@ -1197,6 +2270,93 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-011-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Track requested/uploaded/received/reviewed/released states with explicit actor/time and source-file provenance.",
+    "procedure": "Exercise each document lifecycle transition and assert source, actor and timestamps.",
+    "test_case_name": "DOS-M2-011-C01",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-011.sql"
+    ],
+    "command_refs": [
+      "dos-m2-011-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-011-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Validate private document type/size and access on upload/view/download; replacements retain prior version and audit link.",
+    "procedure": "Reject invalid files and cross-practice downloads while retaining replaced versions.",
+    "test_case_name": "DOS-M2-011-C02",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-011.sql"
+    ],
+    "command_refs": [
+      "dos-m2-011-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-011-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Only the approved clinician can mark review or release; upload success does not imply review, normality or patient visibility.",
+    "procedure": "Race replacement with review; staff upload cannot mark the new document reviewed or released.",
+    "test_case_name": "DOS-M2-011-C03",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-011.sql"
+    ],
+    "command_refs": [
+      "dos-m2-011-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-011-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-011.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-011.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": "release-changes/items.json",
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.
@@ -1237,7 +2397,8 @@ Allowed paths
 - packages/ui/tests/
 - packages/ux/src/
 - packages/ux/tests/
-- release-fragments/
+- release-changes/items.json
+- release-fragments/dos-m2-012.json
 
 Acceptance
 1. Define per-record release decision separate from chart membership; private working notes and released patient artifacts are distinct projections.
@@ -1253,6 +2414,7 @@ Expected outputs
 - apps/doctor-suit/tests/unit/dos-m2-012.test.mjs
 - apps/doctor-suit/supabase/tests/dos-m2-012.sql
 - apps/doctor-suit/tests/e2e/dos-m2-012.spec.ts
+- release-fragments/dos-m2-012.json
 
 Executable verification obligations
 [
@@ -1320,6 +2482,23 @@ Executable verification obligations
     "description": "Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions",
     "blocker": "reviewer_identity_scope_candidate_and_decision_evidence_required",
     "phase": "pre_publication"
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Criterion-specific accountable review/device/verifier evidence listed in coverage cases",
+    "phase": "pre_publication",
+    "blocker": "criterion_review_evidence_required"
   }
 ]
 
@@ -1330,6 +2509,95 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-012-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Define per-record release decision separate from chart membership; private working notes and released patient artifacts are distinct projections.",
+    "procedure": "Compare private-working and released projections for one encounter without changing membership.",
+    "test_case_name": "DOS-M2-012-C01",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-012.sql"
+    ],
+    "command_refs": [
+      "dos-m2-012-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-012-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Record recipient relationship, version, release actor and revocation policy; future caregiver grants are explicit scoped relationships, not shared credentials.",
+    "procedure": "Verify scoped recipient/version/revocation policy and reject implied caregiver authority.",
+    "test_case_name": "DOS-M2-012-C02",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-012.sql"
+    ],
+    "command_refs": [
+      "dos-m2-012-data"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "accountable-human-review"
+    ],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-012-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Backend queries expose only authorized released versions; linking a patient to two doctors does not expose either doctor chart to the other.",
+    "procedure": "Patient has A/B relationships; only released versions appear and A cannot read B chart.",
+    "test_case_name": "DOS-M2-012-C03",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-012.sql"
+    ],
+    "command_refs": [
+      "dos-m2-012-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-012-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-012.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-012.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": "release-changes/items.json",
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.
@@ -1370,7 +2638,8 @@ Allowed paths
 - packages/ui/tests/
 - packages/ux/src/
 - packages/ux/tests/
-- release-fragments/
+- release-changes/items.json
+- release-fragments/dos-m2-013.json
 
 Acceptance
 1. Export only the authorized doctor/practice/patient scope with encounter, signed version, amendment chain, document provenance and manifest completeness.
@@ -1386,6 +2655,7 @@ Expected outputs
 - apps/doctor-suit/tests/unit/dos-m2-013.test.mjs
 - apps/doctor-suit/supabase/tests/dos-m2-013.sql
 - apps/doctor-suit/tests/e2e/dos-m2-013.spec.ts
+- release-fragments/dos-m2-013.json
 
 Executable verification obligations
 [
@@ -1446,6 +2716,23 @@ Executable verification obligations
     "requires": [
       "browser"
     ]
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Criterion-specific accountable review/device/verifier evidence listed in coverage cases",
+    "phase": "pre_publication",
+    "blocker": "criterion_review_evidence_required"
   }
 ]
 
@@ -1456,6 +2743,95 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-013-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Export only the authorized doctor/practice/patient scope with encounter, signed version, amendment chain, document provenance and manifest completeness.",
+    "procedure": "Export one authorized scope and reconcile all encounters, version chains and documents.",
+    "test_case_name": "DOS-M2-013-C01",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-013.sql"
+    ],
+    "command_refs": [
+      "dos-m2-013-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-013-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Use stable IDs and deterministic manifest checksums so omissions and mismatched versions are detectable; export access is current and audited.",
+    "procedure": "Tamper/remove a manifest entry and require checksum/completeness failure on deterministic replay.",
+    "test_case_name": "DOS-M2-013-C02",
+    "required_outputs": [
+      "apps/doctor-suit/tests/unit/dos-m2-013.test.mjs"
+    ],
+    "command_refs": [
+      "dos-m2-013-unit"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-013-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Preserve retention/legal-hold policy gates and historical versions; this task creates a synthetic export, not a real-data erasure policy.",
+    "procedure": "Exercise synthetic export under unresolved retention policy and prove no erasure or unauthorized access.",
+    "test_case_name": "DOS-M2-013-C03",
+    "required_outputs": [
+      "apps/doctor-suit/supabase/tests/dos-m2-013.sql"
+    ],
+    "command_refs": [
+      "dos-m2-013-data"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "accountable-human-review"
+    ],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-013-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-013.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-013.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": "release-changes/items.json",
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.
@@ -1496,7 +2872,8 @@ Allowed paths
 - packages/ui/tests/
 - packages/ux/src/
 - packages/ux/tests/
-- release-fragments/
+- release-changes/items.json
+- release-fragments/dos-m2-014.json
 
 Acceptance
 1. Run the complete synthetic encounter→intake→note→prescription→sign/amend→print/release→result/export workflow against exact candidate code.
@@ -1512,6 +2889,7 @@ Expected outputs
 - apps/doctor-suit/tests/unit/dos-m2-014.test.mjs
 - apps/doctor-suit/supabase/tests/dos-m2-014.sql
 - apps/doctor-suit/tests/e2e/dos-m2-014.spec.ts
+- release-fragments/dos-m2-014.json
 
 Executable verification obligations
 [
@@ -1604,6 +2982,23 @@ Executable verification obligations
     "description": "Independent exact-candidate affected shared-consumer acceptance evidence",
     "blocker": "shared_consumer_regression_receipts_required",
     "phase": "pre_publication"
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+    "commands": [
+      "doctor-release-check"
+    ],
+    "phase": "pre_publication",
+    "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+  },
+  {
+    "version": 2,
+    "kind": "external_gate",
+    "description": "Criterion-specific accountable review/device/verifier evidence listed in coverage cases",
+    "phase": "pre_publication",
+    "blocker": "criterion_review_evidence_required"
   }
 ]
 
@@ -1614,6 +3009,91 @@ Execution boundaries
 - Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
+- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+
+Criterion-specific coverage
+[
+  {
+    "case_id": "DOS-M2-014-C01",
+    "criterion_ids": [
+      1
+    ],
+    "assertion": "Run the complete synthetic encounter→intake→note→prescription→sign/amend→print/release→result/export workflow against exact candidate code.",
+    "procedure": "Run the full synthetic encounter/Rx/order/release/export journey with malicious and concurrent variants.",
+    "test_case_name": "DOS-M2-014-C01",
+    "required_outputs": [
+      "apps/doctor-suit/tests/e2e/dos-m2-014.spec.ts",
+      "apps/doctor-suit/supabase/tests/dos-m2-014.sql"
+    ],
+    "command_refs": [
+      "dos-m2-014-browser",
+      "dos-m2-014-data"
+    ],
+    "external_evidence_required": false,
+    "evidence_types": [],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-014-C02",
+    "criterion_ids": [
+      2
+    ],
+    "assertion": "Obtain independent qualified clinical review of entered-data fidelity, authority boundaries and failure cases; unresolved critical findings block acceptance.",
+    "procedure": "Independent clinician reviews fidelity and authority findings on the exact candidate.",
+    "test_case_name": null,
+    "required_outputs": [],
+    "command_refs": [],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "accountable-human-review"
+    ],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-014-C03",
+    "criterion_ids": [
+      3
+    ],
+    "assertion": "Record all M2 requirements and gate evidence separately from product implementation; no real-patient or prescribing launch is authorized.",
+    "procedure": "Trace M2 requirement receipts and open real-data gates; incomplete or unrun checks prevent acceptance.",
+    "test_case_name": null,
+    "required_outputs": [],
+    "command_refs": [],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "independent-exact-candidate-verifier"
+    ],
+    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+  },
+  {
+    "case_id": "DOS-M2-014-RELEASE",
+    "criterion_ids": [],
+    "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+    "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+    "test_case_name": null,
+    "required_outputs": [
+      "release-fragments/dos-m2-014.json"
+    ],
+    "command_refs": [
+      "doctor-release-check"
+    ],
+    "external_evidence_required": true,
+    "evidence_types": [
+      "exact-candidate-release-review"
+    ],
+    "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+  }
+]
+
+Release ownership
+{
+  "fragment_path": "release-fragments/dos-m2-014.json",
+  "accepted_fragments": "append-only; never rewrite accepted provenance",
+  "inventory_path": "release-changes/items.json",
+  "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+  "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+  "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+}
 
 Evidence handback
 - Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.

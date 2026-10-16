@@ -13,7 +13,7 @@ Worktree: `/workspace/doctor-planning`. Branch: `codex/doctor-suit/milestone-con
 
 ## Remaining parent-owned import prerequisites
 
-Action: reviewed transactional import of M1 through M9 to Automation project `padtxclxwwqvvuiebhte`, project `building-suit` / `f71b3b2b-d56b-4f7e-94f5-0b8c379a1088`. Status: pending parent review; not attempted, not denied, no uncertain mutation outcome.
+Action: reviewed transactional import of M1 through M9 to Automation project `padtxclxwwqvvuiebhte`, project `building-suit` / `f71b3b2b-d56b-4f7e-94f5-0b8c379a1088`. Status: held pending renewed permission and parent review; not attempted, not denied, no uncertain mutation outcome. The parent explicitly cancelled its live-schema fingerprint refresh; this executor has not retried it.
 
 The parent reports that Doctor registrations/tasks/requirements are absent and the project lacks a Doctor app mapping. Supply the live schema/function/trigger/consumer contract and reviewed suit/workstream/app registration, exact model/retry routes, registered verification commands and publication scopes. The inspected creation function requires an active project/workstream; planned task status does not prevent consumers waking.
 
@@ -22,6 +22,8 @@ Use the supported `control.create_task_with_publication_contract` only through t
 Model policy: the user requested high-capability planning; task proposals require the registered `deep` route. No concrete provider/model or retry ID is invented. Mobile platform commands and provider/clinical/legal/commercial decisions require actual evidence and scoped packet/registration refinement before dependent implementation. Native paths are reservations, not a chosen framework.
 
 All original task IDs, the source dependencies and historical source documents are preserved. Legacy Clinic counts remain unreconciled because no corresponding implementation/maintained source was found; do not manufacture historical tasks or assume absence proves their historical nonexistence.
+
+The user now authorizes eventual implementation of M1–M3 once the parent confirms all nine safely saved. That confirmation has not been received. [REVIEW-2.md](REVIEW-2.md) records the latest requested corrections; [registration-adapter.proposal.json](registration-adapter.proposal.json) provides the concrete, non-executing registration and canonical-metadata adapter proposal. No shared project scope or runtime/model registration has been changed.
 
 ## Actual verification
 

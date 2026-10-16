@@ -6,10 +6,15 @@
       "milestone": "DOS-M1",
       "tasks": 20,
       "requirements": 25,
-      "decisions": 5,
+      "decisions": 6,
+      "criterion_cases": 82,
+      "coverage": "criterion-specific-procedure-and-selected-executable/evidence",
+      "canonical_metadata": "all-task-fields-deep-equal-and-hash-verified",
+      "dependency_graph": "identical-to-c9716fbf-review-baseline",
+      "release_scope": "task-fragment-and-related-inventory-only",
       "start_gate": "open-linked-to-every-task",
       "artifact_validation": "passed",
-      "live_import_validation": "pending-parent-contract",
+      "live_import_validation": "held-cancelled-refresh-needs-renewed-permission",
       "task_reports": [
         {
           "task_id": "DOS-M1-001",
@@ -17,7 +22,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 0,
+          "explicit_gates": 2,
           "product_execution": "not-run"
         },
         {
@@ -26,7 +31,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 1,
-          "explicit_gates": 0,
+          "explicit_gates": 2,
           "product_execution": "not-run"
         },
         {
@@ -35,7 +40,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 2,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -43,8 +48,8 @@
           "command_mapping": "resolved-against-repository-resolver",
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
-          "planned_outputs": 1,
-          "explicit_gates": 0,
+          "planned_outputs": 2,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -53,7 +58,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 2,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -62,7 +67,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -71,7 +76,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -80,7 +85,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -89,7 +94,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -98,7 +103,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -107,7 +112,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -116,7 +121,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -125,7 +130,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -134,7 +139,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -142,8 +147,8 @@
           "command_mapping": "resolved-against-repository-resolver",
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
-          "planned_outputs": 2,
-          "explicit_gates": 0,
+          "planned_outputs": 3,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -152,7 +157,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -161,7 +166,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 2,
           "product_execution": "not-run"
         },
         {
@@ -170,7 +175,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 2,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -179,7 +184,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 2,
-          "explicit_gates": 0,
+          "explicit_gates": 2,
           "product_execution": "not-run"
         },
         {
@@ -188,7 +193,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         }
       ]
@@ -198,9 +203,14 @@
       "tasks": 14,
       "requirements": 15,
       "decisions": 3,
+      "criterion_cases": 44,
+      "coverage": "criterion-specific-procedure-and-selected-executable/evidence",
+      "canonical_metadata": "all-task-fields-deep-equal-and-hash-verified",
+      "dependency_graph": "identical-to-c9716fbf-review-baseline",
+      "release_scope": "task-fragment-and-related-inventory-only",
       "start_gate": "open-linked-to-every-task",
       "artifact_validation": "passed",
-      "live_import_validation": "pending-parent-contract",
+      "live_import_validation": "held-cancelled-refresh-needs-renewed-permission",
       "task_reports": [
         {
           "task_id": "DOS-M2-001",
@@ -208,7 +218,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 2,
           "planned_outputs": 0,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -217,7 +227,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -226,7 +236,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -235,7 +245,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 2,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -244,7 +254,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 2,
           "planned_outputs": 0,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -253,7 +263,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -262,7 +272,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 0,
+          "explicit_gates": 2,
           "product_execution": "not-run"
         },
         {
@@ -271,38 +281,11 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
           "task_id": "DOS-M2-009",
-          "command_mapping": "resolved-against-repository-resolver",
-          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
-          "checks": 3,
-          "planned_outputs": 2,
-          "explicit_gates": 0,
-          "product_execution": "not-run"
-        },
-        {
-          "task_id": "DOS-M2-010",
-          "command_mapping": "resolved-against-repository-resolver",
-          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
-          "checks": 3,
-          "planned_outputs": 3,
-          "explicit_gates": 0,
-          "product_execution": "not-run"
-        },
-        {
-          "task_id": "DOS-M2-011",
-          "command_mapping": "resolved-against-repository-resolver",
-          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
-          "checks": 3,
-          "planned_outputs": 3,
-          "explicit_gates": 0,
-          "product_execution": "not-run"
-        },
-        {
-          "task_id": "DOS-M2-012",
           "command_mapping": "resolved-against-repository-resolver",
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
@@ -311,12 +294,39 @@
           "product_execution": "not-run"
         },
         {
+          "task_id": "DOS-M2-010",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 3,
+          "explicit_gates": 1,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-011",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 3,
+          "explicit_gates": 1,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-012",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 3,
+          "explicit_gates": 3,
+          "product_execution": "not-run"
+        },
+        {
           "task_id": "DOS-M2-013",
           "command_mapping": "resolved-against-repository-resolver",
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 2,
           "product_execution": "not-run"
         },
         {
@@ -325,7 +335,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 3,
-          "explicit_gates": 2,
+          "explicit_gates": 4,
           "product_execution": "not-run"
         }
       ]
@@ -335,9 +345,14 @@
       "tasks": 10,
       "requirements": 11,
       "decisions": 2,
+      "criterion_cases": 31,
+      "coverage": "criterion-specific-procedure-and-selected-executable/evidence",
+      "canonical_metadata": "all-task-fields-deep-equal-and-hash-verified",
+      "dependency_graph": "identical-to-c9716fbf-review-baseline",
+      "release_scope": "task-fragment-and-related-inventory-only",
       "start_gate": "open-linked-to-every-task",
       "artifact_validation": "passed",
-      "live_import_validation": "pending-parent-contract",
+      "live_import_validation": "held-cancelled-refresh-needs-renewed-permission",
       "task_reports": [
         {
           "task_id": "DOS-M3-001",
@@ -345,7 +360,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -354,7 +369,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -363,7 +378,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 2,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -372,7 +387,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -381,7 +396,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -390,7 +405,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -399,7 +414,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -408,7 +423,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -417,7 +432,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -426,7 +441,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 3,
-          "explicit_gates": 2,
+          "explicit_gates": 4,
           "product_execution": "not-run"
         }
       ]
@@ -436,9 +451,14 @@
       "tasks": 10,
       "requirements": 11,
       "decisions": 3,
+      "criterion_cases": 40,
+      "coverage": "criterion-specific-procedure-and-selected-executable/evidence",
+      "canonical_metadata": "all-task-fields-deep-equal-and-hash-verified",
+      "dependency_graph": "identical-to-c9716fbf-review-baseline",
+      "release_scope": "task-fragment-and-related-inventory-only",
       "start_gate": "open-linked-to-every-task",
       "artifact_validation": "passed",
-      "live_import_validation": "pending-parent-contract",
+      "live_import_validation": "held-cancelled-refresh-needs-renewed-permission",
       "task_reports": [
         {
           "task_id": "DOS-M4-001",
@@ -446,7 +466,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 2,
           "planned_outputs": 0,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -455,7 +475,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -464,7 +484,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -473,7 +493,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -482,7 +502,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -491,7 +511,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -500,7 +520,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -509,7 +529,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -518,7 +538,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 2,
-          "explicit_gates": 2,
+          "explicit_gates": 4,
           "product_execution": "not-run"
         },
         {
@@ -527,7 +547,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 2,
-          "explicit_gates": 3,
+          "explicit_gates": 5,
           "product_execution": "not-run"
         }
       ]
@@ -537,9 +557,14 @@
       "tasks": 14,
       "requirements": 15,
       "decisions": 4,
+      "criterion_cases": 58,
+      "coverage": "criterion-specific-procedure-and-selected-executable/evidence",
+      "canonical_metadata": "all-task-fields-deep-equal-and-hash-verified",
+      "dependency_graph": "identical-to-c9716fbf-review-baseline",
+      "release_scope": "task-fragment-and-related-inventory-only",
       "start_gate": "open-linked-to-every-task",
       "artifact_validation": "passed",
-      "live_import_validation": "pending-parent-contract",
+      "live_import_validation": "held-cancelled-refresh-needs-renewed-permission",
       "task_reports": [
         {
           "task_id": "DOS-M5-001",
@@ -547,7 +572,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 2,
           "planned_outputs": 0,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -555,8 +580,8 @@
           "command_mapping": "resolved-against-repository-resolver",
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
-          "planned_outputs": 1,
-          "explicit_gates": 1,
+          "planned_outputs": 2,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -565,7 +590,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 2,
-          "explicit_gates": 2,
+          "explicit_gates": 4,
           "product_execution": "not-run"
         },
         {
@@ -574,7 +599,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -583,7 +608,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -592,7 +617,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -601,7 +626,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -610,7 +635,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -619,7 +644,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -628,7 +653,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 2,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -637,7 +662,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 2,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -646,7 +671,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -655,7 +680,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -664,7 +689,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 2,
-          "explicit_gates": 3,
+          "explicit_gates": 5,
           "product_execution": "not-run"
         }
       ]
@@ -674,9 +699,14 @@
       "tasks": 10,
       "requirements": 11,
       "decisions": 4,
+      "criterion_cases": 33,
+      "coverage": "criterion-specific-procedure-and-selected-executable/evidence",
+      "canonical_metadata": "all-task-fields-deep-equal-and-hash-verified",
+      "dependency_graph": "identical-to-c9716fbf-review-baseline",
+      "release_scope": "task-fragment-and-related-inventory-only",
       "start_gate": "open-linked-to-every-task",
       "artifact_validation": "passed",
-      "live_import_validation": "pending-parent-contract",
+      "live_import_validation": "held-cancelled-refresh-needs-renewed-permission",
       "task_reports": [
         {
           "task_id": "DOS-M6-001",
@@ -684,7 +714,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 2,
           "planned_outputs": 0,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -693,7 +723,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -702,7 +732,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -711,7 +741,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -720,7 +750,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -729,7 +759,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -738,7 +768,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -747,7 +777,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 2,
           "planned_outputs": 0,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -756,7 +786,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -765,7 +795,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 3,
-          "explicit_gates": 2,
+          "explicit_gates": 4,
           "product_execution": "not-run"
         }
       ]
@@ -775,9 +805,14 @@
       "tasks": 10,
       "requirements": 11,
       "decisions": 5,
+      "criterion_cases": 34,
+      "coverage": "criterion-specific-procedure-and-selected-executable/evidence",
+      "canonical_metadata": "all-task-fields-deep-equal-and-hash-verified",
+      "dependency_graph": "identical-to-c9716fbf-review-baseline",
+      "release_scope": "task-fragment-and-related-inventory-only",
       "start_gate": "open-linked-to-every-task",
       "artifact_validation": "passed",
-      "live_import_validation": "pending-parent-contract",
+      "live_import_validation": "held-cancelled-refresh-needs-renewed-permission",
       "task_reports": [
         {
           "task_id": "DOS-M7-001",
@@ -785,7 +820,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 2,
           "planned_outputs": 0,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -794,7 +829,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 2,
           "planned_outputs": 0,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -803,7 +838,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 2,
           "planned_outputs": 0,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -812,7 +847,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -821,7 +856,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -830,7 +865,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -839,7 +874,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -848,7 +883,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -857,7 +892,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 2,
           "planned_outputs": 0,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -866,7 +901,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 5,
           "planned_outputs": 0,
-          "explicit_gates": 2,
+          "explicit_gates": 4,
           "product_execution": "not-run"
         }
       ]
@@ -876,9 +911,14 @@
       "tasks": 8,
       "requirements": 9,
       "decisions": 2,
+      "criterion_cases": 25,
+      "coverage": "criterion-specific-procedure-and-selected-executable/evidence",
+      "canonical_metadata": "all-task-fields-deep-equal-and-hash-verified",
+      "dependency_graph": "identical-to-c9716fbf-review-baseline",
+      "release_scope": "task-fragment-and-related-inventory-only",
       "start_gate": "open-linked-to-every-task",
       "artifact_validation": "passed",
-      "live_import_validation": "pending-parent-contract",
+      "live_import_validation": "held-cancelled-refresh-needs-renewed-permission",
       "task_reports": [
         {
           "task_id": "DOS-M8-001",
@@ -886,7 +926,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 2,
           "planned_outputs": 0,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -895,7 +935,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -904,7 +944,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -913,7 +953,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -922,7 +962,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -931,7 +971,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -940,7 +980,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 2,
           "product_execution": "not-run"
         },
         {
@@ -949,7 +989,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 3,
-          "explicit_gates": 2,
+          "explicit_gates": 4,
           "product_execution": "not-run"
         }
       ]
@@ -959,9 +999,14 @@
       "tasks": 8,
       "requirements": 9,
       "decisions": 8,
+      "criterion_cases": 31,
+      "coverage": "criterion-specific-procedure-and-selected-executable/evidence",
+      "canonical_metadata": "all-task-fields-deep-equal-and-hash-verified",
+      "dependency_graph": "identical-to-c9716fbf-review-baseline",
+      "release_scope": "task-fragment-and-related-inventory-only",
       "start_gate": "open-linked-to-every-task",
       "artifact_validation": "passed",
-      "live_import_validation": "pending-parent-contract",
+      "live_import_validation": "held-cancelled-refresh-needs-renewed-permission",
       "task_reports": [
         {
           "task_id": "DOS-M9-001",
@@ -969,7 +1014,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 2,
           "planned_outputs": 0,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -978,7 +1023,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 2,
           "planned_outputs": 0,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -987,7 +1032,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -996,7 +1041,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -1005,7 +1050,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -1014,7 +1059,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -1023,7 +1068,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -1032,7 +1077,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 3,
-          "explicit_gates": 2,
+          "explicit_gates": 4,
           "product_execution": "not-run"
         }
       ]

@@ -1,0 +1,3836 @@
+{
+  "schema": "doctor-reviewed-registration-adapter-proposal-v1",
+  "status": "review-only; no runtime registration or hosted action performed",
+  "safe_to_apply": false,
+  "live_schema_refresh": {
+    "status": "explicitly-cancelled-not-retried",
+    "renewed_permission_required": true
+  },
+  "target": {
+    "automation_project_ref": "padtxclxwwqvvuiebhte",
+    "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+    "project_slug": "building-suit",
+    "repository": "Building-Suit/building-suit-monorepo"
+  },
+  "required_live_bindings": {
+    "schema_function_trigger_consumer_fingerprints": null,
+    "approved_workstream_slug": null,
+    "verified_high_capability_model_profile": null,
+    "verified_retry_policy_id": null,
+    "project_allowed_publication_paths_before_sha256": null,
+    "exact_zero_ready_predicate": null,
+    "reviewed_registration_mutation_interface": null
+  },
+  "registration_proposal": {
+    "suit": {
+      "table_from_inspected_repository": "control.suits",
+      "identity": {
+        "slug": "doctor-suit",
+        "display_name": "Doctor Suit",
+        "stack_key": "doctor-suit",
+        "app_path": "apps/doctor-suit"
+      },
+      "status_proposal": "planning; do not activate the suit during plan storage"
+    },
+    "workstream": {
+      "table_from_inspected_repository": "control.workstreams",
+      "identity": {
+        "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+        "slug": "doctor-suit",
+        "display_name": "Doctor Suit",
+        "stack_key": "doctor-suit",
+        "application_path": "apps/doctor-suit",
+        "suit_slug": "doctor-suit"
+      },
+      "model_profile": null,
+      "retry_policy_id": null,
+      "active": null,
+      "active_constraint": "The inspected task-create function requires active project/workstream. Parent must explicitly review this registration condition; never disable a shared project or bypass the creation function. All nine real open start gates and zero-ready assertions remain mandatory.",
+      "concurrency_policy_proposal": {
+        "serialized": true
+      },
+      "verification_config_proposal": {
+        "commands": [
+          {
+            "name": "doctor-release-check",
+            "program": "pnpm",
+            "args": [
+              "release:check"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-001-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "tooling/checks/dos-m1-contract.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-002-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-002.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-003-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-003.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-003-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-003.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-004-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-004.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-004-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-004.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-005-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-005.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-005-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-005.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-006-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-006.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-006-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-006.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-006-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-006.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-007-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-007.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-007-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-007.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-007-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-008-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-008.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-008-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-008.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-008-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-008.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-009-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-009.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-009-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-009.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-009-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-009.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-010-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-010.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-010-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-010.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-010-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-010.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-011-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-011.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-011-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-011.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-011-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-011.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-012-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-012.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-012-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-012.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-012-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-012.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-013-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-013.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-013-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-013.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-013-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-013.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-014-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-014.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-014-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-014.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-014-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-014.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-015-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-015.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-015-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-015.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-015-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-015.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-016-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-016.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-016-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-016.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-016-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-016.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-017-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-017.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-017-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-017.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-017-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-018-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-018.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-018-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-018.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-019-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-019.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-019-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-019.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m1-020-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m1-020.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m1-020-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m1-020.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m1-020-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m1-020.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m2-002-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m2-002.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m2-002-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m2-002.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m2-002-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m2-002.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m2-003-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m2-003.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m2-003-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m2-003.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m2-003-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m2-003.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m2-004-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m2-004.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m2-004-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m2-004.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m2-006-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m2-006.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m2-006-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m2-006.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m2-006-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m2-006.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m2-007-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m2-007.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m2-008-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m2-008.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m2-008-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m2-008.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m2-008-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m2-008.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m2-009-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m2-009.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m2-009-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m2-009-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m2-009.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m2-010-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m2-010.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m2-010-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m2-010.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m2-010-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m2-010.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m2-011-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m2-011.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m2-011-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m2-011.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m2-011-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m2-011.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m2-012-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m2-012.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m2-012-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m2-012.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m2-012-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m2-012.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m2-013-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m2-013.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m2-013-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m2-013.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m2-013-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m2-013.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m2-014-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m2-014.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m2-014-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m2-014.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m2-014-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m2-014.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m3-001-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m3-001.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m3-001-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m3-001.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m3-001-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m3-001.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m3-002-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m3-002.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m3-002-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m3-002.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m3-002-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m3-002.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m3-003-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m3-003.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m3-003-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m3-003.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m3-004-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m3-004.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m3-004-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m3-004.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m3-004-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m3-004.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m3-005-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m3-005.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m3-005-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m3-005.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m3-005-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m3-005.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m3-006-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m3-006.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m3-006-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m3-006.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m3-006-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m3-006.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m3-007-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m3-007.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m3-007-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m3-007.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m3-007-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m3-007.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m3-008-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m3-008.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m3-008-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m3-008.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m3-008-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m3-008.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m3-009-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m3-009.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m3-009-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m3-009.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m3-009-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m3-009.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m3-010-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m3-010.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m3-010-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m3-010.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m3-010-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m3-010.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m4-002-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m4-002.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m4-003-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m4-003.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m4-004-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m4-004.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m4-005-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m4-005.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m4-006-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m4-006.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m4-007-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m4-007.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m4-008-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m4-008.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m4-009-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m4-009.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m4-009-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m4-009.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m4-010-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m4-010.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m4-010-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m4-010.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m5-002-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m5-002.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m5-002-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m5-002.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m5-003-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m5-003.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m5-003-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m5-003.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m5-004-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m5-004.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m5-005-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m5-005.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m5-006-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m5-006.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m5-007-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m5-007.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m5-008-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m5-008.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m5-009-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m5-009.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m5-010-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m5-010.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m5-010-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m5-010.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m5-011-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m5-011.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m5-011-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m5-011.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m5-012-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m5-012.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m5-013-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m5-013.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m5-014-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m5-014.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m5-014-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m5-014.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m6-002-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m6-002.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m6-002-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m6-002.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m6-002-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m6-002.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m6-003-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m6-003.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m6-003-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m6-003.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m6-003-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m6-003.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m6-004-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m6-004.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m6-004-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m6-004.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m6-004-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m6-004.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m6-005-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m6-005.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m6-005-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m6-005.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m6-005-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m6-005.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m6-006-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m6-006.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m6-006-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m6-006.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m6-006-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m6-006.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m6-007-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m6-007.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m6-007-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m6-007.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m6-007-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m6-007.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m6-009-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m6-009.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m6-009-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m6-009.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m6-009-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m6-009.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m6-010-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m6-010.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m6-010-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m6-010.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m6-010-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m6-010.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m7-004-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m7-004.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m7-004-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m7-004.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m7-004-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m7-004.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m7-005-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m7-005.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m7-005-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m7-005.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m7-005-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m7-005.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m7-006-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m7-006.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m7-006-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m7-006.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m7-006-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m7-006.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m7-007-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m7-007.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m7-007-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m7-007.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m7-007-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m7-007.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m7-008-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m7-008.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m7-008-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m7-008.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m7-008-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m7-008.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m8-002-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m8-002.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m8-002-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m8-002.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m8-002-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m8-002.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m8-003-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m8-003.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m8-003-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m8-003.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m8-003-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m8-003.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m8-004-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m8-004.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m8-004-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m8-004.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m8-004-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m8-004.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m8-005-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m8-005.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m8-005-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m8-005.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m8-005-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m8-005.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m8-006-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m8-006.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m8-006-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m8-006.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m8-006-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m8-006.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m8-007-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m8-007.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m8-007-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m8-007.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m8-007-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m8-007.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m8-008-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m8-008.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m8-008-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m8-008.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m8-008-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m8-008.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m9-003-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m9-003.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m9-003-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m9-003.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m9-003-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m9-003.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m9-004-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m9-004.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m9-004-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m9-004.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m9-004-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m9-004.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m9-005-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m9-005.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m9-005-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m9-005.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m9-005-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m9-005.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m9-006-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m9-006.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m9-006-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m9-006.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m9-006-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m9-006.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m9-007-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m9-007.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m9-007-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m9-007.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m9-007-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m9-007.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          },
+          {
+            "name": "dos-m9-008-unit",
+            "program": "node",
+            "args": [
+              "--test",
+              "apps/doctor-suit/tests/unit/dos-m9-008.test.mjs"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": []
+          },
+          {
+            "name": "dos-m9-008-data",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "supabase",
+              "test",
+              "db",
+              "supabase/tests/dos-m9-008.sql",
+              "--local"
+            ],
+            "cwd": "apps/doctor-suit",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "database",
+              "rls-authorization",
+              "storage-policy",
+              "signed-url-expiry"
+            ]
+          },
+          {
+            "name": "dos-m9-008-browser",
+            "program": "pnpm",
+            "args": [
+              "exec",
+              "playwright",
+              "test",
+              "-c",
+              "apps/doctor-suit/tests/e2e/playwright.config.ts",
+              "apps/doctor-suit/tests/e2e/dos-m9-008.spec.ts",
+              "--workers=1",
+              "--retries=0"
+            ],
+            "cwd": ".",
+            "timeout_ms": 1800000,
+            "capabilities": [
+              "browser",
+              "browser-security"
+            ]
+          }
+        ],
+        "database": {
+          "kind": "supabase-local",
+          "local_only": true,
+          "start_when_needed": true,
+          "start_commands": [
+            {
+              "name": "doctor-local-start",
+              "program": "pnpm",
+              "args": [
+                "exec",
+                "supabase",
+                "start"
+              ],
+              "cwd": "apps/doctor-suit",
+              "timeout_ms": 1800000,
+              "capabilities": [
+                "database",
+                "rls-authorization"
+              ]
+            }
+          ],
+          "reset_commands": [
+            {
+              "name": "doctor-local-reset",
+              "program": "pnpm",
+              "args": [
+                "exec",
+                "supabase",
+                "db",
+                "reset",
+                "--local"
+              ],
+              "cwd": "apps/doctor-suit",
+              "timeout_ms": 1800000,
+              "capabilities": [
+                "database",
+                "rls-authorization"
+              ]
+            }
+          ],
+          "test_commands": [
+            {
+              "name": "doctor-local-regression",
+              "program": "pnpm",
+              "args": [
+                "exec",
+                "supabase",
+                "test",
+                "db",
+                "--local"
+              ],
+              "cwd": "apps/doctor-suit",
+              "timeout_ms": 1800000,
+              "capabilities": [
+                "database",
+                "rls-authorization"
+              ]
+            }
+          ]
+        }
+      },
+      "publication_config_proposal": {
+        "merge_authorized": false,
+        "deployment_authorized": false,
+        "hosted_database_changes_authorized": false,
+        "review_required_before_integration": true
+      }
+    },
+    "project_app_mapping": {
+      "table_from_inspected_repository": "control.projects",
+      "column": "application_paths",
+      "proposed_single_key_delta": {
+        "doctor-suit": "apps/doctor-suit"
+      },
+      "rule": "Only after actual live shape/key semantics are verified and parent reviews this narrow delta. Preserve every other project field/key; do not call a broad project-register upsert."
+    },
+    "forbidden_mutations": [
+      "control.projects.allowed_publication_paths",
+      "shared project model/retry defaults",
+      "shared project verification configuration",
+      "existing suits/workstreams",
+      "credentials/provider configuration",
+      "operational release catalogue/baselines"
+    ],
+    "scope_check": "Compare every proposed task path to already-authorized live project scope. Any missing scope is a reported admission blocker, never an automatic scope-widening operation."
+  },
+  "task_argument_adapter": {
+    "source": "DOS-Mn.json tasks[]",
+    "destination_function": "control.create_task_with_publication_contract",
+    "per_milestone_calls": "DOS-Mn.import-proposal.json create_task_calls[]",
+    "runtime_binding_rule": "Required runtime argument values are null until actual reviewed bindings are supplied. The canonical deep requirement expresses the requested capability only; it does not establish a provider/model registration.",
+    "metadata_rule": "p_metadata contains every original metadata key plus complete canonical_task_contract, canonical_task_sha256, canonical_task_schema and source_packet_sha256. Preserve this object without dropping objective, evidence, coverage, dependencies or release ownership. No recursive embedding: the embedded object is the canonical task before adapter metadata is added.",
+    "readback_rule": "Deep-compare stored metadata canonical_task_contract with canonical source, verify digest, then compare actual top-level arguments and all links against the bound proposal."
+  },
+  "atomic_import_protocol": [
+    "Wait for renewed permission for the cancelled live schema refresh; no retry has occurred.",
+    "Review fresh immutable target/schema/consumer/trigger identities, registry absence or exact existing contents, supported mutation interfaces, model/retry routes and unchanged project publication scopes.",
+    "Create/verify all nine real OPEN start-decision records within reviewed suit registration, before any task can be committed. Keep them open through every milestone import.",
+    "For each milestone M1 through M9, begin one transaction with reviewed serialization, compare scoped existing IDs/history, verify all nine gates remain open and insert missing requirements/decisions without overwriting existing content.",
+    "Create the complete milestone task batch through the supported function and attach every task to its own OPEN start decision with blocking=true before any commit. Add all requirement/dependency/decision links; evidence producers and informational decisions are blocking=false.",
+    "Preserve complete canonical task metadata; bind runtime values only from reviewed evidence. Refresh final publication contracts after all links and metadata exist.",
+    "Before commit assert exact task/link/metadata counts and hashes, all nine start gates OPEN, exact shared project publication-scope equality, zero ready Doctor tasks using the reviewed live predicate, and no claims/executions/publication authority. Any failed assertion aborts the whole milestone transaction.",
+    "First obtain a rollback-only validation receipt. Parent reviews a separate commit action; never edit a guard out of the original supplied SQL.",
+    "Read back complete canonical task objects, link sets, open gates and zero-ready evidence after commit. An uncertain outcome requires readback, never a blind retry.",
+    "Only after all nine readbacks pass may the parent confirm safe storage and release relevant M1–M3 gates in dependency order. Genuine clinical/provider/legal decisions still apply; no real-patient or live clinical activation is authorized."
+  ],
+  "milestones": [
+    {
+      "milestone_id": "DOS-M1",
+      "tasks": 20,
+      "packet_sha256": "2981cf4b621fed9d21cf4c83f5cbfcef2d92567f5e0bb56a2af7cf4c956d5d2a",
+      "start_decision": "DOS-M1-GATE-START",
+      "start_status": "open",
+      "proposal_file": "DOS-M1.import-proposal.json"
+    },
+    {
+      "milestone_id": "DOS-M2",
+      "tasks": 14,
+      "packet_sha256": "027390127daf0ab665753c2248cd88559733293bca8a8ae90d39a323181d61f6",
+      "start_decision": "DOS-M2-GATE-START",
+      "start_status": "open",
+      "proposal_file": "DOS-M2.import-proposal.json"
+    },
+    {
+      "milestone_id": "DOS-M3",
+      "tasks": 10,
+      "packet_sha256": "cba96c12eb85f21d37f2344090e5f2c298fc66207918f368f7c7e94b5d9fdf9b",
+      "start_decision": "DOS-M3-GATE-START",
+      "start_status": "open",
+      "proposal_file": "DOS-M3.import-proposal.json"
+    },
+    {
+      "milestone_id": "DOS-M4",
+      "tasks": 10,
+      "packet_sha256": "c87516767cfa1d38c59b3009ccfe33f701e740ec3d0f627ac33fc09aa2cf1f6b",
+      "start_decision": "DOS-M4-GATE-START",
+      "start_status": "open",
+      "proposal_file": "DOS-M4.import-proposal.json"
+    },
+    {
+      "milestone_id": "DOS-M5",
+      "tasks": 14,
+      "packet_sha256": "f589d6fa3f0b7daf3d984c8647813530f1657d2f904926301654dbf34db76f2f",
+      "start_decision": "DOS-M5-GATE-START",
+      "start_status": "open",
+      "proposal_file": "DOS-M5.import-proposal.json"
+    },
+    {
+      "milestone_id": "DOS-M6",
+      "tasks": 10,
+      "packet_sha256": "b0d3785ff79ac0a5a9410bdba729156792ee35f878c1ba8590c2111306d2655c",
+      "start_decision": "DOS-M6-GATE-START",
+      "start_status": "open",
+      "proposal_file": "DOS-M6.import-proposal.json"
+    },
+    {
+      "milestone_id": "DOS-M7",
+      "tasks": 10,
+      "packet_sha256": "b29f70745b4f0b2d6669bdd88a9a608d9c61df3e03cb5c493cd4cd3b7424d673",
+      "start_decision": "DOS-M7-GATE-START",
+      "start_status": "open",
+      "proposal_file": "DOS-M7.import-proposal.json"
+    },
+    {
+      "milestone_id": "DOS-M8",
+      "tasks": 8,
+      "packet_sha256": "ba434101c8fe874966a07a01a20a37e2ed079c8e6776e10df9dded7b8ed2753a",
+      "start_decision": "DOS-M8-GATE-START",
+      "start_status": "open",
+      "proposal_file": "DOS-M8.import-proposal.json"
+    },
+    {
+      "milestone_id": "DOS-M9",
+      "tasks": 8,
+      "packet_sha256": "9e704f3ed0957dc59da11424b3554f4fc178f4ed833ce56e3786d65f1077290b",
+      "start_decision": "DOS-M9-GATE-START",
+      "start_status": "open",
+      "proposal_file": "DOS-M9.import-proposal.json"
+    }
+  ],
+  "proposal_sha256": "31350472d00a61c775fece6c2c2685698805f992dc451cf4f36553410c7a3feb"
+}

@@ -171,6 +171,7 @@ def build_later(number, source, finish, root, shared):
   if number==5 and index>=6:deps += ['DOS-M2-007','DOS-M2-008']
   if number==5 and index==2:deps += ['DOS-M4-001']
   if number==8 and index==3:deps += ['DOS-M6-009']
+  if number==7 and index==10:blocked.append('DOS-M1-D005')
   producers=[d['decision_id'] for d in decisions if d.get('producer_task_id')==tid]
   if producers:
    criteria += ['Prepare evidence for '+', '.join(producers)+'. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.']

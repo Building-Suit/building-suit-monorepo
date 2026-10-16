@@ -6,10 +6,15 @@
       "milestone": "DOS-M1",
       "tasks": 20,
       "requirements": 25,
-      "decisions": 5,
+      "decisions": 6,
+      "criterion_cases": 82,
+      "coverage": "criterion-specific-procedure-and-selected-executable/evidence",
+      "canonical_metadata": "all-task-fields-deep-equal-and-hash-verified",
+      "dependency_graph": "identical-to-c9716fbf-review-baseline",
+      "release_scope": "task-fragment-and-related-inventory-only",
       "start_gate": "open-linked-to-every-task",
       "artifact_validation": "passed",
-      "live_import_validation": "pending-parent-contract",
+      "live_import_validation": "held-cancelled-refresh-needs-renewed-permission",
       "task_reports": [
         {
           "task_id": "DOS-M1-001",
@@ -17,7 +22,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 1,
-          "explicit_gates": 0,
+          "explicit_gates": 2,
           "product_execution": "not-run"
         },
         {
@@ -26,7 +31,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 1,
-          "explicit_gates": 0,
+          "explicit_gates": 2,
           "product_execution": "not-run"
         },
         {
@@ -35,7 +40,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 2,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -43,8 +48,8 @@
           "command_mapping": "resolved-against-repository-resolver",
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
-          "planned_outputs": 1,
-          "explicit_gates": 0,
+          "planned_outputs": 2,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -53,7 +58,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 2,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -62,7 +67,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -71,7 +76,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -80,7 +85,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -89,7 +94,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -98,7 +103,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -107,7 +112,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -116,7 +121,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -125,7 +130,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -134,7 +139,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -142,8 +147,8 @@
           "command_mapping": "resolved-against-repository-resolver",
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
-          "planned_outputs": 2,
-          "explicit_gates": 0,
+          "planned_outputs": 3,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -152,7 +157,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 1,
           "product_execution": "not-run"
         },
         {
@@ -161,7 +166,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 0,
+          "explicit_gates": 2,
           "product_execution": "not-run"
         },
         {
@@ -170,7 +175,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 2,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         },
         {
@@ -179,7 +184,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 2,
-          "explicit_gates": 0,
+          "explicit_gates": 2,
           "product_execution": "not-run"
         },
         {
@@ -188,7 +193,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 3,
-          "explicit_gates": 1,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         }
       ]
