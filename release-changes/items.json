@@ -660,5 +660,33 @@
         "contains": "create function public.shop_appointment_email_schedule(p_enabled boolean,p_project_ref text)"
       }
     ]
+  },
+  {
+    "id": "doctor-synthetic-foundation",
+    "task": "DOS-M1-002",
+    "suits": [
+      "doctor-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      ".github",
+      "AGENTS.md",
+      "apps/doctor-suit",
+      "package.json",
+      "packages/contracts",
+      "packages/design-tokens",
+      "packages/nuxt-layer",
+      "packages/ui",
+      "packages/ux",
+      "pnpm-lock.yaml",
+      "tooling",
+      "docs/work-packages/doctor-suit",
+      "docs/shared/atomic-template-route-inventory.json"
+    ],
+    "reason": "Recognize the new synthetic Doctor scaffold as an internal consumer of the current shared runtime and workspace tooling. Preserve all existing public items and accepted provenance; this does not activate Doctor or establish a production baseline.",
+    "sources": [
+      "dos-m1-002"
+    ]
   }
 ]

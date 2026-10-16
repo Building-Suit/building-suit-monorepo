@@ -10,7 +10,7 @@ for (const locale of ['en', 'ar']) {
     await expect(button).toBeVisible()
     await button.focus()
     await page.keyboard.press('Enter')
-    await expect(page.getByRole('status')).toContainText(locale === 'en' ? 'remain unavailable' : 'غير متاحة')
+    await expect(page.getByRole('status').filter({ hasText: locale === 'en' ? 'Preview scope:' : 'نطاق المعاينة:' })).toContainText(locale === 'en' ? 'remain unavailable' : 'غير متاحة')
     await expect(button).toBeDisabled()
     await expect(page.locator('link[rel="canonical"]')).toHaveCount(0)
   })
