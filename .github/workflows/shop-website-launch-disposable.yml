@@ -50,6 +50,9 @@ jobs:
       - run: pnpm --filter @building-suit/shop-suit lint
       - run: git diff --check
       - run: pnpm --filter @building-suit/shop-suit build
+        env:
+          SUPABASE_URL: http://127.0.0.1:60321
+          SUPABASE_KEY: local-development-publishable-key
       - run: node --test apps/shop-suit/tests/integration/website-host-built.test.mjs apps/shop-suit/tests/integration/website-public-built.test.mjs apps/shop-suit/tests/integration/appointment-access-built.test.mjs apps/shop-suit/tests/integration/customer-portal-built.test.mjs apps/shop-suit/tests/integration/public-booking-built.test.mjs apps/shop-suit/tests/integration/ss-web-launch-001-built.test.mjs
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/appointment-access.config.ts
