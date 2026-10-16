@@ -69,8 +69,19 @@ for(const p of packets){
    assert(c.command_refs.length||c.external_evidence_required);assert(c.procedure.length>40)
    for(const ref of c.command_refs)assert(ref==='pnpm check'||p.verification_config_proposal.commands.some(x=>x.name===ref))
    for(const output of c.required_outputs)assert(t.expected_outputs.includes(output))
+   if(c.criterion_ids.length){
+    assert.equal(c.evidence_policy.human_approval_required,c.evidence_types.includes('accountable-human-review'))
+    const automated=c.evidence_types.includes('independent-exact-candidate-automated-verifier')
+    assert.equal(c.evidence_policy.independent_automated_verification_required,automated)
+    if(automated){assert(c.evidence_policy.automated_receipt_fields.includes('exact candidate SHA and base SHA'));assert(c.evidence_policy.missing_evidence_behavior.includes('never ask for a human acknowledgement'))}
+    if(p.milestone_id==='DOS-M1')assert.equal(c.evidence_policy.human_approval_required,false,'M1 ordinary synthetic implementation must not acquire a new human approval requirement')
+    if(['DOS-M1-001-C01','DOS-M1-001-C02','DOS-M1-001-C04','DOS-M1-002-C04','DOS-M1-017-C03','DOS-M1-020-C04'].includes(c.case_id)){
+     assert(automated);assert(c.command_refs.includes(t.task_id.toLowerCase()+'-unit'))
+    }
+   }
   }
   for(const m of t.acceptance_mapping){assert.deepEqual(m.verification_case_ids,[t.task_id+`-C${String(m.criterion).padStart(2,'0')}`]);const c=t.verification_cases.find(c=>c.case_id===m.verification_case_ids[0]);assert.deepEqual(c.criterion_ids,[m.criterion]);assert.equal(c.assertion,m.text)}
+  assert(!t.verification_plan.some(v=>['reviewer_identity_scope_candidate_and_decision_evidence_required','criterion_review_evidence_required'].includes(v.blocker)),'blanket human review gate must not return')
   assert(verificationPlanHasEntries(t.verification_plan))
   const result=resolveVerificationPlan({entries:t.verification_plan,configuredCommands:p.verification_config_proposal.commands,phase:'pre_implementation'})
   const unexpected=result.blockers
@@ -106,6 +117,6 @@ for(const p of packets){
  }
  const final=p.tasks.at(-1), reachable=new Set();function deps(id){for(const d of allTasks.get(id).task_dependencies){if(!reachable.has(d)){reachable.add(d);deps(d)}}}deps(final.task_id)
  for(const t of p.tasks.slice(0,-1))assert(reachable.has(t.task_id),`${final.task_id} omits ${t.task_id}`)
- reports.push({milestone:p.milestone_id,tasks:p.tasks.length,requirements:p.requirements.length,decisions:p.decisions.length,criterion_cases:p.tasks.reduce((n,t)=>n+t.acceptance_mapping.length,0),coverage:'criterion-specific-procedure-and-selected-executable/evidence',canonical_metadata:'all-task-fields-deep-equal-and-hash-verified',dependency_graph:'identical-to-c9716fbf-review-baseline',release_scope:'task-fragment-and-related-inventory-only',start_gate:'open-linked-to-every-task',artifact_validation:'passed',live_import_validation:'held-cancelled-refresh-needs-renewed-permission',task_reports:taskReports})
+ reports.push({milestone:p.milestone_id,tasks:p.tasks.length,requirements:p.requirements.length,decisions:p.decisions.length,criterion_cases:p.tasks.reduce((n,t)=>n+t.acceptance_mapping.length,0),coverage:'criterion-specific-procedure-and-selected-executable/evidence',routine_checks:'independent-automated-exact-candidate-no-human-acknowledgement',canonical_metadata:'all-task-fields-deep-equal-and-hash-verified',dependency_graph:'identical-to-c9716fbf-review-baseline',release_scope:'task-fragment-and-related-inventory-only',start_gate:'open-linked-to-every-task',artifact_validation:'passed',live_import_validation:'held-cancelled-refresh-needs-renewed-permission',task_reports:taskReports})
 }
 console.log(JSON.stringify({source_bytes:'verified',task_count:reports.reduce((n,r)=>n+r.tasks,0),reports},null,2))

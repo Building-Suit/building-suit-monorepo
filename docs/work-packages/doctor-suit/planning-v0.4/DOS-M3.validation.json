@@ -9,6 +9,7 @@
       "decisions": 2,
       "criterion_cases": 31,
       "coverage": "criterion-specific-procedure-and-selected-executable/evidence",
+      "routine_checks": "independent-automated-exact-candidate-no-human-acknowledgement",
       "canonical_metadata": "all-task-fields-deep-equal-and-hash-verified",
       "dependency_graph": "identical-to-c9716fbf-review-baseline",
       "release_scope": "task-fragment-and-related-inventory-only",
@@ -58,7 +59,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 3,
+          "explicit_gates": 2,
           "product_execution": "not-run"
         },
         {
@@ -94,7 +95,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 3,
           "planned_outputs": 3,
-          "explicit_gates": 3,
+          "explicit_gates": 2,
           "product_execution": "not-run"
         },
         {
@@ -103,7 +104,7 @@
           "proposed_configuration_readiness": "passed-static-only-not-live-admission",
           "checks": 6,
           "planned_outputs": 3,
-          "explicit_gates": 4,
+          "explicit_gates": 3,
           "product_execution": "not-run"
         }
       ]

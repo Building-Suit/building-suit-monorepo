@@ -3762,7 +3762,7 @@
     {
       "milestone_id": "DOS-M1",
       "tasks": 20,
-      "packet_sha256": "2981cf4b621fed9d21cf4c83f5cbfcef2d92567f5e0bb56a2af7cf4c956d5d2a",
+      "packet_sha256": "137747121e80a74f693301f2ae854fd0ae798319c61a82142b4ee024e4b4dd83",
       "start_decision": "DOS-M1-GATE-START",
       "start_status": "open",
       "proposal_file": "DOS-M1.import-proposal.json"
@@ -3770,7 +3770,7 @@
     {
       "milestone_id": "DOS-M2",
       "tasks": 14,
-      "packet_sha256": "027390127daf0ab665753c2248cd88559733293bca8a8ae90d39a323181d61f6",
+      "packet_sha256": "5f0781743791fac72384c749d9c592454a7aa00caff2f84f451f11a5d9956567",
       "start_decision": "DOS-M2-GATE-START",
       "start_status": "open",
       "proposal_file": "DOS-M2.import-proposal.json"
@@ -3778,7 +3778,7 @@
     {
       "milestone_id": "DOS-M3",
       "tasks": 10,
-      "packet_sha256": "cba96c12eb85f21d37f2344090e5f2c298fc66207918f368f7c7e94b5d9fdf9b",
+      "packet_sha256": "7b47e36b2f5bf8788dfc5ae062524efabf8901442edfb9c18e1a840db036628d",
       "start_decision": "DOS-M3-GATE-START",
       "start_status": "open",
       "proposal_file": "DOS-M3.import-proposal.json"
@@ -3786,7 +3786,7 @@
     {
       "milestone_id": "DOS-M4",
       "tasks": 10,
-      "packet_sha256": "c87516767cfa1d38c59b3009ccfe33f701e740ec3d0f627ac33fc09aa2cf1f6b",
+      "packet_sha256": "23922bc3cddca54dc2df5736f53fbd7ca9178240f1c53570d3a4e5bd42825a1e",
       "start_decision": "DOS-M4-GATE-START",
       "start_status": "open",
       "proposal_file": "DOS-M4.import-proposal.json"
@@ -3794,7 +3794,7 @@
     {
       "milestone_id": "DOS-M5",
       "tasks": 14,
-      "packet_sha256": "f589d6fa3f0b7daf3d984c8647813530f1657d2f904926301654dbf34db76f2f",
+      "packet_sha256": "9ccbfda60b26fb24b8e97c2422f70fc29abda34f94c2de2f07560d48ff31d454",
       "start_decision": "DOS-M5-GATE-START",
       "start_status": "open",
       "proposal_file": "DOS-M5.import-proposal.json"
@@ -3802,7 +3802,7 @@
     {
       "milestone_id": "DOS-M6",
       "tasks": 10,
-      "packet_sha256": "b0d3785ff79ac0a5a9410bdba729156792ee35f878c1ba8590c2111306d2655c",
+      "packet_sha256": "2d9f8344651d065f52c39b8da2883be2be852826a127cbd7dfe9ab57049808ea",
       "start_decision": "DOS-M6-GATE-START",
       "start_status": "open",
       "proposal_file": "DOS-M6.import-proposal.json"
@@ -3810,7 +3810,7 @@
     {
       "milestone_id": "DOS-M7",
       "tasks": 10,
-      "packet_sha256": "b29f70745b4f0b2d6669bdd88a9a608d9c61df3e03cb5c493cd4cd3b7424d673",
+      "packet_sha256": "4913c43cddaaeaf6f54d96bf4cc9c174f750dc7f83c8ea01928c17fe0f453893",
       "start_decision": "DOS-M7-GATE-START",
       "start_status": "open",
       "proposal_file": "DOS-M7.import-proposal.json"
@@ -3818,7 +3818,7 @@
     {
       "milestone_id": "DOS-M8",
       "tasks": 8,
-      "packet_sha256": "ba434101c8fe874966a07a01a20a37e2ed079c8e6776e10df9dded7b8ed2753a",
+      "packet_sha256": "2ec8c0ac9f8d2f14e6806353fec8b97ec3e94cba3efa58e5bbde5d11d0964a27",
       "start_decision": "DOS-M8-GATE-START",
       "start_status": "open",
       "proposal_file": "DOS-M8.import-proposal.json"
@@ -3826,11 +3826,11 @@
     {
       "milestone_id": "DOS-M9",
       "tasks": 8,
-      "packet_sha256": "9e704f3ed0957dc59da11424b3554f4fc178f4ed833ce56e3786d65f1077290b",
+      "packet_sha256": "40aa5c0d85d363f9cf6ee581c521fb5c4ad72b6c58a2ce50bfb9b76b9863dec1",
       "start_decision": "DOS-M9-GATE-START",
       "start_status": "open",
       "proposal_file": "DOS-M9.import-proposal.json"
     }
   ],
-  "proposal_sha256": "31350472d00a61c775fece6c2c2685698805f992dc451cf4f36553410c7a3feb"
+  "proposal_sha256": "abb54c0dcbe36f3fac4233fcee9d627a9d8190148d2fc510ecae0b54951a727c"
 }

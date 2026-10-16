@@ -152,8 +152,7 @@ def build_later(number, source, finish, root, shared):
     outputs += [root+f'implementation/{key}-device-evidence.json']
     plan.append({'version':2,'kind':'external_gate','description':'Exact-candidate device and chosen-platform build/test evidence; Node protocol tests alone cannot satisfy mobile acceptance','blocker':'approved_platform_command_mapping_and_device_receipts_required','phase':'pre_publication'})
     criteria += ['Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.']
-  if policy or kind in ['provider','policy-provider','review','policy-data','review-data']:
-   plan.append({'version':2,'kind':'external_gate','description':'Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions','blocker':'reviewer_identity_scope_candidate_and_decision_evidence_required','phase':'pre_publication'})
+  # Criterion coverage declares genuine domain approvals individually; task kind is not a human-signoff requirement.
   if index==milestone['task_count']:
    for cmd in ['pnpm typecheck','pnpm lint','pnpm build']:plan.append({'version':2,'kind':'command','description':'Run milestone candidate '+cmd,'command':cmd})
    plan.append({'version':2,'kind':'external_gate','description':'Independent exact-candidate affected shared-consumer acceptance evidence','blocker':'shared_consumer_regression_receipts_required','phase':'pre_publication'})

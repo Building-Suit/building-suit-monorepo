@@ -23,7 +23,7 @@ Model policy: the user requested high-capability planning; task proposals requir
 
 All original task IDs, the source dependencies and historical source documents are preserved. Legacy Clinic counts remain unreconciled because no corresponding implementation/maintained source was found; do not manufacture historical tasks or assume absence proves their historical nonexistence.
 
-The user now authorizes eventual implementation of M1–M3 once the parent confirms all nine safely saved. That confirmation has not been received. [REVIEW-2.md](REVIEW-2.md) records the latest requested corrections; [registration-adapter.proposal.json](registration-adapter.proposal.json) provides the concrete, non-executing registration and canonical-metadata adapter proposal. No shared project scope or runtime/model registration has been changed.
+The user now authorizes eventual implementation of M1–M3 once the parent confirms all nine safely saved. That confirmation has not been received. [REVIEW-3.md](REVIEW-3.md) records the final routine-verification correction, following [REVIEW-2.md](REVIEW-2.md); [registration-adapter.proposal.json](registration-adapter.proposal.json) provides the concrete, non-executing registration and canonical-metadata adapter proposal. No shared project scope or runtime/model registration has been changed.
 
 ## Actual verification
 
@@ -33,3 +33,5 @@ The user now authorizes eventual implementation of M1–M3 once the parent confi
 - `git diff --check`, repository preflight and PR #345 stack/parent checks passed.
 - Validation ran on the cloud executor's Node 24.19.0. Repository `.node-version` requests 26.8.1; no product build or runtime compatibility claim is made. The top-level pnpm 10.33.0 invocation was available through Corepack, but its nested `pnpm` resolved to the environment's 11.25.0 wrapper. The two exact underlying `pnpm check` scripts above were therefore run directly using isolated pinned TypeScript/Vue compiler dependencies; the repository lockfile and product packages were not changed.
 - Product unit/data/browser/device tests, live database/import validation and independent legal/clinical/provider reviews were not run or claimed as passed.
+
+The final correction replaces 48 routine human-signoff checks with independent exact-candidate automated verification. All 104 IDs, 244 dependency edges, 117 requirements, 37 decisions, task acceptance criteria, paths and outputs are preserved. Genuine domain approvals remain required. M1–M3 completion means checked implementation in GitHub; Vercel and hosted Supabase connections are user-managed and are not prerequisites for synthetic implementation completion.

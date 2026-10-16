@@ -8,7 +8,7 @@ from pathlib import Path
 
 BASE = Path(__file__).resolve().parents[1]
 SOURCE = json.loads((BASE / 'sources/doctor-suit-planning-v0.2.json').read_text())
-REVISION = 'doctor-suit-planning-v0.4-review-2'
+REVISION = 'doctor-suit-planning-v0.4-review-3'
 ROOT = 'docs/work-packages/doctor-suit/'
 SHARED = ['packages/ui/src/templates/', 'packages/ui/src/organisms/', 'packages/ui/src/utils/', 'packages/ui/package.json', 'packages/ui/tests/', 'packages/ux/src/', 'packages/ux/tests/', 'packages/contracts/src/', 'packages/contracts/package.json', 'packages/contracts/tests/', 'docs/shared/ui-ownership-manifest.json', 'docs/shared/atomic-template-route-inventory.json', 'apps/building-suit-docs/app/pages/components.vue']
 RULES = [
@@ -19,6 +19,8 @@ RULES = [
  'No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.',
  'No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.',
  'The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.',
+ 'M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.',
+ 'Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.',
 ]
 EVIDENCE = [
  'Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.',
@@ -145,6 +147,8 @@ def m1():
    t['acceptance_criteria'][2]='Use Building tokens and text Doctor Suit branding plus approved preview copy; hide external support/contact destinations until actual details are supplied. No fabricated store links, pricing, compliance or production claims.'
   plan=[]
   for v in t['verification_plan']:
+   if t['task_id']=='DOS-M1-001' and v['kind']=='planned_test':
+    v['description']='Create and execute the traceable website contract regression; routine scope/document checks use independent automation, while genuine live-public approval remains separate.'
    if v['kind']=='planned_test':
     outputs=v['expected_outputs']; suffix='data' if any(p.endswith('.sql') for p in outputs) else 'browser' if any(p.endswith('.spec.ts') for p in outputs) else 'unit'
     v['commands']=[t['task_id'].lower()+'-'+suffix]

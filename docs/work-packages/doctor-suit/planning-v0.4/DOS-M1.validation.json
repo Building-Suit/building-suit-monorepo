@@ -9,6 +9,7 @@
       "decisions": 6,
       "criterion_cases": 82,
       "coverage": "criterion-specific-procedure-and-selected-executable/evidence",
+      "routine_checks": "independent-automated-exact-candidate-no-human-acknowledgement",
       "canonical_metadata": "all-task-fields-deep-equal-and-hash-verified",
       "dependency_graph": "identical-to-c9716fbf-review-baseline",
       "release_scope": "task-fragment-and-related-inventory-only",

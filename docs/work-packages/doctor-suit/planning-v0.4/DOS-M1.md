@@ -57,7 +57,7 @@ Executable verification obligations
   {
     "version": 2,
     "kind": "planned_test",
-    "description": "Create the traceable website contract and a deterministic traceability regression check; owner content approval remains separate",
+    "description": "Create and execute the traceable website contract regression; routine scope/document checks use independent automation, while genuine live-public approval remains separate.",
     "expected_outputs": [
       "docs/work-packages/doctor-suit/website-contract-v0.2.md",
       "tooling/checks/dos-m1-contract.test.mjs"
@@ -85,9 +85,9 @@ Executable verification obligations
   {
     "version": 2,
     "kind": "external_gate",
-    "description": "Criterion-specific accountable review/device/verifier evidence listed in coverage cases",
+    "description": "Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.",
     "phase": "pre_publication",
-    "blocker": "criterion_review_evidence_required"
+    "blocker": "independent_automated_verifier_receipt_required"
   }
 ]
 
@@ -99,6 +99,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -109,14 +111,32 @@ Criterion-specific coverage
     ],
     "assertion": "Document the confirmed synthetic public-site and administrative doctor/secretary portal scope, authorized ordinary design choices and unresolved live/domain decisions separately.",
     "procedure": "Compare the confirmed synthetic website/portal scope to the approval record and list remaining live decisions.",
-    "test_case_name": null,
-    "required_outputs": [],
-    "command_refs": [],
+    "test_case_name": "DOS-M1-001-C01",
+    "required_outputs": [
+      "tooling/checks/dos-m1-contract.test.mjs"
+    ],
+    "command_refs": [
+      "dos-m1-001-unit"
+    ],
     "external_evidence_required": true,
     "evidence_types": [
-      "accountable-human-review"
+      "independent-exact-candidate-automated-verifier"
     ],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": true,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.",
+      "automated_receipt_fields": [
+        "independent verifier execution ID",
+        "exact candidate SHA and base SHA",
+        "case ID and evaluated input artifact hashes",
+        "existing authorization/decision references where relevant",
+        "executed command argv, exit codes and immutable logs or reproducible document-comparison assertions",
+        "per-assertion result with failed, skipped, unavailable and unrun obligations distinguished"
+      ],
+      "missing_evidence_behavior": "Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification."
   },
   {
     "case_id": "DOS-M1-001-C02",
@@ -124,15 +144,33 @@ Criterion-specific coverage
       2
     ],
     "assertion": "Describe doctor-alone and delegated workflows, multiple locations, multi-doctor secretaries, and persistent doctor ownership.",
-    "procedure": "Walk the doctor-alone and shared-secretary journey diagrams; locate practice ownership at both locations.",
-    "test_case_name": null,
-    "required_outputs": [],
-    "command_refs": [],
+    "procedure": "Validate the doctor-alone and shared-secretary journey records and their rendered diagrams; locate practice ownership at both locations.",
+    "test_case_name": "DOS-M1-001-C02",
+    "required_outputs": [
+      "tooling/checks/dos-m1-contract.test.mjs"
+    ],
+    "command_refs": [
+      "dos-m1-001-unit"
+    ],
     "external_evidence_required": true,
     "evidence_types": [
-      "accountable-human-review"
+      "independent-exact-candidate-automated-verifier"
     ],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": true,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.",
+      "automated_receipt_fields": [
+        "independent verifier execution ID",
+        "exact candidate SHA and base SHA",
+        "case ID and evaluated input artifact hashes",
+        "existing authorization/decision references where relevant",
+        "executed command argv, exit codes and immutable logs or reproducible document-comparison assertions",
+        "per-assertion result with failed, skipped, unavailable and unrun obligations distinguished"
+      ],
+      "missing_evidence_behavior": "Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification."
   },
   {
     "case_id": "DOS-M1-001-C03",
@@ -151,7 +189,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-001-C04",
@@ -160,14 +203,32 @@ Criterion-specific coverage
     ],
     "assertion": "Identify the actual registered execution route and verification/publication gaps without changing runtime configuration or declaring compatibility.",
     "procedure": "Compare the routing gaps against parent-supplied registry evidence without asserting unobserved registration.",
-    "test_case_name": null,
-    "required_outputs": [],
-    "command_refs": [],
+    "test_case_name": "DOS-M1-001-C04",
+    "required_outputs": [
+      "tooling/checks/dos-m1-contract.test.mjs"
+    ],
+    "command_refs": [
+      "dos-m1-001-unit"
+    ],
     "external_evidence_required": true,
     "evidence_types": [
-      "accountable-human-review"
+      "independent-exact-candidate-automated-verifier"
     ],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": true,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.",
+      "automated_receipt_fields": [
+        "independent verifier execution ID",
+        "exact candidate SHA and base SHA",
+        "case ID and evaluated input artifact hashes",
+        "existing authorization/decision references where relevant",
+        "executed command argv, exit codes and immutable logs or reproducible document-comparison assertions",
+        "per-assertion result with failed, skipped, unavailable and unrun obligations distinguished"
+      ],
+      "missing_evidence_behavior": "Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification."
   },
   {
     "case_id": "DOS-M1-001-RELEASE",
@@ -314,9 +375,9 @@ Executable verification obligations
   {
     "version": 2,
     "kind": "external_gate",
-    "description": "Criterion-specific accountable review/device/verifier evidence listed in coverage cases",
+    "description": "Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.",
     "phase": "pre_publication",
-    "blocker": "criterion_review_evidence_required"
+    "blocker": "independent_automated_verifier_receipt_required"
   }
 ]
 
@@ -328,6 +389,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -347,7 +410,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-002-C02",
@@ -363,7 +431,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-002-C03",
@@ -381,7 +454,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-002-C04",
@@ -390,14 +468,32 @@ Criterion-specific coverage
     ],
     "assertion": "Do not provision a hosted project, choose unverified ports/domain/provider refs or activate a public release product.",
     "procedure": "Inspect the scaffold diff and provider-action receipt list for any hosted resource, invented ref or activation.",
-    "test_case_name": null,
-    "required_outputs": [],
-    "command_refs": [],
+    "test_case_name": "DOS-M1-002-C04",
+    "required_outputs": [
+      "apps/doctor-suit/tests/unit/dos-m1-002.test.mjs"
+    ],
+    "command_refs": [
+      "dos-m1-002-unit"
+    ],
     "external_evidence_required": true,
     "evidence_types": [
-      "accountable-human-review"
+      "independent-exact-candidate-automated-verifier"
     ],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": true,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.",
+      "automated_receipt_fields": [
+        "independent verifier execution ID",
+        "exact candidate SHA and base SHA",
+        "case ID and evaluated input artifact hashes",
+        "existing authorization/decision references where relevant",
+        "executed command argv, exit codes and immutable logs or reproducible document-comparison assertions",
+        "per-assertion result with failed, skipped, unavailable and unrun obligations distinguished"
+      ],
+      "missing_evidence_behavior": "Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification."
   },
   {
     "case_id": "DOS-M1-002-C05",
@@ -415,7 +511,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-002-RELEASE",
@@ -560,6 +661,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -579,7 +682,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-003-C02",
@@ -597,7 +705,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-003-C03",
@@ -615,7 +728,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-003-C04",
@@ -633,7 +751,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-003-C05",
@@ -651,7 +774,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-003-RELEASE",
@@ -821,6 +949,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -838,7 +968,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-004-C02",
@@ -858,7 +993,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-004-C03",
@@ -876,7 +1016,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-004-C04",
@@ -894,7 +1039,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-004-RELEASE",
@@ -1043,6 +1193,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -1062,7 +1214,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-005-C02",
@@ -1080,7 +1237,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-005-C03",
@@ -1100,7 +1262,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-005-C04",
@@ -1118,7 +1285,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-005-RELEASE",
@@ -1286,6 +1458,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -1305,7 +1479,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-006-C02",
@@ -1323,7 +1502,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-006-C03",
@@ -1343,7 +1527,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-006-C04",
@@ -1361,7 +1550,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-006-RELEASE",
@@ -1529,6 +1723,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -1548,7 +1744,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-007-C02",
@@ -1566,7 +1767,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-007-C03",
@@ -1586,7 +1792,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-007-C04",
@@ -1604,7 +1815,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-007-RELEASE",
@@ -1772,6 +1988,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -1791,7 +2009,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-008-C02",
@@ -1809,7 +2032,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-008-C03",
@@ -1827,7 +2055,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-008-C04",
@@ -1845,7 +2078,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-008-RELEASE",
@@ -2013,6 +2251,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -2032,7 +2272,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-009-C02",
@@ -2050,7 +2295,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-009-C03",
@@ -2070,7 +2320,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-009-C04",
@@ -2088,7 +2343,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-009-RELEASE",
@@ -2256,6 +2516,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -2277,7 +2539,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-010-C02",
@@ -2295,7 +2562,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-010-C03",
@@ -2313,7 +2585,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-010-C04",
@@ -2333,7 +2610,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-010-RELEASE",
@@ -2502,6 +2784,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -2523,7 +2807,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-011-C02",
@@ -2541,7 +2830,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-011-C03",
@@ -2559,7 +2853,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-011-C04",
@@ -2577,7 +2876,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-011-RELEASE",
@@ -2746,6 +3050,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -2765,7 +3071,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-012-C02",
@@ -2783,7 +3094,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-012-C03",
@@ -2801,7 +3117,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-012-C04",
@@ -2821,7 +3142,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-012-RELEASE",
@@ -2989,6 +3315,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -3008,7 +3336,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-013-C02",
@@ -3028,7 +3361,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-013-C03",
@@ -3046,7 +3384,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-013-C04",
@@ -3064,7 +3407,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-013-RELEASE",
@@ -3232,6 +3580,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -3251,7 +3601,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-014-C02",
@@ -3269,7 +3624,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-014-C03",
@@ -3289,7 +3649,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-014-C04",
@@ -3309,7 +3674,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-014-RELEASE",
@@ -3477,6 +3847,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -3496,7 +3868,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-015-C02",
@@ -3516,7 +3893,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-015-C03",
@@ -3534,7 +3916,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-015-C04",
@@ -3554,7 +3941,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-015-RELEASE",
@@ -3722,6 +4114,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -3741,7 +4135,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-016-C02",
@@ -3761,7 +4160,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-016-C03",
@@ -3779,7 +4183,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-016-C04",
@@ -3797,7 +4206,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-016-RELEASE",
@@ -3958,9 +4372,9 @@ Executable verification obligations
   {
     "version": 2,
     "kind": "external_gate",
-    "description": "Criterion-specific accountable review/device/verifier evidence listed in coverage cases",
+    "description": "Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.",
     "phase": "pre_publication",
-    "blocker": "criterion_review_evidence_required"
+    "blocker": "independent_automated_verifier_receipt_required"
   }
 ]
 
@@ -3972,6 +4386,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -3991,7 +4407,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-017-C02",
@@ -4009,7 +4430,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-017-C03",
@@ -4017,19 +4443,35 @@ Criterion-specific coverage
       3
     ],
     "assertion": "No clinical bulk export, erasure or retention period is guessed; unresolved policies remain disabled and documented.",
-    "procedure": "Review unresolved retention/export policy and confirm the corresponding live-data operations remain disabled.",
+    "procedure": "Verify unresolved retention/export policy remains explicitly unresolved and confirm the corresponding live-data operations remain disabled.",
     "test_case_name": "DOS-M1-017-C03",
     "required_outputs": [
+      "apps/doctor-suit/tests/unit/dos-m1-017.test.mjs",
       "apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts"
     ],
     "command_refs": [
+      "dos-m1-017-unit",
       "dos-m1-017-browser"
     ],
     "external_evidence_required": true,
     "evidence_types": [
-      "accountable-human-review"
+      "independent-exact-candidate-automated-verifier"
     ],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": true,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.",
+      "automated_receipt_fields": [
+        "independent verifier execution ID",
+        "exact candidate SHA and base SHA",
+        "case ID and evaluated input artifact hashes",
+        "existing authorization/decision references where relevant",
+        "executed command argv, exit codes and immutable logs or reproducible document-comparison assertions",
+        "per-assertion result with failed, skipped, unavailable and unrun obligations distinguished"
+      ],
+      "missing_evidence_behavior": "Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification."
   },
   {
     "case_id": "DOS-M1-017-C04",
@@ -4049,7 +4491,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-017-RELEASE",
@@ -4216,9 +4663,9 @@ Executable verification obligations
   {
     "version": 2,
     "kind": "external_gate",
-    "description": "Criterion-specific accountable review/device/verifier evidence listed in coverage cases",
+    "description": "Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.",
     "phase": "pre_publication",
-    "blocker": "criterion_review_evidence_required"
+    "blocker": "independent_automated_verifier_receipt_required"
   }
 ]
 
@@ -4230,6 +4677,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -4249,7 +4698,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-018-C02",
@@ -4267,7 +4721,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-018-C03",
@@ -4285,7 +4744,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-018-C04",
@@ -4299,9 +4763,23 @@ Criterion-specific coverage
     "command_refs": [],
     "external_evidence_required": true,
     "evidence_types": [
-      "independent-exact-candidate-verifier"
+      "independent-exact-candidate-automated-verifier"
     ],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": true,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.",
+      "automated_receipt_fields": [
+        "independent verifier execution ID",
+        "exact candidate SHA and base SHA",
+        "case ID and evaluated input artifact hashes",
+        "existing authorization/decision references where relevant",
+        "executed command argv, exit codes and immutable logs or reproducible document-comparison assertions",
+        "per-assertion result with failed, skipped, unavailable and unrun obligations distinguished"
+      ],
+      "missing_evidence_behavior": "Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification."
   },
   {
     "case_id": "DOS-M1-018-RELEASE",
@@ -4443,9 +4921,9 @@ Executable verification obligations
   {
     "version": 2,
     "kind": "external_gate",
-    "description": "Criterion-specific accountable review/device/verifier evidence listed in coverage cases",
+    "description": "Only the named domain approvals and actual device/release receipts required by criterion coverage; routine checks require no human acknowledgement.",
     "phase": "pre_publication",
-    "blocker": "criterion_review_evidence_required"
+    "blocker": "criterion_domain_or_device_evidence_required"
   }
 ]
 
@@ -4457,6 +4935,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -4476,7 +4956,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-019-C02",
@@ -4494,7 +4979,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-019-C03",
@@ -4512,7 +5002,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-019-C04",
@@ -4530,7 +5025,12 @@ Criterion-specific coverage
     "evidence_types": [
       "exact-candidate-release-review"
     ],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-019-RELEASE",
@@ -4718,9 +5218,9 @@ Executable verification obligations
   {
     "version": 2,
     "kind": "external_gate",
-    "description": "Criterion-specific accountable review/device/verifier evidence listed in coverage cases",
+    "description": "Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.",
     "phase": "pre_publication",
-    "blocker": "criterion_review_evidence_required"
+    "blocker": "independent_automated_verifier_receipt_required"
   }
 ]
 
@@ -4732,6 +5232,8 @@ Execution boundaries
 - No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.
 - No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.
 - The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.
+- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.
+- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.
 
 Criterion-specific coverage
 [
@@ -4751,7 +5253,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-020-C02",
@@ -4771,7 +5278,12 @@ Criterion-specific coverage
     ],
     "external_evidence_required": false,
     "evidence_types": [],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": false,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
   },
   {
     "case_id": "DOS-M1-020-C03",
@@ -4785,9 +5297,23 @@ Criterion-specific coverage
     "command_refs": [],
     "external_evidence_required": true,
     "evidence_types": [
-      "independent-exact-candidate-verifier"
+      "independent-exact-candidate-automated-verifier"
     ],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": true,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.",
+      "automated_receipt_fields": [
+        "independent verifier execution ID",
+        "exact candidate SHA and base SHA",
+        "case ID and evaluated input artifact hashes",
+        "existing authorization/decision references where relevant",
+        "executed command argv, exit codes and immutable logs or reproducible document-comparison assertions",
+        "per-assertion result with failed, skipped, unavailable and unrun obligations distinguished"
+      ],
+      "missing_evidence_behavior": "Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification."
   },
   {
     "case_id": "DOS-M1-020-C04",
@@ -4796,14 +5322,32 @@ Criterion-specific coverage
     ],
     "assertion": "Report implemented versus verified versus published/integrated/deployed separately; real patients, payment, prescribing and mobile availability remain gated.",
     "procedure": "Audit handoff status labels and confirm no real patients, payment, prescribing, mobile or production availability is claimed.",
-    "test_case_name": null,
-    "required_outputs": [],
-    "command_refs": [],
+    "test_case_name": "DOS-M1-020-C04",
+    "required_outputs": [
+      "apps/doctor-suit/tests/unit/dos-m1-020.test.mjs"
+    ],
+    "command_refs": [
+      "dos-m1-020-unit"
+    ],
     "external_evidence_required": true,
     "evidence_types": [
-      "accountable-human-review"
+      "independent-exact-candidate-automated-verifier"
     ],
-    "acceptance_rule": "Execute the stated action and assertions against actual behavior. No empty/skipped/source-grep-only/fabricated-pass substitute. External review requires reviewer identity, scope/date, exact candidate and supporting references."
+    "evidence_policy": {
+      "human_approval_required": false,
+      "independent_automated_verification_required": true,
+      "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.",
+      "automated_receipt_fields": [
+        "independent verifier execution ID",
+        "exact candidate SHA and base SHA",
+        "case ID and evaluated input artifact hashes",
+        "existing authorization/decision references where relevant",
+        "executed command argv, exit codes and immutable logs or reproducible document-comparison assertions",
+        "per-assertion result with failed, skipped, unavailable and unrun obligations distinguished"
+      ],
+      "missing_evidence_behavior": "Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read."
+    },
+    "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification."
   },
   {
     "case_id": "DOS-M1-020-RELEASE",
