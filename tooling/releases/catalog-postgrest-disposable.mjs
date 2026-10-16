@@ -105,6 +105,25 @@ await assert.rejects(denied('release_candidate_refresh',{p_snapshot:snapshot}),/
 // Multiple ordinary revisions are valid; no duplicate baseline assumption.
 await catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'e'.repeat(40)}})
 assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'2')
+// Persisted-state reproduction: legitimate revisions can expose a scalar helper
+// defect while state and the singleton baseline remain valid.
+assert.equal((await catalog('release_candidate_state')).model,2)
+assert.equal(sql('select count(*) from public.release_candidate_baseline;'),'1')
+const digestDefinition=sql("select pg_get_functiondef('super_admin_private.release_digest(jsonb)'::regprocedure);")
+sql(`create or replace function super_admin_private.release_digest(p_value jsonb) returns text language sql stable set search_path='' as $$select (select key from public.release_candidate_revisions)$$;`)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/CANDIDATE_CARDINALITY_DIGEST_CONTRACT_MISMATCH/)
+sql(digestDefinition)
+console.log('Persisted-state digest scalar fault reproduces state success and identifies the previously unrecognized digest contract mismatch without duplicate baseline data')
+// Unknown deeper extension frame under a matching digest helper is still classified.
+const cryptoDefinition=sql("select pg_get_functiondef('extensions.digest(bytea,text)'::regprocedure);")
+sql(`create or replace function extensions.digest(bytea,text) returns bytea language plpgsql immutable strict as $$begin return (select value from (values('private-sentinel'::bytea),('private-sentinel'::bytea)) v(value));end$$;`)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/reason CANDIDATE_CARDINALITY_DIGEST\)/)
+sql(cryptoDefinition)
+// Never interpret canonical line positions for an altered retained body.
+const retainedDefinition=sql("select pg_get_functiondef('super_admin_private.release_candidate_refresh_retained(jsonb)'::regprocedure);")
+sql(`create or replace function super_admin_private.release_candidate_refresh_retained(p_snapshot jsonb) returns jsonb language plpgsql security definer set search_path='' as $$begin return (select value from (values('{}'::jsonb),('{}'::jsonb)) v(value));end$$;`)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/CANDIDATE_CARDINALITY_REFRESH_CONTRACT_MISMATCH/)
+sql(retainedDefinition)
 const baselineDefinition=sql("select pg_get_functiondef('super_admin_private.candidate_baseline_tree()'::regprocedure);")
 sql(`create or replace function super_admin_private.candidate_baseline_tree() returns text language plpgsql stable set search_path='' as $$begin return (select value from (values('private-sentinel'),('private-sentinel')) v(value));end$$;`)
 await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),error=>{
@@ -131,8 +150,12 @@ for(const [signature,returns,attributes,expression,reason] of [
 // An unrelated trigger's private message must reduce to the refresh boundary.
 sql(`create function public.release_fixture_cardinality() returns trigger language plpgsql as $$begin raise exception 'private-sentinel' using errcode='21000';end$$;
 create trigger release_fixture_cardinality before insert on public.release_candidate_revisions for each row execute function public.release_fixture_cardinality();`)
-await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/CANDIDATE_CARDINALITY_REFRESH/)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/CANDIDATE_CARDINALITY_REVISION_WRITE_TRIGGER_PRESENT/)
 sql('drop trigger release_fixture_cardinality on public.release_candidate_revisions;drop function public.release_fixture_cardinality();')
+sql(`create function public.release_fixture_cardinality() returns trigger language plpgsql as $$begin raise exception 'private-sentinel' using errcode='21000';end$$;
+create trigger release_fixture_cardinality before insert on public.release_candidate_pointer for each row execute function public.release_fixture_cardinality();`)
+await assert.rejects(catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}}),/CANDIDATE_CARDINALITY_POINTER_WRITE_TRIGGER_PRESENT/)
+sql('drop trigger release_fixture_cardinality on public.release_candidate_pointer;drop function public.release_fixture_cardinality();')
 assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'2','Failed writes roll back without deleting prior history')
 await catalog('release_candidate_refresh',{p_snapshot:{...snapshot,stagingSha:'d'.repeat(40)}})
 assert.equal(sql('select count(*) from public.release_candidate_revisions;'),'3')

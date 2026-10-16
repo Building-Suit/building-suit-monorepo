@@ -1,7 +1,7 @@
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
-import { catalogRejectionReason } from './catalog-diagnostics.mjs'
+import { catalogRejectionReason, cardinalityReasons } from './catalog-diagnostics.mjs'
 import { createCatalog } from './publisher.mjs'
 const response = body => new Response(typeof body === 'string' ? body : JSON.stringify(body), { status: 400 })
 
@@ -61,4 +61,14 @@ test('cardinality location diagnostics retain SQLSTATE and exact safe tokens onl
     assert.equal(await catalogRejectionReason(response({code:'21000',message,details:'private-sentinel'})),message)
   }
   assert.equal(await catalogRejectionReason(response({code:'21000',message:'CANDIDATE_CARDINALITY_REFRESH private-sentinel'})),'CATALOG_SQLSTATE_21000_CARDINALITY_VIOLATION')
+})
+
+
+test('statement and contract evidence accepts only fixed SQLSTATE-21000 tokens', async () => {
+  const sql=readFileSync(new URL('../../apps/super-admin-suit/supabase/migrations/20261016122230_release_refresh_statement_evidence.sql',import.meta.url),'utf8')
+  for(const [token] of sql.matchAll(/CANDIDATE_CARDINALITY_[A-Z_]+/g)) assert.ok(cardinalityReasons.has(token),token)
+  for(const message of cardinalityReasons) assert.equal(await catalogRejectionReason(response({code:'21000',message,details:'private-sentinel'})),message)
+  for(const message of ['CANDIDATE_CARDINALITY_POINTER_WRITE private-sentinel','CANDIDATE_CARDINALITY_REFRESH_LINE_99','CANDIDATE_CARDINALITY_DIGEST_CONTRACT_MISMATCH\nprivate-sentinel']) {
+    assert.equal(await catalogRejectionReason(response({code:'21000',message})),'CATALOG_SQLSTATE_21000_CARDINALITY_VIOLATION')
+  }
 })
