@@ -1,0 +1,9 @@
+{
+  "id": "release-refresh-rejection-diagnostics",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["tooling/releases/publisher.mjs", "tooling/releases/catalog-diagnostics.mjs", "tooling/releases/catalog-diagnostics.test.mjs", "tooling/releases/candidate-disposable.mjs", "docs/shared/release-publication-runbook.md"],
+  "reason": "Diagnose catalog rejection with bounded allowlisted reasons and disposable actual-candidate reproduction while retaining authorization, readiness and baseline history."
+}
