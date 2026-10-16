@@ -1,0 +1,1449 @@
+{
+  "format": "reviewed-import-proposal-v1",
+  "milestone_id": "DOS-M1",
+  "packet_file": "DOS-M1.json",
+  "packet_sha256": "1a8873d8d3238071b2974dfe14f6d8e5927c7919e05fcfb371764fc111349367",
+  "target": {
+    "repository": "Building-Suit/building-suit-monorepo",
+    "automation_project_ref": "padtxclxwwqvvuiebhte",
+    "project_slug": "building-suit",
+    "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+    "suit_slug": "doctor-suit",
+    "workstream_slug": "doctor-suit",
+    "application_path": "apps/doctor-suit",
+    "registration_status": "missing-per-parent-readonly-observation; parent must supply reviewed registration"
+  },
+  "safe_to_apply": false,
+  "task_create_function": "control.create_task_with_publication_contract(text,text,text,integer,integer,text,text,text,text,text,jsonb,jsonb,text,jsonb)",
+  "task_ids": [
+    "DOS-M1-001",
+    "DOS-M1-002",
+    "DOS-M1-003",
+    "DOS-M1-004",
+    "DOS-M1-005",
+    "DOS-M1-006",
+    "DOS-M1-007",
+    "DOS-M1-008",
+    "DOS-M1-009",
+    "DOS-M1-010",
+    "DOS-M1-011",
+    "DOS-M1-012",
+    "DOS-M1-013",
+    "DOS-M1-014",
+    "DOS-M1-015",
+    "DOS-M1-016",
+    "DOS-M1-017",
+    "DOS-M1-018",
+    "DOS-M1-019",
+    "DOS-M1-020"
+  ],
+  "requirements": [
+    {
+      "requirement_id": "DOS-M1-R001",
+      "title": "Doctor-centered practice ownership",
+      "summary": "The doctor is the account owner and future paying subscriber; a clinic is a working location, not the permanent owner of the practice. The doctor must operate without a secretary.",
+      "status": "approved",
+      "provenance": "User original intake; naming confirmed by subsequent Doctor Suit request."
+    },
+    {
+      "requirement_id": "DOS-M1-R002",
+      "title": "Multiple doctors, clinics and delegated secretary memberships",
+      "summary": "Doctors can work in multiple clinics with multiple secretaries. A secretary has independently scoped invited memberships with multiple doctors and only the permissions each doctor grants.",
+      "status": "approved",
+      "provenance": "User original intake."
+    },
+    {
+      "requirement_id": "DOS-M1-R003",
+      "title": "Website first; mobile remains part of the product",
+      "summary": "M1 is the public product website plus administrative doctor/secretary browser portal, synthetic data only; clinical prescribing starts M2 and mobile remains later.",
+      "status": "approved",
+      "provenance": "User latest request and original mobile requirement; interpretation explicitly open."
+    },
+    {
+      "requirement_id": "DOS-M1-R004",
+      "title": "No cross-practice data leakage or invented authority",
+      "summary": "Backend-enforced access, product/session isolation, audit attribution and synthetic-only development must precede any real-patient pilot. Public copy cannot claim unimplemented or unverified capabilities.",
+      "status": "proposed",
+      "provenance": "Planning safety baseline; not a medical/legal certification."
+    },
+    {
+      "requirement_id": "DOS-M1-R005",
+      "title": "Current shared architecture and execution ownership",
+      "summary": "Use Building-Suit/building-suit-monorepo, pinned stack, shared packages/ui templates and packages/ux interactions; Doctor app adapters own logic/data. Independent runtime verification and publication remain control-plane owned.",
+      "status": "proposed",
+      "provenance": "Inspected repository rules and worker; target-repository adoption remains open."
+    },
+    {
+      "requirement_id": "DOS-M1-F001",
+      "title": "Website scope, user journeys and implementation contract",
+      "summary": "Produce the implementation-facing website specification from this intake and the inspected repository rules. Reconcile any recovered Clinic Suit IDs/history before assigning replacements. Separate the public site, doctor web portal and secretary web portal; mobile remains later. Acceptance: Document approved facts separately from the proposed web-first interpretation and open decisions. Describe doctor-alone and delegated workflows, multiple locations, multi-doctor secretaries, and persistent doctor ownership. Publish a route/template inventory, permission matrix, synthetic-data policy and traceable acceptance checklist; unresolved choices stay open. Identify the actual registered execution route and verification/publication gaps without changing runtime configuration or declaring compatibility.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-001."
+    },
+    {
+      "requirement_id": "DOS-M1-F002",
+      "title": "Doctor Suit web scaffold and workspace registration",
+      "summary": "Create the Doctor Suit app only after the target-repository decision. Use the maintained new-platform generator and shared Nuxt layer; add the minimal repository wiring needed for a local synthetic preview. Acceptance: Inspect pnpm new:platform doctor-suit \"Doctor Suit\" --dry-run before generation; do not copy another product app. Use BsAppRoot, shared layouts and one registered complete template per route with zero migration debt. Provide scoped AGENTS, environment examples with no values, app manifest, local-preview instructions and the minimum root registration diff. Do not provision a hosted project, choose unverified ports/domain/provider refs or activate a public release product. Create an app-local Playwright configuration and synthetic-browser fixture harness at apps/doctor-suit/tests/e2e/playwright.config.ts; select collision-free local ports and ensure remote backend URLs are rejected. The named control-plane command is registered separately by the authorized operator, not by this task.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-002."
+    },
+    {
+      "requirement_id": "DOS-M1-F003",
+      "title": "Isolated practice identity and disposable data foundation",
+      "summary": "Implement the local Doctor Suit identity/practice/membership data boundary and disposable verification fixtures before protected web workflows. Treat the doctor practice as the ownership scope and locations as context. Acceptance: Use an app-owned local Supabase root and forward migrations; production/staging refs remain unprovisioned. Separate user identity, doctor practice, location and membership; memberships do not confer cross-practice access. Every protected operation validates the server-side practice/context and auditable actor. Create deterministic synthetic fixtures for two doctors, shared secretary, two locations and an outsider; register no hosted writes.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-003."
+    },
+    {
+      "requirement_id": "DOS-M1-F004",
+      "title": "Shared web shells and complete page-template contracts",
+      "summary": "Deliver the public and authenticated web shells through shared presentation templates, including explicit doctor/practice/location context, navigation and reliable interaction states. Acceptance: All new visual composition is exported from packages/ui; product queries remain in Doctor Suit adapters. The active doctor/practice/location is persistently clear; switching context clears sensitive caches and drafts. Navigation, keyboard/focus, dirty-state warnings, loading/empty/error/denied states work from the first slice. English/Arabic, LTR/RTL and light/dark use existing repository infrastructure if the monorepo decision is approved.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-004."
+    },
+    {
+      "requirement_id": "DOS-M1-F005",
+      "title": "Public product website and truthful feature presentation",
+      "summary": "Build the Doctor Suit public homepage and product explanation around the doctor-across-clinics model using the shared landing template. Acceptance: Explain doctor ownership, location independence, delegated staff and future patient/mobile continuity using approved content. Separate implemented, preview and planned capabilities; no fabricated customers, reviews, compliance badges or release history. Do not invent pricing, trial length, payment availability, download links or production onboarding. Primary actions go to a real approved route; use a preview/explanation state rather than fake submission or account creation.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-005."
+    },
+    {
+      "requirement_id": "DOS-M1-F006",
+      "title": "Doctor authentication and account recovery",
+      "summary": "Implement the doctor web identity lifecycle using existing shared auth templates and product-isolated session adapters, with no cross-product SSO by implication. Acceptance: Support sign-up/sign-in/sign-out, verification and recovery states with explicit provider configuration gates. Do not infer a verified identity or ownership from matching email/phone or editable metadata. Validate redirects/callbacks and preserve product/environment cookie isolation. Expiry, retries, refresh and errors cannot leave an authenticated-looking but unauthorized session.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-006."
+    },
+    {
+      "requirement_id": "DOS-M1-F007",
+      "title": "Doctor-led practice onboarding and profile",
+      "summary": "Let an authenticated doctor create and maintain a practice profile and reach a usable workspace without employing a secretary. The doctor is the future subscriber; no paid entitlement is fabricated. Acceptance: A doctor can complete onboarding alone and add an initial location. Onboarding is resumable and idempotent; double-submit does not create duplicate practices. Store only the approved profile fields; professional verification is not asserted unless independently established. Show incomplete configuration honestly; later subscription rules do not block a synthetic preview.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-007."
+    },
+    {
+      "requirement_id": "DOS-M1-F008",
+      "title": "Multiple clinic locations and practice context switching",
+      "summary": "Let a doctor manage multiple working locations without making a location the owner of their practice records. Acceptance: Create/edit/archive locations and configure contact/schedule context without deleting linked history. A doctor retains practice-level patients while encounters/appointments retain location attribution. Location visibility honors membership grants; no inference from a client-selected location ID. Use an explicit configurable timezone; do not hardcode fixed UTC offsets.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-008."
+    },
+    {
+      "requirement_id": "DOS-M1-F009",
+      "title": "Secretary invitations and multi-doctor memberships",
+      "summary": "Enable invited secretaries to use one Doctor Suit identity across independent doctor memberships without becoming subscribers or mixing practices. Acceptance: Invitation acceptance validates intended recipient, expiry, membership scope and idempotency. The same secretary can belong to two practices with different location grants. Revocation/suspension invalidates protected access according to tested session/cache guarantees. No secretary subscription is created and no other doctor membership is changed by this invitation.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-009."
+    },
+    {
+      "requirement_id": "DOS-M1-F010",
+      "title": "Granular delegation enforced in the backend",
+      "summary": "Implement explicit capabilities for patient administration, scheduling, intake, documents and settings scoped to doctor/location. Presentation reflects authorization but is not its boundary. Acceptance: Doctor can grant only selected capabilities or all approved delegable administrative capabilities. Every command/query/attachment access path enforces matching backend grants. No capability grants access to another doctor; no implicit employee-to-owner escalation. Clinical signing and prescribing authority are not implemented in M1; the later physician-only boundary remains a safety decision, not a secretary role shortcut.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-010."
+    },
+    {
+      "requirement_id": "DOS-M1-F011",
+      "title": "Patient directory and safe administrative CRUD",
+      "summary": "Provide the authorized doctor/secretary patient-administration web flow: create, search, paginate, edit and archive the doctor-practice patient record. Acceptance: Use server-side scoped search/pagination and explicit empty/error/denied states. A shared phone number or matching name never automatically merges people or grants a patient app account. Create/update is validated and retry-safe; concurrent updates cannot silently overwrite identity data. Archive preserves referenced records; no bulk hard-delete or cross-doctor patient discovery.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-011."
+    },
+    {
+      "requirement_id": "DOS-M1-F012",
+      "title": "Patient profile, administrative timeline and private documents",
+      "summary": "Deliver a usable patient profile with demographics, administrative activity and authorized document upload/view. This is not yet a signed clinical record or patient-facing portal. Acceptance: Show explicit doctor/location provenance and distinguish entered data from verified data. Attachments have private storage, type/size validation and scoped access; no public object URL. Record uploader, timestamps and replacement/archive history; downloading requires current access. No clinical findings, prescription efficacy, identity verification or result interpretation is invented.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-012."
+    },
+    {
+      "requirement_id": "DOS-M1-F013",
+      "title": "Working hours, availability and appointment rules",
+      "summary": "Configure doctor/location working hours, exceptions, slot duration and conflict detection for a browser-based schedule. Acceptance: The same doctor cannot silently book overlapping commitments across different locations. Respect explicit timezone, exceptions and location permissions. Availability and booking share one authoritative conflict rule. Override policy, if any, is explicit and auditable rather than a client bypass.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-013."
+    },
+    {
+      "requirement_id": "DOS-M1-F014",
+      "title": "Appointments, check-in and live waiting queue",
+      "summary": "Deliver booking/rescheduling/cancellation/check-in and an operational queue without prescribing or billing scope. Acceptance: Use explicit appointment states and allowed transitions; no illegal double-check-in. Rescheduling and cancellation preserve history and are retry-safe. Queue updates remain scoped, recover after reconnect and do not leak other doctors. Notifications beyond in-app status updates remain gated; no unapproved SMS/WhatsApp service is enabled.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-014."
+    },
+    {
+      "requirement_id": "DOS-M1-F015",
+      "title": "Doctor and secretary operational web dashboards",
+      "summary": "Provide each authorized actor with a real-data Today view, appointments, waiting queue and relevant administrative actions rather than a generic placeholder dashboard. Acceptance: Metrics and lists use authoritative scoped queries and agreed time windows, not only loaded page rows. Doctor sees all authorized locations; secretary sees only granted capabilities and locations. Every displayed item links to its permitted source record. No unsupported financial/clinical metric or fabricated sample result is shown outside clearly labeled demo fixtures.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-015."
+    },
+    {
+      "requirement_id": "DOS-M1-F016",
+      "title": "Profile, security and communication-preference settings",
+      "summary": "Provide product-scoped account/profile settings and nonclinical communication preferences, with safe session and ownership boundaries. Acceptance: Separate personal account profile, doctor practice profile and membership permissions. Sensitive settings require the configured reauthentication/authorization policy. Preferences are explicit and scoped; do not enroll people in marketing or enable paid channels. Unsupported subscription/export controls are absent or truthfully unavailable, not fake successful buttons.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-016."
+    },
+    {
+      "requirement_id": "DOS-M1-F017",
+      "title": "Audit visibility and administrative data-preservation controls",
+      "summary": "Expose a permission-scoped audit view and safe archival/correction behavior for M1 administrative records, while preparing the explicit real-data governance gate. Acceptance: Audit covers administrative writes, invitations/grants and document access according to approved policy. Client users cannot modify audit events or silently erase linked history. No clinical bulk export, erasure or retention period is guessed; unresolved policies remain disabled and documented. Audit view is scoped, searchable and excludes credentials or unnecessary sensitive payloads.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-017."
+    },
+    {
+      "requirement_id": "DOS-M1-F018",
+      "title": "Responsive web, accessibility and failure-recovery acceptance",
+      "summary": "Close measurable cross-journey usability gaps in the working website/portal, rather than deferring foundational UX until the end. Acceptance: All M1 critical journeys work on narrow mobile browser and desktop in both approved locales/themes. Keyboard/focus/labels, validation, overlays and reduced-motion settings are verified. Slow/offline/reconnect and repeated actions show honest unsaved state; M1 does not promise offline clinical writes. Shared fixes remain centralized with affected consumer regression coverage.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-018."
+    },
+    {
+      "requirement_id": "DOS-M1-F019",
+      "title": "Public metadata, support paths and website preview readiness",
+      "summary": "Complete public-site metadata and support/navigation behavior while keeping private routes unindexed and future capabilities clearly separated from released functionality. Acceptance: Public titles/descriptions, canonical URL configuration and locale metadata are correct after domain approval. Private/authenticated pages are not exposed through generated sitemaps, public caches or share metadata. Use only approved brand assets/copy and actual support destinations; no fabricated app-store links or pricing. Prepare release fragments/checks and a preview handoff; do not merge, deploy, activate release registration or publish a released version.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-019."
+    },
+    {
+      "requirement_id": "DOS-M1-F020",
+      "title": "Milestone 1 end-to-end verification and owner demo handoff",
+      "summary": "Independently verify the full synthetic website/doctor/secretary vertical slice and prepare an evidence-backed milestone acceptance packet. This is not clinical or commercial launch approval. Acceptance: Doctor alone can onboard, add two clinics, create a patient, book/check in and review their queue/profile. Shared secretary can accept two doctor invitations and perform only granted actions without data leakage. All required unit, local data-authorization, browser, shared-consumer, boundary, lint/typecheck/build checks have exact evidence. Report implemented versus verified versus published/integrated/deployed separately; real patients, payment, prescribing and mobile availability remain gated.",
+      "status": "proposed",
+      "provenance": "Proposed decomposition of this intake; task DOS-M1-020."
+    }
+  ],
+  "decisions": [
+    {
+      "decision_id": "DOS-M1-GATE-START",
+      "title": "Explicit owner start and verified import/admission gate",
+      "decision_text": "OPEN: Parent must confirm all nine milestones safely stored, exact live schema/consumer compatibility, route registration, high-capability model/retry policies, executable verification mapping and publication scope. Saving plans never releases this gate.",
+      "status": "open",
+      "source": "Unresolved operator gate; no approval supplied."
+    },
+    {
+      "decision_id": "DOS-M1-D001",
+      "title": "Meaning of Website in milestone 1",
+      "decision_text": "M1 is the public product website plus administrative doctor/secretary browser portal, synthetic data only; clinical prescribing starts M2 and mobile remains later.",
+      "status": "approved",
+      "source": "Current delegated user authorization; supersedes v0.2 uncertainty, retains original ID."
+    },
+    {
+      "decision_id": "DOS-M1-D002",
+      "title": "Repository, shared standards and execution registration",
+      "decision_text": "Repository placement and shared architecture are authorized. Runtime app/workstream registration, exact model/retry/verification contracts and protected publication paths still require parent live-schema review; this decision stays OPEN until those concrete prerequisites are verified.",
+      "status": "open",
+      "source": "Current delegation confirms repository; parent reports missing Doctor app mapping."
+    },
+    {
+      "decision_id": "DOS-M1-D003",
+      "title": "Patient identity and administrative minimum dataset",
+      "decision_text": "For synthetic M1 use opaque patient IDs and practice-patient relationships, display name plus optional recorded contact and demographics, explicit duplicate-review warnings, optimistic correction and archive. No identity verification or cross-practice merge is inferred. Real-data dataset/retention requires M7 review.",
+      "status": "approved",
+      "source": "Ordinary design choice within current authorization; legal/clinical decisions remain gated."
+    },
+    {
+      "decision_id": "DOS-M1-D004",
+      "title": "Website brand, public domain and approved claims",
+      "decision_text": "Use existing Building tokens and text Doctor Suit branding for the synthetic preview; do not invent logo provenance, domain, pricing/trial, support recipient or release claims. Real public destinations/claims require supplied evidence. This gate applies to public acceptance, not ordinary internal layout choices.",
+      "status": "open",
+      "source": "No approved Doctor Suit domain, logo assets, pricing or trial policy supplied."
+    }
+  ],
+  "task_requirements": [
+    {
+      "task_id": "DOS-M1-001",
+      "requirement_id": "DOS-M1-F001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-001",
+      "requirement_id": "DOS-M1-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-001",
+      "requirement_id": "DOS-M1-R002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-001",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-001",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-001",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-002",
+      "requirement_id": "DOS-M1-F002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-002",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-002",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-002",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-003",
+      "requirement_id": "DOS-M1-F003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-003",
+      "requirement_id": "DOS-M1-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-003",
+      "requirement_id": "DOS-M1-R002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-003",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-003",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-003",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-004",
+      "requirement_id": "DOS-M1-F004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-004",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-004",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-004",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-005",
+      "requirement_id": "DOS-M1-F005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-005",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-005",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-005",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-006",
+      "requirement_id": "DOS-M1-F006",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-006",
+      "requirement_id": "DOS-M1-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-006",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-006",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-006",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-007",
+      "requirement_id": "DOS-M1-F007",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-007",
+      "requirement_id": "DOS-M1-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-007",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-007",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-007",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-008",
+      "requirement_id": "DOS-M1-F008",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-008",
+      "requirement_id": "DOS-M1-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-008",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-008",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-008",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-009",
+      "requirement_id": "DOS-M1-F009",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-009",
+      "requirement_id": "DOS-M1-R002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-009",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-009",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-009",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-010",
+      "requirement_id": "DOS-M1-F010",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-010",
+      "requirement_id": "DOS-M1-R002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-010",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-010",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-010",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-011",
+      "requirement_id": "DOS-M1-F011",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-011",
+      "requirement_id": "DOS-M1-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-011",
+      "requirement_id": "DOS-M1-R002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-011",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-011",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-011",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-012",
+      "requirement_id": "DOS-M1-F012",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-012",
+      "requirement_id": "DOS-M1-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-012",
+      "requirement_id": "DOS-M1-R002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-012",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-012",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-012",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-013",
+      "requirement_id": "DOS-M1-F013",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-013",
+      "requirement_id": "DOS-M1-R002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-013",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-013",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-013",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-014",
+      "requirement_id": "DOS-M1-F014",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-014",
+      "requirement_id": "DOS-M1-R002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-014",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-014",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-014",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-015",
+      "requirement_id": "DOS-M1-F015",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-015",
+      "requirement_id": "DOS-M1-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-015",
+      "requirement_id": "DOS-M1-R002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-015",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-015",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-015",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-016",
+      "requirement_id": "DOS-M1-F016",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-016",
+      "requirement_id": "DOS-M1-R002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-016",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-016",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-016",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "requirement_id": "DOS-M1-F017",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "requirement_id": "DOS-M1-R002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-018",
+      "requirement_id": "DOS-M1-F018",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-018",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-018",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-018",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-019",
+      "requirement_id": "DOS-M1-F019",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-019",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-019",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-019",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "requirement_id": "DOS-M1-F020",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "requirement_id": "DOS-M1-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "requirement_id": "DOS-M1-R002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "requirement_id": "DOS-M1-R003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "requirement_id": "DOS-M1-R004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "requirement_id": "DOS-M1-R005",
+      "suit_slug": "doctor-suit"
+    }
+  ],
+  "task_dependencies": [
+    {
+      "task_id": "DOS-M1-002",
+      "depends_on_task_id": "DOS-M1-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-003",
+      "depends_on_task_id": "DOS-M1-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-004",
+      "depends_on_task_id": "DOS-M1-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-005",
+      "depends_on_task_id": "DOS-M1-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-005",
+      "depends_on_task_id": "DOS-M1-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-006",
+      "depends_on_task_id": "DOS-M1-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-006",
+      "depends_on_task_id": "DOS-M1-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-007",
+      "depends_on_task_id": "DOS-M1-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-008",
+      "depends_on_task_id": "DOS-M1-007",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-009",
+      "depends_on_task_id": "DOS-M1-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-009",
+      "depends_on_task_id": "DOS-M1-008",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-010",
+      "depends_on_task_id": "DOS-M1-009",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-011",
+      "depends_on_task_id": "DOS-M1-010",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-012",
+      "depends_on_task_id": "DOS-M1-011",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-013",
+      "depends_on_task_id": "DOS-M1-008",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-013",
+      "depends_on_task_id": "DOS-M1-010",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-014",
+      "depends_on_task_id": "DOS-M1-011",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-014",
+      "depends_on_task_id": "DOS-M1-013",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-015",
+      "depends_on_task_id": "DOS-M1-012",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-015",
+      "depends_on_task_id": "DOS-M1-014",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-016",
+      "depends_on_task_id": "DOS-M1-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-016",
+      "depends_on_task_id": "DOS-M1-010",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "depends_on_task_id": "DOS-M1-010",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "depends_on_task_id": "DOS-M1-012",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "depends_on_task_id": "DOS-M1-014",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "depends_on_task_id": "DOS-M1-016",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-018",
+      "depends_on_task_id": "DOS-M1-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-018",
+      "depends_on_task_id": "DOS-M1-015",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-018",
+      "depends_on_task_id": "DOS-M1-016",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-018",
+      "depends_on_task_id": "DOS-M1-017",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-019",
+      "depends_on_task_id": "DOS-M1-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-019",
+      "depends_on_task_id": "DOS-M1-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-019",
+      "depends_on_task_id": "DOS-M1-018",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-007",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-008",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-009",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-010",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-011",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-012",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-013",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-014",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-015",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-016",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-017",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-018",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "depends_on_task_id": "DOS-M1-019",
+      "dependency_type": "hard"
+    }
+  ],
+  "task_decisions": [
+    {
+      "task_id": "DOS-M1-001",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-001",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-001",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-002",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-002",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-002",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-003",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-003",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-003",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-004",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-004",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-004",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-005",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-005",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-005",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-005",
+      "decision_id": "DOS-M1-D004",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-006",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-006",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-006",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-007",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-007",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-007",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-008",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-008",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-008",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-009",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-009",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-009",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-010",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-010",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-010",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-010",
+      "decision_id": "DOS-M1-D003",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-011",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-011",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-011",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-011",
+      "decision_id": "DOS-M1-D003",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-012",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-012",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-012",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-012",
+      "decision_id": "DOS-M1-D003",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-013",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-013",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-013",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-014",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-014",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-014",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-015",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-015",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-015",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-016",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-016",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-016",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-017",
+      "decision_id": "DOS-M1-D003",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-018",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-018",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-018",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-019",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-019",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-019",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-019",
+      "decision_id": "DOS-M1-D004",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "decision_id": "DOS-M1-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "decision_id": "DOS-M1-D001",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "decision_id": "DOS-M1-D002",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "decision_id": "DOS-M1-D003",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M1-020",
+      "decision_id": "DOS-M1-D004",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    }
+  ],
+  "transaction_contract": [
+    "Verify exact Automation target, live function/schema/trigger fingerprints, immutable project ID, route, model, retry policy, command registrations and publication scopes before writes.",
+    "Acquire parent-reviewed transaction serialization lock and reread every scoped ID; existing equal payload is a no-op only after full canonical comparison; any differing state/history aborts. Never overwrite existing tasks, decisions, execution or requirement history.",
+    "Create or verify the real OPEN milestone start decision before any task; create every task through supported function and link every task to that decision with blocking=true in the SAME transaction.",
+    "Create all requirement, decision and dependency links and refresh contracts after final metadata. Do not commit partial task/link batches.",
+    "Assert exact payload counts, complete links, zero ready Doctor tasks using live ready-task predicate, zero claims/runs/executions, no publication authority, and all start decisions still OPEN immediately before commit.",
+    "Dry-run rollback and review returned evidence first. Parent controls any commit; never remove a guard from the original draft SQL.",
+    "After commit read back canonical packets and zero-ready evidence. Keep all nine start gates open until parent confirms all nine safely saved; release each milestone separately in dependency order."
+  ],
+  "pending_inputs": [
+    "Parent live schema/consumer and trigger contract",
+    "Reviewed Doctor suit/workstream/app mapping (function requires active project/workstream)",
+    "Verified high-capability deep model and retry policy IDs",
+    "Approved command registration and protected publication paths",
+    "Exact no-ready-task SQL predicate and transaction/rollback proof"
+  ]
+}
