@@ -62,6 +62,7 @@ const changelogBatchFeed: ChangelogFeed = {
   ...changelogFeed,
   entries: ['1.9.0', '1.10.0', '2.0.0', '2.0.1'].flatMap((version, index) => [0, 1].map(note => ({
     id: `batch-${3 - index}-${note}`, suit: 'shop-suit', visibility: 'public' as const, status: 'released' as const, version,
+    ...(index === 3 && note === 0 ? { versionOrigin: 'retrospective' as const } : {}),
     publishedAt: '2026-10-09T12:00:00Z', releasedAt: '2026-10-09T12:00:00Z',
     title: changelogFeed.entries[0]!.title, summary: changelogFeed.entries[0]!.summary,
     details: changelogFeed.entries[0]!.details, links: [],
