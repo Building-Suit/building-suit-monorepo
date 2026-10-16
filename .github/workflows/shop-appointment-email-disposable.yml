@@ -7,6 +7,8 @@ on:
       - 'packages/ui/**'
       - 'packages/ux/**'
       - 'tooling/database/test-shop-appointment-email-local.mjs'
+      - 'tooling/database/configure-shop-reminder-schedule.mjs'
+      - 'tooling/ui/build-appointment-reminder-email.mjs'
 permissions:
   contents: read
 concurrency:
@@ -27,7 +29,14 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.9.7
-      - run: deno check --no-config apps/shop-suit/supabase/functions/shop-appointment-reminder-sender/index.ts
+      - run: node tooling/ui/build-appointment-reminder-email.mjs --check
+      - name: Check deployable function graph without monorepo parent paths
+        run: |
+          mkdir -p "$RUNNER_TEMP/reminder-edge/shop-appointment-reminder-sender" "$RUNNER_TEMP/reminder-edge/_shared/generated"
+          cp apps/shop-suit/supabase/functions/shop-appointment-reminder-sender/index.ts "$RUNNER_TEMP/reminder-edge/shop-appointment-reminder-sender/"
+          cp apps/shop-suit/supabase/functions/_shared/appointment-reminders.mjs "$RUNNER_TEMP/reminder-edge/_shared/"
+          cp apps/shop-suit/supabase/functions/_shared/generated/appointmentReminderEmail.ts "$RUNNER_TEMP/reminder-edge/_shared/generated/"
+          deno check --no-config "$RUNNER_TEMP/reminder-edge/shop-appointment-reminder-sender/index.ts"
       - name: Start disposable Shop backend
         run: |
           test "$RUNNER_ENVIRONMENT" = github-hosted
@@ -44,7 +53,7 @@ jobs:
           PY
             exit 1
           fi
-      - run: node --test apps/shop-suit/tests/unit/appointment-email-reminders.test.mjs
+      - run: node --test apps/shop-suit/tests/unit/appointment-email-reminders.test.mjs apps/shop-suit/tests/unit/appointment-email-schedule.test.mjs
       - run: node tooling/database/test-shop-appointment-email-local.mjs
       - run: pnpm --filter @building-suit/shop-suit build
       - run: node --test apps/shop-suit/tests/integration/public-booking-built.test.mjs

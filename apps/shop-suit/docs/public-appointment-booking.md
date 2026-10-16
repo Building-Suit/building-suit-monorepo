@@ -26,7 +26,7 @@ Private history, contacts, code and form factors stay in component memory, outsi
 
 Public customers are audited as public-customer actors rather than attributing their actions to staff. Staff commands retain their existing actor/permission model. Guest credential/session issuance is private and audited.
 
-The original disabled/cancelled reminder intents remain unchanged as historical booking intent records. The separately reviewed [email reminder integration](appointment-email-reminders.md) adds explicit owner opt-in, per-appointment customer consent and a private fenced outbox. Delivery remains disabled or explicitly test-allowlisted; no customer sending or scheduler activation is performed by these tasks.
+The original disabled/cancelled reminder intents remain unchanged as historical booking intent records. The separately reviewed [email reminder integration](appointment-email-reminders.md) adds explicit owner opt-in, per-appointment customer consent and a private fenced outbox. Delivery defaults disabled; operators can configure test or live delivery and the dormant scheduler after approval. No customer sending or scheduler activation is performed by these tasks.
 
 ## Verification
 

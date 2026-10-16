@@ -22,6 +22,7 @@ do $$declare f record;cred jsonb;session jsonb;ref uuid;r jsonb;slot timestamptz
   ref:=(r->>'reference')::uuid;select appointment_id into f.appointment from public.appointment_booking_references where reference=ref;
 
   r:=public.appointment_reminder_preference(f.slug,session->>'token',ref,true,'ar');assert r->>'ok'='true','eligible customer can consent';
+  assert public.appointment_booking_options(f.slug,session->>'token')->>'remindersEnabled'='true','published readiness reflects explicit owner policy only';
   assert public.appointment_reminder_preference(f.slug,session->>'token',ref,true,'ar')->>'ok'='true','same consent safe to retry';
   assert (select count(*) from public.appointment_email_outbox where appointment_id=f.appointment)=1,'one queue row per appointment instant';
   r:=public.appointment_booking_manage(f.slug,session->>'token');
@@ -103,13 +104,13 @@ end$$;
 rollback to reminder_case;
 do $$declare role_name text;t text;signature text;begin
  foreach role_name in array array['anon','authenticated','service_role'] loop
-  foreach t in array array['appointment_email_consents','appointment_email_outbox','appointment_email_events','appointment_email_budget'] loop
+  foreach t in array array['appointment_email_consents','appointment_email_outbox','appointment_email_events','appointment_email_budget','appointment_email_schedule_settings','appointment_email_schedule_events'] loop
    assert not has_table_privilege(role_name,'public.'||t,'SELECT,INSERT,UPDATE,DELETE'),'no direct private table privileges';
    assert (select relrowsecurity from pg_class where oid=('public.'||t)::regclass),'private tables RLS';
   end loop;
  end loop;
  foreach role_name in array array['anon','authenticated'] loop
-  foreach signature in array array['public.claim_appointment_email(text[])','public.prepare_appointment_email(uuid,uuid,jsonb,text[])','public.finish_appointment_email(uuid,uuid,text,text)','public.shop_booking_settings_save_before_email(uuid,jsonb,jsonb)','public.appointment_booking_manage_before_email(text,text,integer)'] loop
+  foreach signature in array array['public.claim_appointment_email(text[],text)','public.prepare_appointment_email(uuid,uuid,jsonb,text[],text)','public.finish_appointment_email(uuid,uuid,text,text)','public.shop_booking_settings_save_before_email(uuid,jsonb,jsonb)','public.appointment_booking_manage_before_email(text,text,integer)'] loop
    assert not has_function_privilege(role_name,signature,'EXECUTE'),'no browser worker/helper privilege';
   end loop;
  end loop;
@@ -175,3 +176,21 @@ do $$declare f record;begin
  assert (select count(*) from public.appointment_email_outbox where appointment_id=f.appointment)=1;
 end$$;
 rollback to reminder_reconsent;
+savepoint reminder_live_mode;
+do $$declare f record;r jsonb;p jsonb;begin
+ select * into f from reminder_fixture order by shop desc limit 1;
+ update public.appointment_email_outbox set next_attempt_at=clock_timestamp()+interval '10 years' where id<>f.queue;
+ update public.appointment_email_outbox set due_at=clock_timestamp()-interval '1 minute' where id=f.queue;
+ assert public.claim_appointment_email(null) is null,'NULL list never implicitly selects live mode';
+ assert public.claim_appointment_email(null,'LIVE') is null,'invalid mode refused';
+ assert public.claim_appointment_email(array[f.email],'live') is null,'live/test configuration cannot be confused';
+ r:=public.claim_appointment_email(null,'live');assert (r->>'id')::uuid=f.queue,'explicit live mode claims an eligible consented customer without test allowlist';
+ p:=jsonb_build_object('to',jsonb_build_array(f.email));
+ assert public.prepare_appointment_email(f.queue,(r->>'leaseToken')::uuid,p,null) is null,'default prepare remains test-scoped';
+ update public.appointment_email_budget set used=0,next_claim_at='-infinity';
+ insert into public.appointment_email_budget(bucket,used) values('month:'||to_char(clock_timestamp() at time zone 'UTC','YYYY-MM'),2400) on conflict(bucket) do update set used=2400;
+ assert public.prepare_appointment_email(f.queue,(r->>'leaseToken')::uuid,p,null,'live') is null,'live mode retains free allocation caps';
+ update public.appointment_email_budget set used=0,next_claim_at='-infinity';
+ assert public.prepare_appointment_email(f.queue,(r->>'leaseToken')::uuid,p,null,'live')=p,'explicit live authorization still binds exact eligible recipient';
+end$$;
+rollback to reminder_live_mode;

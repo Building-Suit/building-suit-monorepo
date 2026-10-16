@@ -634,8 +634,8 @@
         "ar": "يمكن للمالك تفعيل الخيار وللعميل المؤهل طلب تذكير خاص لكل موعد أو إيقافه."
       },
       "details": {
-        "en": "Reminders use the saved customer email, respect the appointment timezone and stop on cancellation or contact changes. Delivery remains disabled or limited to approved test recipients until operator configuration is approved.",
-        "ar": "تستخدم التذكيرات بريد العميل المحفوظ وتراعي المنطقة الزمنية للموعد وتتوقف عند الإلغاء أو تغيير بيانات التواصل. يظل الإرسال معطلاً أو مقتصراً على عناوين اختبار معتمدة حتى الموافقة على إعداد المشغل."
+        "en": "Reminders use the saved customer email, respect the appointment timezone and stop on cancellation or contact changes. Operators can activate the dormant scheduler and test or live delivery through approved configuration; sending defaults disabled.",
+        "ar": "تستخدم التذكيرات بريد العميل المحفوظ وتراعي المنطقة الزمنية للموعد وتتوقف عند الإلغاء أو تغيير بيانات التواصل. يمكن للمشغل تفعيل الجدولة الخاملة والإرسال التجريبي أو الفعلي عبر إعداد معتمد، ويظل الإرسال معطلاً افتراضياً."
       }
     },
     "sources": [
@@ -648,11 +648,15 @@
       },
       {
         "path": "apps/shop-suit/supabase/functions/_shared/appointment-reminders.mjs",
-        "contains": "if (env('SHOP_REMINDER_DELIVERY_MODE') !== 'test') return null"
+        "contains": "if (!['test','live'].includes(mode)) return null"
       },
       {
         "path": "apps/shop-suit/app/composables/usePublicBooking.ts",
         "contains": "$fetch('/api/website/booking/reminder'"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261016184235_appointment_email_delivery_modes_scheduler.sql",
+        "contains": "create function public.shop_appointment_email_schedule(p_enabled boolean,p_project_ref text)"
       }
     ]
   }

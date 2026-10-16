@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import {test} from 'node:test'
 import {appointmentReminderEmail} from '../../../../packages/ui/src/utils/appointmentReminderEmail.ts'
 import {createAppointmentReminderSender,processAppointmentReminder,reminderConfiguration} from '../../supabase/functions/_shared/appointment-reminders.mjs'
-const config={allowlist:['consented@example.test'],from:'reminders@building-suit.com',apiKey:'synthetic-test-key'}
+const config={mode:'test',allowlist:['consented@example.test'],from:'reminders@building-suit.com',apiKey:'synthetic-test-key'}
 const row={id:'synthetic-queue',leaseToken:'synthetic-lease',to:config.allowlist[0],startsAt:'2026-10-30T00:30:00Z',timeZone:'Africa/Cairo',locale:'en',shopName:'Example <Shop>'}
 function fixture({prepared=true,accepted=true,payload=null}={}){const calls=[];return{calls,rpc:async(name,args)=>{calls.push({name,args});if(name==='claim_appointment_email')return{...row,payload};if(name==='prepare_appointment_email')return prepared?args.p_payload:null;if(name==='finish_appointment_email')return accepted;throw Error('unexpected_rpc')}}}
 test('private English/Arabic templates escape content and use the schedule timezone including Cairo DST',()=>{
@@ -10,10 +10,10 @@ test('private English/Arabic templates escape content and use the schedule timez
  const before=appointmentReminderEmail({...row,startsAt:'2026-10-29T20:30:00Z'}),after=appointmentReminderEmail({...row,startsAt:'2026-10-30T00:30:00Z'})
  assert.match(before.text,/23:30/);assert.match(after.text,/02:30/);assert.throws(()=>appointmentReminderEmail({...row,timeZone:'invalid'}))
 })
-test('sender requires exact worker authorization and explicit test allowlist; disabled/live/invalid config never touches DB/provider',async()=>{
+test('sender requires exact worker authorization and explicit test allowlist; disabled/unknown/invalid config never touches DB/provider',async()=>{
  let calls=0;const values={SHOP_REMINDER_WORKER_TOKEN:'x'.repeat(32),SHOP_REMINDER_FROM:config.from,RESEND_API_KEY:config.apiKey,SUPABASE_URL:'https://example.invalid',SUPABASE_SERVICE_ROLE_KEY:'synthetic',SHOP_REMINDER_TEST_ALLOWLIST:row.to}
  const handler=createAppointmentReminderSender({env:key=>values[key],rpc:async()=>{calls++;return null},fetchImpl:async()=>{throw Error('forbidden')}})
- for(const mode of [undefined,'disabled','live','TEST']){values.SHOP_REMINDER_DELIVERY_MODE=mode;assert.equal((await handler(new Request('https://worker.invalid',{method:'POST',headers:{authorization:`Bearer ${values.SUPABASE_SERVICE_ROLE_KEY}`,'x-shop-reminder-worker-token':values.SHOP_REMINDER_WORKER_TOKEN}}))).status,503)}
+ for(const mode of [undefined,'disabled','LIVE','TEST']){values.SHOP_REMINDER_DELIVERY_MODE=mode;assert.equal((await handler(new Request('https://worker.invalid',{method:'POST',headers:{authorization:`Bearer ${values.SUPABASE_SERVICE_ROLE_KEY}`,'x-shop-reminder-worker-token':values.SHOP_REMINDER_WORKER_TOKEN}}))).status,503)}
  values.SHOP_REMINDER_DELIVERY_MODE='test';assert.equal((await handler(new Request('https://worker.invalid',{method:'POST'}))).status,401);assert.equal(calls,0)
  assert.equal((await handler(new Request('https://worker.invalid',{method:'POST',headers:{authorization:`Bearer ${values.SUPABASE_SERVICE_ROLE_KEY}`,'x-shop-reminder-worker-token':values.SHOP_REMINDER_WORKER_TOKEN}}))).status,200);assert.equal(calls,1)
  values.SHOP_REMINDER_TEST_ALLOWLIST='*';assert.equal(reminderConfiguration(key=>values[key]),null)
@@ -34,4 +34,31 @@ test('uncertain, throttled, permanent and superseded outcomes do not leak provid
 test('retry reuses frozen provider payload across template/from changes and rejects unallowlisted rows',async()=>{
  const frozen={from:config.from,to:[row.to],subject:'Frozen',html:'old',text:'old'},f=fixture({payload:frozen});await processAppointmentReminder({...f,configuration:{...config,from:'changed@building-suit.com'},fetchImpl:async(url,options)=>{assert.equal(options.body,JSON.stringify(frozen));return Response.json({id:'same-receipt'})}})
  const denied=fixture();await assert.rejects(()=>processAppointmentReminder({...denied,configuration:{...config,allowlist:['other@example.test']},fetchImpl:async()=>{throw Error('must not send')}}),/RECIPIENT_DENIED/);assert.equal(denied.calls.length,1)
+})
+test('explicit live mode delivers outside the test list while disabled/unknown modes remain inert',async()=>{
+ const values={SHOP_REMINDER_DELIVERY_MODE:'live',SHOP_REMINDER_TEST_ALLOWLIST:'somebody-else@example.test',SHOP_REMINDER_FROM:config.from,RESEND_API_KEY:config.apiKey}
+ const live=reminderConfiguration(name=>values[name]);assert.equal(live.mode,'live');assert.equal(live.allowlist,null)
+ const f=fixture();let sends=0
+ assert.equal(await processAppointmentReminder({...f,configuration:live,fetchImpl:async()=>{sends++;return Response.json({id:'live-mocked-only'})}}),'sent');assert.equal(sends,1)
+ assert.equal(f.calls[0].args.p_mode,'live');assert.equal(f.calls[0].args.p_allowlist,null);assert.equal(f.calls[1].args.p_mode,'live')
+ values.SHOP_REMINDER_DELIVERY_MODE='test';const restricted=reminderConfiguration(name=>values[name]);await assert.rejects(()=>processAppointmentReminder({...fixture(),configuration:restricted,fetchImpl:async()=>{throw Error('forbidden')}}),/RECIPIENT_DENIED/)
+ values.SHOP_REMINDER_TEST_ALLOWLIST=Array.from({length:21},(_,i)=>`test${i}@example.test`).join(',');assert.equal(reminderConfiguration(name=>values[name]),null)
+ delete values.SHOP_REMINDER_DELIVERY_MODE;assert.equal(reminderConfiguration(name=>values[name]),null)
+})
+test('live provider acceptance followed by persistence crash recovers with identical key/payload',async()=>{
+ const live={...config,mode:'live',allowlist:null},calls=[];let frozen,failFinish=true;const receipts=new Map()
+ const rpc=async(name,args)=>{
+  if(name==='claim_appointment_email')return{...row,payload:frozen,leaseToken:failFinish?'first':'replacement'}
+  if(name==='prepare_appointment_email'){frozen??=args.p_payload;return frozen}
+  if(name==='finish_appointment_email'){if(failFinish){failFinish=false;throw Error('synthetic_persistence_crash')}return true}
+ }
+ const fetchImpl=async(url,options)=>{const key=options.headers['idempotency-key'];calls.push({key,body:options.body});if(!receipts.has(key))receipts.set(key,'single-mocked-receipt');return Response.json({id:receipts.get(key)})}
+ await assert.rejects(()=>processAppointmentReminder({rpc,configuration:live,fetchImpl}),/persistence_crash/)
+ assert.equal(await processAppointmentReminder({rpc,configuration:{...live,from:'changed@building-suit.com'},fetchImpl}),'sent');assert.equal(receipts.size,1);assert.deepEqual(calls[0],calls[1])
+})
+test('live endpoint still requires both platform server credential and dedicated scheduler token',async()=>{
+ const values={SHOP_REMINDER_DELIVERY_MODE:'live',SHOP_REMINDER_WORKER_TOKEN:'w'.repeat(32),SUPABASE_SERVICE_ROLE_KEY:'synthetic-service-jwt',SUPABASE_URL:'https://project.invalid',SHOP_REMINDER_FROM:config.from,RESEND_API_KEY:config.apiKey};let claims=0
+ const handler=createAppointmentReminderSender({env:name=>values[name],rpc:async()=>{claims++;return null},fetchImpl:async()=>{throw Error('no_email')}})
+ for(const headers of [{authorization:'Bearer synthetic-service-jwt'},{'x-shop-reminder-worker-token':values.SHOP_REMINDER_WORKER_TOKEN},{authorization:'Bearer browser-jwt','x-shop-reminder-worker-token':values.SHOP_REMINDER_WORKER_TOKEN}])assert.equal((await handler(new Request('https://worker.invalid',{method:'POST',headers}))).status,401)
+ assert.equal(claims,0);assert.equal((await handler(new Request('https://worker.invalid',{method:'POST',headers:{authorization:'Bearer synthetic-service-jwt','x-shop-reminder-worker-token':values.SHOP_REMINDER_WORKER_TOKEN}}))).status,200);assert.equal(claims,1)
 })

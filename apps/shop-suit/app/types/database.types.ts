@@ -646,6 +646,48 @@ export type Database = {
           },
         ]
       }
+      appointment_email_schedule_events: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          project_ref: string
+        }
+        Insert: {
+          created_at?: string
+          enabled: boolean
+          id?: string
+          project_ref: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          project_ref?: string
+        }
+        Relationships: []
+      }
+      appointment_email_schedule_settings: {
+        Row: {
+          enabled: boolean
+          project_ref: string | null
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          project_ref?: string | null
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          project_ref?: string | null
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       appointment_events: {
         Row: {
           action: string
@@ -10561,7 +10603,7 @@ export type Database = {
         Returns: string
       }
       claim_appointment_email: {
-        Args: { p_allowlist: string[] }
+        Args: { p_allowlist: string[]; p_mode?: string }
         Returns: Json
       }
       claim_support_notification: { Args: never; Returns: Json }
@@ -11156,6 +11198,7 @@ export type Database = {
           p_allowlist: string[]
           p_id: string
           p_lease_token: string
+          p_mode?: string
           p_payload: Json
         }
         Returns: Json
@@ -11829,6 +11872,10 @@ export type Database = {
         Returns: boolean
       }
       shop_admin_provisioned_owner_claim: { Args: never; Returns: Json }
+      shop_appointment_email_schedule: {
+        Args: { p_enabled: boolean; p_project_ref: string }
+        Returns: Json
+      }
       shop_billing_change_cancel: {
         Args: { p_change_id: string; p_shop_id: string }
         Returns: Json

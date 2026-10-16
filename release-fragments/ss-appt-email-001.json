@@ -9,7 +9,7 @@
   "paths": [
     "apps/shop-suit"
   ],
-  "reason": "Adds explicit owner and per-appointment customer control for private email reminders; delivery remains disabled or test-allowlisted.",
+  "reason": "Adds owner and per-appointment customer consent for private email reminders with explicit disabled/test/live modes and a dormant supported scheduler; activation remains an approved configuration operation.",
   "notes": {
     "title": {
       "en": "Control appointment email reminders",
@@ -20,8 +20,8 @@
       "ar": "يمكن للمالك تفعيل الخيار وللعميل المؤهل طلب تذكير خاص لكل موعد أو إيقافه."
     },
     "details": {
-      "en": "Reminders use the saved customer email, respect the appointment timezone and stop on cancellation or contact changes. Delivery remains disabled or limited to approved test recipients until operator configuration is approved.",
-      "ar": "تستخدم التذكيرات بريد العميل المحفوظ وتراعي المنطقة الزمنية للموعد وتتوقف عند الإلغاء أو تغيير بيانات التواصل. يظل الإرسال معطلاً أو مقتصراً على عناوين اختبار معتمدة حتى الموافقة على إعداد المشغل."
+      "en": "Reminders use the saved customer email, respect the appointment timezone and stop on cancellation or contact changes. Operators can activate the dormant scheduler and test or live delivery through approved configuration; sending defaults disabled.",
+      "ar": "تستخدم التذكيرات بريد العميل المحفوظ وتراعي المنطقة الزمنية للموعد وتتوقف عند الإلغاء أو تغيير بيانات التواصل. يمكن للمشغل تفعيل الجدولة الخاملة والإرسال التجريبي أو الفعلي عبر إعداد معتمد، ويظل الإرسال معطلاً افتراضياً."
     }
   }
 }

@@ -10,10 +10,10 @@ Read root/Shop/Supabase/UI agent rules, root README, ongoing Git/database/UI wor
 - Private tenant-bound consent/audit/outbox records; fenced two-minute leases, eligibility recheck at prepare, exact frozen payload and deterministic provider key, five-attempt/23-hour retry bounds, conservative atomic global/day/month/tenant/rate budgets.
 - Cancellation, rescheduling, contact change, reassignment, unpublish and policy disable prevent later authorization. A cancelled possible send cannot restart; only a zero-attempt, unfrozen intent can be requested again before due time. A late acceptance receipt can be retained without reviving a cancelled queue.
 - Private AR/EN email includes the independent published Shop name and appointment instant in the schedule IANA timezone, without notes/customer identity/codes/links/tracking assets. Scope verification does not independently verify an email inbox.
-- New Edge entry point passes Deno checking; default platform JWT verification stays enabled, plus a dedicated worker token. Only explicit test mode and exact allowlisted recipients can send. No live mode, installed scheduler, provider/credential/settings change or actual outbound email.
-- [Activation and scheduling handoff](../../apps/shop-suit/docs/appointment-email-reminders.md) names every key and destination, budgets, free-account shared-usage review, dormant `pg_cron`/`pg_net`/Vault scheduling design and cancellation/in-flight limits. Approval/configuration and separately reviewed CI-only scheduling activation remain external prerequisites, not actions performed here.
+- New Edge entry point passes Deno checking; default platform JWT verification stays enabled, plus a dedicated worker token. Explicit test mode enforces exact allowlisted recipients; live mode supports all currently eligible consented customers under identical budgets. A complete dormant Cron/pg_net/Vault path and CI-only activation helper require approved configuration. No job activation, provider/credential setting change or actual outbound email is performed.
+- [Activation and scheduling handoff](../../apps/shop-suit/docs/appointment-email-reminders.md) names every key and destination, budgets, free-account shared-usage review, implemented dormant `pg_cron`/`pg_net`/Vault scheduler and cancellation/in-flight limits. Approval/configuration and approved CI-only scheduling activation remain external prerequisites, not actions performed here.
 
-## Local evidence
+## Initial b147d57d checkpoint evidence
 
 On 2026-10-16, disposable local PostgreSQL only (no hosted database):
 
@@ -31,3 +31,13 @@ Publication preflight identifies unrelated duplicate shared roots #344 and #346.
 A first reminder browser attempt exposed a missing explicit host-route registration; registration was fixed and the full suite passes. Early SQL iterations found ambiguous PL/pgSQL names and were corrected before final migration replay. Tests never weaken authorization/readiness/provider bounds to pass.
 
 Draft PR/exact-head checks are reported in the final handoff. Parent owns integration; no `stg`/`main` merge or manual deploy occurs here.
+
+## Independent review revision
+
+Parent review identified test-only delivery, a missing executable scheduling path, and clock checks before a potentially blocking global budget lock. The same PR now adds a forward migration with explicit default-test/live server contracts, a dormant scheduler using the existing XPay Cron/Vault/pg_net conventions, a declared Edge entry with JWT verification still enabled, and a source-SHA/branch/environment/approval-bound CI configuration helper. No secrets, job or delivery are activated. The UI email source remains in packages/ui.
+
+Prepare rechecks all clock-sensitive grants after the final advisory lock and at the conditional dispatch transition; failed final authorization rolls back any budget writes. Deterministic actual-worker/SQL tests hold that lock across lease expiry, the 23-hour deadline and appointment start and prove NULL prepare, zero provider calls, zero attempts and unchanged allowances. Mocked live-provider acceptance/persistence-crash recovery reuses exact payload/key; disabled/test/live and both scheduler authorization credentials are covered. Scheduler tests mock task-owned adapters only and parse real extension signatures in full Supabase CI without executing jobs/network operations.
+
+Full verification must run on the final reviewed source head after remaining independent findings are settled; obsolete full-workspace jobs are not rerun. Activation steps and all key/store destinations are in the runbook and need no further feature implementation.
+
+Revision-local checks before publication: 14 focused unit tests pass, including nine worker/template tests, four CI/scheduler/package tests and the booking contract test; both maintained booking and reminder SQL runners pass, including actual final-lock clock races and dormant scheduler mocks. The revised Shop typecheck/build, built booking HTTP regression, three EN/AR owner browser tests, isolated deployable Deno graph check, strict workspace check, changed tooling lint and database security advisor pass. The full unit/workspace CI results above belong to the initial checkpoint and are not attributed to the revised head.

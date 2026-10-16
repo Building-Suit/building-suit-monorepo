@@ -16,7 +16,9 @@
     ".github/workflows/shop-appointment-email-disposable.yml",
     "tooling/database/test-shop-appointment-email-local.mjs",
     "docs/work-packages/shop-appointment-email-reminders.md",
-    "release-changes/items.json"
+    "release-changes/items.json",
+    "tooling/database/configure-shop-reminder-schedule.mjs",
+    "tooling/ui/build-appointment-reminder-email.mjs"
   ],
   "reason": "Adds typed opt-in presentation to existing registered booking/settings templates, private email rendering, component catalogue and disposable delivery qualification; other products do not activate reminders."
 }
