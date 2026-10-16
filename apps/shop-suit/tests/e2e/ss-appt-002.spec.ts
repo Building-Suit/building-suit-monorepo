@@ -48,3 +48,11 @@ test('a suspended in-flight guest booking cannot reveal its late code or history
  const reads=optionsReads;await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'))});release()
  await expect(page.locator('ol > li')).toHaveCount(1);expect(optionsReads).toBe(reads+1);await expect(page.locator('output')).toHaveCount(0);expect(await page.locator('body').innerText()).not.toContain('Private delayed visitor')
 })
+
+for(const locale of ['en','ar'])test(`verified customer explicitly opts in and out of one private reminder ${locale}`,async({page})=>{
+ const ar=locale==='ar';await page.setViewportSize({width:ar?390:1440,height:1000});await transport(page);await page.goto(`https://alpha-tools.shops.building-suit.com/book${ar?'':'?lang=en'}`);await mounted(page)
+ const verify=ar?'لدي رمز وصول':'I have an access code';await page.getByRole('button',{name:verify,exact:true}).click();const dialog=page.getByRole('dialog');await dialog.getByRole('textbox',{name:ar?'رمز الوصول':'Access code',exact:true}).fill('5678ABCDEFGH');await dialog.getByRole('textbox',{name:ar?'رقم الهاتف':'Phone number',exact:true}).fill('+201000000002');await dialog.getByRole('button',{name:verify,exact:true}).click()
+ const on=page.getByRole('button',{name:ar?'أوافق على تذكير بالبريد':'Request email reminder',exact:true}),off=page.getByRole('button',{name:ar?'إيقاف تذكير البريد':'Stop email reminder',exact:true})
+ await expect(on).toHaveCount(1);await expect(off).toHaveCount(0);await on.click();await expect(off).toHaveCount(1);await expect(off).toHaveAttribute('aria-pressed','true');await expectNoPageOverflow(page)
+ expect(await page.locator('body').innerText()).not.toContain('@example');await off.click();await expect(on).toHaveCount(1);await expect(on).toHaveAttribute('aria-pressed','false')
+})

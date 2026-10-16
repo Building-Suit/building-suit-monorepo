@@ -20,7 +20,7 @@ export default defineNitroPlugin(nitroApp=>{
   const host=classifyWebsiteHost(getHeader(event,'host'),config.public.appUrl||'',config.public.appEnvironment,config.public.websiteHostnameSuffix)
   if(host.kind==='private'){if(['/my-appointments','/book'].includes(new URL(event.node.req.url??'/','https://private.invalid').pathname)){setResponseHeader(event,'Cache-Control','private, no-store');setResponseHeader(event,'X-Robots-Tag','noindex, nofollow');setResponseStatus(event,404);await send(event,'Not Found','text/plain; charset=utf-8')}return}
   event.context.websiteHost=host
-  if(host.kind==='website'&&event.method==='POST'&&/^\/api\/website\/(appointment-access\/(verify|validate|rotate|logout)|customer-portal|booking\/(options|slots|manage|command))(\?|$)/.test(event.node.req.url??'')){
+  if(host.kind==='website'&&event.method==='POST'&&/^\/api\/website\/(appointment-access\/(verify|validate|rotate|logout)|customer-portal|booking\/(options|slots|manage|command|reminder))(\?|$)/.test(event.node.req.url??'')){
    const token=getCookie(event,`bs-shop-${config.public.appEnvironment}-appointment-access`)
    if(token&&/^[A-Za-z0-9_-]{43}$/.test(token))event.context.appointmentAccessToken=token
   }
@@ -30,7 +30,7 @@ export default defineNitroPlugin(nitroApp=>{
   if(host.kind!=='website'||!domain)return unavailable()
   const url=new URL(event.node.req.url??'/',websiteUrl(host.slug,domain))
   const asset=/^\/_nuxt\/[A-Za-z0-9_.-]{8,}\.(js|css|woff|woff2)$/.test(url.pathname)||/^\/_i18n\/[a-f0-9]{8}\/(ar|en)\/messages\.json$/.test(url.pathname)||/^\/_nuxt\/builds\/(latest\.json|meta\/[a-f0-9-]{36}\.json)$/.test(url.pathname)
-  const inquiry=(url.pathname==='/api/website/inquiries'||url.pathname==='/api/website/customer-portal'||/^\/api\/website\/booking\/(options|slots|manage|command)$/.test(url.pathname)||/^\/api\/website\/appointment-access\/(verify|validate|rotate|logout)$/.test(url.pathname))&&event.method==='POST'
+  const inquiry=(url.pathname==='/api/website/inquiries'||url.pathname==='/api/website/customer-portal'||/^\/api\/website\/booking\/(options|slots|manage|command|reminder)$/.test(url.pathname)||/^\/api\/website\/appointment-access\/(verify|validate|rotate|logout)$/.test(url.pathname))&&event.method==='POST'
   if(!inquiry&&!['GET','HEAD'].includes(event.method))return unavailable()
   // Giving up a bearer capability must remain possible after publication ends.
   // The logout handler still checks Origin/body/cookie and the revocation RPC

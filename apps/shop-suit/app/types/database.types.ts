@@ -439,6 +439,255 @@ export type Database = {
           },
         ]
       }
+      appointment_email_budget: {
+        Row: {
+          bucket: string
+          next_claim_at: string
+          used: number
+        }
+        Insert: {
+          bucket: string
+          next_claim_at?: string
+          used?: number
+        }
+        Update: {
+          bucket?: string
+          next_claim_at?: string
+          used?: number
+        }
+        Relationships: []
+      }
+      appointment_email_consents: {
+        Row: {
+          appointment_id: string
+          client_id: string
+          credential_id: string
+          email: string
+          enabled: boolean
+          locale: string
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          client_id: string
+          credential_id: string
+          email: string
+          enabled?: boolean
+          locale: string
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          client_id?: string
+          credential_id?: string
+          email?: string
+          enabled?: boolean
+          locale?: string
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_email_consents_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_email_consents_client_id_shop_id_fkey"
+            columns: ["client_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "client_balances"
+            referencedColumns: ["client_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_email_consents_client_id_shop_id_fkey"
+            columns: ["client_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_email_consents_credential_id_shop_id_fkey"
+            columns: ["credential_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_access_credentials"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_email_consents_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_email_events: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          appointment_id: string | null
+          created_at: string
+          credential_id: string | null
+          id: string
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          appointment_id?: string | null
+          created_at?: string
+          credential_id?: string | null
+          id?: string
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          appointment_id?: string | null
+          created_at?: string
+          credential_id?: string | null
+          id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_email_events_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_email_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_email_outbox: {
+        Row: {
+          appointment_id: string
+          appointment_starts_at: string
+          attempts: number
+          created_at: string
+          dispatch_token: string | null
+          due_at: string
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_token: string | null
+          lease_until: string | null
+          next_attempt_at: string
+          payload: Json | null
+          provider_email_id: string | null
+          sent_at: string | null
+          shop_id: string
+          state: string
+        }
+        Insert: {
+          appointment_id: string
+          appointment_starts_at: string
+          attempts?: number
+          created_at?: string
+          dispatch_token?: string | null
+          due_at: string
+          first_attempt_at?: string | null
+          id?: string
+          last_error?: string | null
+          lease_token?: string | null
+          lease_until?: string | null
+          next_attempt_at?: string
+          payload?: Json | null
+          provider_email_id?: string | null
+          sent_at?: string | null
+          shop_id: string
+          state?: string
+        }
+        Update: {
+          appointment_id?: string
+          appointment_starts_at?: string
+          attempts?: number
+          created_at?: string
+          dispatch_token?: string | null
+          due_at?: string
+          first_attempt_at?: string | null
+          id?: string
+          last_error?: string | null
+          lease_token?: string | null
+          lease_until?: string | null
+          next_attempt_at?: string
+          payload?: Json | null
+          provider_email_id?: string | null
+          sent_at?: string | null
+          shop_id?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_email_outbox_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_email_outbox_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_email_schedule_events: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          project_ref: string
+        }
+        Insert: {
+          created_at?: string
+          enabled: boolean
+          id?: string
+          project_ref: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          project_ref?: string
+        }
+        Relationships: []
+      }
+      appointment_email_schedule_settings: {
+        Row: {
+          enabled: boolean
+          project_ref: string | null
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          project_ref?: string | null
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          project_ref?: string | null
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       appointment_events: {
         Row: {
           action: string
@@ -10181,6 +10430,10 @@ export type Database = {
         Args: { p_page?: number; p_slug: string; p_token: string }
         Returns: Json
       }
+      appointment_booking_manage_before_email: {
+        Args: { p_page?: number; p_slug: string; p_token: string }
+        Returns: Json
+      }
       appointment_booking_options: {
         Args: { p_slug: string; p_token?: string }
         Returns: Json
@@ -10217,6 +10470,16 @@ export type Database = {
         Returns: Json
       }
       appointment_options: { Args: { p_shop_id: string }; Returns: Json }
+      appointment_reminder_preference: {
+        Args: {
+          p_enabled: boolean
+          p_locale: string
+          p_reference: string
+          p_slug: string
+          p_token: string
+        }
+        Returns: Json
+      }
       archive_customer: {
         Args: { p_customer_id: string; p_shop_id: string }
         Returns: undefined
@@ -10338,6 +10601,10 @@ export type Database = {
           p_shop_id: string
         }
         Returns: string
+      }
+      claim_appointment_email: {
+        Args: { p_allowlist: string[]; p_mode?: string }
+        Returns: Json
       }
       claim_support_notification: { Args: never; Returns: Json }
       close_cash_shift: {
@@ -10515,6 +10782,15 @@ export type Database = {
           p_shop_id: string
         }
         Returns: string
+      }
+      finish_appointment_email: {
+        Args: {
+          p_id: string
+          p_lease_token: string
+          p_provider_id?: string
+          p_status: string
+        }
+        Returns: boolean
       }
       finish_support_notification: {
         Args: {
@@ -10916,6 +11192,16 @@ export type Database = {
       post_vendor_invoice_and_create_batches: {
         Args: { _actor_profile_id: string; _vendor_invoice_id: string }
         Returns: undefined
+      }
+      prepare_appointment_email: {
+        Args: {
+          p_allowlist: string[]
+          p_id: string
+          p_lease_token: string
+          p_mode?: string
+          p_payload: Json
+        }
+        Returns: Json
       }
       prepare_support_notification: {
         Args: { p_id: string; p_lease_token: string; p_payload: Json }
@@ -11586,6 +11872,10 @@ export type Database = {
         Returns: boolean
       }
       shop_admin_provisioned_owner_claim: { Args: never; Returns: Json }
+      shop_appointment_email_schedule: {
+        Args: { p_enabled: boolean; p_project_ref: string }
+        Returns: Json
+      }
       shop_billing_change_cancel: {
         Args: { p_change_id: string; p_shop_id: string }
         Returns: Json
@@ -11615,6 +11905,10 @@ export type Database = {
       shop_billing_read: { Args: { p_shop_id: string }; Returns: Json }
       shop_booking_settings: { Args: { p_shop_id: string }; Returns: Json }
       shop_booking_settings_save: {
+        Args: { p_policy: Json; p_shop_id: string; p_staff: Json }
+        Returns: undefined
+      }
+      shop_booking_settings_save_before_email: {
         Args: { p_policy: Json; p_shop_id: string; p_staff: Json }
         Returns: undefined
       }
