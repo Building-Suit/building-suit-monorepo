@@ -1,0 +1,2887 @@
+{
+  "artifact_schema": "review-only-task-contract-v1",
+  "artifact_revision": "doctor-suit-planning-v0.4",
+  "milestone_id": "DOS-M8",
+  "title": "Business Suit ecosystem integration",
+  "category": "core",
+  "depends_on_milestones": [
+    "DOS-M6",
+    "DOS-M7"
+  ],
+  "expected_task_count": 8,
+  "status": "prepared-not-imported-not-admitted",
+  "target": {
+    "repository": "Building-Suit/building-suit-monorepo",
+    "automation_project_ref": "padtxclxwwqvvuiebhte",
+    "project_slug": "building-suit",
+    "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+    "suit_slug": "doctor-suit",
+    "workstream_slug": "doctor-suit",
+    "application_path": "apps/doctor-suit",
+    "registration_status": "missing-per-parent-readonly-observation; parent must supply reviewed registration"
+  },
+  "requirements": [
+    {
+      "requirement_id": "DOS-M8-R001",
+      "title": "Milestone boundary and invariant",
+      "summary": "Business Suit ecosystem integration. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.",
+      "status": "proposed",
+      "provenance": "Supplied roadmap v0.2 plus current delegated scope."
+    },
+    {
+      "requirement_id": "DOS-M8-F001",
+      "title": "Ecosystem domain and sharing contract",
+      "summary": "Confirm what Business Suit means and each existing Suit owner; preserve clinical boundaries and capability-based integration. Acceptance: Resolve what Business Suit means using named existing product owners and verified capability/version contracts; do not create a fictional shared platform. Approve purpose-specific minimum data/event fields, authentication, revocation and reconciliation responsibilities per integration. Preserve independent product Auth, clinical chart boundaries and data ownership; no shared patient tables, contact-based account linking or cross-product SSO. Prepare evidence for DOS-M8-GATE-ECOSYSTEM. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-001 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F002",
+      "title": "Versioned events and durable outbox/inbox",
+      "summary": "Implement authenticated event contracts, idempotency, replay and failure handling without shared clinical tables. Acceptance: Define versioned event envelopes with tenant/product provenance, stable event/idempotency IDs, minimal payload and authenticated sender/audience. Implement transactional outbox and receiver inbox deduplication with bounded retry, dead-letter/reconciliation and ordered/version-aware handling where required. Enforce per-integration capability and revocation on dispatch/receive; independent services never bypass product authorization through events.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-002 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F003",
+      "title": "Accounting/Ledger integration",
+      "summary": "Export minimized financial facts with reconciliation; exclude diagnoses, prescriptions and clinical notes by default. Acceptance: Verify the actual Ledger ingestion contract and approve financial field mapping, currencies, source IDs and reconciliation responsibility. Export minimized approved financial facts only; diagnoses, prescriptions, patient notes and unnecessary identifiers are excluded by default. Use authenticated versioned idempotent exchange with explicit pending/rejected/reconciled state; no direct writes into Ledger tables or reuse of its sessions/secrets.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-003 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F004",
+      "title": "Inventory and consumables integration",
+      "summary": "Connect approved usage/stock references only when the owning Inventory/Shop capability is verified. Acceptance: Verify the owning Inventory/Shop capability for approved consumable usage/reference flows and its contract version. Map only authorized stock/usage facts and explicit source documents; this task cannot infer medication substitution or dispensing authority. Keep stock owner as authoritative and reconcile accepted/rejected/pending usage; no cross-app imports or direct shared database writes.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-004 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F005",
+      "title": "Team/employment reference integration",
+      "summary": "Link approved staff references without granting payroll/HR users access to patient records. Acceptance: Approve staff-reference fields and the actual owning employment/team capability; employment identity is distinct from Doctor membership. Link only explicit verified references and keep clinical access governed by Doctor grants; HR/payroll status never grants chart rights. Handle reference revocation, renaming and stale external identity without deleting internal audit or silently merging accounts.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-005 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F006",
+      "title": "Notification/mail capability integration",
+      "summary": "Use approved consented communication routing with minimal payloads and no cross-product session reuse. Acceptance: Verify an existing approved notification/mail capability and route only consented purpose-specific minimal templates. Preserve per-product sender authorization, independent sessions and outbox idempotency; receiving capability cannot read charts to construct messages. Recheck consent and recipient scope at send time and reconcile delivery/cancellation/unknown outcomes under the approved provider policy.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-006 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F007",
+      "title": "Aggregated reporting and consent-aware sharing",
+      "summary": "Expose authorized minimized aggregates; do not repurpose treatment data for marketing. Acceptance: Define approved aggregate measures, disclosure scope and suppression rules with accountable privacy review; do not invent a safe anonymity threshold. Generate minimized aggregates from authorized populations with provenance and consent/use constraints; treatment data is not repurposed for marketing. Prevent drill-through or small-group disclosure beyond approved policy and revoke access when integration authority changes.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-007 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F008",
+      "title": "Cross-Suit contract and failure acceptance",
+      "summary": "Test outages, replay, revocation and reconciliation across independently authorized products. Acceptance: Test each selected integration against verified partner contract/version and exact Doctor candidate with independent product-owner acceptance. Demonstrate replay, outage, revocation, schema incompatibility, source correction and financial/stock/message reconciliation. Unselected or unavailable integrations stay disabled and are excluded from claims; no optional provider or cross-Suit release is automatic.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-008 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    }
+  ],
+  "decisions": [
+    {
+      "decision_id": "DOS-M8-GATE-START",
+      "title": "DOS-M8 parent-controlled start gate",
+      "status": "open",
+      "decision_text": "Remain OPEN until all nine milestones are safely stored and parent verifies dependency acceptance, exact live runtime/registration/commands/paths and authorizes this milestone. Import does not grant execution.",
+      "source": "Current delegated instruction."
+    },
+    {
+      "decision_id": "DOS-M8-GATE-ECOSYSTEM",
+      "title": "Named Business Suit domain owners, capability and disclosure agreements",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M8-001 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M8-001",
+      "producer_task_id": "DOS-M8-001"
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "DOS-M8-001",
+      "milestone_id": "DOS-M8",
+      "sequence": 8010,
+      "priority": 100,
+      "title": "Ecosystem domain and sharing contract",
+      "objective": "Confirm what Business Suit means and each existing Suit owner; preserve clinical boundaries and capability-based integration.",
+      "task_type": "research",
+      "risk_level": "high",
+      "acceptance_criteria": [
+        "Resolve what Business Suit means using named existing product owners and verified capability/version contracts; do not create a fictional shared platform.",
+        "Approve purpose-specific minimum data/event fields, authentication, revocation and reconciliation responsibilities per integration.",
+        "Preserve independent product Auth, clinical chart boundaries and data ownership; no shared patient tables, contact-based account linking or cross-product SSO.",
+        "Prepare evidence for DOS-M8-GATE-ECOSYSTEM. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval."
+      ],
+      "verification_scenarios": [
+        "Review financial, stock, employee and notification data needs against actual owning-Suit capability contracts.",
+        "Missing owner agreement or unsupported capability disables that connector without widening data disclosure."
+      ],
+      "verification_plan": [
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check diff hygiene",
+          "command": "git diff --check"
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check pinned workspace architecture and boundaries",
+          "command": "pnpm check"
+        },
+        {
+          "version": 2,
+          "kind": "external_gate",
+          "description": "Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions",
+          "blocker": "reviewer_identity_scope_candidate_and_decision_evidence_required",
+          "phase": "pre_publication"
+        }
+      ],
+      "allowed_paths": [
+        "docs/work-packages/doctor-suit/",
+        "release-fragments/"
+      ],
+      "expected_outputs": [
+        "docs/work-packages/doctor-suit/implementation/dos-m8-001.md"
+      ],
+      "linked_requirement_ids": [
+        "DOS-M8-R001",
+        "DOS-M8-F001"
+      ],
+      "task_dependencies": [
+        "DOS-M6-010",
+        "DOS-M7-010"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M8-GATE-START"
+      ],
+      "produces_decision_ids": [
+        "DOS-M8-GATE-ECOSYSTEM"
+      ],
+      "specific_evidence": [
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-001.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "status": "planned",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "model_profile_strategy": "require_verified_high_capability_deep_route",
+      "retry_policy_id": null,
+      "evidence_requirements": [
+        "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+        "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+        "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+        "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-001.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M8-001-V01",
+          "assertion": "Review financial, stock, employee and notification data needs against actual owning-Suit capability contracts.",
+          "required_outputs": [],
+          "command_refs": [],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M8-001-V02",
+          "assertion": "Missing owner agreement or unsupported capability disables that connector without widening data disclosure.",
+          "required_outputs": [],
+          "command_refs": [],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Resolve what Business Suit means using named existing product owners and verified capability/version contracts; do not create a fictional shared platform.",
+          "verification_case_ids": [
+            "DOS-M8-001-V01",
+            "DOS-M8-001-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-001.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Approve purpose-specific minimum data/event fields, authentication, revocation and reconciliation responsibilities per integration.",
+          "verification_case_ids": [
+            "DOS-M8-001-V01",
+            "DOS-M8-001-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-001.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Preserve independent product Auth, clinical chart boundaries and data ownership; no shared patient tables, contact-based account linking or cross-product SSO.",
+          "verification_case_ids": [
+            "DOS-M8-001-V01",
+            "DOS-M8-001-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-001.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Prepare evidence for DOS-M8-GATE-ECOSYSTEM. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+          "verification_case_ids": [
+            "DOS-M8-001-V01",
+            "DOS-M8-001-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-001.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        }
+      ],
+      "metadata": {
+        "artifact_revision": "doctor-suit-planning-v0.4",
+        "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+        "milestone_id": "DOS-M8",
+        "allowed_paths": [
+          "docs/work-packages/doctor-suit/",
+          "release-fragments/"
+        ],
+        "source_allowed_paths": [
+          "docs/work-packages/doctor-suit/",
+          "release-fragments/"
+        ],
+        "clinical_live_data_allowed": false,
+        "verification_mode": "focused",
+        "scope_approval": "planning-authorized-execution-gated",
+        "publication_policy": {
+          "merge_authorized": false,
+          "deployment_authorized": false,
+          "hosted_database_changes_authorized": false,
+          "review_required_before_integration": true
+        }
+      },
+      "description": "Confirm what Business Suit means and each existing Suit owner; preserve clinical boundaries and capability-based integration.\n\nRequirements\n- DOS-M8-R001: Business Suit ecosystem integration. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M8-F001: Confirm what Business Suit means and each existing Suit owner; preserve clinical boundaries and capability-based integration. Acceptance: Resolve what Business Suit means using named existing product owners and verified capability/version contracts; do not create a fictional shared platform. Approve purpose-specific minimum data/event fields, authentication, revocation and reconciliation responsibilities per integration. Preserve independent product Auth, clinical chart boundaries and data ownership; no shared patient tables, contact-based account linking or cross-product SSO. Prepare evidence for DOS-M8-GATE-ECOSYSTEM. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.\n\nDependencies: DOS-M6-010, DOS-M7-010\nBlocking decisions: DOS-M8-GATE-START\n\nAllowed paths\n- docs/work-packages/doctor-suit/\n- release-fragments/\n\nAcceptance\n1. Resolve what Business Suit means using named existing product owners and verified capability/version contracts; do not create a fictional shared platform.\n2. Approve purpose-specific minimum data/event fields, authentication, revocation and reconciliation responsibilities per integration.\n3. Preserve independent product Auth, clinical chart boundaries and data ownership; no shared patient tables, contact-based account linking or cross-product SSO.\n4. Prepare evidence for DOS-M8-GATE-ECOSYSTEM. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.\n\nVerification scenarios\n- Review financial, stock, employee and notification data needs against actual owning-Suit capability contracts.\n- Missing owner agreement or unsupported capability disables that connector without widening data disclosure.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m8-001.md\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions\",\n    \"blocker\": \"reviewer_identity_scope_candidate_and_decision_evidence_required\",\n    \"phase\": \"pre_publication\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m8-001.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+    },
+    {
+      "task_id": "DOS-M8-002",
+      "milestone_id": "DOS-M8",
+      "sequence": 8020,
+      "priority": 100,
+      "title": "Versioned events and durable outbox/inbox",
+      "objective": "Implement authenticated event contracts, idempotency, replay and failure handling without shared clinical tables.",
+      "task_type": "feature",
+      "risk_level": "high",
+      "acceptance_criteria": [
+        "Define versioned event envelopes with tenant/product provenance, stable event/idempotency IDs, minimal payload and authenticated sender/audience.",
+        "Implement transactional outbox and receiver inbox deduplication with bounded retry, dead-letter/reconciliation and ordered/version-aware handling where required.",
+        "Enforce per-integration capability and revocation on dispatch/receive; independent services never bypass product authorization through events."
+      ],
+      "verification_scenarios": [
+        "Crash before/after publish/acknowledgement, replay an event and deliver out of order without duplicate business effects.",
+        "Reject wrong audience, revoked sender, unsupported version and a payload containing disallowed clinical fields."
+      ],
+      "verification_plan": [
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check diff hygiene",
+          "command": "git diff --check"
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check pinned workspace architecture and boundaries",
+          "command": "pnpm check"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Execute task-specific state, protocol and failure assertions",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-002.test.mjs"
+          ],
+          "commands": [
+            "dos-m8-002-unit"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Run full repository unit regression for affected consumers",
+          "command": "pnpm test"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify database authorization, replay and write integrity with disposable fixtures",
+          "expected_outputs": [
+            "apps/doctor-suit/supabase/tests/dos-m8-002.sql"
+          ],
+          "commands": [
+            "dos-m8-002-data"
+          ],
+          "requires": [
+            "database",
+            "rls-authorization"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify browser journey, denial and recovery states",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/e2e/dos-m8-002.spec.ts"
+          ],
+          "commands": [
+            "dos-m8-002-browser"
+          ],
+          "requires": [
+            "browser"
+          ]
+        }
+      ],
+      "allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/i18n/",
+        "apps/doctor-suit/server/",
+        "apps/doctor-suit/supabase/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/package.json",
+        "packages/contracts/src/",
+        "packages/contracts/tests/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/src/utils/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-fragments/"
+      ],
+      "expected_outputs": [
+        "docs/work-packages/doctor-suit/implementation/dos-m8-002.md",
+        "apps/doctor-suit/tests/unit/dos-m8-002.test.mjs",
+        "apps/doctor-suit/supabase/tests/dos-m8-002.sql",
+        "apps/doctor-suit/tests/e2e/dos-m8-002.spec.ts"
+      ],
+      "linked_requirement_ids": [
+        "DOS-M8-R001",
+        "DOS-M8-F002"
+      ],
+      "task_dependencies": [
+        "DOS-M8-001"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M8-GATE-START",
+        "DOS-M8-GATE-ECOSYSTEM"
+      ],
+      "produces_decision_ids": [],
+      "specific_evidence": [
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-002.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "status": "planned",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "model_profile_strategy": "require_verified_high_capability_deep_route",
+      "retry_policy_id": null,
+      "evidence_requirements": [
+        "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+        "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+        "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+        "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-002.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M8-002-V01",
+          "assertion": "Crash before/after publish/acknowledgement, replay an event and deliver out of order without duplicate business effects.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-002.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-002.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-002.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-002-unit",
+            "dos-m8-002-data",
+            "dos-m8-002-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M8-002-V02",
+          "assertion": "Reject wrong audience, revoked sender, unsupported version and a payload containing disallowed clinical fields.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-002.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-002.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-002.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-002-unit",
+            "dos-m8-002-data",
+            "dos-m8-002-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Define versioned event envelopes with tenant/product provenance, stable event/idempotency IDs, minimal payload and authenticated sender/audience.",
+          "verification_case_ids": [
+            "DOS-M8-002-V01",
+            "DOS-M8-002-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-002.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Implement transactional outbox and receiver inbox deduplication with bounded retry, dead-letter/reconciliation and ordered/version-aware handling where required.",
+          "verification_case_ids": [
+            "DOS-M8-002-V01",
+            "DOS-M8-002-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-002.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Enforce per-integration capability and revocation on dispatch/receive; independent services never bypass product authorization through events.",
+          "verification_case_ids": [
+            "DOS-M8-002-V01",
+            "DOS-M8-002-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-002.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        }
+      ],
+      "metadata": {
+        "artifact_revision": "doctor-suit-planning-v0.4",
+        "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+        "milestone_id": "DOS-M8",
+        "allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "source_allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "clinical_live_data_allowed": false,
+        "verification_mode": "focused",
+        "scope_approval": "planning-authorized-execution-gated",
+        "publication_policy": {
+          "merge_authorized": false,
+          "deployment_authorized": false,
+          "hosted_database_changes_authorized": false,
+          "review_required_before_integration": true
+        }
+      },
+      "description": "Implement authenticated event contracts, idempotency, replay and failure handling without shared clinical tables.\n\nRequirements\n- DOS-M8-R001: Business Suit ecosystem integration. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M8-F002: Implement authenticated event contracts, idempotency, replay and failure handling without shared clinical tables. Acceptance: Define versioned event envelopes with tenant/product provenance, stable event/idempotency IDs, minimal payload and authenticated sender/audience. Implement transactional outbox and receiver inbox deduplication with bounded retry, dead-letter/reconciliation and ordered/version-aware handling where required. Enforce per-integration capability and revocation on dispatch/receive; independent services never bypass product authorization through events.\n\nDependencies: DOS-M8-001\nBlocking decisions: DOS-M8-GATE-START, DOS-M8-GATE-ECOSYSTEM\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/i18n/\n- apps/doctor-suit/server/\n- apps/doctor-suit/supabase/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/package.json\n- packages/contracts/src/\n- packages/contracts/tests/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/src/utils/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-fragments/\n\nAcceptance\n1. Define versioned event envelopes with tenant/product provenance, stable event/idempotency IDs, minimal payload and authenticated sender/audience.\n2. Implement transactional outbox and receiver inbox deduplication with bounded retry, dead-letter/reconciliation and ordered/version-aware handling where required.\n3. Enforce per-integration capability and revocation on dispatch/receive; independent services never bypass product authorization through events.\n\nVerification scenarios\n- Crash before/after publish/acknowledgement, replay an event and deliver out of order without duplicate business effects.\n- Reject wrong audience, revoked sender, unsupported version and a payload containing disallowed clinical fields.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m8-002.md\n- apps/doctor-suit/tests/unit/dos-m8-002.test.mjs\n- apps/doctor-suit/supabase/tests/dos-m8-002.sql\n- apps/doctor-suit/tests/e2e/dos-m8-002.spec.ts\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Execute task-specific state, protocol and failure assertions\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m8-002.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m8-002-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression for affected consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify database authorization, replay and write integrity with disposable fixtures\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m8-002.sql\"\n    ],\n    \"commands\": [\n      \"dos-m8-002-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify browser journey, denial and recovery states\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m8-002.spec.ts\"\n    ],\n    \"commands\": [\n      \"dos-m8-002-browser\"\n    ],\n    \"requires\": [\n      \"browser\"\n    ]\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m8-002.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+    },
+    {
+      "task_id": "DOS-M8-003",
+      "milestone_id": "DOS-M8",
+      "sequence": 8030,
+      "priority": 100,
+      "title": "Accounting/Ledger integration",
+      "objective": "Export minimized financial facts with reconciliation; exclude diagnoses, prescriptions and clinical notes by default.",
+      "task_type": "feature",
+      "risk_level": "high",
+      "acceptance_criteria": [
+        "Verify the actual Ledger ingestion contract and approve financial field mapping, currencies, source IDs and reconciliation responsibility.",
+        "Export minimized approved financial facts only; diagnoses, prescriptions, patient notes and unnecessary identifiers are excluded by default.",
+        "Use authenticated versioned idempotent exchange with explicit pending/rejected/reconciled state; no direct writes into Ledger tables or reuse of its sessions/secrets."
+      ],
+      "verification_scenarios": [
+        "Replay a collection/refund export and verify one receiving effect and balanced reconciliation.",
+        "Ledger outage, unknown account mapping and source correction remain visible without altering Doctor financial history."
+      ],
+      "verification_plan": [
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check diff hygiene",
+          "command": "git diff --check"
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check pinned workspace architecture and boundaries",
+          "command": "pnpm check"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Execute task-specific state, protocol and failure assertions",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-003.test.mjs"
+          ],
+          "commands": [
+            "dos-m8-003-unit"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Run full repository unit regression for affected consumers",
+          "command": "pnpm test"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify database authorization, replay and write integrity with disposable fixtures",
+          "expected_outputs": [
+            "apps/doctor-suit/supabase/tests/dos-m8-003.sql"
+          ],
+          "commands": [
+            "dos-m8-003-data"
+          ],
+          "requires": [
+            "database",
+            "rls-authorization"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify browser journey, denial and recovery states",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/e2e/dos-m8-003.spec.ts"
+          ],
+          "commands": [
+            "dos-m8-003-browser"
+          ],
+          "requires": [
+            "browser"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "external_gate",
+          "description": "Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions",
+          "blocker": "reviewer_identity_scope_candidate_and_decision_evidence_required",
+          "phase": "pre_publication"
+        }
+      ],
+      "allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/i18n/",
+        "apps/doctor-suit/server/",
+        "apps/doctor-suit/supabase/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/package.json",
+        "packages/contracts/src/",
+        "packages/contracts/tests/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/src/utils/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-fragments/"
+      ],
+      "expected_outputs": [
+        "docs/work-packages/doctor-suit/implementation/dos-m8-003.md",
+        "apps/doctor-suit/tests/unit/dos-m8-003.test.mjs",
+        "apps/doctor-suit/supabase/tests/dos-m8-003.sql",
+        "apps/doctor-suit/tests/e2e/dos-m8-003.spec.ts"
+      ],
+      "linked_requirement_ids": [
+        "DOS-M8-R001",
+        "DOS-M8-F003"
+      ],
+      "task_dependencies": [
+        "DOS-M6-009",
+        "DOS-M8-002"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M8-GATE-START",
+        "DOS-M8-GATE-ECOSYSTEM"
+      ],
+      "produces_decision_ids": [],
+      "specific_evidence": [
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-003.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "status": "planned",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "model_profile_strategy": "require_verified_high_capability_deep_route",
+      "retry_policy_id": null,
+      "evidence_requirements": [
+        "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+        "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+        "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+        "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-003.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M8-003-V01",
+          "assertion": "Replay a collection/refund export and verify one receiving effect and balanced reconciliation.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-003.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-003.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-003.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-003-unit",
+            "dos-m8-003-data",
+            "dos-m8-003-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M8-003-V02",
+          "assertion": "Ledger outage, unknown account mapping and source correction remain visible without altering Doctor financial history.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-003.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-003.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-003.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-003-unit",
+            "dos-m8-003-data",
+            "dos-m8-003-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Verify the actual Ledger ingestion contract and approve financial field mapping, currencies, source IDs and reconciliation responsibility.",
+          "verification_case_ids": [
+            "DOS-M8-003-V01",
+            "DOS-M8-003-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-003.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Export minimized approved financial facts only; diagnoses, prescriptions, patient notes and unnecessary identifiers are excluded by default.",
+          "verification_case_ids": [
+            "DOS-M8-003-V01",
+            "DOS-M8-003-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-003.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Use authenticated versioned idempotent exchange with explicit pending/rejected/reconciled state; no direct writes into Ledger tables or reuse of its sessions/secrets.",
+          "verification_case_ids": [
+            "DOS-M8-003-V01",
+            "DOS-M8-003-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-003.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        }
+      ],
+      "metadata": {
+        "artifact_revision": "doctor-suit-planning-v0.4",
+        "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+        "milestone_id": "DOS-M8",
+        "allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "source_allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "clinical_live_data_allowed": false,
+        "verification_mode": "focused",
+        "scope_approval": "planning-authorized-execution-gated",
+        "publication_policy": {
+          "merge_authorized": false,
+          "deployment_authorized": false,
+          "hosted_database_changes_authorized": false,
+          "review_required_before_integration": true
+        }
+      },
+      "description": "Export minimized financial facts with reconciliation; exclude diagnoses, prescriptions and clinical notes by default.\n\nRequirements\n- DOS-M8-R001: Business Suit ecosystem integration. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M8-F003: Export minimized financial facts with reconciliation; exclude diagnoses, prescriptions and clinical notes by default. Acceptance: Verify the actual Ledger ingestion contract and approve financial field mapping, currencies, source IDs and reconciliation responsibility. Export minimized approved financial facts only; diagnoses, prescriptions, patient notes and unnecessary identifiers are excluded by default. Use authenticated versioned idempotent exchange with explicit pending/rejected/reconciled state; no direct writes into Ledger tables or reuse of its sessions/secrets.\n\nDependencies: DOS-M6-009, DOS-M8-002\nBlocking decisions: DOS-M8-GATE-START, DOS-M8-GATE-ECOSYSTEM\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/i18n/\n- apps/doctor-suit/server/\n- apps/doctor-suit/supabase/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/package.json\n- packages/contracts/src/\n- packages/contracts/tests/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/src/utils/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-fragments/\n\nAcceptance\n1. Verify the actual Ledger ingestion contract and approve financial field mapping, currencies, source IDs and reconciliation responsibility.\n2. Export minimized approved financial facts only; diagnoses, prescriptions, patient notes and unnecessary identifiers are excluded by default.\n3. Use authenticated versioned idempotent exchange with explicit pending/rejected/reconciled state; no direct writes into Ledger tables or reuse of its sessions/secrets.\n\nVerification scenarios\n- Replay a collection/refund export and verify one receiving effect and balanced reconciliation.\n- Ledger outage, unknown account mapping and source correction remain visible without altering Doctor financial history.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m8-003.md\n- apps/doctor-suit/tests/unit/dos-m8-003.test.mjs\n- apps/doctor-suit/supabase/tests/dos-m8-003.sql\n- apps/doctor-suit/tests/e2e/dos-m8-003.spec.ts\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Execute task-specific state, protocol and failure assertions\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m8-003.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m8-003-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression for affected consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify database authorization, replay and write integrity with disposable fixtures\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m8-003.sql\"\n    ],\n    \"commands\": [\n      \"dos-m8-003-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify browser journey, denial and recovery states\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m8-003.spec.ts\"\n    ],\n    \"commands\": [\n      \"dos-m8-003-browser\"\n    ],\n    \"requires\": [\n      \"browser\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions\",\n    \"blocker\": \"reviewer_identity_scope_candidate_and_decision_evidence_required\",\n    \"phase\": \"pre_publication\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m8-003.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+    },
+    {
+      "task_id": "DOS-M8-004",
+      "milestone_id": "DOS-M8",
+      "sequence": 8040,
+      "priority": 100,
+      "title": "Inventory and consumables integration",
+      "objective": "Connect approved usage/stock references only when the owning Inventory/Shop capability is verified.",
+      "task_type": "feature",
+      "risk_level": "high",
+      "acceptance_criteria": [
+        "Verify the owning Inventory/Shop capability for approved consumable usage/reference flows and its contract version.",
+        "Map only authorized stock/usage facts and explicit source documents; this task cannot infer medication substitution or dispensing authority.",
+        "Keep stock owner as authoritative and reconcile accepted/rejected/pending usage; no cross-app imports or direct shared database writes."
+      ],
+      "verification_scenarios": [
+        "Duplicate usage, reversal and stock-owner outage reconcile without double decrement.",
+        "Reject unsupported capability, cross-practice reference and clinical diagnosis fields in stock payloads."
+      ],
+      "verification_plan": [
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check diff hygiene",
+          "command": "git diff --check"
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check pinned workspace architecture and boundaries",
+          "command": "pnpm check"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Execute task-specific state, protocol and failure assertions",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-004.test.mjs"
+          ],
+          "commands": [
+            "dos-m8-004-unit"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Run full repository unit regression for affected consumers",
+          "command": "pnpm test"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify database authorization, replay and write integrity with disposable fixtures",
+          "expected_outputs": [
+            "apps/doctor-suit/supabase/tests/dos-m8-004.sql"
+          ],
+          "commands": [
+            "dos-m8-004-data"
+          ],
+          "requires": [
+            "database",
+            "rls-authorization"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify browser journey, denial and recovery states",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/e2e/dos-m8-004.spec.ts"
+          ],
+          "commands": [
+            "dos-m8-004-browser"
+          ],
+          "requires": [
+            "browser"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "external_gate",
+          "description": "Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions",
+          "blocker": "reviewer_identity_scope_candidate_and_decision_evidence_required",
+          "phase": "pre_publication"
+        }
+      ],
+      "allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/i18n/",
+        "apps/doctor-suit/server/",
+        "apps/doctor-suit/supabase/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/package.json",
+        "packages/contracts/src/",
+        "packages/contracts/tests/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/src/utils/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-fragments/"
+      ],
+      "expected_outputs": [
+        "docs/work-packages/doctor-suit/implementation/dos-m8-004.md",
+        "apps/doctor-suit/tests/unit/dos-m8-004.test.mjs",
+        "apps/doctor-suit/supabase/tests/dos-m8-004.sql",
+        "apps/doctor-suit/tests/e2e/dos-m8-004.spec.ts"
+      ],
+      "linked_requirement_ids": [
+        "DOS-M8-R001",
+        "DOS-M8-F004"
+      ],
+      "task_dependencies": [
+        "DOS-M8-003"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M8-GATE-START",
+        "DOS-M8-GATE-ECOSYSTEM"
+      ],
+      "produces_decision_ids": [],
+      "specific_evidence": [
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-004.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "status": "planned",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "model_profile_strategy": "require_verified_high_capability_deep_route",
+      "retry_policy_id": null,
+      "evidence_requirements": [
+        "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+        "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+        "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+        "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-004.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M8-004-V01",
+          "assertion": "Duplicate usage, reversal and stock-owner outage reconcile without double decrement.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-004.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-004.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-004.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-004-unit",
+            "dos-m8-004-data",
+            "dos-m8-004-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M8-004-V02",
+          "assertion": "Reject unsupported capability, cross-practice reference and clinical diagnosis fields in stock payloads.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-004.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-004.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-004.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-004-unit",
+            "dos-m8-004-data",
+            "dos-m8-004-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Verify the owning Inventory/Shop capability for approved consumable usage/reference flows and its contract version.",
+          "verification_case_ids": [
+            "DOS-M8-004-V01",
+            "DOS-M8-004-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-004.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Map only authorized stock/usage facts and explicit source documents; this task cannot infer medication substitution or dispensing authority.",
+          "verification_case_ids": [
+            "DOS-M8-004-V01",
+            "DOS-M8-004-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-004.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Keep stock owner as authoritative and reconcile accepted/rejected/pending usage; no cross-app imports or direct shared database writes.",
+          "verification_case_ids": [
+            "DOS-M8-004-V01",
+            "DOS-M8-004-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-004.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        }
+      ],
+      "metadata": {
+        "artifact_revision": "doctor-suit-planning-v0.4",
+        "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+        "milestone_id": "DOS-M8",
+        "allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "source_allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "clinical_live_data_allowed": false,
+        "verification_mode": "focused",
+        "scope_approval": "planning-authorized-execution-gated",
+        "publication_policy": {
+          "merge_authorized": false,
+          "deployment_authorized": false,
+          "hosted_database_changes_authorized": false,
+          "review_required_before_integration": true
+        }
+      },
+      "description": "Connect approved usage/stock references only when the owning Inventory/Shop capability is verified.\n\nRequirements\n- DOS-M8-R001: Business Suit ecosystem integration. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M8-F004: Connect approved usage/stock references only when the owning Inventory/Shop capability is verified. Acceptance: Verify the owning Inventory/Shop capability for approved consumable usage/reference flows and its contract version. Map only authorized stock/usage facts and explicit source documents; this task cannot infer medication substitution or dispensing authority. Keep stock owner as authoritative and reconcile accepted/rejected/pending usage; no cross-app imports or direct shared database writes.\n\nDependencies: DOS-M8-003\nBlocking decisions: DOS-M8-GATE-START, DOS-M8-GATE-ECOSYSTEM\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/i18n/\n- apps/doctor-suit/server/\n- apps/doctor-suit/supabase/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/package.json\n- packages/contracts/src/\n- packages/contracts/tests/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/src/utils/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-fragments/\n\nAcceptance\n1. Verify the owning Inventory/Shop capability for approved consumable usage/reference flows and its contract version.\n2. Map only authorized stock/usage facts and explicit source documents; this task cannot infer medication substitution or dispensing authority.\n3. Keep stock owner as authoritative and reconcile accepted/rejected/pending usage; no cross-app imports or direct shared database writes.\n\nVerification scenarios\n- Duplicate usage, reversal and stock-owner outage reconcile without double decrement.\n- Reject unsupported capability, cross-practice reference and clinical diagnosis fields in stock payloads.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m8-004.md\n- apps/doctor-suit/tests/unit/dos-m8-004.test.mjs\n- apps/doctor-suit/supabase/tests/dos-m8-004.sql\n- apps/doctor-suit/tests/e2e/dos-m8-004.spec.ts\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Execute task-specific state, protocol and failure assertions\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m8-004.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m8-004-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression for affected consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify database authorization, replay and write integrity with disposable fixtures\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m8-004.sql\"\n    ],\n    \"commands\": [\n      \"dos-m8-004-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify browser journey, denial and recovery states\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m8-004.spec.ts\"\n    ],\n    \"commands\": [\n      \"dos-m8-004-browser\"\n    ],\n    \"requires\": [\n      \"browser\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions\",\n    \"blocker\": \"reviewer_identity_scope_candidate_and_decision_evidence_required\",\n    \"phase\": \"pre_publication\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m8-004.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+    },
+    {
+      "task_id": "DOS-M8-005",
+      "milestone_id": "DOS-M8",
+      "sequence": 8050,
+      "priority": 100,
+      "title": "Team/employment reference integration",
+      "objective": "Link approved staff references without granting payroll/HR users access to patient records.",
+      "task_type": "feature",
+      "risk_level": "high",
+      "acceptance_criteria": [
+        "Approve staff-reference fields and the actual owning employment/team capability; employment identity is distinct from Doctor membership.",
+        "Link only explicit verified references and keep clinical access governed by Doctor grants; HR/payroll status never grants chart rights.",
+        "Handle reference revocation, renaming and stale external identity without deleting internal audit or silently merging accounts."
+      ],
+      "verification_scenarios": [
+        "Change employment status and confirm no automatic patient access or owner promotion.",
+        "Two staff share contact details; linking requires explicit reference proof and preserves independent memberships."
+      ],
+      "verification_plan": [
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check diff hygiene",
+          "command": "git diff --check"
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check pinned workspace architecture and boundaries",
+          "command": "pnpm check"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Execute task-specific state, protocol and failure assertions",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-005.test.mjs"
+          ],
+          "commands": [
+            "dos-m8-005-unit"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Run full repository unit regression for affected consumers",
+          "command": "pnpm test"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify database authorization, replay and write integrity with disposable fixtures",
+          "expected_outputs": [
+            "apps/doctor-suit/supabase/tests/dos-m8-005.sql"
+          ],
+          "commands": [
+            "dos-m8-005-data"
+          ],
+          "requires": [
+            "database",
+            "rls-authorization"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify browser journey, denial and recovery states",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/e2e/dos-m8-005.spec.ts"
+          ],
+          "commands": [
+            "dos-m8-005-browser"
+          ],
+          "requires": [
+            "browser"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "external_gate",
+          "description": "Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions",
+          "blocker": "reviewer_identity_scope_candidate_and_decision_evidence_required",
+          "phase": "pre_publication"
+        }
+      ],
+      "allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/i18n/",
+        "apps/doctor-suit/server/",
+        "apps/doctor-suit/supabase/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/package.json",
+        "packages/contracts/src/",
+        "packages/contracts/tests/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/src/utils/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-fragments/"
+      ],
+      "expected_outputs": [
+        "docs/work-packages/doctor-suit/implementation/dos-m8-005.md",
+        "apps/doctor-suit/tests/unit/dos-m8-005.test.mjs",
+        "apps/doctor-suit/supabase/tests/dos-m8-005.sql",
+        "apps/doctor-suit/tests/e2e/dos-m8-005.spec.ts"
+      ],
+      "linked_requirement_ids": [
+        "DOS-M8-R001",
+        "DOS-M8-F005"
+      ],
+      "task_dependencies": [
+        "DOS-M8-004"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M8-GATE-START",
+        "DOS-M8-GATE-ECOSYSTEM"
+      ],
+      "produces_decision_ids": [],
+      "specific_evidence": [
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-005.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "status": "planned",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "model_profile_strategy": "require_verified_high_capability_deep_route",
+      "retry_policy_id": null,
+      "evidence_requirements": [
+        "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+        "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+        "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+        "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-005.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M8-005-V01",
+          "assertion": "Change employment status and confirm no automatic patient access or owner promotion.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-005.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-005.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-005.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-005-unit",
+            "dos-m8-005-data",
+            "dos-m8-005-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M8-005-V02",
+          "assertion": "Two staff share contact details; linking requires explicit reference proof and preserves independent memberships.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-005.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-005.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-005.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-005-unit",
+            "dos-m8-005-data",
+            "dos-m8-005-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Approve staff-reference fields and the actual owning employment/team capability; employment identity is distinct from Doctor membership.",
+          "verification_case_ids": [
+            "DOS-M8-005-V01",
+            "DOS-M8-005-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-005.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Link only explicit verified references and keep clinical access governed by Doctor grants; HR/payroll status never grants chart rights.",
+          "verification_case_ids": [
+            "DOS-M8-005-V01",
+            "DOS-M8-005-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-005.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Handle reference revocation, renaming and stale external identity without deleting internal audit or silently merging accounts.",
+          "verification_case_ids": [
+            "DOS-M8-005-V01",
+            "DOS-M8-005-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-005.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        }
+      ],
+      "metadata": {
+        "artifact_revision": "doctor-suit-planning-v0.4",
+        "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+        "milestone_id": "DOS-M8",
+        "allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "source_allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "clinical_live_data_allowed": false,
+        "verification_mode": "focused",
+        "scope_approval": "planning-authorized-execution-gated",
+        "publication_policy": {
+          "merge_authorized": false,
+          "deployment_authorized": false,
+          "hosted_database_changes_authorized": false,
+          "review_required_before_integration": true
+        }
+      },
+      "description": "Link approved staff references without granting payroll/HR users access to patient records.\n\nRequirements\n- DOS-M8-R001: Business Suit ecosystem integration. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M8-F005: Link approved staff references without granting payroll/HR users access to patient records. Acceptance: Approve staff-reference fields and the actual owning employment/team capability; employment identity is distinct from Doctor membership. Link only explicit verified references and keep clinical access governed by Doctor grants; HR/payroll status never grants chart rights. Handle reference revocation, renaming and stale external identity without deleting internal audit or silently merging accounts.\n\nDependencies: DOS-M8-004\nBlocking decisions: DOS-M8-GATE-START, DOS-M8-GATE-ECOSYSTEM\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/i18n/\n- apps/doctor-suit/server/\n- apps/doctor-suit/supabase/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/package.json\n- packages/contracts/src/\n- packages/contracts/tests/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/src/utils/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-fragments/\n\nAcceptance\n1. Approve staff-reference fields and the actual owning employment/team capability; employment identity is distinct from Doctor membership.\n2. Link only explicit verified references and keep clinical access governed by Doctor grants; HR/payroll status never grants chart rights.\n3. Handle reference revocation, renaming and stale external identity without deleting internal audit or silently merging accounts.\n\nVerification scenarios\n- Change employment status and confirm no automatic patient access or owner promotion.\n- Two staff share contact details; linking requires explicit reference proof and preserves independent memberships.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m8-005.md\n- apps/doctor-suit/tests/unit/dos-m8-005.test.mjs\n- apps/doctor-suit/supabase/tests/dos-m8-005.sql\n- apps/doctor-suit/tests/e2e/dos-m8-005.spec.ts\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Execute task-specific state, protocol and failure assertions\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m8-005.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m8-005-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression for affected consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify database authorization, replay and write integrity with disposable fixtures\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m8-005.sql\"\n    ],\n    \"commands\": [\n      \"dos-m8-005-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify browser journey, denial and recovery states\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m8-005.spec.ts\"\n    ],\n    \"commands\": [\n      \"dos-m8-005-browser\"\n    ],\n    \"requires\": [\n      \"browser\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions\",\n    \"blocker\": \"reviewer_identity_scope_candidate_and_decision_evidence_required\",\n    \"phase\": \"pre_publication\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m8-005.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+    },
+    {
+      "task_id": "DOS-M8-006",
+      "milestone_id": "DOS-M8",
+      "sequence": 8060,
+      "priority": 100,
+      "title": "Notification/mail capability integration",
+      "objective": "Use approved consented communication routing with minimal payloads and no cross-product session reuse.",
+      "task_type": "feature",
+      "risk_level": "high",
+      "acceptance_criteria": [
+        "Verify an existing approved notification/mail capability and route only consented purpose-specific minimal templates.",
+        "Preserve per-product sender authorization, independent sessions and outbox idempotency; receiving capability cannot read charts to construct messages.",
+        "Recheck consent and recipient scope at send time and reconcile delivery/cancellation/unknown outcomes under the approved provider policy."
+      ],
+      "verification_scenarios": [
+        "Consent revoked between export and send suppresses dispatch at the accountable boundary.",
+        "Replay, recipient mismatch and provider outage do not leak content or create duplicate messages."
+      ],
+      "verification_plan": [
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check diff hygiene",
+          "command": "git diff --check"
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check pinned workspace architecture and boundaries",
+          "command": "pnpm check"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Execute task-specific state, protocol and failure assertions",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-006.test.mjs"
+          ],
+          "commands": [
+            "dos-m8-006-unit"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Run full repository unit regression for affected consumers",
+          "command": "pnpm test"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify database authorization, replay and write integrity with disposable fixtures",
+          "expected_outputs": [
+            "apps/doctor-suit/supabase/tests/dos-m8-006.sql"
+          ],
+          "commands": [
+            "dos-m8-006-data"
+          ],
+          "requires": [
+            "database",
+            "rls-authorization"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify browser journey, denial and recovery states",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/e2e/dos-m8-006.spec.ts"
+          ],
+          "commands": [
+            "dos-m8-006-browser"
+          ],
+          "requires": [
+            "browser"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "external_gate",
+          "description": "Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions",
+          "blocker": "reviewer_identity_scope_candidate_and_decision_evidence_required",
+          "phase": "pre_publication"
+        }
+      ],
+      "allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/i18n/",
+        "apps/doctor-suit/server/",
+        "apps/doctor-suit/supabase/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/package.json",
+        "packages/contracts/src/",
+        "packages/contracts/tests/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/src/utils/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-fragments/"
+      ],
+      "expected_outputs": [
+        "docs/work-packages/doctor-suit/implementation/dos-m8-006.md",
+        "apps/doctor-suit/tests/unit/dos-m8-006.test.mjs",
+        "apps/doctor-suit/supabase/tests/dos-m8-006.sql",
+        "apps/doctor-suit/tests/e2e/dos-m8-006.spec.ts"
+      ],
+      "linked_requirement_ids": [
+        "DOS-M8-R001",
+        "DOS-M8-F006"
+      ],
+      "task_dependencies": [
+        "DOS-M8-005"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M8-GATE-START",
+        "DOS-M8-GATE-ECOSYSTEM"
+      ],
+      "produces_decision_ids": [],
+      "specific_evidence": [
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-006.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "status": "planned",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "model_profile_strategy": "require_verified_high_capability_deep_route",
+      "retry_policy_id": null,
+      "evidence_requirements": [
+        "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+        "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+        "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+        "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-006.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M8-006-V01",
+          "assertion": "Consent revoked between export and send suppresses dispatch at the accountable boundary.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-006.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-006.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-006.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-006-unit",
+            "dos-m8-006-data",
+            "dos-m8-006-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M8-006-V02",
+          "assertion": "Replay, recipient mismatch and provider outage do not leak content or create duplicate messages.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-006.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-006.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-006.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-006-unit",
+            "dos-m8-006-data",
+            "dos-m8-006-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Verify an existing approved notification/mail capability and route only consented purpose-specific minimal templates.",
+          "verification_case_ids": [
+            "DOS-M8-006-V01",
+            "DOS-M8-006-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-006.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Preserve per-product sender authorization, independent sessions and outbox idempotency; receiving capability cannot read charts to construct messages.",
+          "verification_case_ids": [
+            "DOS-M8-006-V01",
+            "DOS-M8-006-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-006.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Recheck consent and recipient scope at send time and reconcile delivery/cancellation/unknown outcomes under the approved provider policy.",
+          "verification_case_ids": [
+            "DOS-M8-006-V01",
+            "DOS-M8-006-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-006.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        }
+      ],
+      "metadata": {
+        "artifact_revision": "doctor-suit-planning-v0.4",
+        "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+        "milestone_id": "DOS-M8",
+        "allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "source_allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "clinical_live_data_allowed": false,
+        "verification_mode": "focused",
+        "scope_approval": "planning-authorized-execution-gated",
+        "publication_policy": {
+          "merge_authorized": false,
+          "deployment_authorized": false,
+          "hosted_database_changes_authorized": false,
+          "review_required_before_integration": true
+        }
+      },
+      "description": "Use approved consented communication routing with minimal payloads and no cross-product session reuse.\n\nRequirements\n- DOS-M8-R001: Business Suit ecosystem integration. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M8-F006: Use approved consented communication routing with minimal payloads and no cross-product session reuse. Acceptance: Verify an existing approved notification/mail capability and route only consented purpose-specific minimal templates. Preserve per-product sender authorization, independent sessions and outbox idempotency; receiving capability cannot read charts to construct messages. Recheck consent and recipient scope at send time and reconcile delivery/cancellation/unknown outcomes under the approved provider policy.\n\nDependencies: DOS-M8-005\nBlocking decisions: DOS-M8-GATE-START, DOS-M8-GATE-ECOSYSTEM\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/i18n/\n- apps/doctor-suit/server/\n- apps/doctor-suit/supabase/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/package.json\n- packages/contracts/src/\n- packages/contracts/tests/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/src/utils/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-fragments/\n\nAcceptance\n1. Verify an existing approved notification/mail capability and route only consented purpose-specific minimal templates.\n2. Preserve per-product sender authorization, independent sessions and outbox idempotency; receiving capability cannot read charts to construct messages.\n3. Recheck consent and recipient scope at send time and reconcile delivery/cancellation/unknown outcomes under the approved provider policy.\n\nVerification scenarios\n- Consent revoked between export and send suppresses dispatch at the accountable boundary.\n- Replay, recipient mismatch and provider outage do not leak content or create duplicate messages.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m8-006.md\n- apps/doctor-suit/tests/unit/dos-m8-006.test.mjs\n- apps/doctor-suit/supabase/tests/dos-m8-006.sql\n- apps/doctor-suit/tests/e2e/dos-m8-006.spec.ts\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Execute task-specific state, protocol and failure assertions\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m8-006.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m8-006-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression for affected consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify database authorization, replay and write integrity with disposable fixtures\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m8-006.sql\"\n    ],\n    \"commands\": [\n      \"dos-m8-006-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify browser journey, denial and recovery states\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m8-006.spec.ts\"\n    ],\n    \"commands\": [\n      \"dos-m8-006-browser\"\n    ],\n    \"requires\": [\n      \"browser\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions\",\n    \"blocker\": \"reviewer_identity_scope_candidate_and_decision_evidence_required\",\n    \"phase\": \"pre_publication\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m8-006.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+    },
+    {
+      "task_id": "DOS-M8-007",
+      "milestone_id": "DOS-M8",
+      "sequence": 8070,
+      "priority": 100,
+      "title": "Aggregated reporting and consent-aware sharing",
+      "objective": "Expose authorized minimized aggregates; do not repurpose treatment data for marketing.",
+      "task_type": "feature",
+      "risk_level": "high",
+      "acceptance_criteria": [
+        "Define approved aggregate measures, disclosure scope and suppression rules with accountable privacy review; do not invent a safe anonymity threshold.",
+        "Generate minimized aggregates from authorized populations with provenance and consent/use constraints; treatment data is not repurposed for marketing.",
+        "Prevent drill-through or small-group disclosure beyond approved policy and revoke access when integration authority changes."
+      ],
+      "verification_scenarios": [
+        "Attempt filters that isolate one patient or infer suppressed values through differencing and apply the approved disclosure controls.",
+        "Reconcile allowed aggregate totals while denying unapproved recipient/purpose and cross-doctor row-level drill-through."
+      ],
+      "verification_plan": [
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check diff hygiene",
+          "command": "git diff --check"
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check pinned workspace architecture and boundaries",
+          "command": "pnpm check"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Execute task-specific state, protocol and failure assertions",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-007.test.mjs"
+          ],
+          "commands": [
+            "dos-m8-007-unit"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Run full repository unit regression for affected consumers",
+          "command": "pnpm test"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify database authorization, replay and write integrity with disposable fixtures",
+          "expected_outputs": [
+            "apps/doctor-suit/supabase/tests/dos-m8-007.sql"
+          ],
+          "commands": [
+            "dos-m8-007-data"
+          ],
+          "requires": [
+            "database",
+            "rls-authorization"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify browser journey, denial and recovery states",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/e2e/dos-m8-007.spec.ts"
+          ],
+          "commands": [
+            "dos-m8-007-browser"
+          ],
+          "requires": [
+            "browser"
+          ]
+        }
+      ],
+      "allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/i18n/",
+        "apps/doctor-suit/server/",
+        "apps/doctor-suit/supabase/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/package.json",
+        "packages/contracts/src/",
+        "packages/contracts/tests/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/src/utils/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-fragments/"
+      ],
+      "expected_outputs": [
+        "docs/work-packages/doctor-suit/implementation/dos-m8-007.md",
+        "apps/doctor-suit/tests/unit/dos-m8-007.test.mjs",
+        "apps/doctor-suit/supabase/tests/dos-m8-007.sql",
+        "apps/doctor-suit/tests/e2e/dos-m8-007.spec.ts"
+      ],
+      "linked_requirement_ids": [
+        "DOS-M8-R001",
+        "DOS-M8-F007"
+      ],
+      "task_dependencies": [
+        "DOS-M8-006"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M8-GATE-START",
+        "DOS-M8-GATE-ECOSYSTEM"
+      ],
+      "produces_decision_ids": [],
+      "specific_evidence": [
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-007.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "status": "planned",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "model_profile_strategy": "require_verified_high_capability_deep_route",
+      "retry_policy_id": null,
+      "evidence_requirements": [
+        "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+        "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+        "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+        "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-007.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M8-007-V01",
+          "assertion": "Attempt filters that isolate one patient or infer suppressed values through differencing and apply the approved disclosure controls.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-007.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-007.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-007.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-007-unit",
+            "dos-m8-007-data",
+            "dos-m8-007-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M8-007-V02",
+          "assertion": "Reconcile allowed aggregate totals while denying unapproved recipient/purpose and cross-doctor row-level drill-through.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-007.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-007.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-007.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-007-unit",
+            "dos-m8-007-data",
+            "dos-m8-007-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Define approved aggregate measures, disclosure scope and suppression rules with accountable privacy review; do not invent a safe anonymity threshold.",
+          "verification_case_ids": [
+            "DOS-M8-007-V01",
+            "DOS-M8-007-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-007.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Generate minimized aggregates from authorized populations with provenance and consent/use constraints; treatment data is not repurposed for marketing.",
+          "verification_case_ids": [
+            "DOS-M8-007-V01",
+            "DOS-M8-007-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-007.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Prevent drill-through or small-group disclosure beyond approved policy and revoke access when integration authority changes.",
+          "verification_case_ids": [
+            "DOS-M8-007-V01",
+            "DOS-M8-007-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-007.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        }
+      ],
+      "metadata": {
+        "artifact_revision": "doctor-suit-planning-v0.4",
+        "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+        "milestone_id": "DOS-M8",
+        "allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "source_allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "clinical_live_data_allowed": false,
+        "verification_mode": "focused",
+        "scope_approval": "planning-authorized-execution-gated",
+        "publication_policy": {
+          "merge_authorized": false,
+          "deployment_authorized": false,
+          "hosted_database_changes_authorized": false,
+          "review_required_before_integration": true
+        }
+      },
+      "description": "Expose authorized minimized aggregates; do not repurpose treatment data for marketing.\n\nRequirements\n- DOS-M8-R001: Business Suit ecosystem integration. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M8-F007: Expose authorized minimized aggregates; do not repurpose treatment data for marketing. Acceptance: Define approved aggregate measures, disclosure scope and suppression rules with accountable privacy review; do not invent a safe anonymity threshold. Generate minimized aggregates from authorized populations with provenance and consent/use constraints; treatment data is not repurposed for marketing. Prevent drill-through or small-group disclosure beyond approved policy and revoke access when integration authority changes.\n\nDependencies: DOS-M8-006\nBlocking decisions: DOS-M8-GATE-START, DOS-M8-GATE-ECOSYSTEM\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/i18n/\n- apps/doctor-suit/server/\n- apps/doctor-suit/supabase/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/package.json\n- packages/contracts/src/\n- packages/contracts/tests/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/src/utils/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-fragments/\n\nAcceptance\n1. Define approved aggregate measures, disclosure scope and suppression rules with accountable privacy review; do not invent a safe anonymity threshold.\n2. Generate minimized aggregates from authorized populations with provenance and consent/use constraints; treatment data is not repurposed for marketing.\n3. Prevent drill-through or small-group disclosure beyond approved policy and revoke access when integration authority changes.\n\nVerification scenarios\n- Attempt filters that isolate one patient or infer suppressed values through differencing and apply the approved disclosure controls.\n- Reconcile allowed aggregate totals while denying unapproved recipient/purpose and cross-doctor row-level drill-through.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m8-007.md\n- apps/doctor-suit/tests/unit/dos-m8-007.test.mjs\n- apps/doctor-suit/supabase/tests/dos-m8-007.sql\n- apps/doctor-suit/tests/e2e/dos-m8-007.spec.ts\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Execute task-specific state, protocol and failure assertions\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m8-007.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m8-007-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression for affected consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify database authorization, replay and write integrity with disposable fixtures\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m8-007.sql\"\n    ],\n    \"commands\": [\n      \"dos-m8-007-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify browser journey, denial and recovery states\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m8-007.spec.ts\"\n    ],\n    \"commands\": [\n      \"dos-m8-007-browser\"\n    ],\n    \"requires\": [\n      \"browser\"\n    ]\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m8-007.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+    },
+    {
+      "task_id": "DOS-M8-008",
+      "milestone_id": "DOS-M8",
+      "sequence": 8080,
+      "priority": 100,
+      "title": "Cross-Suit contract and failure acceptance",
+      "objective": "Test outages, replay, revocation and reconciliation across independently authorized products.",
+      "task_type": "review",
+      "risk_level": "high",
+      "acceptance_criteria": [
+        "Test each selected integration against verified partner contract/version and exact Doctor candidate with independent product-owner acceptance.",
+        "Demonstrate replay, outage, revocation, schema incompatibility, source correction and financial/stock/message reconciliation.",
+        "Unselected or unavailable integrations stay disabled and are excluded from claims; no optional provider or cross-Suit release is automatic."
+      ],
+      "verification_scenarios": [
+        "Simulate partial outage across receivers and prove unaffected services continue while pending work is recoverable.",
+        "Trace every externally disclosed field to an approved purpose and verify no clinical chart/session leakage."
+      ],
+      "verification_plan": [
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check diff hygiene",
+          "command": "git diff --check"
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Check pinned workspace architecture and boundaries",
+          "command": "pnpm check"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Execute task-specific state, protocol and failure assertions",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-008.test.mjs"
+          ],
+          "commands": [
+            "dos-m8-008-unit"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Run full repository unit regression for affected consumers",
+          "command": "pnpm test"
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify database authorization, replay and write integrity with disposable fixtures",
+          "expected_outputs": [
+            "apps/doctor-suit/supabase/tests/dos-m8-008.sql"
+          ],
+          "commands": [
+            "dos-m8-008-data"
+          ],
+          "requires": [
+            "database",
+            "rls-authorization"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "planned_test",
+          "description": "Verify browser journey, denial and recovery states",
+          "expected_outputs": [
+            "apps/doctor-suit/tests/e2e/dos-m8-008.spec.ts"
+          ],
+          "commands": [
+            "dos-m8-008-browser"
+          ],
+          "requires": [
+            "browser"
+          ]
+        },
+        {
+          "version": 2,
+          "kind": "external_gate",
+          "description": "Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions",
+          "blocker": "reviewer_identity_scope_candidate_and_decision_evidence_required",
+          "phase": "pre_publication"
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Run milestone candidate pnpm typecheck",
+          "command": "pnpm typecheck"
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Run milestone candidate pnpm lint",
+          "command": "pnpm lint"
+        },
+        {
+          "version": 2,
+          "kind": "command",
+          "description": "Run milestone candidate pnpm build",
+          "command": "pnpm build"
+        },
+        {
+          "version": 2,
+          "kind": "external_gate",
+          "description": "Independent exact-candidate affected shared-consumer acceptance evidence",
+          "blocker": "shared_consumer_regression_receipts_required",
+          "phase": "pre_publication"
+        }
+      ],
+      "allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/i18n/",
+        "apps/doctor-suit/server/",
+        "apps/doctor-suit/supabase/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/package.json",
+        "packages/contracts/src/",
+        "packages/contracts/tests/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/src/utils/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-fragments/"
+      ],
+      "expected_outputs": [
+        "docs/work-packages/doctor-suit/implementation/dos-m8-008.md",
+        "apps/doctor-suit/tests/unit/dos-m8-008.test.mjs",
+        "apps/doctor-suit/supabase/tests/dos-m8-008.sql",
+        "apps/doctor-suit/tests/e2e/dos-m8-008.spec.ts"
+      ],
+      "linked_requirement_ids": [
+        "DOS-M8-R001",
+        "DOS-M8-F008"
+      ],
+      "task_dependencies": [
+        "DOS-M8-001",
+        "DOS-M8-002",
+        "DOS-M8-003",
+        "DOS-M8-004",
+        "DOS-M8-005",
+        "DOS-M8-006",
+        "DOS-M8-007"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M8-GATE-START",
+        "DOS-M8-GATE-ECOSYSTEM"
+      ],
+      "produces_decision_ids": [],
+      "specific_evidence": [
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-008.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "status": "planned",
+      "engine_stage": "pending",
+      "model_profile": "deep",
+      "model_profile_strategy": "require_verified_high_capability_deep_route",
+      "retry_policy_id": null,
+      "evidence_requirements": [
+        "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+        "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+        "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+        "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+        "Create docs/work-packages/doctor-suit/implementation/dos-m8-008.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+        "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M8-008-V01",
+          "assertion": "Simulate partial outage across receivers and prove unaffected services continue while pending work is recoverable.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-008.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-008.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-008.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-008-unit",
+            "dos-m8-008-data",
+            "dos-m8-008-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M8-008-V02",
+          "assertion": "Trace every externally disclosed field to an approved purpose and verify no clinical chart/session leakage.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m8-008.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m8-008.sql",
+            "apps/doctor-suit/tests/e2e/dos-m8-008.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m8-008-unit",
+            "dos-m8-008-data",
+            "dos-m8-008-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Test each selected integration against verified partner contract/version and exact Doctor candidate with independent product-owner acceptance.",
+          "verification_case_ids": [
+            "DOS-M8-008-V01",
+            "DOS-M8-008-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-008.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Demonstrate replay, outage, revocation, schema incompatibility, source correction and financial/stock/message reconciliation.",
+          "verification_case_ids": [
+            "DOS-M8-008-V01",
+            "DOS-M8-008-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-008.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Unselected or unavailable integrations stay disabled and are excluded from claims; no optional provider or cross-Suit release is automatic.",
+          "verification_case_ids": [
+            "DOS-M8-008-V01",
+            "DOS-M8-008-V02"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "Create docs/work-packages/doctor-suit/implementation/dos-m8-008.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+            "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+          ]
+        }
+      ],
+      "metadata": {
+        "artifact_revision": "doctor-suit-planning-v0.4",
+        "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+        "milestone_id": "DOS-M8",
+        "allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "source_allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-fragments/"
+        ],
+        "clinical_live_data_allowed": false,
+        "verification_mode": "milestone",
+        "scope_approval": "planning-authorized-execution-gated",
+        "publication_policy": {
+          "merge_authorized": false,
+          "deployment_authorized": false,
+          "hosted_database_changes_authorized": false,
+          "review_required_before_integration": true
+        }
+      },
+      "description": "Test outages, replay, revocation and reconciliation across independently authorized products.\n\nRequirements\n- DOS-M8-R001: Business Suit ecosystem integration. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M8-F008: Test outages, replay, revocation and reconciliation across independently authorized products. Acceptance: Test each selected integration against verified partner contract/version and exact Doctor candidate with independent product-owner acceptance. Demonstrate replay, outage, revocation, schema incompatibility, source correction and financial/stock/message reconciliation. Unselected or unavailable integrations stay disabled and are excluded from claims; no optional provider or cross-Suit release is automatic.\n\nDependencies: DOS-M8-001, DOS-M8-002, DOS-M8-003, DOS-M8-004, DOS-M8-005, DOS-M8-006, DOS-M8-007\nBlocking decisions: DOS-M8-GATE-START, DOS-M8-GATE-ECOSYSTEM\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/i18n/\n- apps/doctor-suit/server/\n- apps/doctor-suit/supabase/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/package.json\n- packages/contracts/src/\n- packages/contracts/tests/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/src/utils/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-fragments/\n\nAcceptance\n1. Test each selected integration against verified partner contract/version and exact Doctor candidate with independent product-owner acceptance.\n2. Demonstrate replay, outage, revocation, schema incompatibility, source correction and financial/stock/message reconciliation.\n3. Unselected or unavailable integrations stay disabled and are excluded from claims; no optional provider or cross-Suit release is automatic.\n\nVerification scenarios\n- Simulate partial outage across receivers and prove unaffected services continue while pending work is recoverable.\n- Trace every externally disclosed field to an approved purpose and verify no clinical chart/session leakage.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m8-008.md\n- apps/doctor-suit/tests/unit/dos-m8-008.test.mjs\n- apps/doctor-suit/supabase/tests/dos-m8-008.sql\n- apps/doctor-suit/tests/e2e/dos-m8-008.spec.ts\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Execute task-specific state, protocol and failure assertions\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m8-008.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m8-008-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression for affected consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify database authorization, replay and write integrity with disposable fixtures\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m8-008.sql\"\n    ],\n    \"commands\": [\n      \"dos-m8-008-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify browser journey, denial and recovery states\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m8-008.spec.ts\"\n    ],\n    \"commands\": [\n      \"dos-m8-008-browser\"\n    ],\n    \"requires\": [\n      \"browser\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Independent accountable human reviewer evidence for the task acceptance and unresolved domain decisions\",\n    \"blocker\": \"reviewer_identity_scope_candidate_and_decision_evidence_required\",\n    \"phase\": \"pre_publication\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run milestone candidate pnpm typecheck\",\n    \"command\": \"pnpm typecheck\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run milestone candidate pnpm lint\",\n    \"command\": \"pnpm lint\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run milestone candidate pnpm build\",\n    \"command\": \"pnpm build\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Independent exact-candidate affected shared-consumer acceptance evidence\",\n    \"blocker\": \"shared_consumer_regression_receipts_required\",\n    \"phase\": \"pre_publication\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m8-008.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+    }
+  ],
+  "verification_config_proposal": {
+    "commands": [
+      {
+        "name": "dos-m8-002-unit",
+        "program": "node",
+        "args": [
+          "--test",
+          "apps/doctor-suit/tests/unit/dos-m8-002.test.mjs"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": []
+      },
+      {
+        "name": "dos-m8-002-data",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "supabase",
+          "test",
+          "db",
+          "supabase/tests/dos-m8-002.sql",
+          "--local"
+        ],
+        "cwd": "apps/doctor-suit",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "database",
+          "rls-authorization",
+          "storage-policy",
+          "signed-url-expiry"
+        ]
+      },
+      {
+        "name": "dos-m8-002-browser",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "playwright",
+          "test",
+          "-c",
+          "apps/doctor-suit/tests/e2e/playwright.config.ts",
+          "apps/doctor-suit/tests/e2e/dos-m8-002.spec.ts",
+          "--workers=1",
+          "--retries=0"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "browser",
+          "browser-security"
+        ]
+      },
+      {
+        "name": "dos-m8-003-unit",
+        "program": "node",
+        "args": [
+          "--test",
+          "apps/doctor-suit/tests/unit/dos-m8-003.test.mjs"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": []
+      },
+      {
+        "name": "dos-m8-003-data",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "supabase",
+          "test",
+          "db",
+          "supabase/tests/dos-m8-003.sql",
+          "--local"
+        ],
+        "cwd": "apps/doctor-suit",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "database",
+          "rls-authorization",
+          "storage-policy",
+          "signed-url-expiry"
+        ]
+      },
+      {
+        "name": "dos-m8-003-browser",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "playwright",
+          "test",
+          "-c",
+          "apps/doctor-suit/tests/e2e/playwright.config.ts",
+          "apps/doctor-suit/tests/e2e/dos-m8-003.spec.ts",
+          "--workers=1",
+          "--retries=0"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "browser",
+          "browser-security"
+        ]
+      },
+      {
+        "name": "dos-m8-004-unit",
+        "program": "node",
+        "args": [
+          "--test",
+          "apps/doctor-suit/tests/unit/dos-m8-004.test.mjs"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": []
+      },
+      {
+        "name": "dos-m8-004-data",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "supabase",
+          "test",
+          "db",
+          "supabase/tests/dos-m8-004.sql",
+          "--local"
+        ],
+        "cwd": "apps/doctor-suit",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "database",
+          "rls-authorization",
+          "storage-policy",
+          "signed-url-expiry"
+        ]
+      },
+      {
+        "name": "dos-m8-004-browser",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "playwright",
+          "test",
+          "-c",
+          "apps/doctor-suit/tests/e2e/playwright.config.ts",
+          "apps/doctor-suit/tests/e2e/dos-m8-004.spec.ts",
+          "--workers=1",
+          "--retries=0"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "browser",
+          "browser-security"
+        ]
+      },
+      {
+        "name": "dos-m8-005-unit",
+        "program": "node",
+        "args": [
+          "--test",
+          "apps/doctor-suit/tests/unit/dos-m8-005.test.mjs"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": []
+      },
+      {
+        "name": "dos-m8-005-data",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "supabase",
+          "test",
+          "db",
+          "supabase/tests/dos-m8-005.sql",
+          "--local"
+        ],
+        "cwd": "apps/doctor-suit",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "database",
+          "rls-authorization",
+          "storage-policy",
+          "signed-url-expiry"
+        ]
+      },
+      {
+        "name": "dos-m8-005-browser",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "playwright",
+          "test",
+          "-c",
+          "apps/doctor-suit/tests/e2e/playwright.config.ts",
+          "apps/doctor-suit/tests/e2e/dos-m8-005.spec.ts",
+          "--workers=1",
+          "--retries=0"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "browser",
+          "browser-security"
+        ]
+      },
+      {
+        "name": "dos-m8-006-unit",
+        "program": "node",
+        "args": [
+          "--test",
+          "apps/doctor-suit/tests/unit/dos-m8-006.test.mjs"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": []
+      },
+      {
+        "name": "dos-m8-006-data",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "supabase",
+          "test",
+          "db",
+          "supabase/tests/dos-m8-006.sql",
+          "--local"
+        ],
+        "cwd": "apps/doctor-suit",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "database",
+          "rls-authorization",
+          "storage-policy",
+          "signed-url-expiry"
+        ]
+      },
+      {
+        "name": "dos-m8-006-browser",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "playwright",
+          "test",
+          "-c",
+          "apps/doctor-suit/tests/e2e/playwright.config.ts",
+          "apps/doctor-suit/tests/e2e/dos-m8-006.spec.ts",
+          "--workers=1",
+          "--retries=0"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "browser",
+          "browser-security"
+        ]
+      },
+      {
+        "name": "dos-m8-007-unit",
+        "program": "node",
+        "args": [
+          "--test",
+          "apps/doctor-suit/tests/unit/dos-m8-007.test.mjs"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": []
+      },
+      {
+        "name": "dos-m8-007-data",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "supabase",
+          "test",
+          "db",
+          "supabase/tests/dos-m8-007.sql",
+          "--local"
+        ],
+        "cwd": "apps/doctor-suit",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "database",
+          "rls-authorization",
+          "storage-policy",
+          "signed-url-expiry"
+        ]
+      },
+      {
+        "name": "dos-m8-007-browser",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "playwright",
+          "test",
+          "-c",
+          "apps/doctor-suit/tests/e2e/playwright.config.ts",
+          "apps/doctor-suit/tests/e2e/dos-m8-007.spec.ts",
+          "--workers=1",
+          "--retries=0"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "browser",
+          "browser-security"
+        ]
+      },
+      {
+        "name": "dos-m8-008-unit",
+        "program": "node",
+        "args": [
+          "--test",
+          "apps/doctor-suit/tests/unit/dos-m8-008.test.mjs"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": []
+      },
+      {
+        "name": "dos-m8-008-data",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "supabase",
+          "test",
+          "db",
+          "supabase/tests/dos-m8-008.sql",
+          "--local"
+        ],
+        "cwd": "apps/doctor-suit",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "database",
+          "rls-authorization",
+          "storage-policy",
+          "signed-url-expiry"
+        ]
+      },
+      {
+        "name": "dos-m8-008-browser",
+        "program": "pnpm",
+        "args": [
+          "exec",
+          "playwright",
+          "test",
+          "-c",
+          "apps/doctor-suit/tests/e2e/playwright.config.ts",
+          "apps/doctor-suit/tests/e2e/dos-m8-008.spec.ts",
+          "--workers=1",
+          "--retries=0"
+        ],
+        "cwd": ".",
+        "timeout_ms": 1800000,
+        "capabilities": [
+          "browser",
+          "browser-security"
+        ]
+      }
+    ],
+    "database": {
+      "kind": "supabase-local",
+      "local_only": true,
+      "start_when_needed": true,
+      "start_commands": [
+        {
+          "name": "doctor-local-start",
+          "program": "pnpm",
+          "args": [
+            "exec",
+            "supabase",
+            "start"
+          ],
+          "cwd": "apps/doctor-suit",
+          "timeout_ms": 1800000,
+          "capabilities": [
+            "database",
+            "rls-authorization"
+          ]
+        }
+      ],
+      "reset_commands": [
+        {
+          "name": "doctor-local-reset",
+          "program": "pnpm",
+          "args": [
+            "exec",
+            "supabase",
+            "db",
+            "reset",
+            "--local"
+          ],
+          "cwd": "apps/doctor-suit",
+          "timeout_ms": 1800000,
+          "capabilities": [
+            "database",
+            "rls-authorization"
+          ]
+        }
+      ],
+      "test_commands": [
+        {
+          "name": "doctor-local-regression",
+          "program": "pnpm",
+          "args": [
+            "exec",
+            "supabase",
+            "test",
+            "db",
+            "--local"
+          ],
+          "cwd": "apps/doctor-suit",
+          "timeout_ms": 1800000,
+          "capabilities": [
+            "database",
+            "rls-authorization"
+          ]
+        }
+      ]
+    }
+  },
+  "import_readiness": {
+    "safe_to_apply": false,
+    "all_tasks_blocked": true,
+    "open_start_decision": "DOS-M8-GATE-START",
+    "live_schema_contract_pending": true,
+    "publication_authority_granted": false,
+    "model_and_retry_route_pending": true
+  },
+  "execution_boundaries": [
+    "Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.",
+    "Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.",
+    "Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.",
+    "Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.",
+    "No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.",
+    "No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release."
+  ],
+  "content_sha256": "d368edae1e69c65379ffa89fbe70f9257c000d43f0cee6f203dadaef0a864ef6"
+}

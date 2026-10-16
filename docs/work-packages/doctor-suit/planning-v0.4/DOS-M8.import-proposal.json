@@ -1,0 +1,388 @@
+{
+  "format": "reviewed-import-proposal-v1",
+  "milestone_id": "DOS-M8",
+  "packet_file": "DOS-M8.json",
+  "packet_sha256": "d368edae1e69c65379ffa89fbe70f9257c000d43f0cee6f203dadaef0a864ef6",
+  "target": {
+    "repository": "Building-Suit/building-suit-monorepo",
+    "automation_project_ref": "padtxclxwwqvvuiebhte",
+    "project_slug": "building-suit",
+    "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+    "suit_slug": "doctor-suit",
+    "workstream_slug": "doctor-suit",
+    "application_path": "apps/doctor-suit",
+    "registration_status": "missing-per-parent-readonly-observation; parent must supply reviewed registration"
+  },
+  "safe_to_apply": false,
+  "task_create_function": "control.create_task_with_publication_contract(text,text,text,integer,integer,text,text,text,text,text,jsonb,jsonb,text,jsonb)",
+  "task_ids": [
+    "DOS-M8-001",
+    "DOS-M8-002",
+    "DOS-M8-003",
+    "DOS-M8-004",
+    "DOS-M8-005",
+    "DOS-M8-006",
+    "DOS-M8-007",
+    "DOS-M8-008"
+  ],
+  "requirements": [
+    {
+      "requirement_id": "DOS-M8-R001",
+      "title": "Milestone boundary and invariant",
+      "summary": "Business Suit ecosystem integration. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.",
+      "status": "proposed",
+      "provenance": "Supplied roadmap v0.2 plus current delegated scope."
+    },
+    {
+      "requirement_id": "DOS-M8-F001",
+      "title": "Ecosystem domain and sharing contract",
+      "summary": "Confirm what Business Suit means and each existing Suit owner; preserve clinical boundaries and capability-based integration. Acceptance: Resolve what Business Suit means using named existing product owners and verified capability/version contracts; do not create a fictional shared platform. Approve purpose-specific minimum data/event fields, authentication, revocation and reconciliation responsibilities per integration. Preserve independent product Auth, clinical chart boundaries and data ownership; no shared patient tables, contact-based account linking or cross-product SSO. Prepare evidence for DOS-M8-GATE-ECOSYSTEM. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-001 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F002",
+      "title": "Versioned events and durable outbox/inbox",
+      "summary": "Implement authenticated event contracts, idempotency, replay and failure handling without shared clinical tables. Acceptance: Define versioned event envelopes with tenant/product provenance, stable event/idempotency IDs, minimal payload and authenticated sender/audience. Implement transactional outbox and receiver inbox deduplication with bounded retry, dead-letter/reconciliation and ordered/version-aware handling where required. Enforce per-integration capability and revocation on dispatch/receive; independent services never bypass product authorization through events.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-002 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F003",
+      "title": "Accounting/Ledger integration",
+      "summary": "Export minimized financial facts with reconciliation; exclude diagnoses, prescriptions and clinical notes by default. Acceptance: Verify the actual Ledger ingestion contract and approve financial field mapping, currencies, source IDs and reconciliation responsibility. Export minimized approved financial facts only; diagnoses, prescriptions, patient notes and unnecessary identifiers are excluded by default. Use authenticated versioned idempotent exchange with explicit pending/rejected/reconciled state; no direct writes into Ledger tables or reuse of its sessions/secrets.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-003 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F004",
+      "title": "Inventory and consumables integration",
+      "summary": "Connect approved usage/stock references only when the owning Inventory/Shop capability is verified. Acceptance: Verify the owning Inventory/Shop capability for approved consumable usage/reference flows and its contract version. Map only authorized stock/usage facts and explicit source documents; this task cannot infer medication substitution or dispensing authority. Keep stock owner as authoritative and reconcile accepted/rejected/pending usage; no cross-app imports or direct shared database writes.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-004 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F005",
+      "title": "Team/employment reference integration",
+      "summary": "Link approved staff references without granting payroll/HR users access to patient records. Acceptance: Approve staff-reference fields and the actual owning employment/team capability; employment identity is distinct from Doctor membership. Link only explicit verified references and keep clinical access governed by Doctor grants; HR/payroll status never grants chart rights. Handle reference revocation, renaming and stale external identity without deleting internal audit or silently merging accounts.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-005 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F006",
+      "title": "Notification/mail capability integration",
+      "summary": "Use approved consented communication routing with minimal payloads and no cross-product session reuse. Acceptance: Verify an existing approved notification/mail capability and route only consented purpose-specific minimal templates. Preserve per-product sender authorization, independent sessions and outbox idempotency; receiving capability cannot read charts to construct messages. Recheck consent and recipient scope at send time and reconcile delivery/cancellation/unknown outcomes under the approved provider policy.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-006 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F007",
+      "title": "Aggregated reporting and consent-aware sharing",
+      "summary": "Expose authorized minimized aggregates; do not repurpose treatment data for marketing. Acceptance: Define approved aggregate measures, disclosure scope and suppression rules with accountable privacy review; do not invent a safe anonymity threshold. Generate minimized aggregates from authorized populations with provenance and consent/use constraints; treatment data is not repurposed for marketing. Prevent drill-through or small-group disclosure beyond approved policy and revoke access when integration authority changes.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-007 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M8-F008",
+      "title": "Cross-Suit contract and failure acceptance",
+      "summary": "Test outages, replay, revocation and reconciliation across independently authorized products. Acceptance: Test each selected integration against verified partner contract/version and exact Doctor candidate with independent product-owner acceptance. Demonstrate replay, outage, revocation, schema incompatibility, source correction and financial/stock/message reconciliation. Unselected or unavailable integrations stay disabled and are excluded from claims; no optional provider or cross-Suit release is automatic.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M8-008 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    }
+  ],
+  "decisions": [
+    {
+      "decision_id": "DOS-M8-GATE-START",
+      "title": "DOS-M8 parent-controlled start gate",
+      "status": "open",
+      "decision_text": "Remain OPEN until all nine milestones are safely stored and parent verifies dependency acceptance, exact live runtime/registration/commands/paths and authorizes this milestone. Import does not grant execution.",
+      "source": "Current delegated instruction."
+    },
+    {
+      "decision_id": "DOS-M8-GATE-ECOSYSTEM",
+      "title": "Named Business Suit domain owners, capability and disclosure agreements",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M8-001 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M8-001",
+      "producer_task_id": "DOS-M8-001"
+    }
+  ],
+  "task_requirements": [
+    {
+      "task_id": "DOS-M8-001",
+      "requirement_id": "DOS-M8-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-001",
+      "requirement_id": "DOS-M8-F001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-002",
+      "requirement_id": "DOS-M8-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-002",
+      "requirement_id": "DOS-M8-F002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-003",
+      "requirement_id": "DOS-M8-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-003",
+      "requirement_id": "DOS-M8-F003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-004",
+      "requirement_id": "DOS-M8-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-004",
+      "requirement_id": "DOS-M8-F004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-005",
+      "requirement_id": "DOS-M8-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-005",
+      "requirement_id": "DOS-M8-F005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-006",
+      "requirement_id": "DOS-M8-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-006",
+      "requirement_id": "DOS-M8-F006",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-007",
+      "requirement_id": "DOS-M8-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-007",
+      "requirement_id": "DOS-M8-F007",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-008",
+      "requirement_id": "DOS-M8-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M8-008",
+      "requirement_id": "DOS-M8-F008",
+      "suit_slug": "doctor-suit"
+    }
+  ],
+  "task_dependencies": [
+    {
+      "task_id": "DOS-M8-001",
+      "depends_on_task_id": "DOS-M6-010",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-001",
+      "depends_on_task_id": "DOS-M7-010",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-002",
+      "depends_on_task_id": "DOS-M8-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-003",
+      "depends_on_task_id": "DOS-M6-009",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-003",
+      "depends_on_task_id": "DOS-M8-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-004",
+      "depends_on_task_id": "DOS-M8-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-005",
+      "depends_on_task_id": "DOS-M8-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-006",
+      "depends_on_task_id": "DOS-M8-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-007",
+      "depends_on_task_id": "DOS-M8-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-008",
+      "depends_on_task_id": "DOS-M8-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-008",
+      "depends_on_task_id": "DOS-M8-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-008",
+      "depends_on_task_id": "DOS-M8-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-008",
+      "depends_on_task_id": "DOS-M8-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-008",
+      "depends_on_task_id": "DOS-M8-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-008",
+      "depends_on_task_id": "DOS-M8-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M8-008",
+      "depends_on_task_id": "DOS-M8-007",
+      "dependency_type": "hard"
+    }
+  ],
+  "task_decisions": [
+    {
+      "task_id": "DOS-M8-001",
+      "decision_id": "DOS-M8-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-002",
+      "decision_id": "DOS-M8-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-002",
+      "decision_id": "DOS-M8-GATE-ECOSYSTEM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-003",
+      "decision_id": "DOS-M8-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-003",
+      "decision_id": "DOS-M8-GATE-ECOSYSTEM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-004",
+      "decision_id": "DOS-M8-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-004",
+      "decision_id": "DOS-M8-GATE-ECOSYSTEM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-005",
+      "decision_id": "DOS-M8-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-005",
+      "decision_id": "DOS-M8-GATE-ECOSYSTEM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-006",
+      "decision_id": "DOS-M8-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-006",
+      "decision_id": "DOS-M8-GATE-ECOSYSTEM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-007",
+      "decision_id": "DOS-M8-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-007",
+      "decision_id": "DOS-M8-GATE-ECOSYSTEM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-008",
+      "decision_id": "DOS-M8-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-008",
+      "decision_id": "DOS-M8-GATE-ECOSYSTEM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M8-001",
+      "decision_id": "DOS-M8-GATE-ECOSYSTEM",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    }
+  ],
+  "transaction_contract": [
+    "Verify exact Automation target, live function/schema/trigger fingerprints, immutable project ID, route, model, retry policy, command registrations and publication scopes before writes.",
+    "Acquire parent-reviewed transaction serialization lock and reread every scoped ID; existing equal payload is a no-op only after full canonical comparison; any differing state/history aborts. Never overwrite existing tasks, decisions, execution or requirement history.",
+    "Create or verify the real OPEN milestone start decision before any task; create every task through supported function and link every task to that decision with blocking=true in the SAME transaction.",
+    "Create all requirement, decision and dependency links and refresh contracts after final metadata. Do not commit partial task/link batches.",
+    "Assert exact payload counts, complete links, zero ready Doctor tasks using live ready-task predicate, zero claims/runs/executions, no publication authority, and all start decisions still OPEN immediately before commit.",
+    "Dry-run rollback and review returned evidence first. Parent controls any commit; never remove a guard from the original draft SQL.",
+    "After commit read back canonical packets and zero-ready evidence. Keep all nine start gates open until parent confirms all nine safely saved; release each milestone separately in dependency order."
+  ],
+  "pending_inputs": [
+    "Parent live schema/consumer and trigger contract",
+    "Reviewed Doctor suit/workstream/app mapping (function requires active project/workstream)",
+    "Verified high-capability deep model and retry policy IDs",
+    "Approved command registration and protected publication paths",
+    "Exact no-ready-task SQL predicate and transaction/rollback proof"
+  ]
+}

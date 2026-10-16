@@ -1,0 +1,545 @@
+{
+  "format": "reviewed-import-proposal-v1",
+  "milestone_id": "DOS-M6",
+  "packet_file": "DOS-M6.json",
+  "packet_sha256": "f12793bf6ce61a0cfb29c7071641ed4a22b2fe73fddf32eb54aa79378433cfa6",
+  "target": {
+    "repository": "Building-Suit/building-suit-monorepo",
+    "automation_project_ref": "padtxclxwwqvvuiebhte",
+    "project_slug": "building-suit",
+    "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+    "suit_slug": "doctor-suit",
+    "workstream_slug": "doctor-suit",
+    "application_path": "apps/doctor-suit",
+    "registration_status": "missing-per-parent-readonly-observation; parent must supply reviewed registration"
+  },
+  "safe_to_apply": false,
+  "task_create_function": "control.create_task_with_publication_contract(text,text,text,integer,integer,text,text,text,text,text,jsonb,jsonb,text,jsonb)",
+  "task_ids": [
+    "DOS-M6-001",
+    "DOS-M6-002",
+    "DOS-M6-003",
+    "DOS-M6-004",
+    "DOS-M6-005",
+    "DOS-M6-006",
+    "DOS-M6-007",
+    "DOS-M6-008",
+    "DOS-M6-009",
+    "DOS-M6-010"
+  ],
+  "requirements": [
+    {
+      "requirement_id": "DOS-M6-R001",
+      "title": "Milestone boundary and invariant",
+      "summary": "Doctor subscriptions and practice billing. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.",
+      "status": "proposed",
+      "provenance": "Supplied roadmap v0.2 plus current delegated scope."
+    },
+    {
+      "requirement_id": "DOS-M6-F001",
+      "title": "Doctor subscription and commercial-policy decisions",
+      "summary": "Approve per-doctor plans, prices, trial, locations/staff limits, refunds and expiry; invent no commercial values. Acceptance: Obtain explicit per-doctor plan, price/currency, trial, staff/location quota, renewal, grace/expiry, refund and cancellation decisions without filling commercial values from another Suit. Define doctor as subscriber and secretary as independently invited staff; separate subscription entitlement from practice patient billing. Approve preservation/access behavior on expiry and downgrade; historical clinical/financial records are never deleted to enforce a plan. Prepare evidence for DOS-M6-GATE-COMMERCIAL. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M6-001 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M6-F002",
+      "title": "Entitlement and usage enforcement",
+      "summary": "Implement backend quotas/idempotency with clear read/write behavior and no historical record deletion on expiry. Acceptance: Evaluate entitlements and quota mutations server-side from trusted current subscription state, with atomic allocation and idempotency. Implement approved write/read/export behavior for trial, active, past-due, cancelled and expired states without erasing history or blocking safety-critical access by assumption. Return explicit entitlement errors and usage totals scoped to doctor practice; client metadata and hidden buttons cannot grant paid capabilities.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M6-002 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M6-F003",
+      "title": "Subscription checkout or approved manual-payment process",
+      "summary": "Use an approved payment route; never assume account/provider eligibility or reuse another product secret. Acceptance: Choose an approved checkout or manual-payment route with verified account eligibility, currencies, cost/refund terms and server credentials ownership. Create server-side quote/payment intent from approved price/version and doctor subscriber identity; browser totals/return URLs are untrusted. Use only sandbox or synthetic manual evidence; no account creation, charges, paid API or production callback activation is included. Prepare evidence for DOS-M6-GATE-PAYMENT. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M6-003 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M6-F004",
+      "title": "Payment confirmation and reconciliation",
+      "summary": "Use trusted payment evidence, duplicate-event handling and reconciliation; browser return is not authority. Acceptance: Accept payment confirmation only through verified provider evidence or approved audited manual review, bound to payment intent, amount/currency and subscriber. Persist duplicate/out-of-order event handling, idempotent entitlement update and reconciliation of pending/unknown outcomes. Verify callback authentication and replay protection; retain financial history and exclude sensitive payment data from logs.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M6-004 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M6-F005",
+      "title": "Renewal, cancellation and subscription settings",
+      "summary": "Provide auditable lifecycle changes and accurate doctor-facing billing state. Acceptance: Implement approved renewal/cancel/reactivate lifecycle with effective dates, current plan/version and explicit customer acknowledgement. Separate requested cancellation from effective expiry and provider confirmation; retain invoices/payment history and auditable changes. Show accurate current, pending and failed billing state, retry safely and preserve allowed record access under expiry policy.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M6-005 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M6-F006",
+      "title": "Practice service prices and visit charges",
+      "summary": "Define doctor/location services and patient charges separately from the SaaS subscription. Acceptance: Define doctor/location service price records and effective versions separately from SaaS plans; persist patient charge snapshot and currency. Authorize charge creation/correction with links to visit/service and accountable actor; later price changes never rewrite an existing charge. Use exact monetary arithmetic and explicit rounding/discount approval rules; tax applicability remains gated.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M6-006 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M6-F007",
+      "title": "Collections, receipts and refunds",
+      "summary": "Implement atomic patient-payment/receipt/refund flows with appropriate approvals and immutable financial history. Acceptance: Post patient collections, allocations, receipt numbers and refunds atomically with idempotency, exact amounts and approved authorization. Preserve immutable financial entries and link corrections/refunds to originals; no destructive edit/delete of paid history. Prevent over-allocation and over-refund under concurrency, record pending/unknown external outcomes and reconcile before retrying money movement.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M6-007 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M6-F008",
+      "title": "Egypt tax-document applicability and adapter decision",
+      "summary": "Obtain qualified applicability review and verify required official integration before any compliance claim. Acceptance: Obtain qualified current Egypt tax-document applicability review for the exact business model, entity and service types; do not infer exemption or obligation. Record any required official interface/version, enrollment, credentials custody, environment and legal invoice/receipt fields from verified sources. If applicable, specify separately approved adapter/test requirements; absent evidence prohibits compliance badges or production tax submissions. Prepare evidence for DOS-M6-GATE-TAX. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M6-008 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M6-F009",
+      "title": "Revenue and settlement reporting",
+      "summary": "Reconcile practice revenue, outstanding balances and SaaS billing views to their distinct ledgers. Acceptance: Reconcile practice charges/collections/refunds/outstanding balances to their own immutable entries, separately from SaaS invoices/settlements. Use explicit date/status/currency definitions, scoped full-population queries and stable trace links from every report total to source. Show pending settlements/refunds and discrepancies; never net different currencies or equate provider payout with patient revenue.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M6-009 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M6-F010",
+      "title": "Financial and commercial acceptance",
+      "summary": "Verify concurrency, reconciliation, refunds, entitlements and separately approved commercial launch policy. Acceptance: Verify plan/entitlement/checkout-confirmation/renewal and practice-charge/payment/refund/report journeys on the exact synthetic candidate. Obtain independent financial review of concurrency, rounding, reconciliation and required commercial/tax decisions. Record commercial launch as separately unapproved until actual owner/provider evidence exists; no real money or production billing is exercised here.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M6-010 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    }
+  ],
+  "decisions": [
+    {
+      "decision_id": "DOS-M6-GATE-START",
+      "title": "DOS-M6 parent-controlled start gate",
+      "status": "open",
+      "decision_text": "Remain OPEN until all nine milestones are safely stored and parent verifies dependency acceptance, exact live runtime/registration/commands/paths and authorizes this milestone. Import does not grant execution.",
+      "source": "Current delegated instruction."
+    },
+    {
+      "decision_id": "DOS-M6-GATE-COMMERCIAL",
+      "title": "Per-doctor pricing/trial/limits/refund/expiry policy",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M6-001 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M6-001",
+      "producer_task_id": "DOS-M6-001"
+    },
+    {
+      "decision_id": "DOS-M6-GATE-PAYMENT",
+      "title": "Provider/manual-payment route and account/cost eligibility",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M6-003 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M6-003",
+      "producer_task_id": "DOS-M6-003"
+    },
+    {
+      "decision_id": "DOS-M6-GATE-TAX",
+      "title": "Qualified Egypt tax applicability and official adapter contract",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M6-008 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M6-008",
+      "producer_task_id": "DOS-M6-008"
+    }
+  ],
+  "task_requirements": [
+    {
+      "task_id": "DOS-M6-001",
+      "requirement_id": "DOS-M6-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-001",
+      "requirement_id": "DOS-M6-F001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-002",
+      "requirement_id": "DOS-M6-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-002",
+      "requirement_id": "DOS-M6-F002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-003",
+      "requirement_id": "DOS-M6-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-003",
+      "requirement_id": "DOS-M6-F003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-004",
+      "requirement_id": "DOS-M6-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-004",
+      "requirement_id": "DOS-M6-F004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-005",
+      "requirement_id": "DOS-M6-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-005",
+      "requirement_id": "DOS-M6-F005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-006",
+      "requirement_id": "DOS-M6-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-006",
+      "requirement_id": "DOS-M6-F006",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-007",
+      "requirement_id": "DOS-M6-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-007",
+      "requirement_id": "DOS-M6-F007",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-008",
+      "requirement_id": "DOS-M6-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-008",
+      "requirement_id": "DOS-M6-F008",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-009",
+      "requirement_id": "DOS-M6-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-009",
+      "requirement_id": "DOS-M6-F009",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "requirement_id": "DOS-M6-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "requirement_id": "DOS-M6-F010",
+      "suit_slug": "doctor-suit"
+    }
+  ],
+  "task_dependencies": [
+    {
+      "task_id": "DOS-M6-001",
+      "depends_on_task_id": "DOS-M1-020",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-001",
+      "depends_on_task_id": "DOS-M3-010",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-002",
+      "depends_on_task_id": "DOS-M6-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-003",
+      "depends_on_task_id": "DOS-M6-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-004",
+      "depends_on_task_id": "DOS-M6-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-005",
+      "depends_on_task_id": "DOS-M6-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-006",
+      "depends_on_task_id": "DOS-M6-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-007",
+      "depends_on_task_id": "DOS-M6-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-008",
+      "depends_on_task_id": "DOS-M6-007",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-009",
+      "depends_on_task_id": "DOS-M6-008",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "depends_on_task_id": "DOS-M6-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "depends_on_task_id": "DOS-M6-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "depends_on_task_id": "DOS-M6-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "depends_on_task_id": "DOS-M6-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "depends_on_task_id": "DOS-M6-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "depends_on_task_id": "DOS-M6-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "depends_on_task_id": "DOS-M6-007",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "depends_on_task_id": "DOS-M6-008",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "depends_on_task_id": "DOS-M6-009",
+      "dependency_type": "hard"
+    }
+  ],
+  "task_decisions": [
+    {
+      "task_id": "DOS-M6-001",
+      "decision_id": "DOS-M6-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-002",
+      "decision_id": "DOS-M6-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-002",
+      "decision_id": "DOS-M6-GATE-COMMERCIAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-003",
+      "decision_id": "DOS-M6-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-003",
+      "decision_id": "DOS-M6-GATE-COMMERCIAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-004",
+      "decision_id": "DOS-M6-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-004",
+      "decision_id": "DOS-M6-GATE-COMMERCIAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-004",
+      "decision_id": "DOS-M6-GATE-PAYMENT",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-005",
+      "decision_id": "DOS-M6-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-005",
+      "decision_id": "DOS-M6-GATE-COMMERCIAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-005",
+      "decision_id": "DOS-M6-GATE-PAYMENT",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-006",
+      "decision_id": "DOS-M6-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-006",
+      "decision_id": "DOS-M6-GATE-COMMERCIAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-006",
+      "decision_id": "DOS-M6-GATE-PAYMENT",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-007",
+      "decision_id": "DOS-M6-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-007",
+      "decision_id": "DOS-M6-GATE-COMMERCIAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-007",
+      "decision_id": "DOS-M6-GATE-PAYMENT",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-008",
+      "decision_id": "DOS-M6-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-008",
+      "decision_id": "DOS-M6-GATE-COMMERCIAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-008",
+      "decision_id": "DOS-M6-GATE-PAYMENT",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-009",
+      "decision_id": "DOS-M6-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-009",
+      "decision_id": "DOS-M6-GATE-COMMERCIAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-009",
+      "decision_id": "DOS-M6-GATE-PAYMENT",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-009",
+      "decision_id": "DOS-M6-GATE-TAX",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "decision_id": "DOS-M6-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "decision_id": "DOS-M6-GATE-COMMERCIAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "decision_id": "DOS-M6-GATE-PAYMENT",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-010",
+      "decision_id": "DOS-M6-GATE-TAX",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M6-001",
+      "decision_id": "DOS-M6-GATE-COMMERCIAL",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    },
+    {
+      "task_id": "DOS-M6-003",
+      "decision_id": "DOS-M6-GATE-PAYMENT",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    },
+    {
+      "task_id": "DOS-M6-008",
+      "decision_id": "DOS-M6-GATE-TAX",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    }
+  ],
+  "transaction_contract": [
+    "Verify exact Automation target, live function/schema/trigger fingerprints, immutable project ID, route, model, retry policy, command registrations and publication scopes before writes.",
+    "Acquire parent-reviewed transaction serialization lock and reread every scoped ID; existing equal payload is a no-op only after full canonical comparison; any differing state/history aborts. Never overwrite existing tasks, decisions, execution or requirement history.",
+    "Create or verify the real OPEN milestone start decision before any task; create every task through supported function and link every task to that decision with blocking=true in the SAME transaction.",
+    "Create all requirement, decision and dependency links and refresh contracts after final metadata. Do not commit partial task/link batches.",
+    "Assert exact payload counts, complete links, zero ready Doctor tasks using live ready-task predicate, zero claims/runs/executions, no publication authority, and all start decisions still OPEN immediately before commit.",
+    "Dry-run rollback and review returned evidence first. Parent controls any commit; never remove a guard from the original draft SQL.",
+    "After commit read back canonical packets and zero-ready evidence. Keep all nine start gates open until parent confirms all nine safely saved; release each milestone separately in dependency order."
+  ],
+  "pending_inputs": [
+    "Parent live schema/consumer and trigger contract",
+    "Reviewed Doctor suit/workstream/app mapping (function requires active project/workstream)",
+    "Verified high-capability deep model and retry policy IDs",
+    "Approved command registration and protected publication paths",
+    "Exact no-ready-task SQL predicate and transaction/rollback proof"
+  ]
+}

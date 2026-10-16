@@ -1,0 +1,536 @@
+{
+  "format": "reviewed-import-proposal-v1",
+  "milestone_id": "DOS-M4",
+  "packet_file": "DOS-M4.json",
+  "packet_sha256": "9c1d6c162a32a15fb1c0fa9b226b7fb384cc421bf9e4ca9c24e89783248f4215",
+  "target": {
+    "repository": "Building-Suit/building-suit-monorepo",
+    "automation_project_ref": "padtxclxwwqvvuiebhte",
+    "project_slug": "building-suit",
+    "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+    "suit_slug": "doctor-suit",
+    "workstream_slug": "doctor-suit",
+    "application_path": "apps/doctor-suit",
+    "registration_status": "missing-per-parent-readonly-observation; parent must supply reviewed registration"
+  },
+  "safe_to_apply": false,
+  "task_create_function": "control.create_task_with_publication_contract(text,text,text,integer,integer,text,text,text,text,text,jsonb,jsonb,text,jsonb)",
+  "task_ids": [
+    "DOS-M4-001",
+    "DOS-M4-002",
+    "DOS-M4-003",
+    "DOS-M4-004",
+    "DOS-M4-005",
+    "DOS-M4-006",
+    "DOS-M4-007",
+    "DOS-M4-008",
+    "DOS-M4-009",
+    "DOS-M4-010"
+  ],
+  "requirements": [
+    {
+      "requirement_id": "DOS-M4-R001",
+      "title": "Milestone boundary and invariant",
+      "summary": "Doctor and secretary mobile experience. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.",
+      "status": "proposed",
+      "provenance": "Supplied roadmap v0.2 plus current delegated scope."
+    },
+    {
+      "requirement_id": "DOS-M4-F001",
+      "title": "Mobile platform and distribution decision",
+      "summary": "Approve Android/iOS scope, framework, device support and deployment/cost policy; no silent framework adoption. Acceptance: Approve Android/iOS or other explicitly selected scope, supported device/OS matrix, framework, renderer and distribution method with owner and cost responsibility. Record an architecture decision for native rendering versus current web-only shared templates, package boundaries, secure storage, accessibility and exact build/device verification commands. Name reserved source paths and test harness ownership; no scaffold, platform account, signing certificate, store purchase or framework install precedes this decision. Prepare evidence for DOS-M4-GATE-PLATFORM, DOS-M4-GATE-OFFLINE. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M4-001 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M4-F002",
+      "title": "Mobile app shell and shared contracts",
+      "summary": "Implement approved mobile navigation/contracts while preserving product-owned backend authorization. Acceptance: Create the approved mobile entry/navigation shell with explicit doctor/practice/location context and typed versioned backend contracts. Preserve application-owned data adapters and server authorization; shared pure contracts never import the mobile application. Provide loading, signed-out, permission-denied, offline and recoverable-error states; a shell route cannot expose clinical data before context validation. Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M4-002 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M4-F003",
+      "title": "Mobile authentication and session lifecycle",
+      "summary": "Implement secure storage/session expiry/logout and account recovery for the chosen platform. Acceptance: Use the approved platform secure storage and product/environment-specific session namespace; never store privileged backend keys. Implement login/recovery/refresh/expiry/logout and server revocation with clear pending/failure states and permitted redirect/deep-link targets. Clear protected caches and pending drafts according to the approved policy on logout/account change/device loss; biometric unlock is not fresh server authorization. Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M4-003 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M4-F004",
+      "title": "Doctor/practice/location and employee context",
+      "summary": "Support clear scoped context switching with immediate cache/draft invalidation. Acceptance: Resolve doctor memberships and location grants from the server and display active practice/location on every protected mobile flow. Cancel inflight queries, discard stale responses and clear sensitive state when context changes; unsaved edits require safe explicit handling. One secretary may switch independent doctor memberships without gaining subscriber or signing authority. Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M4-004 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M4-F005",
+      "title": "Patient directory and profile on mobile",
+      "summary": "Deliver fast authorized patient lookup, profile and document access with failure states. Acceptance: Support authorized patient search/pagination/profile and private document retrieval using the same patient-relationship IDs as web. Minimize local cached data under the approved policy; downloads and previews require current permission and contain no public object URLs. Preserve readable English/Arabic names, explicit provenance and empty/denied/error states without matching contacts to identity. Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M4-005 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M4-F006",
+      "title": "Mobile clinical notes and encounter workflow",
+      "summary": "Allow doctor-authored encounter updates with tested conflict/unsaved-state handling. Acceptance: Edit clinician-authored encounters through the same versioned state-transition APIs as web; mobile cannot invent extra transition authority. Persist only drafts allowed by the offline policy and show unsent state distinctly; finalized content cannot be edited in place. Resolve concurrent web/mobile edits explicitly with preserved provenance; no last-write-wins overwrite of clinical data. Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M4-006 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M4-F007",
+      "title": "Mobile prescription authoring and review",
+      "summary": "Provide safe structured prescribing and signing using the same authoritative clinical contracts. Acceptance: Render structured prescription fields and full review summary from M2 contracts without defaulting clinical values or recommending doses. Signing uses current accountable clinician authorization, immutable server versions and explicit confirmation of the exact draft. Stopped/amended prescriptions refresh promptly and any stale cached signing action fails closed. Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M4-007 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M4-F008",
+      "title": "Mobile schedule and staff operations",
+      "summary": "Deliver appointments/queue and delegated secretary actions without permission widening. Acceptance: Provide schedule, check-in and queue actions with practice/location attribution and the same cross-location conflict rules as web. Respect independent secretary capabilities and membership changes for every action, not only visible navigation. Reconcile retry/reconnect and concurrent staff edits from server acknowledgements without duplicate appointments or queue entries. Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M4-008 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M4-F009",
+      "title": "Connectivity and offline policy implementation",
+      "summary": "Implement only the approved offline/cache policy; define conflicts, device loss and expiring local sensitive data. Acceptance: Approve which data may be cached or drafted offline, expiry, encryption, device-loss response and permitted reconciliation behavior; default to no offline signing. Implement explicit cache lifecycle and conflict rules with server version/authorization revalidation; never upload a revoked or cross-practice pending draft silently. Document unsupported offline actions and purge evidence; no promise of full offline clinical operation. Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M4-009 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M4-F010",
+      "title": "Device and mobile release-candidate verification",
+      "summary": "Verify real-device journeys, accessibility, security and distribution prerequisites without publishing automatically. Acceptance: Run the approved real-device matrix for authentication, context, charts, notes, prescription review and delegated schedule workflows. Record exact app build, backend candidate, OS/device versions, permissions, accessibility and security results; simulators alone cannot prove device behavior. Verify distribution/signing prerequisites and remaining issues without uploading to stores or releasing; mobile launch requires M7 acceptance too. Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M4-010 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    }
+  ],
+  "decisions": [
+    {
+      "decision_id": "DOS-M4-GATE-START",
+      "title": "DOS-M4 parent-controlled start gate",
+      "status": "open",
+      "decision_text": "Remain OPEN until all nine milestones are safely stored and parent verifies dependency acceptance, exact live runtime/registration/commands/paths and authorizes this milestone. Import does not grant execution.",
+      "source": "Current delegated instruction."
+    },
+    {
+      "decision_id": "DOS-M4-GATE-PLATFORM",
+      "title": "Doctor/secretary mobile framework, platforms, device support and exact command/path registration",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M4-001 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M4-001",
+      "producer_task_id": "DOS-M4-001"
+    },
+    {
+      "decision_id": "DOS-M4-GATE-OFFLINE",
+      "title": "Clinically reviewed offline/cache/conflict/device-loss policy; implemented by DOS-M4-009",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M4-001 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M4-001",
+      "producer_task_id": "DOS-M4-001"
+    }
+  ],
+  "task_requirements": [
+    {
+      "task_id": "DOS-M4-001",
+      "requirement_id": "DOS-M4-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-001",
+      "requirement_id": "DOS-M4-F001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-002",
+      "requirement_id": "DOS-M4-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-002",
+      "requirement_id": "DOS-M4-F002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-003",
+      "requirement_id": "DOS-M4-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-003",
+      "requirement_id": "DOS-M4-F003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-004",
+      "requirement_id": "DOS-M4-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-004",
+      "requirement_id": "DOS-M4-F004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-005",
+      "requirement_id": "DOS-M4-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-005",
+      "requirement_id": "DOS-M4-F005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-006",
+      "requirement_id": "DOS-M4-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-006",
+      "requirement_id": "DOS-M4-F006",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-007",
+      "requirement_id": "DOS-M4-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-007",
+      "requirement_id": "DOS-M4-F007",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-008",
+      "requirement_id": "DOS-M4-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-008",
+      "requirement_id": "DOS-M4-F008",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-009",
+      "requirement_id": "DOS-M4-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-009",
+      "requirement_id": "DOS-M4-F009",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "requirement_id": "DOS-M4-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "requirement_id": "DOS-M4-F010",
+      "suit_slug": "doctor-suit"
+    }
+  ],
+  "task_dependencies": [
+    {
+      "task_id": "DOS-M4-001",
+      "depends_on_task_id": "DOS-M2-014",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-002",
+      "depends_on_task_id": "DOS-M4-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-003",
+      "depends_on_task_id": "DOS-M4-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-004",
+      "depends_on_task_id": "DOS-M4-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-005",
+      "depends_on_task_id": "DOS-M4-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-006",
+      "depends_on_task_id": "DOS-M2-014",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-006",
+      "depends_on_task_id": "DOS-M4-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-007",
+      "depends_on_task_id": "DOS-M2-014",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-007",
+      "depends_on_task_id": "DOS-M4-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-008",
+      "depends_on_task_id": "DOS-M4-007",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-009",
+      "depends_on_task_id": "DOS-M4-008",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "depends_on_task_id": "DOS-M4-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "depends_on_task_id": "DOS-M4-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "depends_on_task_id": "DOS-M4-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "depends_on_task_id": "DOS-M4-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "depends_on_task_id": "DOS-M4-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "depends_on_task_id": "DOS-M4-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "depends_on_task_id": "DOS-M4-007",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "depends_on_task_id": "DOS-M4-008",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "depends_on_task_id": "DOS-M4-009",
+      "dependency_type": "hard"
+    }
+  ],
+  "task_decisions": [
+    {
+      "task_id": "DOS-M4-001",
+      "decision_id": "DOS-M4-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-002",
+      "decision_id": "DOS-M4-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-002",
+      "decision_id": "DOS-M4-GATE-PLATFORM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-002",
+      "decision_id": "DOS-M4-GATE-OFFLINE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-003",
+      "decision_id": "DOS-M4-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-003",
+      "decision_id": "DOS-M4-GATE-PLATFORM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-003",
+      "decision_id": "DOS-M4-GATE-OFFLINE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-004",
+      "decision_id": "DOS-M4-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-004",
+      "decision_id": "DOS-M4-GATE-PLATFORM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-004",
+      "decision_id": "DOS-M4-GATE-OFFLINE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-005",
+      "decision_id": "DOS-M4-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-005",
+      "decision_id": "DOS-M4-GATE-PLATFORM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-005",
+      "decision_id": "DOS-M4-GATE-OFFLINE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-006",
+      "decision_id": "DOS-M4-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-006",
+      "decision_id": "DOS-M4-GATE-PLATFORM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-006",
+      "decision_id": "DOS-M4-GATE-OFFLINE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-007",
+      "decision_id": "DOS-M4-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-007",
+      "decision_id": "DOS-M4-GATE-PLATFORM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-007",
+      "decision_id": "DOS-M4-GATE-OFFLINE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-008",
+      "decision_id": "DOS-M4-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-008",
+      "decision_id": "DOS-M4-GATE-PLATFORM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-008",
+      "decision_id": "DOS-M4-GATE-OFFLINE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-009",
+      "decision_id": "DOS-M4-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-009",
+      "decision_id": "DOS-M4-GATE-PLATFORM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-009",
+      "decision_id": "DOS-M4-GATE-OFFLINE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "decision_id": "DOS-M4-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "decision_id": "DOS-M4-GATE-PLATFORM",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "decision_id": "DOS-M4-GATE-OFFLINE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M4-001",
+      "decision_id": "DOS-M4-GATE-PLATFORM",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    },
+    {
+      "task_id": "DOS-M4-001",
+      "decision_id": "DOS-M4-GATE-OFFLINE",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    }
+  ],
+  "transaction_contract": [
+    "Verify exact Automation target, live function/schema/trigger fingerprints, immutable project ID, route, model, retry policy, command registrations and publication scopes before writes.",
+    "Acquire parent-reviewed transaction serialization lock and reread every scoped ID; existing equal payload is a no-op only after full canonical comparison; any differing state/history aborts. Never overwrite existing tasks, decisions, execution or requirement history.",
+    "Create or verify the real OPEN milestone start decision before any task; create every task through supported function and link every task to that decision with blocking=true in the SAME transaction.",
+    "Create all requirement, decision and dependency links and refresh contracts after final metadata. Do not commit partial task/link batches.",
+    "Assert exact payload counts, complete links, zero ready Doctor tasks using live ready-task predicate, zero claims/runs/executions, no publication authority, and all start decisions still OPEN immediately before commit.",
+    "Dry-run rollback and review returned evidence first. Parent controls any commit; never remove a guard from the original draft SQL.",
+    "After commit read back canonical packets and zero-ready evidence. Keep all nine start gates open until parent confirms all nine safely saved; release each milestone separately in dependency order."
+  ],
+  "pending_inputs": [
+    "Parent live schema/consumer and trigger contract",
+    "Reviewed Doctor suit/workstream/app mapping (function requires active project/workstream)",
+    "Verified high-capability deep model and retry policy IDs",
+    "Approved command registration and protected publication paths",
+    "Exact no-ready-task SQL predicate and transaction/rollback proof"
+  ]
+}

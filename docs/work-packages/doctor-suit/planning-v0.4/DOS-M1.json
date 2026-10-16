@@ -349,6 +349,127 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-001-V01",
+          "assertion": "Trace each supplied user outcome to the proposed milestones.",
+          "required_outputs": [
+            "tooling/checks/dos-m1-contract.test.mjs"
+          ],
+          "command_refs": [
+            "dos-m1-001-unit"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-001-V02",
+          "assertion": "Check recovered historical IDs for overlap; absence of old files must remain recorded.",
+          "required_outputs": [
+            "tooling/checks/dos-m1-contract.test.mjs"
+          ],
+          "command_refs": [
+            "dos-m1-001-unit"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-001-V03",
+          "assertion": "Review all navigation states with no fabricated product or legal claims.",
+          "required_outputs": [
+            "tooling/checks/dos-m1-contract.test.mjs"
+          ],
+          "command_refs": [
+            "dos-m1-001-unit"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Document approved facts separately from the proposed web-first interpretation and open decisions.",
+          "verification_case_ids": [
+            "DOS-M1-001-V01",
+            "DOS-M1-001-V02",
+            "DOS-M1-001-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Describe doctor-alone and delegated workflows, multiple locations, multi-doctor secretaries, and persistent doctor ownership.",
+          "verification_case_ids": [
+            "DOS-M1-001-V01",
+            "DOS-M1-001-V02",
+            "DOS-M1-001-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Publish a route/template inventory, permission matrix, synthetic-data policy and traceable acceptance checklist; unresolved choices stay open.",
+          "verification_case_ids": [
+            "DOS-M1-001-V01",
+            "DOS-M1-001-V02",
+            "DOS-M1-001-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Identify the actual registered execution route and verification/publication gaps without changing runtime configuration or declaring compatibility.",
+          "verification_case_ids": [
+            "DOS-M1-001-V01",
+            "DOS-M1-001-V02",
+            "DOS-M1-001-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -514,6 +635,143 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-002-V01",
+          "assertion": "Run generator fixture/boundary checks and verify new routes are discovered.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-002.test.mjs"
+          ],
+          "command_refs": [
+            "dos-m1-002-unit"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-002-V02",
+          "assertion": "Build the app with placeholder-safe local configuration.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-002.test.mjs"
+          ],
+          "command_refs": [
+            "dos-m1-002-unit"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-002-V03",
+          "assertion": "Verify no Shop/Ledger imports, copied tenants, secrets or app-local component layer.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-002.test.mjs"
+          ],
+          "command_refs": [
+            "dos-m1-002-unit"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Inspect pnpm new:platform doctor-suit \"Doctor Suit\" --dry-run before generation; do not copy another product app.",
+          "verification_case_ids": [
+            "DOS-M1-002-V01",
+            "DOS-M1-002-V02",
+            "DOS-M1-002-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Use BsAppRoot, shared layouts and one registered complete template per route with zero migration debt.",
+          "verification_case_ids": [
+            "DOS-M1-002-V01",
+            "DOS-M1-002-V02",
+            "DOS-M1-002-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Provide scoped AGENTS, environment examples with no values, app manifest, local-preview instructions and the minimum root registration diff.",
+          "verification_case_ids": [
+            "DOS-M1-002-V01",
+            "DOS-M1-002-V02",
+            "DOS-M1-002-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Do not provision a hosted project, choose unverified ports/domain/provider refs or activate a public release product.",
+          "verification_case_ids": [
+            "DOS-M1-002-V01",
+            "DOS-M1-002-V02",
+            "DOS-M1-002-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 5,
+          "text": "Create an app-local Playwright configuration and synthetic-browser fixture harness at apps/doctor-suit/tests/e2e/playwright.config.ts; select collision-free local ports and ensure remote backend URLs are rejected. The named control-plane command is registered separately by the authorized operator, not by this task.",
+          "verification_case_ids": [
+            "DOS-M1-002-V01",
+            "DOS-M1-002-V02",
+            "DOS-M1-002-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -659,6 +917,149 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-003-V01",
+          "assertion": "Test anonymous, doctor A, doctor B, secretary and outsider access with two simultaneous sessions.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-003.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-003.sql"
+          ],
+          "command_refs": [
+            "dos-m1-003-unit",
+            "dos-m1-003-data"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-003-V02",
+          "assertion": "Reject client-supplied ownership and user-editable metadata escalation.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-003.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-003.sql"
+          ],
+          "command_refs": [
+            "dos-m1-003-unit",
+            "dos-m1-003-data"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-003-V03",
+          "assertion": "Run the exact product-local migration/reset/test lifecycle in a disposable environment.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-003.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-003.sql"
+          ],
+          "command_refs": [
+            "dos-m1-003-unit",
+            "dos-m1-003-data"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Use an app-owned local Supabase root and forward migrations; production/staging refs remain unprovisioned.",
+          "verification_case_ids": [
+            "DOS-M1-003-V01",
+            "DOS-M1-003-V02",
+            "DOS-M1-003-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Separate user identity, doctor practice, location and membership; memberships do not confer cross-practice access.",
+          "verification_case_ids": [
+            "DOS-M1-003-V01",
+            "DOS-M1-003-V02",
+            "DOS-M1-003-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Every protected operation validates the server-side practice/context and auditable actor.",
+          "verification_case_ids": [
+            "DOS-M1-003-V01",
+            "DOS-M1-003-V02",
+            "DOS-M1-003-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Create deterministic synthetic fixtures for two doctors, shared secretary, two locations and an outsider; register no hosted writes.",
+          "verification_case_ids": [
+            "DOS-M1-003-V01",
+            "DOS-M1-003-V02",
+            "DOS-M1-003-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 5,
+          "text": "Record local-only collision-free project/port mapping and blank unprovisioned hosted entries; no credentials. Create the local data verification lifecycle and generated types; reject hosted targets in the browser fixture harness.",
+          "verification_case_ids": [
+            "DOS-M1-003-V01",
+            "DOS-M1-003-V02",
+            "DOS-M1-003-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -824,6 +1225,127 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-004-V01",
+          "assertion": "Exercise context switches with unsaved data and stale async responses.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-004.test.mjs"
+          ],
+          "command_refs": [
+            "dos-m1-004-unit"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-004-V02",
+          "assertion": "Run strict template boundaries and affected shared-component checks.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-004.test.mjs"
+          ],
+          "command_refs": [
+            "dos-m1-004-unit"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-004-V03",
+          "assertion": "Preview narrow mobile browser and desktop without hidden actions or keyboard traps.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-004.test.mjs"
+          ],
+          "command_refs": [
+            "dos-m1-004-unit"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "All new visual composition is exported from packages/ui; product queries remain in Doctor Suit adapters.",
+          "verification_case_ids": [
+            "DOS-M1-004-V01",
+            "DOS-M1-004-V02",
+            "DOS-M1-004-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "The active doctor/practice/location is persistently clear; switching context clears sensitive caches and drafts.",
+          "verification_case_ids": [
+            "DOS-M1-004-V01",
+            "DOS-M1-004-V02",
+            "DOS-M1-004-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Navigation, keyboard/focus, dirty-state warnings, loading/empty/error/denied states work from the first slice.",
+          "verification_case_ids": [
+            "DOS-M1-004-V01",
+            "DOS-M1-004-V02",
+            "DOS-M1-004-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "English/Arabic, LTR/RTL and light/dark use existing repository infrastructure if the monorepo decision is approved.",
+          "verification_case_ids": [
+            "DOS-M1-004-V01",
+            "DOS-M1-004-V02",
+            "DOS-M1-004-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -988,6 +1510,133 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-005-V01",
+          "assertion": "Check every call to action, internal link and public readiness label.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-005.test.mjs",
+            "apps/doctor-suit/tests/e2e/dos-m1-005.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-005-unit",
+            "dos-m1-005-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-005-V02",
+          "assertion": "Verify anonymous SSR produces no private records or credentials.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-005.test.mjs",
+            "apps/doctor-suit/tests/e2e/dos-m1-005.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-005-unit",
+            "dos-m1-005-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-005-V03",
+          "assertion": "Review both languages and mobile navigation for layout/copy parity.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-005.test.mjs",
+            "apps/doctor-suit/tests/e2e/dos-m1-005.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-005-unit",
+            "dos-m1-005-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Explain doctor ownership, location independence, delegated staff and future patient/mobile continuity using approved content.",
+          "verification_case_ids": [
+            "DOS-M1-005-V01",
+            "DOS-M1-005-V02",
+            "DOS-M1-005-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Separate implemented, preview and planned capabilities; no fabricated customers, reviews, compliance badges or release history.",
+          "verification_case_ids": [
+            "DOS-M1-005-V01",
+            "DOS-M1-005-V02",
+            "DOS-M1-005-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Do not invent pricing, trial length, payment availability, download links or production onboarding.",
+          "verification_case_ids": [
+            "DOS-M1-005-V01",
+            "DOS-M1-005-V02",
+            "DOS-M1-005-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Primary actions go to a real approved route; use a preview/explanation state rather than fake submission or account creation.",
+          "verification_case_ids": [
+            "DOS-M1-005-V01",
+            "DOS-M1-005-V02",
+            "DOS-M1-005-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -1174,6 +1823,139 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-006-V01",
+          "assertion": "Test new/existing user, expired verification, invalid recovery and open-redirect attempts.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-006.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-006.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-006.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-006-unit",
+            "dos-m1-006-data",
+            "dos-m1-006-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-006-V02",
+          "assertion": "Test simultaneous Doctor/other-product sessions and cache clearing on logout.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-006.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-006.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-006.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-006-unit",
+            "dos-m1-006-data",
+            "dos-m1-006-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-006-V03",
+          "assertion": "Use the local mail/test environment; do not send external email.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-006.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-006.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-006.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-006-unit",
+            "dos-m1-006-data",
+            "dos-m1-006-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Support sign-up/sign-in/sign-out, verification and recovery states with explicit provider configuration gates.",
+          "verification_case_ids": [
+            "DOS-M1-006-V01",
+            "DOS-M1-006-V02",
+            "DOS-M1-006-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Do not infer a verified identity or ownership from matching email/phone or editable metadata.",
+          "verification_case_ids": [
+            "DOS-M1-006-V01",
+            "DOS-M1-006-V02",
+            "DOS-M1-006-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Validate redirects/callbacks and preserve product/environment cookie isolation.",
+          "verification_case_ids": [
+            "DOS-M1-006-V01",
+            "DOS-M1-006-V02",
+            "DOS-M1-006-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Expiry, retries, refresh and errors cannot leave an authenticated-looking but unauthorized session.",
+          "verification_case_ids": [
+            "DOS-M1-006-V01",
+            "DOS-M1-006-V02",
+            "DOS-M1-006-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -1359,6 +2141,139 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-007-V01",
+          "assertion": "Resume incomplete onboarding after refresh and another session.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-007.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-007.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-007-unit",
+            "dos-m1-007-data",
+            "dos-m1-007-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-007-V02",
+          "assertion": "Retry/double-submit while checking one practice/one owner membership.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-007.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-007.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-007-unit",
+            "dos-m1-007-data",
+            "dos-m1-007-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-007-V03",
+          "assertion": "Verify a secretary cannot self-promote through onboarding endpoints.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-007.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-007.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-007-unit",
+            "dos-m1-007-data",
+            "dos-m1-007-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "A doctor can complete onboarding alone and add an initial location.",
+          "verification_case_ids": [
+            "DOS-M1-007-V01",
+            "DOS-M1-007-V02",
+            "DOS-M1-007-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Onboarding is resumable and idempotent; double-submit does not create duplicate practices.",
+          "verification_case_ids": [
+            "DOS-M1-007-V01",
+            "DOS-M1-007-V02",
+            "DOS-M1-007-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Store only the approved profile fields; professional verification is not asserted unless independently established.",
+          "verification_case_ids": [
+            "DOS-M1-007-V01",
+            "DOS-M1-007-V02",
+            "DOS-M1-007-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Show incomplete configuration honestly; later subscription rules do not block a synthetic preview.",
+          "verification_case_ids": [
+            "DOS-M1-007-V01",
+            "DOS-M1-007-V02",
+            "DOS-M1-007-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -1544,6 +2459,139 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-008-V01",
+          "assertion": "Test two locations, cross-location patient lookup and restricted secretary access.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-008.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-008.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-008.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-008-unit",
+            "dos-m1-008-data",
+            "dos-m1-008-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-008-V02",
+          "assertion": "Archive a location with future appointments and surface a resolution workflow.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-008.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-008.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-008.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-008-unit",
+            "dos-m1-008-data",
+            "dos-m1-008-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-008-V03",
+          "assertion": "Check stale browser requests after a context switch cannot overwrite the new context.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-008.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-008.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-008.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-008-unit",
+            "dos-m1-008-data",
+            "dos-m1-008-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Create/edit/archive locations and configure contact/schedule context without deleting linked history.",
+          "verification_case_ids": [
+            "DOS-M1-008-V01",
+            "DOS-M1-008-V02",
+            "DOS-M1-008-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "A doctor retains practice-level patients while encounters/appointments retain location attribution.",
+          "verification_case_ids": [
+            "DOS-M1-008-V01",
+            "DOS-M1-008-V02",
+            "DOS-M1-008-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Location visibility honors membership grants; no inference from a client-selected location ID.",
+          "verification_case_ids": [
+            "DOS-M1-008-V01",
+            "DOS-M1-008-V02",
+            "DOS-M1-008-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Use an explicit configurable timezone; do not hardcode fixed UTC offsets.",
+          "verification_case_ids": [
+            "DOS-M1-008-V01",
+            "DOS-M1-008-V02",
+            "DOS-M1-008-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -1730,6 +2778,139 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-009-V01",
+          "assertion": "Test reused/expired/wrong-recipient invitations and concurrent acceptance.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-009.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-009.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-009.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-009-unit",
+            "dos-m1-009-data",
+            "dos-m1-009-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-009-V02",
+          "assertion": "Test shared secretary access across two doctors with no mixed lists, search or uploads.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-009.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-009.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-009.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-009-unit",
+            "dos-m1-009-data",
+            "dos-m1-009-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-009-V03",
+          "assertion": "Test revocation while the secretary keeps a browser tab open.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-009.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-009.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-009.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-009-unit",
+            "dos-m1-009-data",
+            "dos-m1-009-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Invitation acceptance validates intended recipient, expiry, membership scope and idempotency.",
+          "verification_case_ids": [
+            "DOS-M1-009-V01",
+            "DOS-M1-009-V02",
+            "DOS-M1-009-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "The same secretary can belong to two practices with different location grants.",
+          "verification_case_ids": [
+            "DOS-M1-009-V01",
+            "DOS-M1-009-V02",
+            "DOS-M1-009-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Revocation/suspension invalidates protected access according to tested session/cache guarantees.",
+          "verification_case_ids": [
+            "DOS-M1-009-V01",
+            "DOS-M1-009-V02",
+            "DOS-M1-009-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "No secretary subscription is created and no other doctor membership is changed by this invitation.",
+          "verification_case_ids": [
+            "DOS-M1-009-V01",
+            "DOS-M1-009-V02",
+            "DOS-M1-009-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -1916,6 +3097,139 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-010-V01",
+          "assertion": "Exercise each denied operation directly, not just by hiding a button.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-010.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-010.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-010.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-010-unit",
+            "dos-m1-010-data",
+            "dos-m1-010-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-010-V02",
+          "assertion": "Test permission changes, revoked memberships, overposted fields and conflicting grants.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-010.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-010.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-010.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-010-unit",
+            "dos-m1-010-data",
+            "dos-m1-010-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-010-V03",
+          "assertion": "Audit actor and scope for grant/revoke and privileged administrative writes.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-010.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-010.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-010.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-010-unit",
+            "dos-m1-010-data",
+            "dos-m1-010-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Doctor can grant only selected capabilities or all approved delegable administrative capabilities.",
+          "verification_case_ids": [
+            "DOS-M1-010-V01",
+            "DOS-M1-010-V02",
+            "DOS-M1-010-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Every command/query/attachment access path enforces matching backend grants.",
+          "verification_case_ids": [
+            "DOS-M1-010-V01",
+            "DOS-M1-010-V02",
+            "DOS-M1-010-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "No capability grants access to another doctor; no implicit employee-to-owner escalation.",
+          "verification_case_ids": [
+            "DOS-M1-010-V01",
+            "DOS-M1-010-V02",
+            "DOS-M1-010-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Clinical signing and prescribing authority are not implemented in M1; the later physician-only boundary remains a safety decision, not a secretary role shortcut.",
+          "verification_case_ids": [
+            "DOS-M1-010-V01",
+            "DOS-M1-010-V02",
+            "DOS-M1-010-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -2103,6 +3417,139 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-011-V01",
+          "assertion": "Test duplicate-name/shared-phone households, pagination and simultaneous edits.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-011.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-011.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-011.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-011-unit",
+            "dos-m1-011-data",
+            "dos-m1-011-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-011-V02",
+          "assertion": "Test doctor A versus doctor B and secretary capability variants.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-011.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-011.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-011.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-011-unit",
+            "dos-m1-011-data",
+            "dos-m1-011-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-011-V03",
+          "assertion": "Test validation feedback, double-submit, refresh and failed network save.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-011.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-011.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-011.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-011-unit",
+            "dos-m1-011-data",
+            "dos-m1-011-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Use server-side scoped search/pagination and explicit empty/error/denied states.",
+          "verification_case_ids": [
+            "DOS-M1-011-V01",
+            "DOS-M1-011-V02",
+            "DOS-M1-011-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "A shared phone number or matching name never automatically merges people or grants a patient app account.",
+          "verification_case_ids": [
+            "DOS-M1-011-V01",
+            "DOS-M1-011-V02",
+            "DOS-M1-011-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Create/update is validated and retry-safe; concurrent updates cannot silently overwrite identity data.",
+          "verification_case_ids": [
+            "DOS-M1-011-V01",
+            "DOS-M1-011-V02",
+            "DOS-M1-011-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Archive preserves referenced records; no bulk hard-delete or cross-doctor patient discovery.",
+          "verification_case_ids": [
+            "DOS-M1-011-V01",
+            "DOS-M1-011-V02",
+            "DOS-M1-011-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -2290,6 +3737,139 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-012-V01",
+          "assertion": "Test unauthorized object access, revoked grants, expired links and interrupted uploads.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-012.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-012.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-012.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-012-unit",
+            "dos-m1-012-data",
+            "dos-m1-012-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-012-V02",
+          "assertion": "Test filename/content handling and prevention of accidental public caching.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-012.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-012.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-012.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-012-unit",
+            "dos-m1-012-data",
+            "dos-m1-012-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-012-V03",
+          "assertion": "Review usable profile navigation and document failures with synthetic files only.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-012.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-012.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-012.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-012-unit",
+            "dos-m1-012-data",
+            "dos-m1-012-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Show explicit doctor/location provenance and distinguish entered data from verified data.",
+          "verification_case_ids": [
+            "DOS-M1-012-V01",
+            "DOS-M1-012-V02",
+            "DOS-M1-012-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Attachments have private storage, type/size validation and scoped access; no public object URL.",
+          "verification_case_ids": [
+            "DOS-M1-012-V01",
+            "DOS-M1-012-V02",
+            "DOS-M1-012-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Record uploader, timestamps and replacement/archive history; downloading requires current access.",
+          "verification_case_ids": [
+            "DOS-M1-012-V01",
+            "DOS-M1-012-V02",
+            "DOS-M1-012-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "No clinical findings, prescription efficacy, identity verification or result interpretation is invented.",
+          "verification_case_ids": [
+            "DOS-M1-012-V01",
+            "DOS-M1-012-V02",
+            "DOS-M1-012-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -2476,6 +4056,139 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-013-V01",
+          "assertion": "Test simultaneous conflicting writes, boundaries, timezone/day changes and exceptions.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-013.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-013.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-013.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-013-unit",
+            "dos-m1-013-data",
+            "dos-m1-013-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-013-V02",
+          "assertion": "Test secretary limited to one location and doctor with multiple clinics.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-013.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-013.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-013.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-013-unit",
+            "dos-m1-013-data",
+            "dos-m1-013-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-013-V03",
+          "assertion": "Verify no hidden appointment changes while editing availability.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-013.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-013.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-013.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-013-unit",
+            "dos-m1-013-data",
+            "dos-m1-013-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "The same doctor cannot silently book overlapping commitments across different locations.",
+          "verification_case_ids": [
+            "DOS-M1-013-V01",
+            "DOS-M1-013-V02",
+            "DOS-M1-013-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Respect explicit timezone, exceptions and location permissions.",
+          "verification_case_ids": [
+            "DOS-M1-013-V01",
+            "DOS-M1-013-V02",
+            "DOS-M1-013-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Availability and booking share one authoritative conflict rule.",
+          "verification_case_ids": [
+            "DOS-M1-013-V01",
+            "DOS-M1-013-V02",
+            "DOS-M1-013-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Override policy, if any, is explicit and auditable rather than a client bypass.",
+          "verification_case_ids": [
+            "DOS-M1-013-V01",
+            "DOS-M1-013-V02",
+            "DOS-M1-013-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -2662,6 +4375,139 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-014-V01",
+          "assertion": "Exercise two reception sessions updating the same appointment.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-014.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-014.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-014.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-014-unit",
+            "dos-m1-014-data",
+            "dos-m1-014-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-014-V02",
+          "assertion": "Test cancellation after check-in and documented resolution behavior.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-014.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-014.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-014.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-014-unit",
+            "dos-m1-014-data",
+            "dos-m1-014-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-014-V03",
+          "assertion": "Test reconnect/refetch without duplicate or stale queue entries.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-014.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-014.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-014.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-014-unit",
+            "dos-m1-014-data",
+            "dos-m1-014-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Use explicit appointment states and allowed transitions; no illegal double-check-in.",
+          "verification_case_ids": [
+            "DOS-M1-014-V01",
+            "DOS-M1-014-V02",
+            "DOS-M1-014-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Rescheduling and cancellation preserve history and are retry-safe.",
+          "verification_case_ids": [
+            "DOS-M1-014-V01",
+            "DOS-M1-014-V02",
+            "DOS-M1-014-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Queue updates remain scoped, recover after reconnect and do not leak other doctors.",
+          "verification_case_ids": [
+            "DOS-M1-014-V01",
+            "DOS-M1-014-V02",
+            "DOS-M1-014-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Notifications beyond in-app status updates remain gated; no unapproved SMS/WhatsApp service is enabled.",
+          "verification_case_ids": [
+            "DOS-M1-014-V01",
+            "DOS-M1-014-V02",
+            "DOS-M1-014-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -2827,6 +4673,133 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-015-V01",
+          "assertion": "Reconcile counters to synthetic source records and timezone boundaries.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-015.test.mjs",
+            "apps/doctor-suit/tests/e2e/dos-m1-015.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-015-unit",
+            "dos-m1-015-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-015-V02",
+          "assertion": "Test zero-data, denied and partial-capability dashboards.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-015.test.mjs",
+            "apps/doctor-suit/tests/e2e/dos-m1-015.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-015-unit",
+            "dos-m1-015-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-015-V03",
+          "assertion": "Test refresh, real-time invalidation and stale-session recovery.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-015.test.mjs",
+            "apps/doctor-suit/tests/e2e/dos-m1-015.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-015-unit",
+            "dos-m1-015-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Metrics and lists use authoritative scoped queries and agreed time windows, not only loaded page rows.",
+          "verification_case_ids": [
+            "DOS-M1-015-V01",
+            "DOS-M1-015-V02",
+            "DOS-M1-015-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Doctor sees all authorized locations; secretary sees only granted capabilities and locations.",
+          "verification_case_ids": [
+            "DOS-M1-015-V01",
+            "DOS-M1-015-V02",
+            "DOS-M1-015-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Every displayed item links to its permitted source record.",
+          "verification_case_ids": [
+            "DOS-M1-015-V01",
+            "DOS-M1-015-V02",
+            "DOS-M1-015-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "No unsupported financial/clinical metric or fabricated sample result is shown outside clearly labeled demo fixtures.",
+          "verification_case_ids": [
+            "DOS-M1-015-V01",
+            "DOS-M1-015-V02",
+            "DOS-M1-015-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -3013,6 +4986,139 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-016-V01",
+          "assertion": "Test account versus practice updates do not overwrite each other.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-016.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-016.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-016.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-016-unit",
+            "dos-m1-016-data",
+            "dos-m1-016-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-016-V02",
+          "assertion": "Test logout/session-expiry and outstanding form state.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-016.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-016.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-016.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-016-unit",
+            "dos-m1-016-data",
+            "dos-m1-016-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-016-V03",
+          "assertion": "Test a secretary cannot alter doctor ownership, billing authority or other memberships.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-016.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-016.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-016.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-016-unit",
+            "dos-m1-016-data",
+            "dos-m1-016-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Separate personal account profile, doctor practice profile and membership permissions.",
+          "verification_case_ids": [
+            "DOS-M1-016-V01",
+            "DOS-M1-016-V02",
+            "DOS-M1-016-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Sensitive settings require the configured reauthentication/authorization policy.",
+          "verification_case_ids": [
+            "DOS-M1-016-V01",
+            "DOS-M1-016-V02",
+            "DOS-M1-016-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Preferences are explicit and scoped; do not enroll people in marketing or enable paid channels.",
+          "verification_case_ids": [
+            "DOS-M1-016-V01",
+            "DOS-M1-016-V02",
+            "DOS-M1-016-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Unsupported subscription/export controls are absent or truthfully unavailable, not fake successful buttons.",
+          "verification_case_ids": [
+            "DOS-M1-016-V01",
+            "DOS-M1-016-V02",
+            "DOS-M1-016-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -3202,6 +5308,139 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-017-V01",
+          "assertion": "Attempt client mutation/deletion of audit entries.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-017.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-017.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-017-unit",
+            "dos-m1-017-data",
+            "dos-m1-017-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-017-V02",
+          "assertion": "Reconcile representative create/edit/archive/invite/permission actions to attributed events.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-017.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-017.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-017-unit",
+            "dos-m1-017-data",
+            "dos-m1-017-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-017-V03",
+          "assertion": "Test cross-practice audit queries and document-access history.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-017.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-017.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-017.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-017-unit",
+            "dos-m1-017-data",
+            "dos-m1-017-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Audit covers administrative writes, invitations/grants and document access according to approved policy.",
+          "verification_case_ids": [
+            "DOS-M1-017-V01",
+            "DOS-M1-017-V02",
+            "DOS-M1-017-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Client users cannot modify audit events or silently erase linked history.",
+          "verification_case_ids": [
+            "DOS-M1-017-V01",
+            "DOS-M1-017-V02",
+            "DOS-M1-017-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "No clinical bulk export, erasure or retention period is guessed; unresolved policies remain disabled and documented.",
+          "verification_case_ids": [
+            "DOS-M1-017-V01",
+            "DOS-M1-017-V02",
+            "DOS-M1-017-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Audit view is scoped, searchable and excludes credentials or unnecessary sensitive payloads.",
+          "verification_case_ids": [
+            "DOS-M1-017-V01",
+            "DOS-M1-017-V02",
+            "DOS-M1-017-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -3392,6 +5631,133 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-018-V01",
+          "assertion": "Run appointment and patient administrative flows on desktop and mobile viewport.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-018.test.mjs",
+            "apps/doctor-suit/tests/e2e/dos-m1-018.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-018-unit",
+            "dos-m1-018-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-018-V02",
+          "assertion": "Run keyboard-only and screen-reader-label review; distinguish automated from human findings.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-018.test.mjs",
+            "apps/doctor-suit/tests/e2e/dos-m1-018.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-018-unit",
+            "dos-m1-018-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-018-V03",
+          "assertion": "Inject network errors and stale responses; prove no duplicate saves or lost context.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-018.test.mjs",
+            "apps/doctor-suit/tests/e2e/dos-m1-018.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-018-unit",
+            "dos-m1-018-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "All M1 critical journeys work on narrow mobile browser and desktop in both approved locales/themes.",
+          "verification_case_ids": [
+            "DOS-M1-018-V01",
+            "DOS-M1-018-V02",
+            "DOS-M1-018-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Keyboard/focus/labels, validation, overlays and reduced-motion settings are verified.",
+          "verification_case_ids": [
+            "DOS-M1-018-V01",
+            "DOS-M1-018-V02",
+            "DOS-M1-018-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Slow/offline/reconnect and repeated actions show honest unsaved state; M1 does not promise offline clinical writes.",
+          "verification_case_ids": [
+            "DOS-M1-018-V01",
+            "DOS-M1-018-V02",
+            "DOS-M1-018-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Shared fixes remain centralized with affected consumer regression coverage.",
+          "verification_case_ids": [
+            "DOS-M1-018-V01",
+            "DOS-M1-018-V02",
+            "DOS-M1-018-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -3557,6 +5923,133 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-019-V01",
+          "assertion": "Inspect public versus authenticated page source, sitemap and metadata behavior.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-019.test.mjs",
+            "apps/doctor-suit/tests/e2e/dos-m1-019.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-019-unit",
+            "dos-m1-019-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-019-V02",
+          "assertion": "Test every navigation/support/deep link and missing-route state.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-019.test.mjs",
+            "apps/doctor-suit/tests/e2e/dos-m1-019.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-019-unit",
+            "dos-m1-019-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-019-V03",
+          "assertion": "Review preview readiness labels against implemented evidence.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-019.test.mjs",
+            "apps/doctor-suit/tests/e2e/dos-m1-019.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-019-unit",
+            "dos-m1-019-browser"
+          ],
+          "external_evidence_required": false,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Public titles/descriptions, canonical URL configuration and locale metadata are correct after domain approval.",
+          "verification_case_ids": [
+            "DOS-M1-019-V01",
+            "DOS-M1-019-V02",
+            "DOS-M1-019-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Private/authenticated pages are not exposed through generated sitemaps, public caches or share metadata.",
+          "verification_case_ids": [
+            "DOS-M1-019-V01",
+            "DOS-M1-019-V02",
+            "DOS-M1-019-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "Use only approved brand assets/copy and actual support destinations; no fabricated app-store links or pricing.",
+          "verification_case_ids": [
+            "DOS-M1-019-V01",
+            "DOS-M1-019-V02",
+            "DOS-M1-019-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Prepare release fragments/checks and a preview handoff; do not merge, deploy, activate release registration or publish a released version.",
+          "verification_case_ids": [
+            "DOS-M1-019-V01",
+            "DOS-M1-019-V02",
+            "DOS-M1-019-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     },
     {
@@ -3791,6 +6284,139 @@
         "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
         "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
         "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+      ],
+      "source_reading": [
+        "AGENTS.md",
+        "README.md",
+        "docs/agent-workflows.md",
+        "docs/shared/git-workflow.md",
+        "packages/ui/AGENTS.md",
+        "docs/shared/design-system.md",
+        "docs/shared/interactions.md",
+        "docs/shared/data-table.md",
+        "docs/architecture/identity.md",
+        "docs/shared/database.md",
+        "docs/shared/future-suit-administration.md",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "tooling/control-plane/runner/task-prompt.mjs",
+        "tooling/control-plane/runner/verification-mode.mjs"
+      ],
+      "verification_cases": [
+        {
+          "case_id": "DOS-M1-020-V01",
+          "assertion": "Run the complete independent two-doctor/two-location/secretary/outsider journey.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-020.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-020.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-020.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-020-unit",
+            "dos-m1-020-data",
+            "dos-m1-020-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-020-V02",
+          "assertion": "Run negative authorization and duplicate-write tests, recovery and mobile-browser checks.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-020.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-020.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-020.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-020-unit",
+            "dos-m1-020-data",
+            "dos-m1-020-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        },
+        {
+          "case_id": "DOS-M1-020-V03",
+          "assertion": "Produce traceability, defects, screenshots/evidence refs and outstanding owner/domain gates with no self-approved PASS.",
+          "required_outputs": [
+            "apps/doctor-suit/tests/unit/dos-m1-020.test.mjs",
+            "apps/doctor-suit/supabase/tests/dos-m1-020.sql",
+            "apps/doctor-suit/tests/e2e/dos-m1-020.spec.ts"
+          ],
+          "command_refs": [
+            "dos-m1-020-unit",
+            "dos-m1-020-data",
+            "dos-m1-020-browser"
+          ],
+          "external_evidence_required": true,
+          "acceptance_rule": "Implement these observable positive/negative assertions against real task behavior; no source-grep-only, empty, skipped or fabricated-pass substitute."
+        }
+      ],
+      "acceptance_mapping": [
+        {
+          "criterion": 1,
+          "text": "Doctor alone can onboard, add two clinics, create a patient, book/check in and review their queue/profile.",
+          "verification_case_ids": [
+            "DOS-M1-020-V01",
+            "DOS-M1-020-V02",
+            "DOS-M1-020-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 2,
+          "text": "Shared secretary can accept two doctor invitations and perform only granted actions without data leakage.",
+          "verification_case_ids": [
+            "DOS-M1-020-V01",
+            "DOS-M1-020-V02",
+            "DOS-M1-020-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 3,
+          "text": "All required unit, local data-authorization, browser, shared-consumer, boundary, lint/typecheck/build checks have exact evidence.",
+          "verification_case_ids": [
+            "DOS-M1-020-V01",
+            "DOS-M1-020-V02",
+            "DOS-M1-020-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        },
+        {
+          "criterion": 4,
+          "text": "Report implemented versus verified versus published/integrated/deployed separately; real patients, payment, prescribing and mobile availability remain gated.",
+          "verification_case_ids": [
+            "DOS-M1-020-V01",
+            "DOS-M1-020-V02",
+            "DOS-M1-020-V03"
+          ],
+          "review_evidence": [
+            "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+            "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+            "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+            "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+            "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+          ]
+        }
       ]
     }
   ],
@@ -3837,12 +6463,10 @@
           "supabase",
           "test",
           "db",
-          "apps/doctor-suit/supabase/tests/dos-m1-003.sql",
-          "--local",
-          "--workdir",
-          "apps/doctor-suit"
+          "supabase/tests/dos-m1-003.sql",
+          "--local"
         ],
-        "cwd": ".",
+        "cwd": "apps/doctor-suit",
         "timeout_ms": 1800000,
         "capabilities": [
           "database",
@@ -3912,12 +6536,10 @@
           "supabase",
           "test",
           "db",
-          "apps/doctor-suit/supabase/tests/dos-m1-006.sql",
-          "--local",
-          "--workdir",
-          "apps/doctor-suit"
+          "supabase/tests/dos-m1-006.sql",
+          "--local"
         ],
-        "cwd": ".",
+        "cwd": "apps/doctor-suit",
         "timeout_ms": 1800000,
         "capabilities": [
           "database",
@@ -3965,12 +6587,10 @@
           "supabase",
           "test",
           "db",
-          "apps/doctor-suit/supabase/tests/dos-m1-007.sql",
-          "--local",
-          "--workdir",
-          "apps/doctor-suit"
+          "supabase/tests/dos-m1-007.sql",
+          "--local"
         ],
-        "cwd": ".",
+        "cwd": "apps/doctor-suit",
         "timeout_ms": 1800000,
         "capabilities": [
           "database",
@@ -4018,12 +6638,10 @@
           "supabase",
           "test",
           "db",
-          "apps/doctor-suit/supabase/tests/dos-m1-008.sql",
-          "--local",
-          "--workdir",
-          "apps/doctor-suit"
+          "supabase/tests/dos-m1-008.sql",
+          "--local"
         ],
-        "cwd": ".",
+        "cwd": "apps/doctor-suit",
         "timeout_ms": 1800000,
         "capabilities": [
           "database",
@@ -4071,12 +6689,10 @@
           "supabase",
           "test",
           "db",
-          "apps/doctor-suit/supabase/tests/dos-m1-009.sql",
-          "--local",
-          "--workdir",
-          "apps/doctor-suit"
+          "supabase/tests/dos-m1-009.sql",
+          "--local"
         ],
-        "cwd": ".",
+        "cwd": "apps/doctor-suit",
         "timeout_ms": 1800000,
         "capabilities": [
           "database",
@@ -4124,12 +6740,10 @@
           "supabase",
           "test",
           "db",
-          "apps/doctor-suit/supabase/tests/dos-m1-010.sql",
-          "--local",
-          "--workdir",
-          "apps/doctor-suit"
+          "supabase/tests/dos-m1-010.sql",
+          "--local"
         ],
-        "cwd": ".",
+        "cwd": "apps/doctor-suit",
         "timeout_ms": 1800000,
         "capabilities": [
           "database",
@@ -4177,12 +6791,10 @@
           "supabase",
           "test",
           "db",
-          "apps/doctor-suit/supabase/tests/dos-m1-011.sql",
-          "--local",
-          "--workdir",
-          "apps/doctor-suit"
+          "supabase/tests/dos-m1-011.sql",
+          "--local"
         ],
-        "cwd": ".",
+        "cwd": "apps/doctor-suit",
         "timeout_ms": 1800000,
         "capabilities": [
           "database",
@@ -4230,12 +6842,10 @@
           "supabase",
           "test",
           "db",
-          "apps/doctor-suit/supabase/tests/dos-m1-012.sql",
-          "--local",
-          "--workdir",
-          "apps/doctor-suit"
+          "supabase/tests/dos-m1-012.sql",
+          "--local"
         ],
-        "cwd": ".",
+        "cwd": "apps/doctor-suit",
         "timeout_ms": 1800000,
         "capabilities": [
           "database",
@@ -4283,12 +6893,10 @@
           "supabase",
           "test",
           "db",
-          "apps/doctor-suit/supabase/tests/dos-m1-013.sql",
-          "--local",
-          "--workdir",
-          "apps/doctor-suit"
+          "supabase/tests/dos-m1-013.sql",
+          "--local"
         ],
-        "cwd": ".",
+        "cwd": "apps/doctor-suit",
         "timeout_ms": 1800000,
         "capabilities": [
           "database",
@@ -4336,12 +6944,10 @@
           "supabase",
           "test",
           "db",
-          "apps/doctor-suit/supabase/tests/dos-m1-014.sql",
-          "--local",
-          "--workdir",
-          "apps/doctor-suit"
+          "supabase/tests/dos-m1-014.sql",
+          "--local"
         ],
-        "cwd": ".",
+        "cwd": "apps/doctor-suit",
         "timeout_ms": 1800000,
         "capabilities": [
           "database",
@@ -4420,12 +7026,10 @@
           "supabase",
           "test",
           "db",
-          "apps/doctor-suit/supabase/tests/dos-m1-016.sql",
-          "--local",
-          "--workdir",
-          "apps/doctor-suit"
+          "supabase/tests/dos-m1-016.sql",
+          "--local"
         ],
-        "cwd": ".",
+        "cwd": "apps/doctor-suit",
         "timeout_ms": 1800000,
         "capabilities": [
           "database",
@@ -4473,12 +7077,10 @@
           "supabase",
           "test",
           "db",
-          "apps/doctor-suit/supabase/tests/dos-m1-017.sql",
-          "--local",
-          "--workdir",
-          "apps/doctor-suit"
+          "supabase/tests/dos-m1-017.sql",
+          "--local"
         ],
-        "cwd": ".",
+        "cwd": "apps/doctor-suit",
         "timeout_ms": 1800000,
         "capabilities": [
           "database",
@@ -4588,12 +7190,10 @@
           "supabase",
           "test",
           "db",
-          "apps/doctor-suit/supabase/tests/dos-m1-020.sql",
-          "--local",
-          "--workdir",
-          "apps/doctor-suit"
+          "supabase/tests/dos-m1-020.sql",
+          "--local"
         ],
-        "cwd": ".",
+        "cwd": "apps/doctor-suit",
         "timeout_ms": 1800000,
         "capabilities": [
           "database",
@@ -4622,7 +7222,67 @@
           "browser-security"
         ]
       }
-    ]
+    ],
+    "database": {
+      "kind": "supabase-local",
+      "local_only": true,
+      "start_when_needed": true,
+      "start_commands": [
+        {
+          "name": "doctor-local-start",
+          "program": "pnpm",
+          "args": [
+            "exec",
+            "supabase",
+            "start"
+          ],
+          "cwd": "apps/doctor-suit",
+          "timeout_ms": 1800000,
+          "capabilities": [
+            "database",
+            "rls-authorization"
+          ]
+        }
+      ],
+      "reset_commands": [
+        {
+          "name": "doctor-local-reset",
+          "program": "pnpm",
+          "args": [
+            "exec",
+            "supabase",
+            "db",
+            "reset",
+            "--local"
+          ],
+          "cwd": "apps/doctor-suit",
+          "timeout_ms": 1800000,
+          "capabilities": [
+            "database",
+            "rls-authorization"
+          ]
+        }
+      ],
+      "test_commands": [
+        {
+          "name": "doctor-local-regression",
+          "program": "pnpm",
+          "args": [
+            "exec",
+            "supabase",
+            "test",
+            "db",
+            "--local"
+          ],
+          "cwd": "apps/doctor-suit",
+          "timeout_ms": 1800000,
+          "capabilities": [
+            "database",
+            "rls-authorization"
+          ]
+        }
+      ]
+    }
   },
   "import_readiness": {
     "safe_to_apply": false,
@@ -4640,5 +7300,5 @@
     "No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.",
     "No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release."
   ],
-  "content_sha256": "1a8873d8d3238071b2974dfe14f6d8e5927c7919e05fcfb371764fc111349367"
+  "content_sha256": "ebf757a8b250b500f163f78b634b86b16b30553e65e62774fb254bc3c8d51299"
 }

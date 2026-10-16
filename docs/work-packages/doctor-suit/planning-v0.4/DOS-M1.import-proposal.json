@@ -2,7 +2,7 @@
   "format": "reviewed-import-proposal-v1",
   "milestone_id": "DOS-M1",
   "packet_file": "DOS-M1.json",
-  "packet_sha256": "1a8873d8d3238071b2974dfe14f6d8e5927c7919e05fcfb371764fc111349367",
+  "packet_sha256": "ebf757a8b250b500f163f78b634b86b16b30553e65e62774fb254bc3c8d51299",
   "target": {
     "repository": "Building-Suit/building-suit-monorepo",
     "automation_project_ref": "padtxclxwwqvvuiebhte",

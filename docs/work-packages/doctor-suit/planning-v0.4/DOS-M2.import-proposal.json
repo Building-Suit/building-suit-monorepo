@@ -1,0 +1,686 @@
+{
+  "format": "reviewed-import-proposal-v1",
+  "milestone_id": "DOS-M2",
+  "packet_file": "DOS-M2.json",
+  "packet_sha256": "5eb17574b6b7e30e08fd980f5f42ea4d72e97764f0a00fc3f52a485e39242484",
+  "target": {
+    "repository": "Building-Suit/building-suit-monorepo",
+    "automation_project_ref": "padtxclxwwqvvuiebhte",
+    "project_slug": "building-suit",
+    "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+    "suit_slug": "doctor-suit",
+    "workstream_slug": "doctor-suit",
+    "application_path": "apps/doctor-suit",
+    "registration_status": "missing-per-parent-readonly-observation; parent must supply reviewed registration"
+  },
+  "safe_to_apply": false,
+  "task_create_function": "control.create_task_with_publication_contract(text,text,text,integer,integer,text,text,text,text,text,jsonb,jsonb,text,jsonb)",
+  "task_ids": [
+    "DOS-M2-001",
+    "DOS-M2-002",
+    "DOS-M2-003",
+    "DOS-M2-004",
+    "DOS-M2-005",
+    "DOS-M2-006",
+    "DOS-M2-007",
+    "DOS-M2-008",
+    "DOS-M2-009",
+    "DOS-M2-010",
+    "DOS-M2-011",
+    "DOS-M2-012",
+    "DOS-M2-013",
+    "DOS-M2-014"
+  ],
+  "requirements": [
+    {
+      "requirement_id": "DOS-M2-R001",
+      "title": "Milestone boundary and invariant",
+      "summary": "Clinical records and prescriptions on the web. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.",
+      "status": "proposed",
+      "provenance": "Supplied roadmap v0.2 plus current delegated scope."
+    },
+    {
+      "requirement_id": "DOS-M2-F001",
+      "title": "Clinical workflow and prescribing policy sign-off",
+      "summary": "Approve encounter, amendment, signing and delegable drafting policy with a qualified clinician; no medical recommendation is generated. Acceptance: Record accountable clinician, review date, encounter state transitions and which actions may be drafted by staff versus signed by a doctor; unresolved professional authority remains explicit. Define amendment/revocation, patient release and conflict rules for synthetic workflows; retain original signed material and audit actor/time. Produce a signed decision record or leave clinical governance OPEN; neither a developer nor a test run can supply clinical approval. Prepare evidence for DOS-M2-GATE-CLINICAL. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-001 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M2-F002",
+      "title": "Encounter lifecycle and visit provenance",
+      "summary": "Implement draft/in-progress/finalized/amended encounters with doctor, location, patient and time attribution. Acceptance: Create distinct encounter identity referencing the practice-patient relationship, responsible doctor and encounter location; never make a location the chart owner. Authorize draft/in-progress/finalized/amended transitions on the server with version comparison and idempotency keys; finalized content cannot be overwritten. Persist actor, event time, originating encounter/version and amendment reason; archived locations and patients retain referenced history.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-002 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M2-F003",
+      "title": "History, allergies and structured intake",
+      "summary": "Capture clinician-reviewed history/allergies/vitals with provenance, correction and permission rules. Acceptance: Represent patient-reported, staff-entered and clinician-reviewed observations separately with source, timestamp and unit; distinguish unknown, none-reported and missing allergy/history fields. Correct observations through a traceable revision; unreviewed data must not render as verified and no values or diagnoses are inferred. Apply encounter/practice and delegated intake permissions consistently to history, allergies and observations; clinician review requires the approved actor capability.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-003 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M2-F004",
+      "title": "Clinical note templates and specialty-neutral forms",
+      "summary": "Provide typed clinical forms and configurable templates without claiming coverage of every specialty. Acceptance: Define versioned neutral note sections and typed field schemas with explicit optional/required fields approved by governance; do not silently claim specialty coverage. Persist the template version with each note so later template edits do not rewrite historical content. Use shared page templates for editing/review, retain unsaved content on validation/network failure and require explicit conflict resolution.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-004 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M2-F005",
+      "title": "Medication catalogue source and licensing contract",
+      "summary": "Select an approved catalogue/manual-entry policy, provenance and update workflow; do not invent EDA API access. Acceptance: Record candidate catalogue owner, license/redistribution restrictions, allowed fields, version, provenance, update cadence and access evidence; unavailable APIs remain unavailable. Define explicit clinician-entered manual entries and unverified identity labeling where approved; no scraping, EDA access or commercial license is assumed. Approve a versioned catalogue/manual-entry contract with withdrawal/update behavior and retain the licensing decision OPEN until evidence is supplied. Prepare evidence for DOS-M2-GATE-CATALOGUE. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-005 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M2-F006",
+      "title": "Structured prescription builder",
+      "summary": "Capture medicine identity, strength, form, dose, route, dates, frequency and instructions with clinician review. Acceptance: Persist medicine identity/provenance, entered strength/form/dose/unit/route, start/end, structured frequency and clinician-authored instructions without filling clinical values automatically. Validate required shape and internal consistency, associate each draft with encounter and responsible doctor, and surface unresolved medicine identity explicitly. Retain draft edits with version checks; save is not signing and no validation result implies that a dose or medicine is clinically appropriate.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-006 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M2-F007",
+      "title": "Complex schedules and schedule validation",
+      "summary": "Represent tapering, every-N-hours, selected weekdays and as-needed instructions without deriving unapproved medical advice. Acceptance: Model explicit schedule segments for tapering, interval, selected weekdays and as-needed instructions with boundaries, timezone semantics and versioned representation. Detect overlapping/contradictory segments and ambiguous time anchors for clinician correction; never calculate a replacement dose or infer an as-needed dosing cadence. Preserve exact entered regimen through serialization and amendments; provide deterministic test vectors reviewed under the prescribing policy.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-007 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M2-F008",
+      "title": "Clinician review, signing and immutable versions",
+      "summary": "Enforce accountable finalization, revoke/amend workflow and immutable prior prescription versions. Acceptance: Require the approved accountable doctor and current authorization for signing; invitations, editable metadata and staff grants cannot confer signing authority. Atomically store immutable signed version, signer and time, source draft/version and integrity reference; repeated signing is idempotent and stale signing fails. Revocation/amendment creates a linked version and reason with old content preserved; downstream consumers can distinguish active, superseded and stopped versions.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-008 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M2-F009",
+      "title": "Prescription print and patient-safe sharing",
+      "summary": "Render readable bilingual-capable print/share output from structured data with scoped access and no public patient exposure. Acceptance: Render print output from one signed structured version with doctor, patient, location, date, version/status and unmodified instructions; bilingual layout must remain legible. Use shared pure print presentation and UX-owned download behavior; app adapters perform current permission checks. Sharing is scoped, revocable and expiry-aware with no public patient metadata, static storage URL or analytics payload; a stopped/superseded version is visibly labeled.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-009 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M2-F010",
+      "title": "Follow-up plans and order requests",
+      "summary": "Capture clinician-authored follow-up, lab/imaging and referral requests without interpreting results. Acceptance: Store clinician-authored follow-up, lab, imaging and referral requests with encounter/doctor attribution, due context and explicit lifecycle. Separate request creation, operational tracking and clinical interpretation; a result or referral never silently creates a diagnosis. Allow only authorized transitions and cancellation with history; external provider calls remain absent until M9 approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-010 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M2-F011",
+      "title": "Results and clinical document review",
+      "summary": "Track uploaded/requested/received/reviewed/released states and clinical attribution. Acceptance: Track requested/uploaded/received/reviewed/released states with explicit actor/time and source-file provenance. Validate private document type/size and access on upload/view/download; replacements retain prior version and audit link. Only the approved clinician can mark review or release; upload success does not imply review, normality or patient visibility.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-011 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M2-F012",
+      "title": "Clinical record release and patient visibility rules",
+      "summary": "Separate private working material, released patient content and caregiver access policy. Acceptance: Define per-record release decision separate from chart membership; private working notes and released patient artifacts are distinct projections. Record recipient relationship, version, release actor and revocation policy; future caregiver grants are explicit scoped relationships, not shared credentials. Backend queries expose only authorized released versions; linking a patient to two doctors does not expose either doctor chart to the other.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-012 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M2-F013",
+      "title": "Clinical export and amendment integrity",
+      "summary": "Export authorized complete records with version/provenance and preserve audit/retention rules. Acceptance: Export only the authorized doctor/practice/patient scope with encounter, signed version, amendment chain, document provenance and manifest completeness. Use stable IDs and deterministic manifest checksums so omissions and mismatched versions are detectable; export access is current and audited. Preserve retention/legal-hold policy gates and historical versions; this task creates a synthetic export, not a real-data erasure policy.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-013 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M2-F014",
+      "title": "Clinical workflow safety acceptance",
+      "summary": "Verify synthetic end-to-end encounters/Rx/orders and obtain independent clinical review before any live use. Acceptance: Run the complete synthetic encounter→intake→note→prescription→sign/amend→print/release→result/export workflow against exact candidate code. Obtain independent qualified clinical review of entered-data fidelity, authority boundaries and failure cases; unresolved critical findings block acceptance. Record all M2 requirements and gate evidence separately from product implementation; no real-patient or prescribing launch is authorized.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M2-014 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    }
+  ],
+  "decisions": [
+    {
+      "decision_id": "DOS-M2-GATE-START",
+      "title": "DOS-M2 parent-controlled start gate",
+      "status": "open",
+      "decision_text": "Remain OPEN until all nine milestones are safely stored and parent verifies dependency acceptance, exact live runtime/registration/commands/paths and authorizes this milestone. Import does not grant execution.",
+      "source": "Current delegated instruction."
+    },
+    {
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "title": "Qualified clinical governance and signing policy",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M2-001 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M2-001",
+      "producer_task_id": "DOS-M2-001"
+    },
+    {
+      "decision_id": "DOS-M2-GATE-CATALOGUE",
+      "title": "Medication source/license/manual-entry policy",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M2-005 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M2-005",
+      "producer_task_id": "DOS-M2-005"
+    }
+  ],
+  "task_requirements": [
+    {
+      "task_id": "DOS-M2-001",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-001",
+      "requirement_id": "DOS-M2-F001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-002",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-002",
+      "requirement_id": "DOS-M2-F002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-003",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-003",
+      "requirement_id": "DOS-M2-F003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-004",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-004",
+      "requirement_id": "DOS-M2-F004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-005",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-005",
+      "requirement_id": "DOS-M2-F005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-006",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-006",
+      "requirement_id": "DOS-M2-F006",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-007",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-007",
+      "requirement_id": "DOS-M2-F007",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-008",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-008",
+      "requirement_id": "DOS-M2-F008",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-009",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-009",
+      "requirement_id": "DOS-M2-F009",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-010",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-010",
+      "requirement_id": "DOS-M2-F010",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-011",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-011",
+      "requirement_id": "DOS-M2-F011",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-012",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-012",
+      "requirement_id": "DOS-M2-F012",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-013",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-013",
+      "requirement_id": "DOS-M2-F013",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "requirement_id": "DOS-M2-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "requirement_id": "DOS-M2-F014",
+      "suit_slug": "doctor-suit"
+    }
+  ],
+  "task_dependencies": [
+    {
+      "task_id": "DOS-M2-001",
+      "depends_on_task_id": "DOS-M1-020",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-002",
+      "depends_on_task_id": "DOS-M2-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-003",
+      "depends_on_task_id": "DOS-M2-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-004",
+      "depends_on_task_id": "DOS-M2-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-005",
+      "depends_on_task_id": "DOS-M2-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-006",
+      "depends_on_task_id": "DOS-M2-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-007",
+      "depends_on_task_id": "DOS-M2-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-008",
+      "depends_on_task_id": "DOS-M2-007",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-009",
+      "depends_on_task_id": "DOS-M2-008",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-010",
+      "depends_on_task_id": "DOS-M2-009",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-011",
+      "depends_on_task_id": "DOS-M2-010",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-012",
+      "depends_on_task_id": "DOS-M2-011",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-013",
+      "depends_on_task_id": "DOS-M2-012",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "depends_on_task_id": "DOS-M2-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "depends_on_task_id": "DOS-M2-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "depends_on_task_id": "DOS-M2-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "depends_on_task_id": "DOS-M2-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "depends_on_task_id": "DOS-M2-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "depends_on_task_id": "DOS-M2-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "depends_on_task_id": "DOS-M2-007",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "depends_on_task_id": "DOS-M2-008",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "depends_on_task_id": "DOS-M2-009",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "depends_on_task_id": "DOS-M2-010",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "depends_on_task_id": "DOS-M2-011",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "depends_on_task_id": "DOS-M2-012",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "depends_on_task_id": "DOS-M2-013",
+      "dependency_type": "hard"
+    }
+  ],
+  "task_decisions": [
+    {
+      "task_id": "DOS-M2-001",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-002",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-002",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-003",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-003",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-004",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-004",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-005",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-005",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-006",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-006",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-006",
+      "decision_id": "DOS-M2-GATE-CATALOGUE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-007",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-007",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-007",
+      "decision_id": "DOS-M2-GATE-CATALOGUE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-008",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-008",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-008",
+      "decision_id": "DOS-M2-GATE-CATALOGUE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-009",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-009",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-009",
+      "decision_id": "DOS-M2-GATE-CATALOGUE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-010",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-010",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-010",
+      "decision_id": "DOS-M2-GATE-CATALOGUE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-011",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-011",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-011",
+      "decision_id": "DOS-M2-GATE-CATALOGUE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-012",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-012",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-012",
+      "decision_id": "DOS-M2-GATE-CATALOGUE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-013",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-013",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-013",
+      "decision_id": "DOS-M2-GATE-CATALOGUE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "decision_id": "DOS-M2-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-014",
+      "decision_id": "DOS-M2-GATE-CATALOGUE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M2-001",
+      "decision_id": "DOS-M2-GATE-CLINICAL",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    },
+    {
+      "task_id": "DOS-M2-005",
+      "decision_id": "DOS-M2-GATE-CATALOGUE",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    }
+  ],
+  "transaction_contract": [
+    "Verify exact Automation target, live function/schema/trigger fingerprints, immutable project ID, route, model, retry policy, command registrations and publication scopes before writes.",
+    "Acquire parent-reviewed transaction serialization lock and reread every scoped ID; existing equal payload is a no-op only after full canonical comparison; any differing state/history aborts. Never overwrite existing tasks, decisions, execution or requirement history.",
+    "Create or verify the real OPEN milestone start decision before any task; create every task through supported function and link every task to that decision with blocking=true in the SAME transaction.",
+    "Create all requirement, decision and dependency links and refresh contracts after final metadata. Do not commit partial task/link batches.",
+    "Assert exact payload counts, complete links, zero ready Doctor tasks using live ready-task predicate, zero claims/runs/executions, no publication authority, and all start decisions still OPEN immediately before commit.",
+    "Dry-run rollback and review returned evidence first. Parent controls any commit; never remove a guard from the original draft SQL.",
+    "After commit read back canonical packets and zero-ready evidence. Keep all nine start gates open until parent confirms all nine safely saved; release each milestone separately in dependency order."
+  ],
+  "pending_inputs": [
+    "Parent live schema/consumer and trigger contract",
+    "Reviewed Doctor suit/workstream/app mapping (function requires active project/workstream)",
+    "Verified high-capability deep model and retry policy IDs",
+    "Approved command registration and protected publication paths",
+    "Exact no-ready-task SQL predicate and transaction/rollback proof"
+  ]
+}

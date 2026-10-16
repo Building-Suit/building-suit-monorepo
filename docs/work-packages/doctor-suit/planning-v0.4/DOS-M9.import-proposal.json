@@ -1,0 +1,593 @@
+{
+  "format": "reviewed-import-proposal-v1",
+  "milestone_id": "DOS-M9",
+  "packet_file": "DOS-M9.json",
+  "packet_sha256": "c18c677e54e61d218de54ab382b13994c564f4a17ff25bd224ee796b40f3d622",
+  "target": {
+    "repository": "Building-Suit/building-suit-monorepo",
+    "automation_project_ref": "padtxclxwwqvvuiebhte",
+    "project_slug": "building-suit",
+    "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+    "suit_slug": "doctor-suit",
+    "workstream_slug": "doctor-suit",
+    "application_path": "apps/doctor-suit",
+    "registration_status": "missing-per-parent-readonly-observation; parent must supply reviewed registration"
+  },
+  "safe_to_apply": false,
+  "task_create_function": "control.create_task_with_publication_contract(text,text,text,integer,integer,text,text,text,text,text,jsonb,jsonb,text,jsonb)",
+  "task_ids": [
+    "DOS-M9-001",
+    "DOS-M9-002",
+    "DOS-M9-003",
+    "DOS-M9-004",
+    "DOS-M9-005",
+    "DOS-M9-006",
+    "DOS-M9-007",
+    "DOS-M9-008"
+  ],
+  "requirements": [
+    {
+      "requirement_id": "DOS-M9-R001",
+      "title": "Milestone boundary and invariant",
+      "summary": "Optional specialties and external provider integrations. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.",
+      "status": "proposed",
+      "provenance": "Supplied roadmap v0.2 plus current delegated scope."
+    },
+    {
+      "requirement_id": "DOS-M9-F001",
+      "title": "Specialty prioritization and clinician-led templates",
+      "summary": "Select specialty modules through approved clinical requirements rather than assuming one universal chart. Acceptance: Obtain explicit owner selection of optional specialties and provider connectors; all eight named tasks remain stored without implying that every connector will be implemented. For selected specialties, obtain clinician-led versioned fields/workflows and review boundaries; no universal template or specialty competence is assumed. Record chosen scope, deferred tasks, qualified reviewers and acceptance fixtures without renumbering stable task IDs or cancelling history. Prepare evidence for DOS-M9-GATE-OPTIONAL. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M9-001 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M9-F002",
+      "title": "Egypt medication catalogue / national prescription feasibility",
+      "summary": "Verify source licensing, interfaces and access terms before implementing an EDA/national adapter. Acceptance: Verify actual medication catalogue/national prescription source, licensing, redistribution, version/update and access terms using provider evidence. Record whether an EDA/national interface exists and is accessible to this entity; unavailable access yields a feasibility finding, never a fabricated adapter. Specify approved fallback/manual-entry behavior and preserve M2 clinician review/signing authority; no automatic substitution or dosing recommendation. Prepare evidence for DOS-M9-GATE-MEDICATION. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M9-002 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M9-F003",
+      "title": "Lab integration",
+      "summary": "Implement one verified partner protocol with identity matching, provenance and retry/reconciliation. Acceptance: Select one verified lab partner with documented protocol/version, sandbox access, commercial/data terms and explicit identity-matching rules. Map request/result IDs and provenance to the exact patient relationship/order; ambiguous matches are quarantined for authorized review, never merged by contact. Implement authenticated idempotent delivery/retry/reconciliation with result review/release still clinician-controlled. Prepare evidence for DOS-M9-GATE-LAB. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M9-003 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M9-F004",
+      "title": "Imaging/radiology integration",
+      "summary": "Implement one approved imaging workflow and data exchange with minimum-necessary access. Acceptance: Approve one imaging workflow and partner exchange contract including identifiers, document/image access, version and minimum-necessary disclosure. Preserve order/patient/doctor provenance, private viewer/document authorization and reconciliation of external status. Do not assume a particular imaging standard, endpoint or diagnostic interpretation before verified partner requirements. Prepare evidence for DOS-M9-GATE-IMAGING. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M9-004 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M9-F005",
+      "title": "Pharmacy integration",
+      "summary": "Connect approved fulfillment/status flows without assuming medication substitution or dispensing authority. Acceptance: Approve partner/contract, fulfillment fields and permitted prescription release with patient/doctor consent and minimum data. Exchange only authorized signed/current prescription versions and fulfillment/status events with idempotency and provenance. Stopping/amending a prescription reconciles partner state; neither adapter nor pharmacy-status UI may infer medication substitution or prescribing/dispensing authority. Prepare evidence for DOS-M9-GATE-PHARMACY. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M9-005 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M9-F006",
+      "title": "Insurance/UHIA feasibility and first connector",
+      "summary": "Verify eligibility, standards, contracting and actual API availability before claims integration. Acceptance: Obtain current qualified applicability and contracting review for the named insurer/UHIA route, actual API availability, standards/version and credential eligibility. Define approved eligibility/claim fields, consent, coding responsibilities and financial reconciliation without fabricating coverage or reimbursement. Build the first connector only after verified contract/sandbox evidence; unavailable access is a documented feasibility blocker, not a mock production integration. Prepare evidence for DOS-M9-GATE-INSURANCE. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M9-006 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M9-F007",
+      "title": "Interoperable clinical export or referral exchange",
+      "summary": "Select required standards/profile/version with partner testing and explicit patient/doctor access policy. Acceptance: Select the actual standard/profile/version and partner contract through explicit decision, with approved minimum clinical dataset and patient/doctor release policy. Map stable identifiers, units, terminology, timestamps, provenance and amendment references; unsupported fields must be reported rather than silently dropped. Validate authorized export/import against partner fixtures with idempotency and quarantine ambiguous identity/version matches; cross-doctor access remains independently granted. Prepare evidence for DOS-M9-GATE-EXCHANGE. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M9-007 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M9-F008",
+      "title": "Optional-module acceptance and rollout",
+      "summary": "Verify chosen specialty/provider modules independently; telemedicine, AI diagnosis and hospital systems are not silently included. Acceptance: Verify each explicitly selected optional module independently using partner sandbox/contract and qualified specialty review on the exact candidate. Retain deferred/unavailable module IDs and list exclusions; do not claim telemedicine, AI diagnosis, hospital systems or universal provider coverage. Obtain separate rollout authorization per module with incident/recovery and compatibility evidence; this task does not deploy or purchase access.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M9-008 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    }
+  ],
+  "decisions": [
+    {
+      "decision_id": "DOS-M9-GATE-START",
+      "title": "DOS-M9 parent-controlled start gate",
+      "status": "open",
+      "decision_text": "Remain OPEN until all nine milestones are safely stored and parent verifies dependency acceptance, exact live runtime/registration/commands/paths and authorizes this milestone. Import does not grant execution.",
+      "source": "Current delegated instruction."
+    },
+    {
+      "decision_id": "DOS-M9-GATE-OPTIONAL",
+      "title": "Owner-selected specialty/provider scope; no automatic optional execution",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M9-001 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M9-001",
+      "producer_task_id": "DOS-M9-001"
+    },
+    {
+      "decision_id": "DOS-M9-GATE-MEDICATION",
+      "title": "Medication catalogue/national interface licensing and access",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M9-002 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M9-002",
+      "producer_task_id": "DOS-M9-002"
+    },
+    {
+      "decision_id": "DOS-M9-GATE-LAB",
+      "title": "Named lab partner protocol and access approval",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M9-003 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M9-003",
+      "producer_task_id": "DOS-M9-003"
+    },
+    {
+      "decision_id": "DOS-M9-GATE-IMAGING",
+      "title": "Named imaging partner protocol and access approval",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M9-004 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M9-004",
+      "producer_task_id": "DOS-M9-004"
+    },
+    {
+      "decision_id": "DOS-M9-GATE-PHARMACY",
+      "title": "Named pharmacy scope and fulfillment authority",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M9-005 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M9-005",
+      "producer_task_id": "DOS-M9-005"
+    },
+    {
+      "decision_id": "DOS-M9-GATE-INSURANCE",
+      "title": "Insurance/UHIA contracting, applicability and actual interface access",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M9-006 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M9-006",
+      "producer_task_id": "DOS-M9-006"
+    },
+    {
+      "decision_id": "DOS-M9-GATE-EXCHANGE",
+      "title": "Partner clinical exchange profile/version and release policy",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M9-007 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M9-007",
+      "producer_task_id": "DOS-M9-007"
+    }
+  ],
+  "task_requirements": [
+    {
+      "task_id": "DOS-M9-001",
+      "requirement_id": "DOS-M9-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-001",
+      "requirement_id": "DOS-M9-F001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-002",
+      "requirement_id": "DOS-M9-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-002",
+      "requirement_id": "DOS-M9-F002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-003",
+      "requirement_id": "DOS-M9-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-003",
+      "requirement_id": "DOS-M9-F003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-004",
+      "requirement_id": "DOS-M9-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-004",
+      "requirement_id": "DOS-M9-F004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-005",
+      "requirement_id": "DOS-M9-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-005",
+      "requirement_id": "DOS-M9-F005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-006",
+      "requirement_id": "DOS-M9-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-006",
+      "requirement_id": "DOS-M9-F006",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-007",
+      "requirement_id": "DOS-M9-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-007",
+      "requirement_id": "DOS-M9-F007",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "requirement_id": "DOS-M9-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "requirement_id": "DOS-M9-F008",
+      "suit_slug": "doctor-suit"
+    }
+  ],
+  "task_dependencies": [
+    {
+      "task_id": "DOS-M9-001",
+      "depends_on_task_id": "DOS-M2-014",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-001",
+      "depends_on_task_id": "DOS-M7-010",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-002",
+      "depends_on_task_id": "DOS-M9-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-003",
+      "depends_on_task_id": "DOS-M9-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-004",
+      "depends_on_task_id": "DOS-M9-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-005",
+      "depends_on_task_id": "DOS-M9-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-006",
+      "depends_on_task_id": "DOS-M9-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-007",
+      "depends_on_task_id": "DOS-M9-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "depends_on_task_id": "DOS-M9-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "depends_on_task_id": "DOS-M9-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "depends_on_task_id": "DOS-M9-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "depends_on_task_id": "DOS-M9-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "depends_on_task_id": "DOS-M9-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "depends_on_task_id": "DOS-M9-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "depends_on_task_id": "DOS-M9-007",
+      "dependency_type": "hard"
+    }
+  ],
+  "task_decisions": [
+    {
+      "task_id": "DOS-M9-001",
+      "decision_id": "DOS-M9-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-002",
+      "decision_id": "DOS-M9-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-002",
+      "decision_id": "DOS-M9-GATE-OPTIONAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-003",
+      "decision_id": "DOS-M9-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-003",
+      "decision_id": "DOS-M9-GATE-OPTIONAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-003",
+      "decision_id": "DOS-M9-GATE-MEDICATION",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-004",
+      "decision_id": "DOS-M9-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-004",
+      "decision_id": "DOS-M9-GATE-OPTIONAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-004",
+      "decision_id": "DOS-M9-GATE-MEDICATION",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-004",
+      "decision_id": "DOS-M9-GATE-LAB",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-005",
+      "decision_id": "DOS-M9-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-005",
+      "decision_id": "DOS-M9-GATE-OPTIONAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-005",
+      "decision_id": "DOS-M9-GATE-MEDICATION",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-005",
+      "decision_id": "DOS-M9-GATE-LAB",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-005",
+      "decision_id": "DOS-M9-GATE-IMAGING",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-006",
+      "decision_id": "DOS-M9-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-006",
+      "decision_id": "DOS-M9-GATE-OPTIONAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-006",
+      "decision_id": "DOS-M9-GATE-MEDICATION",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-006",
+      "decision_id": "DOS-M9-GATE-LAB",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-006",
+      "decision_id": "DOS-M9-GATE-IMAGING",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-006",
+      "decision_id": "DOS-M9-GATE-PHARMACY",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-007",
+      "decision_id": "DOS-M9-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-007",
+      "decision_id": "DOS-M9-GATE-OPTIONAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-007",
+      "decision_id": "DOS-M9-GATE-MEDICATION",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-007",
+      "decision_id": "DOS-M9-GATE-LAB",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-007",
+      "decision_id": "DOS-M9-GATE-IMAGING",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-007",
+      "decision_id": "DOS-M9-GATE-PHARMACY",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-007",
+      "decision_id": "DOS-M9-GATE-INSURANCE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "decision_id": "DOS-M9-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "decision_id": "DOS-M9-GATE-OPTIONAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "decision_id": "DOS-M9-GATE-MEDICATION",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "decision_id": "DOS-M9-GATE-LAB",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "decision_id": "DOS-M9-GATE-IMAGING",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "decision_id": "DOS-M9-GATE-PHARMACY",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "decision_id": "DOS-M9-GATE-INSURANCE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-008",
+      "decision_id": "DOS-M9-GATE-EXCHANGE",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M9-001",
+      "decision_id": "DOS-M9-GATE-OPTIONAL",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    },
+    {
+      "task_id": "DOS-M9-002",
+      "decision_id": "DOS-M9-GATE-MEDICATION",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    },
+    {
+      "task_id": "DOS-M9-003",
+      "decision_id": "DOS-M9-GATE-LAB",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    },
+    {
+      "task_id": "DOS-M9-004",
+      "decision_id": "DOS-M9-GATE-IMAGING",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    },
+    {
+      "task_id": "DOS-M9-005",
+      "decision_id": "DOS-M9-GATE-PHARMACY",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    },
+    {
+      "task_id": "DOS-M9-006",
+      "decision_id": "DOS-M9-GATE-INSURANCE",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    },
+    {
+      "task_id": "DOS-M9-007",
+      "decision_id": "DOS-M9-GATE-EXCHANGE",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    }
+  ],
+  "transaction_contract": [
+    "Verify exact Automation target, live function/schema/trigger fingerprints, immutable project ID, route, model, retry policy, command registrations and publication scopes before writes.",
+    "Acquire parent-reviewed transaction serialization lock and reread every scoped ID; existing equal payload is a no-op only after full canonical comparison; any differing state/history aborts. Never overwrite existing tasks, decisions, execution or requirement history.",
+    "Create or verify the real OPEN milestone start decision before any task; create every task through supported function and link every task to that decision with blocking=true in the SAME transaction.",
+    "Create all requirement, decision and dependency links and refresh contracts after final metadata. Do not commit partial task/link batches.",
+    "Assert exact payload counts, complete links, zero ready Doctor tasks using live ready-task predicate, zero claims/runs/executions, no publication authority, and all start decisions still OPEN immediately before commit.",
+    "Dry-run rollback and review returned evidence first. Parent controls any commit; never remove a guard from the original draft SQL.",
+    "After commit read back canonical packets and zero-ready evidence. Keep all nine start gates open until parent confirms all nine safely saved; release each milestone separately in dependency order."
+  ],
+  "pending_inputs": [
+    "Parent live schema/consumer and trigger contract",
+    "Reviewed Doctor suit/workstream/app mapping (function requires active project/workstream)",
+    "Verified high-capability deep model and retry policy IDs",
+    "Approved command registration and protected publication paths",
+    "Exact no-ready-task SQL predicate and transaction/rollback proof"
+  ]
+}
