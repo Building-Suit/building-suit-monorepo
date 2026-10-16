@@ -102,7 +102,13 @@ export function useWebsiteProfile(canManage: Ref<boolean>) {
       canEdit: Boolean(canManage.value && result?.slug),
       canPublish: Boolean(canManage.value && isOwner.value && result?.catalog.integration === 'ready' && result.catalog.publishedItemCount > 0 && result.missing.length === 0 && result.state !== 'suspended' && !open.value && !logoPending.value),
       canUnpublish: Boolean(canManage.value && result?.state === 'published'),
-      locationOptions: activeLocations.value.map(l => ({ id: l.id, label: l.name })),
+      locationOptions: [
+        ...activeLocations.value.map(l => ({ id: l.id, label: l.name, canShow: true })),
+        ...(result?.draft.locations ?? []).filter(l => !activeLocations.value.some(active => active.id === l.id)).map(l => ({
+          id: l.id, canShow: false,
+          label: `${l.publicName || (ar ? 'موقع محفوظ' : 'Saved location')} (${ar ? 'مؤرشف أو غير متاح — يمكن إخفاؤه' : 'archived or unavailable — hide to keep editing'})`,
+        })),
+      ],
       copy: ar ? {
         loading: 'جارٍ التحميل', failed: 'تعذر تحميل الملف العام.', denied: 'تحتاج صلاحية إدارة الإعدادات.', retry: 'حاول تاني', edit: 'تعديل المسودة', save: 'حفظ المسودة', cancel: 'إلغاء', publish: 'نشر', unpublish: 'إلغاء النشر', optIn: 'بصفتي المالك، أوافق صراحة على نشر هذا الملف وبياناته العامة.', logo: 'الشعار العام', logoHelp: 'PNG أو JPEG أو WebP حتى 128 كيلوبايت و2048 بكسل. يتم حفظ الشعار فور اختياره للمسودة فقط.', removeLogo: 'إزالة الشعار', publicName: 'الاسم العام', description: 'وصف قصير', phone: 'هاتف عام', whatsapp: 'واتساب عام (رمز البلد والأرقام)', email: 'بريد إلكتروني عام', openingHours: 'مواعيد العمل العامة', seoTitle: 'عنوان محركات البحث', seoDescription: 'وصف محركات البحث', locations: 'المواقع العامة (لا تظهر تلقائياً)', visible: 'إظهار الموقع', address: 'العنوان العام', readiness: 'متطلبات النشر', catalogPending: 'نشر المنتجات والخدمات متاح في خطوة الكتالوج التالية.'
       } : {

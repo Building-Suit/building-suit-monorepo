@@ -45,7 +45,7 @@ function updateLocation(id: string, key: 'visible' | 'publicName' | 'address', v
       </BsField>
       <BsFieldGroup :legend="view.copy.locations">
         <BsStack v-for="location in view.locationOptions" :key="location.id" gap="sm">
-          <BsCheckbox :model-value="form.locations.find(v => v.id === location.id)?.visible ?? false" :label="`${view.copy.visible}: ${location.label}`" @update:model-value="updateLocation(location.id,'visible',$event === true)" />
+          <BsCheckbox :model-value="form.locations.find(v => v.id === location.id)?.visible ?? false" :label="`${view.copy.visible}: ${location.label}`" :disabled="!location.canShow && !(form.locations.find(v => v.id === location.id)?.visible ?? false)" @update:model-value="updateLocation(location.id,'visible',$event === true)" />
           <BsField v-slot="field" :label="view.copy.publicName"><BsInput :id="field.id" :model-value="form.locations.find(v => v.id === location.id)?.publicName ?? ''" :maxlength="120" @update:model-value="updateLocation(location.id,'publicName',$event)" /></BsField>
           <BsField v-slot="field" :label="view.copy.address"><BsInput :id="field.id" :model-value="form.locations.find(v => v.id === location.id)?.address ?? ''" :maxlength="500" @update:model-value="updateLocation(location.id,'address',$event)" /></BsField>
         </BsStack>

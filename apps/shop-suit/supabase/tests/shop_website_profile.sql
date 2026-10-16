@@ -114,6 +114,24 @@ do $$declare p jsonb:=public.shop_website_profile(current_setting('profile_test.
  if p->>'logoDataUrl' is null or p->'draft'->>'publicName'<>'Edited draft' then raise exception 'unpublish lost logo or draft'; end if;
 end$$;
 reset role;
+-- Archive -> reopen saved draft -> hide stale entry -> save. Even hidden
+-- archived entries remain tenant checked; saving never republishes.
+update public.shop_locations set status='archived',archived_at=now(),is_default=false where shop_id=current_setting('profile_test.shop')::uuid;
+set local role authenticated;
+do $$declare a uuid:=current_setting('profile_test.shop')::uuid; d jsonb; v jsonb; foreign_loc uuid;begin
+ d:=public.shop_website_profile(a)->'draft';
+ begin perform public.shop_website_profile_save(a,d); raise exception 'visible archived draft accepted'; exception when invalid_parameter_value then null;end;
+ d:=jsonb_set(d,'{locations,0,visible}','false');
+ v:=public.shop_website_profile_save(a,d);
+ if v->'draft'->'locations'->0->>'address'<>'Public street' or v->'draft'->'locations'->0->>'publicName'<>'Public branch'
+   or v->>'state'<>'draft' or not(v->'missing' @> '["location"]') or public.shop_website_public_profile('profile-fixture-new') is not null then raise exception 'archived draft recovery lost data or republished'; end if;
+ reset role;
+ select id into foreign_loc from public.shop_locations where shop_id=(select shop from public_profile_fixture where shop<>a limit 1) limit 1;
+ update public.shop_locations set status='archived',archived_at=now(),is_default=false where id=foreign_loc;
+ set local role authenticated;
+ begin perform public.shop_website_profile_save(a,jsonb_set(d,'{locations,0,id}',to_jsonb(foreign_loc::text))); raise exception 'hidden foreign location accepted'; exception when invalid_parameter_value then null;end;
+end$$;
+reset role;
 -- Audit and direct-access boundaries.
 do $$begin
  if (select count(*) from public.shop_website_profile_events where shop_id=current_setting('profile_test.shop')::uuid)<7 then raise exception 'audit missing'; end if;

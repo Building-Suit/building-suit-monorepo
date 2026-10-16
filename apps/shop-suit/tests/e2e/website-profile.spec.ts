@@ -116,3 +116,52 @@ test('malformed profile read stays retryable and does not remove the address edi
   await page.locator('#website-profile').getByRole('button',{name:'Retry',exact:true}).click()
   await expect(page.locator('#website-profile').getByRole('button',{name:'Edit draft',exact:true})).toBeEnabled()
 })
+for (const locale of ['en','ar']) test(`archived public location can be hidden and saved without republishing: ${locale}`, async ({page}) => {
+  const ar=locale==='ar'
+  const publicLocation={id:'location-2',visible:true,publicName:'Public branch two',address:'Public street two'}
+  let archived=false
+  let settings:WebsiteProfileSettings={...initial(),draft:{...emptyWebsiteProfile(),publicName:'Saved public shop',locations:[publicLocation]}}
+  const {calls}=await pilotFixture(page,locale,'owner',(name,args)=>{
+    if(name==='shop_permission_access') return {'settings.manage':true}
+    if(name==='list_shop_locations') return [
+      {id:'location-1',shop_id:'shop-1',name:'First branch',status:'active',is_default:true},
+      {id:'location-2',shop_id:'shop-1',name:'Second branch',status:archived?'archived':'active',is_default:false},
+    ]
+    if(name==='shop_website_profile') return settings
+    if(name==='archive_shop_location') { expect(args).toEqual({p_shop_id:'shop-1',p_location_id:'location-2'});archived=true;return null }
+    if(name==='shop_website_profile_save') {
+      const draft=args.p_profile as WebsiteProfileDraft
+      expect(args.p_shop_id).toBe('shop-1')
+      expect(draft.locations).toEqual([{...publicLocation,visible:false}])
+      settings={...settings,draft,missing:['location','publishedItem']};return settings
+    }
+    return undefined
+  })
+  await fixtureGoto(page,'/settings')
+  const panel=page.locator('#website-profile')
+  await panel.getByRole('button',{name:ar?'تعديل المسودة':'Edit draft',exact:true}).click()
+  await expect(page.getByRole('dialog').getByRole('checkbox',{name:/Second branch/})).toBeChecked()
+  await page.getByRole('dialog').getByRole('button',{name:ar?'إلغاء':'Cancel',exact:true}).click()
+  await page.locator('#locations').getByRole('row').filter({hasText:'Second branch'}).getByRole('button',{name:ar?'أرشفة':'Archive',exact:true}).click()
+  await page.getByRole('dialog',{name:ar?'تأكيد':'Confirm',exact:true}).getByRole('button',{name:ar?'تأكيد':'Confirm',exact:true}).click()
+  await expect.poll(()=>archived).toBe(true)
+  await fixtureReload(page)
+  await panel.getByRole('button',{name:ar?'تعديل المسودة':'Edit draft',exact:true}).click()
+  const dialog=page.getByRole('dialog')
+  const stale=dialog.getByRole('checkbox',{name:/Public branch two/})
+  await expect(stale).toBeChecked()
+  await stale.uncheck()
+  await expect(stale).toBeDisabled()
+  await dialog.getByLabel(ar?'الاسم العام':'Public name',{exact:true}).first().fill('Edited after archival')
+  await dialog.getByRole('button',{name:ar?'حفظ المسودة':'Save draft',exact:true}).click()
+  await expect(dialog).toHaveCount(0)
+  await expect(panel).toContainText(ar?'لم يتم نشر':'have not been published')
+  await expect(panel.getByRole('button',{name:ar?'نشر':'Publish',exact:true})).toBeDisabled()
+  expect(settings.state).toBe('draft')
+  expect(calls.some(c=>c.name==='shop_website_profile_publish')).toBe(false)
+  await fixtureReload(page)
+  await panel.getByRole('button',{name:ar?'تعديل المسودة':'Edit draft',exact:true}).click()
+  await expect(stale).not.toBeChecked()
+  await expect(stale).toBeDisabled()
+  await expect(dialog.getByLabel(ar?'العنوان العام':'Public address',{exact:true}).last()).toHaveValue('Public street two')
+})
