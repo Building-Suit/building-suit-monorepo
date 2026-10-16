@@ -803,5 +803,42 @@
     "sources": [
       "dos-m1-004-settings-support"
     ]
+  },
+  {
+    "id": "doctor-session-lifecycle",
+    "task": "DOS-M1-006",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/src/templates/BsAccountSessionPage.vue",
+      "packages/ui/src/templates/BsSignInPage.vue",
+      "packages/ui/src/templates/BsSignupPage.vue",
+      "packages/ui/src/templates/BsEmailVerificationPage.vue",
+      "packages/ui/src/templates/BsPasswordRecoveryPage.vue",
+      "packages/ui/package.json",
+      "packages/testing/playwright.auth-parity.config.ts",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/shared/realtime-adoption.json",
+      "docs/shared/realtime-adoption.md",
+      "docs/work-packages/doctor-suit/authentication-evidence.md",
+      ".github/workflows/doctor-disposable.yml",
+      "pnpm-lock.yaml",
+      "packages/ui/src/molecules/BsStateSurface.vue"
+    ],
+    "reason": "Implement synthetic Doctor account lifecycle with own provider gates, independently checked current sessions, product/environment cookies and same-origin PKCE callbacks. Shared auth templates add opt-in availability presentation; existing consumers retain default rendering. No operational registration, hosted provider changes or clinical verification is asserted.",
+    "sources": [
+      "dos-m1-006"
+    ]
   }
 ]

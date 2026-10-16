@@ -54,6 +54,8 @@ try {
   docker(['exec', container, 'chmod', '644', '/usr/local/share/postgresql/extension/pgtap.control', '/usr/local/share/postgresql/extension/pgtap--1.3.4.sql'])
   sql(`create role anon; create role authenticated; create schema auth; create schema extensions;
     create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,is_anonymous boolean default false,banned_until timestamptz,raw_user_meta_data jsonb);
+    create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id),not_after timestamptz);
+    create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;
     create function auth.uid() returns uuid language sql stable as $$select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid$$;
     grant usage on schema auth,extensions to anon,authenticated;
     grant execute on function auth.uid() to anon,authenticated;`)

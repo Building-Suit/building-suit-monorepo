@@ -146,13 +146,13 @@
       "suit": "doctor-suit",
       "status": "not-needed",
       "workflows": [
-        "synthetic scaffold scope disclosure"
+        "synthetic preview and verified account lifecycle"
       ],
-      "reason": "The generated synthetic preview has no business readers, authenticated session or concurrent writes. No Realtime delivery is claimed by scaffold availability.",
+      "reason": "The synthetic account lifecycle has no operational business readers or Realtime subscriptions. Account verification does not establish live synchronization.",
       "evidence": [
         {
           "path": "apps/doctor-suit/README.md",
-          "anchor": "It has no authenticated session or database access"
+          "anchor": "There are no operational business readers or Realtime subscriptions"
         }
       ],
       "unblock": [

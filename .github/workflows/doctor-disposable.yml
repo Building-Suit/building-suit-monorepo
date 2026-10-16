@@ -6,6 +6,7 @@ on:
       - 'docs/architecture/environments.json'
       - 'packages/ui/**'
       - 'packages/ux/**'
+      - 'packages/testing/playwright.auth-parity.config.ts'
       - '.github/workflows/doctor-disposable.yml'
   push:
     branches: [stg]
@@ -14,6 +15,7 @@ on:
       - 'docs/architecture/environments.json'
       - 'packages/ui/**'
       - 'packages/ux/**'
+      - 'packages/testing/playwright.auth-parity.config.ts'
       - '.github/workflows/doctor-disposable.yml'
 permissions:
   contents: read
@@ -76,6 +78,8 @@ jobs:
           SUPABASE_URL: http://127.0.0.1:60321
           SUPABASE_KEY: local-development-publishable-key
       - run: pnpm exec playwright install --with-deps chromium
+      - name: Verify existing shared auth presentation retains default behavior
+        run: pnpm exec playwright test -c packages/testing/playwright.auth-parity.config.ts
       - name: Verify settings in existing consumers with local-only targets and no n8n access
         run: pnpm exec playwright test -c packages/testing/playwright.settings-focus.config.ts
       - uses: actions/upload-artifact@v4
@@ -84,3 +88,25 @@ jobs:
           name: shared-settings-focus-results
           path: test-results/settings-focus
           if-no-files-found: ignore
+
+  doctor-auth-protocol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build for the loopback synthetic protocol fixture
+        run: pnpm --filter @building-suit/doctor-suit build
+        env:
+          APP_URL: http://127.0.0.1:4337
+          DOCTOR_SUPABASE_URL: http://127.0.0.1:4338
+          DOCTOR_SUPABASE_PUBLISHABLE_KEY: sb_publishable_synthetic_protocol_fixture
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Verify account protocol journeys without external mail or credential artifacts
+        # The HTTP fixture does not prove actual Supabase Auth service acceptance.
+        run: pnpm exec playwright test -c apps/doctor-suit/tests/e2e/playwright.auth.config.ts

@@ -362,7 +362,8 @@
     "./templates/BsPublicAppointmentBookingPage.vue": "./src/templates/BsPublicAppointmentBookingPage.vue",
     "./organisms/BsBookingPolicySettings.vue": "./src/organisms/BsBookingPolicySettings.vue",
     "./utils/appointmentReminderEmail": "./src/utils/appointmentReminderEmail.ts",
-    "./templates/BsProductPreviewPage.vue": "./src/templates/BsProductPreviewPage.vue"
+    "./templates/BsProductPreviewPage.vue": "./src/templates/BsProductPreviewPage.vue",
+    "./templates/BsAccountSessionPage.vue": "./src/templates/BsAccountSessionPage.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

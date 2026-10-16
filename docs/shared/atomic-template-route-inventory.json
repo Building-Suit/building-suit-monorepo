@@ -77,7 +77,8 @@
     "BsShopWebsitePage": "packages/ui/src/templates/BsShopWebsitePage.vue",
     "BsShopCustomerPortalPage": "packages/ui/src/templates/BsShopCustomerPortalPage.vue",
     "BsPublicAppointmentBookingPage": "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue",
-    "BsProductPreviewPage": "packages/ui/src/templates/BsProductPreviewPage.vue"
+    "BsProductPreviewPage": "packages/ui/src/templates/BsProductPreviewPage.vue",
+    "BsAccountSessionPage": "packages/ui/src/templates/BsAccountSessionPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2643,6 +2644,65 @@
       "status": "implemented; browser acceptance pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/sign-in.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsSignInPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/sign-in.vue",
+      "status": "implemented; synthetic authentication browser verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "sign-in"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/sign-up.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsSignupPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/sign-up.vue",
+      "status": "implemented; synthetic authentication browser verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "signup"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/verify.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsEmailVerificationPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/verify.vue",
+      "status": "implemented; synthetic authentication browser verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "email-verification"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/recover.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPasswordRecoveryPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/recover.vue",
+      "status": "implemented; synthetic authentication browser verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "password-recovery"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/account.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsAccountSessionPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/account.vue",
+      "status": "implemented; synthetic authentication browser verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "verified-account-session"
+    },
+    {
+      "source": "apps/doctor-suit/app/layouts/auth.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsProductAuthFrame.vue",
+      "domainAdapter": "apps/doctor-suit/app/layouts/auth.vue",
+      "status": "implemented; synthetic authentication browser verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -2768,6 +2828,7 @@
     "BsShopWebsitePage",
     "BsShopCustomerPortalPage",
     "BsPublicAppointmentBookingPage",
-    "BsProductPreviewPage"
+    "BsProductPreviewPage",
+    "BsAccountSessionPage"
   ]
 }

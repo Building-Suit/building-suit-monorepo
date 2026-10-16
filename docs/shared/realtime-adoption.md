@@ -7,7 +7,7 @@ The machine-readable [evidence matrix](realtime-adoption.json) records the revie
 | Suit | Decision | Concurrent-update evidence | Current behavior and prerequisite |
 | --- | --- | --- | --- |
 | Ledger | Blocked | Journal posting/approval/reversal affects other readers' journal, balances and reports; notifications/team administration can also change in another session. | Local revision watchers and manual refresh remain. There is no publication declaration in maintained Ledger migrations. Verify product-owned table eligibility, event delivery, RLS/capability isolation and session lifecycle before subscribing. |
-| Doctor | Intentionally not needed | The synthetic scaffold has no business readers, authenticated session or concurrent writes. | Reassess administrative queue readers with Doctor authorization and event-delivery evidence. |
+| Doctor | Intentionally not needed | The synthetic account lifecycle has no operational business readers or Realtime subscriptions. | Reassess administrative queue readers with Doctor authorization and event-delivery evidence. |
 | Inventory | Intentionally not needed | Only the bootstrap welcome page exists; no current business query or writer. | No subscription. Reassess stock/reservation/count readers when tenant/warehouse authorization and their business schema exist. Future requirements do not establish present adoption. |
 | Automation | Blocked | Runners update tasks, executions, verification and incidents concurrently; operators can update projects/policies. | Overview polling and explicit task refresh remain. Direct server PostgreSQL and Basic dashboard authentication provide no Supabase browser event/auth contract. An authorized transport design is prerequisite. |
 

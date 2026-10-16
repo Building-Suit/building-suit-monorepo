@@ -8,6 +8,7 @@ insert into auth.users(id,email,email_confirmed_at,is_anonymous,raw_user_meta_da
 ('00000000-0000-0000-0000-000000000003','secretary@example.test',now(),false,'{"role":"owner","practice_id":"10000000-0000-0000-0000-000000000001"}'),
 ('00000000-0000-0000-0000-000000000004','outsider@example.test',now(),false,'{}'),
 ('00000000-0000-0000-0000-000000000005','unverified@example.test',null,false,'{}');
+insert into auth.sessions(id,user_id,not_after) select ('50000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,('00000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,now()+interval '1 hour' from generate_series(1,5) n;
 insert into public.doctor_profiles(user_id,display_name) values
 ('00000000-0000-0000-0000-000000000001','Synthetic doctor A'),('00000000-0000-0000-0000-000000000002','Synthetic doctor B');
 insert into public.practices(id,owner_user_id,name) values
@@ -28,7 +29,7 @@ select throws_ok($$insert into public.locations(practice_id,name,timezone) value
 select throws_ok($$update public.memberships set capabilities=array['clinical.sign']$$,'23514',null,'staff cannot receive clinical signing authority');
 
 set local role authenticated;
-select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
+select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-000000000001","session_id":"50000000-0000-0000-0000-000000000001","role":"authenticated"}',true);
 select is((select count(*) from public.practices),1::bigint,'doctor sees own practice');
 select is((select count(*) from public.locations),2::bigint,'doctor owns both locations');
 select ok(not doctor_private.has_access('10000000-0000-0000-0000-000000000002','patients.read'),'doctor cannot read another practice');
@@ -38,7 +39,7 @@ select throws_ok($$update public.practices set owner_user_id='00000000-0000-0000
 select ok(not has_table_privilege('authenticated','public.audit_events','UPDATE'),'audit events cannot be edited');
 select ok(not has_table_privilege('authenticated','public.audit_events','DELETE'),'audit events cannot be deleted');
 
-select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-000000000003","role":"authenticated","user_metadata":{"role":"owner"}}',true);
+select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-000000000003","session_id":"50000000-0000-0000-0000-000000000003","role":"authenticated","user_metadata":{"role":"owner"}}',true);
 select is((select count(*) from public.practices),2::bigint,'shared secretary has two independent practice contexts');
 select is((select count(*) from public.locations),2::bigint,'secretary sees exactly two granted locations');
 select ok(doctor_private.has_access('10000000-0000-0000-0000-000000000001','patients.read','20000000-0000-0000-0000-000000000001'),'explicit granted read allowed');
@@ -53,7 +54,7 @@ set local role authenticated;
 select ok(not doctor_private.has_access('10000000-0000-0000-0000-000000000001','patients.read','20000000-0000-0000-0000-000000000001'),'revocation takes effect on next request without JWT refresh');
 select is((select count(*) from public.practices),1::bigint,'revocation hides only its own practice context');
 
-select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-000000000004","role":"authenticated"}',true);
+select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-000000000004","session_id":"50000000-0000-0000-0000-000000000004","role":"authenticated"}',true);
 select is((select count(*) from public.practices),0::bigint,'outsider cannot discover practices');
 select is((select count(*) from public.locations),0::bigint,'outsider cannot discover locations');
 select throws_ok($$select doctor_private.require_access('10000000-0000-0000-0000-000000000001','patients.read')$$,'42501','DOCTOR_ACCESS_DENIED','unauthorized command fails explicitly');
@@ -64,7 +65,7 @@ select is((select count(*) from public.audit_events),1::bigint,'retry did not du
 select throws_ok($$select public.doctor_onboard('Changed payload','Location','Etc/UTC','40000000-0000-0000-0000-000000000001')$$,'22023','DOCTOR_IDEMPOTENCY_CONFLICT','changed retry rejected');
 select throws_ok($$select public.doctor_onboard('Duplicate practice','Location','Etc/UTC','40000000-0000-0000-0000-000000000002')$$,'23505','DOCTOR_PRACTICE_EXISTS','different-key duplicate onboarding denied');
 select is((select professional_verification from public.doctor_profiles),'unverified','onboarding never claims professional verification');
-select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-000000000005","role":"authenticated"}',true);
+select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-000000000005","session_id":"50000000-0000-0000-0000-000000000005","role":"authenticated"}',true);
 select throws_ok($$select public.doctor_onboard('Unverified','Location','Etc/UTC','40000000-0000-0000-0000-000000000003')$$,'42501','DOCTOR_AUTH_REQUIRED','unconfirmed identity cannot onboard');
 reset role;
 set local role anon;

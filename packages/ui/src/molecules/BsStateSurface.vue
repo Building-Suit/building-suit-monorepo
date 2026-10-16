@@ -2,6 +2,7 @@
 const props = withDefaults(defineProps<{
   state: 'loading' | 'empty' | 'error' | 'denied' | 'permission' | 'read-only' | 'info' | 'warning' | 'success'
   title: string
+  titleLevel?: 1 | 2 | 3
   description?: string
   actionLabel?: string
 }>(), { description: undefined, actionLabel: undefined })
@@ -13,7 +14,7 @@ const icon = computed(() => ({ loading: 'repeat', empty: 'reports', error: 'noti
 <template>
   <div class="ls-state-surface" :data-state="state" :role="state === 'error' ? 'alert' : 'status'" :aria-busy="state === 'loading' || undefined">
     <BsIcon :name="icon" :class="state === 'loading' ? 'animate-spin' : ''" />
-    <div class="min-w-0"><p class="font-bold">{{ title }}</p><p v-if="description" class="mt-1 text-sm text-fg-muted">{{ description }}</p></div>
+    <div class="min-w-0"><BsHeading v-if="titleLevel" :level="titleLevel">{{ title }}</BsHeading><p v-else class="font-bold">{{ title }}</p><p v-if="description" class="mt-1 text-sm text-fg-muted">{{ description }}</p></div>
     <BsButton v-if="actionLabel" size="sm" :variant="state === 'error' ? 'primary' : 'default'" @click="$emit('action')">{{ actionLabel }}</BsButton>
   </div>
 </template>

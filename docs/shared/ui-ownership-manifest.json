@@ -473,6 +473,16 @@
       ],
       "task": "DOS-M1-005",
       "migrationStatus": "implemented; candidate browser verification pending"
+    },
+    {
+      "family": "verified-account-session",
+      "owner": "packages/ui",
+      "components": [
+        "BsAccountSessionPage"
+      ],
+      "adapterBoundary": "App-owned verified identity lifecycle, provider gates and localized copy; shared templates own complete credential and current-session presentation. No metadata authority or provider calls inside UI.",
+      "task": "DOS-M1-006",
+      "migrationStatus": "registered complete synthetic account route"
     }
   ]
 }

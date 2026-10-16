@@ -220,6 +220,8 @@ export type Database = {
         }
         Returns: Json
       }
+      doctor_runtime_contract: { Args: never; Returns: Json }
+      doctor_session_context: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never
