@@ -7,7 +7,7 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
   const jwt=`set request.jwt.claims='{"role":"service_role"}';`
   const json=x=>`'${JSON.stringify(x).replaceAll("'","''")}'::jsonb`
   const parse=x=>JSON.parse(x.split('\n').at(-1))
-  const setup=(name,kind,beforeModel)=>{
+  const setup=(name,kind,beforeModel,beforePreview)=>{
     sql(`create database ${name};`)
     const q=s=>databaseSql(name,s)
     q(`create schema extensions;create extension pgcrypto with schema extensions;create schema super_admin_private;
@@ -21,6 +21,8 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
     if(beforeModel) beforeModel(q)
     q(migration('20261015215030_upcoming_release_candidates'))
     for(const file of ['20261016112949_release_cardinality_location','20261016122230_release_refresh_statement_evidence','20261016144255_qualified_release_baseline_pin']) q(migration(file))
+    if(beforePreview) beforePreview(q)
+    q(migration('20261016173321_durable_release_preview'))
     return q
   }
   // Opt-in local diagnosis: replay current repository data, not a hosted catalog.
@@ -64,8 +66,14 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
   assert.throws(()=>refresh({...first,changes:[{...change,notes:{...change.notes,title:{en:'changed copy',ar:'نص مختلف'}}}]}),/DIGEST_CONFLICT/)
   const two=refresh(snapshot(2,[change,{...change,id:'candidate-fix',classification:'patch'}]))
   assert.equal(two.manifest.versions['shop-suit'],'0.1.0','Repeated PR updates stay within the same net release')
-  assert.throws(()=>feed(stage),/STAGING_CANDIDATE_NOT_READY/)
+  assert.deepEqual(feed(stage).entries,upcoming.entries,'Pending refresh keeps the last verified preview available')
+  assert.throws(()=>ready({...two,digest:'0'.repeat(64)}),/DIGEST_CONFLICT/)
+  assert.deepEqual(feed(stage).entries,upcoming.entries,'Failed ready cannot swap the preview')
+  assert.throws(()=>ready(one),/STALE_CANDIDATE/,'Superseded readiness cannot republish an old candidate')
   ready(two)
+  const twoReady=state(stage).revisions.find(r=>r.key===two.key).readyAt
+  ready(two)
+  assert.equal(state(stage).revisions.find(r=>r.key===two.key).readyAt,twoReady,'Readiness retries preserve publication time')
   assert.equal(feed(stage).entries.length,2)
   assert.equal(new Set(feed(stage).entries.map(e=>e.targetVersion)).size,1)
   assert.equal(state(stage).baseVersions['shop-suit'],'0.0.0')
@@ -73,10 +81,13 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
   assert.throws(()=>refresh(snapshot(3,[{...change,suits:['ledger-suit']} ])),/UNREGISTERED_SUIT/)
   assert.throws(()=>refresh(snapshot(3,[{...change,notes:{title:{en:'no Arabic'},summary:copy,details:copy}}])),/INVALID_COPY/)
   assert.equal(stage('select count(*) from public.release_candidate_revisions;'),beforeFailure)
-  const zero=refresh({...snapshot(3,[]),mainSha:'f'.repeat(40)});ready(zero)
+  const zero=refresh({...snapshot(3,[]),mainSha:'f'.repeat(40)});
+  assert.equal(feed(stage).entries.length,2,'Even a net-zero refresh must pass readiness before retiring a preview');ready(zero)
   assert.deepEqual(zero.manifest.versions,{})
   assert.deepEqual(feed(stage).entries,[],'Net zero/reverts remove the upcoming public release, retaining every revision')
-  const final=refresh(snapshot(4,[change,{...change,id:'candidate-fix',classification:'patch'}]));ready(final)
+  const final=refresh(snapshot(4,[change,{...change,id:'candidate-fix',classification:'patch'}]));
+  assert.deepEqual(feed(stage).entries,[],'An unready later revision cannot resurrect the last nonempty preview after a ready net-zero revision')
+  ready(final)
   const exported=state(stage).revisions.find(r=>r.key===final.key)
   const promote=r=>parse(prod(`${jwt}select public.release_candidate_promote(${json(r)},'${'9'.repeat(40)}','${first.mainSha}','${final.manifest.stagingTree}');`))
   assert.throws(()=>promote({...exported,readyAt:null}),/UNREADY_OR_WRONG_PROMOTION_PROVENANCE/)
@@ -100,7 +111,11 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
   assert.deepEqual(feed(stage).entries,feed(prod).entries,'Staging receives the exact frozen production receipt')
   const next=refresh({...snapshot(6,[{...change,classification:'patch'}],{'shop-suit':'0.1.0'}),mainSha:'9'.repeat(40),mainTree:final.manifest.stagingTree})
   assert.equal(next.manifest.versions['shop-suit'],'0.1.1','Fresh candidate starts from actual released production version')
+  assert.deepEqual(feed(stage).entries,feed(prod).entries,'After acknowledgment an unready successor cannot revive an old preview');
   ready(next)
+  const nextFeed=feed(stage).entries
+  stage(`${jwt}select public.release_candidate_acknowledge(${json(receipt)});`)
+  assert.deepEqual(feed(stage).entries,nextFeed,'An acknowledgment retry must not clear a subsequently verified preview')
   assert.equal(feed(stage).entries.filter(e=>e.status==='coming-soon').length,1)
   assert.equal(feed(prod).entries.length,2)
   const published=feed(prod).entries[0].publishedAt
@@ -112,8 +127,11 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
   for(const role of ['anon','authenticated']) {
     assert.throws(()=>stage(`set role ${role};select public.release_candidate_refresh(${json(first)});`),/permission denied/)
     assert.throws(()=>stage(`set role ${role};select * from public.release_candidate_revisions;`),/permission denied/)
+    assert.throws(()=>stage(`set role ${role};select * from public.release_candidate_preview;`),/permission denied/)
+    assert.throws(()=>stage(`set role ${role};select public.release_candidate_ready('${next.key}','${next.digest}');`),/permission denied/)
   }
   for(const field of ['baseVersions','mainSha','stagingSha','digest','task','paths','BS-TEST','provenance','branchCommits','fragmentDigests','private-merge-audit-marker','private-fragment-audit-marker']) assert.ok(!JSON.stringify(feed(stage)).includes(field))
+  assert.throws(()=>ready(one),/STALE_CANDIDATE/,'Acknowledgment makes old readiness stale');
   assert.deepEqual(refresh(first),{...one,readyAt:state(stage).revisions.find(r=>r.key===one.key).readyAt},'An old identical revision retry after promotion returns its retained outcome without resurrecting it')
   if(outputPath) writeFileSync(outputPath,JSON.stringify(feed(stage))+'\n')
   assert.equal(stage('select version from public.release_version_heads;'),'0.0.0','Original v1 baseline/history remain unchanged')
@@ -124,6 +142,31 @@ export async function testCandidates({sql,databaseSql,parallelDatabaseSql,output
   assert.match(raced.find(row=>row.status==='rejected').reason.message,/PRODUCTION_BASELINE_ACK_REQUIRED/)
   assert.equal(initialRace('select count(*) from public.release_candidate_revisions;'),'1')
   assert.equal(state(initialRace).baseVersions['shop-suit'],'0.0.0')
+  // Upgrade persisted state with a verified preview and a newer unready candidate.
+  let adoptedReady,adoptedPending
+  const adoption=setup('candidate_preview_adoption','staging',null,q=>{
+    adoptedReady=parse(q(`${jwt}select public.release_candidate_refresh(${json(first)});`))
+    q(`${jwt}select public.release_candidate_ready('${adoptedReady.key}','${adoptedReady.digest}');`)
+    adoptedPending=parse(q(`${jwt}select public.release_candidate_refresh(${json(snapshot(2,[change,{...change,id:'candidate-fix'}]))});`))
+  })
+  assert.equal(feed(adoption).entries.length,1,'Upgrade adopts the last verified preview, not unready pending work')
+  assert.equal(adoption('select revision_key from public.release_candidate_pointer;'),adoptedPending.key)
+  adoption(`${jwt}select public.release_candidate_ready('${adoptedPending.key}','${adoptedPending.digest}');`)
+  assert.equal(feed(adoption).entries.length,2)
+  const adoptedZero=setup('candidate_preview_zero','staging',null,q=>{
+    const initial=parse(q(`${jwt}select public.release_candidate_refresh(${json(first)});`))
+    q(`${jwt}select public.release_candidate_ready('${initial.key}','${initial.digest}');`)
+    const cleared=parse(q(`${jwt}select public.release_candidate_refresh(${json(snapshot(2,[]))});`))
+    q(`${jwt}select public.release_candidate_ready('${cleared.key}','${cleared.digest}');`)
+    q(`${jwt}select public.release_candidate_refresh(${json(snapshot(3))});`)
+  })
+  assert.deepEqual(feed(adoptedZero).entries,[],'Upgrade preserves a ready net-zero preview rather than resurrecting earlier notes')
+  const retired=setup('candidate_preview_retired','staging',null,q=>{
+    const accepted=parse(q(`${jwt}select public.release_candidate_refresh(${json(first)});`))
+    q(`${jwt}select public.release_candidate_ready('${accepted.key}','${accepted.digest}');`)
+    q(`${jwt}select public.release_candidate_acknowledge(${json({...accepted,deploymentSha:'9'.repeat(40),publishedAt:'2026-10-16T00:00:00Z'})});`)
+  })
+  assert.ok(feed(retired).entries.every(row=>row.status==='released'),'Upgrade never searches behind an acknowledged retirement boundary')
   let priorLegacy
   const legacy=setup('candidate_existing_legacy','staging',q=>{
     const oldRequest={repository:'Building-Suit/building-suit-monorepo',ref:'refs/heads/stg',parentSha:'4b4c3ca5ffed96e7d61f6eb5a60d04a52862aa0c',sourceSha:'e'.repeat(40),fragments:[change]}

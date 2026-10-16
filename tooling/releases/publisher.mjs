@@ -11,6 +11,22 @@ export function assertReady({ contexts, required, checks }) {
     if (!(status?.state === 'success' || (!status && check?.conclusion === 'success' && check?.status === 'completed'))) throw new Error(`Deployment not ready: ${name}`)
   }
 }
+/** A release-PR verification can share a SHA with the protected push. Only the latter is release authority. */
+export async function protectedVerification(request, sha, branch) {
+  const runs = await request(`actions/workflows/ci.yml/runs?head_sha=${sha}&branch=${branch}&event=push&per_page=100`)
+  if (runs.total_count > 100) throw new Error('Readiness pagination requires explicit review')
+  const eligible = runs.workflow_runs.filter(run => run.head_sha === sha && run.head_branch === branch && run.event === 'push'
+    && run.path === '.github/workflows/ci.yml')
+    .sort((a, b) => b.run_number - a.run_number || b.id - a.id)
+  const run = eligible[0]
+  if (!run) return { name: 'verify', status: 'queued', conclusion: null }
+  // Inspect the latest attempt of the newest authoritative run; never fall back past a failure or rerun.
+  const jobs = await request(`actions/runs/${run.id}/jobs?filter=latest&per_page=100`)
+  if (jobs.total_count > 100) throw new Error('Readiness pagination requires explicit review')
+  const verify = jobs.jobs.filter(job => job.name === 'verify')
+  if (verify.length > 1) throw new Error('Ambiguous protected verification jobs')
+  return { name: 'verify', status: verify[0]?.status ?? 'queued', conclusion: verify[0]?.conclusion ?? null }
+}
 export function requiredContexts(config, releases) {
   if (!config || !Array.isArray(config.common) || !config.common.includes('verify')) throw new Error('Full verify must be a release gate')
   const contexts = new Set(config.common)
@@ -92,10 +108,10 @@ export async function runPublisher() {
     if (accepted.model !== 2 || accepted.environment !== 'staging') throw new Error('Missing staging candidate authority')
     upcoming = promotionCandidate(accepted.revisions, { mainParent: git('rev-parse',`${tip}^1`), tree: git('rev-parse',`${tip}^{tree}`), ancestor: sha => ancestor(sha,tip) })
   }
-  const [statuses, checkRuns] = await Promise.all([github(`commits/${tip}/status?per_page=100`), github(`commits/${tip}/check-runs?per_page=100`)] )
+  const [statuses, checkRuns, verification] = await Promise.all([github(`commits/${tip}/status?per_page=100`), github(`commits/${tip}/check-runs?per_page=100`), protectedVerification(github, tip, branch)] )
   if (checkRuns.total_count > 100 || statuses.total_count > 100) throw new Error('Readiness pagination requires explicit review')
   const required = requiredContexts(JSON.parse(process.env.RELEASE_REQUIRED_CONTEXTS || 'null'), [upcoming])
-  assertReady({ contexts: statuses.statuses, checks: checkRuns.check_runs, required })
+  assertReady({ contexts: statuses.statuses.filter(row => row.context !== 'verify'), checks: [verification, ...checkRuns.check_runs.filter(row => row.name !== 'verify')], required })
   if ((await github(`git/ref/heads/${branch}`)).object.sha !== tip || (await github('git/ref/heads/main')).object.sha !== main) throw new Error('Branch advanced; reconcile the actual new branch diff')
   if (environment === 'staging') {
     await catalog('release_candidate_ready', { p_key: upcoming.key, p_digest: upcoming.digest })
