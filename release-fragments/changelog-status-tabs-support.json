@@ -1,0 +1,9 @@
+{
+  "id": "changelog-status-tabs-support",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["packages/ui", "packages/contracts/tests", "apps/shop-suit/tests/e2e/public-changelog.spec.ts", "docs/shared", "release-changes"],
+  "reason": "Shared tab accessibility and regression coverage, bilingual editorial corrections and an evidence audit of the unversioned production baseline. Public presentation changes are linked to the existing Shop upcoming-release item."
+}

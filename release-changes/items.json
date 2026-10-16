@@ -56,12 +56,12 @@
         "ar": "ضرائب قابلة للإعداد"
       },
       "summary": {
-        "en": "Manage tax rates and retain the original tax calculation on issued documents.",
-        "ar": "إدارة معدلات الضرائب والاحتفاظ بالحساب الضريبي الأصلي للمستندات الصادرة."
+        "en": "Set up tax rates for your business.",
+        "ar": "إعداد معدلات الضرائب لنشاطك."
       },
       "details": {
-        "en": "Manage tax rates and retain the original tax calculation on issued documents.",
-        "ar": "إدارة معدلات الضرائب والاحتفاظ بالحساب الضريبي الأصلي للمستندات الصادرة."
+        "en": "Issued documents retain their original tax calculation.",
+        "ar": "تحتفظ المستندات الصادرة بحساباتها الضريبية الأصلية."
       }
     },
     "evidence": [
@@ -128,12 +128,12 @@
         "ar": "تسوية عمليات نقطة البيع دون اتصال"
       },
       "summary": {
-        "en": "Keep counter work durable and reconcile queued operations with authoritative results after reconnection.",
-        "ar": "حفظ عمل نقطة البيع بشكل دائم وتسوية العمليات المؤجلة مع النتائج المعتمدة بعد عودة الاتصال."
+        "en": "Keep counter operations queued when the connection drops.",
+        "ar": "حفظ عمليات نقطة البيع في قائمة انتظار عند انقطاع الاتصال."
       },
       "details": {
-        "en": "Keep counter work durable and reconcile queued operations with authoritative results after reconnection.",
-        "ar": "حفظ عمل نقطة البيع بشكل دائم وتسوية العمليات المؤجلة مع النتائج المعتمدة بعد عودة الاتصال."
+        "en": "After reconnection, reconcile queued work with authoritative results.",
+        "ar": "بعد عودة الاتصال، سوِّ العمليات المؤجلة مع النتائج المعتمدة."
       }
     },
     "evidence": [
@@ -164,12 +164,12 @@
         "ar": "إعدادات النشاط والمستندات"
       },
       "summary": {
-        "en": "Configure business document presentation while preserving historical currency and issued document evidence.",
-        "ar": "إعداد عرض مستندات النشاط مع الحفاظ على العملة التاريخية وأدلة المستندات الصادرة."
+        "en": "Configure how your business documents are presented.",
+        "ar": "إعداد طريقة عرض مستندات نشاطك."
       },
       "details": {
-        "en": "Configure business document presentation while preserving historical currency and issued document evidence.",
-        "ar": "إعداد عرض مستندات النشاط مع الحفاظ على العملة التاريخية وأدلة المستندات الصادرة."
+        "en": "Historical currency and issued document evidence remain preserved.",
+        "ar": "تبقى العملة التاريخية وأدلة المستندات الصادرة محفوظة."
       }
     },
     "evidence": [
@@ -369,11 +369,16 @@
       {
         "path": "apps/shop-suit/app/composables/usePublicChangelog.ts",
         "contains": "client.list"
+      },
+      {
+        "path": "packages/ui/src/organisms/BsChangelogTimeline.vue",
+        "contains": "<BsTabs"
       }
     ],
     "sources": [
       "bs-task-release-publication",
-      "upcoming-net-release-preview"
+      "upcoming-net-release-preview",
+      "changelog-status-tabs"
     ]
   },
   {
