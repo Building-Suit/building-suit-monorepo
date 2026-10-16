@@ -1,6 +1,6 @@
 import { validWebsiteSlug } from './websiteAddress.ts'
 
-/** CATALOG must replace the server boundary, never a browser-supplied count. */
+/** Server-owned published-item readiness, never a browser-supplied count. */
 export type PublishedItemReadiness = { integration: 'pending' | 'ready'; publishedItemCount: number }
 export type WebsiteProfileDraft = {
   publicName: string; description: string; phone: string; whatsapp: string; email: string

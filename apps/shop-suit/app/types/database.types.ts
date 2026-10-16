@@ -6853,6 +6853,126 @@ export type Database = {
           },
         ]
       }
+      shop_website_catalog_entries: {
+        Row: {
+          description: string
+          display_order: number
+          id: string
+          image_data_url: string | null
+          product_id: string | null
+          public_name: string
+          published: boolean
+          service_id: string | null
+          shop_id: string
+          show_price: boolean
+          updated_at: string
+        }
+        Insert: {
+          description?: string
+          display_order?: number
+          id?: string
+          image_data_url?: string | null
+          product_id?: string | null
+          public_name: string
+          published?: boolean
+          service_id?: string | null
+          shop_id: string
+          show_price?: boolean
+          updated_at?: string
+        }
+        Update: {
+          description?: string
+          display_order?: number
+          id?: string
+          image_data_url?: string | null
+          product_id?: string | null
+          public_name?: string
+          published?: boolean
+          service_id?: string | null
+          shop_id?: string
+          show_price?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_catalog_entries_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_product_shop_fk"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "low_stock_products"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_product_shop_fk"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_product_shop_fk"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_service_shop_fk"
+            columns: ["service_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      shop_website_catalog_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          entry_id: string
+          id: string
+          occurred_at: string
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          entry_id: string
+          id?: string
+          occurred_at?: string
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          entry_id?: string
+          id?: string
+          occurred_at?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_catalog_event_shop_fk"
+            columns: ["entry_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_website_catalog_entries"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_website_logos: {
         Row: {
           data_url: string
@@ -11056,6 +11176,28 @@ export type Database = {
         Args: { p_shop_id: string; p_slug: string }
         Returns: Json
       }
+      shop_website_catalog: {
+        Args: { p_page?: number; p_search?: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_catalog_publish: {
+        Args: {
+          p_item_id: string
+          p_kind: string
+          p_published: boolean
+          p_shop_id: string
+        }
+        Returns: undefined
+      }
+      shop_website_catalog_save: {
+        Args: {
+          p_entry: Json
+          p_item_id: string
+          p_kind: string
+          p_shop_id: string
+        }
+        Returns: undefined
+      }
       shop_website_host_resolve: { Args: { p_slug: string }; Returns: Json }
       shop_website_logo_replace: {
         Args: { p_data_url: string; p_shop_id: string }
@@ -11072,6 +11214,10 @@ export type Database = {
       }
       shop_website_profile_unpublish: {
         Args: { p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_public_catalog: {
+        Args: { p_page?: number; p_slug: string }
         Returns: Json
       }
       shop_website_public_profile: { Args: { p_slug: string }; Returns: Json }

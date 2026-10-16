@@ -347,7 +347,9 @@
     "./types/websiteAddressPresentation": "./src/types/websiteAddressPresentation.ts",
     "./organisms/BsWebsiteAddressSettings.vue": "./src/organisms/BsWebsiteAddressSettings.vue",
     "./types/websiteProfilePresentation": "./src/types/websiteProfilePresentation.ts",
-    "./organisms/BsWebsiteProfileSettings.vue": "./src/organisms/BsWebsiteProfileSettings.vue"
+    "./organisms/BsWebsiteProfileSettings.vue": "./src/organisms/BsWebsiteProfileSettings.vue",
+    "./types/websiteCatalogPresentation": "./src/types/websiteCatalogPresentation.ts",
+    "./organisms/BsWebsiteCatalogSettings.vue": "./src/organisms/BsWebsiteCatalogSettings.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

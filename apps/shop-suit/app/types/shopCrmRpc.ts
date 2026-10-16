@@ -4,6 +4,10 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      shop_website_catalog: { Args: {p_shop_id:string;p_search?:string;p_page?:number}; Returns: import('../../shared/websiteCatalog').WebsiteCatalogSettings }
+      shop_website_catalog_save: { Args: {p_shop_id:string;p_kind:import('../../shared/websiteCatalog').WebsiteCatalogKind;p_item_id:string;p_entry:import('../../shared/websiteCatalog').WebsiteCatalogEntry};Returns:undefined }
+      shop_website_catalog_publish: { Args: {p_shop_id:string;p_kind:import('../../shared/websiteCatalog').WebsiteCatalogKind;p_item_id:string;p_published:boolean};Returns:undefined }
+      shop_website_public_catalog: { Args: {p_slug:string;p_page?:number};Returns: import('../../shared/websiteCatalog').PublicWebsiteCatalog|null }
       shop_website_profile: { Args: { p_shop_id: string }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
       shop_website_profile_save: { Args: { p_shop_id: string; p_profile: import('../../shared/websiteProfile').WebsiteProfileDraft }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
       shop_website_logo_replace: { Args: { p_shop_id: string; p_data_url: string | null }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }

@@ -21,7 +21,7 @@ do $$declare a uuid; b uuid; v jsonb; d jsonb; loc uuid; foreign_loc uuid; begin
  perform public.shop_website_address_save(a,'profile-fixture');
  v:=public.shop_website_profile(a);
  if v->'draft'<>'{}' or v->>'logoDataUrl' is not null or v->>'ownerOptedIn'<>'false' then raise exception 'public defaults copied private data'; end if;
- if v->'catalog'<>'{"integration":"pending","publishedItemCount":0}' then raise exception 'catalog boundary violated'; end if;
+ if v->'catalog'<>'{"integration":"ready","publishedItemCount":0}' then raise exception 'catalog boundary violated'; end if;
  d:='{"publicName":"Public shop","description":"Public description","phone":"","whatsapp":"","email":"","openingHours":"Sun–Thu 09:00–17:00","seoTitle":"Public search title","seoDescription":"Public search description","locations":[]}';
  v:=public.shop_website_profile_save(a,d);
  if not(v->'missing' @> '["logo","contact","location","publishedItem"]') then raise exception 'readiness missing checks'; end if;
@@ -52,8 +52,8 @@ do $$declare a uuid; b uuid; v jsonb; d jsonb; loc uuid; foreign_loc uuid; begin
  perform set_config('profile_test.shop',a::text,true);
 end$$;
 reset role;
--- A future CATALOG implementation is simulated only inside this rolled-back
--- transaction to exercise snapshot/unpublish behavior, never shipped as readiness.
+-- Isolate PROFILE snapshot tests with transaction-local readiness. The CATALOG
+-- suite separately exercises actual configured product/service publication.
 create or replace function shop_private.website_catalog_readiness(p_shop_id uuid)
 returns jsonb language sql stable set search_path='' as $$ select '{"integration":"ready","publishedItemCount":1}'::jsonb; $$;
 do $$declare a uuid:=current_setting('profile_test.shop')::uuid; actor uuid:=gen_random_uuid(); profile uuid; member uuid; begin
