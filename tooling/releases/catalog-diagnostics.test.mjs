@@ -72,3 +72,16 @@ test('statement and contract evidence accepts only fixed SQLSTATE-21000 tokens',
     assert.equal(await catalogRejectionReason(response({code:'21000',message})),'CATALOG_SQLSTATE_21000_CARDINALITY_VIOLATION')
   }
 })
+
+
+test('PostgREST void success is accepted only for the declared void publisher operations', async () => {
+  const empty=createCatalog('https://abcdefghijklmnopqrst.supabase.co','credential-sentinel','abcdefghijklmnopqrst',async()=>new Response(null,{status:204}))
+  for(const operation of ['release_candidate_ready','release_candidate_acknowledge']) assert.equal(await empty(operation),null)
+  for(const operation of ['release_candidate_state','release_candidate_refresh','release_candidate_promote']) await assert.rejects(empty(operation),/unexpected empty response/)
+  const malformed=createCatalog('https://abcdefghijklmnopqrst.supabase.co','credential-sentinel','abcdefghijklmnopqrst',async()=>new Response('private-payload-sentinel',{status:200}))
+  await assert.rejects(malformed('release_candidate_state'),error=>{
+    assert.match(error.message,/returned invalid JSON/)
+    assert.doesNotMatch(error.stack,/private-payload-sentinel|credential-sentinel/)
+    return true
+  })
+})
