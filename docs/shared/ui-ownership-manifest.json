@@ -460,6 +460,19 @@
       "adapterBoundary": "Shop owns publication policy, scoped booking data and atomic commands. Shared UI owns complete booking/settings presentation; UX owns record dialogs, overlays and suspension/expiry lifecycle. Customer identifiers, contacts and tokens never become template authority.",
       "task": "SS-APPT-002",
       "migrationStatus": "registered complete public route; settings extend the canonical business template"
+    },
+    {
+      "family": "synthetic-product-preview",
+      "owner": "packages/ui",
+      "components": [
+        "BsProductPreviewPage"
+      ],
+      "adapterBoundary": "typed translated public product scope, feature availability and internal preview destinations; no auth or product queries in shared presentation",
+      "auditSources": [
+        "apps/doctor-suit/app/pages/index.vue"
+      ],
+      "task": "DOS-M1-005",
+      "migrationStatus": "implemented; candidate browser verification pending"
     }
   ]
 }

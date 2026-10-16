@@ -76,7 +76,8 @@
     "BsShopPublicEntryPage": "packages/ui/src/templates/BsShopPublicEntryPage.vue",
     "BsShopWebsitePage": "packages/ui/src/templates/BsShopWebsitePage.vue",
     "BsShopCustomerPortalPage": "packages/ui/src/templates/BsShopCustomerPortalPage.vue",
-    "BsPublicAppointmentBookingPage": "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue"
+    "BsPublicAppointmentBookingPage": "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue",
+    "BsProductPreviewPage": "packages/ui/src/templates/BsProductPreviewPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -84,9 +85,9 @@
     "routes": 74
   },
   "currentInventory": {
-    "suitVueFiles": 93,
+    "suitVueFiles": 94,
     "localComponents": 0,
-    "routes": 77,
+    "routes": 78,
     "layouts": 10,
     "roots": 6
   },
@@ -2626,10 +2627,20 @@
     {
       "source": "apps/doctor-suit/app/pages/index.vue",
       "kind": "route",
-      "destination": "packages/ui/src/templates/BsStarterWorkflowPage.vue",
+      "destination": "packages/ui/src/templates/BsProductPreviewPage.vue",
       "domainAdapter": "apps/doctor-suit/app/pages/index.vue",
-      "purpose": "starter-workflow",
-      "status": "generated; product acceptance pending",
+      "purpose": "synthetic-public-product-preview",
+      "status": "implemented; browser acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/preview.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsStarterWorkflowPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/preview.vue",
+      "purpose": "synthetic-preview-scope",
+      "status": "implemented; browser acceptance pending",
       "verification": "not-yet-accepted",
       "dependencies": []
     }
@@ -2756,6 +2767,7 @@
     "BsShopPublicEntryPage",
     "BsShopWebsitePage",
     "BsShopCustomerPortalPage",
-    "BsPublicAppointmentBookingPage"
+    "BsPublicAppointmentBookingPage",
+    "BsProductPreviewPage"
   ]
 }

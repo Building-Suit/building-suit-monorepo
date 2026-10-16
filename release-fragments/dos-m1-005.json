@@ -1,0 +1,28 @@
+{
+  "id": "dos-m1-005",
+  "task": "DOS-M1-005",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/pages",
+    "apps/doctor-suit/app/utils/publicPreview.ts",
+    "apps/doctor-suit/tests/unit/dos-m1-005.test.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m1-005.spec.ts",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsProductPreviewPage.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "release-changes/items.json",
+    ".github/workflows/doctor-disposable.yml"
+  ],
+  "reason": "Add a complete shared synthetic-preview template and bilingual Doctor-owned scope copy with planned feature labels and actual internal preview navigation. Existing product rendering is unchanged; new shared exports and catalogue documentation are internal support. No operational Doctor release is activated."
+}

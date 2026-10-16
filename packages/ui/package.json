@@ -361,7 +361,8 @@
     "./types/appointmentBookingPresentation": "./src/types/appointmentBookingPresentation.ts",
     "./templates/BsPublicAppointmentBookingPage.vue": "./src/templates/BsPublicAppointmentBookingPage.vue",
     "./organisms/BsBookingPolicySettings.vue": "./src/organisms/BsBookingPolicySettings.vue",
-    "./utils/appointmentReminderEmail": "./src/utils/appointmentReminderEmail.ts"
+    "./utils/appointmentReminderEmail": "./src/utils/appointmentReminderEmail.ts",
+    "./templates/BsProductPreviewPage.vue": "./src/templates/BsProductPreviewPage.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

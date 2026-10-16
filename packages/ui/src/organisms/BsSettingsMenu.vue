@@ -12,7 +12,7 @@ const { locale, locales, setLocale } = useI18n()
 const ui = useUiCopy()
 const { preference, set: setTheme } = useTheme()
 
-const { open, root, hydrated, position, openMenu } = useFloatingMenu('.ls-card')
+const { open, root, panel, hydrated, position, openMenu, closeMenu, onKeydown } = useFloatingMenu('.ls-card')
 
 const available = computed(() =>
   (locales.value as Array<{ code: string, name?: string }>).map(l => ({
@@ -90,6 +90,7 @@ const THEMES: Array<{ value: 'light' | 'dark' | 'system', labelKey: 'themeLight'
     v-else
     ref="root"
     class="relative"
+    @keydown="onKeydown"
   >
     <button
       type="button"
@@ -107,6 +108,7 @@ const THEMES: Array<{ value: 'light' | 'dark' | 'system', labelKey: 'themeLight'
     </button>
 
     <div
+      ref="panel"
       v-show="open"
       :class="[
         'ls-card absolute start-0 z-30 my-1 w-56 p-2 shadow-overlay',
@@ -127,7 +129,7 @@ const THEMES: Array<{ value: 'light' | 'dark' | 'system', labelKey: 'themeLight'
         role="menuitemradio"
         :aria-checked="hydrated && locale === option.code"
         class="flex w-full items-center justify-between rounded-chip px-2 py-2 text-start text-sm hover:bg-surface-muted"
-        @click="setLocale(option.code as typeof locale); open = false"
+        @click="setLocale(option.code as typeof locale); closeMenu(true)"
       >
         <span>{{ option.name }}</span>
         <BsIcon

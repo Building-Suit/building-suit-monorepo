@@ -688,5 +688,101 @@
     "sources": [
       "dos-m1-002"
     ]
+  },
+  {
+    "id": "doctor-synthetic-preview-ui",
+    "task": "DOS-M1-005",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/src/templates/BsProductPreviewPage.vue",
+      "packages/ui/package.json",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      ".github/workflows/doctor-disposable.yml"
+    ],
+    "reason": "Add a data-only complete shared preview contract for synthetic Doctor implementation and document it in the component catalogue; existing operational product pages are unchanged. Doctor remains unavailable for clinical care or production signup.",
+    "sources": [
+      "dos-m1-004",
+      "dos-m1-005"
+    ]
+  },
+  {
+    "task": "DOS-M1-004",
+    "paths": [
+      "packages/ux/src/composables/useFloatingMenu.ts",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/tests/floating-menu.test.mjs",
+      "packages/testing/playwright.settings-focus.config.ts",
+      "packages/testing/e2e/settings-menu-focus.spec.ts"
+    ],
+    "id": "dos-m1-004-settings-focus",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "reason": "Fix the existing shared settings menu keyboard and focus behavior in the already registered Shop product.",
+    "notes": {
+      "title": {
+        "en": "Use settings from the keyboard",
+        "ar": "استخدام الإعدادات بلوحة المفاتيح"
+      },
+      "summary": {
+        "en": "Move between language and theme choices and return focus when closing settings.",
+        "ar": "تنقّل بين خيارات اللغة والمظهر وأعد التركيز عند إغلاق الإعدادات."
+      },
+      "details": {
+        "en": "Opening settings focuses the first choice. Arrow keys, Home and End navigate the menu; Escape or choosing a language returns focus to the settings control.",
+        "ar": "يضع فتح الإعدادات التركيز على الخيار الأول. تتنقل مفاتيح الأسهم وHome وEnd داخل القائمة، ويعيد Escape أو اختيار اللغة التركيز إلى زر الإعدادات."
+      }
+    },
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": "@keydown=\"onKeydown\""
+      },
+      {
+        "path": "packages/ux/src/composables/useFloatingMenu.ts",
+        "contains": "closeMenu: menu.close, onKeydown"
+      }
+    ],
+    "sources": [
+      "dos-m1-004-settings-focus"
+    ]
+  },
+  {
+    "task": "DOS-M1-004",
+    "paths": [
+      "packages/ux/src/composables/useFloatingMenu.ts",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/tests/floating-menu.test.mjs",
+      "packages/testing/playwright.settings-focus.config.ts",
+      "packages/testing/e2e/settings-menu-focus.spec.ts"
+    ],
+    "id": "dos-m1-004-settings-support",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "reason": "Track the same shared settings interaction fix for internal consumers without activating operational products or inventing production baselines.",
+    "sources": [
+      "dos-m1-004-settings-support"
+    ]
   }
 ]
