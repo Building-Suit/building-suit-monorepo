@@ -1,0 +1,9 @@
+{
+  "id": "release-standard-code-evidence",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["tooling/releases/catalog-diagnostics.mjs", "tooling/releases/catalog-standard-reasons.mjs", "tooling/releases/catalog-diagnostics.test.mjs", "tooling/releases/catalog-postgrest-disposable.mjs", "docs/shared/release-publication-runbook.md"],
+  "reason": "Preserve static standard error identity and all current model-2 guard coverage after confirmed diagnostic information loss, with real REST regressions and no hosted repair inferred from disposable success."
+}

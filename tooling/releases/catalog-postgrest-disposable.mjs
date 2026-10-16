@@ -50,6 +50,11 @@ insert into public.suit_registry(id,stable_key,display_name,asset_reference,adap
 `)
   }
 }
+// Test-only RPC demonstrates exact SQLSTATE/guard classification through PostgREST.
+// It is created solely in this invocation's disposable database, never a migration.
+sql(`create function public.release_candidate_diagnostic(p_code text,p_guard text) returns void language plpgsql as $$begin raise exception '%',p_guard using errcode=p_code;end$$;
+revoke all on function public.release_candidate_diagnostic(text,text) from public,anon,authenticated;
+grant execute on function public.release_candidate_diagnostic(text,text) to service_role;`)
 command('docker',['run','-d','--name',rest,'--network',network,'-p','127.0.0.1::3000','-e','PGRST_DB_URI=postgresql://postgres@release-db/postgres','-e','PGRST_DB_SCHEMAS=public','-e','PGRST_DB_ANON_ROLE=anon','-e',`PGRST_JWT_SECRET=${jwtSecret}`,'public.ecr.aws/supabase/postgrest:v16.1'])
 const port=command('docker',['port',rest,'3000/tcp']).split(':').at(-1)
 status.API_URL=`http://127.0.0.1:${port}`
@@ -69,6 +74,18 @@ const transport=(url,options)=>{
 const catalog=createCatalog(`https://${ref}.supabase.co`,status.SERVICE_ROLE_KEY,ref,transport)
 const state=await catalog('release_candidate_state')
 assert.equal(state.model,2);assert.equal(state.environment,'staging')
+for(const [code,guard,reason] of [
+  ['42P10','private-sentinel','CATALOG_SQLSTATE_42P10_INVALID_COLUMN_REFERENCE'],
+  ['22003','private-sentinel','CATALOG_SQLSTATE_22003_NUMERIC_VALUE_OUT_OF_RANGE'],
+  ['P0001','IMMUTABLE_CANDIDATE_HISTORY','IMMUTABLE_CANDIDATE_HISTORY'],
+  ['P0001','private-sentinel','CATALOG_GUARD_UNRECOGNIZED'],
+]) {
+  await assert.rejects(catalog('release_candidate_diagnostic',{p_code:code,p_guard:guard}),error=>{
+    assert.ok(error.message.includes(`reason ${reason}`))
+    assert.ok(!error.stack.includes('private-sentinel'))
+    return true
+  })
+}
 const snapshot={...buildCandidate('origin/main','HEAD'),baseVersions:state.baseVersions}
 const first=await catalog('release_candidate_refresh',{p_snapshot:snapshot})
 const retries=await Promise.all([0,1].map(()=>catalog('release_candidate_refresh',{p_snapshot:snapshot})))
