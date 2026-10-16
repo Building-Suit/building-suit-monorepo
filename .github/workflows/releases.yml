@@ -6,7 +6,6 @@ on:
     workflows: [Verify workspace]
     types: [completed]
     branches: [stg, main]
-  deployment_status:
   schedule:
     - cron: '37 * * * *'
   workflow_dispatch:
@@ -16,7 +15,8 @@ permissions:
   statuses: read
 jobs:
   reconcile:
-    # Deployment events are wake-ups only. Ignore their payload as authority and re-read protected refs.
+    # Never subscribe to deployment_status: these environment jobs emit it themselves.
+    # Allowed wake-ups re-read protected refs; publisher readiness remains authoritative.
     if: github.repository == 'Building-Suit/building-suit-monorepo'
     strategy:
       fail-fast: false
