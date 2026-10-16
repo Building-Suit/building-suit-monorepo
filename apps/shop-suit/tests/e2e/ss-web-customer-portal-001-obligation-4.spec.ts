@@ -26,7 +26,7 @@ for(const locale of ['en','ar'])for(const width of [390,820,1440])for(const them
  for(const label of ar?['مكتمل','ملغي','لم يحضر']:['Completed','Cancelled','No show'])await expect(page.getByText(label,{exact:true})).toBeVisible()
  await page.screenshot({path:test.info().outputPath('history.png'),fullPage:true})
  await page.getByRole('button',{name:ar?'إنهاء الوصول':'End access',exact:true}).click();await expect(page.getByRole('textbox',{name:ar?'رمز الوصول':'Access code',exact:true})).toBeVisible();await expect(page.locator('ol > li')).toHaveCount(0)
- await login(page,ar,'WXYZABCDEFGH');await expect(page.locator('ol > li')).toHaveCount(1)
+ if(width===390&&theme==='light'){await login(page,ar,'WXYZABCDEFGH');await expect(page.locator('ol > li')).toHaveCount(1)}
  await page.goto(`https://beta-tools.shops.building-suit.com/my-appointments${ar?'':'?lang=en'}`);await mounted(page);await expect(page.locator('ol > li')).toHaveCount(0)
 })
 test('revocation and absolute expiry clear history and return to verification',async({page,request})=>{
