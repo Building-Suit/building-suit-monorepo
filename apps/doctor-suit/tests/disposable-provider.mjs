@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { randomUUID } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { validateLocalDoctorTarget } from './local-lifecycle.mjs'
+import { DoctorProviderFailure,doctorProviderFailureSummary } from './provider-diagnostics.mjs'
 const root = fileURLToPath(new URL('../../../',import.meta.url))
 const app = path.join(root,'apps/doctor-suit')
 const api = 'http://127.0.0.1:65321'; const origin = 'http://127.0.0.1:4341'
@@ -16,11 +17,6 @@ const scratch = await mkdtemp(path.join(tmpdir(),'doctor-provider-'))
 const environment = { ...process.env,SUPABASE_HOME: process.env.SUPABASE_HOME || path.join(scratch,'cli') }
 const wait = ms => new Promise(resolve => setTimeout(resolve,ms))
 function expect(value,label) { if (!value) throw new Error(label) }
-function diagnostic(output) {
-  return output.replaceAll(String.fromCharCode(27),'').replace(/\[[0-9;]*m/g,'').split('\n').filter(line => /error|failed|unhealthy|permission|disk|invalid|cannot|must|not found|SQLSTATE/i.test(line))
-    .filter(line => !/ANON_KEY|SERVICE_ROLE_KEY|SECRET_KEY|PUBLISHABLE_KEY|password|authorization|access_token|refresh_token/i.test(line))
-    .slice(-6).map(line => line.replace(/[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/g,'[redacted-token]').replace(/[A-Za-z0-9_-]{40,}/g,'[redacted-value]').slice(0,500)).join(' | ')
-}
 function cli(args,timeout = 600000) {
   return new Promise((resolve,reject) => {
     const child = spawn('pnpm',['exec','supabase','--workdir',app,...args],{ cwd: root,env: environment,stdio: ['ignore','pipe','pipe'] })
@@ -28,7 +24,7 @@ function cli(args,timeout = 600000) {
     child.stdout.on('data',data => { output+=data; if (output.length>16*1024*1024) child.kill('SIGTERM') })
     child.stderr.on('data',data => { output+=data; if (output.length>16*1024*1024) child.kill('SIGTERM') })
     child.once('error',() => { clearTimeout(timer); reject(new Error('CLI process unavailable')) })
-    child.once('exit',code => { clearTimeout(timer); code===0 ? resolve(output) : reject(new Error(`CLI operation failed: ${diagnostic(output) || 'no safe diagnostic'}; remaining captured output withheld`)) })
+    child.once('exit',code => { clearTimeout(timer); code===0 ? resolve(output) : reject(new DoctorProviderFailure(output)) })
   })
 }
 function docker(args) { const result = spawnSync('docker',args,{ encoding: 'utf8',timeout: 10000 }); expect(result.status===0,'Docker inspection failed'); return result.stdout.trim().split('\n').filter(Boolean) }
@@ -119,7 +115,7 @@ try {
   console.log('Actual Storage/Functions: validated private bytes, stable retry, two preserved versions, anonymous/direct/public/signed bypass denials, cross-practice and revoked-session denials passed')
   console.log('Synthetic actual-provider acceptance passed. Realtime and hosted provider connections remain UNRUN.')
 } catch (error) {
-  console.error(`Doctor actual-provider acceptance failed at ${stage}: ${error instanceof Error ? error.message : 'unavailable'}`)
+  console.error(`Doctor actual-provider acceptance failed at ${stage}: ${doctorProviderFailureSummary(error)}`)
   process.exitCode = 1
 } finally {
   functions?.kill('SIGTERM')
