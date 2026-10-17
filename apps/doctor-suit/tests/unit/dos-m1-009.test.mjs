@@ -163,3 +163,15 @@ test('DOS-M1-009: equivalent recipient/capability-set ordering keeps an uncertai
   assert.equal(await fixture.controller.invite({ email: 'synthetic-staff@example.test',grants: [{ locationId: location,capabilities: ['appointments.read','patients.read'] }] }),true)
   assert.deepEqual(calls[0],calls[1]); assert.equal(issued,1)
 })
+
+test('DOS-M1-009: SDK sign-out notifications cannot leave the account-switch form stuck checking', async () => {
+  const { createDoctorAuthController,doctorAuthState } = await import('../../app/utils/authController.ts')
+  let controller; let locked = false; let clears = 0
+  const state = { ...doctorAuthState(),phase: 'authenticated',identity: actor,providerReady: true }
+  const backend = { marker: async () => true,identity: async () => actor,signIn: async () => {},signOut: async () => { controller.providerChanged(); assert.equal(state.phase,'checking') } }
+  controller = createDoctorAuthController(backend,state,{ clear: () => { clears++ },locked: () => locked,lock: () => { locked = true },unlock: () => { locked = false } })
+  assert.equal(await controller.signOut(),true)
+  assert.equal(state.phase,'signed-out'); assert.equal(state.identity,null); assert.equal(state.pending,false); assert.equal(locked,true)
+  assert.equal(await controller.signIn('synthetic-secretary@example.test','synthetic-password-only'),true)
+  assert.equal(state.phase,'authenticated'); assert.equal(locked,false); assert.ok(clears>=3)
+})

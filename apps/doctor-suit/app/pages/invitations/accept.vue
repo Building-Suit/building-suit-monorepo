@@ -3,6 +3,7 @@ import { doctorDelegationCopy, doctorDelegationError } from '../../utils/delegat
 import { doctorInvitationCredential } from '../../utils/delegation'
 definePageMeta({ layout: false, middleware: 'doctor-auth' })
 const route = useRoute()
+const signInDestination = { path: '/sign-in', query: { next: '/invitations/accept' } }
 if (Object.keys(route.query).length || route.hash) await navigateTo('/invitations/accept', { replace: true })
 const { auth, product } = useDoctorAuthPresentation(false)
 const context = useDoctorContext(); const invitation = useDoctorInvitation()
@@ -26,8 +27,8 @@ async function submit() {
   if (!invitation.state.details) { await invitation.review(code.value); return }
   if (await invitation.accept(code.value)) code.value = ''
 }
-async function switchAccount() { reset(); await auth.signOut(); await navigateTo('/sign-in?next=%2Finvitations%2Faccept') }
-watch(() => auth.state.phase, phase => { if (phase==='signed-out' || phase==='unavailable') { reset(); void navigateTo('/sign-in') } })
+async function switchAccount() { reset(); await auth.signOut(); await navigateTo(signInDestination) }
+watch(() => auth.state.phase, phase => { if (phase==='signed-out' || phase==='unavailable') { reset(); void navigateTo(signInDestination) } })
 </script>
 <template>
   <BsInvitationAcceptancePage v-model:form="form" v-model:code="code" :product="product" stage="accept" :copy="copy" :email="words.verifiedAccount" :pending="invitation.state.pending || invitation.state.loading || !hydrated" :error="doctorDelegationError(invitation.state.error, ar) || ''" :submit-disabled="!hydrated || (!complete && !doctorInvitationCredential(code))" :acceptance-code="complete ? undefined : { label: words.codeLabel, hint: words.codeHint, maxLength: 101 }" login-to="/account" :verification="{ resendDisabled: true }" @submit="submit" @switch-account="switchAccount" />

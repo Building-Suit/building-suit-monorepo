@@ -126,7 +126,7 @@ export function createDoctorAuthController(backend: DoctorAuthBackend | null, st
       state.phase = 'signed-out'
       try { if (backend) await backend.signOut(); state.error = null; return true }
       catch { state.error = 'sign-out'; return false }
-      finally { state.pending = false; needsRefresh = false }
+      finally { state.identity = null; state.phase = 'signed-out'; state.pending = false; needsRefresh = false }
     },
   }
 }
