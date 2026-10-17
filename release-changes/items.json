@@ -1276,5 +1276,31 @@
     "sources": [
       "dos-m1-017"
     ]
+  },
+  {
+    "id": "dos-m1-018",
+    "task": "DOS-M1-018",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit/tests/unit/dos-m1-018.test.mjs",
+      "apps/doctor-suit/tests/e2e/dos-m1-018.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/dos-m1-018.spec.ts",
+      "docs/work-packages/doctor-suit/usability-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Verify synthetic administrative critical journeys across both locales, both themes and mobile/desktop. Keyboard dirty protection, safe focus return, semantic labels, reduced-motion rendering, uncertain-result retries, pending duplicate exclusion, source navigation and independent secretary scopes are covered end-to-end. Cross-layer interaction/product tests distinguish unconfirmed outcomes from accepted saves. No runtime policy, clinical authority, provider activation or offline clinical write is introduced.",
+    "sources": [
+      "dos-m1-018"
+    ]
   }
 ]
