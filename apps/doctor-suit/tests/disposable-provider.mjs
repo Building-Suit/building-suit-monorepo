@@ -76,7 +76,7 @@ try {
   expect(status.API_URL===api && status.ANON_KEY && status.SERVICE_ROLE_KEY,'Actual local target/status mismatch')
   // Never print captured CLI output, status keys, mail bodies, auth tokens or passwords.
   await writeFile(path.join(scratch,'function.env'),`DOCTOR_LOCAL_PROVIDER=1\nDOCTOR_WEB_ORIGIN=${origin}\n`,{ mode: 0o600 })
-  functions = spawn('pnpm',['exec','supabase','--workdir',app,'functions','serve','doctor-documents','--env-file',path.join(scratch,'function.env')],{ cwd: root,env: environment,stdio: ['ignore','pipe','pipe'] })
+  functions = spawn('pnpm',['exec','supabase','--workdir',app,'functions','serve','doctor-documents','--env-file',path.join(scratch,'function.env')],{ cwd: root,env: environment,detached: true,stdio: ['ignore','pipe','pipe'] })
   functions.stdout.on('data',data => { functionsOutput=(functionsOutput+data).slice(-20000) }); functions.stderr.on('data',data => { functionsOutput=(functionsOutput+data).slice(-20000) })
   stage = 'configured private Storage bucket'; const storageAdmin = createClient(api,status.SERVICE_ROLE_KEY,options)
   const existingBucket = await storageAdmin.storage.getBucket(bucket)
@@ -102,9 +102,9 @@ try {
   const publicResponse = await fetch(`${api}/storage/v1/object/public/${bucket}/${locator}`); expect(!publicResponse.ok,'Public object URL exposed private bytes')
   const signed = await a.client.storage.from(bucket).createSignedUrl(locator,60); expect(signed.error,'Direct client could mint a signed bypass URL')
   const directWrite = await a.client.storage.from(bucket).upload(`bypass-${randomUUID()}.pdf`,pdf,{ contentType: 'application/pdf' }); expect(directWrite.error,'Direct client upload bypass allowed')
-  stage = 'byte validation and cross-practice denial'; expect((await endpoint(a,'upload',{ filename: 'spoof.pdf' },new TextEncoder().encode('<script>synthetic</script>'))).status===415,'Spoofed file accepted')
-  expect((await endpoint(a,'upload',{ filename: 'large.pdf' },new Uint8Array(5242881))).status===413,'Oversized file accepted')
-  expect((await endpoint(b,'download',{ ...a.scope,documentId: outcome.documentId })).status===403,'Cross-practice download allowed')
+  stage = 'reject spoofed file'; expect((await endpoint(a,'upload',{ filename: 'spoof.pdf' },new TextEncoder().encode('<script>synthetic</script>'))).status===415,'Spoofed file accepted')
+  stage = 'reject oversized file'; expect((await endpoint(a,'upload',{ filename: 'large.pdf' },new Uint8Array(5242881))).status===413,'Oversized file accepted')
+  stage = 'reject cross-practice file'; expect((await endpoint(b,'download',{ ...a.scope,documentId: outcome.documentId })).status===403,'Cross-practice download allowed')
   stage = 'actual bytes and replacement history'; const downloaded = await endpoint(a,'download',{ documentId: outcome.documentId }); expect(downloaded.status===200 && Buffer.from(await downloaded.arrayBuffer()).equals(Buffer.from(pdf)),'Real download bytes differ')
   const replacement = await endpoint(a,'upload',{ filename: 'replacement.pdf',documentId: outcome.documentId,expectedVersion: 1 },pdf); expect(replacement.status===200,'Real replacement failed')
   const history = await rpc(a.client,'doctor_document_history',{ p_practice: a.scope.practiceId,p_location: a.scope.locationId,p_patient: a.scope.patientId,p_document: outcome.documentId }); expect(history.total===2 && history.versions.every(value => value.provenance==='uploaded_unreviewed' && value.uploaded_by===a.user.id),'Replacement lost immutable unreviewed provenance')
@@ -118,8 +118,14 @@ try {
   console.error(`Doctor actual-provider acceptance failed at ${stage}: ${doctorProviderFailureSummary(error)}`)
   process.exitCode = 1
 } finally {
-  functions?.kill('SIGTERM')
-  if (functions) await Promise.race([new Promise(resolve => functions.once('exit',resolve)),wait(5000)])
+  if (functions?.pid) {
+    // The pnpm wrapper can exit before its CLI child. Own a separate process
+    // group so cleanup covers that child without touching unrelated processes.
+    try { process.kill(-functions.pid,'SIGTERM') } catch { /* already exited */ }
+    if (functions.exitCode===null) await Promise.race([new Promise(resolve => functions.once('exit',resolve)),wait(5000)])
+    try { process.kill(-functions.pid,'SIGKILL') } catch { /* owned group exited */ }
+    functions.stdout.destroy(); functions.stderr.destroy(); functions.unref()
+  }
   functionsOutput = ''
   if (owned) { try { await cli(['stop','--no-backup'],60000) } catch { console.error('Owned Doctor local cleanup failed'); process.exitCode = 1 } }
   await rm(scratch,{ recursive: true,force: true })
