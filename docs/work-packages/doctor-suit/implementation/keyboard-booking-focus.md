@@ -16,10 +16,15 @@ Creation availability remains dependent on hydration and both current-board clin
 
 Four EN/AR × 390/1280px light-mode browser regressions hold real fixture responses without fabricating permission results. They require focus to remain on the action, Enter to open booking while the read is held, the dialog to survive delivery, and Escape to close it and return focus. After release, they await the browser response's successful completion and the board date control returning after loading, then assert that booking remains visible. All traffic stays on synthetic loopback services; trace/screenshot artifacts remain disabled for auth fixtures.
 
+## SQL fixture prerequisite
+
+Fresh CI on the corrected keyboard source exposed an independent DOS-M1-015 fixture collision, reproduced in the local disposable PostgreSQL runner at 10:42 UTC. Between 10:00 and noon UTC, the UTC+14 and UTC-12 clinic dates differ by two days, placing clinic A2's 23:00 appointment inside the same doctor's 15-hour A1 population. Its 15:00 appointment lies seven hours before or seventeen hours after the start of that population, depending on the local-date relationship. Only this synthetic fixture time changes; the opposite-timezone, overdue-queue, authorization and pagination assertions and the product exclusion constraint remain unchanged.
+
 ## Verification
 
 - Baseline: controlled AR/390 case fails at the focused-button assertion during the held read.
 - Corrected source: all four controlled cases repeated four times pass (16 passes).
 - Full auth: 60 passed (56 original plus 4 controlled cases); all 4 unchanged stress repeats and 54 public cases pass.
+- SQL: 679 assertions and 39 transaction races pass after the fixture correction; all 1,440 UTC minute positions independently confirm that the corrected clinic populations do not overlap.
 - Root units: 1,844 passed, 23 explicit infrastructure skips. Doctor build/lint/typecheck and strict 105-template/80-historical-migration boundaries pass.
 - Release provenance and exact-head GitHub results are recorded in the focused PR. These results do not grant clinical approval, configure hosting or promote production.
