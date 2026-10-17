@@ -216,7 +216,7 @@
     "apps/shop-suit/tests/e2e/website-hostname-owner.spec.ts": "442592701e2bb691deb7cc39d2d89d1e3fd49e0ba147f287b7bc74d8755c9f0a",
     "apps/shop-suit/tests/unit/website-launch-lifecycle.test.mjs": "aa35c7ddccc992cef9ac56c04ea5e921f2422d2a72aa10d0c0521a13400e9e13",
     ".github/workflows/shop-website-hostname-disposable.yml": "1ee3e73148dcb45843c37bfab695b4176f62b7b5b0542da9ef909126be020afa",
-    "release-fragments/dos-m1-020-hostname-fixture-regression.json": "7b420e74cde7858414f6288690438babd4c7ce5d2784081c639c53cfa418838d"
+    "release-fragments/dos-m1-020-hostname-fixture-regression.json": "cfd6854100a57f789f0099e7358a777ae0991220c34ab7e09186d6c464fa0375"
   },
   "taskBaseSha": "e53cc7bcd8b0f07c2c2287de0867c942e480d85c",
   "aggregateRootPullRequest": 345,

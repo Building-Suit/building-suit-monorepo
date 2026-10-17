@@ -1,7 +1,10 @@
 {
   "id": "dos-m1-020-hostname-fixture-regression",
   "task": "DOS-M1-020",
-  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "suits": [
+    "doctor-suit",
+    "shop-suit"
+  ],
   "classification": "internal",
   "disposition": "internal",
   "paths": [
