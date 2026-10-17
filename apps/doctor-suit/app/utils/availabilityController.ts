@@ -38,11 +38,11 @@ export function createDoctorAvailabilityController(repository: ReturnType<typeof
     if (state.pending || state.loading) return false
     const selected = scope(); const config = state.config; const expected = capture()
     if (!repository || !selected || !config?.canManage || !selected.capabilities.includes('availability.manage')) { state.actionError = 'denied'; return false }
-    if (config.version!==expectedVersion) { state.actionError = 'conflict'; return false }
+    if (config.locationVersion!==selected.locationVersion || config.timezone!==selected.timezone || config.version!==expectedVersion) { state.actionError = 'conflict'; return false }
     if (!validDoctorSchedule(raw)) { state.actionError = 'invalid'; return false }
-    const input = doctorScheduleInput(raw); const material = JSON.stringify([scopeKey(),expectedVersion,input]); if (command?.material!==material) command = { material,key: key() }
+    const input = doctorScheduleInput(raw); const material = JSON.stringify([scopeKey(),expectedVersion,config.locationVersion,input]); if (command?.material!==material) command = { material,key: key() }
     state.pending = true; state.actionError = null
-    try { const result = await repository.write(selected.practiceId,selected.locationId,expectedVersion,input,command.key,signal()); if (!accepts(expected)) return false; version(result); state.config = result; state.slots = null; discard(); return true }
+    try { const result = await repository.write(selected.practiceId,selected.locationId,expectedVersion,config.locationVersion,input,command.key,signal()); if (!accepts(expected)) return false; version(result); state.config = result; state.slots = null; discard(); return true }
     catch (error) { if (accepts(expected)) { state.actionError = failure(error); if (state.actionError!=='network') command = null } return false }
     finally { if (accepts(expected)) state.pending = false }
   }
