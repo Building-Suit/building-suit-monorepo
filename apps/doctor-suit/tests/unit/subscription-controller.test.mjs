@@ -11,7 +11,8 @@ const terms=(n=51)=>({terms_id:id(n),plan_key:'synthetic-ui-trial',version:1,cur
 const offer=(configured=true,n=51)=>doctorSaasTerms({subscriber_user_id:actor.userId,practice_id:null,configuration_revision:n,configured,terms:configured?terms(n):null,data_mode:'synthetic',payment_route:'unconfigured',purchase_available:false,live_activation:false},actor)
 const status=(kind='unconfigured')=>doctorSaasStatus({subscriber_user_id:actor.userId,practice_id:null,state:kind,revision:kind==='unconfigured'?0:1,period_active:kind==='trial',business_writes_allowed:kind==='trial',observed_at:new Date(epoch+(kind==='expired'?10000:0)).toISOString(),period:kind==='unconfigured'?null:{id:id(61),kind:'trial',terms_id:id(51),started_at:new Date(epoch-2*86400000+10000).toISOString(),ends_at:new Date(epoch+10000).toISOString(),accepted_document_ref:'synthetic-ui/v51'},terms:kind==='unconfigured'?null:terms(),data_mode:'synthetic',paid_activation_available:false,live_activation:false},actor)
 const flush=async()=>{for(let n=0;n<12;n++)await new Promise(r=>setImmediate(r))}
-function setup(repository,changed=async()=>{},timers){const state=reactive(doctorSubscriptionState());let current=actor;const value=createDoctorSubscriptionController(repository,state,()=>current,changed,timers,()=>id(71));return{state,value,identity:value=>{current=value}}}
+const document=()=>({termsId:id(51),documentRef:'synthetic-ui/v51',english:'Synthetic test document, no legal approval.',arabic:'وثيقة اختبار اصطناعية دون موافقة قانونية.'})
+function setup(repository,changed=async()=>{},timers){const state=reactive(doctorSubscriptionState());let current=actor;const value=createDoctorSubscriptionController({document:async()=>document(),...repository},state,()=>current,changed,timers,()=>id(71));return{state,value,identity:value=>{current=value}}}
 test('unconfigured owner has no fabricated offer, price, trial or live purchase',async()=>{
  const{state,value}=setup({terms:async()=>offer(false),status:async()=>status()});await value.load();assert.equal(value.canStart(),false);assert.equal(state.offer.terms,null)
  for(const ar of[false,true]){const view=doctorSubscriptionView(state,ar);assert.equal(view.termsFields.length,0);assert.equal(view.canContinue,false);assert.ok(view.copy.paymentUnavailable)}
@@ -47,4 +48,17 @@ test('missing current authority observations cannot enable the new owner UI',asy
 test('cached acceptance cannot be submitted by a replaced identity before lifecycle cleanup',async()=>{
  let writes=0;const{state,value,identity}=setup({terms:async()=>offer(),status:async()=>status(),startTrial:async()=>{writes++}})
  await value.load();state.accepted=true;identity({...actor,userId:id(2)});assert.equal(value.canStart(),false);assert.equal(await value.start(),false);assert.equal(writes,0)
+})
+
+test('missing version document prevents acceptance even when all commercial fields are configured',async()=>{
+ const{state,value}=setup({terms:async()=>offer(),status:async()=>status(),document:async()=>null});await value.load();state.accepted=true;assert.equal(value.canStart(),false);assert.equal(await value.start(),false);assert.equal(state.document,null)
+})
+test('both locales display every configured lifecycle policy and the exact version document',async()=>{
+ const{state,value}=setup({terms:async()=>offer(),status:async()=>status()});await value.load()
+ for(const ar of[false,true]){const view=doctorSubscriptionView(state,ar),rows=new Map(view.termsFields.map(row=>[row.label,row.value]));for(const key of['renewal','grace','expiry','cancellation','refund','version'])assert.ok(rows.has(view.copy[key]));assert.equal(rows.get(view.copy.grace),'0');assert.equal(view.document.body,ar?document().arabic:document().english)}
+})
+test('configured automatic renewal, grace, cancellation and refund variants are never replaced by defaults',async()=>{
+ const configured=offer();configured.terms={...configured.terms,renewalPolicy:'automatic_opt_in',graceDays:3,cancellationPolicy:'immediate_read_only',refundPolicy:'none_where_permitted'}
+ const{state,value}=setup({terms:async()=>configured,status:async()=>status()});await value.load()
+ for(const ar of[false,true]){const view=doctorSubscriptionView(state,ar),rows=new Map(view.termsFields.map(row=>[row.label,row.value]));assert.equal(rows.get(view.copy.renewal),view.copy.automatic);assert.equal(rows.get(view.copy.grace),'3');assert.equal(rows.get(view.copy.cancellation),view.copy.immediate);assert.equal(rows.get(view.copy.refund),view.copy.noRefund)}
 })

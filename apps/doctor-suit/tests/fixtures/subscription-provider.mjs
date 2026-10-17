@@ -1,10 +1,11 @@
 // Owned synthetic browser protocol; real periods/admission/locking are verified in SQL/provider suites.
 import{randomUUID}from'node:crypto'
 export function subscriptionProtocol({state,data,actor,ownPractice,rpc,input,send}){
- if(!['doctor_saas_terms','doctor_saas_status','doctor_start_saas_trial'].includes(rpc))return false
+ if(!['doctor_saas_terms','doctor_saas_status','doctor_start_saas_trial','doctor_saas_terms_document'].includes(rpc))return false
  const reject=code=>{send({code},400);return true},fixture=state.subscription??(state.subscription={}),current=fixture.configured===true,account=fixture.accounts?.[actor.id]
  if(!ownPractice&&data.memberships.some(item=>item.user_id===actor.id)&&!account?.trial)return reject('42501')
  const terms={terms_id:'ae190000-0000-0000-0000-000000000051',plan_key:'synthetic-browser-subscription',version:1,currency:'USD',currency_exponent:2,monthly_minor:1234,yearly_minor:null,trial_days:2,grace_days:0,staff:{kind:'limited',limit:2},clinics:{kind:'limited',limit:3},over_limit_policy:'block_new_allocation',renewal_policy:'manual',expiry_policy:'historical_read_only',cancellation_policy:'period_end',refund_policy:'manual_review',terms_document_ref:'synthetic-browser-subscription/v1'}
+ if(rpc==='doctor_saas_terms_document'){send(fixture.documentAvailable===true&&input.p_terms===terms.terms_id?{terms_id:terms.terms_id,document_ref:terms.terms_document_ref,data_mode:'synthetic',content_en:'Synthetic test document only. This fixture does not grant legal approval or live-sale authority.',content_ar:'وثيقة اختبار اصطناعية فقط. لا تمنح هذه البيانات موافقة قانونية أو صلاحية بيع حي.'}:null);return true}
  const base={subscriber_user_id:actor.id,practice_id:ownPractice?.id??null,data_mode:'synthetic',live_activation:false}
  if(rpc==='doctor_saas_terms'){send({...base,configuration_revision:fixture.revision??1,configured:current,terms:current?terms:null,payment_route:'unconfigured',purchase_available:false});return true}
  if(rpc==='doctor_saas_status'){

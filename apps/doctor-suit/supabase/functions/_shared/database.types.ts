@@ -591,6 +591,41 @@ export type Database = {
           },
         ]
       }
+      doctor_saas_terms_documents: {
+        Row: {
+          content_ar: string
+          content_en: string
+          created_at: string
+          database_actor: string
+          document_ref: string
+          terms_version_id: string
+        }
+        Insert: {
+          content_ar: string
+          content_en: string
+          created_at?: string
+          database_actor?: string
+          document_ref: string
+          terms_version_id: string
+        }
+        Update: {
+          content_ar?: string
+          content_en?: string
+          created_at?: string
+          database_actor?: string
+          document_ref?: string
+          terms_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_terms_documents_terms_version_id_fkey"
+            columns: ["terms_version_id"]
+            isOneToOne: true
+            referencedRelation: "doctor_saas_terms_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doctor_saas_terms_versions: {
         Row: {
           cancellation_policy: string | null
@@ -1543,6 +1578,7 @@ export type Database = {
       doctor_runtime_contract: { Args: never; Returns: Json }
       doctor_saas_status: { Args: never; Returns: Json }
       doctor_saas_terms: { Args: never; Returns: Json }
+      doctor_saas_terms_document: { Args: { p_terms: string }; Returns: Json }
       doctor_save_onboarding_draft: {
         Args: {
           p_display_name: string
