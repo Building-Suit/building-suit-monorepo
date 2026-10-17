@@ -1,5 +1,6 @@
 import { test, expect, type Page, type BrowserContext } from '@playwright/test'
 import { doctorDelegationCopy } from '../../app/utils/delegationPresentation'
+test.use({ actionTimeout: 10000 })
 const fixture = 'http://127.0.0.1:4338/__fixture'
 const base = 'http://127.0.0.1:4337'
 async function local(context: BrowserContext, ar: boolean) {
@@ -16,6 +17,10 @@ async function login(page: Page,email: string,ar: boolean,path = '/account') {
 async function choose(page: Page,ar: boolean,clinic: string) {
   await page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true }).click()
   await page.getByRole('option',{ name: new RegExp(` · ${clinic}$`) }).click()
+  // Selection is a verified asynchronous command; clicking its option does not
+  // mean its result/preference has reached the browser before a hard navigation.
+  await expect(page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true })).toContainText(clinic)
+  await expect(page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true })).toBeEnabled()
 }
 async function issue(page: Page,ar: boolean,clinic: string,all = false,two = false) {
   const copy = doctorDelegationCopy(ar)
@@ -65,6 +70,13 @@ for (const ar of [false,true]) test(`DOS-M1-009/010 ${ar ? 'AR mobile' : 'EN des
     await local(ownerContext,ar); await local(otherContext,ar); await local(staffContext,ar)
     const owner = await ownerContext.newPage(); const other = await otherContext.newPage(); const staff = await staffContext.newPage()
     for (const page of [owner,other,staff]) page.setDefaultTimeout(10000)
+    if (process.env.DOCTOR_PROTOCOL_STRESS==='true') {
+      for (const page of [owner,other,staff]) await (await page.context().newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: 4 })
+      for (const context of [ownerContext,otherContext,staffContext]) await context.route('**/rest/v1/rpc/**', async route => {
+        await new Promise(resolve => setTimeout(resolve,150))
+        await route.continue()
+      })
+    }
     // Only fixed stage names enter CI logs; never credentials or request bodies.
     const stage = (name: string) => console.info(`Doctor delegation stage: ${name}`)
     stage('owner A invitation')
@@ -142,12 +154,16 @@ test('DOS-M1-009 protocol fixture: wrong recipient and expired pending codes nev
   const context = await browser.newContext(); const strangerContext = await browser.newContext()
   try {
     await local(context,false); await local(strangerContext,false)
+    const stage = (name: string) => console.info(`Doctor recipient stage: ${name}`)
+    stage('owner invitation')
     const owner = await context.newPage(); await login(owner,'synthetic-doctor-a@example.test',false)
     const code = await issue(owner,false,'Clinic A1')
+    stage('wrong recipient sign-in')
     const outsider = await strangerContext.newPage(); await login(outsider,'synthetic-outsider@example.test',false,'/invitations/accept')
     await outsider.getByLabel(copy.codeLabel,{ exact: true }).fill(code)
     await outsider.getByRole('button',{ name: copy.review,exact: true }).click()
     await expect(outsider.getByText(copy.errors.denied,{ exact: true })).toBeVisible()
+    stage('switch account')
     await outsider.getByRole('button',{ name: copy.switchAccount,exact: true }).click()
     await expect(outsider).toHaveURL(/\/sign-in\?next=/)
     expect(new URL(outsider.url()).searchParams.get('next')).toBe('/invitations/accept')
@@ -157,10 +173,15 @@ test('DOS-M1-009 protocol fixture: wrong recipient and expired pending codes nev
     await outsider.getByRole('button',{ name: 'Sign in',exact: true }).click()
     await expect(outsider).toHaveURL(/\/invitations\/accept$/)
     await expect(outsider.getByLabel(copy.codeLabel,{ exact: true })).toHaveValue('')
+    stage('expired invitation')
     await request.post(fixture,{ data: { delegationAction: { kind: 'expire',id: code.split('.')[0] } } })
     await outsider.getByLabel(copy.codeLabel,{ exact: true }).fill(code)
     await outsider.getByRole('button',{ name: copy.review,exact: true }).click()
     await expect(outsider.getByText(copy.errors.denied,{ exact: true })).toBeVisible()
     const state = await (await request.get(fixture)).json(); expect(state.delegation.memberships).toHaveLength(0)
-  } finally { await Promise.all([context,strangerContext].map(context => context.unrouteAll({ behavior: 'ignoreErrors' }))); await Promise.all([context,strangerContext].map(context => context.close())) }
+  } finally {
+    await Promise.allSettled([context,strangerContext].map(async context => {
+      try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() }
+    }))
+  }
 })

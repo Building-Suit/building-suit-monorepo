@@ -106,3 +106,7 @@ jobs:
       - name: Verify account protocol journeys without external mail or credential artifacts
         # The HTTP fixture does not prove actual Supabase Auth service acceptance.
         run: pnpm exec playwright test -c apps/doctor-suit/tests/e2e/playwright.auth.config.ts
+      - name: Verify delegation under slower CPU and RPC timing
+        env:
+          DOCTOR_PROTOCOL_STRESS: 'true'
+        run: pnpm exec playwright test -c apps/doctor-suit/tests/e2e/playwright.auth.config.ts --grep 'two doctors' --repeat-each=2

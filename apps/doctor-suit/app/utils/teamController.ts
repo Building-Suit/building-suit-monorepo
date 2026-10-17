@@ -57,7 +57,14 @@ export function createDoctorTeamController(repository: ReturnType<typeof doctorD
     } catch (error) { if (accepts(revision,expected)) state.error = doctorDelegationFailure(error); return false }
     finally { if (accepts(revision,expected)) state.pending = false }
   }
-  return { state,clear,load,forgetCredential: () => { state.credential = ''; command = null },
+  // Context selection completes before its directory request. Editors may open
+  // only once the matching directory has supplied their location choices.
+  function available() {
+    const selected = scope(); const directory = state.directory
+    return Boolean(selected?.portal==='doctor' && directory?.practiceId===selected.practiceId
+      && !state.loading && directory.locationTotal<=directory.locations.length)
+  }
+  return { state,clear,load,available,forgetCredential: () => { state.credential = ''; command = null },
     invite: (form: DoctorInvitationForm) => mutate('invite',{ form: { email: form.email.trim().toLowerCase(),grants: doctorCanonicalGrants(form.grants) } }),
     grants: (member: DoctorTeamMember,grants: DoctorDelegationGrant[]) => mutate('grants',{ member,grants: doctorCanonicalGrants(grants) }),
     status: (member: DoctorTeamMember,status: DoctorTeamMember['status']) => mutate('status',{ member,status }),

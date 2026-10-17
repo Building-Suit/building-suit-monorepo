@@ -175,3 +175,19 @@ test('DOS-M1-009: SDK sign-out notifications cannot leave the account-switch for
   assert.equal(await controller.signIn('synthetic-secretary@example.test','synthetic-password-only'),true)
   assert.equal(state.phase,'authenticated'); assert.equal(locked,false); assert.ok(clears>=3)
 })
+
+test('DOS-M1-009: editors wait for the selected practice directory, including context replacement', async () => {
+  const first = deferred(); const second = deferred(); let loads = 0
+  const fixture = team({ load: () => ++loads===1 ? first.promise : second.promise })
+  const loading = fixture.controller.load({ page: 0,size: 20,search: '' })
+  assert.equal(fixture.controller.available(),false)
+  first.resolve(directory); assert.equal(await loading,true)
+  assert.equal(fixture.controller.available(),true)
+  fixture.scope({ ...scope,practiceId: invitation })
+  assert.equal(fixture.controller.available(),false)
+  const replacing = fixture.controller.load({ page: 0,size: 20,search: '' })
+  assert.equal(fixture.controller.available(),false)
+  second.resolve({ ...directory,practiceId: invitation }); assert.equal(await replacing,true)
+  assert.equal(fixture.controller.available(),true)
+  fixture.controller.clear(); assert.equal(fixture.controller.available(),false)
+})

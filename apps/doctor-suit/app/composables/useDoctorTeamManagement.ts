@@ -29,7 +29,7 @@ export function useDoctorTeamManagement() {
   function page(value: number) { if (team.state.pending) return; query.page = Math.max(0,value-1); void reload() }
   function tab(value: string) { if (team.state.pending || !['members','invitations'].includes(value)) return; activeTab.value = value; query.page = 0; void reload() }
   const capacity = computed(() => Boolean(team.state.directory && team.state.directory.locationTotal>team.state.directory.locations.length))
-  const available = computed(() => Boolean(scopeKey.value) && !capacity.value)
+  const available = computed(() => Boolean(scopeKey.value) && team.available())
   const roles = computed(() => ['selected','read','schedule','all'].map(value => ({ value,label: copy.value[value as 'selected'|'read'|'schedule'|'all'] })))
   const grantOptions = computed(() => doctorAdministrativeCapabilities.map(key => ({ key,label: copy.value.capabilityLabels[key] })))
   const editorCopy = computed(() => ({ email: copy.value.email,emailMaxLength: 254,role: copy.value.preset,locations: copy.value.locations,permissions: copy.value.permissions,credentialLabel: copy.value.credentialLabel,ready: copy.value.ready,deliveryTitle: copy.value.deliveryTitle,deliveryHint: copy.value.deliveryHint }))
