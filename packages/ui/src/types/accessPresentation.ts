@@ -79,6 +79,7 @@ export interface BsAccessEditorState {
   error?: string | null
   submitLabel: string
   cancelLabel: string
+  submitDisabled?: boolean
 }
 export interface BsAccessIdentityForm {
   name: string
@@ -86,6 +87,7 @@ export interface BsAccessIdentityForm {
   email: string
   role: string
   locationIds: string[]
+  grants?: { locationId: string; capabilities: string[] }[]
 }
 export interface BsAccessIdentityCopy {
   name?: string
@@ -98,6 +100,8 @@ export interface BsAccessIdentityCopy {
   deliveryTitle?: string
   deliveryHint?: string
   ready?: string
+  credentialLabel?: string
+  permissions?: string
 }
 export interface BsAccessRoleForm {
   name: string

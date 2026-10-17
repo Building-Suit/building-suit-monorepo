@@ -5,6 +5,7 @@ assertLocalFixtureEnvironment(process.env)
 const root = fileURLToPath(new URL('../../../../', import.meta.url))
 export default defineConfig({
   testDir: fileURLToPath(new URL('.', import.meta.url)), testMatch: '*.auth.fixture.ts', workers: 1, retries: 0,
+  preserveOutput: 'never',
   outputDir: fileURLToPath(new URL('../../../../test-results/doctor-auth', import.meta.url)), reporter: 'list',
   // Credential fixtures must never become trace/screenshot artifacts.
   use: { baseURL: 'http://127.0.0.1:4337', browserName: 'chromium', trace: 'off', screenshot: 'off' },

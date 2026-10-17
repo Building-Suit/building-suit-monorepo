@@ -42,7 +42,7 @@ export function doctorReturnPath(value: unknown): string {
     || Array.from(decoded).some(character => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127)) return '/account'
   const url = new URL(decoded, 'https://doctor.invalid')
   if (url.origin !== 'https://doctor.invalid') return '/account'
-  if (['/account', '/onboarding', '/workspace', '/patients', '/appointments', '/locations', '/settings', '/audit'].includes(url.pathname)
+  if (['/account', '/team', '/invitations/accept', '/onboarding', '/workspace', '/patients', '/appointments', '/locations', '/settings', '/audit'].includes(url.pathname)
     || /^\/patients\/[0-9a-f-]{36}$/i.test(url.pathname)) return url.pathname
   return '/account'
 }

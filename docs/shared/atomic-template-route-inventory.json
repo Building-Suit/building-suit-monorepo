@@ -2744,6 +2744,26 @@
       "status": "implemented; synthetic location/context verification pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/team.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsAccessManagementPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/team.vue",
+      "purpose": "access-management",
+      "status": "implemented; synthetic delegation verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/invitations/accept.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsInvitationAcceptancePage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/invitations/accept.vue",
+      "purpose": "invitation-acceptance",
+      "status": "implemented; synthetic delegation verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [

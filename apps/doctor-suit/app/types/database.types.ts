@@ -12,6 +12,7 @@ export type Database = {
       audit_events: {
         Row: {
           actor_user_id: string
+          details: Json
           entity_id: string
           event_type: string
           happened_at: string
@@ -20,6 +21,7 @@ export type Database = {
         }
         Insert: {
           actor_user_id: string
+          details?: Json
           entity_id: string
           event_type: string
           happened_at?: string
@@ -28,6 +30,7 @@ export type Database = {
         }
         Update: {
           actor_user_id?: string
+          details?: Json
           entity_id?: string
           event_type?: string
           happened_at?: string
@@ -111,16 +114,19 @@ export type Database = {
       }
       membership_locations: {
         Row: {
+          capabilities: string[] | null
           location_id: string
           membership_id: string
           practice_id: string
         }
         Insert: {
+          capabilities?: string[] | null
           location_id: string
           membership_id: string
           practice_id: string
         }
         Update: {
+          capabilities?: string[] | null
           location_id?: string
           membership_id?: string
           practice_id?: string
@@ -245,11 +251,76 @@ export type Database = {
           },
         ]
       }
+      secretary_invitations: {
+        Row: {
+          accepted_membership_id: string | null
+          accepted_user_id: string | null
+          created_at: string
+          created_by: string
+          expires_at: string
+          grants: Json
+          id: string
+          practice_id: string
+          recipient_email: string
+          status: string
+          token_hash: string
+          version: number
+        }
+        Insert: {
+          accepted_membership_id?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          created_by: string
+          expires_at: string
+          grants: Json
+          id?: string
+          practice_id: string
+          recipient_email: string
+          status?: string
+          token_hash: string
+          version?: number
+        }
+        Update: {
+          accepted_membership_id?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          grants?: Json
+          id?: string
+          practice_id?: string
+          recipient_email?: string
+          status?: string
+          token_hash?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "secretary_invitations_accepted_membership_id_fkey"
+            columns: ["accepted_membership_id"]
+            isOneToOne: false
+            referencedRelation: "memberships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "secretary_invitations_practice_id_fkey"
+            columns: ["practice_id"]
+            isOneToOne: false
+            referencedRelation: "practices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      doctor_accept_secretary_invitation: {
+        Args: { p_invitation: string; p_key: string; p_token: string }
+        Returns: Json
+      }
+      doctor_administrative_capabilities: { Args: never; Returns: string[] }
       doctor_archive_location: {
         Args: {
           p_expected_version: number
@@ -259,11 +330,34 @@ export type Database = {
         }
         Returns: Json
       }
+      doctor_cancel_secretary_invitation: {
+        Args: {
+          p_invitation: string
+          p_key: string
+          p_practice: string
+          p_version: number
+        }
+        Returns: Json
+      }
       doctor_complete_onboarding: {
         Args: { p_draft_version: number; p_key: string }
         Returns: Json
       }
       doctor_contexts: { Args: never; Returns: Json }
+      doctor_invitation_details: {
+        Args: { p_invitation: string; p_token: string }
+        Returns: Json
+      }
+      doctor_invite_secretary: {
+        Args: {
+          p_email: string
+          p_grants: Json
+          p_key: string
+          p_practice: string
+          p_token_hash: string
+        }
+        Returns: Json
+      }
       doctor_location_archive_status: {
         Args: { p_location: string; p_practice: string }
         Returns: Json
@@ -308,6 +402,35 @@ export type Database = {
         Returns: Json
       }
       doctor_session_context: { Args: never; Returns: Json }
+      doctor_set_membership_grants: {
+        Args: {
+          p_grants: Json
+          p_key: string
+          p_membership: string
+          p_practice: string
+          p_version: number
+        }
+        Returns: Json
+      }
+      doctor_set_membership_status: {
+        Args: {
+          p_key: string
+          p_membership: string
+          p_practice: string
+          p_status: string
+          p_version: number
+        }
+        Returns: Json
+      }
+      doctor_team: {
+        Args: {
+          p_page?: number
+          p_practice: string
+          p_search?: string
+          p_size?: number
+        }
+        Returns: Json
+      }
       doctor_update_practice_profile: {
         Args: {
           p_display_name: string

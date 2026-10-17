@@ -1,10 +1,11 @@
 // Disposable protocol fixture, NOT Supabase Auth acceptance. Loopback and synthetic inputs only.
 import http from 'node:http'
 import { randomUUID } from 'node:crypto'
+import { delegationProtocol, resetDelegationProtocol, applyDelegationFixtureInput } from './delegation-provider.mjs'
 const userId = '11111111-1111-4111-8111-111111111111'
 let state
 const tokens = new Set()
-function reset() { tokens.clear(); state = { confirmed: true, active: false, sessionId: randomUUID(), marker: 'doctor-suit', logoutFails: false, outbox: [], calls: [], pkceExchanges: 0, enrollment: 'owner', profile: null, practice: null, location: null, locations: [], locationCommands: {}, draft: null, completeCalls: 0, profileCalls: 0 } }
+function reset() { resetDelegationProtocol(); tokens.clear(); state = { confirmed: true, active: false, sessionId: randomUUID(), marker: 'doctor-suit', logoutFails: false, outbox: [], calls: [], pkceExchanges: 0, enrollment: 'owner', profile: null, practice: null, location: null, locations: [], locationCommands: {}, draft: null, completeCalls: 0, profileCalls: 0 } }
 reset()
 const user = () => ({ id: userId, aud: 'authenticated', role: 'authenticated', email: 'synthetic@example.test', email_confirmed_at: state.confirmed ? '2026-01-01T00:00:00Z' : null, app_metadata: { provider: 'email', providers: ['email'] }, user_metadata: { role: 'owner', verified: true }, identities: [], created_at: '2026-01-01T00:00:00Z' })
 const token = () => `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: userId, role: 'authenticated', aud: 'authenticated', session_id: state.sessionId, exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.synthetic-signature`
@@ -30,6 +31,7 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === '/__fixture') {
     if (req.method === 'POST') {
       if (input.reset) reset()
+      else if (input.delegationAction) applyDelegationFixtureInput(state,input)
       else if (input.bumpProfile && state.practice) state.practice.version++
       else Object.assign(state, input)
     }
@@ -37,6 +39,7 @@ const server = http.createServer(async (req, res) => {
   }
   // Never retain credential bodies or verification material in fixture telemetry.
   state.calls.push(`${req.method} ${url.pathname}`)
+  if (delegationProtocol({ state, req, url, input, send, deny })) return
   if (input.email && input.email !== 'synthetic@example.test') { deny('invalid_credentials'); return }
   if (url.pathname === '/rest/v1/rpc/doctor_runtime_contract') { send({ product: state.marker, version: 1, data_mode: 'synthetic' }); return }
   if (url.pathname === '/auth/v1/signup') { state.confirmed = false; state.active = false; state.outbox.push('signup'); send({ user: user(), session: null }); return }

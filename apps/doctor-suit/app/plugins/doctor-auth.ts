@@ -12,6 +12,9 @@ import type { DoctorContextPreference } from '../utils/locationContext'
 import type { DoctorContextScope } from '../utils/contextScope'
 import { createDoctorLocationsController, doctorLocationsState } from '../utils/locationsController'
 import { doctorLocationsRepository } from '../utils/locationsRepository'
+import { doctorDelegationRepository } from '../utils/delegationRepository'
+import { createDoctorTeamController, doctorTeamState } from '../utils/teamController'
+import { createDoctorInvitationController, doctorInvitationState } from '../utils/invitationController'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig()
@@ -54,11 +57,18 @@ export default defineNuxtPlugin((nuxtApp) => {
     return null
   }
   const locations = createDoctorLocationsController(client ? doctorLocationsRepository(client) : null, reactive(doctorLocationsState()), locationsScope)
+  const delegation = client ? doctorDelegationRepository(client) : null
+  const teamScope = (): DoctorContextScope | null => {
+    const selected = locationsScope()
+    return selected?.portal === 'doctor' && selected.practiceId === state.identity?.practiceId ? selected : null
+  }
+  const team = createDoctorTeamController(delegation, reactive(doctorTeamState()), teamScope)
+  const invitation = createDoctorInvitationController(delegation, reactive(doctorInvitationState()), () => state.identity)
   const controller = createDoctorAuthController(client ? doctorAuthBackend(client, settings.origin) : null, state, {
     clear: () => { void context.clear() },
     locked: () => locked.value === '1', lock: () => { locked.value = '1'; context.forgetPreference() }, unlock: () => { locked.value = null },
   })
-  context.registerClear(() => { practice.clear(); locations.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
+  context.registerClear(() => { practice.clear(); locations.clear(); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
   if (import.meta.client && client) {
     const { data } = client.auth.onAuthStateChange(event => {
       // Never await SDK calls while its internal auth lock holds this callback.
@@ -66,5 +76,5 @@ export default defineNuxtPlugin((nuxtApp) => {
     })
     nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh() })
   }
-  return { provide: { doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope } }
+  return { provide: { doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation } }
 })

@@ -915,5 +915,77 @@
     "sources": [
       "dos-m1-008"
     ]
+  },
+  {
+    "id": "doctor-secretary-memberships",
+    "task": "DOS-M1-009",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/src/organisms/BsAccessIdentityEditor.vue",
+      "packages/ui/src/templates/BsAccessManagementPage.vue",
+      "packages/ui/src/templates/BsInvitationAcceptancePage.vue",
+      "packages/ui/src/types/accessPresentation.ts",
+      "packages/ux/src/composables/usePageRevalidation.ts",
+      "packages/ux/src/index.ts",
+      "packages/ux/tests/page-revalidation.test.mjs",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/shared/realtime-adoption.json",
+      "docs/shared/realtime-adoption.md",
+      "docs/work-packages/doctor-suit/delegation-evidence.md",
+      "packages/testing/playwright.auth-parity.config.ts",
+      ".github/workflows/doctor-disposable.yml"
+    ],
+    "reason": "Add synthetic recipient-and-secret-bound secretary invitations, independently scoped multi-doctor memberships, expiry/idempotency/concurrency checks and explicit status commands. Raw secrets stay outside persisted receipts and URLs. Shared template/refresh additions are opt-in; no operational registration, email delivery or clinical authority is activated.",
+    "sources": [
+      "dos-m1-009"
+    ]
+  },
+  {
+    "id": "doctor-administrative-grants",
+    "task": "DOS-M1-010",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/src/organisms/BsAccessIdentityEditor.vue",
+      "packages/ui/src/templates/BsAccessManagementPage.vue",
+      "packages/ui/src/templates/BsInvitationAcceptancePage.vue",
+      "packages/ui/src/types/accessPresentation.ts",
+      "packages/ux/src/composables/usePageRevalidation.ts",
+      "packages/ux/src/index.ts",
+      "packages/ux/tests/page-revalidation.test.mjs",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/shared/realtime-adoption.json",
+      "docs/shared/realtime-adoption.md",
+      "docs/work-packages/doctor-suit/delegation-evidence.md",
+      "packages/testing/playwright.auth-parity.config.ts",
+      ".github/workflows/doctor-disposable.yml"
+    ],
+    "reason": "Enforce approved administrative capability sets independently per location, owner-only optimistic grant replacement, exact before/after audit scope, and foreground cleanup after permission loss. Clinical/ownership delegation is rejected. Shared permission presentation is opt-in and existing consumers retain their defaults; attachment/patient integration remains deferred to its real feature paths.",
+    "sources": [
+      "dos-m1-010"
+    ]
   }
 ]

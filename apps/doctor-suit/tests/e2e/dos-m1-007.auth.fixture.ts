@@ -50,7 +50,7 @@ for (const ar of [false, true]) test(`DOS-M1-007 ${ar ? 'AR mobile' : 'EN deskto
     expect(state.profileCalls).toBe(1)
     expect(state.profile.professional_verification).toBe('unverified')
     expect(state.location.name).toBe('Synthetic first location')
-  } finally { await resumed.close() }
+  } finally { await resumed.unrouteAll({ behavior: 'ignoreErrors' }); await resumed.close() }
 })
 test('DOS-M1-007 protocol fixture: delegated membership cannot expose owner forms or writes', async ({ page, context, request }) => {
   await prepare(context, false)

@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { validateLocalDoctorTarget } from './local-lifecycle.mjs'
 import { verifyOnboardingConcurrency } from './onboarding-concurrency.mjs'
+import { verifyInvitationConcurrency } from './invitations-concurrency.mjs'
 
 const root = fileURLToPath(new URL('../../../', import.meta.url))
 const app = `${root}apps/doctor-suit/`
@@ -72,6 +73,7 @@ try {
     console.log(`${file}: ${passed.length} SQL assertions passed`)
   }
   await verifyOnboardingConcurrency(container)
+  await verifyInvitationConcurrency(container)
   if (generate.length) {
     const output = docker(['run', '--rm', '--network', `container:${container}`,
       '-e', 'PG_META_DB_HOST=127.0.0.1', '-e', 'PG_META_DB_NAME=postgres', '-e', 'PG_META_DB_USER=postgres',

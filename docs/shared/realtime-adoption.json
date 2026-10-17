@@ -146,13 +146,13 @@
       "suit": "doctor-suit",
       "status": "not-needed",
       "workflows": [
-        "synthetic account lifecycle, owner profile/setup and authorized working-location management"
+        "synthetic account lifecycle, practice/location/team administration and grant-context revalidation"
       ],
-      "reason": "Owner profile, setup and location reads use explicit request refresh. Context changes invalidate private reads and dialogs; no live queue or Realtime subscription is implemented.",
+      "reason": "Private administrative data reads use explicit request refresh. Protected context uses foreground/visible-page polling; no live queue or Realtime subscription is implemented.",
       "evidence": [
         {
           "path": "apps/doctor-suit/README.md",
-          "anchor": "Owner profile, setup and location reads use explicit request refresh"
+          "anchor": "Private administrative data reads use explicit request refresh"
         }
       ],
       "unblock": [

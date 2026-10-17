@@ -503,6 +503,18 @@
       "adapterBoundary": "Complete typed location directory and record-action dialogs. Doctor owns queries, explicit scope/capabilities, draft values, idempotent commands and archive policy. Shared UX owns modal lifecycle and scope reset.",
       "task": "DOS-M1-008",
       "migrationStatus": "registered complete administrative route"
+    },
+    {
+      "family": "doctor-administrative-delegation",
+      "owner": "packages/ui",
+      "components": [
+        "BsAccessManagementPage",
+        "BsAccessIdentityEditor",
+        "BsInvitationAcceptancePage"
+      ],
+      "adapterBoundary": "Existing complete access and invitation templates gain opt-in controlled per-location administrative permission fields, confirmation, pagination and manual credential entry. Doctor owns verified recipient binding, one-time secret lifecycle, independent memberships, server authorization and typed commands. Shared UX owns foreground/visible-page refresh and dialog lifecycle.",
+      "task": "DOS-M1-009",
+      "migrationStatus": "registered complete synthetic team and invitation routes; granular enforcement is DOS-M1-010"
     }
   ]
 }
