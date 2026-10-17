@@ -1,4 +1,5 @@
 // SQL/RLS fallback for small executors. This is not a Supabase service integration test.
+import{verifyDoctorIsolatedRecovery}from'./recovery-isolated.mjs'
 import { createHash, randomUUID } from 'node:crypto'
 import { mkdtemp, readFile, readdir, rm, writeFile, mkdir, chmod } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -107,6 +108,7 @@ try {
   await verifySaasQuotaConcurrency(container)
   await verifySaasWriteConcurrency(container)
   await verifySaasReservationConcurrency(container)
+  await verifyDoctorIsolatedRecovery(container)
   if (generate.length) {
     const output = docker(['run', '--rm', '--network', `container:${container}`,
       '-e', 'PG_META_DB_HOST=127.0.0.1', '-e', 'PG_META_DB_NAME=postgres', '-e', 'PG_META_DB_USER=postgres',
