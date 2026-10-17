@@ -1,9 +1,6 @@
 -- DOS-M1-012: administrative, unreviewed attachments. No clinical interpretation.
-insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
-values('doctor-private-documents','doctor-private-documents',false,5242880,array['application/pdf','image/png','image/jpeg'])
-on conflict(id) do update set public=false,file_size_limit=5242880,allowed_mime_types=excluded.allowed_mime_types;
-alter table storage.buckets add constraint doctor_documents_private_bucket check(id<>'doctor-private-documents' or
-  (not public and file_size_limit between 1 and 5242880 and allowed_mime_types is not null and allowed_mime_types <@ array['application/pdf','image/png','image/jpeg']::text[]));
+-- Storage bucket configuration uses the supported API/local CLI configuration;
+-- do not alter provider table constraints or write object metadata directly.
 create policy doctor_documents_bucket_guard on storage.buckets as restrictive for all to anon,authenticated
   using(id<>'doctor-private-documents') with check(id<>'doctor-private-documents');
 create policy doctor_documents_object_guard on storage.objects as restrictive for all to anon,authenticated

@@ -17,7 +17,7 @@ const environment = { ...process.env,SUPABASE_HOME: process.env.SUPABASE_HOME ||
 const wait = ms => new Promise(resolve => setTimeout(resolve,ms))
 function expect(value,label) { if (!value) throw new Error(label) }
 function diagnostic(output) {
-  return output.replace(/\x1b\[[0-9;]*m/g,'').split('\n').filter(line => /error|failed|unhealthy|permission|disk|invalid|cannot|must|not found|SQLSTATE/i.test(line))
+  return output.replaceAll(String.fromCharCode(27),'').replace(/\[[0-9;]*m/g,'').split('\n').filter(line => /error|failed|unhealthy|permission|disk|invalid|cannot|must|not found|SQLSTATE/i.test(line))
     .filter(line => !/ANON_KEY|SERVICE_ROLE_KEY|SECRET_KEY|PUBLISHABLE_KEY|password|authorization|access_token|refresh_token/i.test(line))
     .slice(-6).map(line => line.replace(/[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/g,'[redacted-token]').replace(/[A-Za-z0-9_-]{40,}/g,'[redacted-value]').slice(0,500)).join(' | ')
 }
@@ -82,6 +82,9 @@ try {
   await writeFile(path.join(scratch,'function.env'),`DOCTOR_LOCAL_PROVIDER=1\nDOCTOR_WEB_ORIGIN=${origin}\n`,{ mode: 0o600 })
   functions = spawn('pnpm',['exec','supabase','--workdir',app,'functions','serve','doctor-documents','--env-file',path.join(scratch,'function.env')],{ cwd: root,env: environment,stdio: ['ignore','pipe','pipe'] })
   functions.stdout.on('data',data => { functionsOutput=(functionsOutput+data).slice(-20000) }); functions.stderr.on('data',data => { functionsOutput=(functionsOutput+data).slice(-20000) })
+  stage = 'configured private Storage bucket'; const storageAdmin = createClient(api,status.SERVICE_ROLE_KEY,options)
+  const existingBucket = await storageAdmin.storage.getBucket(bucket)
+  if (existingBucket.error) expect(!(await storageAdmin.storage.createBucket(bucket,{ public: false,fileSizeLimit: 5242880,allowedMimeTypes: ['application/pdf','image/png','image/jpeg'] })).error,'Supported local Storage bucket creation failed')
   stage = 'real Auth and owner onboarding'; const a = await bootstrap(status.ANON_KEY,'doctor-a'); const b = await bootstrap(status.ANON_KEY,'doctor-b')
   console.log('Actual Auth: captured local confirmation email, unconfirmed denial, verified session and two independent owner practices passed')
   const pdf = new TextEncoder().encode('%PDF-1.7\nSynthetic administrative attachment\n%%EOF\n')

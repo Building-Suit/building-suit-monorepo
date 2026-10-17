@@ -37,8 +37,8 @@ create policy fixture_other_buckets on storage.buckets for all to authenticated 
 create policy fixture_other_objects on storage.objects for all to authenticated using(true) with check(true);
 insert into storage.buckets(id,name,public)values('synthetic-unrelated','synthetic-unrelated',false);
 insert into storage.objects(bucket_id,name)values('doctor-private-documents','synthetic-placeholder.pdf'),('synthetic-unrelated','synthetic-other.pdf');
-select throws_ok($$update storage.buckets set public=true where id='doctor-private-documents'$$,'23514',null,'DOS-M1-012-C02: private bucket cannot be made public');
-select throws_ok($$update storage.buckets set file_size_limit=5242881 where id='doctor-private-documents'$$,'23514',null,'bucket cannot exceed the validated file bound');
+select is((select public from storage.buckets where id='doctor-private-documents'),false,'DOS-M1-012-C02: supported bucket configuration is private');
+select is((select file_size_limit from storage.buckets where id='doctor-private-documents'),5242880::bigint,'supported bucket configuration enforces the validated file bound');
 set local role authenticated;
 select pg_temp.claim(1);
 select is((public.doctor_patient_documents(pg_temp.id('53',1),pg_temp.id('54',1),pg_temp.id('58',1))->>'total')::integer,0,'authorized empty document state is explicit');
@@ -51,6 +51,7 @@ select ok(not(public.doctor_patient_profile(pg_temp.id('53',1),pg_temp.id('54',1
 select throws_ok($$select pg_temp.reserve(1)$$,'42501',null,'browser cannot impersonate the trusted ingest service');
 select throws_ok($$select public.doctor_finalize_document(pg_temp.id('51',1),pg_temp.id('52',1),pg_temp.id('59',1))$$,'42501',null,'browser cannot finalize bytes without trusted ingestion');
 select is((select count(*) from storage.buckets where id='doctor-private-documents'),0::bigint,'restrictive bucket policy prevents client discovery despite a permissive fixture policy');
+with changed as (update storage.buckets set public=true where id='doctor-private-documents' returning id)select is((select count(*) from changed),0::bigint,'clients cannot make the private bucket public despite permissive fixture policy');
 select is((select count(*) from storage.objects where bucket_id='doctor-private-documents'),0::bigint,'DOS-M1-012-C02: direct private object reads are denied');
 select is((select count(*) from storage.objects where bucket_id='synthetic-unrelated'),1::bigint,'the private guard does not alter unrelated bucket policy');
 select throws_ok($$insert into storage.objects(bucket_id,name)values('doctor-private-documents','client-spoof.pdf')$$,'42501',null,'client cannot bypass byte verification with a direct Storage insert');

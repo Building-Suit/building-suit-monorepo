@@ -15,6 +15,11 @@ export function doctorDocumentBackend(configuration: DoctorDocumentConfiguration
   const options = { auth: { persistSession: false,autoRefreshToken: false,detectSessionInUrl: false },global: { fetch: (input: RequestInfo | URL,init?: RequestInit) => fetch(input,{ ...init,signal: AbortSignal.timeout(20000) }) } }
   const user = createClient<Database>(configuration.url,configuration.publicKey,{ ...options,global: { ...options.global,headers: { Authorization: authorization } } })
   const service = createClient<Database>(configuration.url,configuration.serviceKey,options)
+  async function privateBucket() {
+    const { data,error } = await service.storage.getBucket(DOCTOR_DOCUMENT_BUCKET)
+    if (error || !data || data.public || Number(data.file_size_limit)!==DOCTOR_DOCUMENT_MAX_BYTES || !Array.isArray(data.allowed_mime_types)
+      || data.allowed_mime_types.length!==3 || !['application/pdf','image/png','image/jpeg'].every(mime => data.allowed_mime_types!.includes(mime))) throw new DoctorDocumentFailure(503,'unavailable')
+  }
   const scope = (value: DocumentScope) => ({ p_practice: value.practiceId,p_location: value.locationId,p_patient: value.patientId })
   return {
     async authenticate() {
@@ -51,12 +56,14 @@ export function doctorDocumentBackend(configuration: DoctorDocumentConfiguration
       return plan
     },
     async put(reservation,bytes) {
+      await privateBucket()
       const result = await service.storage.from(DOCTOR_DOCUMENT_BUCKET).upload(reservation.objectPath,new Uint8Array(bytes),{ contentType: reservation.mime,upsert: false,cacheControl: '0' })
       // A retry may find the first attempt's immutable object. The handler reads
       // and checks its exact length/hash before committing metadata.
       if (result.error && String(result.error.statusCode)!=='409' && String(result.error.statusCode)!=='400') throw new DoctorDocumentFailure(503,'unavailable')
     },
     async get(plan) {
+      await privateBucket()
       const { data,error } = await service.storage.from(DOCTOR_DOCUMENT_BUCKET).download(plan.objectPath)
       if (error || !data || data.size!==plan.size || data.size>DOCTOR_DOCUMENT_MAX_BYTES) throw new DoctorDocumentFailure(503,'unavailable')
       return new Uint8Array(await data.arrayBuffer())

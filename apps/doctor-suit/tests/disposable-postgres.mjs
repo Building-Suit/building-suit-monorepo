@@ -70,6 +70,9 @@ try {
     alter table storage.buckets enable row level security; alter table storage.objects enable row level security;
     grant usage on schema storage to anon,authenticated,service_role;
     grant select,insert,update,delete on storage.buckets,storage.objects to anon,authenticated,service_role;`)
+  // Emulate configured bucket metadata only; the actual provider fixture uses
+  // the supported Storage API and checks HTTP/private bytes independently.
+  sql(`insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('doctor-private-documents','doctor-private-documents',false,5242880,array['application/pdf','image/png','image/jpeg']);`)
   const migrations = (await readdir(`${app}supabase/migrations`)).filter(file => file.endsWith('.sql')).sort()
   for (const file of migrations) sql(await readFile(`${app}supabase/migrations/${file}`, 'utf8'))
   const suites = (await readdir(`${app}supabase/tests`)).filter(file => file.endsWith('.sql')).sort()
