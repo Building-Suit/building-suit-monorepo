@@ -1,3 +1,4 @@
+import { initializeMilestoneProtocol,milestoneProtocol } from './milestone-provider.mjs'
 import { seedAuditProtocol,auditProtocol } from './audit-provider.mjs'
 // In-memory multi-account browser protocol fixture. Actual authority is verified in SQL suites.
 import { createHash, randomUUID } from 'node:crypto'
@@ -30,6 +31,7 @@ export function applyDelegationFixtureInput(state,input) {
 export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny }) {
   if (!state.delegation) return false
   const data = model(state)
+  if (state.milestone) initializeMilestoneProtocol(data)
   if (state.patients) seedPatientProtocol(data)
   if (state.documents) seedDocumentProtocol(data)
   if (state.availability) seedAvailabilityProtocol(data)
@@ -69,6 +71,7 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
     return [{ practice_id: practice.id,practice_name: practice.name,doctor_name: data.users.find(item => item.id===practice.owner_user_id).name,location_id: location.id,location_name: location.name,timezone: location.timezone,portal: owner(practice.id) ? 'doctor' : 'secretary',grants_version: owner(practice.id) ? practice.version : membership.version,location_version: location.version,capabilities }]
   })
   const rpc = url.pathname.replace('/rest/v1/rpc/','')
+  if (state.milestone && milestoneProtocol({ data,actor,rpc,input,send,owner })) return true
   if (state.audit && auditProtocol({ data,actor,rpc,input,send,capability,owner })) return true
   if (state.documents && url.pathname==='/functions/v1/doctor-documents') { void documentFunction({ data,actor,sessionId: session.sessionId,capability,valid: () => sessions.get(req.headers.authorization)===session },req,url,rawBytes,res).catch(() => send({ error: 'unavailable' },503)); return true }
   if (state.documents && documentProtocol({ data,actor,capability },rpc,input,send)) return true
@@ -86,7 +89,7 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
   }
   if (rpc==='doctor_practice_setup') {
     const location = ownPractice && data.locations.find(item => item.practice_id===ownPractice.id && !item.archived_at)
-    send({ enrollment: ownPractice || !data.memberships.some(item => item.user_id===actor.id) ? 'owner' : 'delegated-only',profile: ownPractice ? { display_name: actor.name,professional_verification: 'unverified' } : null,practice: ownPractice ? { id: ownPractice.id,name: ownPractice.name,version: ownPractice.version } : null,location: location || null,draft: null }); return true
+    send({ enrollment: ownPractice || !data.memberships.some(item => item.user_id===actor.id) ? 'owner' : 'delegated-only',profile: ownPractice ? { display_name: actor.name,professional_verification: 'unverified' } : null,practice: ownPractice ? { id: ownPractice.id,name: ownPractice.name,version: ownPractice.version } : null,location: location || null,draft: data.milestoneDrafts?.[actor.id] || null }); return true
   }
   if (rpc==='doctor_locations') {
     if (!capability(input.p_practice,null,'locations.read') && !capability(input.p_practice,null,'locations.manage')) return reject()

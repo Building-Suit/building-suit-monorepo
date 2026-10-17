@@ -1,0 +1,164 @@
+{
+  "version": 1,
+  "taskId": "DOS-M1-020",
+  "planningHead": "4ca7110f4d6efa828e0b41213e5c059bf02ba9db",
+  "baseSha": "e53cc7bcd8b0f07c2c2287de0867c942e480d85c",
+  "candidateRef": "codex/doctor-suit/m1-combined-acceptance",
+  "headBinding": "Resolve the published GitHub PR head SHA and check-run head_sha; no self-referential commit hash is embedded.",
+  "implementationIdentity": "implementation-agent",
+  "independentAcceptance": "pending",
+  "integration": "not-claimed",
+  "deployment": "not-performed",
+  "domainApprovalGranted": false,
+  "requiredCommands": [
+    "unit",
+    "sql",
+    "actual-provider",
+    "doctor-public",
+    "doctor-auth",
+    "shared-auth",
+    "shared-settings",
+    "boundary",
+    "lint",
+    "typecheck",
+    "build",
+    "release"
+  ],
+  "tasks": [
+    {
+      "taskId": "DOS-M1-001",
+      "canonicalTaskSha256": "92a9ba2c95b68cf0156de7fe7deed82eeda019904a3f3316f280a0716b2e6a15",
+      "pullRequest": 348,
+      "sourceHead": "52c42b6ca1516bdf6dd6db45957c698924bb69b4"
+    },
+    {
+      "taskId": "DOS-M1-002",
+      "canonicalTaskSha256": "33a143ec55991d4cdc3e07e4615c200dd69aadb18c0353769de73d1908a8cb4b",
+      "pullRequest": 349,
+      "sourceHead": "d81525ffcdc6ab316fd504e7c6541fe220885aa5"
+    },
+    {
+      "taskId": "DOS-M1-003",
+      "canonicalTaskSha256": "ec32e06bcf53c5079e01b378de303781c97ad97880596b2730e5608602a3689a",
+      "pullRequest": 350,
+      "sourceHead": "3a7958a187828a39951e5bb416fa7cd790a1aa2a"
+    },
+    {
+      "taskId": "DOS-M1-004",
+      "canonicalTaskSha256": "8f9b2c800fc2c99e1a351d41b3045414cac270fee0f9b5e838f9e409bad0995f",
+      "pullRequest": 351,
+      "sourceHead": "a0723e33d40b541ba0d8b7e6f54c999cd5763bcb"
+    },
+    {
+      "taskId": "DOS-M1-005",
+      "canonicalTaskSha256": "de9d3aacd2a9cfdb973917996de7571c2ebbf8cccad4e7ab39e808dd291e07bf",
+      "pullRequest": 351,
+      "sourceHead": "a0723e33d40b541ba0d8b7e6f54c999cd5763bcb"
+    },
+    {
+      "taskId": "DOS-M1-006",
+      "canonicalTaskSha256": "e12e8e909091b585a5f14e15e203ba9e0aa34129a966e65d3764a48d38b2ca97",
+      "pullRequest": 352,
+      "sourceHead": "8fdc6bef7e774a6b66c1bd8074818c0ba4fd12a1"
+    },
+    {
+      "taskId": "DOS-M1-007",
+      "canonicalTaskSha256": "4bfb6eead7693992192048ce0160e859c5574d422c0138c0c8f6f42867b76208",
+      "pullRequest": 353,
+      "sourceHead": "ed1bad51a220f7d75fdef0dabdc96ad5f887ddda"
+    },
+    {
+      "taskId": "DOS-M1-008",
+      "canonicalTaskSha256": "3811ca8830ee2e77178f61df2a49841a58f632a9de486ab750969d49cde59d7e",
+      "pullRequest": 354,
+      "sourceHead": "f4bbfb3ea5abd67099e155d344cd5051fac139b8"
+    },
+    {
+      "taskId": "DOS-M1-009",
+      "canonicalTaskSha256": "9cbb4ea589017e6cd5a3a3ed5931004493f0d3b2db69cdb65fc090134549203f",
+      "pullRequest": 355,
+      "sourceHead": "fa4732cfe8214ace8d55cfa689b1131a8b8958a5"
+    },
+    {
+      "taskId": "DOS-M1-010",
+      "canonicalTaskSha256": "38a87b7e7f9a98ba0b5cb739549ee8755bfe63d9e858340a6674e817218e5e1c",
+      "pullRequest": 355,
+      "sourceHead": "fa4732cfe8214ace8d55cfa689b1131a8b8958a5"
+    },
+    {
+      "taskId": "DOS-M1-011",
+      "canonicalTaskSha256": "5aab8d404b16090853351e978db29fb88858fe791beb2f21579dab68aba5aef2",
+      "pullRequest": 356,
+      "sourceHead": "a43ae003af9b875c861369cee69ae5222bb65558"
+    },
+    {
+      "taskId": "DOS-M1-012",
+      "canonicalTaskSha256": "56cdc7e18d0e745c85446af448dc91e5a2e96a04a65fdecacb572ea980f43634",
+      "pullRequest": 357,
+      "sourceHead": "bbb32f7bf736be66ea28bd31c4084f0032e2a3e8"
+    },
+    {
+      "taskId": "DOS-M1-013",
+      "canonicalTaskSha256": "958f017762868987d5464abb88a89ac78337bb9165d3e424036283134758954d",
+      "pullRequest": 358,
+      "sourceHead": "54f91a987a7ef9dba86290190b63e8775d315a5a"
+    },
+    {
+      "taskId": "DOS-M1-014",
+      "canonicalTaskSha256": "de3a351274ac88c91b2d127d65f4a71b75e34515bd361e7edc7066233e0caec8",
+      "pullRequest": 359,
+      "sourceHead": "1ed57a4c9c842cd8459462bec8d4d77302919c88"
+    },
+    {
+      "taskId": "DOS-M1-015",
+      "canonicalTaskSha256": "684ccf9e0a0611ed14d3258bbae541d11671b29c77321f26957adcfd03a0d8dc",
+      "pullRequest": 360,
+      "sourceHead": "125a5def646d97747f7540d2205da2d522438889"
+    },
+    {
+      "taskId": "DOS-M1-016",
+      "canonicalTaskSha256": "80f936a4987fca5ff660a550a5f08709c011765755b5dd2ada2c872dacba2144",
+      "pullRequest": 361,
+      "sourceHead": "36797466dc3980d3d2e2c70b3e0c980318e7fc15"
+    },
+    {
+      "taskId": "DOS-M1-017",
+      "canonicalTaskSha256": "53d1904fab3b05b8a49eac491005f1d68a79dd81b7f0202012b271a5c77d9224",
+      "pullRequest": 362,
+      "sourceHead": "3da424cdd9fb7bca61dedf8593ae25386546a019"
+    },
+    {
+      "taskId": "DOS-M1-018",
+      "canonicalTaskSha256": "5898ad2df80438e4239c161310b142733db18518e3b6d5671c634e48d826aa08",
+      "pullRequest": 363,
+      "sourceHead": "3ecccbf8172196a2518eaae93ce41d54b5f87117"
+    },
+    {
+      "taskId": "DOS-M1-019",
+      "canonicalTaskSha256": "9d049b39e2f967108bebe92d895bed2aac952df163e9ae67c18cfff3d11a61b2",
+      "pullRequest": 364,
+      "sourceHead": "e53cc7bcd8b0f07c2c2287de0867c942e480d85c"
+    },
+    {
+      "taskId": "DOS-M1-020",
+      "canonicalTaskSha256": "b5113d109fa08913afa9b4bf81dfe9855a711c570cf097b2eeee73d9169f4135",
+      "sourceRef": "codex/doctor-suit/m1-combined-acceptance",
+      "acceptance": "pending-independent-exact-candidate-verifier"
+    }
+  ],
+  "inputHashes": {
+    "apps/doctor-suit/supabase/tests/dos-m1-020.sql": "64d2c9c3458d63c2afb684bfc20781f697895ee5417b107e218b52db345bf2e3",
+    "apps/doctor-suit/tests/disposable-provider.mjs": "aa75fa305e20809c0e0656617c2d72cd428e29964e5d196567159d15ac33b0b7",
+    "apps/doctor-suit/tests/fixtures/delegation-provider.mjs": "86b3d681469380e2b9868180aee1eb4dd8ad2481fc3d1fa5b793590ad113f89f",
+    "apps/doctor-suit/tests/fixtures/milestone-provider.mjs": "110c35cc0dcfce1095d21f6e650cd1c4f435ab57cb345d760921c476895a0023",
+    "apps/doctor-suit/tests/milestone-actual-provider.mjs": "2109599510a19e94f6c1aaefae75e08e1a0583450fae7979cd53e4ff7134f1c1",
+    "apps/doctor-suit/tests/milestone-evidence.mjs": "9d8aaac73740d46effabc626e2e1da5fd29af486444acef3f0d75dffe5ce0b8a",
+    "apps/doctor-suit/tests/unit/dos-m1-020.test.mjs": "b73a58ac1f4badd84b3a8e4f845f34722cb836561a576bbb61c2a9081332148d",
+    "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts": "7052244615eccfb9e7253c710bcc35a0fb4040d780d640b48b25a7026e357132",
+    "apps/doctor-suit/tests/e2e/dos-m1-020.spec.ts": "82ae8bf8e36a6fd5356bf50b8bbba78b6d046166371e47e4e9e61c6b0631c7cc",
+    "docs/work-packages/doctor-suit/implementation/dos-m1-020.md": "babfccbf19b917f61a4a86ee7329de0f6d514ee9ee2e87d516f41cf855dd8038",
+    "docs/work-packages/doctor-suit/implementation-tracker.md": "2cf84a22ee352bc1dfeab192db05d69f0e6e095639edd547817cc5a689b86630",
+    "release-fragments/dos-m1-020.json": "6d5ea9a8cae40d36c40e32f0eac60c8d6e88680f1b2fafe828b43b0867780adc",
+    "apps/doctor-suit/app/utils/contextController.ts": "567e230155618e0dad5666f162fe68d69ccf145b11a3d5469121243ccd24162a"
+  }
+}

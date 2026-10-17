@@ -26,8 +26,8 @@ This is the **current implementation ledger**, reconciled on 2026-10-17. Earlier
 | DOS-M1-016 | PR361 `36797466` | Independent personal settings, default-off in-app preference, fresh-sign-in contact policy and retry/audit | **All current checks and independent parent review pass; ready.** Actual wrong-browser/reused-code/password replacement/new-SID/frozen-SID paths pass |
 | DOS-M1-017 | PR362 `3da424cd` | Five-field read-only audit, explicit audit/domain/clinic grants, own-account activity and retained archive history | **All exact-head checks pass; ready for final independent parent review.** Actual safe audit/foreign/mutation/personal-scope assertions pass |
 | DOS-M1-018 | PR363 `3ecccbf8` | Eight EN/AR ×light/dark ×390/1280 keyboard/dirty/pending/uncertain-save/patient/booking/secretary journeys | All exact-head checks pass; ready for final independent parent review. Local3units,8matrix+motion,44public,root1,816,all7build/type,lint/boundaries pass |
-| DOS-M1-019 | PR364 (current branch; follow-up head in GitHub) | Public/private metadata, neutral shared404, handoff and revocation-safe explicit practice selection | Seven units;52public,2focused auth,48shared auth and12settings cases pass. Initial exact provider/SQL/public CI passed; full protocol exposed context refresh/reselection race, corrected with deterministic regressions and12repeated EN/AR revocation passes. Refreshed exact-head full CI/review pending |
-| DOS-M1-020 | Not yet published | Final combined acceptance packet and independent reconciliation | Starts after019's verified candidate; no final combined milestone PASS is self-approved |
+| DOS-M1-019 | PR364 `e53cc7bc` | Public/private metadata, neutral shared404, handoff and revocation-safe explicit practice selection | All five Doctor exact-head jobs pass;52public/54auth/48shared/12settings local cases,12extra revocation repeats,root1,823/23skips and all7type/build pass. Final unrelated CI/review readiness remains in GitHub |
+| DOS-M1-020 | Active isolated combined candidate; publication follows focused checks | Combined doctor-alone/two-doctor/secretary/outsider harness, actual-provider helper and independent acceptance packet |29new/679total SQL assertions plus39races,3newunits,root1,826/23skips,all7type/build,lint and strict105-template boundaries pass. Browser/provider/independent exact-candidate receipts are reconciled in the task packet; no milestone PASS is self-approved |
 
 ## Current provider and combined evidence
 
@@ -42,7 +42,7 @@ This is the **current implementation ledger**, reconciled on 2026-10-17. Earlier
 
 | Boundary | Current status | Required evidence/action |
 |---|---|---|
-| Final synthetic M1 acceptance | Pending019/020 and parent review/integration | Exact combined candidate and passing required checks; parent coordinates stg merges |
+| Final synthetic M1 acceptance | Pending020 exact combined independent receipt and parent review/integration | Exact combined candidate and passing required checks; parent coordinates stg merges |
 | Live domain/destinations, DOS-M1-D005 | Open; not required for synthetic M1 | Owner-supplied real domain/support details; omit production canonical and unsupported external destinations |
 | DOS-M2-GATE-CLINICAL | Open | Accountable qualified clinician's signed scope/version/constraints, recorded through DOS-M2-001; developer/test approval cannot substitute |
 | DOS-M2-GATE-CATALOGUE | Open | Documented owner/license/provenance and approved manual-entry contract; no scraping or assumed provider access |

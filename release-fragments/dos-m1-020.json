@@ -1,0 +1,17 @@
+{
+  "id": "dos-m1-020",
+  "task": "DOS-M1-020",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests",
+    "apps/doctor-suit/supabase/tests/dos-m1-020.sql",
+    "docs/work-packages/doctor-suit/implementation/dos-m1-020.md",
+    "docs/work-packages/doctor-suit/implementation/m1-acceptance-inputs.json",
+    "docs/work-packages/doctor-suit/implementation-tracker.md"
+  ],
+  "reason": "Add the combined synthetic M1 acceptance harness, actual-provider cross-domain journey and independent-verifier handoff. No public runtime behavior, release activation, domain approval, integration or deployment is supplied by this test/evidence task. Preserve all prior planning and provenance; distinct task statuses remain current in the tracker."
+}

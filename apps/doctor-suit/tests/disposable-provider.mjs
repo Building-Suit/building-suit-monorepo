@@ -9,6 +9,7 @@ import { createClient } from '@supabase/supabase-js'
 import { doctorRealtimeProbeSummary,createDoctorRealtimeWireProbe } from './realtime-provider-probe.mjs'
 import { verifyDoctorAppointmentProvider } from './appointments-actual-provider.mjs'
 import { verifyDoctorAccountProvider } from './account-actual-provider.mjs'
+import { verifyDoctorMilestoneProvider } from './milestone-actual-provider.mjs'
 import { doctorOversizedResponse } from './oversized-http.mjs'
 import { validateLocalDoctorTarget } from './local-lifecycle.mjs'
 import { DoctorProviderFailure,doctorProviderFailureSummary } from './provider-diagnostics.mjs'
@@ -165,6 +166,7 @@ try {
   expect((await endpoint(b,'status')).status===200,'Independent Doctor B was changed by A signout')
   console.log('Actual Storage/Functions: validated private bytes, stable retry, two preserved versions, anonymous/direct/public/signed bypass denials, cross-practice and revoked-session denials passed')
   stage = 'actual queue session revocation';await appointmentAcceptance.verifyRevocation()
+  await verifyDoctorMilestoneProvider({ api,origin,publicKey: status.ANON_KEY,mail,options,setStage: value => { stage = value } })
   console.log('Synthetic actual-provider acceptance passed. Actual browser Auth recovery/PKCE, account reauthentication, Storage, Functions and scoped Realtime paths passed; hosted connections remain UNRUN.')
 } catch (error) {
   console.error(`Doctor actual-provider acceptance failed at ${stage}: ${doctorProviderFailureSummary(error)}`)
