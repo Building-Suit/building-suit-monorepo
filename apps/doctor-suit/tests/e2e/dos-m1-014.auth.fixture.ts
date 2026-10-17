@@ -52,3 +52,18 @@ for(const ar of [false,true])test(`DOS-M1-014-C03 ${ar ? 'AR mobile' : 'EN deskt
     await owner.goto('/team');await owner.getByRole('row',{ name: /synthetic-secretary@example.test/ }).getByRole('button',{ name: access.revoke,exact: true }).click();await owner.getByRole('dialog',{ name: access.actionTitle,exact: true }).getByRole('button',{ name: access.confirm,exact: true }).click();await staff.bringToFront();await staff.evaluate(() => window.dispatchEvent(new Event('focus')));await expect(dirty).toBeHidden();await expect(staff.getByRole('button',{ name: copy.create,exact: true })).toHaveCount(0);await choose(staff,ar,'Clinic B1');await expect(card(staff,'Synthetic B patient 01')).toHaveCount(1)
   } finally { await close([staffContext,ownerContext]) }
 })
+
+
+test('DOS-M1-014-C01: active queue commands remain reachable outside the selected day',async ({ browser,request }) => {
+  test.setTimeout(90000);const copy = doctorAppointmentsCopy(false);const context = await browser.newContext({ viewport: { width: 1280,height: 1000 } })
+  try {
+    await local(context,false);const page = await context.newPage();await live(page);await login(page,'synthetic-doctor-a@example.test',false);await choose(page,false,'Clinic A1')
+    await transition(page,'Synthetic household',copy.actions.checked_in,copy)
+    const date = page.getByLabel(copy.date,{ exact: true });const next = new Date(`${await date.inputValue()}T00:00:00Z`);next.setUTCDate(next.getUTCDate()+1);await date.fill(next.toISOString().slice(0,10));await date.press('Tab')
+    await expect(card(page,'Synthetic household')).toHaveCount(0)
+    const queue = page.getByRole('region',{ name: copy.queue,exact: true });const row = queue.getByRole('row').filter({ hasText: 'Synthetic household' })
+    await row.getByRole('button',{ name: copy.actions.in_progress,exact: true }).click();let dialog = page.getByRole('dialog',{ name: copy.actions.in_progress,exact: true });await dialog.getByRole('button',{ name: copy.actions.in_progress,exact: true }).click();await expect(dialog).toBeHidden()
+    await row.getByRole('button',{ name: copy.actions.completed,exact: true }).click();dialog = page.getByRole('dialog',{ name: copy.actions.completed,exact: true });await dialog.getByRole('button',{ name: copy.actions.completed,exact: true }).click();await expect(dialog).toBeHidden();await expect(row).toHaveCount(0)
+    const data = (await (await request.get(fixture)).json()).delegation;const completed = data.appointmentRows.find((item: { state: string }) => item.state==='completed');expect(data.appointmentHistory[completed.id]).toHaveLength(4)
+  } finally { await close([context]) }
+})
