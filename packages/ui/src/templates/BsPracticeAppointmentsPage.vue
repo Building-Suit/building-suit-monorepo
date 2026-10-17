@@ -10,7 +10,7 @@ const props = defineProps<{
   editor: { title: string; dirty: boolean; pending: boolean; error: string | null; disabled: boolean; selectingPatient: boolean; earliestDate: string; latestDate: string; timezone: string; patientLoading: boolean; patientError: string | null; offersLoading: boolean; offersError: string | null }
   patientOptions: { value: string; label: string }[]; clinicOptions: { value: string; label: string }[]; slotOptions: { value: number; label: string }[]
   transition: { title: string; description: string; reasonRequired: boolean; dirty: boolean; pending: boolean; error: string | null; disabled: boolean }
-  history: { title: string; loading: boolean; error: string | null; total: number; page: number; rows: { id: string; event: string; actor: string; at: string; reason: string; original: string; replacement: string }[] }
+  history: { title: string; record?: { id: string; label: string; value: string }[]; hasHistory?: boolean; loadLabel?: string; loading: boolean; error: string | null; total: number; page: number; rows: { id: string; event: string; actor: string; at: string; reason: string; original: string; replacement: string }[] }
 }>()
 const date = defineModel<string>('date',{ required: true })
 const form = defineModel<{ patientId: string; destinationId: string; date: string; minute: number | null; reason: string }>('form',{ required: true })
@@ -47,6 +47,12 @@ const historyColumns = computed(() => [{ key: 'at',field: 'at',header: props.cop
       <BsField v-if="!editor.selectingPatient" v-slot="field" :label="copy.reason" required><BsInput :id="field.id" v-model="form.reason" :aria-describedby="field.describedby" :maxlength="200" required :disabled="editor.pending" /></BsField>
     </BsRecordActionDialog>
     <BsRecordActionDialog v-model:visible="transitionOpen" :title="transition.title" :dirty="transition.dirty" :pending="transition.pending" :error="transition.error" :submit-disabled="transition.disabled" :submit-label="transition.title" :cancel-label="copy.cancel" @submit="emit('confirm')"><BsText as="p">{{ transition.description }}</BsText><BsField v-if="transition.reasonRequired" v-slot="field" :label="copy.reason" required><BsInput :id="field.id" v-model="reason" :aria-describedby="field.describedby" :maxlength="200" required :disabled="transition.pending" /></BsField></BsRecordActionDialog>
-    <BsDialog v-model:visible="historyOpen" :title="history.title"><BsStack gap="md"><BsStateSurface v-if="history.error" state="error" :title="history.error"><BsButton @click="emit('historyRetry')">{{ copy.retry }}</BsButton></BsStateSurface><BsDataTable v-else :value="history.rows" :columns="historyColumns" row-key="id" :label="history.title" :loading="history.loading" /><BsPagination :page="history.page+1" :total="history.total" :label="copy.pages" :previous-label="copy.previous" :next-label="copy.next" @update:page="emit('historyPage',$event-1)" /></BsStack></BsDialog>
+    <BsDialog v-model:visible="historyOpen" :title="history.title"><BsStack gap="md">
+      <BsDescriptionList v-if="history.record?.length"><BsDescriptionItem v-for="field in history.record" :key="field.id" :term="field.label">{{ field.value }}</BsDescriptionItem></BsDescriptionList>
+      <BsStateSurface v-if="history.error" state="error" :title="history.error"><BsButton @click="emit('historyRetry')">{{ copy.retry }}</BsButton></BsStateSurface>
+      <BsSectionSkeleton v-else-if="history.hasHistory === false && history.loading" :rows="3" />
+      <template v-else-if="history.hasHistory !== false"><BsDataTable :value="history.rows" :columns="historyColumns" row-key="id" :label="history.title" :loading="history.loading" /><BsPagination :page="history.page+1" :total="history.total" :label="copy.pages" :previous-label="copy.previous" :next-label="copy.next" @update:page="emit('historyPage',$event-1)" /></template>
+      <BsButton v-else @click="emit('historyRetry')">{{ history.loadLabel || copy.history }}</BsButton>
+    </BsStack></BsDialog>
   </BsStack>
 </template>

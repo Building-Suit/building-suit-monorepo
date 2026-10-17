@@ -67,3 +67,19 @@ export function appointmentProtocol({ data,actor,sessionId,rpc,input,send,capabi
   data.appointmentRevisions[oldLocation] = (data.appointmentRevisions[oldLocation] || 0)+1;if(oldLocation!==item.location_id)data.appointmentRevisions[item.location_id] = (data.appointmentRevisions[item.location_id] || 0)+1
   const result = { appointment_id: item.id,version: item.version,state: item.state };data.appointmentCommands[key] = { fingerprint,result };send(result);return true
 }
+
+
+export function seedDashboardProtocol(data) {
+  if(data.dashboardSeeded)return
+  data.dashboardSeeded = true
+  for(const membership of data.memberships)for(const grant of membership.grants)grant.capabilities = [...new Set([...grant.capabilities,'dashboard.read'])]
+  // This explicitly enabled browser fixture is larger than either source page.
+  const location = data.locations[0];const original = data.appointmentRows.find(item => item.location_id===location.id)
+  const day = doctorAvailabilityToday(location.timezone)
+  for(let n=0;n<24;n++) {
+    const starts = instant(day,n*20,location.timezone)
+    const item = { ...original,id: randomUUID(),starts_at: starts,ends_at: new Date(Date.parse(starts)+20*60000).toISOString(),state: n<22 ? 'checked_in' : 'booked',checked_in_at: n<22 ? new Date(Date.now()+n*1000).toISOString() : null }
+    data.appointmentRows.push(item);data.scheduleCommitments.push(item)
+    data.appointmentHistory[item.id] = [{ id: String(1000+n),type: 'appointment.booked',version: 1,at: new Date().toISOString(),actor_user_id: item.doctor_user_id,location_id: location.id,details: {} }]
+  }
+}

@@ -75,13 +75,18 @@ const server = http.createServer(async (req, res) => {
   if (!state.active || !tokens.has(req.headers.authorization)) { deny(); return }
   if (url.pathname === '/auth/v1/user') { send(user()); return }
   if (url.pathname === '/rest/v1/rpc/doctor_session_context') { send({ product: 'doctor-suit', user_id: userId, session_id: state.sessionId, practice_id: state.practice?.id || null }); return }
-  const locationContext = item => ({ practice_id: state.practice.id, practice_name: state.practice.name, doctor_name: state.profile.display_name, location_id: item.id, location_name: item.name, timezone: item.timezone, portal: 'doctor', grants_version: state.practice.version, location_version: item.version, capabilities: ['locations.read', 'locations.manage', 'patients.read'] })
+  const locationContext = item => ({ practice_id: state.practice.id, practice_name: state.practice.name, doctor_name: state.profile.display_name, location_id: item.id, location_name: item.name, timezone: item.timezone, portal: 'doctor', grants_version: state.practice.version, location_version: item.version, capabilities: ['locations.read', 'locations.manage', 'patients.read','dashboard.read','appointments.read'] })
   if (url.pathname === '/rest/v1/rpc/doctor_contexts') { send(state.practice ? state.locations.filter(item => !item.archived_at).map(locationContext) : []); return }
   if (url.pathname === '/rest/v1/rpc/doctor_resolve_context') {
     const item = state.locations.find(item => !item.archived_at && item.id === input.p_location && item.practice_id === input.p_practice)
     if (!item) { deny('42501'); return }
     if (input.p_expected_version !== state.practice.version) { deny('40001'); return }
     send(locationContext(item)); return
+  }
+  if(url.pathname==='/rest/v1/rpc/doctor_appointment_board') {
+    const item = state.locations.find(item => !item.archived_at && item.id===input.p_location && item.practice_id===input.p_practice)
+    if(!item || !state.practice) { deny('42501');return }
+    send({ practice_id: item.practice_id,location_id: item.id,date: input.p_day,timezone: item.timezone,location_version: item.version,items: [],queue: [],page: input.p_page || 0,queue_page: input.p_queue_page || 0,total: 0,queue_total: 0,revision: 0,can_write: false,can_queue: false,can_read_patients: true,external_notifications: 'disabled' });return
   }
   if (url.pathname === '/rest/v1/rpc/doctor_locations') {
     if (!state.practice || input.p_practice !== state.practice.id) { deny('42501'); return }

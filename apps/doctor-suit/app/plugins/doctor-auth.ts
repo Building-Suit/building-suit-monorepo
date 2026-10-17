@@ -1,3 +1,5 @@
+import { doctorDashboardRepository } from '../utils/dashboardRepository'
+import { createDoctorDashboardController,doctorDashboardState } from '../utils/dashboardController'
 import { doctorAppointmentsRepository } from '../utils/appointmentsRepository'
 import { createDoctorAppointmentsController,doctorAppointmentsState } from '../utils/appointmentsController'
 import { createDoctorAppointmentsRealtime } from '../utils/appointmentsRealtime'
@@ -76,6 +78,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   const availability = createDoctorAvailabilityController(client ? doctorAvailabilityRepository(client) : null,reactive(doctorAvailabilityState()),availabilityScope)
   const appointmentsScope = () => { const selected = context.state.current;return selected?.capabilities.includes('appointments.read') ? selected : null }
   const appointments = createDoctorAppointmentsController(client ? doctorAppointmentsRepository(client) : null,reactive(doctorAppointmentsState()),appointmentsScope)
+  const dashboard = createDoctorDashboardController(client ? doctorDashboardRepository(client,provider.environment) : null,reactive(doctorDashboardState()),() => state.identity)
   const appointmentsLive = createDoctorAppointmentsRealtime(import.meta.client ? client ?? null : null,appointments.disconnected)
   const delegation = client ? doctorDelegationRepository(client) : null
   const teamScope = (): DoctorContextScope | null => {
@@ -88,7 +91,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     clear: () => { void context.clear() },
     locked: () => locked.value === '1', lock: () => { locked.value = '1'; context.forgetPreference() }, unlock: () => { locked.value = null },
   })
-  context.registerClear(() => { practice.clear(); locations.clear(); patients.clear(); patientProfile.clear(); availability.clear(); appointments.clear(); void appointmentsLive.update(null,async () => {}); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
+  context.registerClear(() => { practice.clear(); locations.clear(); patients.clear(); patientProfile.clear(); availability.clear(); appointments.clear(); dashboard.clear(); void appointmentsLive.update(null,async () => {}); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
   if (import.meta.client && client) {
     const { data } = client.auth.onAuthStateChange(event => {
       // Never await SDK calls while its internal auth lock holds this callback.
@@ -96,5 +99,5 @@ export default defineNuxtPlugin((nuxtApp) => {
     })
     nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh(); void appointmentsLive.dispose() })
   }
-  return { provide: { doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
+  return { provide: { doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
 })

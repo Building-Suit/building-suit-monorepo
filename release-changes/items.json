@@ -1182,5 +1182,34 @@
     "sources": [
       "dos-m1-014-queue-actions"
     ]
+  },
+  {
+    "id": "dos-m1-015",
+    "task": "DOS-M1-015",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit/app",
+      "apps/doctor-suit/tests",
+      "apps/doctor-suit/supabase/tests/dos-m1-015.sql",
+      "packages/ui/src/templates/BsPracticeOverviewPage.vue",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/work-packages/doctor-suit/dashboard-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md",
+      "release-changes/items.json",
+      "packages/ui/src/templates/BsPracticeAppointmentsPage.vue"
+    ],
+    "reason": "Add a synthetic administrative Today overview across every authorized clinic. Per-clinic local-day appointment totals and all-date active queues come from full scoped SQL populations, with independent bounded source pages. Current verified dashboard/appointment grants, patient-name redaction, exact source context and immutable history protect links. All-or-none generations/abort and authority revalidation clear obsolete multi-clinic reads. Shared presentation owns complete optional overview tables; app adapters own all queries, windows, permissions and commands. No financial/clinical metrics or provider delivery is enabled. Current appointment details are resolved only from a fresh authorized source page; complete historical data loads separately and retains every-clinic permission checks.",
+    "sources": [
+      "dos-m1-015"
+    ]
   }
 ]

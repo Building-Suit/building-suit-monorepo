@@ -2,7 +2,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { seedPatientProtocol, patientProtocol } from './patients-provider.mjs'
 import { seedDocumentProtocol,documentProtocol,documentFunction } from './documents-provider.mjs'
-import { seedAppointmentProtocol,appointmentProtocol } from './appointments-provider.mjs'
+import { seedAppointmentProtocol,appointmentProtocol,seedDashboardProtocol } from './appointments-provider.mjs'
 import { seedAvailabilityProtocol,availabilityProtocol } from './availability-provider.mjs'
 import { doctorAdministrativeCapabilities } from '../../app/utils/locationContext.ts'
 const sessions = new Map(); const refreshes = new Map()
@@ -21,6 +21,7 @@ function model(state) {
 }
 export function applyDelegationFixtureInput(state,input) {
   const data = model(state); const action = input.delegationAction
+  if(action.kind==='history-scope') { const events = data.appointmentHistory?.[action.id];if(events?.length)events[0].location_id = action.locationId }
   if (action.kind==='expire') { const item = data.invitations.find(item => item.id===action.id); if (item) item.expires_at='2020-01-01T00:00:00Z' }
   if (action.kind==='status') { const item = data.memberships.find(item => item.id===action.id); if (item) { item.status=action.status; item.version++ } }
   if (action.kind==='grants') { const item = data.memberships.find(item => item.id===action.id); if (item) { item.grants=action.grants; item.version++ } }
@@ -32,6 +33,7 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
   if (state.documents) seedDocumentProtocol(data)
   if (state.availability) seedAvailabilityProtocol(data)
   if (state.appointments) seedAppointmentProtocol(data)
+  if (state.dashboard) seedDashboardProtocol(data)
   const userView = actor => ({ id: actor.id,aud: 'authenticated',role: 'authenticated',email: actor.email,email_confirmed_at: '2026-01-01T00:00:00Z',app_metadata: { provider: 'email',providers: ['email'] },user_metadata: { role: 'owner',clinical_signer: true },identities: [],created_at: '2026-01-01T00:00:00Z' })
   function issue(actor,sessionId = randomUUID()) {
     const access_token = `${Buffer.from('{"alg":"HS256","typ":"JWT"}').toString('base64url')}.${Buffer.from(JSON.stringify({ sub: actor.id,role: 'authenticated',aud: 'authenticated',session_id: sessionId,exp: Math.floor(Date.now()/1000)+3600 })).toString('base64url')}.synthetic-signature`

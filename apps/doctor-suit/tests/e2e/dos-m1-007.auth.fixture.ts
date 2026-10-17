@@ -1,3 +1,4 @@
+import { doctorDashboardCopy } from '../../app/utils/dashboardPresentation'
 import { test, expect, type Page, type BrowserContext } from '@playwright/test'
 const fixture = 'http://127.0.0.1:4338/__fixture'
 test.beforeEach(async ({ request }) => { await request.post(fixture, { data: { reset: true, completeDelayMs: 250 } }); await request.post(fixture, { data: { completeDelayMs: 250 } }) })
@@ -37,6 +38,9 @@ for (const ar of [false, true]) test(`DOS-M1-007 ${ar ? 'AR mobile' : 'EN deskto
     await expect(second.getByRole('heading', { name: 'Synthetic practice', exact: true })).toBeVisible()
     await expect(second.getByText(ar ? 'المؤهلات المهنية غير متحقق منها' : 'Professional credentials unverified', { exact: true })).toBeVisible()
     await expect(second.getByText('Africa/Cairo', { exact: true })).toBeVisible()
+    const overview = doctorDashboardCopy(ar)
+    await expect(second.getByText(overview.today,{ exact: true }).locator('..').locator('dd')).toHaveText('0')
+    await expect(second.getByText(overview.queue,{ exact: true }).first().locator('..').locator('dd')).toHaveText('0')
     expect(await second.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
     await expect(second.getByRole('status').filter({ hasText: 'Synthetic practice · Synthetic first location · Africa/Cairo' })).toBeVisible()
     await expect(second.getByRole('main')).toHaveCount(1)
