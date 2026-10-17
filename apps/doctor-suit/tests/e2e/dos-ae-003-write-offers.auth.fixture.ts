@@ -1,3 +1,4 @@
+import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import{test,expect}from'@playwright/test'
 import{doctorPatientsCopy}from'../../app/utils/patientsPresentation'
 import{doctorLocationsCopy}from'../../app/utils/locationsPresentation'
@@ -10,7 +11,7 @@ for(const ar of[false,true])test(`DOS-AE-003 ${ar?'AR mobile':'EN desktop'}: clo
  try{
   await context.addCookies([{name:'building-suit-locale',value:ar?'ar':'en',url:base}]);await context.route('**/*',route=>['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname)?route.continue():route.abort())
   const page=await context.newPage(),patients=doctorPatientsCopy(ar),locations=doctorLocationsCopy(ar),team=doctorDelegationCopy(ar)
-  await page.goto('/patients');await page.getByLabel(ar?/^البريد الإلكتروني/:/^Email/).fill('synthetic-doctor-a@example.test');await page.getByLabel(ar?/^كلمة المرور/:/^Password/).fill('synthetic-password-only');await page.getByRole('button',{name:ar?'تسجيل الدخول':'Sign in',exact:true}).click()
+  await page.goto('/patients');await page.getByLabel(ar?/^البريد الإلكتروني/:/^Email/).fill('synthetic-doctor-a@example.test');await doctorPasswordStep(page);await page.getByLabel(ar?/^كلمة المرور/:/^Password/).fill('synthetic-password-only');await page.getByRole('button',{name:ar?'تسجيل الدخول':'Sign in',exact:true}).click()
   const picker=page.getByRole('combobox',{name:ar?'الممارسة والموقع':'Practice and location',exact:true});await picker.click();await page.getByRole('option',{name:/ · Clinic A1$/}).click()
   await expect(page.getByRole('row').filter({hasText:'Synthetic A patient 02'})).toBeVisible();await expect(page.getByRole('button',{name:patients.create,exact:true})).toHaveCount(0)
   await page.goto('/locations');await expect(page.getByRole('button',{name:locations.create,exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:locations.edit,exact:true})).toHaveCount(0);await expect(page.getByRole('button',{name:locations.archive,exact:true}).first()).toBeVisible()

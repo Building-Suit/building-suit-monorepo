@@ -1,3 +1,4 @@
+import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { test, expect, type Page, type Locator } from '@playwright/test'
 import { doctorAppointmentsCopy } from '../../app/utils/appointmentsPresentation'
 import { localRealtimeProtocol } from './realtimeProtocol'
@@ -27,7 +28,7 @@ for (const ar of [true, false]) for (const width of [390, 1280]) {
       const copy = doctorAppointmentsCopy(ar)
       await page.goto('/appointments')
       await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill('synthetic-doctor-a@example.test')
-      await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
+      await doctorPasswordStep(page);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
       await page.getByRole('button', { name: ar ? 'تسجيل الدخول' : 'Sign in', exact: true }).press('Enter')
       const picker = page.getByRole('combobox', { name: ar ? 'الممارسة والموقع' : 'Practice and location', exact: true })
       await picker.click()

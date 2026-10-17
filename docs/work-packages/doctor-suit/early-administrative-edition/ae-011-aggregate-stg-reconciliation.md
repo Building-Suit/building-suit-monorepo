@@ -1,0 +1,13 @@
+# DOS-AE-011 — aggregate reconciliation with current stg
+
+This integration branch preserves the complete administrative implementation through PR387, incorporates root369’s independent dependency-graph check (ad884423), and history-merges current stg 88ed868b, including Shop address copy #377 and shared auth #384. The only merge conflict was the route registry; Doctor subscription/privacy and Shop Google callback entries are all retained. The nine original plans and Automation remain unchanged. Clinical #366 remains held.
+
+Doctor browser journeys now exercise the existing shared email-first password stage when present. The helper acts only on /sign-in and uses the real form action; password recovery/signup remain distinct. No shared component/token/brand/auth product source is modified by this Doctor adaptation.
+
+Pre-integration exact head ddb8586408d30fed326bc8d7924e117ce45e2d93 has actual administrative_candidate GoTrue/Storage/Edge/Realtime acceptance: https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39080137897/job/117535237957 . It covers explicit trial/quota/reserved-seat conversion, owner/staff context, hold/resume, database-clock expiry, retained history/rights/settings/recovery and direct/Edge document denial. This receipt does not cover the later shared-auth merge.
+
+Aggregate strict boundaries pass for 108 routes; Doctor types/lint/build pass. Current aggregate acceptance is blocked by newly merged shared-auth regressions owned by the separate Shop repair: two shared signup units throw ReferenceError(useRoute), and Doctor owner-onboarding journeys cannot edit the profile name after the shared enrollment template hides that field for existing accounts. The full browser run records further exact failures before final acceptance. The parent has assigned Shop the stg CI repair; this branch does not duplicate that shared work or claim final checks pass.
+
+The bounded DST-only fix for the parent is separately published as 829be5963483523fd4079ce9214f4926f7b016b3, branch codex/doctor-suit/stg-dst-fixture, based exactly on 88ed868b. It changes only the London reschedule slot from 09:40 to 09:00 plus provenance; the broader Doctor stack already contains the same slot correction. Preserve retry/history assertions and all backend scheduling rules.
+
+No protected-branch integration occurs until the parent-coordinated shared repair is incorporated and exact aggregate checks/review pass. Qualified commercial, provider, privacy, recovery, security/financial and real-user gates remain pending; there is no paid/live-sale or clinical readiness claim.

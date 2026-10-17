@@ -1,10 +1,11 @@
+import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { test,expect,type BrowserContext,type Page,type WebSocketRoute } from '@playwright/test'
 import { doctorAppointmentsCopy } from '../../app/utils/appointmentsPresentation'
 import { doctorDelegationCopy } from '../../app/utils/delegationPresentation'
 const fixture = 'http://127.0.0.1:4338/__fixture';const base = 'http://127.0.0.1:4337'
 test.use({ actionTimeout: 10000 })
 async function local(context: BrowserContext,ar: boolean) { await context.addCookies([{ name: 'building-suit-locale',value: ar ? 'ar' : 'en',url: base }]);await context.addInitScript(theme => localStorage.setItem('building-suit.theme',theme),ar ? 'light' : 'dark');await context.route('**/*',route => ['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort()) }
-async function login(page: Page,email: string,ar: boolean) { await page.goto('/appointments');await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill(email);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only');await page.getByRole('button',{ name: ar ? 'تسجيل الدخول' : 'Sign in',exact: true }).click();await expect(page).toHaveURL(url => url.pathname==='/appointments') }
+async function login(page: Page,email: string,ar: boolean) { await page.goto('/appointments');await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill(email);await doctorPasswordStep(page);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only');await page.getByRole('button',{ name: ar ? 'تسجيل الدخول' : 'Sign in',exact: true }).click();await expect(page).toHaveURL(url => url.pathname==='/appointments') }
 async function choose(page: Page,ar: boolean,clinic: string) { const select = page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true });await select.click();await page.getByRole('option',{ name: new RegExp(` · ${clinic}$`) }).click();await expect(select).toContainText(clinic);await expect(select).toBeEnabled() }
 async function live(page: Page) {
   const joins: { socket: WebSocketRoute; topic: string; ref: string; filters: { id: number; filter: string }[] }[] = []
