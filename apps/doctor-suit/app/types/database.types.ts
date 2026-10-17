@@ -267,6 +267,207 @@ export type Database = {
           },
         ]
       }
+      patient_document_events: {
+        Row: {
+          actor_user_id: string
+          document_id: string
+          event_type: string
+          happened_at: string
+          id: number
+          location_id: string
+          location_name: string
+          patient_id: string
+          practice_id: string
+          timezone: string
+          version_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          document_id: string
+          event_type: string
+          happened_at?: string
+          id?: never
+          location_id: string
+          location_name: string
+          patient_id: string
+          practice_id: string
+          timezone: string
+          version_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          document_id?: string
+          event_type?: string
+          happened_at?: string
+          id?: never
+          location_id?: string
+          location_name?: string
+          patient_id?: string
+          practice_id?: string
+          timezone?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_document_events_practice_id_document_id_version_id_fkey"
+            columns: ["practice_id", "document_id", "version_id"]
+            isOneToOne: false
+            referencedRelation: "patient_document_versions"
+            referencedColumns: ["practice_id", "document_id", "id"]
+          },
+          {
+            foreignKeyName: "patient_document_events_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "patient_document_events_practice_id_patient_id_document_id_fkey"
+            columns: ["practice_id", "patient_id", "document_id"]
+            isOneToOne: false
+            referencedRelation: "patient_documents"
+            referencedColumns: ["practice_id", "patient_id", "id"]
+          },
+        ]
+      }
+      patient_document_versions: {
+        Row: {
+          byte_size: number
+          document_id: string
+          filename: string
+          id: string
+          location_id: string
+          location_name: string
+          mime_type: string
+          object_path: string
+          patient_id: string
+          practice_id: string
+          provenance: string
+          revision: number
+          sha256: string
+          timezone: string
+          uploaded_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          byte_size: number
+          document_id: string
+          filename: string
+          id: string
+          location_id: string
+          location_name: string
+          mime_type: string
+          object_path: string
+          patient_id: string
+          practice_id: string
+          provenance?: string
+          revision: number
+          sha256: string
+          timezone: string
+          uploaded_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          byte_size?: number
+          document_id?: string
+          filename?: string
+          id?: string
+          location_id?: string
+          location_name?: string
+          mime_type?: string
+          object_path?: string
+          patient_id?: string
+          practice_id?: string
+          provenance?: string
+          revision?: number
+          sha256?: string
+          timezone?: string
+          uploaded_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_document_versions_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "patient_document_versions_practice_id_patient_id_document__fkey"
+            columns: ["practice_id", "patient_id", "document_id"]
+            isOneToOne: false
+            referencedRelation: "patient_documents"
+            referencedColumns: ["practice_id", "patient_id", "id"]
+          },
+        ]
+      }
+      patient_documents: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string
+          created_location_id: string
+          current_version_id: string
+          id: string
+          patient_id: string
+          practice_id: string
+          version: number
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by: string
+          created_location_id: string
+          current_version_id: string
+          id: string
+          patient_id: string
+          practice_id: string
+          version?: number
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string
+          created_location_id?: string
+          current_version_id?: string
+          id?: string
+          patient_id?: string
+          practice_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_document_current_version"
+            columns: ["practice_id", "id", "current_version_id"]
+            isOneToOne: false
+            referencedRelation: "patient_document_versions"
+            referencedColumns: ["practice_id", "document_id", "id"]
+          },
+          {
+            foreignKeyName: "patient_documents_practice_id_created_location_id_fkey"
+            columns: ["practice_id", "created_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "patient_documents_practice_id_fkey"
+            columns: ["practice_id"]
+            isOneToOne: false
+            referencedRelation: "practices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_documents_practice_id_patient_id_fkey"
+            columns: ["practice_id", "patient_id"]
+            isOneToOne: false
+            referencedRelation: "practice_patients"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
       patient_identities: {
         Row: {
           created_at: string
@@ -454,6 +655,17 @@ export type Database = {
         Returns: Json
       }
       doctor_administrative_capabilities: { Args: never; Returns: string[] }
+      doctor_archive_document: {
+        Args: {
+          p_document: string
+          p_expected_version: number
+          p_key: string
+          p_location: string
+          p_patient: string
+          p_practice: string
+        }
+        Returns: Json
+      }
       doctor_archive_location: {
         Args: {
           p_expected_version: number
@@ -487,6 +699,34 @@ export type Database = {
         Returns: Json
       }
       doctor_contexts: { Args: never; Returns: Json }
+      doctor_document_delivery: {
+        Args: {
+          p_actor: string
+          p_document: string
+          p_key?: string
+          p_location: string
+          p_patient: string
+          p_practice: string
+          p_session: string
+          p_version?: string
+        }
+        Returns: Json
+      }
+      doctor_document_history: {
+        Args: {
+          p_document: string
+          p_location: string
+          p_page?: number
+          p_patient: string
+          p_practice: string
+          p_size?: number
+        }
+        Returns: Json
+      }
+      doctor_finalize_document: {
+        Args: { p_actor: string; p_intent: string; p_session: string }
+        Returns: Json
+      }
       doctor_invitation_details: {
         Args: { p_invitation: string; p_token: string }
         Returns: Json
@@ -527,6 +767,16 @@ export type Database = {
         Args: { p_location: string; p_patient: string; p_practice: string }
         Returns: Json
       }
+      doctor_patient_documents: {
+        Args: {
+          p_location: string
+          p_page?: number
+          p_patient: string
+          p_practice: string
+          p_size?: number
+        }
+        Returns: Json
+      }
       doctor_patient_duplicate_review: {
         Args: {
           p_input: Json
@@ -534,6 +784,10 @@ export type Database = {
           p_patient?: string
           p_practice: string
         }
+        Returns: Json
+      }
+      doctor_patient_profile: {
+        Args: { p_location: string; p_patient: string; p_practice: string }
         Returns: Json
       }
       doctor_patients: {
@@ -548,6 +802,23 @@ export type Database = {
         Returns: Json
       }
       doctor_practice_setup: { Args: never; Returns: Json }
+      doctor_reserve_document: {
+        Args: {
+          p_actor: string
+          p_document?: string
+          p_expected_version?: number
+          p_filename: string
+          p_key: string
+          p_location: string
+          p_mime: string
+          p_patient: string
+          p_practice: string
+          p_session: string
+          p_sha: string
+          p_size: number
+        }
+        Returns: Json
+      }
       doctor_resolve_context: {
         Args: {
           p_expected_version?: number

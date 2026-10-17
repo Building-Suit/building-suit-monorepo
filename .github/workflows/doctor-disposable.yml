@@ -110,3 +110,21 @@ jobs:
         env:
           DOCTOR_PROTOCOL_STRESS: 'true'
         run: pnpm exec playwright test -c apps/doctor-suit/tests/e2e/playwright.auth.config.ts --grep 'two doctors' --repeat-each=2
+
+  doctor-actual-provider:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check portable private document function
+        run: pnpm exec tsc -p apps/doctor-suit/tests/tsconfig.edge.json
+      - name: Verify actual disposable Doctor Auth, Storage and Functions
+        # Synthetic local users/files only. Runner owns its project lifecycle.
+        # Captured service keys, emails and byte bodies are never published.
+        run: node apps/doctor-suit/tests/disposable-provider.mjs

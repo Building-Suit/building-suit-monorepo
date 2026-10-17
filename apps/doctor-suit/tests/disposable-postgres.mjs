@@ -55,13 +55,21 @@ try {
   console.log('Final TCP server ready after the deliberately delayed socket-only initialization phase')
   for (const file of ['pgtap.control', 'pgtap--1.3.4.sql']) docker(['cp', `${directory}/${file}`, `${container}:/usr/local/share/postgresql/extension/${file}`])
   docker(['exec', container, 'chmod', '644', '/usr/local/share/postgresql/extension/pgtap.control', '/usr/local/share/postgresql/extension/pgtap--1.3.4.sql'])
-  sql(`create role anon; create role authenticated; create schema auth; create schema extensions;
+  sql(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create schema extensions;
     create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,is_anonymous boolean default false,banned_until timestamptz,raw_user_meta_data jsonb);
     create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id),not_after timestamptz);
     create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;
     create function auth.uid() returns uuid language sql stable as $$select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid$$;
-    grant usage on schema auth,extensions to anon,authenticated;
+    grant usage on schema auth,extensions to anon,authenticated,service_role;
     grant execute on function auth.uid() to anon,authenticated;`)
+  // Minimal Storage interface scaffold for PostgreSQL policy/metadata tests only.
+  // Real Storage HTTP/byte validation belongs to the separate actual-provider run.
+  sql(`create schema storage;
+    create table storage.buckets(id text primary key,name text not null,public boolean not null default false,file_size_limit bigint,allowed_mime_types text[]);
+    create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text not null references storage.buckets(id),name text not null,metadata jsonb);
+    alter table storage.buckets enable row level security; alter table storage.objects enable row level security;
+    grant usage on schema storage to anon,authenticated,service_role;
+    grant select,insert,update,delete on storage.buckets,storage.objects to anon,authenticated,service_role;`)
   const migrations = (await readdir(`${app}supabase/migrations`)).filter(file => file.endsWith('.sql')).sort()
   for (const file of migrations) sql(await readFile(`${app}supabase/migrations/${file}`, 'utf8'))
   const suites = (await readdir(`${app}supabase/tests`)).filter(file => file.endsWith('.sql')).sort()
@@ -84,9 +92,11 @@ try {
     if (!output.startsWith('export type Json') || !output.includes('doctor_onboard:')) throw new Error('Unexpected PostgreSQL Meta type output')
     await mkdir(`${app}app/types`, { recursive: true })
     await writeFile(`${app}app/types/database.types.ts`, output)
+    await mkdir(`${app}supabase/functions/_shared`, { recursive: true })
+    await writeFile(`${app}supabase/functions/_shared/database.types.ts`, output)
     console.log('Generated public schema types from the migrated disposable database using CLI-pinned PostgreSQL Meta v0.98.0')
   }
-  console.log('SQL/RLS verification only. Full Supabase Auth, Storage and Realtime integration: UNRUN.')
+  console.log('SQL/RLS verification only. Minimal Auth/Storage interfaces only; actual Supabase Auth, Storage and Realtime service integration: UNRUN in this SQL runner.')
 } finally {
   spawnSync('docker', ['rm', '-f', '-v', container], { stdio: 'ignore' })
   await rm(directory, { recursive: true, force: true })
