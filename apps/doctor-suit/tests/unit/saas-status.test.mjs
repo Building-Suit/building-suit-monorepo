@@ -34,6 +34,6 @@ test('trial adapter sends only a versioned terms acceptance and stable command k
   assert.throws(() => doctorSaasTrialReceipt({ ...receipt,terms_id: id(52) },id(51)),/RESPONSE_INVALID/)
 })
 test('known SaaS failures are bounded UI categories without private backend text', () => {
-  for(const [code,expected]of Object.entries({ DS001: 'configuration',DS004: 'trial-used',DS005: 'trial-unavailable','40001': 'conflict','42501': 'denied','22023': 'invalid' }))assert.equal(doctorSaasFailure({ code,message: 'SYNTHETIC_PRIVATE_BACKEND_DETAIL' }),expected)
+  for(const [code,expected]of Object.entries({ DS001: 'configuration',DS002: 'staff-limit',DS003: 'clinic-limit',DS004: 'trial-used',DS005: 'trial-unavailable',DS006: 'inactive','40001': 'conflict','42501': 'denied','22023': 'invalid' }))assert.equal(doctorSaasFailure({ code,message: 'SYNTHETIC_PRIVATE_BACKEND_DETAIL' }),expected)
   assert.equal(doctorSaasFailure({ code: 'unknown',message: 'SYNTHETIC_PRIVATE_BACKEND_DETAIL' }),'network')
 })
