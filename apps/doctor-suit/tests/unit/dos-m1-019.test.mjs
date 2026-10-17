@@ -22,3 +22,25 @@ test('C03 preview navigation has only real relative destinations, with no invent
 test('C03/C04 missing-route copy is neutral, locale-specific and cannot reflect a requested identifier',() => {
   for(const ar of [false,true]) { const result = doctorMissingPage(ar);assert.deepEqual(result.links.map(link => link.to),['/','/preview']);assert.ok(result.title && result.description);assert.equal(result.description.includes('SENTINEL'),false);result.links[0].to='/changed';assert.equal(doctorMissingPage(ar).links[0].to,'/') }
 })
+
+test('C02 a foreground authority request cannot settle with an earlier in-flight context snapshot',async () => {
+  const { createDoctorContextController,doctorContextState } = await import('../../app/utils/contextController.ts')
+  const actor = { userId: 'd1900000-0000-4000-8000-000000000001',sessionId: 'd1900000-0000-4000-8000-000000000002',practiceId: null }
+  const row = { practice_id: 'd1900000-0000-4000-8000-000000000003',practice_name: 'Synthetic practice',doctor_name: 'Synthetic doctor',location_id: 'd1900000-0000-4000-8000-000000000004',location_name: 'Synthetic clinic',timezone: 'Etc/UTC',portal: 'secretary',grants_version: 1,location_version: 1,capabilities: ['audit.read'] }
+  let resolve;let calls = 0;let held = false;const state = doctorContextState()
+  const controller = createDoctorContextController({ load: async () => { calls++;if(held && calls===2)return new Promise(done => { resolve = done });return held ? [] : [row] },resolve: async () => row },state,() => actor,'local',{ read: () => null,write: () => {} })
+  await controller.refresh();const old = controller.capture('audit');held = true
+  const earlier = controller.refresh();await new Promise(done => setImmediate(done));const foreground = controller.refresh();resolve([row])
+  await Promise.all([earlier,foreground]);assert.equal(calls,3);assert.equal(state.current,null);assert.equal(old.accepts(),false);assert.equal(state.phase,'choosing')
+})
+
+
+test('C02 repeated authority refreshes after revocation cannot silently choose the remaining doctor',async () => {
+  const { createDoctorContextController,doctorContextState } = await import('../../app/utils/contextController.ts')
+  const actor = { userId: 'd1900000-0000-4000-8000-000000000001',sessionId: 'd1900000-0000-4000-8000-000000000002',practiceId: null }
+  const row = n => ({ practice_id: `d1900000-0000-4000-8000-00000000000${n}`,practice_name: 'Synthetic practice',doctor_name: 'Synthetic doctor',location_id: `d1900000-0000-4000-8000-00000000001${n}`,location_name: 'Synthetic clinic',timezone: 'Etc/UTC',portal: 'secretary',grants_version: 1,location_version: 1,capabilities: ['audit.read'] })
+  let options = [row(3),row(4)];const state = doctorContextState();const controller = createDoctorContextController({ load: async () => options,resolve: async practice => options.find(item => item.practice_id===practice) },state,() => actor,'local',{ read: () => null,write: () => {} })
+  await controller.refresh();await controller.choose(`${row(3).practice_id}:${row(3).location_id}`);const old = controller.capture('audit');options = [row(4)]
+  for(let n=0;n<3;n++) { assert.equal(await controller.refresh(),false);assert.equal(state.current,null);assert.equal(state.phase,'choosing');assert.equal(old.accepts(),false) }
+  assert.equal(await controller.choose(`${row(4).practice_id}:${row(4).location_id}`),true);assert.equal(state.current.practiceId,row(4).practice_id)
+})

@@ -23,11 +23,12 @@ export function createDoctorContextController(repository: ReturnType<typeof doct
   let generation = 0
   let controller = new AbortController()
   let initialCleanup = Promise.resolve()
+  let requiresSelection = false
   const identity = () => { const value = actor(); return value ? `${value.userId}:${value.sessionId}` : null }
   function invalidate() { generation++; controller.abort(); controller = new AbortController(); state.current = null }
   function clear() {
-    invalidate(); state.options = []; state.phase = 'idle'; state.error = null
-    refreshFlight = null
+    invalidate(); requiresSelection = false; state.options = []; state.phase = 'idle'; state.error = null
+    refreshFlight = null; refreshQueued = false
     const captured = generation
     initialCleanup = lifecycle.transition(null).catch(() => { if (captured === generation) { state.phase = 'error'; state.error = 'cleanup' } })
     return initialCleanup
@@ -46,7 +47,7 @@ export function createDoctorContextController(repository: ReturnType<typeof doct
       if (doctorContextId(result) !== value) throw Object.assign(new Error('Context mismatch'), { code: '42501' })
       await lifecycle.transition(result)
       if (captured !== generation || expectedActor !== identity() || signal.aborted) return false
-      state.current = result; state.phase = 'ready'
+      state.current = result; requiresSelection = false; state.phase = 'ready'
       preferences.write({ userId: currentActor.userId, sessionId: currentActor.sessionId, practiceId: result.practiceId, locationId: result.locationId })
       return true
     } catch (error) {
@@ -55,43 +56,55 @@ export function createDoctorContextController(repository: ReturnType<typeof doct
     }
   }
   let refreshFlight: Promise<boolean> | null = null
-  function refresh(): Promise<boolean> {
-    if (refreshFlight) return refreshFlight
+  let refreshQueued = false
+  async function refreshOnce(): Promise<boolean> {
     const captured = generation; const expectedActor = identity(); const currentActor = actor()
     if (!repository || !currentActor) { void clear(); state.error = currentActor ? 'unavailable' : 'session'; state.phase = 'error'; return Promise.resolve(false) }
     if (!state.current) state.phase = 'loading'
     const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(10000)])
-    const flight: Promise<boolean> = (async () => {
-      try {
-        const options = doctorLocationContexts(await repository.load(signal), currentActor, environment)
-        if (captured !== generation || expectedActor !== identity() || signal.aborted) return false
-        const previous = state.current
-        state.options = options; state.error = null
-        if (previous) {
-          const retained = options.find(item => doctorContextId(item) === doctorContextId(previous))
-          if (retained && JSON.stringify(retained) === JSON.stringify(previous)) { state.phase = 'ready'; return true }
-          if (retained) return choose(doctorContextId(retained))
-          // A revoked/archived scope must not silently switch to another doctor's context.
-          invalidate(); const invalidated = generation; preferences.write(null); await lifecycle.transition(null)
-          if (invalidated === generation && expectedActor === identity()) state.phase = 'choosing'
-          return false
-        }
-        const preferred = doctorContextPreference(preferences.read(), currentActor)
-        const matching = preferred && options.find(item => doctorContextId(item) === doctorContextId(preferred))
-        if (matching) return choose(doctorContextId(matching))
-        preferences.write(null)
-        if (options.length === 1) return choose(doctorContextId(options[0]!))
-        state.phase = 'choosing'; return false
-      } catch (error) {
-        if (captured === generation && expectedActor === identity()) {
-          invalidate(); state.options = []; const invalidated = generation
-          let reason = failure(error)
-          try { await lifecycle.transition(null) } catch { reason = 'cleanup' }
-          if (invalidated === generation && expectedActor === identity()) { state.error = reason; state.phase = 'error' }
-        }
+    try {
+      const options = doctorLocationContexts(await repository.load(signal), currentActor, environment)
+      if (captured !== generation || expectedActor !== identity() || signal.aborted) return false
+      const previous = state.current
+      state.options = options; state.error = null
+      if (previous) {
+        const retained = options.find(item => doctorContextId(item) === doctorContextId(previous))
+        if (retained && JSON.stringify(retained) === JSON.stringify(previous)) { state.phase = 'ready'; return true }
+        if (retained) return choose(doctorContextId(retained))
+        // A revoked/archived scope must not silently switch to another doctor's context.
+        requiresSelection = true
+        invalidate(); const invalidated = generation; preferences.write(null); await lifecycle.transition(null)
+        if (invalidated === generation && expectedActor === identity()) state.phase = 'choosing'
         return false
       }
-    })().finally(() => { if (refreshFlight === flight) refreshFlight = null })
+      if (requiresSelection) { preferences.write(null); state.phase = 'choosing'; return false }
+      const preferred = doctorContextPreference(preferences.read(), currentActor)
+      const matching = preferred && options.find(item => doctorContextId(item) === doctorContextId(preferred))
+      if (matching) return choose(doctorContextId(matching))
+      preferences.write(null)
+      if (options.length === 1) return choose(doctorContextId(options[0]!))
+      state.phase = 'choosing'; return false
+    } catch (error) {
+      if (captured === generation && expectedActor === identity()) {
+        invalidate(); state.options = []; const invalidated = generation
+        let reason = failure(error)
+        try { await lifecycle.transition(null) } catch { reason = 'cleanup' }
+        if (invalidated === generation && expectedActor === identity()) { state.error = reason; state.phase = 'error' }
+      }
+      return false
+    }
+  }
+  function refresh(): Promise<boolean> {
+    if (refreshFlight) { refreshQueued = true; return refreshFlight }
+    // A foreground request made during an older read must observe a new
+    // authority snapshot before its caller resumes. Coalesce concurrent callers
+    // into one trailing read, and never revive a cleared session's flight.
+    const flight: Promise<boolean> = Promise.resolve().then(async () => {
+      let result: boolean
+      do { refreshQueued = false; result = await refreshOnce() }
+      while (refreshQueued && refreshFlight === flight)
+      return result
+    }).finally(() => { if (refreshFlight === flight) refreshFlight = null })
     refreshFlight = flight
     return flight
   }

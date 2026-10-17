@@ -26,5 +26,12 @@ for(const ar of [false,true])test(`DOS-M1-017-C02/C04 ${ar ? 'AR mobile' : 'EN d
     await page.route('**/rest/v1/rpc/doctor_administrative_audit',async route => { const response = await route.fetch();captured = true;await held;await route.fulfill({ response }).catch(() => {}) })
     await page.getByRole('button',{ name: copy.submit,exact: true }).click();await expect.poll(() => captured).toBe(true)
     const data = (await (await request.get(fixture)).json()).delegation;const member = data.memberships.find((item: { practice_id: string }) => item.practice_id===data.practices[0].id);await request.post(fixture,{ data: { delegationAction: { kind: 'status',id: member.id,status: 'revoked' } } });await page.evaluate(() => window.dispatchEvent(new Event('focus')));await expect(page.getByText(ar ? 'الوصول إلى هذا السجل غير مسموح. تحقق من الجلسة والصلاحيات الحالية.' : 'This activity is not permitted. Check the current session and grants.',{ exact: true })).toBeVisible();release();await page.unroute('**/rest/v1/rpc/doctor_administrative_audit');await expect(page.getByText(data.users[0].id,{ exact: true })).toHaveCount(0);await clinic(page,'Clinic B1',ar);await expect(page.getByText(copy.count(1,1),{ exact: false })).toBeVisible();await expect(page.getByText(data.users[1].id,{ exact: true })).toBeVisible()
+  } catch(error) {
+    // Fixed lifecycle categories only; never log response bodies or actor IDs.
+    console.info('Doctor audit revocation lifecycle',await context.pages()[0]?.evaluate(() => {
+      const root = document.querySelector('#__nuxt');const app = root && Reflect.get(root,'__vue_app__');const nuxt = app?.config.globalProperties.$nuxt
+      return { visible: document.visibilityState==='visible',auth: nuxt?.$doctorAuth?.state?.phase,context: nuxt?.$doctorContext?.state?.phase,contextError: nuxt?.$doctorContext?.state?.error,current: Boolean(nuxt?.$doctorContext?.state?.current),options: nuxt?.$doctorContext?.state?.options?.length,auditError: nuxt?.$doctorAudit?.state?.error,auditPending: Boolean(nuxt?.$doctorAudit?.state?.pending),rows: nuxt?.$doctorAudit?.state?.result?.rows?.length ?? 0 }
+    }).catch(() => ({ unavailable: true })))
+    throw error
   } finally { release?.();try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() } }
 })
