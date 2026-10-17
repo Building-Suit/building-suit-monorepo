@@ -4,12 +4,25 @@ import { onMounted, onBeforeUnmount } from 'vue'
 export function usePageRevalidation(work: () => unknown | Promise<unknown>, enabled: () => boolean, intervalMs = 30000) {
   let mounted = false
   let suspended = false
+  let queued = false
   let flight: Promise<unknown> | null = null
   let timer: ReturnType<typeof setInterval> | undefined
-  function refresh() {
-    if (!mounted || suspended || !enabled() || document.visibilityState!=='visible') return Promise.resolve(undefined)
-    if (flight) return flight
-    flight = Promise.resolve().then(() => mounted && !suspended && enabled() && document.visibilityState==='visible' ? work() : undefined).catch(() => undefined).finally(() => { flight = null })
+  const active = () => mounted && !suspended && enabled() && document.visibilityState==='visible'
+  function refresh(): Promise<unknown> {
+    if (!active()) return Promise.resolve(undefined)
+    if (flight) { queued = true; return flight }
+    flight = Promise.resolve().then(async () => {
+      do {
+        queued = false
+        if (!active()) return
+        try { await work() } catch { /* A later foreground return may retry. */ }
+      } while (queued)
+    }).finally(() => {
+      flight = null
+      // Vue/auth watchers can enqueue a revision between the last work result
+      // and this finalizer. Its callers still wait for the newest request.
+      if (queued && active()) return refresh()
+    })
     return flight
   }
   function suspend() { suspended = true }
@@ -22,7 +35,7 @@ export function usePageRevalidation(work: () => unknown | Promise<unknown>, enab
     timer = setInterval(foreground,Math.max(5000,intervalMs))
   })
   onBeforeUnmount(() => {
-    mounted = false
+    mounted = false; queued = false
     if (timer!==undefined) clearInterval(timer)
     window.removeEventListener('focus',foreground)
     window.removeEventListener('pagehide',suspend)

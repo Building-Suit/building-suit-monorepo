@@ -95,12 +95,19 @@ export function createDoctorAuthController(backend: DoctorAuthBackend | null, st
   function refresh(): Promise<boolean> {
     if (state.pending) { needsRefresh = true; return Promise.resolve(false) }
     if (refreshFlight) return refreshFlight
-    refreshFlight = (async () => {
+    const flight: Promise<boolean> = (async () => {
       let result: boolean
       do { needsRefresh = false; result = await reconcile() } while (needsRefresh && !state.pending)
       return result
-    })().finally(() => { refreshFlight = null })
-    return refreshFlight
+    })().then(result => {
+      if (refreshFlight === flight) refreshFlight = null
+      // A provider event can arrive after the loop returns but before this
+      // continuation. Admission must receive the newest verified result.
+      if (needsRefresh && !state.pending) return refresh()
+      return result
+    }, error => { if (refreshFlight === flight) refreshFlight = null; throw error })
+    refreshFlight = flight
+    return flight
   }
   return {
     state,

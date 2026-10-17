@@ -51,3 +51,28 @@ test('page suspension stops foreground/interval work, including an event queued 
     await nextTick(); assert.equal(calls,0)
   } finally { fixture.dispose() }
 })
+
+test('a newer authenticated revision requested during refresh runs after the stale flight settles', async () => {
+  let release; let revision = 1; const seen = []
+  const fixture = await mount(async () => {
+    const captured = revision; seen.push(captured)
+    if (captured===1) await new Promise(resolve => { release = resolve })
+  })
+  try {
+    const first = fixture.action.refresh(); await nextTick()
+    revision = 2
+    const latest = fixture.action.refresh()
+    fixture.view.dispatchEvent(new Event('focus'))
+    release(); await Promise.all([first,latest])
+    assert.deepEqual(seen,[1,2])
+  } finally { fixture.dispose() }
+})
+
+test('a refresh queued as the previous work settles is drained before its callers complete', async () => {
+  let action; let calls = 0
+  const fixture = await mount(() => {
+    if (++calls===1) queueMicrotask(() => queueMicrotask(() => { void action.refresh() }))
+  })
+  action = fixture.action
+  try { await action.refresh(); assert.equal(calls,2) } finally { fixture.dispose() }
+})

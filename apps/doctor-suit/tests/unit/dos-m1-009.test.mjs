@@ -191,3 +191,19 @@ test('DOS-M1-009: editors wait for the selected practice directory, including co
   assert.equal(fixture.controller.available(),true)
   fixture.controller.clear(); assert.equal(fixture.controller.available(),false)
 })
+
+test('DOS-M1-009: protected admission waits for an SDK revision queued as identity verification settles', async () => {
+  const { createDoctorAuthController,doctorAuthState } = await import('../../app/utils/authController.ts')
+  let controller; let reads = 0
+  const state = { ...doctorAuthState(),providerReady: true }
+  const backend = { marker: async () => true,identity: async () => {
+    if (++reads===1) {
+      queueMicrotask(() => queueMicrotask(() => queueMicrotask(() => controller.providerChanged())))
+      return null
+    }
+    return actor
+  } }
+  controller = createDoctorAuthController(backend,state,{ clear() {},locked: () => false,lock() {},unlock() {} })
+  assert.equal(await controller.refresh(),true)
+  assert.equal(state.phase,'authenticated'); assert.deepEqual(state.identity,actor); assert.equal(reads,2)
+})

@@ -13,14 +13,29 @@ async function login(page: Page,email: string,ar: boolean,path = '/account') {
   await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
   await page.getByRole('button',{ name: ar ? 'تسجيل الدخول' : 'Sign in',exact: true }).click()
   await expect(page).toHaveURL(new RegExp(`${path}$`))
+  if (path==='/account') await expect(page.getByRole('button',{ name: ar ? 'تسجيل الخروج' : 'Sign out',exact: true })).toBeEnabled()
+  else await expect(page.getByLabel(doctorDelegationCopy(ar).codeLabel,{ exact: true })).toBeEnabled()
 }
 async function choose(page: Page,ar: boolean,clinic: string) {
-  await page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true }).click()
-  await page.getByRole('option',{ name: new RegExp(` · ${clinic}$`) }).click()
-  // Selection is a verified asynchronous command; clicking its option does not
-  // mean its result/preference has reached the browser before a hard navigation.
-  await expect(page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true })).toContainText(clinic)
-  await expect(page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true })).toBeEnabled()
+  try {
+    await page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true }).click()
+    await page.getByRole('option',{ name: new RegExp(` · ${clinic}$`) }).click()
+    // Selection is a verified asynchronous command; clicking its option does not
+    // mean its result/preference has reached the browser before a hard navigation.
+    await expect(page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true })).toContainText(clinic)
+    await expect(page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true })).toBeEnabled()
+  } catch (error) {
+    // Whitelisted lifecycle enums/counts only: no actor IDs, form values or tokens.
+    const diagnostic = await page.evaluate(() => {
+      const element = document.querySelector('#__nuxt')
+      const app = element && Reflect.get(element,'__vue_app__')
+      const nuxt = app?.config.globalProperties.$nuxt
+      const auth = nuxt?.$doctorAuth?.state; const context = nuxt?.$doctorContext?.state
+      return { path: location.pathname,returnToTeam: new URLSearchParams(location.search).get('next')==='/team',auth: auth?.phase ?? null,authPending: Boolean(auth?.pending),authError: auth?.error ?? null,providerReady: Boolean(auth?.providerReady),context: context?.phase ?? null,error: context?.error ?? null,options: context?.options?.length ?? null,current: Boolean(context?.current) }
+    }).catch(() => null)
+    console.info('Doctor context lifecycle diagnostic',diagnostic)
+    throw error
+  }
 }
 async function issue(page: Page,ar: boolean,clinic: string,all = false,two = false) {
   const copy = doctorDelegationCopy(ar)
@@ -183,5 +198,27 @@ test('DOS-M1-009 protocol fixture: wrong recipient and expired pending codes nev
     await Promise.allSettled([context,strangerContext].map(async context => {
       try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() }
     }))
+  }
+})
+
+test('DOS-M1-009: foreground session reconciliation restores the protected selector after route loading',async ({ browser }) => {
+  test.setTimeout(60000)
+  const context = await browser.newContext()
+  try {
+    await local(context,false)
+    const page = await context.newPage()
+    await login(page,'synthetic-doctor-a@example.test',false)
+    await page.goto('/team'); await choose(page,false,'Clinic A1')
+    for (let cycle=0;cycle<4;cycle++) {
+      await page.reload()
+      const verified = page.waitForResponse(response => new URL(response.url()).pathname==='/rest/v1/rpc/doctor_session_context')
+      // The actual SDK handles visibility return and rechecks the same session.
+      await page.evaluate(() => { document.dispatchEvent(new Event('visibilitychange')); window.dispatchEvent(new Event('focus')) })
+      await verified
+      await choose(page,false,'Clinic A1')
+      await expect(page.getByRole('button',{ name: 'Invite secretary',exact: true })).toBeVisible()
+    }
+  } finally {
+    await Promise.allSettled([context.unrouteAll({ behavior: 'ignoreErrors' })]); await context.close()
   }
 })
