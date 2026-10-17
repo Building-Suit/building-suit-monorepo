@@ -231,7 +231,10 @@ onMounted(async () => {
     await loadShops({ force: true })
     if (loadError.value) throw new Error('Shop lookup unavailable')
     if (currentId.value) await navigateTo('/dashboard')
-  } catch { identityFailed.value = true; errorMessage.value = copy.value.failed }
+  } catch {
+    identityFailed.value = true
+    errorMessage.value = locale.value === 'ar' ? 'تعذّر تأكيد الحساب. أعد تحميل الصفحة للمحاولة مرة أخرى.' : 'Your account could not be checked. Reload this page to try again.'
+  }
   finally { identityLoading.value = false }
 })
 
