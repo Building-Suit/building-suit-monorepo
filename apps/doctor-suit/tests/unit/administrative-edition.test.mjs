@@ -23,9 +23,10 @@ test('administrative reasons are fixed intent codes without free-text notes', ()
 test('legacy synthetic context remains compatible; trusted edition metadata is validated', () => {
   const legacy = doctorLocationContext(context(), actor, 'local')
   assert.equal(Object.hasOwn(legacy, 'editionRevision'), false)
-  const candidate = doctorLocationContext({ ...context(), edition: 'administrative_candidate', edition_revision: 2 }, actor, 'local')
+  const candidate = doctorLocationContext({ ...context(), capabilities: ['patients.read','appointments.read'], edition: 'administrative_candidate', edition_revision: 2 }, actor, 'local')
   assert.equal(candidate.edition, 'administrative_candidate')
   assert.equal(candidate.editionRevision, 2)
+  assert.throws(() => doctorLocationContext({ ...context(), edition: 'administrative_candidate', edition_revision: 2 }, actor, 'local'), /CONTEXT_RESPONSE_INVALID/)
   for (const change of [{ edition: 'administrative_live', edition_revision: 2 }, { edition: 'administrative_candidate' }, { edition_revision: 2 }, { edition: 'synthetic_preview', edition_revision: 0 }]) {
     assert.throws(() => doctorLocationContext({ ...context(), ...change }, actor, 'local'), /CONTEXT_RESPONSE_INVALID/)
   }

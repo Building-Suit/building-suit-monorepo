@@ -62,20 +62,22 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
   const ownPractice = data.practices.find(item => item.owner_user_id===actor.id)
   const memberFor = practice => data.memberships.find(item => item.practice_id===practice && item.user_id===actor.id && item.status==='active')
   const owner = practice => data.practices.some(item => item.id===practice && item.owner_user_id===actor.id)
-  const capability = (practice,location,key) => owner(practice) || Boolean(memberFor(practice)?.grants.some(item => (!location || item.location_id===location) && item.capabilities.includes(key)))
+  const candidate = state.edition==='administrative_candidate'
+  const allowed = doctorAdministrativeCapabilities.filter(key => !candidate || !key.startsWith('documents.'))
+  const capability = (practice,location,key) => allowed.includes(key) && (owner(practice) || Boolean(memberFor(practice)?.grants.some(item => (!location || item.location_id===location) && item.capabilities.includes(key))))
   const contexts = () => data.locations.filter(item => !item.archived_at).flatMap(location => {
     const practice = data.practices.find(item => item.id===location.practice_id)
     const membership = memberFor(practice.id)
-    const capabilities = owner(practice.id) ? [...doctorAdministrativeCapabilities] : membership?.grants.find(item => item.location_id===location.id)?.capabilities || []
+    const capabilities = (owner(practice.id) ? [...doctorAdministrativeCapabilities] : membership?.grants.find(item => item.location_id===location.id)?.capabilities || []).filter(key => allowed.includes(key))
     if (!capabilities.length) return []
-    return [{ practice_id: practice.id,practice_name: practice.name,doctor_name: data.users.find(item => item.id===practice.owner_user_id).name,location_id: location.id,location_name: location.name,timezone: location.timezone,portal: owner(practice.id) ? 'doctor' : 'secretary',grants_version: owner(practice.id) ? practice.version : membership.version,location_version: location.version,capabilities }]
+    return [{ practice_id: practice.id,practice_name: practice.name,doctor_name: data.users.find(item => item.id===practice.owner_user_id).name,location_id: location.id,location_name: location.name,timezone: location.timezone,portal: owner(practice.id) ? 'doctor' : 'secretary',grants_version: owner(practice.id) ? practice.version : membership.version,location_version: location.version,edition: candidate ? 'administrative_candidate' : 'synthetic_preview',edition_revision: state.editionRevision || 1,capabilities }]
   })
   const rpc = url.pathname.replace('/rest/v1/rpc/','')
   if (state.milestone && milestoneProtocol({ data,actor,rpc,input,send,owner })) return true
   if (state.audit && auditProtocol({ data,actor,rpc,input,send,capability,owner })) return true
   if (state.documents && url.pathname==='/functions/v1/doctor-documents') { void documentFunction({ data,actor,sessionId: session.sessionId,capability,valid: () => sessions.get(req.headers.authorization)===session },req,url,rawBytes,res).catch(() => send({ error: 'unavailable' },503)); return true }
   if (state.documents && documentProtocol({ data,actor,capability },rpc,input,send)) return true
-  if (state.appointments && appointmentProtocol({ data,actor,sessionId: session.sessionId,rpc,input,send,capability })) return true
+  if (state.appointments && appointmentProtocol({ candidate,data,actor,sessionId: session.sessionId,rpc,input,send,capability })) return true
   if (state.availability && availabilityProtocol({ data,actor,rpc,input,send,capability })) return true
   if (state.patients && patientProtocol({ data, actor, sessionId: session.sessionId, rpc, input, send, capability })) return true
   const reject = (code='42501') => { deny(code); return true }
@@ -103,9 +105,9 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
     const members = data.memberships.filter(item => item.practice_id===input.p_practice && data.users.find(user => user.id===item.user_id).email.includes(search)).map(item => ({ id: item.id,email: data.users.find(user => user.id===item.user_id).email,status: item.status,version: item.version,created_at: item.created_at,grants: item.grants.map(grant => ({ ...grant,location_name: data.locations.find(item => item.id===grant.location_id).name,archived: false })) }))
     const invitations = data.invitations.filter(item => item.practice_id===input.p_practice && item.recipient_email.includes(search)).map(item => ({ id: item.id,recipient_email: item.recipient_email,status: item.status==='pending' && Date.parse(item.expires_at)<=Date.now() ? 'expired' : item.status,version: item.version,expires_at: item.expires_at,created_at: item.created_at,grants: item.grants }))
     const locations = data.locations.filter(item => item.practice_id===input.p_practice).map(item => ({ id: item.id,name: item.name,timezone: item.timezone,archived: Boolean(item.archived_at) }))
-    send({ practice_id: input.p_practice,practice_name: data.practices.find(item => item.id===input.p_practice).name,members: members.slice(start,start+size),invitations: invitations.slice(start,start+size),locations,member_total: members.length,invitation_total: invitations.length,location_total: locations.length }); return true
+    send({ edition: candidate ? 'administrative_candidate' : 'synthetic_preview',edition_revision: state.editionRevision || 1,available_capabilities: allowed,practice_id: input.p_practice,practice_name: data.practices.find(item => item.id===input.p_practice).name,members: members.slice(start,start+size),invitations: invitations.slice(start,start+size),locations,member_total: members.length,invitation_total: invitations.length,location_total: locations.length }); return true
   }
-  function validGrants(grants,practice,empty=false) { return Array.isArray(grants) && (empty || grants.length) && grants.every(grant => data.locations.some(item => item.id===grant.location_id && item.practice_id===practice) && grant.capabilities?.length && grant.capabilities.every(key => doctorAdministrativeCapabilities.includes(key))) }
+  function validGrants(grants,practice,empty=false) { return Array.isArray(grants) && (empty || grants.length) && grants.every(grant => data.locations.some(item => item.id===grant.location_id && item.practice_id===practice) && grant.capabilities?.length && grant.capabilities.every(key => allowed.includes(key))) }
   const receipt = `${actor.id}:${input.p_key}`
   const fingerprint = JSON.stringify({ ...input,...(input.p_token ? { p_token: undefined,p_token_hash: digest(input.p_token) } : {}) })
   function replay() { const previous = data.receipts[receipt]; if (!previous) return false; if (previous.fingerprint!==fingerprint) deny('22023'); else send(previous.result); return true }

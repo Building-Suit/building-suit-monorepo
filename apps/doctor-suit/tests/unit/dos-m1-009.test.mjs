@@ -1,3 +1,4 @@
+import { doctorAdministrativeCapabilities } from '../../app/utils/locationContext.ts'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
@@ -35,7 +36,7 @@ test('DOS-M1-009: invitation codes are exact non-URL credentials and contain 32 
   assert.notEqual(first.hash,first.token)
 })
 test('DOS-M1-009: strict projections reject another practice, clinical grants and mismatched invitation IDs', () => {
-  const dto = { practice_id: practice,practice_name: 'Synthetic',members: [],invitations: [],locations: [],member_total: 0,invitation_total: 0,location_total: 0,token_hash: 'must not propagate' }
+  const dto = { practice_id: practice,practice_name: 'Synthetic',edition: 'synthetic_preview',edition_revision: 1,available_capabilities: [...doctorAdministrativeCapabilities],members: [],invitations: [],locations: [],member_total: 0,invitation_total: 0,location_total: 0,token_hash: 'must not propagate' }
   assert.equal('token_hash' in doctorTeamDirectory(dto,practice),false)
   assert.throws(() => doctorTeamDirectory({ ...dto,practice_id: invitation },practice),/RESPONSE_INVALID/)
   const preview = { invitation_id: invitation,practice_id: practice,practice_name: 'Synthetic',doctor_name: 'Synthetic owner',expires_at: details.expiresAt,status: 'pending',grants: [{ location_id: location,location_name: 'Synthetic',timezone: 'Africa/Cairo',capabilities: ['clinical.sign'] }] }
