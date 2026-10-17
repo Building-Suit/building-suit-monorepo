@@ -23,6 +23,8 @@ export function useDoctorLocationManagement() {
     form.value = { name: '', timezone: '', phone: '', address: '' }; selected.value = null; archiveTarget.value = null
     query.page = 0; query.search = ''; editor.reset(); archiving.reset()
   }
+  const unregisterPolicy=locations.registerPolicyChange(reset)
+  onBeforeUnmount(unregisterPolicy)
   const unregister = context.registerClear(reset)
   onBeforeUnmount(() => { unregister(); reset() })
   async function reload() {
@@ -43,7 +45,7 @@ export function useDoctorLocationManagement() {
   }
   function edit(id: string) {
     const row = locations.state.directory?.rows.find(item => item.id === id)
-    if (!hydrated.value || !row?.canManage || row.archivedAt) return
+    if (!hydrated.value || !row?.canEdit || row.archivedAt) return
     selected.value = { ...row }; form.value = { name: row.name, timezone: row.timezone, phone: row.phone, address: row.address }
     editor.edit()
   }
@@ -74,7 +76,7 @@ export function useDoctorLocationManagement() {
     }, () => doctorLocationError(locations.state.error, ar.value) || copy.value.errors.network)
     if (done) { await context.refresh(); await reload() }
   }
-  const rows = computed(() => (locations.state.directory?.rows || []).map(row => ({ id: row.id, name: row.name, timezone: row.timezone, phone: row.phone, address: row.address, status: row.archivedAt ? copy.value.archived : copy.value.active, canEdit: hydrated.value && row.canManage && !row.archivedAt, canArchive: hydrated.value && row.canManage && !row.archivedAt })))
+  const rows = computed(() => (locations.state.directory?.rows || []).map(row => ({ id: row.id, name: row.name, timezone: row.timezone, phone: row.phone, address: row.address, status: row.archivedAt ? copy.value.archived : copy.value.active, canEdit: hydrated.value && row.canEdit && !row.archivedAt, canArchive: hydrated.value && row.canManage && !row.archivedAt })))
   const editorView = computed(() => ({ title: editor.mode.value === 'create' ? copy.value.create : copy.value.edit, dirty: editor.dirty.value, pending: editor.pending.value, error: editor.error.value, submitDisabled: !validDoctorLocationForm(form.value) }))
   const archiveView = computed(() => ({ title: `${copy.value.archive}: ${archiveTarget.value?.name || ''}`, description: copy.value.archiveDescription, pending: archiving.pending.value, error: archiving.error.value }))
   return { context, locations, copy, hydrated, query, form, scopeKey, search, page, error, rows, editorView, archiveView, editorOpen: editor.visible, archiveOpen: archiving.visible, create, edit, archive, save, confirmArchive, reload }

@@ -7,10 +7,11 @@ import { doctorDelegationPreset, doctorFormGrants } from '../../app/utils/delega
 const practice = '53000000-0000-0000-0000-000000000001'
 const location = '54000000-0000-0000-0000-000000000001'
 const allowed = doctorAdministrativeCapabilities.filter(cap => !cap.startsWith('documents.'))
-const directory = () => ({ practice_id: practice, practice_name: 'Synthetic edition', edition: 'administrative_candidate', edition_revision: 2, available_capabilities: [...allowed], members: [], invitations: [], locations: [], member_total: 0, invitation_total: 0, location_total: 0 })
+const directory = () => ({ practice_id: practice, practice_name: 'Synthetic edition', edition: 'administrative_candidate', edition_revision: 2,entitlement:{state:'unconfigured',revision:0,writes_allowed:false,can_add_staff:false,can_add_clinic:false,over_limit:false,valid_until:null,observed_at:new Date().toISOString()}, available_capabilities: [...allowed], members: [], invitations: [], locations: [], member_total: 0, invitation_total: 0, location_total: 0 })
 test('candidate team authority works without an active clinic and rejects static/forged document offers', () => {
   const parsed = doctorTeamDirectory(directory(), practice)
   assert.equal(parsed.locations.length, 0)
+  assert.equal(parsed.entitlement.writesAllowed,false)
   assert.equal(parsed.editionRevision, 2)
   assert.deepEqual(parsed.availableCapabilities, allowed)
   for (const key of ['documents.read', 'documents.write', 'clinical.sign']) {

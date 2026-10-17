@@ -47,8 +47,7 @@ export function createDoctorContextController(repository: ReturnType<typeof doct
       if(left>0) { expiryTimer=timers!.set(tick,Math.min(Math.ceil(left),2147483647));return }
       // Remove the old authority/drafts/listeners before asking for fresh
       // history access. Only a new server response can provide another state.
-      const cleanup=clear();const cleared=generation
-      void cleanup.then(()=>{if(cleared===generation && state.error!=='cleanup')return refresh()})
+      expire()
     }
     expiryTimer=timers.set(tick,Math.min(Math.ceil(remaining),2147483647))
   }
@@ -60,6 +59,10 @@ export function createDoctorContextController(repository: ReturnType<typeof doct
     const captured = generation
     initialCleanup = lifecycle.transition(null).catch(() => { if (captured === generation) { state.phase = 'error'; state.error = 'cleanup' } })
     return initialCleanup
+  }
+  function expire(){
+    const cleanup=clear();const cleared=generation
+    void cleanup.then(()=>{if(cleared===generation && state.error!=='cleanup')return refresh()})
   }
   async function choose(value: string): Promise<boolean> {
     const option = state.options.find(item => doctorContextId(item) === value)
@@ -139,7 +142,7 @@ export function createDoctorContextController(repository: ReturnType<typeof doct
     refreshFlight = flight
     return flight
   }
-  return { state, clear, refresh, choose, forgetPreference: () => preferences.write(null),
+  return { state,expire, clear, refresh, choose, forgetPreference: () => preferences.write(null),
     capture(feature: string, query: unknown = null) {
       if (state.phase !== 'ready' || !state.current) throw new Error('DOCTOR_CONTEXT_REQUIRED')
       return lifecycle.capture(feature, query)

@@ -1,17 +1,19 @@
+import { createDoctorEntitlementDeadline,doctorEntitlementKey,type DoctorEntitlementTimers } from './entitlement.ts'
 import { doctorScopeKey, type DoctorContextScope } from './contextScope.ts'
-import { createDoctorInvitationSecret, doctorCanonicalGrants, doctorDelegationFailure, validDoctorDelegationGrants, validDoctorInvitation, type DoctorDelegationError, type DoctorDelegationGrant, type DoctorInvitationForm, type DoctorTeamDirectory, type DoctorTeamInvitation, type DoctorTeamMember, type DoctorTeamQuery } from './delegation.ts'
+import { doctorTeamCanAllocate,doctorTeamCanChangeGrants,createDoctorInvitationSecret, doctorCanonicalGrants, doctorDelegationFailure, validDoctorDelegationGrants, validDoctorInvitation, type DoctorDelegationError, type DoctorDelegationGrant, type DoctorInvitationForm, type DoctorTeamDirectory, type DoctorTeamInvitation, type DoctorTeamMember, type DoctorTeamQuery } from './delegation.ts'
 import { doctorUuid } from './locationContext.ts'
 import type { doctorDelegationRepository } from './delegationRepository'
 export interface DoctorTeamState { loading: boolean; pending: boolean; directory: DoctorTeamDirectory | null; credential: string; error: DoctorDelegationError }
 export function doctorTeamState(): DoctorTeamState { return { loading: false,pending: false,directory: null,credential: '',error: null } }
 export function createDoctorTeamController(repository: ReturnType<typeof doctorDelegationRepository> | null,state: DoctorTeamState,scope: () => DoctorContextScope | null,
-  key: () => string = () => crypto.randomUUID(),secret = createDoctorInvitationSecret) {
+  key: () => string = () => crypto.randomUUID(),secret = createDoctorInvitationSecret,timers?: DoctorEntitlementTimers,onExpired?: ()=>void) {
+  const expiry=createDoctorEntitlementDeadline(timers)
   const policyListeners = new Set<() => void>(); let policy: string | null = null
   let generation = 0; let controller = new AbortController()
   let command: { input: string; key: string; secret?: { token: string; hash: string } } | null = null
   const scopeKey = () => { const value = scope(); return value ? doctorScopeKey(value,'team') : null }
   const accepts = (revision: number,expected: string | null) => revision===generation && expected===scopeKey()
-  function clear() { policy = null; generation++; controller.abort(); controller = new AbortController(); command = null; Object.assign(state,doctorTeamState()) }
+  function clear() { expiry.clear();policy = null; generation++; controller.abort(); controller = new AbortController(); command = null; Object.assign(state,doctorTeamState()) }
   async function load(query: DoctorTeamQuery) {
     if (state.pending) return false
     generation++; controller.abort(); controller = new AbortController()
@@ -19,11 +21,15 @@ export function createDoctorTeamController(repository: ReturnType<typeof doctorD
     state.directory = null; state.loading = true; state.error = null
     if (!selected || selected.portal!=='doctor' || !repository) { state.loading = false; state.error = 'denied'; return false }
     try {
+      const sentAt=timers?.now()??0
       const result = await repository.load(selected.practiceId,{ ...query },AbortSignal.any([controller.signal,AbortSignal.timeout(10000)]))
       if (!accepts(revision,expected)) return false
-      const nextPolicy = JSON.stringify([result.edition,result.editionRevision,[...result.availableCapabilities].sort()])
+      if(selected.edition==='administrative_candidate' && (result.edition!=='administrative_candidate' || !result.entitlement))throw {code:'42501'}
+      const nextPolicy = JSON.stringify([result.edition,result.editionRevision,[...result.availableCapabilities].sort(),doctorEntitlementKey(result.entitlement)])
       if (policy && policy!==nextPolicy) for (const listener of policyListeners) listener()
-      policy = nextPolicy; state.directory = result; return true
+      policy = nextPolicy; state.directory = result
+      expiry.arm(result.entitlement,sentAt,()=>{for(const listener of policyListeners)listener();clear();onExpired?.();if(expected===scopeKey())void load({...query})},()=>accepts(revision,expected))
+      return true
     } catch (error) { if (accepts(revision,expected)) state.error = doctorDelegationFailure(error); return false }
     finally { if (accepts(revision,expected)) state.loading = false }
   }
@@ -33,6 +39,8 @@ export function createDoctorTeamController(repository: ReturnType<typeof doctorD
     if (!selected || selected.portal!=='doctor' || !directory || directory.practiceId!==selected.practiceId || !repository
       || (input.member && !directory.members.some(item => item.id===input.member!.id && item.version===input.member!.version))
       || (input.invitation && !directory.invitations.some(item => item.id===input.invitation!.id && item.version===input.invitation!.version))) { state.error = 'denied'; return false }
+    if(((kind==='invite' || (kind==='status' && input.status==='active')) && !doctorTeamCanAllocate(directory))
+      || (kind==='grants' && input.member && input.grants && !doctorTeamCanChangeGrants(directory,input.member.grants,input.grants))) {state.error='denied';return false}
     if ((kind==='invite' && (!input.form || !validDoctorInvitation(input.form,directory.locations)))
       || (kind==='grants' && (!input.grants || !validDoctorDelegationGrants(input.grants,directory.locations)))
       || (kind==='cancel' && input.invitation?.status!=='pending')) { state.error = 'invalid'; return false }

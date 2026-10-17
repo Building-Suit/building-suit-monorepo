@@ -81,9 +81,9 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
   if (state.audit && auditProtocol({ data,actor,rpc,input,send,capability,owner })) return true
   if (state.documents && url.pathname==='/functions/v1/doctor-documents') { void documentFunction({ data,actor,sessionId: session.sessionId,capability,valid: () => sessions.get(req.headers.authorization)===session },req,url,rawBytes,res).catch(() => send({ error: 'unavailable' },503)); return true }
   if (state.documents && documentProtocol({ data,actor,capability },rpc,input,send)) return true
-  if (state.appointments && appointmentProtocol({ candidate,data,actor,sessionId: session.sessionId,rpc,input,send,capability })) return true
-  if (state.availability && availabilityProtocol({ data,actor,rpc,input,send,capability })) return true
-  if (state.patients && patientProtocol({ data, actor, sessionId: session.sessionId, rpc, input, send, capability })) return true
+  if (state.appointments && appointmentProtocol({ businessWritable:practice=>!candidate || entitlement(practice).writes_allowed,candidate,data,actor,sessionId: session.sessionId,rpc,input,send,capability })) return true
+  if (state.availability && availabilityProtocol({ businessWritable:practice=>!candidate || entitlement(practice).writes_allowed,data,actor,rpc,input,send,capability })) return true
+  if (state.patients && patientProtocol({ businessWritable:practice=>!candidate || entitlement(practice).writes_allowed,data, actor, sessionId: session.sessionId, rpc, input, send, capability })) return true
   const reject = (code='42501') => { deny(code); return true }
   if (rpc==='doctor_session_context') { send({ product: 'doctor-suit',user_id: actor.id,session_id: session.sessionId,practice_id: ownPractice?.id || null }); return true }
   if (rpc==='doctor_contexts') { send(contexts()); return true }
@@ -101,7 +101,7 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
     if (!capability(input.p_practice,null,'locations.read') && !capability(input.p_practice,null,'locations.manage')) return reject()
     const rows = data.locations.filter(item => item.practice_id===input.p_practice && (capability(item.practice_id,item.id,'locations.read') || capability(item.practice_id,item.id,'locations.manage')) && item.name.toLowerCase().includes((input.p_search || '').toLowerCase()))
     const size = input.p_size || 25; const start = (input.p_page || 0)*size
-    send({ practice_name: data.practices.find(item => item.id===input.p_practice).name,rows: rows.slice(start,start+size).map(item => ({ ...item,can_manage: capability(item.practice_id,item.id,'locations.manage') })),total: rows.length,can_create: owner(input.p_practice) }); return true
+    send({ ...(candidate?{edition:'administrative_candidate',entitlement:entitlement(input.p_practice)}:{}),practice_name: data.practices.find(item => item.id===input.p_practice).name,rows: rows.slice(start,start+size).map(item => ({ ...item,can_manage: capability(item.practice_id,item.id,'locations.manage'),can_edit: capability(item.practice_id,item.id,'locations.manage') && !item.archived_at && (!candidate || entitlement(item.practice_id).writes_allowed) })),total: rows.length,can_create: owner(input.p_practice) && (!candidate || entitlement(input.p_practice).can_add_clinic) }); return true
   }
   if (rpc==='doctor_team') {
     if (!owner(input.p_practice)) return reject()
@@ -109,7 +109,7 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
     const members = data.memberships.filter(item => item.practice_id===input.p_practice && data.users.find(user => user.id===item.user_id).email.includes(search)).map(item => ({ id: item.id,email: data.users.find(user => user.id===item.user_id).email,status: item.status,version: item.version,created_at: item.created_at,grants: item.grants.map(grant => ({ ...grant,location_name: data.locations.find(item => item.id===grant.location_id).name,archived: false })) }))
     const invitations = data.invitations.filter(item => item.practice_id===input.p_practice && item.recipient_email.includes(search)).map(item => ({ id: item.id,recipient_email: item.recipient_email,status: item.status==='pending' && Date.parse(item.expires_at)<=Date.now() ? 'expired' : item.status,version: item.version,expires_at: item.expires_at,created_at: item.created_at,grants: item.grants }))
     const locations = data.locations.filter(item => item.practice_id===input.p_practice).map(item => ({ id: item.id,name: item.name,timezone: item.timezone,archived: Boolean(item.archived_at) }))
-    send({ edition: candidate ? 'administrative_candidate' : 'synthetic_preview',edition_revision: state.editionRevision || 1,available_capabilities: allowed,practice_id: input.p_practice,practice_name: data.practices.find(item => item.id===input.p_practice).name,members: members.slice(start,start+size),invitations: invitations.slice(start,start+size),locations,member_total: members.length,invitation_total: invitations.length,location_total: locations.length }); return true
+    send({ ...(candidate?{entitlement:entitlement(input.p_practice)}:{}),edition: candidate ? 'administrative_candidate' : 'synthetic_preview',edition_revision: state.editionRevision || 1,available_capabilities: allowed,practice_id: input.p_practice,practice_name: data.practices.find(item => item.id===input.p_practice).name,members: members.slice(start,start+size),invitations: invitations.slice(start,start+size),locations,member_total: members.length,invitation_total: invitations.length,location_total: locations.length }); return true
   }
   function validGrants(grants,practice,empty=false) { return Array.isArray(grants) && (empty || grants.length) && grants.every(grant => data.locations.some(item => item.id===grant.location_id && item.practice_id===practice) && grant.capabilities?.length && grant.capabilities.every(key => allowed.includes(key))) }
   const receipt = `${actor.id}:${input.p_key}`

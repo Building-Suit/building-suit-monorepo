@@ -24,7 +24,7 @@ const card = (page: Page,name: string) => page.locator('.bs-appointment-event').
 async function close(contexts: BrowserContext[]) { await Promise.allSettled(contexts.map(async context => { try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() } })) }
 test.beforeEach(async ({ request }) => {
   await request.post(fixture,{ data: { reset: true } })
-  await request.post(fixture,{ data: { delegation: true,patients: true,documents: true,availability: true,appointments: true,edition: 'administrative_candidate',editionRevision: 2 } })
+  await request.post(fixture,{ data: { delegation: true,patients: true,documents: true,availability: true,appointments: true,edition: 'administrative_candidate',editionRevision: 2,entitlements:Object.fromEntries([1,2].map(n=>[`a3000000-0000-4000-8000-${String(n).padStart(12,'0')}`,{state:'trial',revision:1,writes_allowed:true,can_add_staff:true,can_add_clinic:true,over_limit:false,valid_until:new Date(Date.now()+3600000).toISOString()}])) } })
 })
 for(const ar of [false,true])test(`DOS-AE-002 candidate ${ar ? 'AR mobile light RTL' : 'EN desktop dark'}: coded reasons, effective grants and omitted documents`,async ({ browser,request }) => {
   test.setTimeout(120000)

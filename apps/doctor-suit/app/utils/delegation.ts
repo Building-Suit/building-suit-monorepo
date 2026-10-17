@@ -1,10 +1,11 @@
+import { doctorEntitlement,type DoctorEntitlement } from './entitlement.ts'
 import { doctorEditionMode, type DoctorEditionMode } from './administrativeEdition.ts'
 import { doctorAdministrativeCapabilities, doctorUuid, type DoctorAdministrativeCapability } from './locationContext.ts'
 export interface DoctorDelegationGrant { locationId: string; capabilities: DoctorAdministrativeCapability[] }
 export interface DoctorTeamLocation { id: string; name: string; timezone: string; archived: boolean }
 export interface DoctorTeamMember { id: string; email: string; status: 'active' | 'suspended' | 'revoked'; version: number; createdAt: string; grants: (DoctorDelegationGrant & { locationName: string; archived: boolean })[] }
 export interface DoctorTeamInvitation { id: string; email: string; status: 'pending' | 'accepted' | 'cancelled' | 'expired'; version: number; expiresAt: string; createdAt: string; grants: DoctorDelegationGrant[] }
-export interface DoctorTeamDirectory { practiceId: string; practiceName: string; edition: DoctorEditionMode; editionRevision: number; availableCapabilities: DoctorAdministrativeCapability[]; members: DoctorTeamMember[]; invitations: DoctorTeamInvitation[]; locations: DoctorTeamLocation[]; memberTotal: number; invitationTotal: number; locationTotal: number }
+export interface DoctorTeamDirectory { practiceId: string; practiceName: string; edition: DoctorEditionMode; editionRevision: number; availableCapabilities: DoctorAdministrativeCapability[]; entitlement?: DoctorEntitlement; members: DoctorTeamMember[]; invitations: DoctorTeamInvitation[]; locations: DoctorTeamLocation[]; memberTotal: number; invitationTotal: number; locationTotal: number }
 export interface DoctorInvitationDetails { id: string; practiceId: string; practiceName: string; doctorName: string; expiresAt: string; status: 'pending' | 'accepted'; grants: (DoctorDelegationGrant & { locationName: string; timezone: string })[] }
 export interface DoctorTeamQuery { page: number; size: number; search: string }
 export interface DoctorInvitationForm { email: string; grants: DoctorDelegationGrant[] }
@@ -45,7 +46,8 @@ export function doctorTeamDirectory(value: unknown, practiceId: string): DoctorT
     if (!record(item) || !doctorUuid(item.id) || !text(item.recipient_email) || !['pending','accepted','cancelled','expired'].includes(String(item.status)) || !version(item.version) || !text(item.expires_at) || !text(item.created_at)) invalid()
     return { id: item.id, email: item.recipient_email, status: item.status as DoctorTeamInvitation['status'], version: Number(item.version), expiresAt: item.expires_at, createdAt: item.created_at, grants: grants(item.grants) }
   }))
-  return { practiceId, practiceName: value.practice_name, edition: value.edition, editionRevision: Number(value.edition_revision), availableCapabilities: [...value.available_capabilities] as DoctorAdministrativeCapability[], members, invitations, locations, memberTotal: Number(value.member_total), invitationTotal: Number(value.invitation_total), locationTotal: Number(value.location_total) }
+  const entitlement=doctorEntitlement(value.entitlement,value.edition as DoctorEditionMode)
+  return { ...(entitlement?{entitlement}:{}),practiceId, practiceName: value.practice_name, edition: value.edition, editionRevision: Number(value.edition_revision), availableCapabilities: [...value.available_capabilities] as DoctorAdministrativeCapability[], members, invitations, locations, memberTotal: Number(value.member_total), invitationTotal: Number(value.invitation_total), locationTotal: Number(value.location_total) }
 }
 export function doctorInvitationDetails(value: unknown, invitationId: string): DoctorInvitationDetails {
   if (!record(value) || value.invitation_id!==invitationId || !doctorUuid(value.practice_id) || !text(value.practice_name) || !text(value.doctor_name) || !text(value.expires_at) || !['pending','accepted'].includes(String(value.status))) invalid()
@@ -80,8 +82,20 @@ export async function createDoctorInvitationSecret() {
 export type DoctorDelegationError = 'denied' | 'invalid' | 'conflict' | 'network' | null
 export function doctorDelegationFailure(error: unknown): DoctorDelegationError {
   const code = error && typeof error==='object' && 'code' in error ? String(error.code) : ''
-  if (code==='42501') return 'denied'
+  if (['42501','DS001','DS002','DS003','DS006','DS007'].includes(String(code))) return 'denied'
   if (['22023','23514'].includes(code)) return 'invalid'
   if (['40001','23505'].includes(code)) return 'conflict'
   return 'network'
+}
+
+/** Security reductions remain possible after subscription expiry. */
+export function doctorDelegationReduction(before: DoctorDelegationGrant[],after: DoctorDelegationGrant[]): boolean {
+  return after.every(next=>next.capabilities.every(capability=>before.find(prior=>prior.locationId===next.locationId)?.capabilities.includes(capability)))
+}
+
+export function doctorTeamCanAllocate(directory: DoctorTeamDirectory | null): boolean {
+  return Boolean(directory && (directory.edition!=='administrative_candidate' || (directory.entitlement?.writesAllowed && directory.entitlement.canAddStaff)))
+}
+export function doctorTeamCanChangeGrants(directory: DoctorTeamDirectory | null,before: DoctorDelegationGrant[],after: DoctorDelegationGrant[]): boolean {
+  return Boolean(directory && (directory.edition!=='administrative_candidate' || directory.entitlement?.writesAllowed || doctorDelegationReduction(before,after)))
 }

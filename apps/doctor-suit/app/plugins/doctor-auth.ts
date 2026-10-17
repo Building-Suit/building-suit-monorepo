@@ -84,7 +84,9 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
     return null
   }
-  const locations = createDoctorLocationsController(client ? doctorLocationsRepository(client) : null, reactive(doctorLocationsState()), locationsScope)
+  const entitlementTimers=import.meta.client?{now:()=>performance.now(),set:(callback:()=>void,delay:number)=>setTimeout(callback,delay),clear:(handle:unknown)=>clearTimeout(handle as ReturnType<typeof setTimeout>)}:undefined
+  const expiredOwnerScope=()=>context.expire()
+  const locations = createDoctorLocationsController(client ? doctorLocationsRepository(client) : null, reactive(doctorLocationsState()), locationsScope,undefined,entitlementTimers,expiredOwnerScope)
   const patientsScope = () => {
     const selected = context.state.current
     return selected?.locationId && selected.capabilities.includes('patients.read') ? selected : null
@@ -102,7 +104,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     const selected = locationsScope()
     return selected?.portal === 'doctor' && selected.practiceId === state.identity?.practiceId ? selected : null
   }
-  const team = createDoctorTeamController(delegation, reactive(doctorTeamState()), teamScope)
+  const team = createDoctorTeamController(delegation, reactive(doctorTeamState()), teamScope,undefined,undefined,entitlementTimers,expiredOwnerScope)
   const invitation = createDoctorInvitationController(delegation, reactive(doctorInvitationState()), () => state.identity)
   const controller = createDoctorAuthController(client ? doctorAuthBackend(client, settings.origin) : null, state, {
     clear: () => { account.clear(); personalAudit.clear(); void context.clear() },

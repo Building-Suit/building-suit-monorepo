@@ -35,3 +35,21 @@ export function doctorEntitlement(value: unknown,edition: DoctorEditionMode | un
 export function doctorEntitlementKey(value: DoctorEntitlement | undefined): unknown[] {
   return value ? [value.state,value.revision,value.writesAllowed,value.canAddStaff,value.canAddClinic,value.overLimit,value.validUntil] : []
 }
+export interface DoctorEntitlementTimers { now(): number; set(callback: ()=>void,delay: number): unknown; clear(handle: unknown): void }
+/** Timers only remove a read model's authority; a new server read may replace it. */
+export function createDoctorEntitlementDeadline(timers?: DoctorEntitlementTimers) {
+  let sequence=0;let handle: unknown
+  function clear(){sequence++;if(handle!==undefined)timers?.clear(handle);handle=undefined}
+  function arm(value: DoctorEntitlement|undefined,sentAt: number,expired: ()=>void,accepts: ()=>boolean){
+    clear();if(!timers || value?.state!=='trial' || !value.validUntil)return
+    const token=sequence;const deadline=timers.now()+Math.max(0,Date.parse(value.validUntil)-Date.parse(value.observedAt)-Math.max(0,timers.now()-sentAt))
+    function tick(){
+      if(token!==sequence || !accepts())return
+      handle=undefined;const left=deadline-timers!.now()
+      if(left>0){handle=timers!.set(tick,Math.min(Math.ceil(left),2147483647));return}
+      clear();expired()
+    }
+    handle=timers.set(tick,Math.min(Math.ceil(deadline-timers.now()),2147483647))
+  }
+  return{clear,arm}
+}
