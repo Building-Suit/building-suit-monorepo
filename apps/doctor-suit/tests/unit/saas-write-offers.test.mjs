@@ -60,3 +60,15 @@ test('computed team state invalidates editors without rewriting role permissions
   raw=rawTeam(rawEntitlement({observed_at:new Date(epoch+1000).toISOString()}));await team.load({page:0,size:20,search:''});assert.equal(clears,0)
   raw=rawTeam(historical());await team.load({page:0,size:20,search:''});assert.equal(clears,1);assert.deepEqual([...state.directory.availableCapabilities],['patients.read','patients.write'])
 })
+for(const kind of['team','locations'])for(const outcome of['late-success','late-failure'])test(`${kind}: a pre-expiry pending refresh cannot suppress deadline cleanup (${outcome})`,async()=>{
+ const timers=clock(),state=reactive(kind==='team'?doctorTeamState():doctorLocationsState());let read=0,resolve,reject,expired=0,draft='Synthetic open draft'
+ const decode=()=>kind==='team'?doctorTeamDirectory(rawTeam(),id(21)):doctorLocationDirectory(rawLocations(),id(21))
+ const repository={load:async()=>{read++;if(read===1)return decode();if(read===2)return new Promise((yes,no)=>{resolve=yes;reject=no});throw Error('Synthetic offline after expiry')}}
+ const controller=kind==='team'?createDoctorTeamController(repository,state,()=>scope,undefined,undefined,timers,()=>{expired++}):createDoctorLocationsController(repository,state,()=>scope,undefined,timers,()=>{expired++})
+ await controller.load({page:0,size:20,search:''});controller.registerPolicyChange(()=>{draft=''})
+ if(kind==='team')state.credential='Synthetic invitation credential'
+ timers.advance(9000);const pending=controller.load({page:0,size:20,search:''});assert.equal(state.loading,true)
+ timers.advance(1000);assert.equal(draft,'');assert.equal(state.directory,null);assert.equal(expired,1);if(kind==='team')assert.equal(state.credential,'')
+ if(outcome==='late-success')resolve(decode());else reject(Error('Synthetic pre-expiry refresh failed late'))
+ assert.equal(await pending,false);await flush();assert.equal(state.directory,null);assert.equal(state.loading,false);assert.equal(state.error,'network');assert.equal(expired,1)
+})

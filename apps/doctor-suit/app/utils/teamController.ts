@@ -9,11 +9,11 @@ export function createDoctorTeamController(repository: ReturnType<typeof doctorD
   key: () => string = () => crypto.randomUUID(),secret = createDoctorInvitationSecret,timers?: DoctorEntitlementTimers,onExpired?: ()=>void) {
   const expiry=createDoctorEntitlementDeadline(timers)
   const policyListeners = new Set<() => void>(); let policy: string | null = null
-  let generation = 0; let controller = new AbortController()
+  let deadlineGeneration = 0;let generation = 0; let controller = new AbortController()
   let command: { input: string; key: string; secret?: { token: string; hash: string } } | null = null
   const scopeKey = () => { const value = scope(); return value ? doctorScopeKey(value,'team') : null }
   const accepts = (revision: number,expected: string | null) => revision===generation && expected===scopeKey()
-  function clear() { expiry.clear();policy = null; generation++; controller.abort(); controller = new AbortController(); command = null; Object.assign(state,doctorTeamState()) }
+  function clear() { deadlineGeneration++;expiry.clear();policy = null; generation++; controller.abort(); controller = new AbortController(); command = null; Object.assign(state,doctorTeamState()) }
   async function load(query: DoctorTeamQuery) {
     if (state.pending) return false
     generation++; controller.abort(); controller = new AbortController()
@@ -28,7 +28,8 @@ export function createDoctorTeamController(repository: ReturnType<typeof doctorD
       const nextPolicy = JSON.stringify([result.edition,result.editionRevision,[...result.availableCapabilities].sort(),doctorEntitlementKey(result.entitlement)])
       if (policy && policy!==nextPolicy) for (const listener of policyListeners) listener()
       policy = nextPolicy; state.directory = result
-      expiry.arm(result.entitlement,sentAt,()=>{for(const listener of policyListeners)listener();clear();onExpired?.();if(expected===scopeKey())void load({...query})},()=>accepts(revision,expected))
+      const deadline = ++deadlineGeneration
+      expiry.arm(result.entitlement,sentAt,()=>{for(const listener of policyListeners)listener();clear();onExpired?.();if(expected===scopeKey())void load({...query})},()=>deadline===deadlineGeneration && expected===scopeKey())
       return true
     } catch (error) { if (accepts(revision,expected)) state.error = doctorDelegationFailure(error); return false }
     finally { if (accepts(revision,expected)) state.loading = false }

@@ -15,10 +15,10 @@ export function doctorLocationFailure(error: unknown): DoctorLocationError {
 }
 export function createDoctorLocationsController(repository: ReturnType<typeof doctorLocationsRepository> | null, state: DoctorLocationsState, scope: () => DoctorContextScope | null, key = () => crypto.randomUUID(),timers?: DoctorEntitlementTimers,onExpired?: ()=>void) {
   const expiry=createDoctorEntitlementDeadline(timers);const policyListeners=new Set<()=>void>();let policy: string|null=null
-  let generation = 0; let controller = new AbortController()
+  let deadlineGeneration = 0;let generation = 0; let controller = new AbortController()
   let command: { input: string; key: string } | null = null
   const scopeKey = () => { const value = scope(); return value ? doctorScopeKey(value, 'locations') : null }
-  function clear() { expiry.clear();policy=null;generation++; controller.abort(); controller = new AbortController(); command = null; Object.assign(state, doctorLocationsState()) }
+  function clear() { deadlineGeneration++;expiry.clear();policy=null;generation++; controller.abort(); controller = new AbortController(); command = null; Object.assign(state, doctorLocationsState()) }
   async function load(query: DoctorLocationQuery) {
     if (state.pending) return false
     generation++; controller.abort(); controller = new AbortController()
@@ -33,7 +33,8 @@ export function createDoctorLocationsController(repository: ReturnType<typeof do
       const nextPolicy=JSON.stringify([result.edition,doctorEntitlementKey(result.entitlement)])
       if(policy && policy!==nextPolicy)for(const listener of policyListeners)listener()
       policy=nextPolicy;state.directory = result
-      expiry.arm(result.entitlement,sentAt,()=>{for(const listener of policyListeners)listener();clear();onExpired?.();if(expectedScope===scopeKey())void load({...query})},()=>captured===generation && expectedScope===scopeKey())
+      const deadline = ++deadlineGeneration
+      expiry.arm(result.entitlement,sentAt,()=>{for(const listener of policyListeners)listener();clear();onExpired?.();if(expectedScope===scopeKey())void load({...query})},()=>deadline===deadlineGeneration && expectedScope===scopeKey())
       return true
     } catch (error) { if (captured === generation && expectedScope === scopeKey()) state.error = doctorLocationFailure(error); return false }
     finally { if (captured === generation && expectedScope === scopeKey()) state.loading = false }
