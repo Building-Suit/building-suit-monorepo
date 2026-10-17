@@ -1,3 +1,4 @@
+import{verifyDoctorAdministrativeCandidateProvider}from'./administrative-candidate-actual-provider.mjs'
 // Actual disposable Supabase Auth/Storage/Functions acceptance. No hosted target.
 import { spawn,spawnSync } from 'node:child_process'
 import { readFile,mkdtemp,writeFile,rm,access } from 'node:fs/promises'
@@ -62,7 +63,7 @@ async function mail(email) {
   }
   throw new Error('Local captured confirmation email unavailable')
 }
-async function bootstrap(publicKey,label) {
+async function confirmedActor(publicKey,label,beforeContext) {
   const client = createClient(api,publicKey,options)
   const email = `synthetic-${label}-${randomUUID()}@example.test`; const password = `Synthetic-${randomUUID()}!9`
   const signup = await client.auth.signUp({ email,password,options: { emailRedirectTo: `${origin}/verify`,data: { display_name: `Synthetic ${label}` } } })
@@ -73,15 +74,20 @@ async function bootstrap(publicKey,label) {
   const response = await fetch(confirmation,{ redirect: 'manual' }); expect(response.status>=300 && response.status<400,'Real Auth confirmation failed')
   const signin = await client.auth.signInWithPassword({ email,password }); expect(!signin.error && signin.data.session,'Confirmed password admission failed')
   const user = signin.data.user; const session = signin.data.session
+  await beforeContext?.({client,user,session})
   const verified = await rpc(client,'doctor_session_context'); expect(verified.user_id===user.id && verified.session_id,'Verified session must match actual Auth identity')
+  return{client,user,session,sessionId:verified.session_id}
+}
+async function bootstrap(publicKey,label,beforeContext,timezone='Africa/Cairo'){
+  const actor=await confirmedActor(publicKey,label,beforeContext),{client,user,session,sessionId}=actor
   const onboardingKey = randomUUID()
-  const draft = await rpc(client,'doctor_save_onboarding_draft',{ p_key: onboardingKey,p_expected_version: 0,p_display_name: `Synthetic ${label}`,p_practice_name: `Synthetic ${label} practice`,p_location_name: `${label} clinic`,p_timezone: 'Africa/Cairo' })
+  const draft = await rpc(client,'doctor_save_onboarding_draft',{ p_key: onboardingKey,p_expected_version: 0,p_display_name: `Synthetic ${label}`,p_practice_name: `Synthetic ${label} practice`,p_location_name: `${label} clinic`,p_timezone: timezone })
   await rpc(client,'doctor_complete_onboarding',{ p_key: onboardingKey,p_draft_version: draft.version })
   const contexts = await rpc(client,'doctor_contexts'); const context = contexts.contexts?.[0] || contexts.options?.[0] || contexts[0]
   expect(context?.practice_id && context?.location_id,'Owned clinic context missing')
   const patient = await rpc(client,'doctor_write_patient',{ p_practice: context.practice_id,p_location: context.location_id,p_input: { name: `Synthetic ${label} patient`,phone: '',email: '',date_of_birth: null },p_key: randomUUID() })
   expect(patient.patient_id,'Patient creation failed')
-  return { client,user,session,sessionId: verified.session_id,scope: { practiceId: context.practice_id,locationId: context.location_id,patientId: patient.patient_id } }
+  return { client,user,session,sessionId,scope: { practiceId: context.practice_id,locationId: context.location_id,patientId: patient.patient_id } }
 }
 try {
   validateLocalDoctorTarget(JSON.parse(await readFile(path.join(root,'docs/architecture/environments.json'),'utf8')),await readFile(path.join(app,'supabase/config.toml'),'utf8'),process.env)
@@ -167,6 +173,9 @@ try {
   console.log('Actual Storage/Functions: validated private bytes, stable retry, two preserved versions, anonymous/direct/public/signed bypass denials, cross-practice and revoked-session denials passed')
   stage = 'actual queue session revocation';await appointmentAcceptance.verifyRevocation()
   await verifyDoctorMilestoneProvider({ api,origin,publicKey: status.ANON_KEY,mail,options,setStage: value => { stage = value } })
+  await appointmentAcceptance.cleanup()
+  function ownedCandidateSql(input){expect(owned,'Actual candidate fixture requires run-owned services');const result=spawnSync('docker',['exec','-i',`supabase_db_${project}`,'psql','-X','-U','postgres','-d','postgres','-qAt','-v','ON_ERROR_STOP=1'],{input,encoding:'utf8',timeout:15000,maxBuffer:65536});expect(result.status===0,'Owned actual-candidate fixture SQL failed');return result.stdout.trim()}
+  await verifyDoctorAdministrativeCandidateProvider({publicKey:status.ANON_KEY,bootstrap,confirmedActor,sql:ownedCandidateSql,rpc,endpoint,legacyLocator:locator,expect,setStage:value=>{stage=value},verifyQueue:(a,b,rescheduleReason)=>verifyDoctorAppointmentProvider({api,key:status.ANON_KEY,a,b,rpc,expect,probe:realtimeProbe,advanceRevision,independentWire:realtimeWire,rescheduleReason,setStage:value=>{stage=value}}),verifyAccount:admitEmail=>verifyDoctorAccountProvider({root,api,key:status.ANON_KEY,project,expect,admitEmail,expectedHome:'/subscription',expectVersionDocument:true,setStage:value=>{stage=value}})})
   console.log('Synthetic actual-provider acceptance passed. Actual browser Auth recovery/PKCE, account reauthentication, Storage, Functions and scoped Realtime paths passed; hosted connections remain UNRUN.')
 } catch (error) {
   console.error(`Doctor actual-provider acceptance failed at ${stage}: ${doctorProviderFailureSummary(error)}`)

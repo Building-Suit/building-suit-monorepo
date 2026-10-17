@@ -3,7 +3,7 @@ import { chromium,expect as browserExpect } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { spawn,spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
-export async function verifyDoctorAccountProvider({ root,api,key,project,expect,setStage }) {
+export async function verifyDoctorAccountProvider({ root,api,key,project,expect,setStage,admitEmail,expectedHome='/onboarding',expectVersionDocument=false }) {
   const origin = 'http://127.0.0.1:4341';let server;let browser;let context;let token = '';let changedPolicy = false
   const pause = milliseconds => new Promise(resolve => setTimeout(resolve,milliseconds))
   function policy(seconds) {
@@ -38,7 +38,8 @@ export async function verifyDoctorAccountProvider({ root,api,key,project,expect,
     setStage('actual browser signup and PKCE confirmation');policy(20);changedPolicy = true
     await page.goto(`${origin}/sign-up`);await page.getByLabel(/^Display name/).fill('Synthetic personal web');await page.getByLabel(/^Email/).fill(email);await page.getByLabel(/^Password/).fill(password);await page.getByRole('button',{ name: 'Create synthetic account',exact: true }).click();await page.getByRole('heading',{ name: 'Verify account',exact: true }).waitFor()
     const unconfirmed = await createClient(api,key,{ auth: { persistSession: false,autoRefreshToken: false } }).auth.signInWithPassword({ email,password });expect(Boolean(unconfirmed.error) && !unconfirmed.data.session,'Actual unconfirmed account admitted')
-    const confirmation = await link(email);await page.goto(confirmation);await page.waitForURL(`${origin}/onboarding`);expect(new URL(page.url()).search==='','Confirmation URL material was not scrubbed');await page.getByRole('link',{name:'Back to account',exact:true}).last().click();await page.waitForURL(`${origin}/account`);await page.getByRole('button',{ name: 'Edit account details',exact: true }).waitFor();await until(() => Boolean(token))
+    await admitEmail?.(email)
+    const confirmation = await link(email);await page.goto(confirmation);await page.waitForURL(`${origin}${expectedHome}`);expect(new URL(page.url()).search==='','Confirmation URL material was not scrubbed');if(expectVersionDocument){await page.getByRole('heading',{name:'Version document text',exact:true}).waitFor();await page.getByText('Synthetic actual-provider test document only. No legal approval or live-sale authority.',{exact:true}).waitFor();}await page.getByRole('link',{name:'Back to account',exact:true}).last().click();await page.waitForURL(`${origin}/account`);await page.getByRole('button',{ name: 'Edit account details',exact: true }).waitFor();await until(() => Boolean(token))
     const identity = await client(token).rpc('doctor_session_context');expect(!identity.error && identity.data.practice_id===null,'Account confirmation must not create professional authority')
     const firstToken = token;const firstSid = identity.data.session_id
     setStage('actual personal settings authoritative defaults');const initialSettings=await settings();expect(initialSettings.in_app_confirmations===false && initialSettings.version===0,'Actual personal settings must start unchanged and opted out')
