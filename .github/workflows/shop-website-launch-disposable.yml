@@ -52,6 +52,12 @@ jobs:
           LAUNCH_FULL_SHOP_DB: '1'
           SUPABASE_HOME: ${{ runner.temp }}/shop-website-launch-supabase
         run: node tooling/database/test-shop-website-launch-local.mjs
+      - name: Stop owned disposable backend after SQL qualification
+        env:
+          SUPABASE_HOME: ${{ runner.temp }}/shop-website-launch-supabase
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          pnpm exec supabase --workdir apps/shop-suit stop --no-backup
       - name: Remove temporary upgrade fixture after regression
         run: |
           git restore -- apps/shop-suit/supabase/config.toml
@@ -82,3 +88,8 @@ jobs:
         with:
           name: website-launch-browser-results
           path: test-results
+      - name: Clean up owned disposable backend after failure
+        if: failure() || cancelled()
+        env:
+          SUPABASE_HOME: ${{ runner.temp }}/shop-website-launch-supabase
+        run: pnpm exec supabase --workdir apps/shop-suit stop --no-backup

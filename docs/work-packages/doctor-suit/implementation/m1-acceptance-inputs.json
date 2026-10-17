@@ -7,7 +7,7 @@
   "headBinding": "Resolve the published GitHub PR head SHA and check-run head_sha; no self-referential commit hash is embedded.",
   "implementationIdentity": "implementation-agent",
   "expectedEvidenceCounts": {
-    "rootPassed": 1834,
+    "rootPassed": 1839,
     "rootSkipped": 23,
     "workspacePassed": 111,
     "shopRegressions": 28,
@@ -19,7 +19,8 @@
     "sharedSettings": 12,
     "sqlTotal": 679,
     "sqlCombined": 29,
-    "shopBackend": 1
+    "shopBackend": 1,
+    "shopLaunchPassed": 12
   },
   "independentAcceptance": "pending",
   "integration": "not-claimed",
@@ -43,7 +44,10 @@
     "typecheck",
     "build",
     "release",
-    "shop-backend"
+    "shop-backend",
+    "shop-launch-sql",
+    "shop-launch-changelog",
+    "shop-launch"
   ],
   "tasks": [
     {
@@ -169,12 +173,12 @@
     }
   ],
   "inputHashes": {
-    "docs/work-packages/doctor-suit/implementation/m1-aggregate.md": "562b7152fda73d3106f7e8463276cbd2d5f62a6e0d112c7104d05baf8d17572e",
-    ".github/workflows/ci.yml": "27428078e8100e937406b396e26afeaea68820a7caad3de0428eb71ba3ed7451",
+    "docs/work-packages/doctor-suit/implementation/m1-aggregate.md": "fdec590c7f33ba0eedb93f72d0f5c1849c4c8292665c1b129c3dc38265867c55",
+    ".github/workflows/ci.yml": "e4bc193162ab7e74426d094ef730996bcfb4a9bea939136ab5aca66377e1e18e",
     ".github/workflows/doctor-disposable.yml": "d4519a8d97194fca9ed88feb7fac90de0a39fbd93b3a3874b1649a129fba6bc4",
     "packages/testing/playwright.doctor-workspace.config.ts": "d1a9d56d805416a0e07de847218010d31c65b777e6b4ae71d216dba99120599e",
-    "apps/doctor-suit/tests/m1-aggregate-evidence.mjs": "84e18c55b0fb5a048da0114fffc0629431aeed2ae58d2d941eae43fef37656db",
-    "apps/doctor-suit/tests/unit/dos-m1-020-evidence.test.mjs": "593159cf457d47ec3cb1f502e2ec98a7d0b20b1941a96705fa28843aff537abd",
+    "apps/doctor-suit/tests/m1-aggregate-evidence.mjs": "e3244fc246debc196beb18b8ee8a79b3042aece2db8260f8861d640802b870a4",
+    "apps/doctor-suit/tests/unit/dos-m1-020-evidence.test.mjs": "69cf184e666d8a12d7de3f698320900e87e252ac1ea05324c9cb260bba370fad",
     "apps/doctor-suit/supabase/tests/dos-m1-020.sql": "64d2c9c3458d63c2afb684bfc20781f697895ee5417b107e218b52db345bf2e3",
     "apps/doctor-suit/tests/disposable-provider.mjs": "aa75fa305e20809c0e0656617c2d72cd428e29964e5d196567159d15ac33b0b7",
     "apps/doctor-suit/tests/fixtures/delegation-provider.mjs": "86b3d681469380e2b9868180aee1eb4dd8ad2481fc3d1fa5b793590ad113f89f",
@@ -190,7 +194,15 @@
     "apps/doctor-suit/app/utils/contextController.ts": "567e230155618e0dad5666f162fe68d69ccf145b11a3d5469121243ccd24162a",
     "apps/doctor-suit/tests/shop-backend-actual-provider.mjs": "7161767ddef380774b5e19d58df966ff068ed30630ff2ecfb0b285aeeee8562f",
     "apps/doctor-suit/tests/unit/dos-m1-020-shop-backend.test.mjs": "baddcec02e30245ad148a89ba460d90951e8f5cc40ea85699527e6d42f850ae5",
-    "packages/testing/playwright.doctor-shop-backend.config.ts": "8a0c1fbe9728c39c1ce05bbfbc5e297fb87602860f305fd9679af3b7689f31c3"
+    "packages/testing/playwright.doctor-shop-backend.config.ts": "8a0c1fbe9728c39c1ce05bbfbc5e297fb87602860f305fd9679af3b7689f31c3",
+    ".github/workflows/shop-website-launch-disposable.yml": "96f31a1c3d0c2f3deb5895e9be043e55c32639637e1f9eca67b7e55cc3b5e90f",
+    "apps/shop-suit/tests/e2e/public-changelog.config.ts": "b55d64a106b3f1a03c88cd5f50f4d9f6eaa19546313425742b25b700519f8cb6",
+    "apps/shop-suit/tests/e2e/public-changelog.spec.ts": "f85d9eab2d960dbfbf59dc6d690c95e22e7ec834c1bc8434f20d4b509d66dcc8",
+    "apps/shop-suit/tests/e2e/public-changelog.setup.mjs": "91eba32a0fe645dbcdd2c3478f992de04287162496f7a5b0a738420558b7ed88",
+    "apps/shop-suit/tests/e2e/public-changelog-fixture-server.mjs": "7ed4b3aa0c7a96d2936b6f53fd8142e86b3f357cdd8ce8d95c66c4c72ac5a2ed",
+    "apps/shop-suit/tests/unit/public-changelog-harness.test.mjs": "0241974a018993c5b77a68bd3cd157493b5080d55d909de6a355546453ca67e8",
+    "tooling/releases/catalog-disposable.mjs": "688fab2d9e49454bf5794aef9136614b5c240a03a3d195f252f7b8296c15237c",
+    "release-fragments/dos-m1-020-shop-changelog-regression.json": "15bd9cd0184d8cd4de686c85eb5c48e6b316e769376767306c17492e3da83f61"
   },
   "taskBaseSha": "e53cc7bcd8b0f07c2c2287de0867c942e480d85c",
   "aggregateRootPullRequest": 345,

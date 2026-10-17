@@ -1,0 +1,22 @@
+{
+  "id": "dos-m1-020-shop-changelog-regression",
+  "task": "DOS-M1-020",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/shop-website-launch-disposable.yml",
+    "apps/shop-suit/tests/e2e/public-changelog.config.ts",
+    "apps/shop-suit/tests/e2e/public-changelog.spec.ts",
+    "apps/shop-suit/tests/e2e/public-changelog.setup.mjs",
+    "apps/shop-suit/tests/e2e/public-changelog-fixture-server.mjs",
+    "apps/shop-suit/tests/unit/public-changelog-harness.test.mjs",
+    "apps/doctor-suit/tests/m1-aggregate-evidence.mjs",
+    "apps/doctor-suit/tests/unit/dos-m1-020-evidence.test.mjs",
+    "tooling/releases/catalog-disposable.mjs",
+    "docs/work-packages/doctor-suit/implementation/m1-aggregate.md",
+    "docs/work-packages/doctor-suit/implementation/m1-acceptance-inputs.json"
+  ],
+  "reason": "Repair the combined M1 Shop launch verifier: generate both actual anonymous release projections in one bounded complete SQL setup, preserve all release and browser assertions, clean up interrupted disposable catalog containers, isolate the unrelated public-plan request on a loopback synthetic transport, and stop the owned full Shop stack after its SQL checks. Regression tests reject early, failed, timed-out, missing and malformed setup results. Test infrastructure only; no public product change, release activation, hosted connection, migration, reminder activation or deployment."
+}

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { summarizeDoctorWorkspace,doctorWorkspaceEvidenceIssues,doctorAggregateClaimIssues,doctorAggregateBrowserScope,summarizeDoctorEvidenceLog } from '../m1-aggregate-evidence.mjs'
+import { summarizeDoctorWorkspace,doctorWorkspaceEvidenceIssues,doctorAggregateClaimIssues,doctorAggregateBrowserScope,summarizeDoctorEvidenceLog,doctorShopLaunchEvidenceIssues } from '../m1-aggregate-evidence.mjs'
 const head = '1'.repeat(40)
 function report() { return { stats: { expected: 111,skipped: 1,unexpected: 0,flaky: 0 },suites: [{ specs: Array.from({ length: 112 },(_,n) => ({ file: 'synthetic.spec.ts',title: n===111 ? 'Shop signup, product persistence and independent Ledger sessions' : `Synthetic case ${n}`,tests: [{ expectedStatus: n===111 ? 'skipped' : 'passed',results: [{ status: n===111 ? 'skipped' : 'passed',error: { message: 'PRIVATE_PAYLOAD_SENTINEL' } }] }] })) }] } }
 function packet() { return { independentAcceptance: 'pending',domainApprovalGranted: false,integration: 'not-claimed',deployment: 'not-performed',tasks: Array.from({ length: 20 },(_,n) => ({ taskId: `DOS-M1-${String(n+1).padStart(3,'0')}`,canonicalTaskSha256: 'a'.repeat(64) })) } }
@@ -14,4 +14,19 @@ test('M1 scope covers the requested aggregate and its first stg integration, pre
   assert.equal(doctorAggregateBrowserScope({ eventName: 'pull_request',prNumber: 366 }),false)
   assert.equal(doctorAggregateBrowserScope({ eventName: 'push',ref: 'refs/heads/stg',headHasManifest: true,parentHasManifest: false }),true)
   for(const change of [{ parentHasManifest: true },{ ref: 'refs/heads/main' },{ headHasManifest: false }])assert.equal(doctorAggregateBrowserScope({ eventName: 'push',ref: 'refs/heads/stg',headHasManifest: true,parentHasManifest: false,...change }),false)
+})
+
+test('failed or skipped Shop launch qualification blocks C03/C04 despite other green Doctor evidence',() => {
+  const branch='codex/doctor-suit/milestone-contracts'
+  const run={ head_sha: head,head_branch: branch,event: 'pull_request',path: '.github/workflows/shop-website-launch-disposable.yml',status: 'completed',conclusion: 'success' }
+  const job={ name: 'website-launch',status: 'completed',conclusion: 'success',steps: ['Full maintained Shop regression and public website SQL matrix','Run pnpm exec playwright test -c apps/shop-suit/tests/e2e/public-changelog.config.ts','Run pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-web-launch-001.config.ts'].map(name => ({ name,conclusion: 'success' })) }
+  assert.deepEqual(doctorShopLaunchEvidenceIssues(run,job,head,branch),[])
+  for(const conclusion of ['failure','skipped','cancelled',null]) {
+    assert.ok(doctorShopLaunchEvidenceIssues({ ...run,conclusion },job,head,branch).length)
+    assert.ok(doctorShopLaunchEvidenceIssues(run,{ ...job,conclusion },head,branch).length)
+    for(let index=0;index<3;index++)assert.ok(doctorShopLaunchEvidenceIssues(run,{ ...job,steps: job.steps.map((step,n) => n===index ? { ...step,conclusion } : step) },head,branch).length)
+  }
+  for(const patch of [{ head_sha: '2'.repeat(40) },{ head_branch: 'stg' },{ event: 'push' },{ path: '.github/workflows/doctor-disposable.yml' }])assert.ok(doctorShopLaunchEvidenceIssues({ ...run,...patch },job,head,branch).length)
+  assert.ok(doctorShopLaunchEvidenceIssues(run,{ ...job,steps: [] },head,branch).length)
+  assert.ok(doctorShopLaunchEvidenceIssues(undefined,undefined,head,branch).length)
 })
