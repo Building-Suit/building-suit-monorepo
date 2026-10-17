@@ -52,3 +52,15 @@ test('reschedule history rejects unbounded or malformed snapshots',() => {
  const raw = { practice_id: id(1),location_id: id(2),appointment_id: id(9),version: 2,page: 0,total: 1,events: [{ id: '1',type: 'appointment.rescheduled',version: 2,at: '2026-10-17T00:00:00Z',actor_user_id: id(3),location_id: id(2),details: { reason: 'Synthetic move',from: { location_id: id(2),location_name: 'Original',timezone: 'Etc/UTC',starts_at: row().starts_at,ends_at: row().ends_at },to: { location_id: id(2),location_name: 'New',timezone: 'Etc/UTC',starts_at: row().starts_at,ends_at: row().ends_at } } }] }
  assert.equal(doctorAppointmentHistory(raw,id(1),id(2),id(9),0).events[0].from.locationName,'Original');assert.throws(() => doctorAppointmentHistory({ ...raw,location_id: id(7) },id(1),id(2),id(9),0));raw.events[0].details.to.timezone = 'Invalid/Zone';assert.throws(() => doctorAppointmentHistory(raw,id(1),id(2),id(9),0))
 })
+
+test('revision-only live binding ignores delete events and disposes obsolete callbacks',async () => {
+  const { createDoctorAppointmentsRealtime } = await import('../../app/utils/appointmentsRealtime.ts')
+  const bindings = [];let refreshes = 0;let removed = 0
+  const channel = { on(_type,filter,callback) { bindings.push({ filter,callback });return channel },subscribe(callback) { callback('SUBSCRIBED');return channel } }
+  const client = { channel: () => channel,removeChannel: async () => { removed++;return 'ok' } }
+  const f = fixture();const live = createDoctorAppointmentsRealtime(client,() => {})
+  await live.update(f.scope(),async () => { refreshes++ });await new Promise(resolve => setTimeout(resolve,300));assert.equal(refreshes,1)
+  for(const binding of bindings)if(['DELETE','*'].includes(binding.filter.event))binding.callback()
+  await new Promise(resolve => setTimeout(resolve,300));assert.equal(refreshes,1,'delete events must not enter a row-authorized revision channel')
+  await live.update(null,async () => {});for(const binding of bindings)binding.callback();await new Promise(resolve => setTimeout(resolve,300));assert.equal(refreshes,1);assert.equal(removed,1);await live.dispose()
+})

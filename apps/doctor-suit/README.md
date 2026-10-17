@@ -104,3 +104,11 @@ doctor-wide UTC exclusion across clinics and explicit current permissions.
 Missing/ambiguous local clocks are unavailable. Upcoming commitments block clinic
 archive; appointment lifecycle/queue UI is DOS-M1-014. The PostgreSQL suite tests
 real cross-clinic/rule/timezone/grant races independently of HTTP browser fixtures.
+
+## Synthetic appointments and waiting queue (DOS-M1-014)
+
+`/appointments` uses the complete shared `BsPracticeAppointmentsPage` and existing `BsAppointmentCalendar`. Reads require exact clinic `appointments.read`; patient names additionally require `patients.read`. Booking/rescheduling require current patient and appointment authority in each involved clinic. Queue transitions use independently granted `queue.manage`. Cancelling after check-in additionally requires queue authority; in-progress visits can only complete. These are administrative statuses and never clinical signatures.
+
+The server applies current rule/location versions, one shared doctor-wide conflict rule, optimistic appointment versions and exact retry receipts after the practice lock. A partial unique index permits only one in-progress visit per doctor. The appointment itself is its unique queue entry. Rescheduling/cancellation append history and preserve clocks, origin clinic/timezone and attribution. Future bookings and active queue entries block clinic archive; explicit queue resolution permits archival while foreign keys retain history. Rule or clinic edits never move/cancel appointments.
+
+Only the three-column `appointment_queue_revisions` interface joins the documented Supabase Realtime publication. RLS checks fresh sessions, active clinics and current read grants; authenticated direct writes remain denied. The shared scoped subscription controller refetches authorized boards on initial join and reconnect. App scope/SID/grant changes abort reads/commands, discard private projections and remove old subscriptions. Outgoing patient notifications remain disabled. Local SQL/browser transports and actual cloud service acceptance are recorded separately in `appointments-evidence.md`; no hosted connections or deployments are configured here.

@@ -1,7 +1,7 @@
 // Owned browser protocol only. Real IANA/conflict/locking authority is checked in SQL.
 import { randomUUID } from 'node:crypto'
 import { validDoctorSchedule,doctorAvailabilityToday } from '../../app/utils/availability.ts'
-function instant(day,minute,zone) {
+export function instant(day,minute,zone) {
   const wall = Date.parse(`${day}T00:00:00Z`)+minute*60000; let value = wall
   for (let attempt=0;attempt<4;attempt++) {
     const parts = new Intl.DateTimeFormat('en',{ timeZone: zone,year: 'numeric',month: '2-digit',day: '2-digit',hour: '2-digit',minute: '2-digit',hourCycle: 'h23' }).formatToParts(new Date(value))
@@ -53,7 +53,7 @@ export function availabilityProtocol({ data,actor,rpc,input,send,capability }) {
   const slots = []; const doctor = data.practices.find(item => item.id===input.p_practice).owner_user_id
   for (const window of windows) for (let minute=window.start;minute+config.slot_minutes<=window.end;minute+=config.slot_minutes) {
     const start = instant(day,minute,location.timezone); const end = instant(day,minute+config.slot_minutes,location.timezone)
-    const busy = data.scheduleCommitments.some(item => item.doctor_user_id===doctor && item.state==='booked' && Date.parse(item.starts_at)<Date.parse(end) && Date.parse(item.ends_at)>Date.parse(start))
+    const busy = data.scheduleCommitments.some(item => item.doctor_user_id===doctor && !['cancelled','no_show'].includes(item.state) && Date.parse(item.starts_at)<Date.parse(end) && Date.parse(item.ends_at)>Date.parse(start))
     const reason = Date.parse(start)<=Date.now() ? 'past' : busy ? 'busy' : null
     slots.push({ minute,starts_at: start,ends_at: end,available: !reason,reason })
   }

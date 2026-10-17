@@ -1098,5 +1098,34 @@
     "sources": [
       "dos-m1-013"
     ]
+  },
+  {
+    "id": "doctor-appointments-and-scoped-queue",
+    "task": "DOS-M1-014",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/package.json",
+      "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/doctor-suit/appointments-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md",
+      "pnpm-lock.yaml"
+    ],
+    "reason": "Add synthetic appointment booking, attributed retry-safe rescheduling/cancellation, explicit administrative state transitions and an authorized clinic queue. One doctor has at most one in-progress administrative visit across clinics. Shared UI owns the complete calendar, queue and controlled dialogs; app logic retains exact permissions, patient lookup, CAS/idempotency and scope. Minimal revision-only Realtime invalidations trigger authoritative refresh after join/reconnect. Private state and obsolete requests clear on context, session or grant loss. Appointment history and original clinic/timezone references survive rule/location edits and archive. External notifications and clinical authority remain disabled.",
+    "sources": [
+      "dos-m1-014"
+    ]
   }
 ]

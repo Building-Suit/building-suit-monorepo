@@ -21,9 +21,15 @@ alter table public.appointment_queue_revisions enable row level security;
 revoke all on public.appointment_queue_revisions from public,anon,authenticated;
 grant select on public.appointment_queue_revisions to authenticated;
 create function doctor_private.can_read_appointment_queue(p_practice uuid,p_location uuid) returns boolean
-language sql stable security definer set search_path='' as $$
-  select doctor_private.has_access(p_practice,'appointments.read',p_location)
-    and exists(select 1 from public.locations where id=p_location and practice_id=p_practice and archived_at is null)
+language plpgsql stable security definer set search_path='' as $$
+begin
+  return doctor_private.has_access(p_practice,'appointments.read',p_location)
+    and exists(select 1 from public.locations where id=p_location and practice_id=p_practice and archived_at is null);
+exception when insufficient_privilege then
+  -- A revoked subscriber matches no rows. Keep the row predicate boolean;
+  -- authoritative appointment RPCs still reject an invalid session explicitly.
+  return false;
+end
 $$;
 revoke all on function doctor_private.can_read_appointment_queue(uuid,uuid) from public,anon,authenticated;
 grant execute on function doctor_private.can_read_appointment_queue(uuid,uuid) to authenticated;
@@ -118,7 +124,7 @@ begin
 end $$;
 create function doctor_private.transition_appointment(p_practice uuid,p_location uuid,p_appointment uuid,p_expected_version integer,p_state text,p_reason text,p_key uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare actor uuid; item public.appointments; previous public.appointments; request jsonb; prior doctor_private.command_receipts; result jsonb; reason text;
+declare actor uuid; item public.appointments; previous public.appointments; request jsonb; prior doctor_private.command_receipts; result jsonb; reason text; conflict_constraint text;
 begin
   perform pg_advisory_xact_lock(hashtextextended(p_practice::text,1));
   perform doctor_private.appointment_scope(p_practice,p_location); actor:=doctor_private.current_actor();
@@ -156,7 +162,10 @@ begin
     values(p_practice,actor,'appointment.'||p_state,item.id,jsonb_build_object('location_id',p_location,'from',previous.state,'to',p_state,'reason',reason,'version',item.version));
   result:=jsonb_build_object('appointment_id',item.id,'version',item.version,'state',item.state,'queue_authority',previous.state='checked_in' and p_state='cancelled');
   insert into doctor_private.command_receipts values(actor,p_key,request,result); return result;
-exception when unique_violation then raise exception using errcode='40001',message='DOCTOR_QUEUE_ALREADY_IN_PROGRESS';
+exception when unique_violation then
+  get stacked diagnostics conflict_constraint=constraint_name;
+  if conflict_constraint='appointments_one_in_progress_per_doctor' then raise exception using errcode='40001',message='DOCTOR_QUEUE_ALREADY_IN_PROGRESS'; end if;
+  raise exception using errcode='22023',message='DOCTOR_IDEMPOTENCY_CONFLICT';
 end $$;
 create function doctor_private.reschedule_appointment(p_practice uuid,p_location uuid,p_appointment uuid,p_expected_version integer,p_destination uuid,p_day date,p_minute integer,p_schedule_version integer,p_location_version integer,p_reason text,p_key uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$

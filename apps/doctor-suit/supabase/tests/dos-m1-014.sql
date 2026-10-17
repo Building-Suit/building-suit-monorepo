@@ -27,7 +27,7 @@ begin
 end $$;
 create function pg_temp.command(n integer,state text,version integer default 1,key integer default 100,reason text default '')returns jsonb language sql as $$select public.doctor_transition_appointment(pg_temp.id('a3',1),pg_temp.id('a4',1),pg_temp.id('a9',n),version,state,reason,pg_temp.id('aa',key))$$;
 create function pg_temp.transition_case(previous text,target text)returns text language plpgsql security definer as $$
-declare case_id uuid:=gen_random_uuid(); stamp timestamptz:=now()-interval '10 minutes'; result text;
+declare case_id uuid:=gen_random_uuid(); stamp timestamptz:=case when target='checked_in' then date_trunc('day',clock_timestamp())+interval '12 hours' else clock_timestamp()-interval '10 minutes' end; result text;
 begin
  insert into public.appointments(id,practice_id,doctor_user_id,location_id,patient_id,starts_at,ends_at,timezone,location_name,state,created_by,checked_in_at,started_at,completed_at)values(case_id,pg_temp.id('a3',1),pg_temp.id('a1',1),pg_temp.id('a4',1),pg_temp.id('a8',1),stamp,stamp+interval '5 minutes','Etc/UTC','Queue A1',previous,pg_temp.id('a1',1),case when previous in('checked_in','in_progress','completed')then now()end,case when previous in('in_progress','completed')then now()end,case when previous='completed'then now()end);
  begin perform public.doctor_transition_appointment(pg_temp.id('a3',1),pg_temp.id('a4',1),case_id,1,target,case when target in('cancelled','no_show')then 'Synthetic resolution'else ''end,gen_random_uuid()); result:='ok';
@@ -53,6 +53,11 @@ select throws_ok($$select * from public.appointments$$,'42501',null,'direct appo
 select throws_ok($$update public.appointments set state='completed'$$,'42501',null,'direct lifecycle writes are denied');
 select throws_ok($$update public.appointment_queue_revisions set revision=999$$,'42501',null,'clients cannot fabricate revision events');
 select is((select count(*)from public.appointment_queue_revisions),2::bigint,'Realtime RLS hides Doctor B counters');
+reset role;
+create policy fixture_future_queue_read on public.appointment_queue_revisions for select to authenticated using(true);
+set local role authenticated;
+select is((select count(*)from public.appointment_queue_revisions),2::bigint,'restrictive queue guard still hides Doctor B under a future permissive policy');
+reset role;drop policy fixture_future_queue_read on public.appointment_queue_revisions;set local role authenticated;
 select is(pg_temp.command(12,'checked_in')->>'state','checked_in','check-in succeeds once');
 select is(pg_temp.command(12,'checked_in')->>'version','2','uncertain check-in retry returns the original receipt');
 select is(pg_temp.board()->>'queue_total','1','duplicate check-in retains one queue identity');
@@ -84,8 +89,8 @@ select is((select count(*)from public.appointment_queue_revisions),2::bigint,'se
 reset role;
 -- Rule-driven rescheduling uses actual future slots and captures clinic snapshots.
 select pg_temp.claim(1);
-select public.doctor_write_schedule(pg_temp.id('a3',1),pg_temp.id('a4',1),0,jsonb_build_object('slot_minutes',20,'weekly',(select jsonb_agg(jsonb_build_object('weekday',day,'start',540,'end',1020))from generate_series(0,6)day),'exceptions','[]'::jsonb),pg_temp.id('aa',200));
-select public.doctor_write_schedule(pg_temp.id('a3',1),pg_temp.id('a4',2),0,jsonb_build_object('slot_minutes',20,'weekly',(select jsonb_agg(jsonb_build_object('weekday',day,'start',540,'end',1020))from generate_series(0,6)day),'exceptions','[]'::jsonb),pg_temp.id('aa',201));
+select public.doctor_write_schedule(pg_temp.id('a3',1),pg_temp.id('a4',1),0,jsonb_build_object('slot_minutes',20,'weekly',(select jsonb_agg(jsonb_build_object('weekday',day,'start',540,'end',1020))from generate_series(0,6)day),'exceptions','[]'::jsonb),pg_temp.id('aa',200),1);
+select public.doctor_write_schedule(pg_temp.id('a3',1),pg_temp.id('a4',2),0,jsonb_build_object('slot_minutes',20,'weekly',(select jsonb_agg(jsonb_build_object('weekday',day,'start',540,'end',1020))from generate_series(0,6)day),'exceptions','[]'::jsonb),pg_temp.id('aa',201),1);
 create function pg_temp.move(key integer default 210,minute integer default 600)returns jsonb language sql as $$select public.doctor_reschedule_appointment(pg_temp.id('a3',1),pg_temp.id('a4',1),pg_temp.id('a9',16),1,pg_temp.id('a4',2),current_date+7,minute,1,1,'Synthetic requested clinic change',pg_temp.id('aa',key))$$;
 set local role authenticated;
 select pg_temp.claim(3);
@@ -117,7 +122,26 @@ reset role;
 delete from auth.sessions where id=pg_temp.id('a2',3);
 set local role authenticated;
 select throws_ok($$select pg_temp.board(3)$$,'42501',null,'revoked Auth SID cannot restore independent data');
-select throws_ok($$select *from public.appointment_queue_revisions$$,'42501',null,'revoked Auth SID cannot receive revision payloads');
+select is((select count(*)from public.appointment_queue_revisions),0::bigint,'revoked Auth SID matches no revision payloads');
 reset role;
+-- DOS-M1-008-C01/C02: actual appointment references, retained snapshots and
+-- a past active queue dependency now have concrete lifecycle acceptance.
+select pg_temp.claim(1);
+select pg_temp.seed(17,1,'checked_in');
+update public.appointments set starts_at=now()-interval '2 days',ends_at=now()-interval '2 days'+interval '20 minutes' where id=pg_temp.id('a9',17);
+select set_config('test.queue.original_clocks',(select jsonb_agg(jsonb_build_object('id',id,'starts_at',starts_at,'ends_at',ends_at,'timezone',timezone,'location_name',location_name)order by id)from public.appointments where practice_id=pg_temp.id('a3',1))::text,true);
+set local role authenticated;
+select lives_ok($$select public.doctor_write_location(pg_temp.id('a3',1),'Renamed synthetic clinic','Europe/London','','',pg_temp.id('aa',259),pg_temp.id('a4',1),1)$$,'DOS-M1-008-C02: clinic correction preserves appointment snapshots');
+select throws_ok($$select public.doctor_archive_location(pg_temp.id('a3',1),pg_temp.id('a4',1),2,pg_temp.id('aa',261))$$,'23503','DOCTOR_LOCATION_HAS_DEPENDENCIES','DOS-M1-008-C01: a past active queue entry blocks clinic archive');
+reset role;
+select is((select jsonb_agg(jsonb_build_object('id',id,'starts_at',starts_at,'ends_at',ends_at,'timezone',timezone,'location_name',location_name)order by id)from public.appointments where practice_id=pg_temp.id('a3',1)),current_setting('test.queue.original_clocks')::jsonb,'changing clinic timezone/name makes no hidden appointment changes');
+set local role authenticated;
+select is(pg_temp.command(17,'cancelled',1,260,'Synthetic past-queue resolution')->>'state','cancelled','past queue entry requires explicit attributed resolution');
+select lives_ok($$select public.doctor_archive_location(pg_temp.id('a3',1),pg_temp.id('a4',1),2,pg_temp.id('aa',261))$$,'resolved clinic archives without deleting historical appointments');
+reset role;
+select is((select count(*)from public.appointments where practice_id=pg_temp.id('a3',1)and location_id=pg_temp.id('a4',1)),3::bigint,'archived clinic retains all actual appointment references');
+select is((select timezone from public.appointments where id=pg_temp.id('a9',12)),'Etc/UTC','historical appointment retains original timezone after clinic correction/archive');
+select is((select location_name from public.appointments where id=pg_temp.id('a9',12)),'Queue 1','historical appointment retains original clinic name');
+select is((select details->'from'->>'location_id'from public.appointment_events where appointment_id=pg_temp.id('a9',16)and event_type='appointment.rescheduled'),pg_temp.id('a4',1)::text,'moved appointment history still identifies archived origin clinic');
 select *from finish();
 rollback;

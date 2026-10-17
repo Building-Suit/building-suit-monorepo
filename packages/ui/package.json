@@ -369,7 +369,8 @@
     "./templates/BsPatientDirectoryPage.vue": "./src/templates/BsPatientDirectoryPage.vue",
     "./organisms/BsPatientIdentityFields.vue": "./src/organisms/BsPatientIdentityFields.vue",
     "./templates/BsPatientProfilePage.vue": "./src/templates/BsPatientProfilePage.vue",
-    "./templates/BsAvailabilityPage.vue": "./src/templates/BsAvailabilityPage.vue"
+    "./templates/BsAvailabilityPage.vue": "./src/templates/BsAvailabilityPage.vue",
+    "./templates/BsPracticeAppointmentsPage.vue": "./src/templates/BsPracticeAppointmentsPage.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

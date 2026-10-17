@@ -6,6 +6,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { randomUUID } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
+import { verifyDoctorAppointmentProvider } from './appointments-actual-provider.mjs'
 import { doctorOversizedResponse } from './oversized-http.mjs'
 import { validateLocalDoctorTarget } from './local-lifecycle.mjs'
 import { DoctorProviderFailure,doctorProviderFailureSummary } from './provider-diagnostics.mjs'
@@ -13,7 +14,7 @@ const root = fileURLToPath(new URL('../../../',import.meta.url))
 const app = path.join(root,'apps/doctor-suit')
 const api = 'http://127.0.0.1:65321'; const origin = 'http://127.0.0.1:4341'
 const project = 'building-suit-doctor'; const bucket = 'doctor-private-documents'
-let stage = 'guard'; let owned = false; let functions; let functionsOutput = ''
+let appointmentAcceptance;let stage = 'guard'; let owned = false; let functions; let functionsOutput = ''
 const scratch = await mkdtemp(path.join(tmpdir(),'doctor-provider-'))
 const environment = { ...process.env,SUPABASE_HOME: process.env.SUPABASE_HOME || path.join(scratch,'cli') }
 const wait = ms => new Promise(resolve => setTimeout(resolve,ms))
@@ -71,7 +72,7 @@ try {
   expect(!docker(['ps','-a','--format','{{.Names}}']).some(name => name.endsWith(`_${project}`)),'Existing project container is not owned by this run')
   expect(!docker(['volume','ls','--format','{{.Name}}']).some(name => name.endsWith(`_${project}`)),'Existing project volume is not owned by this run')
   owned = true; stage = 'start actual local services'; console.log('Starting owned disposable Doctor Auth/Storage/PostgREST/Functions services')
-  await cli(['start','--exclude','studio,postgres-meta,logflare,vector,supavisor,realtime,imgproxy,edge-runtime'])
+  await cli(['start','--exclude','studio,postgres-meta,logflare,vector,supavisor,imgproxy,edge-runtime'])
   stage = 'read private local runtime'; const raw = await cli(['status','-o','json'],30000)
   const start = raw.indexOf('{'); const end = raw.lastIndexOf('}'); const status = JSON.parse(raw.slice(start,end+1))
   expect(status.API_URL===api && status.ANON_KEY && status.SERVICE_ROLE_KEY,'Actual local target/status mismatch')
@@ -84,6 +85,7 @@ try {
   if (existingBucket.error) expect(!(await storageAdmin.storage.createBucket(bucket,{ public: false,fileSizeLimit: 5242880,allowedMimeTypes: ['application/pdf','image/png','image/jpeg'] })).error,'Supported local Storage bucket creation failed')
   stage = 'real Auth and owner onboarding'; const a = await bootstrap(status.ANON_KEY,'doctor-a'); const b = await bootstrap(status.ANON_KEY,'doctor-b')
   console.log('Actual Auth: captured local confirmation email, unconfirmed denial, verified session and two independent owner practices passed')
+  stage = 'actual appointment lifecycle and scoped Realtime';appointmentAcceptance = await verifyDoctorAppointmentProvider({ api,key: status.ANON_KEY,admin: storageAdmin,a,b,rpc,expect,setStage: value => { stage = value } })
   const pdf = new TextEncoder().encode('%PDF-1.7\nSynthetic administrative attachment\n%%EOF\n')
   async function endpoint(actor,operation,data = {},bytes) {
     return fetch(`${api}/functions/v1/doctor-documents?op=${operation}`,{ method: 'POST',headers: { apikey: status.ANON_KEY,authorization: `Bearer ${actor.session.access_token}`,origin,'content-type': 'application/pdf','x-doctor-document': encodeURIComponent(JSON.stringify({ ...actor.scope,key: randomUUID(),...data })) },body: bytes,signal: AbortSignal.timeout(30000) })
@@ -135,11 +137,13 @@ try {
   const revoked = await endpoint(frozen,'download',{ documentId: outcome.documentId }); expect([401,403].includes(revoked.status),'Revoked JWT was admitted by document endpoint')
   expect((await endpoint(b,'status')).status===200,'Independent Doctor B was changed by A signout')
   console.log('Actual Storage/Functions: validated private bytes, stable retry, two preserved versions, anonymous/direct/public/signed bypass denials, cross-practice and revoked-session denials passed')
-  console.log('Synthetic actual-provider acceptance passed. Realtime and hosted provider connections remain UNRUN.')
+  stage = 'actual queue session revocation';await appointmentAcceptance.verifyRevocation()
+  console.log('Synthetic actual-provider acceptance passed. Actual Auth, Storage, Functions and scoped Realtime paths passed; broader recovery/PKCE and hosted connections remain UNRUN.')
 } catch (error) {
   console.error(`Doctor actual-provider acceptance failed at ${stage}: ${doctorProviderFailureSummary(error)}`)
   process.exitCode = 1
 } finally {
+  await appointmentAcceptance?.cleanup()
   if (functions?.pid) {
     // The pnpm wrapper can exit before its CLI child. Own a separate process
     // group so cleanup covers that child without touching unrelated processes.
