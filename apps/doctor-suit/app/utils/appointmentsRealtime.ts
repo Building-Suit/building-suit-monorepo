@@ -1,5 +1,6 @@
+import { createPostgresReadinessBarrier } from '@building-suit/data-access/postgres-readiness'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { createScopedRealtime } from '@building-suit/data-access'
+import { createScopedRealtime,type RealtimeChannel } from '@building-suit/data-access'
 import type { Database } from '../types/database.types'
 import type { DoctorLocationContext } from './locationContext'
 import { doctorScopeKey } from './contextScope.ts'
@@ -7,8 +8,12 @@ export function createDoctorAppointmentsRealtime(client: SupabaseClient<Database
   const realtime = client ? createScopedRealtime({
     // The pinned provider can acknowledge a channel before Postgres delivery is
     // active. Hold admission so the shared join/reconnect refresh closes that gap.
-    channel: name => client.channel(name,{ config: { postgres_changes_options: { wait: true } } }),
-    removeChannel: channel => client.removeChannel(channel),
+    channel(name) {
+      const raw = client.channel(name,{ config: { postgres_changes_options: { wait: true } } })
+      const barrier = createPostgresReadinessBarrier(callback => raw.on('system',{},callback),callback => raw.subscribe(callback))
+      return { raw,dispose: barrier.dispose,on: (...args: Parameters<RealtimeChannel['on']>) => raw.on(...args),subscribe: barrier.subscribe }
+    },
+    removeChannel(channel) { channel.dispose();return client.removeChannel(channel.raw) },
   }) : null
   return {
     async update(selected: DoctorLocationContext | null,refresh: () => Promise<void>) {

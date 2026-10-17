@@ -55,8 +55,8 @@ test('reschedule history rejects unbounded or malformed snapshots',() => {
 
 test('revision-only live binding ignores delete events and disposes obsolete callbacks',async () => {
   const { createDoctorAppointmentsRealtime } = await import('../../app/utils/appointmentsRealtime.ts')
-  const bindings = [];let refreshes = 0;let removed = 0
-  const channel = { on(_type,filter,callback) { bindings.push({ filter,callback });return channel },subscribe(callback) { callback('SUBSCRIBED');return channel } }
+  const bindings = [];let refreshes = 0;let removed = 0;let systemReady
+  const channel = { on(type,filter,callback) { if(type==='system')systemReady = callback;else bindings.push({ filter,callback });return channel },subscribe(callback) { callback('SUBSCRIBED');systemReady({ extension: 'postgres_changes',status: 'ok' });return channel } }
   let capturedOptions
   const client = { channel: (_name,options) => { capturedOptions = options;return channel },removeChannel: async () => { removed++;return 'ok' } }
   const f = fixture();const live = createDoctorAppointmentsRealtime(client,() => {})
@@ -81,13 +81,14 @@ test('failure-only Realtime diagnostics reject arbitrary output, extra fields an
 
 test('Doctor live status and reconciliation wait for the provider activation acknowledgement',async () => {
   const { createDoctorAppointmentsRealtime } = await import('../../app/utils/appointmentsRealtime.ts')
-  let admitted;let refreshes = 0;let options
-  const channel = { on() { return channel },subscribe(callback) { admitted = callback;return channel } }
+  let admitted;let systemReady;let refreshes = 0;let options
+  const channel = { on(type,_filter,callback) { if(type==='system')systemReady = callback;return channel },subscribe(callback) { admitted = callback;return channel } }
   const client = { channel(_name,value) { options = value;return channel },removeChannel: async () => 'ok' }
   const f = fixture();const live = createDoctorAppointmentsRealtime(client,() => {})
   await live.update(f.scope(),async () => { refreshes++ })
   assert.deepEqual(options,{ config: { postgres_changes_options: { wait: true } } })
   await new Promise(resolve => setTimeout(resolve,300));assert.equal(live.connected,false);assert.equal(refreshes,0)
-  admitted('SUBSCRIBED');await new Promise(resolve => setTimeout(resolve,300));assert.equal(live.connected,true);assert.equal(refreshes,1)
+  admitted('SUBSCRIBED');await new Promise(resolve => setTimeout(resolve,300));assert.equal(live.connected,false);assert.equal(refreshes,0)
+  systemReady({ extension: 'postgres_changes',status: 'ok' });await new Promise(resolve => setTimeout(resolve,300));assert.equal(live.connected,true);assert.equal(refreshes,1)
   await live.dispose()
 })
