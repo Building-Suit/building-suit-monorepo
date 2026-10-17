@@ -1,3 +1,6 @@
+import { doctorAppointmentsRepository } from '../utils/appointmentsRepository'
+import { createDoctorAppointmentsController,doctorAppointmentsState } from '../utils/appointmentsController'
+import { createDoctorAppointmentsRealtime } from '../utils/appointmentsRealtime'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createBrowserClient, createServerClient, parseCookieHeader, serializeCookieHeader } from '@supabase/ssr'
 import type { Database } from '../types/database.types'
@@ -71,6 +74,9 @@ export default defineNuxtPlugin((nuxtApp) => {
   const patientProfile = createDoctorProfileController(client ? doctorPatientProfileRepository(client,provider.url,provider.key) : null,reactive(doctorProfileState()),patientsScope)
   const availabilityScope = () => { const selected = context.state.current; return selected?.capabilities.some(cap => cap==='availability.manage' || cap==='appointments.read') ? selected : null }
   const availability = createDoctorAvailabilityController(client ? doctorAvailabilityRepository(client) : null,reactive(doctorAvailabilityState()),availabilityScope)
+  const appointmentsScope = () => { const selected = context.state.current;return selected?.capabilities.includes('appointments.read') ? selected : null }
+  const appointments = createDoctorAppointmentsController(client ? doctorAppointmentsRepository(client) : null,reactive(doctorAppointmentsState()),appointmentsScope)
+  const appointmentsLive = createDoctorAppointmentsRealtime(import.meta.client ? client ?? null : null,appointments.disconnected)
   const delegation = client ? doctorDelegationRepository(client) : null
   const teamScope = (): DoctorContextScope | null => {
     const selected = locationsScope()
@@ -82,13 +88,13 @@ export default defineNuxtPlugin((nuxtApp) => {
     clear: () => { void context.clear() },
     locked: () => locked.value === '1', lock: () => { locked.value = '1'; context.forgetPreference() }, unlock: () => { locked.value = null },
   })
-  context.registerClear(() => { practice.clear(); locations.clear(); patients.clear(); patientProfile.clear(); availability.clear(); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
+  context.registerClear(() => { practice.clear(); locations.clear(); patients.clear(); patientProfile.clear(); availability.clear(); appointments.clear(); void appointmentsLive.update(null,async () => {}); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
   if (import.meta.client && client) {
     const { data } = client.auth.onAuthStateChange(event => {
       // Never await SDK calls while its internal auth lock holds this callback.
       if (event !== 'INITIAL_SESSION') controller.providerChanged()
     })
-    nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh() })
+    nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh(); void appointmentsLive.dispose() })
   }
-  return { provide: { doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
+  return { provide: { doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
 })

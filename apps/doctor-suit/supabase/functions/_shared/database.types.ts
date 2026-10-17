@@ -60,8 +60,36 @@ export type Database = {
           },
         ]
       }
+      appointment_queue_revisions: {
+        Row: {
+          location_id: string
+          practice_id: string
+          revision: number
+        }
+        Insert: {
+          location_id: string
+          practice_id: string
+          revision?: number
+        }
+        Update: {
+          location_id?: string
+          practice_id?: string
+          revision?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_queue_revisions_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
+          checked_in_at: string | null
+          completed_at: string | null
           created_at: string
           created_by: string
           doctor_user_id: string
@@ -71,6 +99,7 @@ export type Database = {
           location_name: string
           patient_id: string
           practice_id: string
+          started_at: string | null
           starts_at: string
           state: string
           timezone: string
@@ -78,6 +107,8 @@ export type Database = {
           version: number
         }
         Insert: {
+          checked_in_at?: string | null
+          completed_at?: string | null
           created_at?: string
           created_by: string
           doctor_user_id: string
@@ -87,6 +118,7 @@ export type Database = {
           location_name: string
           patient_id: string
           practice_id: string
+          started_at?: string | null
           starts_at: string
           state?: string
           timezone: string
@@ -94,6 +126,8 @@ export type Database = {
           version?: number
         }
         Update: {
+          checked_in_at?: string | null
+          completed_at?: string | null
           created_at?: string
           created_by?: string
           doctor_user_id?: string
@@ -103,6 +137,7 @@ export type Database = {
           location_name?: string
           patient_id?: string
           practice_id?: string
+          started_at?: string | null
           starts_at?: string
           state?: string
           timezone?: string
@@ -820,6 +855,25 @@ export type Database = {
         Returns: Json
       }
       doctor_administrative_capabilities: { Args: never; Returns: string[] }
+      doctor_appointment_board: {
+        Args: {
+          p_day: string
+          p_location: string
+          p_page?: number
+          p_practice: string
+          p_queue_page?: number
+        }
+        Returns: Json
+      }
+      doctor_appointment_history: {
+        Args: {
+          p_appointment: string
+          p_location: string
+          p_page?: number
+          p_practice: string
+        }
+        Returns: Json
+      }
       doctor_archive_document: {
         Args: {
           p_document: string
@@ -984,6 +1038,22 @@ export type Database = {
         Returns: Json
       }
       doctor_practice_setup: { Args: never; Returns: Json }
+      doctor_reschedule_appointment: {
+        Args: {
+          p_appointment: string
+          p_day: string
+          p_destination: string
+          p_expected_version: number
+          p_key: string
+          p_location: string
+          p_location_version: number
+          p_minute: number
+          p_practice: string
+          p_reason: string
+          p_schedule_version: number
+        }
+        Returns: Json
+      }
       doctor_reserve_document: {
         Args: {
           p_actor: string
@@ -1052,6 +1122,18 @@ export type Database = {
           p_practice: string
           p_search?: string
           p_size?: number
+        }
+        Returns: Json
+      }
+      doctor_transition_appointment: {
+        Args: {
+          p_appointment: string
+          p_expected_version: number
+          p_key: string
+          p_location: string
+          p_practice: string
+          p_reason: string
+          p_state: string
         }
         Returns: Json
       }
