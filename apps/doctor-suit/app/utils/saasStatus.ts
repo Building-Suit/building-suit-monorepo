@@ -28,13 +28,14 @@ export function doctorSaasStatus(value: unknown,identity: DoctorIdentity): Docto
   if(startedAt>=endsAt)invalid()
   return { ...base,terms,period: { id: value.period.id,kind: 'trial',termsId: terms.id,startedAt,endsAt,acceptedDocumentRef: terms.termsDocumentRef } }
 }
-export type DoctorSaasError = 'configuration' | 'conflict' | 'trial-used' | 'trial-unavailable' | 'staff-limit' | 'clinic-limit' | 'inactive' | 'denied' | 'invalid' | 'network'
+export type DoctorSaasError = 'configuration' | 'conflict' | 'trial-used' | 'trial-unavailable' | 'staff-limit' | 'clinic-limit' | 'inactive' | 'over-limit-read-only' | 'denied' | 'invalid' | 'network'
 export function doctorSaasFailure(error: unknown): DoctorSaasError {
   const code = record(error) ? error.code : null
   if(code==='DS001')return 'configuration'
   if(code==='DS002')return 'staff-limit'
   if(code==='DS003')return 'clinic-limit'
   if(code==='DS006')return 'inactive'
+  if(code==='DS007')return 'over-limit-read-only'
   if(code==='DS004')return 'trial-used'
   if(code==='DS005')return 'trial-unavailable'
   if(code==='40001')return 'conflict'
