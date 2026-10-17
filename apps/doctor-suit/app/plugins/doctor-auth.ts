@@ -59,7 +59,9 @@ export default defineNuxtPlugin((nuxtApp) => {
   const locked = useCookie<string | null>(`bs-doctor-${settings.environment}-locked`, { sameSite: 'lax', path: '/', secure: settings.origin.startsWith('https:') })
   const state = reactive(doctorAuthState())
   const preference = useCookie<DoctorContextPreference | null>(`bs-doctor-${settings.environment}-context`, { sameSite: 'lax', path: '/', secure: provider.origin.startsWith('https:') })
-  const context = createDoctorContextController(client ? doctorContextRepository(client) : null, reactive(doctorContextState()), () => state.identity, provider.environment, { read: () => preference.value, write: value => { preference.value = value } })
+  const context = createDoctorContextController(client ? doctorContextRepository(client) : null, reactive(doctorContextState()), () => state.identity, provider.environment, { read: () => preference.value, write: value => { preference.value = value } },import.meta.client ? {
+    now: () => performance.now(),set: (callback,delay) => window.setTimeout(callback,delay),clear: handle => window.clearTimeout(handle as number),
+  } : undefined)
   const account = createDoctorAccountController(client ? doctorAccountRepository(client) : null,reactive(doctorAccountState()),() => state.identity,provider.environment)
   const auditScope = () => {
     const selected = context.state.current
@@ -112,7 +114,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       // Never await SDK calls while its internal auth lock holds this callback.
       if (event !== 'INITIAL_SESSION') controller.providerChanged()
     })
-    nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh(); void appointmentsLive.dispose() })
+    nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh();void context.clear(); void appointmentsLive.dispose() })
   }
   return { provide: { doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
 })

@@ -9,6 +9,7 @@ import { createDoctorAppointmentsController, doctorAppointmentsState } from '../
 const id = n => `ae020000-0000-0000-0000-${String(n).padStart(12, '0')}`
 const actor = { userId: id(1), sessionId: id(2), practiceId: id(3) }
 const context = () => ({ practice_id: id(3), location_id: id(4), practice_name: 'Synthetic edition practice', doctor_name: 'Synthetic doctor', location_name: 'Synthetic clinic', timezone: 'Etc/UTC', portal: 'doctor', grants_version: 1, location_version: 1, capabilities: ['patients.read', 'appointments.read', 'documents.read'] })
+const entitlement = () => ({ state:'unconfigured',revision:0,writes_allowed:false,can_add_staff:false,can_add_clinic:false,over_limit:false,valid_until:null,observed_at:'2026-10-17T00:00:00Z' })
 
 test('DOS-AE-002: candidate mode does not admit a live or clinical mode', () => {
   assert.equal(doctorEditionMode('synthetic_preview'), true)
@@ -23,7 +24,7 @@ test('administrative reasons are fixed intent codes without free-text notes', ()
 test('legacy synthetic context remains compatible; trusted edition metadata is validated', () => {
   const legacy = doctorLocationContext(context(), actor, 'local')
   assert.equal(Object.hasOwn(legacy, 'editionRevision'), false)
-  const candidate = doctorLocationContext({ ...context(), capabilities: ['patients.read','appointments.read'], edition: 'administrative_candidate', edition_revision: 2 }, actor, 'local')
+  const candidate = doctorLocationContext({ ...context(), capabilities: ['patients.read','appointments.read'], edition: 'administrative_candidate', edition_revision: 2,entitlement:entitlement() }, actor, 'local')
   assert.equal(candidate.edition, 'administrative_candidate')
   assert.equal(candidate.editionRevision, 2)
   assert.throws(() => doctorLocationContext({ ...context(), edition: 'administrative_candidate', edition_revision: 2 }, actor, 'local'), /CONTEXT_RESPONSE_INVALID/)
@@ -53,7 +54,7 @@ test('same-user edition transition clears private state and rejects an older pen
   controller.registerClear(() => { privateDraft = ''; appointments.clear() })
   const captured = controller.capture('documents')
   const pending = appointments.load({ date: '2026-10-25', page: 0, queuePage: 0 })
-  row = { ...row, edition: 'administrative_candidate', edition_revision: 2, capabilities: ['patients.read', 'appointments.read'] }
+  row = { ...row, edition: 'administrative_candidate', edition_revision: 2, capabilities: ['patients.read', 'appointments.read'],entitlement:entitlement() }
   await controller.refresh()
   release({ locationVersion: 1, timezone: 'Etc/UTC', items: [{ patientName: 'SYNTHETIC_STALE_RESPONSE' }] })
   assert.equal(await pending, false)

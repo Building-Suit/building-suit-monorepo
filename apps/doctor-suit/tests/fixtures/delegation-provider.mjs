@@ -63,6 +63,10 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
   const memberFor = practice => data.memberships.find(item => item.practice_id===practice && item.user_id===actor.id && item.status==='active')
   const owner = practice => data.practices.some(item => item.id===practice && item.owner_user_id===actor.id)
   const candidate = state.edition==='administrative_candidate'
+  // Protocol-only synthetic metadata. Candidate actors start unconfigured;
+  // focused fixtures may explicitly supply per-practice test periods.
+  const entitlement = practice => ({ state:'unconfigured',revision:0,writes_allowed:false,can_add_staff:false,can_add_clinic:false,over_limit:false,valid_until:null,
+    ...state.entitlements?.[practice],observed_at:new Date().toISOString() })
   const allowed = doctorAdministrativeCapabilities.filter(key => !candidate || !key.startsWith('documents.'))
   const capability = (practice,location,key) => allowed.includes(key) && (owner(practice) || Boolean(memberFor(practice)?.grants.some(item => (!location || item.location_id===location) && item.capabilities.includes(key))))
   const contexts = () => data.locations.filter(item => !item.archived_at).flatMap(location => {
@@ -70,7 +74,7 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
     const membership = memberFor(practice.id)
     const capabilities = (owner(practice.id) ? [...doctorAdministrativeCapabilities] : membership?.grants.find(item => item.location_id===location.id)?.capabilities || []).filter(key => allowed.includes(key))
     if (!capabilities.length) return []
-    return [{ practice_id: practice.id,practice_name: practice.name,doctor_name: data.users.find(item => item.id===practice.owner_user_id).name,location_id: location.id,location_name: location.name,timezone: location.timezone,portal: owner(practice.id) ? 'doctor' : 'secretary',grants_version: owner(practice.id) ? practice.version : membership.version,location_version: location.version,edition: candidate ? 'administrative_candidate' : 'synthetic_preview',edition_revision: state.editionRevision || 1,capabilities }]
+    return [{ practice_id: practice.id,practice_name: practice.name,doctor_name: data.users.find(item => item.id===practice.owner_user_id).name,location_id: location.id,location_name: location.name,timezone: location.timezone,portal: owner(practice.id) ? 'doctor' : 'secretary',grants_version: owner(practice.id) ? practice.version : membership.version,location_version: location.version,edition: candidate ? 'administrative_candidate' : 'synthetic_preview',edition_revision: state.editionRevision || 1,capabilities,...(candidate?{entitlement:entitlement(practice.id)}:{}) }]
   })
   const rpc = url.pathname.replace('/rest/v1/rpc/','')
   if (state.milestone && milestoneProtocol({ data,actor,rpc,input,send,owner })) return true
