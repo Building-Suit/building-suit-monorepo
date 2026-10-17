@@ -21,6 +21,7 @@
     "apps/doctor-suit/app/utils/delegation.ts",
     "apps/doctor-suit/app/utils/delegationForms.ts",
     "apps/doctor-suit/app/utils/locationContext.ts",
+    "apps/doctor-suit/app/utils/teamController.ts",
     "apps/doctor-suit/supabase/migrations/20261017144047_doctor_administrative_presentation.sql",
     "apps/doctor-suit/supabase/tests/dos-ae-002-ui.sql",
     "apps/doctor-suit/tests/e2e/dos-ae-002.auth.fixture.ts",
@@ -29,6 +30,7 @@
     "apps/doctor-suit/tests/unit/administrative-edition.test.mjs",
     "apps/doctor-suit/tests/unit/administrative-presentation.test.mjs",
     "apps/doctor-suit/tests/unit/dos-m1-009.test.mjs",
+    "apps/doctor-suit/tests/unit/dos-m1-010.test.mjs",
     "docs/work-packages/doctor-suit/early-administrative-edition/ae-002-ui-binding.md",
     "packages/ui/src/templates/BsPatientProfilePage.vue",
     "packages/ui/src/templates/BsPracticeAppointmentsPage.vue"

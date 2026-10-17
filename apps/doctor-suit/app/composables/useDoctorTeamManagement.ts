@@ -23,7 +23,8 @@ export function useDoctorTeamManagement() {
     watch(() => form.value.locationIds.join(':'), () => { form.value = { ...form.value,grants: form.value.locationIds.map(locationId => ({ locationId,capabilities: form.value.grants?.find(item => item.locationId===locationId)?.capabilities || doctorDelegationPreset(form.value.role,effectiveCapabilities.value) })) } })
   }
   trackForm(invitationForm); trackForm(memberForm)
-  watch(() => { const value = team.state.directory; return value ? `${value.edition}:${value.editionRevision}:${value.availableCapabilities.join(',')}` : null },(value,previous) => { if (previous && value!==previous) { reset(); team.forgetCredential() } },{ flush: 'sync' })
+  const unregisterPolicy = team.registerPolicyChange(() => { reset(); team.forgetCredential() })
+  onBeforeUnmount(unregisterPolicy)
   async function reload() { const result = await team.load({ ...query }); if (!result && scopeKey.value && team.state.error==='denied') await context.refresh(); return result }
   watch(scopeKey, () => { reset(); if (hydrated.value) void reload() }, { flush: 'sync' })
   function search(value: string) { if (team.state.pending) return; query.search = value; query.page = 0; void reload() }
