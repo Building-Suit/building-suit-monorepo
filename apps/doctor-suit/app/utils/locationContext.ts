@@ -1,5 +1,6 @@
 import type { DoctorContextScope } from './contextScope'
 import type { DoctorIdentity } from './authController'
+import { doctorEditionMode } from './administrativeEdition.ts'
 export const doctorAdministrativeCapabilities = ['dashboard.read', 'locations.read', 'locations.manage', 'patients.read', 'patients.write', 'documents.read', 'documents.write', 'availability.manage', 'appointments.read', 'appointments.write', 'queue.manage', 'audit.read'] as const
 export type DoctorAdministrativeCapability = typeof doctorAdministrativeCapabilities[number]
 export interface DoctorLocationContext extends DoctorContextScope {
@@ -21,9 +22,12 @@ export function doctorLocationContext(value: unknown, actor: DoctorIdentity, env
     || !['doctor', 'secretary'].includes(String(value.portal)) || !Number.isSafeInteger(value.grants_version) || Number(value.grants_version)<1
     || !Number.isSafeInteger(value.location_version) || Number(value.location_version)<1 || !Array.isArray(value.capabilities)
     || value.capabilities.some(item => !doctorAdministrativeCapabilities.includes(item as DoctorAdministrativeCapability))) invalid()
+  const edition = value.edition !== undefined || value.edition_revision !== undefined
+  if (edition && (!doctorEditionMode(value.edition) || !Number.isSafeInteger(value.edition_revision) || Number(value.edition_revision) < 1)) invalid()
   return { environment, userId: actor.userId, sessionId: actor.sessionId, practiceId: value.practice_id, locationId: value.location_id,
     portal: value.portal as DoctorContextScope['portal'], practiceName: value.practice_name, doctorName: value.doctor_name,
-    locationName: value.location_name, timezone: value.timezone, grantsVersion: Number(value.grants_version), locationVersion: Number(value.location_version), capabilities: [...new Set(value.capabilities)] as DoctorAdministrativeCapability[] }
+    locationName: value.location_name, timezone: value.timezone, grantsVersion: Number(value.grants_version), locationVersion: Number(value.location_version), capabilities: [...new Set(value.capabilities)] as DoctorAdministrativeCapability[],
+    ...(edition ? { edition: value.edition as NonNullable<DoctorContextScope['edition']>, editionRevision: Number(value.edition_revision) } : {}) }
 }
 export function doctorLocationContexts(value: unknown, actor: DoctorIdentity, environment: DoctorContextScope['environment']) {
   if (!Array.isArray(value)) invalid()
