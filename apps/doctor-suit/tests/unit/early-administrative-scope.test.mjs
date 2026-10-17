@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
-import { sourceHead, validateAdministrativeScope } from '../../../../tooling/doctor-admin/scope.mjs'
+import { sourceHead, validateAdministrativeScope } from '../helpers/administrative-scope.mjs'
 
 const root = fileURLToPath(new URL('../../../../', import.meta.url))
 const scope = JSON.parse(readFileSync(`${root}docs/work-packages/doctor-suit/early-administrative-edition/scope.v1.json`, 'utf8'))
