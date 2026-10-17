@@ -28,9 +28,11 @@ insert into public.practice_patients(id,practice_id,patient_identity_id,display_
  (pg_temp.id(63),pg_temp.id(24),pg_temp.id(53),'Synthetic expired patient',pg_temp.id(35),pg_temp.id(4));
 insert into public.appointments(id,practice_id,doctor_user_id,location_id,patient_id,starts_at,ends_at,timezone,location_name,created_by)
  values(pg_temp.id(71),pg_temp.id(21),pg_temp.id(1),pg_temp.id(31),pg_temp.id(61),'2030-01-02T09:00Z','2030-01-02T09:20Z','Etc/UTC','Synthetic A1',pg_temp.id(1));
+insert into public.secretary_invitations(id,practice_id,recipient_email,token_hash,grants,created_by,expires_at)
+ values(pg_temp.id(72),pg_temp.id(22),'synthetic-write-1@example.test',encode(sha256(decode(repeat('ef',32),'hex')),'hex'),pg_temp.grants(array[33],array['patients.read']),pg_temp.id(2),clock_timestamp()+interval'2 hours');
 insert into public.doctor_saas_terms_versions(id,plan_key,version,status,currency,currency_exponent,monthly_minor,trial_days,staff_limit,staff_unlimited,clinic_limit,clinic_unlimited,over_limit_policy,renewal_policy,grace_days,expiry_policy,cancellation_policy,refund_policy,terms_document_ref,commercial_approval_ref,legal_approval_ref)values
  (pg_temp.id(81),'synthetic-business',1,'approved','USD',2,1234,2,1,false,1,false,'block_new_allocation','manual',0,'historical_read_only','period_end','manual_review','synthetic-business/v1','SYNTHETIC_COMMERCIAL','SYNTHETIC_LEGAL'),
- (pg_temp.id(82),'synthetic-business',2,'approved','USD',2,1234,2,1,false,1,false,'read_only_until_within_limit','manual',0,'historical_read_only','period_end','manual_review','synthetic-business/v2','SYNTHETIC_COMMERCIAL','SYNTHETIC_LEGAL');
+ (pg_temp.id(82),'synthetic-business',2,'approved','USD',2,1234,2,2,false,1,false,'read_only_until_within_limit','manual',0,'historical_read_only','period_end','manual_review','synthetic-business/v2','SYNTHETIC_COMMERCIAL','SYNTHETIC_LEGAL');
 update public.doctor_saas_configuration set terms_version_id=pg_temp.id(81),revision=2,change_reason='Synthetic block-allocation policy';
 set local role authenticated;select pg_temp.claim(1);select public.doctor_start_saas_trial(pg_temp.id(81),2,'synthetic-business/v1',pg_temp.id(91));reset role;
 update public.doctor_saas_configuration set terms_version_id=pg_temp.id(82),revision=3,change_reason='Synthetic read-only policy';
@@ -60,7 +62,11 @@ select lives_ok($$select pg_temp.command(format('select public.doctor_archive_lo
 select lives_ok($$select pg_temp.command(pg_temp.patient(22,33,62,105))$$,'same stable correction request can succeed after reducing back within the limit');
 select lives_ok($$select pg_temp.command(format('select public.doctor_write_schedule(%L,%L,0,%L::jsonb,%L,1)',pg_temp.id(22),pg_temp.id(33),jsonb_build_object('slot_minutes',20,'weekly','[]'::jsonb,'exceptions','[]'::jsonb),pg_temp.id(106)))$$,'new schedule is allowed after recovery');
 select lives_ok($$select pg_temp.command(format('select public.doctor_write_schedule(%L,%L,1,%L::jsonb,%L,1)',pg_temp.id(22),pg_temp.id(33),jsonb_build_object('slot_minutes',30,'weekly','[]'::jsonb,'exceptions','[]'::jsonb),pg_temp.id(108)))$$,'schedule update with its location primary key also checks current authority');
+select pg_temp.claim(1);
+select lives_ok($$select pg_temp.command(format('select public.doctor_accept_secretary_invitation(%L,%L,%L)',pg_temp.id(72),repeat('ef',32),pg_temp.id(122)))$$,'read-only policy accepts a reserved invitation exactly at the staff cap');
 reset role;
+select is(doctor_private.saas_usage(pg_temp.id(22))->>'staff_total','2','acceptance converts the reservation without increasing final staff usage');
+select is((select status from public.secretary_invitations where id=pg_temp.id(72)),'accepted','successful reserved conversion marks the invitation accepted');
 update public.doctor_saas_accounts set state='suspended',revision=revision+1,reason_code='operator_hold'where subscriber_user_id=pg_temp.id(1);
 set local role authenticated;select pg_temp.claim(1);
 select throws_ok($$select pg_temp.command(pg_temp.patient(21,31,61,109,2))$$,'DS006','DOCTOR_SAAS_PERIOD_INACTIVE','held subscriber cannot correct administrative records');

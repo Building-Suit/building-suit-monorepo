@@ -69,5 +69,5 @@ test('DOS-M1-009/010: authenticated return paths strip invitation material and n
   const { doctorReturnPath } = await import('../../app/utils/authConfiguration.ts')
   assert.equal(doctorReturnPath('/invitations/accept?code=synthetic#credential'),'/invitations/accept')
   assert.equal(doctorReturnPath('/team?role=owner'),'/team')
-  assert.equal(doctorReturnPath('https://attacker.example/invitations/accept'),'/account')
+  assert.equal(doctorReturnPath('https://attacker.example/invitations/accept'),'/workspace')
 })

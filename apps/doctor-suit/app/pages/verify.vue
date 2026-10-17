@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { doctorPkceCallback } from '../utils/authConfiguration'
+import { doctorHomePath,doctorPkceCallback } from '../utils/authConfiguration'
 definePageMeta({ layout: false })
 const route = useRoute()
 const { auth, copy, product, availability, error } = useDoctorAuthPresentation(false)
@@ -9,7 +9,7 @@ onMounted(async () => {
   const callback = doctorPkceCallback(route.query)
   await navigateTo('/verify', { replace: true })
   if (!callback || !await auth.exchange(callback.code, callback.flowId)) { await auth.refresh(); invalid.value = true }
-  else await navigateTo('/account', { replace: true })
+  else await navigateTo(doctorHomePath, { replace: true })
 })
 const gate = computed(() => availability.value || (invalid.value ? { state: 'error' as const, title: copy.value.expired, description: error.value || copy.value.verifyDescription } : { state: 'loading' as const, title: copy.value.pending, description: copy.value.verifyDescription }))
 </script>

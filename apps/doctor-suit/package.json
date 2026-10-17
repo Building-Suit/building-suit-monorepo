@@ -10,6 +10,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@building-suit/contracts": "workspace:*",
     "@building-suit/data-access": "workspace:*",
     "@building-suit/nuxt-layer": "workspace:*",
     "@building-suit/ui": "workspace:*",

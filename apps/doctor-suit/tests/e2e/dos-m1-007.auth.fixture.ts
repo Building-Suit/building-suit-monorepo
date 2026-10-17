@@ -7,7 +7,7 @@ async function prepare(context: BrowserContext, ar: boolean) {
   await context.route('**/*', route => ['127.0.0.1', 'localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort())
 }
 async function signIn(page: Page, ar = false) {
-  await page.goto('/sign-in')
+  await page.goto('/account')
   await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill('synthetic@example.test')
   await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
   await page.getByRole('button', { name: ar ? 'تسجيل الدخول' : 'Sign in', exact: true }).click()
@@ -39,8 +39,8 @@ for (const ar of [false, true]) test(`DOS-M1-007 ${ar ? 'AR mobile' : 'EN deskto
     await expect(second.getByText(ar ? 'المؤهلات المهنية غير متحقق منها' : 'Professional credentials unverified', { exact: true })).toBeVisible()
     await expect(second.getByText('Africa/Cairo', { exact: true })).toBeVisible()
     const overview = doctorDashboardCopy(ar)
-    await expect(second.getByText(overview.today,{ exact: true }).locator('..').locator('dd')).toHaveText('0')
-    await expect(second.getByText(overview.queue,{ exact: true }).first().locator('..').locator('dd')).toHaveText('0')
+    await expect(second.getByRole('group',{ name: overview.today,exact: true }).getByText('0',{ exact: true })).toHaveText('0')
+    await expect(second.getByRole('group',{ name: overview.queue,exact: true }).getByText('0',{ exact: true })).toHaveText('0')
     expect(await second.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
     await expect(second.getByRole('status').filter({ hasText: 'Synthetic practice · Synthetic first location · Africa/Cairo' })).toBeVisible()
     await expect(second.getByRole('main')).toHaveCount(1)

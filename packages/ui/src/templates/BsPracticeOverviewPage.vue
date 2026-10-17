@@ -24,18 +24,14 @@ const emit = defineEmits<{ retry: []; refresh: []; page: [scope: string,page: nu
 const columns = computed(() => props.activity ? [{ key: 'patient',field: 'patient',header: props.activity.patient },{ key: 'time',field: 'time',header: props.activity.time },{ key: 'status',field: 'status',header: props.activity.status },{ key: 'source',header: props.activity.source }] : [])
 </script>
 <template>
-  <BsContentSection padding="lg">
+  <BsBox as="section">
     <BsStack gap="lg">
-      <BsHeading :level="1">{{ title }}</BsHeading>
-      <BsText as="p" tone="muted">{{ description }}</BsText>
+      <BsPageHeader :title="title" :subtitle="description"><template v-if="actions.length" #actions><BsLink v-for="action in actions" :key="action.to" :to="action.to" variant="standalone">{{ action.label }}</BsLink></template></BsPageHeader>
       <BsAlert tone="info" :title="notice.title" :description="notice.description" />
       <BsStateSurface v-if="loading" state="loading" :title="loadingLabel" />
       <BsStateSurface v-else-if="denied" state="permission" :title="denied.title" :description="denied.description" />
       <BsStateSurface v-else-if="error" state="error" :title="error" :action-label="retryLabel" @action="emit('retry')" />
       <template v-else>
-        <BsContentSection v-if="profile" :title="profile.title"><BsDescriptionList><BsDescriptionItem v-for="field in profile.fields" :key="field.id" :term="field.label">{{ field.value }}</BsDescriptionItem></BsDescriptionList></BsContentSection>
-        <BsContentSection v-if="location" :title="location.title"><BsDescriptionList><BsDescriptionItem v-for="field in location.fields" :key="field.id" :term="field.label">{{ field.value }}</BsDescriptionItem></BsDescriptionList></BsContentSection>
-        <BsInline :wrap="true"><BsLink v-for="action in actions" :key="action.to" :to="action.to">{{ action.label }}</BsLink></BsInline>
         <BsStack v-if="activity" gap="lg">
           <BsSectionHeader :title="activity.title" :description="activity.description"><template #actions><BsButton :disabled="activityPending" @click="emit('refresh')">{{ activity.refresh }}</BsButton></template></BsSectionHeader>
           <BsText v-if="refreshedAt" as="p" size="sm">{{ activity.refreshed }}: {{ refreshedAt }}</BsText>
@@ -44,7 +40,7 @@ const columns = computed(() => props.activity ? [{ key: 'patient',field: 'patien
           <BsStateSurface v-else-if="!activitySections?.length" state="empty" :title="activity.empty" />
           <BsPanel v-for="section in activityLoading || activityError ? [] : activitySections" :key="section.scope" padding="md"><BsStack gap="md">
             <BsHeading :level="3">{{ section.title }}</BsHeading><BsText as="p">{{ section.window }}</BsText>
-            <BsDescriptionList><BsDescriptionItem :term="activity.today">{{ section.total }}</BsDescriptionItem><BsDescriptionItem :term="activity.queue">{{ section.queueTotal }}</BsDescriptionItem></BsDescriptionList>
+            <BsGrid :columns="2"><BsKpiCard :title="activity.today" role="group" :aria-label="activity.today">{{ section.total }}</BsKpiCard><BsKpiCard :title="activity.queue" role="group" :aria-label="activity.queue">{{ section.queueTotal }}</BsKpiCard></BsGrid>
             <BsHeading :level="4">{{ activity.appointments }}</BsHeading>
             <BsDataTable :value="section.items" :columns="columns" row-key="id" :label="`${section.title} · ${activity.appointments}`"><template #cell-source="{ row }"><BsButton size="sm" :disabled="activityPending" @click="emit('source',section.scope,row.id)">{{ activity.source }}</BsButton></template><template #empty><BsStateSurface state="empty" :title="activity.noRows" /></template></BsDataTable>
             <BsPagination :page="section.page+1" :total="section.total" :label="`${section.title} · ${activity.pages}`" :previous-label="activity.previous" :next-label="activity.next" @update:page="emit('page',section.scope,$event-1,false)" />
@@ -53,7 +49,8 @@ const columns = computed(() => props.activity ? [{ key: 'patient',field: 'patien
             <BsPagination :page="section.queuePage+1" :total="section.queueTotal" :label="`${section.title} · ${activity.queuePages}`" :previous-label="activity.previous" :next-label="activity.next" @update:page="emit('page',section.scope,$event-1,true)" />
           </BsStack></BsPanel>
         </BsStack>
+        <BsGrid v-if="profile || location" :columns="2"><BsPanel v-if="profile" padding="md"><BsHeading :level="2">{{ profile.title }}</BsHeading><BsDescriptionList><BsDescriptionItem v-for="field in profile.fields" :key="field.id" :term="field.label">{{ field.value }}</BsDescriptionItem></BsDescriptionList></BsPanel><BsPanel v-if="location" padding="md"><BsHeading :level="2">{{ location.title }}</BsHeading><BsDescriptionList><BsDescriptionItem v-for="field in location.fields" :key="field.id" :term="field.label">{{ field.value }}</BsDescriptionItem></BsDescriptionList></BsPanel></BsGrid>
       </template>
     </BsStack>
-  </BsContentSection>
+  </BsBox>
 </template>

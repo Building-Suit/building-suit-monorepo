@@ -43,7 +43,7 @@ test('DOS-M1-006: publishable keys, environment-bound cookies and callback origi
   ]) assert.throws(() => doctorProviderConfiguration({ ...values, ...bad }), /^Error: DOCTOR_/)
 })
 test('DOS-M1-006: external, encoded, traversal and malformed return destinations fail closed', () => {
-  for (const value of ['https://evil.test', '//evil.test', '/\\evil.test', '%2f%2fevil.test', '/patients/../../evil', '/account\n', '/%00account', '%zz', ['//evil.test'], '/sign-in']) assert.equal(doctorReturnPath(value), '/account')
+  for (const value of [undefined,'https://evil.test', '//evil.test', '/\\evil.test', '%2f%2fevil.test', '/patients/../../evil', '/account\n', '/%00account', '%zz', ['//evil.test'], '/sign-in']) assert.equal(doctorReturnPath(value), '/workspace')
   assert.equal(doctorReturnPath('/patients?phone=synthetic#private'), '/patients')
   assert.equal(doctorReturnPath('/appointments'), '/appointments')
 })

@@ -2635,10 +2635,19 @@
     {
       "source": "apps/doctor-suit/app/pages/index.vue",
       "kind": "route",
-      "destination": "packages/ui/src/templates/BsProductPreviewPage.vue",
+      "destination": "packages/ui/src/templates/BsLandingPage.vue",
       "domainAdapter": "apps/doctor-suit/app/pages/index.vue",
-      "purpose": "synthetic-public-product-preview",
-      "status": "implemented; browser acceptance pending",
+      "purpose": "canonical-administrative-product-landing",
+      "status": "implemented; local EN/AR acceptance required",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/layouts/marketing.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsMarketingLayout.vue",
+      "domainAdapter": "apps/doctor-suit/app/layouts/marketing.vue",
+      "status": "implemented; local EN/AR acceptance required",
       "verification": "not-yet-accepted",
       "dependencies": []
     },

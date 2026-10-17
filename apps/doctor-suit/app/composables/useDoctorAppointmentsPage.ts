@@ -17,22 +17,33 @@ export function useDoctorAppointmentsPage() {
   const editor = useRecordAction(() => form.value);const transition = useRecordAction(() => ({ reason: reason.value }));const query = () => ({ date: date.value,page: page.value,queuePage: queuePage.value })
   function reset() { submitted.value = null;editor.reset();transition.reset();appointments.discard();original.value = null;transitionTarget.value = null;historyTarget.value = null;historyOpen.value = false;sourceMode.value = false;reason.value = '';form.value = { patientId: '',destinationId: '',date: today(),minute: null,reason: '' } }
   const unregister = context.registerClear(reset)
-  onBeforeUnmount(() => { unregister();reset();appointments.clear();void nuxt.$doctorAppointmentsLive.update(null,async () => {}) })
+  let initialRead = true;let refreshAfterInitial = false;let stopped = false
+  onBeforeUnmount(() => { stopped=true;unregister();reset();appointments.clear();void nuxt.$doctorAppointmentsLive.update(null,async () => {}) })
   async function denied() { if([state.error,state.actionError,state.historyError,state.offersError,state.patientsError].includes('denied')) { reset();await context.refresh() } }
   async function read() { const result = await appointments.load(query());if(result)state.live = nuxt.$doctorAppointmentsLive.connected ? 'current' : 'offline';await denied();return result }
-  async function bind() { const selected = nuxt.$doctorAppointmentsScope();try { await nuxt.$doctorAppointmentsLive.update(selected,async () => { await read() }) } catch { appointments.disconnected() } }
+  async function bind() { const selected = nuxt.$doctorAppointmentsScope();try { await nuxt.$doctorAppointmentsLive.update(selected,async () => {
+    // The initial source read owns its date/page intent. A connection refresh
+    // must trail it rather than aborting the read that opens source history.
+    if(initialRead) { refreshAfterInitial=true;return }
+    if(!stopped)await read()
+  }) } catch { appointments.disconnected() } }
   async function reload() { if(state.pending)return;reset();await context.refresh();await nuxt.$doctorAppointmentsLive.update(null,async () => {}).catch(() => {});await bind();return read() }
   watch(scopeKey,() => { reset();appointments.clear();date.value = today();page.value = queuePage.value = 0;if(hydrated.value) { void bind();void read() } },{ flush: 'sync' })
   const route = useRoute()
   onMounted(async () => {
-    hydrated.value = true;await bind();if(!scopeKey.value)return
-    const requested = doctorDashboardSource(route.query,nuxt.$doctorAppointmentsScope())
-    if(requested==='denied') { appointments.clear();state.error = 'denied';return }
-    if(requested) { date.value = requested.date;page.value = requested.page;queuePage.value = requested.queuePage }
-    const captured = scopeKey.value
-    if(await read() && requested && captured===scopeKey.value) {
-      if(!row(requested.appointmentId)) { appointments.clear();state.error = 'denied';return }
-      state.history = null;historyTarget.value = requested.appointmentId;sourceMode.value = true;historyOpen.value = true
+    try {
+      hydrated.value = true;await bind();if(!scopeKey.value)return
+      const requested = doctorDashboardSource(route.query,nuxt.$doctorAppointmentsScope())
+      if(requested==='denied') { appointments.clear();state.error = 'denied';return }
+      if(requested) { date.value = requested.date;page.value = requested.page;queuePage.value = requested.queuePage }
+      const captured = scopeKey.value
+      if(await read() && requested && captured===scopeKey.value) {
+        if(!row(requested.appointmentId)) { appointments.clear();state.error = 'denied';return }
+        state.history = null;historyTarget.value = requested.appointmentId;sourceMode.value = true;historyOpen.value = true
+      }
+    } finally {
+      initialRead=false
+      if(refreshAfterInitial && !stopped && scopeKey.value && state.error!=='denied')void read()
     }
   })
   usePageRevalidation(async () => { await context.refresh();await read() },() => hydrated.value && Boolean(scopeKey.value) && !state.pending && !editor.visible.value && !transition.visible.value && !historyOpen.value)
