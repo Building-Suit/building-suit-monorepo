@@ -2,7 +2,12 @@
   "id": "dos-m1-020",
   "task": "DOS-M1-020",
   "suits": [
-    "doctor-suit"
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
   ],
   "classification": "internal",
   "disposition": "internal",
@@ -11,7 +16,11 @@
     "apps/doctor-suit/supabase/tests/dos-m1-020.sql",
     "docs/work-packages/doctor-suit/implementation/dos-m1-020.md",
     "docs/work-packages/doctor-suit/implementation/m1-acceptance-inputs.json",
-    "docs/work-packages/doctor-suit/implementation-tracker.md"
+    "docs/work-packages/doctor-suit/implementation-tracker.md",
+    ".github/workflows/ci.yml",
+    ".github/workflows/doctor-disposable.yml",
+    "packages/testing/playwright.doctor-workspace.config.ts",
+    "docs/work-packages/doctor-suit/implementation/m1-aggregate.md"
   ],
-  "reason": "Add the combined synthetic M1 acceptance harness, actual-provider cross-domain journey and independent-verifier handoff. No public runtime behavior, release activation, domain approval, integration or deployment is supplied by this test/evidence task. Preserve all prior planning and provenance; distinct task statuses remain current in the tracker."
+  "reason": "Add the combined synthetic M1 acceptance harness, actual-provider cross-domain journey and independent-verifier handoff. No public runtime behavior, release activation, domain approval, integration or deployment is supplied by this test/evidence task. Preserve all prior planning and provenance; distinct task statuses remain current in the tracker. Execute the permitted M1 aggregate against the exact PR head and independently reconcile read-only GitHub command/step/artifact evidence for C03/C04. Preserve the original aggregate for ordinary work; explicitly hold n8n coverage only for this requested M1 batch and its first stg introduction. No M2 implementation or domain approval is included."
 }

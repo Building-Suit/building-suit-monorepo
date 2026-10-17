@@ -6,11 +6,30 @@
   "candidateRef": "codex/doctor-suit/m1-combined-acceptance",
   "headBinding": "Resolve the published GitHub PR head SHA and check-run head_sha; no self-referential commit hash is embedded.",
   "implementationIdentity": "implementation-agent",
+  "expectedEvidenceCounts": {
+    "rootPassed": 1831,
+    "rootSkipped": 23,
+    "workspacePassed": 111,
+    "shopRegressions": 28,
+    "changelogPassed": 14,
+    "doctorPublic": 54,
+    "doctorAuth": 56,
+    "doctorStress": 4,
+    "sharedAuth": 48,
+    "sharedSettings": 12,
+    "sqlTotal": 679,
+    "sqlCombined": 29
+  },
   "independentAcceptance": "pending",
   "integration": "not-claimed",
   "deployment": "not-performed",
   "domainApprovalGranted": false,
   "requiredCommands": [
+    "workspace-browser",
+    "built-assets",
+    "shared-regressions",
+    "public-changelog",
+    "doctor-stress",
     "unit",
     "sql",
     "actual-provider",
@@ -147,6 +166,12 @@
     }
   ],
   "inputHashes": {
+    "docs/work-packages/doctor-suit/implementation/m1-aggregate.md": "842fc50e69fa69f8f0a106886e9f8d387d1245f0bb356defcc86f15456932d4c",
+    ".github/workflows/ci.yml": "b48fec31cd017a1203dc24397be67ca238c2593e2a8c362b9198114780941568",
+    ".github/workflows/doctor-disposable.yml": "d4519a8d97194fca9ed88feb7fac90de0a39fbd93b3a3874b1649a129fba6bc4",
+    "packages/testing/playwright.doctor-workspace.config.ts": "d1a9d56d805416a0e07de847218010d31c65b777e6b4ae71d216dba99120599e",
+    "apps/doctor-suit/tests/m1-aggregate-evidence.mjs": "e65a7895c9df8e7620edb2fd1d375a79a97ba050b39d71f636788415ce1c0c92",
+    "apps/doctor-suit/tests/unit/dos-m1-020-evidence.test.mjs": "593159cf457d47ec3cb1f502e2ec98a7d0b20b1941a96705fa28843aff537abd",
     "apps/doctor-suit/supabase/tests/dos-m1-020.sql": "64d2c9c3458d63c2afb684bfc20781f697895ee5417b107e218b52db345bf2e3",
     "apps/doctor-suit/tests/disposable-provider.mjs": "aa75fa305e20809c0e0656617c2d72cd428e29964e5d196567159d15ac33b0b7",
     "apps/doctor-suit/tests/fixtures/delegation-provider.mjs": "86b3d681469380e2b9868180aee1eb4dd8ad2481fc3d1fa5b793590ad113f89f",
@@ -156,9 +181,9 @@
     "apps/doctor-suit/tests/unit/dos-m1-020.test.mjs": "b73a58ac1f4badd84b3a8e4f845f34722cb836561a576bbb61c2a9081332148d",
     "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts": "7052244615eccfb9e7253c710bcc35a0fb4040d780d640b48b25a7026e357132",
     "apps/doctor-suit/tests/e2e/dos-m1-020.spec.ts": "82ae8bf8e36a6fd5356bf50b8bbba78b6d046166371e47e4e9e61c6b0631c7cc",
-    "docs/work-packages/doctor-suit/implementation/dos-m1-020.md": "5407e13324a2852ade591d89e0cc1c9445ccb26b52043b31f0025b8e472af385",
+    "docs/work-packages/doctor-suit/implementation/dos-m1-020.md": "c1df7dde35411ca06881cfb4d631ec058488a9c9ddfaeed740d0c6ffc5cc998d",
     "docs/work-packages/doctor-suit/implementation-tracker.md": "a33ff1e7f6320d1fc6510ab7f18647393cd1fa26247918accb7a82697c5110c2",
-    "release-fragments/dos-m1-020.json": "6d5ea9a8cae40d36c40e32f0eac60c8d6e88680f1b2fafe828b43b0867780adc",
+    "release-fragments/dos-m1-020.json": "79105d0e76fd2c7cc70ec7b8ec710f8f942380289d63feb2276a31f1137b7c76",
     "apps/doctor-suit/app/utils/contextController.ts": "567e230155618e0dad5666f162fe68d69ccf145b11a3d5469121243ccd24162a"
   }
 }
