@@ -14,8 +14,8 @@ defineProps<{
 const emit = defineEmits<{ submit: []; resend: [] }>()
 </script>
 <template>
-  <BsAuthLayout :product-name="product.name" :home-label="product.homeLabel" :title="copy.title" :description="copy.description">
-    <template #logo="{ tone }"><BsProductLogo :name="product.name" :asset-prefix="product.assetPrefix" :tone="tone" size="auth" /></template>
+  <BsAuthLayout presentation="glass" :product-name="product.name" :home-label="product.homeLabel" :title="copy.title" :description="copy.description">
+    <template #logo="{ tone }"><BsProductLogo :name="product.name" :asset-prefix="product.assetPrefix" kind="mark" :tone="tone" size="auth" /></template>
     <BsStateSurface v-if="availability" :title-level="1" :state="availability.state" :title="availability.title" :description="availability.description" />
     <BsVerificationForm v-else v-model="code" :eyebrow="copy.eyebrow" :title="copy.title" :description="copy.description" :email="email" :code-label="copy.code" :pending="pending" :error="error" :expired="expired" :verified="verified" :expiry-label="copy.expiry" :expired-label="copy.expired" :attempts-label="copy.attempts" :submit-label="copy.submit" :pending-label="copy.pending" :resend-prompt="copy.resendPrompt" :resend-label="copy.resend" :resend-disabled="resendDisabled" :security-title="copy.securityTitle" :security-body="copy.securityBody" @submit="emit('submit')" @resend="emit('resend')" />
   </BsAuthLayout>

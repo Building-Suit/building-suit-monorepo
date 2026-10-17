@@ -41,13 +41,13 @@ export function useWebsiteAddress(canManage: Ref<boolean>) {
       if (response.error) throw response.error
       if (isCurrent() && shopId === currentId.value && canManage.value) await refresh()
     }, () => locale.value === 'ar' ? 'تعذر حفظ العنوان. راجع الصيغة أو جرّب عنواناً آخر.' : 'Could not save this address. Check the format or try another address.')
-    if (saved && isCurrent() && shopId === currentId.value && canManage.value) success.value = locale.value === 'ar' ? 'تم حفظ العنوان بدون نشر الموقع.' : 'Address saved. Website remains unpublished.'
+    if (saved && isCurrent() && shopId === currentId.value && canManage.value) success.value = locale.value === 'ar' ? 'تم حجز العنوان. راجع الملف العام للمتجر لمعرفة حالة النشر.' : 'Address reserved. Check Public shop profile for publication status.'
   }
   const view = computed<BsWebsiteAddressView>(() => {
     const ar = locale.value === 'ar'
     return {
       title: ar ? 'عنوان موقع المتجر' : 'Shop website address',
-      help: ar ? 'العنوان مستقل عن اسم المتجر. الموقع غير منشور في هذه المرحلة. العناوين السابقة تظل محجوزة لنفس المتجر.' : 'The address is separate from your display name. Websites are unpublished in this phase. Previous addresses stay reserved to this Shop.',
+      help: ar ? 'العنوان مستقل عن اسم المتجر. احجز العنوان هنا، وراجع الملف العام للمتجر لإدارة النشر ومعرفة حالته. العناوين السابقة تظل محجوزة لنفس المتجر.' : 'The address is separate from your display name. Reserve an address here; manage publication and check its status in Public shop profile. Previous addresses stay reserved to this Shop.',
       label: ar ? 'العنوان المختصر' : 'Address slug',
       currentUrl: canManage.value && data.value && domain ? websiteUrl(data.value.slug, domain) : '',
       aliases: canManage.value && domain ? (data.value?.aliases ?? []).map(slug => websiteUrl(slug, domain)) : [],

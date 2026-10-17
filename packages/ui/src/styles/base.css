@@ -212,13 +212,35 @@ body {
 }
 
 @layer components {
+  
   .ls-card {
     border-radius: var(--bs-radius-card);
-    border: 1px solid var(--bs-border);
-    background: var(--bs-surface);
-    box-shadow: var(--bs-elevation-1);
-    transition: box-shadow var(--bs-motion-default), border-color var(--bs-motion-quick);
+    border: 1px solid color-mix(
+      in srgb,
+      var(--bs-border) 90%,
+      var(--bs-accent) 10%
+    );
+    background: linear-gradient(
+      155deg,
+      color-mix(
+        in srgb,
+        var(--bs-surface) 94%,
+        var(--bs-surface-raised)
+      ),
+      var(--bs-surface)
+    );
+    box-shadow:
+      var(--bs-elevation-1),
+      inset 0 1px 0 color-mix(
+        in srgb,
+        var(--bs-text) 4%,
+        transparent
+      );
+    transition:
+      box-shadow var(--bs-motion-default),
+      border-color var(--bs-motion-quick);
   }
+
 
   /* Flat variant for cards that sit inside another card. */
   .ls-card-flat {

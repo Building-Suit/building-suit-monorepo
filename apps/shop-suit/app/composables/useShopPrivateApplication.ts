@@ -6,12 +6,12 @@ const { currentId, currentLocationId, loadShops } = useShop()
 const confirmation = useConfirmation()
 const { toasts } = useToasts()
 const contextKey = computed(() => `${user.value?.id ?? 'anonymous'}:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}`)
-// OTP verification establishes a session before provisioning finishes. Keep
-// that signup instance alive so its retry/error and identity checks can finish.
-// Operational pages still remount whenever their account or tenant changes.
+// Signup and Google OAuth exchange can create a session before provisioning
+// finishes. Do not remount these pages when the session becomes available.
 const signupActive = computed(() => router.currentRoute.value.path === '/auth/signup')
-const layoutKey = computed(() => signupActive.value ? 'signup' : `${user.value?.id ?? 'anonymous'}:${pageLayout.value || 'none'}`)
-const pageKey = computed(() => signupActive.value ? 'signup' : contextKey.value)
+const googleCallbackActive = computed(() => router.currentRoute.value.path === '/auth/google-callback')
+const layoutKey = computed(() => signupActive.value ? 'signup' : googleCallbackActive.value ? 'google-callback' : `${user.value?.id ?? 'anonymous'}:${pageLayout.value || 'none'}`)
+const pageKey = computed(() => signupActive.value ? 'signup' : googleCallbackActive.value ? 'google-callback' : contextKey.value)
 // This gate can unmount NuxtPage on session loss. Nuxt's useRoute() only
 // advances after the destination page resolves, so using it here would keep
 // the host hidden forever after logout. The committed router route has already

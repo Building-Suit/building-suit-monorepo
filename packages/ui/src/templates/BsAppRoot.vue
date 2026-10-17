@@ -15,16 +15,18 @@ const props = withDefaults(defineProps<{
   privacy: undefined, renderPage: true, layout: undefined, layoutKey: undefined, pageKey: undefined, pageTransition: false,
   announcer: false, toastHost: false, confirmHost: true,
 })
-// Each consuming app has its own generated layout-name union. The caller
-// supplies a registered name; this shared boundary forwards that configuration.
+const route = useRoute()
+// Only auth routes receive the glass route transition by default. Existing
+// products with explicit page transitions (such as Ledger) retain theirs.
+const authRoute = computed(() => /^(?:\/auth(?:\/|$)|\/login\/?$|\/signup\/?$|\/sign-in\/?$|\/sign-up\/?$|\/recover\/?$|\/verify(?:-email)?\/?$)/.test(route.path))
+const resolvedPageTransition = computed(() => props.pageTransition || (authRoute.value ? { name: 'bs-auth-route', mode: 'out-in' as const } : false))
 function nativeLayoutName() { return props.layout as PageMeta['layout'] }
-function scopedPageKey(route: { path: string }) { return `${route.path}:${props.pageKey}` }
+function scopedPageKey(currentRoute: { path: string }) { return `${currentRoute.path}:${props.pageKey}` }
 </script>
-
 <template>
   <div class="bs-app-root">
     <NuxtRouteAnnouncer v-if="announcer" />
-    <NuxtLayout v-if="renderPage" :key="layoutKey" :name="nativeLayoutName()"><NuxtPage :page-key="pageKey === undefined ? undefined : scopedPageKey" :transition="pageTransition" /></NuxtLayout>
+    <NuxtLayout v-if="renderPage" :key="layoutKey" :name="nativeLayoutName()"><NuxtPage :page-key="pageKey === undefined ? undefined : scopedPageKey" :transition="resolvedPageTransition" /></NuxtLayout>
     <BsSectionSkeleton v-else :rows="3" />
     <BsToastHost v-if="toastHost" />
     <BsConfirmHost v-if="confirmHost" />
