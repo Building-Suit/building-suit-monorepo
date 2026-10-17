@@ -1,0 +1,17 @@
+{
+  "id": "dos-ae-003-reservation-conversion",
+  "task": "DOS-AE-003",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/supabase/migrations/20261017164957_doctor_saas_final_business_allowance.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-003-write-access.sql",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/saas-reservation-concurrency.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-003-business-write-access.md"
+  ],
+  "reason": "Evaluate final owner-locked staff allowance for invitation reservation conversion under read-only policy; retain before-write identity/period checks, deferred quotas, rollback and concurrent allocation safety. No hosted operation or live commercial approval."
+}
