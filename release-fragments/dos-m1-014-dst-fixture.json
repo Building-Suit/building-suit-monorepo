@@ -1,0 +1,13 @@
+{
+  "id": "dos-m1-014-dst-fixture",
+  "task": "DOS-M1-014",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/e2e/dos-m1-014.auth.fixture.ts"
+  ],
+  "reason": "Select the available London 09:00 fixture slot. On 2026-10-25 the prior London 09:40\u201310:20 slot overlaps seeded Cairo 13:00\u201313:20 (UTC10:00\u201310:20) after the DST transition. Preserve uncertain-retry, Realtime and attributed-history assertions; no product authorization or scheduling rule changes."
+}
