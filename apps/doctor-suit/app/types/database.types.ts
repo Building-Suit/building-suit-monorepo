@@ -1096,6 +1096,7 @@ export type Database = {
           p_input: Json
           p_key: string
           p_location: string
+          p_location_version: number
           p_practice: string
         }
         Returns: Json

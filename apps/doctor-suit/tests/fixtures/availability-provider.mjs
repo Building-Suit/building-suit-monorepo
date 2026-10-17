@@ -37,6 +37,7 @@ export function availabilityProtocol({ data,actor,rpc,input,send,capability }) {
   if (rpc==='doctor_schedule') { send(configuration()); return true }
   if (rpc==='doctor_write_schedule') {
     if (!canManage) return reject()
+    if (input.p_location_version!==location.version) return reject('40001','DOCTOR_AVAILABILITY_CONFLICT')
     const raw = input.p_input; const form = raw && { slotMinutes: raw.slot_minutes,weekly: raw.weekly,exceptions: raw.exceptions }
     if (!raw || Object.keys(raw).some(key => !['slot_minutes','weekly','exceptions'].includes(key)) || !validDoctorSchedule(form)) return reject('22023','DOCTOR_AVAILABILITY_INVALID')
     const key = `${actor.id}:${input.p_key}`; const fingerprint = JSON.stringify(input); const prior = data.scheduleCommands[key]

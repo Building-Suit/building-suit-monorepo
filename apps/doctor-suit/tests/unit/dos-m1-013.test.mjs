@@ -39,7 +39,7 @@ test('availability decoder rejects foreign scope, repeated slots and unsupported
 test('uncertain rule save retains exact input/key and prevents duplicate submissions',async () => {
   const f = fixture(); await f.controller.load(); const form = doctorScheduleInput(f.state.config)
   f.repository.write = async (...args) => { f.calls.push(args); throw new Error('lost response') }
-  assert.equal(await f.controller.write(form,1),false); assert.equal(await f.controller.write(form,1),false); assert.equal(f.calls[0][4],f.calls[1][4]); assert.deepEqual(f.calls[0][3],f.calls[1][3])
+  assert.equal(await f.controller.write(form,1),false); assert.equal(await f.controller.write(form,1),false); assert.equal(f.calls[0][5],f.calls[1][5]); assert.deepEqual(f.calls[0][4],f.calls[1][4])
   const waiting = deferred(); f.repository.write = async (...args) => { f.calls.push(args); return waiting.promise }
   const save = f.controller.write(form,1); assert.equal(await f.controller.write(form,1),false); waiting.resolve({ ...configuration(),version: 2 }); assert.equal(await save,true); assert.equal(f.state.config.version,2); assert.equal(f.state.pending,false)
 })
@@ -56,7 +56,7 @@ test('location timezone/version changes require context reconciliation before sh
 test('scope loss aborts requests, invalidates late results and clears working-hour drafts',async () => {
   const f = fixture(); const loaded = deferred(); f.repository.load = () => loaded.promise
   const request = f.controller.load(); f.controller.clear(); f.setScope(null); loaded.resolve(configuration()); assert.equal(await request,false); assert.equal(f.state.config,null)
-  const g = fixture(); await g.controller.load(); const pending = deferred(); let signal; g.repository.write = async (...args) => { signal = args[5]; return pending.promise }
+  const g = fixture(); await g.controller.load(); const pending = deferred(); let signal; g.repository.write = async (...args) => { signal = args[6]; return pending.promise }
   const save = g.controller.write(doctorScheduleInput(g.state.config),1); g.controller.clear(); assert.equal(signal.aborted,true); pending.reject(new Error('late error')); assert.equal(await save,false); assert.equal(g.state.actionError,null); assert.equal(g.state.config,null)
 })
 test('known authorization denial clears previously loaded private rules and cannot become a local override',async () => {
@@ -68,4 +68,13 @@ test('known authorization denial clears previously loaded private rules and cann
 test('registered availability route retains authenticated admission without broadening external redirects',() => {
   assert.equal(doctorReturnPath('/availability?private=synthetic#fragment'),'/availability')
   for (const path of ['//external.test/availability','https://external.test/availability','/availability/unknown','/availability/../../external']) assert.equal(doctorReturnPath(path),'/account')
+})
+
+test('stale location timezone context is refused before calling the write adapter',async () => {
+  const f = fixture();await f.controller.load();const form = doctorScheduleInput(f.state.config)
+  f.setScope({ ...f.scope(),locationVersion: 2,timezone: 'Etc/UTC' })
+  assert.equal(await f.controller.write(form,1),false);assert.equal(f.state.actionError,'conflict');assert.equal(f.calls.length,0)
+})
+test('schedule write carries the configuration location version before server mutation',async () => {
+  const f = fixture();await f.controller.load();assert.equal(await f.controller.write(doctorScheduleInput(f.state.config),1),true);assert.equal(f.calls[0][3],1)
 })
