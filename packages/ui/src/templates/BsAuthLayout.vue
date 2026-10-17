@@ -170,7 +170,6 @@ useTheme()
   position: relative;
   isolation: isolate;
   width: 100%;
-  min-height: 682px;
   padding: 122px 38px 49px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--bs-border-strong) 88%, var(--bs-premium-gold) 12%);
