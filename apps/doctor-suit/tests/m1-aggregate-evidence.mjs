@@ -11,6 +11,8 @@ import { doctorMilestoneReceiptIssues } from './milestone-evidence.mjs'
 const root = fileURLToPath(new URL('../../../',import.meta.url))
 const packetPath = 'docs/work-packages/doctor-suit/implementation/m1-acceptance-inputs.json'
 const backendCase = 'Shop signup, product persistence and independent Ledger sessions'
+const shopChangelogEvidenceFiles = new Set(['apps/shop-suit/tests/e2e/public-changelog.config.ts','apps/shop-suit/tests/e2e/public-changelog.spec.ts','apps/shop-suit/tests/e2e/public-changelog.setup.mjs','apps/shop-suit/tests/e2e/public-changelog-fixture-server.mjs','apps/shop-suit/tests/unit/public-changelog-harness.test.mjs','tooling/releases/catalog-disposable.mjs'])
+export function doctorEvidenceInputPathAllowed(file) { return typeof file==='string' && !file.includes('..') && !path.isAbsolute(file) && (['apps/doctor-suit/','docs/work-packages/doctor-suit/','packages/testing/','.github/workflows/','release-fragments/'].some(prefix => file.startsWith(prefix)) || shopChangelogEvidenceFiles.has(file)) }
 export function doctorAggregateBrowserScope({ eventName,prNumber,ref,headHasManifest,parentHasManifest }) { return (eventName==='pull_request' && prNumber===345) || (eventName==='push' && ref==='refs/heads/stg' && headHasManifest && !parentHasManifest) }
 export function summarizeDoctorWorkspace(report,candidateSha) {
   const cases = []
@@ -54,7 +56,7 @@ async function evaluate(out) {
   const issues = [];const packet = JSON.parse(await readFile(path.join(root,packetPath),'utf8'));const base = packet.baseSha;const hashes = {}
   if(!/^[0-9a-f]{40}$/.test(head || '') || !/^[0-9a-f]{40}$/.test(base || '') || git(['rev-parse','HEAD'])!==head)issues.push('exact-candidate-binding')
   if(spawnSync('git',['merge-base','--is-ancestor',base,head],{ cwd: root }).status!==0)issues.push('staging-base-not-in-candidate')
-  for(const [file,expected]of Object.entries(packet.inputHashes)) { if(file.includes('..') || path.isAbsolute(file) || !['apps/doctor-suit/','docs/work-packages/doctor-suit/','packages/testing/','.github/workflows/','release-fragments/'].some(prefix => file.startsWith(prefix)))throw new Error('INPUT_PATH_INVALID');const value = sha256(await readFile(path.join(root,file)));hashes[file] = value;if(value!==expected)issues.push(`input:${file}`) }
+  for(const [file,expected]of Object.entries(packet.inputHashes)) { if(!doctorEvidenceInputPathAllowed(file))throw new Error('INPUT_PATH_INVALID');const value = sha256(await readFile(path.join(root,file)));hashes[file] = value;if(value!==expected)issues.push(`input:${file}`) }
   if(git(['status','--porcelain']))issues.push('dirty-candidate')
   if(spawnSync('git',['diff','--quiet','4ca7110f4d6efa828e0b41213e5c059bf02ba9db','--','docs/work-packages/doctor-suit/planning-v0.4'],{ cwd: root }).status!==0)issues.push('planning-changed')
   for(const row of packet.tasks)if(row.sourceHead && spawnSync('git',['merge-base','--is-ancestor',row.sourceHead,head],{ cwd: root }).status!==0)issues.push(`ancestry:${row.taskId}`)
@@ -151,5 +153,5 @@ if(process.argv[1]===fileURLToPath(import.meta.url)) {
       await appendFile(process.env.GITHUB_OUTPUT,`active=${active}\n`)
     } else { if(!out)throw new Error('OUTPUT_REQUIRED');if(mode==='workspace')await captureWorkspace(report,out,process.env.M1_HEAD_SHA);else if(mode==='evaluate')await evaluate(out);else throw new Error('MODE_INVALID') }
   }
-  catch { console.error('Doctor aggregate evidence unavailable or invalid; no passing evaluation is supplied');process.exitCode = 1 }
+  catch(error) { const known = new Set(['INPUT_PATH_INVALID','INDEPENDENT_CI_CONTEXT_REQUIRED','GITHUB_EVIDENCE_READ_FAILED','OUTPUT_REQUIRED','MODE_INVALID','WORKSPACE_EVIDENCE_FAILED']);console.error(`Doctor aggregate evidence unavailable or invalid; reason: ${known.has(error?.message) ? error.message : 'UNCLASSIFIED'}; no passing evaluation is supplied`);process.exitCode = 1 }
 }

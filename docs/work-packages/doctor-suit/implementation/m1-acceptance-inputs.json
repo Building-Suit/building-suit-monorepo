@@ -7,7 +7,7 @@
   "headBinding": "Resolve the published GitHub PR head SHA and check-run head_sha; no self-referential commit hash is embedded.",
   "implementationIdentity": "implementation-agent",
   "expectedEvidenceCounts": {
-    "rootPassed": 1839,
+    "rootPassed": 1840,
     "rootSkipped": 23,
     "workspacePassed": 111,
     "shopRegressions": 28,
@@ -173,12 +173,12 @@
     }
   ],
   "inputHashes": {
-    "docs/work-packages/doctor-suit/implementation/m1-aggregate.md": "fdec590c7f33ba0eedb93f72d0f5c1849c4c8292665c1b129c3dc38265867c55",
+    "docs/work-packages/doctor-suit/implementation/m1-aggregate.md": "9ae08846c14dd6a7f683095c2448020a965e0e5e15c51b7e28c1866c0beafb36",
     ".github/workflows/ci.yml": "e4bc193162ab7e74426d094ef730996bcfb4a9bea939136ab5aca66377e1e18e",
     ".github/workflows/doctor-disposable.yml": "d4519a8d97194fca9ed88feb7fac90de0a39fbd93b3a3874b1649a129fba6bc4",
     "packages/testing/playwright.doctor-workspace.config.ts": "d1a9d56d805416a0e07de847218010d31c65b777e6b4ae71d216dba99120599e",
-    "apps/doctor-suit/tests/m1-aggregate-evidence.mjs": "e3244fc246debc196beb18b8ee8a79b3042aece2db8260f8861d640802b870a4",
-    "apps/doctor-suit/tests/unit/dos-m1-020-evidence.test.mjs": "69cf184e666d8a12d7de3f698320900e87e252ac1ea05324c9cb260bba370fad",
+    "apps/doctor-suit/tests/m1-aggregate-evidence.mjs": "42af5519289fd1582ffdad774c5b4c5fd7f352795ad1179fb0b6b3b9471fa07c",
+    "apps/doctor-suit/tests/unit/dos-m1-020-evidence.test.mjs": "7e8bedd1812855e4dbdd00c59fb76d308e23626986773c415b4bc6eae0234e93",
     "apps/doctor-suit/supabase/tests/dos-m1-020.sql": "64d2c9c3458d63c2afb684bfc20781f697895ee5417b107e218b52db345bf2e3",
     "apps/doctor-suit/tests/disposable-provider.mjs": "aa75fa305e20809c0e0656617c2d72cd428e29964e5d196567159d15ac33b0b7",
     "apps/doctor-suit/tests/fixtures/delegation-provider.mjs": "86b3d681469380e2b9868180aee1eb4dd8ad2481fc3d1fa5b793590ad113f89f",

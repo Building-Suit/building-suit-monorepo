@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { summarizeDoctorWorkspace,doctorWorkspaceEvidenceIssues,doctorAggregateClaimIssues,doctorAggregateBrowserScope,summarizeDoctorEvidenceLog,doctorShopLaunchEvidenceIssues } from '../m1-aggregate-evidence.mjs'
+import { readFileSync } from 'node:fs'
+import { summarizeDoctorWorkspace,doctorWorkspaceEvidenceIssues,doctorAggregateClaimIssues,doctorAggregateBrowserScope,summarizeDoctorEvidenceLog,doctorShopLaunchEvidenceIssues,doctorEvidenceInputPathAllowed } from '../m1-aggregate-evidence.mjs'
 const head = '1'.repeat(40)
 function report() { return { stats: { expected: 111,skipped: 1,unexpected: 0,flaky: 0 },suites: [{ specs: Array.from({ length: 112 },(_,n) => ({ file: 'synthetic.spec.ts',title: n===111 ? 'Shop signup, product persistence and independent Ledger sessions' : `Synthetic case ${n}`,tests: [{ expectedStatus: n===111 ? 'skipped' : 'passed',results: [{ status: n===111 ? 'skipped' : 'passed',error: { message: 'PRIVATE_PAYLOAD_SENTINEL' } }] }] })) }] } }
 function packet() { return { independentAcceptance: 'pending',domainApprovalGranted: false,integration: 'not-claimed',deployment: 'not-performed',tasks: Array.from({ length: 20 },(_,n) => ({ taskId: `DOS-M1-${String(n+1).padStart(3,'0')}`,canonicalTaskSha256: 'a'.repeat(64) })) } }
@@ -29,4 +30,10 @@ test('failed or skipped Shop launch qualification blocks C03/C04 despite other g
   for(const patch of [{ head_sha: '2'.repeat(40) },{ head_branch: 'stg' },{ event: 'push' },{ path: '.github/workflows/doctor-disposable.yml' }])assert.ok(doctorShopLaunchEvidenceIssues({ ...run,...patch },job,head,branch).length)
   assert.ok(doctorShopLaunchEvidenceIssues(run,{ ...job,steps: [] },head,branch).length)
   assert.ok(doctorShopLaunchEvidenceIssues(undefined,undefined,head,branch).length)
+})
+
+test('every bound acceptance input is reviewable without allowing unrelated Shop/tooling files or traversal',() => {
+  const manifest=JSON.parse(readFileSync(new URL('../../../../docs/work-packages/doctor-suit/implementation/m1-acceptance-inputs.json',import.meta.url),'utf8'))
+  for(const file of Object.keys(manifest.inputHashes))assert.equal(doctorEvidenceInputPathAllowed(file),true,file)
+  for(const file of ['../release-fragments/private.json','apps/doctor-suit/../../.env','/apps/doctor-suit/tests/proof.mjs','apps/shop-suit/app/composables/usePlans.ts','tooling/releases/publisher.mjs','tooling/releases/catalog-disposable.mjs/child','apps/shop-suit/tests/unit/unreviewed.test.mjs',null,{}])assert.equal(doctorEvidenceInputPathAllowed(file),false)
 })
