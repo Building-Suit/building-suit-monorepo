@@ -42,10 +42,13 @@ withDefaults(defineProps<{
     >
     <span v-if="!assetPrefix" class="inline-flex items-center gap-3 leading-normal">
       <span class="grid size-11 place-items-center rounded-control border border-brand-gold bg-brand-navy text-xl font-black text-brand-gold">{{ monogram || name.charAt(0) }}</span>
-      <span class="text-start"><strong class="block text-xl tracking-tight">{{ name }}</strong><span class="block text-xs opacity-60">by Building Suit</span></span>
+      <span v-if="kind !== 'mark'" class="text-start"><strong class="block text-xl tracking-tight">{{ name }}</strong><span class="block text-xs opacity-60">by Building Suit</span></span>
     </span>
   </span>
 </template>
 <style>
-.bs-product-logo--navigation { width: auto; max-width: 13rem; height: 3.5rem; }.bs-product-logo--marketing { width: auto; max-width: 9rem; height: auto; margin-block: var(--bs-space-2); }.bs-product-logo--auth { width: 14rem; max-width: 100%; height: auto; margin-block: var(--bs-space-4); }@media (min-width: 640px) { .bs-product-logo--marketing { max-width: 13rem; } }
+.bs-product-logo--navigation { width: auto; max-width: 13rem; height: 3.5rem; }
+.bs-product-logo--marketing { width: auto; max-width: 9rem; height: auto; margin-block: var(--bs-space-2); }
+.bs-product-logo--auth { width: 14rem; max-width: 100%; height: auto; margin-block: var(--bs-space-4); }
+@media (min-width: 640px) { .bs-product-logo--marketing { max-width: 13rem; } }
 </style>
