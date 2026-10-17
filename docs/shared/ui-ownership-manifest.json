@@ -536,6 +536,16 @@
       "adapterBoundary": "Complete typed administrative patient profile, preserved activity and private attachment/version/history presentation. Doctor owns entered/unreviewed provenance, verified current scope, strict metadata and authenticated byte transport. Shared UX owns record dialogs and private preview URL disposal. No public Storage URL or clinical interpretation is supplied.",
       "task": "DOS-M1-012",
       "migrationStatus": "registered complete synthetic profile; acceptance in progress"
+    },
+    {
+      "family": "doctor-availability-rules",
+      "owner": "packages/ui",
+      "components": [
+        "BsAvailabilityPage"
+      ],
+      "adapterBoundary": "Complete typed weekly working-hours, exception and duration dialogs with scoped availability presentation. Doctor owns timezone-aware rules, physician-wide conflict invariants, current permissions, optimistic/idempotent commands and data. Shared UX owns confirmation and record-action lifecycle; hours edits never move appointments.",
+      "task": "DOS-M1-013",
+      "migrationStatus": "registered complete synthetic availability route; verification in progress"
     }
   ]
 }

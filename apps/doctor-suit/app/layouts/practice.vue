@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { doctorContextId } from '../utils/locationContext'
 import { doctorLocationsCopy } from '../utils/locationsPresentation'
+import { doctorAvailabilityCopy } from '../utils/availabilityPresentation'
 import { doctorPatientsCopy } from '../utils/patientsPresentation'
 import { doctorDelegationCopy } from '../utils/delegationPresentation'
 const { auth } = useDoctorAuthPresentation(false)
@@ -9,11 +10,12 @@ const { locale } = useI18n()
 const context = useDoctorContext()
 const scopeCopy = computed(() => doctorLocationsCopy(locale.value === 'ar'))
 const patientsCopy = computed(() => doctorPatientsCopy(locale.value === 'ar'))
+const availabilityCopy = computed(() => doctorAvailabilityCopy(locale.value === 'ar'))
 const teamCopy = computed(() => doctorDelegationCopy(locale.value === 'ar'))
 const hydrated = ref(false)
 onMounted(() => { hydrated.value = true })
 const canLocations = computed(() => context.state.current?.capabilities.some(cap => cap === 'locations.read' || cap === 'locations.manage') || (!context.state.current && Boolean(auth.state.identity?.practiceId)))
-const groups = computed(() => [{ key: 'practice', label: copy.value.workspace, links: [{ to: '/workspace', label: copy.value.workspace }, ...(context.state.current?.capabilities.includes('patients.read') ? [{ to: '/patients', label: patientsCopy.value.title }] : []), ...(canLocations.value ? [{ to: '/locations', label: scopeCopy.value.title }] : []), ...(auth.state.identity?.practiceId && (!context.state.current || context.state.current.portal === 'doctor') ? [{ to: '/onboarding', label: copy.value.edit }] : []), ...(context.state.current?.portal === 'doctor' || (!context.state.options.length && auth.state.identity?.practiceId) ? [{ to: '/team', label: teamCopy.value.teamLink }] : []), { to: '/account', label: copy.value.account }] }])
+const groups = computed(() => [{ key: 'practice', label: copy.value.workspace, links: [{ to: '/workspace', label: copy.value.workspace }, ...(context.state.current?.capabilities.includes('patients.read') ? [{ to: '/patients', label: patientsCopy.value.title }] : []), ...(context.state.current?.capabilities.some(cap => cap === 'availability.manage' || cap === 'appointments.read') ? [{ to: '/availability', label: availabilityCopy.value.title }] : []), ...(canLocations.value ? [{ to: '/locations', label: scopeCopy.value.title }] : []), ...(auth.state.identity?.practiceId && (!context.state.current || context.state.current.portal === 'doctor') ? [{ to: '/onboarding', label: copy.value.edit }] : []), ...(context.state.current?.portal === 'doctor' || (!context.state.options.length && auth.state.identity?.practiceId) ? [{ to: '/team', label: teamCopy.value.teamLink }] : []), { to: '/account', label: copy.value.account }] }])
 const caption = computed(() => {
   const selected = context.state.current
   return selected ? [selected.doctorName, selected.practiceName, selected.locationName, selected.timezone, selected.portal === 'doctor' ? scopeCopy.value.owner : scopeCopy.value.secretary].join(' · ') : scopeCopy.value.noContext

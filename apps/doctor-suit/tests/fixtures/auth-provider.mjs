@@ -30,7 +30,7 @@ const server = http.createServer(async (req, res) => {
     return
   }
   let body = ''
-  for await (const chunk of req) { body += chunk; if (body.length > 16384) { res.writeHead(413).end('{}'); return } }
+  for await (const chunk of req) { body += chunk; if (body.length > (state.availability && url.pathname==='/rest/v1/rpc/doctor_write_schedule' ? 32768 : 16384)) { res.writeHead(413).end('{}'); return } }
   let input
   try { input = body ? JSON.parse(body) : {} } catch { res.writeHead(400).end('{}'); return }
   const send = (value, status = 200) => { res.writeHead(status).end(JSON.stringify(value)) }

@@ -82,7 +82,8 @@
     "BsPracticeOverviewPage": "packages/ui/src/templates/BsPracticeOverviewPage.vue",
     "BsLocationManagementPage": "packages/ui/src/templates/BsLocationManagementPage.vue",
     "BsPatientDirectoryPage": "packages/ui/src/templates/BsPatientDirectoryPage.vue",
-    "BsPatientProfilePage": "packages/ui/src/templates/BsPatientProfilePage.vue"
+    "BsPatientProfilePage": "packages/ui/src/templates/BsPatientProfilePage.vue",
+    "BsAvailabilityPage": "packages/ui/src/templates/BsAvailabilityPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2786,6 +2787,16 @@
       "status": "implemented; synthetic private document verification pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/availability.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsAvailabilityPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/availability.vue",
+      "purpose": "doctor-working-hours-and-availability",
+      "status": "implemented; synthetic schedule verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -2916,6 +2927,7 @@
     "BsPracticeOverviewPage",
     "BsLocationManagementPage",
     "BsPatientDirectoryPage",
-    "BsPatientProfilePage"
+    "BsPatientProfilePage",
+    "BsAvailabilityPage"
   ]
 }

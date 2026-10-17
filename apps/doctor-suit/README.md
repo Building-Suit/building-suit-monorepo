@@ -95,3 +95,12 @@ captures confirmation email locally, suppresses credentials/body artifacts, and
 stops only the local project it started. It excludes Realtime, whose acceptance
 remains open. See `documents-evidence.md` and the implementation tracker for
 actual passing/failing/unrun status.
+
+Working hours (`/availability`, DOS-M1-013) are scoped to the current clinic and
+its explicit IANA timezone. Weekly windows, dated exceptions and duration are
+versioned server commands. Hours changes preserve all saved appointments; there
+is no browser conflict override. Availability and booking share one rule, with a
+doctor-wide UTC exclusion across clinics and explicit current permissions.
+Missing/ambiguous local clocks are unavailable. Upcoming commitments block clinic
+archive; appointment lifecycle/queue UI is DOS-M1-014. The PostgreSQL suite tests
+real cross-clinic/rule/timezone/grant races independently of HTTP browser fixtures.

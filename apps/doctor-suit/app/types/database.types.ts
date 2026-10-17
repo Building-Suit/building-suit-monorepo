@@ -9,6 +9,130 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      appointment_events: {
+        Row: {
+          actor_user_id: string
+          appointment_id: string
+          details: Json
+          event_type: string
+          happened_at: string
+          id: number
+          location_id: string
+          practice_id: string
+          record_version: number
+        }
+        Insert: {
+          actor_user_id: string
+          appointment_id: string
+          details?: Json
+          event_type: string
+          happened_at?: string
+          id?: never
+          location_id: string
+          practice_id: string
+          record_version: number
+        }
+        Update: {
+          actor_user_id?: string
+          appointment_id?: string
+          details?: Json
+          event_type?: string
+          happened_at?: string
+          id?: never
+          location_id?: string
+          practice_id?: string
+          record_version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_events_practice_id_appointment_id_fkey"
+            columns: ["practice_id", "appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "appointment_events_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
+      appointments: {
+        Row: {
+          created_at: string
+          created_by: string
+          doctor_user_id: string
+          ends_at: string
+          id: string
+          location_id: string
+          location_name: string
+          patient_id: string
+          practice_id: string
+          starts_at: string
+          state: string
+          timezone: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          doctor_user_id: string
+          ends_at: string
+          id?: string
+          location_id: string
+          location_name: string
+          patient_id: string
+          practice_id: string
+          starts_at: string
+          state?: string
+          timezone: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          doctor_user_id?: string
+          ends_at?: string
+          id?: string
+          location_id?: string
+          location_name?: string
+          patient_id?: string
+          practice_id?: string
+          starts_at?: string
+          state?: string
+          timezone?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_practice_id_doctor_user_id_fkey"
+            columns: ["practice_id", "doctor_user_id"]
+            isOneToOne: false
+            referencedRelation: "practices"
+            referencedColumns: ["id", "owner_user_id"]
+          },
+          {
+            foreignKeyName: "appointments_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "appointments_practice_id_patient_id_fkey"
+            columns: ["practice_id", "patient_id"]
+            isOneToOne: false
+            referencedRelation: "practice_patients"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
       audit_events: {
         Row: {
           actor_user_id: string
@@ -67,6 +191,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      location_schedules: {
+        Row: {
+          exceptions: Json
+          location_id: string
+          practice_id: string
+          slot_minutes: number
+          updated_at: string
+          updated_by: string
+          version: number
+          weekly: Json
+        }
+        Insert: {
+          exceptions: Json
+          location_id: string
+          practice_id: string
+          slot_minutes: number
+          updated_at?: string
+          updated_by: string
+          version?: number
+          weekly: Json
+        }
+        Update: {
+          exceptions?: Json
+          location_id?: string
+          practice_id?: string
+          slot_minutes?: number
+          updated_at?: string
+          updated_by?: string
+          version?: number
+          weekly?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_schedules_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
       }
       locations: {
         Row: {
@@ -685,6 +850,23 @@ export type Database = {
         }
         Returns: Json
       }
+      doctor_availability: {
+        Args: { p_day: string; p_location: string; p_practice: string }
+        Returns: Json
+      }
+      doctor_book_appointment: {
+        Args: {
+          p_day: string
+          p_key: string
+          p_location: string
+          p_location_version: number
+          p_minute: number
+          p_patient: string
+          p_practice: string
+          p_schedule_version: number
+        }
+        Returns: Json
+      }
       doctor_cancel_secretary_invitation: {
         Args: {
           p_invitation: string
@@ -839,6 +1021,10 @@ export type Database = {
         }
         Returns: Json
       }
+      doctor_schedule: {
+        Args: { p_location: string; p_practice: string }
+        Returns: Json
+      }
       doctor_session_context: { Args: never; Returns: Json }
       doctor_set_membership_grants: {
         Args: {
@@ -900,6 +1086,16 @@ export type Database = {
           p_key: string
           p_location: string
           p_patient?: string
+          p_practice: string
+        }
+        Returns: Json
+      }
+      doctor_write_schedule: {
+        Args: {
+          p_expected_version: number
+          p_input: Json
+          p_key: string
+          p_location: string
           p_practice: string
         }
         Returns: Json
