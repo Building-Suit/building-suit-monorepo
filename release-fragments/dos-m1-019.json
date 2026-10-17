@@ -24,7 +24,8 @@
     "docs/work-packages/doctor-suit/preview-handoff.md",
     "docs/work-packages/doctor-suit/implementation-tracker.md",
     "docs/work-packages/doctor-suit/implementation-history.md",
-    "release-changes/items.json"
+    "release-changes/items.json",
+    "apps/doctor-suit/tests/e2e/dos-m1-017.auth.fixture.ts"
   ],
   "reason": "Complete synthetic preview metadata and a neutral shared HTTP404 handoff. Approved public copy/locale metadata is separate from private/auth routes, which remove sharing descriptions and callback/user material. No production canonical/domain, external support/store/pricing or release activation is invented. Preserve prior tracker observations as explicit history and reconcile current task/provider status for the final M1 packet. Full protocol verification also exposed overlapping context-refresh revocation: require explicit reselection after authority loss and re-read authority for a newer refresh, with deterministic regressions."
 }
