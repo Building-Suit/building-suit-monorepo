@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { doctorPageMetadata } from './utils/previewMetadata'
 import { usePageExitCleanup, useFreshPageOnRestore, usePageRevalidation } from '@building-suit/ux'
 const context = useDoctorContext()
 const auth = useDoctorAuth()
@@ -12,7 +13,17 @@ const revalidation = usePageRevalidation(() => context.refresh(), () => !transit
 watch(() => [auth.state.phase, auth.state.identity?.userId, auth.state.identity?.sessionId, route.path, transitioning.value].join(':'), () => { void revalidation.refresh() })
 usePageExitCleanup(() => { void context.clear() })
 useFreshPageOnRestore()
-const { locale, localeProperties } = useI18n()
+const { locale, localeProperties,t } = useI18n()
+const metadata = computed(() => doctorPageMetadata(route.path,locale.value==='ar',{ title: t('workflow'),description: t('description') }))
+useHead(() => ({ title: metadata.value.title }))
+useSeoMeta({ description: () => metadata.value.description,robots: () => metadata.value.robots,
+  ogTitle: () => metadata.value.publicPage ? metadata.value.title : undefined,
+  ogDescription: () => metadata.value.publicPage ? metadata.value.description : undefined,
+  ogLocale: () => metadata.value.publicPage ? metadata.value.locale : undefined,
+  twitterCard: () => metadata.value.publicPage ? 'summary' : undefined,
+  twitterTitle: () => metadata.value.publicPage ? metadata.value.title : undefined,
+  twitterDescription: () => metadata.value.publicPage ? metadata.value.description : undefined,
+})
 useHead(() => ({ htmlAttrs: { lang: localeProperties.value.language || locale.value, dir: localeProperties.value.dir || 'ltr' } }))
 </script>
 <template><BsAppRoot toast-host /></template>

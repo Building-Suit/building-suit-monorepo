@@ -1,0 +1,15 @@
+import { test,expect } from '@playwright/test'
+const fixture = 'http://127.0.0.1:4338/__fixture'
+test.use({ actionTimeout: 10000 })
+const stage = (name: string) => console.info(`Doctor metadata stage: ${name}`)
+for(const ar of [false,true])test(`DOS-M1-019-C02 ${ar ? 'AR' : 'EN'}: private/auth pages and SPA history remove preview sharing metadata`,async ({ browser,request }) => {
+  test.setTimeout(90000);await request.post(fixture,{ data: { reset: true } });const context = await browser.newContext({ viewport: { width: 390,height: 1000 } })
+  try {
+    await context.addCookies([{ name: 'building-suit-locale',value: ar ? 'ar' : 'en',url: 'http://127.0.0.1:4337' }]);await context.route('**/*',route => ['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort());const page = await context.newPage()
+    async function privateHead() { await expect(page.locator('meta[property^="og:"],meta[name^="twitter:"],meta[name="description"],link[rel="canonical"]')).toHaveCount(0);await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content',/noindex.*nosnippet/);expect(await page.title()).not.toMatch(/synthetic@example|session|DO_NOT_REFLECT/i) }
+    stage('private-account');const signin = await page.goto('/account');expect(signin?.headers()['cache-control']).toContain('no-store');await privateHead();stage('sign-in');await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill('synthetic@example.test');await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only');await page.getByRole('button',{ name: ar ? 'تسجيل الدخول' : 'Sign in',exact: true }).click();await expect(page).toHaveURL(/\/account$/);await expect(page.getByText(ar ? 'الحساب مؤكّد' : 'Account verified',{ exact: true })).toBeVisible();await privateHead()
+    stage('public-from-private');await page.getByRole('link',{ name: ar ? 'العودة إلى المعاينة' : 'Back to preview',exact: true }).click();await expect(page).toHaveURL('http://127.0.0.1:4337/');await expect(page.locator('meta[property="og:title"]')).toHaveCount(1);stage('history-return');await page.goBack();await expect(page).toHaveURL(/\/account$/);await expect(page.getByText(ar ? 'الحساب مؤكّد' : 'Account verified',{ exact: true })).toBeVisible();await privateHead()
+    stage('sign-out');await page.getByRole('button',{ name: ar ? 'تسجيل الخروج' : 'Sign out',exact: true }).click();await expect(page).toHaveURL(/\/sign-in$/)
+    stage('auth-route-scrub');for(const path of ['/sign-up','/recover','/verify?code=DO_NOT_REFLECT_SENTINEL&sb_flow_id=invalid']) { const response = await page.goto(path);expect(response?.headers()['cache-control']).toContain('no-store');await privateHead();expect(await page.locator('meta').evaluateAll(elements => elements.map(element => element.getAttribute('content')).join(' '))).not.toContain('DO_NOT_REFLECT_SENTINEL') }
+  } finally { try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close().catch(() => {}) } }
+})

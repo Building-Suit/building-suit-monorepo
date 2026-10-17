@@ -570,6 +570,16 @@
       "adapterBoundary": "Optional read-only audit projection, controlled bounded search and paging. Doctor owns current UID/SID, practice/clinic/domain permissions, safe event projection and data. Shared defaults preserve the existing full-history consumer. No export, erasure or retention controls are enabled.",
       "task": "DOS-M1-017",
       "migrationStatus": "registered complete synthetic administrative and personal audit routes; verification in progress"
+    },
+    {
+      "family": "neutral-route-status",
+      "owner": "packages/ui",
+      "components": [
+        "BsRouteStatusPage"
+      ],
+      "adapterBoundary": "Complete neutral route status and known navigation destinations. Product adapters own status code, public/private metadata, HTTP response semantics and approved copy; no requested path or query is rendered.",
+      "task": "DOS-M1-019",
+      "migrationStatus": "registered neutral synthetic missing-route template; verification in progress"
     }
   ]
 }

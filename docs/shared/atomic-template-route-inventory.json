@@ -78,6 +78,7 @@
     "BsShopCustomerPortalPage": "packages/ui/src/templates/BsShopCustomerPortalPage.vue",
     "BsPublicAppointmentBookingPage": "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue",
     "BsProductPreviewPage": "packages/ui/src/templates/BsProductPreviewPage.vue",
+    "BsRouteStatusPage": "packages/ui/src/templates/BsRouteStatusPage.vue",
     "BsAccountSessionPage": "packages/ui/src/templates/BsAccountSessionPage.vue",
     "BsPracticeOverviewPage": "packages/ui/src/templates/BsPracticeOverviewPage.vue",
     "BsLocationManagementPage": "packages/ui/src/templates/BsLocationManagementPage.vue",
@@ -2828,6 +2829,16 @@
       "verification": "not-yet-accepted",
       "dependencies": [],
       "purpose": "personal-account-audit"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/[...slug].vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsRouteStatusPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/[...slug].vue",
+      "status": "implemented; synthetic metadata and missing-route verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "neutral-missing-route"
     }
   ],
   "verifiedSharedHeads": [
@@ -2954,6 +2965,7 @@
     "BsShopCustomerPortalPage",
     "BsPublicAppointmentBookingPage",
     "BsProductPreviewPage",
+    "BsRouteStatusPage",
     "BsAccountSessionPage",
     "BsPracticeOverviewPage",
     "BsLocationManagementPage",
