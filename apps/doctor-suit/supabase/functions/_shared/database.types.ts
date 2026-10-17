@@ -230,6 +230,57 @@ export type Database = {
           },
         ]
       }
+      doctor_edition_policy: {
+        Row: {
+          change_reason: string
+          changed_at: string
+          mode: string
+          revision: number
+          singleton: boolean
+        }
+        Insert: {
+          change_reason: string
+          changed_at?: string
+          mode: string
+          revision: number
+          singleton?: boolean
+        }
+        Update: {
+          change_reason?: string
+          changed_at?: string
+          mode?: string
+          revision?: number
+          singleton?: boolean
+        }
+        Relationships: []
+      }
+      doctor_edition_policy_events: {
+        Row: {
+          change_reason: string
+          database_actor: string
+          happened_at: string
+          next_mode: string
+          previous_mode: string | null
+          revision: number
+        }
+        Insert: {
+          change_reason: string
+          database_actor: string
+          happened_at?: string
+          next_mode: string
+          previous_mode?: string | null
+          revision: number
+        }
+        Update: {
+          change_reason?: string
+          database_actor?: string
+          happened_at?: string
+          next_mode?: string
+          previous_mode?: string | null
+          revision?: number
+        }
+        Relationships: []
+      }
       doctor_profiles: {
         Row: {
           created_at: string
@@ -889,6 +940,7 @@ export type Database = {
         Returns: Json
       }
       doctor_administrative_capabilities: { Args: never; Returns: string[] }
+      doctor_administrative_edition: { Args: never; Returns: Json }
       doctor_appointment_board: {
         Args: {
           p_day: string

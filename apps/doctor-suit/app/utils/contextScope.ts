@@ -1,3 +1,4 @@
+import type { DoctorEditionMode } from './administrativeEdition.ts'
 export interface DoctorContextScope {
   environment: 'local' | 'staging' | 'production'
   portal: 'doctor' | 'secretary'
@@ -7,11 +8,14 @@ export interface DoctorContextScope {
   locationId: string | null
   grantsVersion: number
   locationVersion?: number
+  edition?: DoctorEditionMode
+  editionRevision?: number
 }
 
 export function doctorScopeKey(scope: DoctorContextScope, feature: string, query: unknown = null): string {
   return JSON.stringify(['doctor-suit', scope.environment, scope.portal, scope.userId, scope.sessionId,
-    scope.practiceId, scope.locationId, scope.grantsVersion, scope.locationVersion ?? 0, feature, query])
+    scope.practiceId, scope.locationId, scope.grantsVersion, scope.locationVersion ?? 0, feature, query,
+    ...(scope.edition === undefined && scope.editionRevision === undefined ? [] : [scope.edition, scope.editionRevision])])
 }
 
 /** Product context lifecycle, never an authorization decision. Trusted adapters supply the scope. */
