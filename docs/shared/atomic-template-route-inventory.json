@@ -2839,6 +2839,22 @@
       "verification": "not-yet-accepted",
       "dependencies": [],
       "purpose": "neutral-missing-route"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/google-callback.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSignInPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSignInPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSignInPage.vue",
+      "status": "pending-validation",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/google-callback.vue",
+      "dependencies": [],
+      "verification": "Manual Google and Supabase sandbox OAuth browser tests required",
+      "purpose": "google-oauth-callback"
     }
   ],
   "verifiedSharedHeads": [

@@ -2,5 +2,5 @@
 const { product } = useDoctorAuthPresentation()
 </script>
 <template>
-  <BsProductAuthFrame :product="product"><slot /></BsProductAuthFrame>
+  <BsProductAuthFrame :product="{ ...product, presentation: 'glass' }"><slot /></BsProductAuthFrame>
 </template>
