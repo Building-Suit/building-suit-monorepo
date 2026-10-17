@@ -559,6 +559,17 @@
       "adapterBoundary": "Complete appointment calendar, booking/rescheduling and state confirmation dialogs, scoped queue and paged immutable history. Doctor owns authorization, appointment state machine, patient lookup, optimistic commands and scope. Shared UX owns record actions; shared data-access owns subscription lifecycle and authoritative reconnect refresh. External notifications remain disabled.",
       "task": "DOS-M1-014",
       "migrationStatus": "registered complete synthetic appointment route; verification in progress"
+    },
+    {
+      "family": "doctor-read-only-audit",
+      "owner": "packages/ui",
+      "components": [
+        "BsAuditHistoryPage",
+        "BsDataTable"
+      ],
+      "adapterBoundary": "Optional read-only audit projection, controlled bounded search and paging. Doctor owns current UID/SID, practice/clinic/domain permissions, safe event projection and data. Shared defaults preserve the existing full-history consumer. No export, erasure or retention controls are enabled.",
+      "task": "DOS-M1-017",
+      "migrationStatus": "registered complete synthetic administrative and personal audit routes; verification in progress"
     }
   ]
 }

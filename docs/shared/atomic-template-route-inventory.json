@@ -2808,6 +2808,26 @@
       "status": "implemented; synthetic appointment verification pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/audit.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsAuditHistoryPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/audit.vue",
+      "status": "implemented; synthetic audit verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "permission-scoped-administrative-audit"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/account-activity.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsAuditHistoryPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/account-activity.vue",
+      "status": "implemented; synthetic audit verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "personal-account-audit"
     }
   ],
   "verifiedSharedHeads": [

@@ -1,3 +1,4 @@
+import { seedAuditProtocol,auditProtocol } from './audit-provider.mjs'
 // In-memory multi-account browser protocol fixture. Actual authority is verified in SQL suites.
 import { createHash, randomUUID } from 'node:crypto'
 import { seedPatientProtocol, patientProtocol } from './patients-provider.mjs'
@@ -34,6 +35,7 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
   if (state.availability) seedAvailabilityProtocol(data)
   if (state.appointments) seedAppointmentProtocol(data)
   if (state.dashboard) seedDashboardProtocol(data)
+  if (state.audit) seedAuditProtocol(data)
   const userView = actor => ({ id: actor.id,aud: 'authenticated',role: 'authenticated',email: actor.email,email_confirmed_at: '2026-01-01T00:00:00Z',app_metadata: { provider: 'email',providers: ['email'] },user_metadata: { role: 'owner',clinical_signer: true },identities: [],created_at: '2026-01-01T00:00:00Z' })
   function issue(actor,sessionId = randomUUID()) {
     const access_token = `${Buffer.from('{"alg":"HS256","typ":"JWT"}').toString('base64url')}.${Buffer.from(JSON.stringify({ sub: actor.id,role: 'authenticated',aud: 'authenticated',session_id: sessionId,exp: Math.floor(Date.now()/1000)+3600 })).toString('base64url')}.synthetic-signature`
@@ -67,6 +69,7 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
     return [{ practice_id: practice.id,practice_name: practice.name,doctor_name: data.users.find(item => item.id===practice.owner_user_id).name,location_id: location.id,location_name: location.name,timezone: location.timezone,portal: owner(practice.id) ? 'doctor' : 'secretary',grants_version: owner(practice.id) ? practice.version : membership.version,location_version: location.version,capabilities }]
   })
   const rpc = url.pathname.replace('/rest/v1/rpc/','')
+  if (state.audit && auditProtocol({ data,actor,rpc,input,send,capability,owner })) return true
   if (state.documents && url.pathname==='/functions/v1/doctor-documents') { void documentFunction({ data,actor,sessionId: session.sessionId,capability,valid: () => sessions.get(req.headers.authorization)===session },req,url,rawBytes,res).catch(() => send({ error: 'unavailable' },503)); return true }
   if (state.documents && documentProtocol({ data,actor,capability },rpc,input,send)) return true
   if (state.appointments && appointmentProtocol({ data,actor,sessionId: session.sessionId,rpc,input,send,capability })) return true

@@ -879,6 +879,15 @@ export type Database = {
         Returns: Json
       }
       doctor_account_settings: { Args: never; Returns: Json }
+      doctor_administrative_audit: {
+        Args: {
+          p_location?: string
+          p_page?: number
+          p_practice: string
+          p_query?: string
+        }
+        Returns: Json
+      }
       doctor_administrative_capabilities: { Args: never; Returns: string[] }
       doctor_appointment_board: {
         Args: {
@@ -1060,6 +1069,10 @@ export type Database = {
           p_size?: number
           p_status?: string
         }
+        Returns: Json
+      }
+      doctor_personal_account_audit: {
+        Args: { p_page?: number; p_query?: string }
         Returns: Json
       }
       doctor_practice_setup: { Args: never; Returns: Json }

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { BsAuditHistoryView, BsAuditHistoryCopy } from '../types/auditPresentation'
-defineProps<{ items: BsAuditHistoryView[]; copy: BsAuditHistoryCopy; windowLabel: string; errorMessage: string; loading: boolean; loadingMore: boolean; hasMore: boolean }>()
-const emit = defineEmits<{ loadMore: [] }>()
+const props = withDefaults(defineProps<{ summaryOnly?: boolean; controls?: { searchLabel: string; submitLabel: string; retryLabel: string; notice: string; governance: string; scopeKey: string|null; backTo: string; backLabel: string; page: number; pages: number; pageLabel: string; previous: string; next: string }; items: BsAuditHistoryView[]; copy: BsAuditHistoryCopy; windowLabel: string; errorMessage: string; loading: boolean; loadingMore: boolean; hasMore: boolean }>(), { summaryOnly: false })
+const search = defineModel<string>('search', { default: '' })
+const emit = defineEmits<{ loadMore: []; search: [scope: string|null,value: string]; retry: []; page: [scope: string|null,value: number] }>()
+const columns = computed(() => [{ key: 'column1',header: props.copy.date },{ key: 'column2',header: props.copy.actor },{ key: 'column3',header: props.copy.activity },{ key: 'column4',header: props.copy.record },...(!props.summaryOnly ? [{ key: 'column5',header: props.copy.changes }] : [])])
 </script>
 <template>
   <BsStack gap="lg">
@@ -9,6 +11,13 @@ const emit = defineEmits<{ loadMore: [] }>()
       <BsHeading :level="1" size="h1">{{ copy.title }}</BsHeading>
       <BsText size="sm" tone="muted">{{ copy.subtitle }}</BsText>
     </BsBox>
+    <BsStack v-if="controls">
+      <BsLink :to="controls.backTo">{{ controls.backLabel }}</BsLink>
+      <BsText as="p">{{ controls.notice }}</BsText>
+      <BsText as="p">{{ controls.governance }}</BsText>
+      <BsForm :pending="loading" @submit="emit('search',controls.scopeKey,search)"><BsField v-slot="field" :label="controls.searchLabel"><BsInput :id="field.id" v-model="search" :maxlength="120" /></BsField><BsButton submit :disabled="loading">{{ controls.submitLabel }}</BsButton></BsForm>
+      <BsButton v-if="errorMessage" :disabled="loading" @click="emit('retry')">{{ controls.retryLabel }}</BsButton>
+    </BsStack>
     <BsCard v-if="windowLabel" role="status" as="section" padding="md">
       <BsStack gap="xs">
         <BsText emphasis="semibold">{{ windowLabel }}</BsText>
@@ -23,7 +32,7 @@ const emit = defineEmits<{ loadMore: [] }>()
         <BsDataTable
           :value="items"
           row-key="id"
-          :columns="[{ key: 'column1', header: (copy.date) }, { key: 'column2', header: (copy.actor) }, { key: 'column3', header: (copy.activity) }, { key: 'column4', header: (copy.record) }, { key: 'column5', header: (copy.changes) }]"
+          :columns="columns"
         >
           <template #header-column1>{{ copy.date }}</template>
           <template #cell-column1="{ row }">{{ row.timestamp }}</template>
@@ -67,5 +76,10 @@ const emit = defineEmits<{ loadMore: [] }>()
         <BsButton type="button" :disabled="loadingMore" @click="emit('loadMore')">{{ copy.loadMore }}</BsButton>
       </BsInline>
     </template>
+    <BsInline v-if="controls && !errorMessage" :wrap="true">
+      <BsButton :disabled="loading || controls.page===0" @click="emit('page',controls.scopeKey,controls.page-1)">{{ controls.previous }}</BsButton>
+      <BsText role="status">{{ controls.pageLabel }}</BsText>
+      <BsButton :disabled="loading || controls.page+1>=controls.pages" @click="emit('page',controls.scopeKey,controls.page+1)">{{ controls.next }}</BsButton>
+    </BsInline>
   </BsStack>
 </template>

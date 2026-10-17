@@ -1,0 +1,2 @@
+import { test,expect } from '@playwright/test'
+for(const path of ['/audit','/account-activity'])test(`DOS-M1-017: ${path} requires verified account admission`,async ({ page }) => { await page.route('**/*',route => ['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort());await page.goto(path);await expect(page).toHaveURL(/\/sign-in\?next=/);await expect(page.getByRole('heading',{ name: 'Sign-in unavailable',exact: true })).toBeVisible();await expect(page.getByRole('table')).toHaveCount(0) })

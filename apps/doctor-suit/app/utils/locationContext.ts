@@ -1,6 +1,6 @@
 import type { DoctorContextScope } from './contextScope'
 import type { DoctorIdentity } from './authController'
-export const doctorAdministrativeCapabilities = ['dashboard.read', 'locations.read', 'locations.manage', 'patients.read', 'patients.write', 'documents.read', 'documents.write', 'availability.manage', 'appointments.read', 'appointments.write', 'queue.manage'] as const
+export const doctorAdministrativeCapabilities = ['dashboard.read', 'locations.read', 'locations.manage', 'patients.read', 'patients.write', 'documents.read', 'documents.write', 'availability.manage', 'appointments.read', 'appointments.write', 'queue.manage', 'audit.read'] as const
 export type DoctorAdministrativeCapability = typeof doctorAdministrativeCapabilities[number]
 export interface DoctorLocationContext extends DoctorContextScope {
   locationId: string
