@@ -43,7 +43,7 @@ export function delegationProtocol({ state,req,url,input,send,deny }) {
   const session = sessions.get(req.headers.authorization)
   if (!session) { deny(); return true }
   const actor = session.actor
-  if (url.pathname==='/auth/v1/logout') { sessions.delete(req.headers.authorization); send({}); return true }
+  if (url.pathname==='/auth/v1/logout') { sessions.delete(req.headers.authorization); for (const [key,value] of refreshes) if (value.sessionId===session.sessionId) refreshes.delete(key); send({}); return true }
   if (url.pathname==='/auth/v1/user') { send(userView(actor)); return true }
   const ownPractice = data.practices.find(item => item.owner_user_id===actor.id)
   const memberFor = practice => data.memberships.find(item => item.practice_id===practice && item.user_id===actor.id && item.status==='active')

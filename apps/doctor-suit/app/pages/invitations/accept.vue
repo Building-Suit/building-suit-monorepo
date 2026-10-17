@@ -26,7 +26,7 @@ async function submit() {
   if (!invitation.state.details) { await invitation.review(code.value); return }
   if (await invitation.accept(code.value)) code.value = ''
 }
-async function switchAccount() { reset(); await auth.signOut(); await navigateTo('/sign-in?returnTo=%2Finvitations%2Faccept') }
+async function switchAccount() { reset(); await auth.signOut(); await navigateTo('/sign-in?next=%2Finvitations%2Faccept') }
 watch(() => auth.state.phase, phase => { if (phase==='signed-out' || phase==='unavailable') { reset(); void navigateTo('/sign-in') } })
 </script>
 <template>
