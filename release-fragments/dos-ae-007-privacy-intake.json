@@ -1,0 +1,39 @@
+{
+  "id": "dos-ae-007-privacy-intake",
+  "task": "DOS-AE-007",
+  "suits": [
+    "doctor-suit",
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/doctor-suit/app/pages/account.vue",
+    "apps/doctor-suit/app/pages/privacy.vue",
+    "apps/doctor-suit/app/plugins/doctor-auth.ts",
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/app/utils/authConfiguration.ts",
+    "apps/doctor-suit/app/utils/privacyController.ts",
+    "apps/doctor-suit/app/utils/privacyPresentation.ts",
+    "apps/doctor-suit/app/utils/privacyRepository.ts",
+    "apps/doctor-suit/app/utils/privacyRequests.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261017232403_doctor_own_privacy_requests.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-007-privacy.sql",
+    "apps/doctor-suit/tests/e2e/dos-ae-007-privacy.auth.fixture.ts",
+    "apps/doctor-suit/tests/fixtures/delegation-provider.mjs",
+    "apps/doctor-suit/tests/fixtures/privacy-provider.mjs",
+    "apps/doctor-suit/tests/unit/privacy-requests.test.mjs",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-007-privacy-intake.md",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsPrivacyRequestsPage.vue"
+  ],
+  "reason": "Provide bounded synthetic own-account privacy review intake with verified actor scope, immutable receipts and safe retries. Qualified privacy policy/outcomes and all genuine approval gates stay pending; no patient fulfillment, exports, hosted mutation, live activation or clinical approval."
+}

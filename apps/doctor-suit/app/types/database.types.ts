@@ -340,6 +340,39 @@ export type Database = {
         }
         Relationships: []
       }
+      doctor_privacy_requests: {
+        Row: {
+          created_at: string
+          database_actor: string
+          id: string
+          kind: string
+          request_key: string
+          session_id: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          database_actor?: string
+          id?: string
+          kind: string
+          request_key: string
+          session_id: string
+          state?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          database_actor?: string
+          id?: string
+          kind?: string
+          request_key?: string
+          session_id?: string
+          state?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       doctor_profiles: {
         Row: {
           created_at: string
@@ -1465,6 +1498,7 @@ export type Database = {
         Returns: Json
       }
       doctor_practice_setup: { Args: never; Returns: Json }
+      doctor_privacy_requests: { Args: never; Returns: Json }
       doctor_reschedule_appointment: {
         Args: {
           p_appointment: string
@@ -1552,6 +1586,10 @@ export type Database = {
           p_key: string
           p_terms: string
         }
+        Returns: Json
+      }
+      doctor_submit_privacy_request: {
+        Args: { p_key: string; p_kind: string }
         Returns: Json
       }
       doctor_team: {

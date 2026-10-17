@@ -86,7 +86,8 @@
     "BsPatientProfilePage": "packages/ui/src/templates/BsPatientProfilePage.vue",
     "BsAvailabilityPage": "packages/ui/src/templates/BsAvailabilityPage.vue",
     "BsPracticeAppointmentsPage": "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
-    "BsSubscriptionStatusPage": "packages/ui/src/templates/BsSubscriptionStatusPage.vue"
+    "BsSubscriptionStatusPage": "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
+    "BsPrivacyRequestsPage": "packages/ui/src/templates/BsPrivacyRequestsPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2859,6 +2860,16 @@
       "status": "implemented; candidate verification pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/privacy.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPrivacyRequestsPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/privacy.vue",
+      "purpose": "synthetic-own-account-privacy-review-intake",
+      "status": "implemented; qualified privacy fulfillment unavailable",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -2993,6 +3004,7 @@
     "BsPatientProfilePage",
     "BsAvailabilityPage",
     "BsPracticeAppointmentsPage",
-    "BsSubscriptionStatusPage"
+    "BsSubscriptionStatusPage",
+    "BsPrivacyRequestsPage"
   ]
 }

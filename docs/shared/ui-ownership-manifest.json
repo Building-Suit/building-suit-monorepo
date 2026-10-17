@@ -608,6 +608,19 @@
       ],
       "task": "DOS-AE-003",
       "migrationStatus": "implemented; candidate acceptance pending"
+    },
+    {
+      "family": "privacy-request-intake",
+      "owner": "packages/ui",
+      "components": [
+        "BsPrivacyRequestsPage"
+      ],
+      "adapterBoundary": "Shared presentation receives coded own-account review options, bounded rows and semantic commands. Product owns identity, immutable intake and authority; no export/erasure/legal fulfillment.",
+      "auditSources": [
+        "apps/doctor-suit/app/pages/privacy.vue"
+      ],
+      "task": "DOS-AE-007",
+      "migrationStatus": "synthetic intake only; qualified privacy gates pending"
     }
   ]
 }
