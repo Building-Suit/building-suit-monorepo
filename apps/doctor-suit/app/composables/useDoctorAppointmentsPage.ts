@@ -35,7 +35,9 @@ export function useDoctorAppointmentsPage() {
   watch(editor.visible,value => { if(!value && !state.pending) { submitted.value = null;appointments.discard() } })
   watch(historyOpen,value => { if(!value) { historyTarget.value = null;state.history = null;sourceMode.value = false } })
   const row = (id: string) => state.board?.items.find(item => item.id===id) || state.board?.queue.find(item => item.id===id)
-  const canCreate = computed(() => hydrated.value && Boolean(state.board?.canWrite && state.board.canReadPatients) && !state.loading)
+  // A board read does not change clinic capabilities. Keep the permitted action
+  // mounted so an asynchronous refresh cannot discard keyboard focus/activation.
+  const canCreate = computed(() => hydrated.value && Boolean(state.board?.canWrite && state.board.canReadPatients))
   const clinicOptions = computed(() => context.state.options.filter(item => item.practiceId===nuxt.$doctorAppointmentsScope()?.practiceId && (['appointments.read','appointments.write','patients.read'] as const).every(cap => item.capabilities.includes(cap))).map(item => ({ value: item.locationId,label: `${item.locationName} · ${item.timezone}` })))
   async function patients(search = '') { form.value.patientId = '';await appointments.patients(search);await denied() }
   async function offers() { form.value.minute = null;if(!editor.visible.value || !form.value.destinationId)return;await appointments.offers(form.value.destinationId,form.value.date);await denied() }
