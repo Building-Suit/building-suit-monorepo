@@ -1,10 +1,12 @@
 // Actual owned Supabase Realtime, Auth SID and appointment acceptance. No hosted URL.
 import { randomUUID } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
+import { createDoctorRealtimeWireProbe } from './realtime-provider-probe.mjs'
 import { doctorAvailabilityToday } from '../app/utils/availability.ts'
 const wait = ms => new Promise(resolve => setTimeout(resolve,ms))
-export async function verifyDoctorAppointmentProvider({ api,key,admin,a,b,rpc,expect,setStage,probe }) {
-  const frozen = createClient(api,key,{ auth: { persistSession: false,autoRefreshToken: false,detectSessionInUrl: false },accessToken: async () => a.session.access_token })
+export async function verifyDoctorAppointmentProvider({ api,key,a,b,rpc,expect,setStage,probe,advanceRevision,independentWire }) {
+  const ownerWire = createDoctorRealtimeWireProbe()
+  const frozen = createClient(api,key,{ auth: { persistSession: false,autoRefreshToken: false,detectSessionInUrl: false },accessToken: async () => a.session.access_token,realtime: { logger: ownerWire.logger } })
   const channels = [];let revisionA = 0;let revisionB = 0;let forbidden = 0;let invalidPayload = false
   const allowedKeys = new Set(['practice_id','location_id','revision'])
   function observe(practiceId,locationId,accept) { return payload => {
@@ -21,12 +23,7 @@ export async function verifyDoctorAppointmentProvider({ api,key,admin,a,b,rpc,ex
     await new Promise((resolve,reject) => { const timer = setTimeout(() => reject(new Error('Actual Realtime join deadline')),20000);channel.subscribe(status => { if(status==='SUBSCRIBED') { clearTimeout(timer);resolve() } else if(['CHANNEL_ERROR','TIMED_OUT'].includes(status)) { clearTimeout(timer);reject(new Error('Actual Realtime join failed')) } }) })
     return channel
   }
-  async function increment(practiceId,locationId) {
-    const current = await admin.from('appointment_queue_revisions').select('revision').eq('location_id',locationId).maybeSingle()
-    expect(!current.error,'Owned revision fixture lookup failed')
-    const result = await admin.from('appointment_queue_revisions').upsert({ practice_id: practiceId,location_id: locationId,revision: (current.data?.revision || 0)+1 })
-    expect(!result.error,'Owned revision fixture write failed')
-  }
+  async function increment(practiceId,locationId) { await advanceRevision(practiceId,locationId) }
   async function cleanup() {
     await Promise.allSettled(channels.map(({ client,channel }) => client.removeChannel(channel)))
     frozen.realtime.disconnect()
@@ -98,6 +95,7 @@ export async function verifyDoctorAppointmentProvider({ api,key,admin,a,b,rpc,ex
     const previousA = revisionA;const previousB = revisionB;let controlAvailable = false
     try { await increment(a.scope.practiceId,a.scope.locationId);await increment(b.scope.practiceId,b.scope.locationId);await wait(1500);controlAvailable = true } catch { /* failure-only control stays unavailable */ }
     console.log(`Owned Realtime failure controls: ${JSON.stringify({ available: controlAvailable,owner_update_seen: revisionA>previousA,independent_insert_seen: revisionB>previousB,foreign_scope_blocked: forbidden===0,unexpected_payload: invalidPayload })}`)
+    console.log(`Owned Realtime failure wire: ${JSON.stringify({ owner: ownerWire.summary(),independent: independentWire.summary() })}`)
     await cleanup();throw error
   }
 }

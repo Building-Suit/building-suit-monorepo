@@ -6,7 +6,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { randomUUID } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
-import { doctorRealtimeProbeSummary } from './realtime-provider-probe.mjs'
+import { doctorRealtimeProbeSummary,createDoctorRealtimeWireProbe } from './realtime-provider-probe.mjs'
 import { verifyDoctorAppointmentProvider } from './appointments-actual-provider.mjs'
 import { doctorOversizedResponse } from './oversized-http.mjs'
 import { validateLocalDoctorTarget } from './local-lifecycle.mjs'
@@ -31,7 +31,15 @@ function cli(args,timeout = 600000) {
   })
 }
 function docker(args) { const result = spawnSync('docker',args,{ encoding: 'utf8',timeout: 10000 }); expect(result.status===0,'Docker inspection failed'); return result.stdout.trim().split('\n').filter(Boolean) }
-const options = { auth: { persistSession: false,autoRefreshToken: false,detectSessionInUrl: false } }
+const realtimeWire = createDoctorRealtimeWireProbe()
+const options = { auth: { persistSession: false,autoRefreshToken: false,detectSessionInUrl: false },realtime: { logger: realtimeWire.logger } }
+function advanceRevision(practiceId,locationId) {
+  const uuid = value => typeof value==='string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+  expect(owned && uuid(practiceId) && uuid(locationId),'Owned revision fixture target rejected')
+  const input = `insert into public.appointment_queue_revisions(practice_id,location_id)values('${practiceId}'::uuid,'${locationId}'::uuid)on conflict(location_id)do update set revision=appointment_queue_revisions.revision+1;`
+  const result = spawnSync('docker',['exec','-i',`supabase_db_${project}`,'psql','-X','-U','postgres','-d','postgres','-qAt','-v','ON_ERROR_STOP=1'],{ input,encoding: 'utf8',timeout: 10000,maxBuffer: 65536 })
+  expect(result.status===0,'Owned revision fixture write failed')
+}
 async function realtimeProbe() {
   if(!owned)return { available: false }
   const input = await readFile(path.join(app,'tests/realtime-provider-probe.sql'),'utf8')
@@ -92,7 +100,7 @@ try {
   if (existingBucket.error) expect(!(await storageAdmin.storage.createBucket(bucket,{ public: false,fileSizeLimit: 5242880,allowedMimeTypes: ['application/pdf','image/png','image/jpeg'] })).error,'Supported local Storage bucket creation failed')
   stage = 'real Auth and owner onboarding'; const a = await bootstrap(status.ANON_KEY,'doctor-a'); const b = await bootstrap(status.ANON_KEY,'doctor-b')
   console.log('Actual Auth: captured local confirmation email, unconfirmed denial, verified session and two independent owner practices passed')
-  stage = 'actual appointment lifecycle and scoped Realtime';appointmentAcceptance = await verifyDoctorAppointmentProvider({ api,key: status.ANON_KEY,admin: storageAdmin,a,b,rpc,expect,probe: realtimeProbe,setStage: value => { stage = value } })
+  stage = 'actual appointment lifecycle and scoped Realtime';appointmentAcceptance = await verifyDoctorAppointmentProvider({ api,key: status.ANON_KEY,a,b,rpc,expect,probe: realtimeProbe,advanceRevision,independentWire: realtimeWire,setStage: value => { stage = value } })
   const pdf = new TextEncoder().encode('%PDF-1.7\nSynthetic administrative attachment\n%%EOF\n')
   async function endpoint(actor,operation,data = {},bytes) {
     return fetch(`${api}/functions/v1/doctor-documents?op=${operation}`,{ method: 'POST',headers: { apikey: status.ANON_KEY,authorization: `Bearer ${actor.session.access_token}`,origin,'content-type': 'application/pdf','x-doctor-document': encodeURIComponent(JSON.stringify({ ...actor.scope,key: randomUUID(),...data })) },body: bytes,signal: AbortSignal.timeout(30000) })

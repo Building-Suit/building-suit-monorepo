@@ -66,11 +66,14 @@ test('revision-only live binding ignores delete events and disposes obsolete cal
 })
 
 test('failure-only Realtime diagnostics reject arbitrary output, extra fields and short secrets',async () => {
-  const { doctorRealtimeProbeSummary } = await import('../realtime-provider-probe.mjs')
-  const valid = { published: true,publishes_insert: true,publishes_update: true,primary_key: true,revision_rows: 1,subscriptions: 3,sid_claims: 3,authenticated_claims: 3,visible_claims: 1,wal_slots: 1 }
+  const { doctorRealtimeProbeSummary,createDoctorRealtimeWireProbe } = await import('../realtime-provider-probe.mjs')
+  const valid = { published: true,publishes_insert: true,publishes_update: true,primary_key: true,replication_select: false,authenticated_select: true,service_select: false,service_insert: false,service_update: false,wal_slot_active: false,revision_rows: 1,subscriptions: 3,sid_claims: 3,authenticated_claims: 3,visible_claims: 1,wal_slots: 1 }
   assert.equal(doctorRealtimeProbeSummary(JSON.stringify(valid)).available,true)
   const secret = 'tiny-secret'
   for(const output of [secret,JSON.stringify(secret),JSON.stringify({ ...valid,detail: secret }),JSON.stringify({ ...valid,subscriptions: secret }),JSON.stringify({ ...valid,subscriptions: 1234 }),JSON.stringify({ ...valid,published: secret }),`${JSON.stringify(valid)}\n${secret}`]) {
     const result = doctorRealtimeProbeSummary(output);assert.deepEqual(result,{ available: false });assert.equal(JSON.stringify(result).includes(secret),false)
   }
+  const wire = createDoctorRealtimeWireProbe();wire.logger('receive',`opaque-topic postgres_changes ${secret}`,{ headers: { Authorization: secret } });wire.logger('receive','opaque-topic system', { status: 'error',message: secret })
+  wire.logger('receive','opaque-topic phx_reply',{ status: 'ok',response: { postgres_changes: [{ id: 0 },{ id: 7 },{ id: 'opaque-wire-binding' }] } });wire.logger('receive','opaque-topic postgres_changes',{ ids: [7],data: { type: 'UPDATE',record: { arbitrary: secret } } });
+  assert.deepEqual(wire.summary(),{ change_frames: 2,insert_frames: 0,update_frames: 1,unrecognized_change_frames: 1,change_matching_ids: 1,join_bindings: 3,join_numeric_ids: 2,join_string_ids: 1,join_zero_ids: 1,system_ok: 0,system_error: 1,client_error: 0 });assert.equal(JSON.stringify(wire.summary()).includes(secret),false)
 })
