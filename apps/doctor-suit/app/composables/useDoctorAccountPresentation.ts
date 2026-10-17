@@ -6,6 +6,7 @@ export function useDoctorAccountPresentation() {
   const copy = computed(() => doctorAccountCopy(locale.value==='ar'))
   const form = ref<DoctorAccountForm>({ personalName: '',contactPhone: '',inAppConfirmations: false })
   const editor = useRecordAction(() => form.value)
+  const reauthenticating = ref(false)
   const error = computed(() => doctorAccountError(account.state.error,locale.value==='ar'))
   const identityKey = computed(() => auth.state.identity ? JSON.stringify([auth.state.identity.userId,auth.state.identity.sessionId]) : null)
   watch(identityKey,() => { editor.reset();form.value = { personalName: '',contactPhone: '',inAppConfirmations: false };if(identityKey.value)void account.load() },{ immediate: true })
@@ -14,7 +15,11 @@ export function useDoctorAccountPresentation() {
   async function save() {
     await editor.run(async () => { if(!await account.update(form.value))throw new Error('account-command') },() => error.value || copy.value.retry)
   }
-  async function reauthenticate() { editor.reset();form.value = { personalName: '',contactPhone: '',inAppConfirmations: false };await auth.signOut();await navigateTo('/sign-in?next=/account') }
+  async function reauthenticate() {
+    if(reauthenticating.value)return
+    reauthenticating.value = true;editor.reset();form.value = { personalName: '',contactPhone: '',inAppConfirmations: false }
+    try { await auth.signOut();await navigateTo('/sign-in?next=/account') } finally { reauthenticating.value = false }
+  }
   const view = computed(() => {
     const data = account.state.settings
     return { title: copy.value.title,description: copy.value.description,loading: account.state.pending && !data,loadingLabel: copy.value.loading,error: error.value,saved: account.state.saved ? copy.value.saved : null,canEdit: Boolean(data) && !account.state.pending,
@@ -24,5 +29,5 @@ export function useDoctorAccountPresentation() {
     }
   })
   onUnmounted(() => { editor.reset();form.value = { personalName: '',contactPhone: '',inAppConfirmations: false } })
-  return { account,view,form,editorOpen: editor.visible,edit,save,reauthenticate }
+  return { account,view,form,reauthenticating,editorOpen: editor.visible,edit,save,reauthenticate }
 }
