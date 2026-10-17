@@ -15,6 +15,18 @@ export function createDoctorProfileController(repository: ReturnType<typeof doct
   const signal = () => AbortSignal.any([controller.signal,AbortSignal.timeout(30000)])
   function discard() { uploadKey = null; state.file = null; state.replacement = null; state.actionError = null }
   function clear() { generation++; documentsRevision++; historyRevision++; controller.abort(); controller = new AbortController(); uploadKey = null; archiveIntent = null; Object.assign(state,doctorProfileState()) }
+  function failure(field: 'documentsError' | 'historyError' | 'actionError',error: unknown) {
+    const result = doctorPatientFailure(error)
+    if (result==='denied') {
+      // A known denial immediately removes private file state, even before the
+      // broader context refresh discovers which grants/session changed.
+      state.documents = null; state.history = null; state.historyDocumentId = null
+      state.file = null; state.replacement = null; uploadKey = null; archiveIntent = null
+      state.available = false; state.serviceWrite = false
+      if (state.profile) { state.profile.documentsRead = false; state.profile.documentsWrite = false }
+    }
+    state[field] = result
+  }
   function writable() { return Boolean(state.profile?.documentsWrite && state.documents?.canWrite && state.available && state.serviceWrite && !state.loading && !state.documentsLoading) }
   function selected(id: string) { return state.documents?.rows.find(item => item.id===id) || null }
   async function documents(page = state.page,size = state.size) {
@@ -29,9 +41,9 @@ export function createDoctorProfileController(repository: ReturnType<typeof doct
         const service = await repository.status(selectedScope,key(),signal())
         if (!accepts(expected) || revision!==documentsRevision) return false
         state.available = true; state.serviceWrite = service.canWrite
-      } catch (error) { if (accepts(expected) && revision===documentsRevision) state.documentsError = doctorPatientFailure(error) }
+      } catch (error) { if (accepts(expected) && revision===documentsRevision) failure('documentsError',error) }
       return true
-    } catch (error) { if (accepts(expected) && revision===documentsRevision) state.documentsError = doctorPatientFailure(error); return false }
+    } catch (error) { if (accepts(expected) && revision===documentsRevision) failure('documentsError',error); return false }
     finally { if (accepts(expected) && revision===documentsRevision) state.documentsLoading = false }
   }
   async function load(patientId: string) {
@@ -64,7 +76,7 @@ export function createDoctorProfileController(repository: ReturnType<typeof doct
       await repository.upload(selectedScope,row,file,uploadKey,signal())
       if (!accepts(expected)) return false
       discard(); return true
-    } catch (error) { if (accepts(expected)) { state.actionError = doctorPatientFailure(error); if (state.actionError!=='network') uploadKey = null } return false }
+    } catch (error) { if (accepts(expected)) { failure('actionError',error); if (state.actionError!=='network') uploadKey = null } return false }
     finally { if (accepts(expected)) state.pending = false }
   }
   async function archive(id: string,expectedVersion: number) {
@@ -74,7 +86,7 @@ export function createDoctorProfileController(repository: ReturnType<typeof doct
     const expected = capture(); state.pending = true; state.actionError = null
     if (archiveIntent?.id!==id || archiveIntent?.version!==row.version) archiveIntent = { id,version: row.version,key: key() }
     try { await repository.archive(selectedScope,row,archiveIntent.key,signal()); if (!accepts(expected)) return false; archiveIntent = null; return true }
-    catch (error) { if (accepts(expected)) { state.actionError = doctorPatientFailure(error); if (state.actionError!=='network') archiveIntent = null } return false }
+    catch (error) { if (accepts(expected)) { failure('actionError',error); if (state.actionError!=='network') archiveIntent = null } return false }
     finally { if (accepts(expected)) state.pending = false }
   }
   function closeHistory() { historyRevision++; state.history = null; state.historyDocumentId = null; state.historyLoading = false; state.historyError = null; state.historyPage = 0 }
@@ -83,7 +95,7 @@ export function createDoctorProfileController(repository: ReturnType<typeof doct
     const row = selected(id); const selectedScope = current(); if (!row || !repository || !selectedScope || !state.profile?.documentsRead) return false
     const expected = capture(); const revision = ++historyRevision; state.history = null; state.historyDocumentId = id; state.historyPage = page; state.historyLoading = true; state.historyError = null
     try { const result = await repository.history(selectedScope,row,page,20,signal()); if (!accepts(expected) || revision!==historyRevision) return false; state.history = result; return true }
-    catch (error) { if (accepts(expected) && revision===historyRevision) state.historyError = doctorPatientFailure(error); return false }
+    catch (error) { if (accepts(expected) && revision===historyRevision) failure('historyError',error); return false }
     finally { if (accepts(expected) && revision===historyRevision) state.historyLoading = false }
   }
   async function download(documentId: string,versionId: string) {
@@ -92,7 +104,7 @@ export function createDoctorProfileController(repository: ReturnType<typeof doct
     const selectedScope = current(); if (!row || !version || !selectedScope) return null
     const expected = capture(); state.pending = true; state.actionError = null
     try { const blob = await repository.download(selectedScope,row,version,key(),signal()); return accepts(expected) ? { blob,version: { ...version } as DoctorDocumentVersion } : null }
-    catch (error) { if (accepts(expected)) state.actionError = doctorPatientFailure(error); return null }
+    catch (error) { if (accepts(expected)) failure('actionError',error); return null }
     finally { if (accepts(expected)) state.pending = false }
   }
   return { state,clear,discard,load,documents,choose,upload,archive,history,closeHistory,download,writable,scopeKey }

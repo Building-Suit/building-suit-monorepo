@@ -6,6 +6,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { randomUUID } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
+import { doctorOversizedResponse } from './oversized-http.mjs'
 import { validateLocalDoctorTarget } from './local-lifecycle.mjs'
 import { DoctorProviderFailure,doctorProviderFailureSummary } from './provider-diagnostics.mjs'
 const root = fileURLToPath(new URL('../../../',import.meta.url))
@@ -104,10 +105,10 @@ try {
   const directWrite = await a.client.storage.from(bucket).upload(`bypass-${randomUUID()}.pdf`,pdf,{ contentType: 'application/pdf' }); expect(directWrite.error,'Direct client upload bypass allowed')
   stage = 'reject spoofed file'; expect((await endpoint(a,'upload',{ filename: 'spoof.pdf' },new TextEncoder().encode('<script>synthetic</script>'))).status===415,'Spoofed file accepted')
   stage = 'reject oversized file'; let oversized
-  try { oversized = await endpoint(a,'upload',{ filename: 'large.pdf' },new Uint8Array(5242881)) } catch { stage = 'oversized file transport failed'; throw new Error('Synthetic oversized upload transport failed') }
-  if (oversized.status!==413) {
+  try { oversized = await doctorOversizedResponse(`${api}/functions/v1/doctor-documents?op=upload`,{ apikey: status.ANON_KEY,authorization: `Bearer ${a.session.access_token}`,origin,'content-type': 'application/pdf','x-doctor-document': encodeURIComponent(JSON.stringify({ ...a.scope,key: randomUUID(),filename: 'large.pdf' })) },new Uint8Array(5242881)) } catch { stage = 'oversized file transport failed'; throw new Error('Synthetic oversized upload transport failed') }
+  if (oversized!==413) {
     // Fixed categories only; never reflect a response body or exception detail.
-    stage = ({ 400: 'oversized file bad request',401: 'oversized file session denial',403: 'oversized file scope denial',500: 'oversized file server error',502: 'oversized file gateway error',503: 'oversized file unavailable' })[oversized.status] || 'oversized file unexpected response'
+    stage = ({ 400: 'oversized file bad request',401: 'oversized file session denial',403: 'oversized file scope denial',500: 'oversized file server error',502: 'oversized file gateway error',503: 'oversized file unavailable' })[oversized] || 'oversized file unexpected response'
     throw new Error('Synthetic oversized upload response failed')
   }
   stage = 'reject cross-practice file'; expect((await endpoint(b,'download',{ ...a.scope,documentId: outcome.documentId })).status===403,'Cross-practice download allowed')

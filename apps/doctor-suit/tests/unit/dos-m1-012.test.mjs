@@ -75,3 +75,11 @@ test('archive confirmation cannot silently apply to a newly refreshed replacemen
   f.state.documents.rows[0].version++
   assert.equal(await f.controller.archive(id(4),confirmedVersion),false); assert.equal(f.state.actionError,'conflict'); assert.equal(f.calls.length,0)
 })
+
+test('a known file access denial immediately clears private rows, history and selected bytes',async () => {
+  const f = fixture(); await f.controller.load(id(3)); f.controller.choose(new File(['pdf'],'a.pdf',{ type: 'application/pdf' }),null)
+  f.state.history = { versions: [],events: [],total: 0 }; f.state.historyDocumentId = id(4)
+  f.repository.download = async () => { throw { code: '42501' } }
+  assert.equal(await f.controller.download(id(4),id(5)),null); assert.equal(f.state.actionError,'denied')
+  assert.equal(f.state.documents,null); assert.equal(f.state.history,null); assert.equal(f.state.file,null); assert.equal(f.state.available,false); assert.equal(f.state.profile.documentsRead,false)
+})

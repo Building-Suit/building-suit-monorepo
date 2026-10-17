@@ -14,7 +14,7 @@ export function useDoctorPatientProfile() {
   watch(previewOpen,value => { if (!value) { preview.clear(); previewName.value = '' } })
   watch(historyOpen,value => { if (!value) profile.closeHistory() })
   watch(upload.visible,value => { if (!value && !state.pending) profile.discard() })
-  async function denied() { if (state.error==='denied' || state.actionError==='denied' || state.documentsError==='denied') await context.refresh() }
+  async function denied() { if (state.error==='denied' || state.actionError==='denied' || state.documentsError==='denied' || state.historyError==='denied') { reset(); await context.refresh() } }
   async function reload() { reset(); const result = await profile.load(patientId.value); await denied(); return result }
   watch([scopeKey,patientId],() => { reset(); profile.clear(); if (hydrated.value) void reload() },{ flush: 'sync' })
   onMounted(() => { hydrated.value = true })
@@ -34,7 +34,7 @@ export function useDoctorPatientProfile() {
     if (!version || state.documents?.rows.find(row => row.id===id)?.version!==version) { state.actionError = 'conflict'; return }
     if (await profile.archive(id,version)) { previewOpen.value = false; await profile.documents() } else await denied()
   }
-  async function showHistory(id: string) { previewOpen.value = false; historyOpen.value = true; await profile.history(id) }
+  async function showHistory(id: string) { previewOpen.value = false; historyOpen.value = true; await profile.history(id); await denied() }
   async function delivery(id: string,versionId: string,show: boolean) {
     const result = await profile.download(id,versionId)
     if (!result) { await denied(); return }
@@ -57,6 +57,6 @@ export function useDoctorPatientProfile() {
     previewView: computed(() => ({ url: preview.url.value,name: previewName.value })),error: computed(() => error(state.error)),openUpload,save,archive,showHistory,
     download: (id: string,versionId: string) => delivery(id,versionId,false),showPreview: (id: string,versionId: string) => delivery(id,versionId,true),
     documentsPage: (page: number,size: number) => { if (!state.pending) { profile.closeHistory(); historyOpen.value = false; void profile.documents(page,size) } },
-    retryDocuments: () => profile.documents(),historyPage: (page: number) => state.historyDocumentId ? profile.history(state.historyDocumentId,page) : false,retryHistory: () => state.historyDocumentId ? profile.history(state.historyDocumentId,state.historyPage) : false,
+    retryDocuments: async () => { const result = await profile.documents(); await denied(); return result },historyPage: (page: number) => state.historyDocumentId ? profile.history(state.historyDocumentId,page) : false,retryHistory: () => state.historyDocumentId ? profile.history(state.historyDocumentId,state.historyPage) : false,
   }
 }
