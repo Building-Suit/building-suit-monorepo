@@ -361,6 +361,161 @@ export type Database = {
         }
         Relationships: []
       }
+      doctor_saas_configuration: {
+        Row: {
+          change_reason: string
+          changed_at: string
+          revision: number
+          singleton: boolean
+          terms_version_id: string | null
+        }
+        Insert: {
+          change_reason: string
+          changed_at?: string
+          revision: number
+          singleton?: boolean
+          terms_version_id?: string | null
+        }
+        Update: {
+          change_reason?: string
+          changed_at?: string
+          revision?: number
+          singleton?: boolean
+          terms_version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_configuration_terms_version_id_fkey"
+            columns: ["terms_version_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_terms_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_saas_configuration_events: {
+        Row: {
+          change_reason: string
+          database_actor: string
+          happened_at: string
+          next_terms_id: string | null
+          previous_terms_id: string | null
+          revision: number
+        }
+        Insert: {
+          change_reason: string
+          database_actor: string
+          happened_at?: string
+          next_terms_id?: string | null
+          previous_terms_id?: string | null
+          revision: number
+        }
+        Update: {
+          change_reason?: string
+          database_actor?: string
+          happened_at?: string
+          next_terms_id?: string | null
+          previous_terms_id?: string | null
+          revision?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_configuration_events_next_terms_id_fkey"
+            columns: ["next_terms_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_terms_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_saas_configuration_events_previous_terms_id_fkey"
+            columns: ["previous_terms_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_terms_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_saas_terms_versions: {
+        Row: {
+          cancellation_policy: string | null
+          clinic_limit: number | null
+          clinic_unlimited: boolean | null
+          commercial_approval_ref: string | null
+          created_at: string
+          currency: string | null
+          currency_exponent: number | null
+          database_actor: string
+          expiry_policy: string | null
+          grace_days: number | null
+          id: string
+          legal_approval_ref: string | null
+          monthly_minor: number | null
+          over_limit_policy: string | null
+          plan_key: string
+          refund_policy: string | null
+          renewal_policy: string | null
+          staff_limit: number | null
+          staff_unlimited: boolean | null
+          status: string
+          terms_document_ref: string | null
+          trial_days: number | null
+          version: number
+          yearly_minor: number | null
+        }
+        Insert: {
+          cancellation_policy?: string | null
+          clinic_limit?: number | null
+          clinic_unlimited?: boolean | null
+          commercial_approval_ref?: string | null
+          created_at?: string
+          currency?: string | null
+          currency_exponent?: number | null
+          database_actor?: string
+          expiry_policy?: string | null
+          grace_days?: number | null
+          id?: string
+          legal_approval_ref?: string | null
+          monthly_minor?: number | null
+          over_limit_policy?: string | null
+          plan_key: string
+          refund_policy?: string | null
+          renewal_policy?: string | null
+          staff_limit?: number | null
+          staff_unlimited?: boolean | null
+          status: string
+          terms_document_ref?: string | null
+          trial_days?: number | null
+          version: number
+          yearly_minor?: number | null
+        }
+        Update: {
+          cancellation_policy?: string | null
+          clinic_limit?: number | null
+          clinic_unlimited?: boolean | null
+          commercial_approval_ref?: string | null
+          created_at?: string
+          currency?: string | null
+          currency_exponent?: number | null
+          database_actor?: string
+          expiry_policy?: string | null
+          grace_days?: number | null
+          id?: string
+          legal_approval_ref?: string | null
+          monthly_minor?: number | null
+          over_limit_policy?: string | null
+          plan_key?: string
+          refund_policy?: string | null
+          renewal_policy?: string | null
+          staff_limit?: number | null
+          staff_unlimited?: boolean | null
+          status?: string
+          terms_document_ref?: string | null
+          trial_days?: number | null
+          version?: number
+          yearly_minor?: number | null
+        }
+        Relationships: []
+      }
       location_schedules: {
         Row: {
           exceptions: Json
@@ -1229,6 +1384,7 @@ export type Database = {
         Returns: Json
       }
       doctor_runtime_contract: { Args: never; Returns: Json }
+      doctor_saas_terms: { Args: never; Returns: Json }
       doctor_save_onboarding_draft: {
         Args: {
           p_display_name: string
