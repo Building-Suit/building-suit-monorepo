@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { doctorAvailabilityToday } from '../app/utils/availability.ts'
 const wait = ms => new Promise(resolve => setTimeout(resolve,ms))
-export async function verifyDoctorAppointmentProvider({ api,key,admin,a,b,rpc,expect,setStage }) {
+export async function verifyDoctorAppointmentProvider({ api,key,admin,a,b,rpc,expect,setStage,probe }) {
   const frozen = createClient(api,key,{ auth: { persistSession: false,autoRefreshToken: false,detectSessionInUrl: false },accessToken: async () => a.session.access_token })
   const channels = [];let revisionA = 0;let revisionB = 0;let forbidden = 0;let invalidPayload = false
   const allowedKeys = new Set(['practice_id','location_id','revision'])
@@ -51,13 +51,19 @@ export async function verifyDoctorAppointmentProvider({ api,key,admin,a,b,rpc,ex
     const base = { p_practice: a.scope.practiceId,p_location: a.scope.locationId }
     const book = (day,minute,key = randomUUID()) => rpc(a.client,'doctor_book_appointment',{ ...base,p_patient: a.scope.patientId,p_day: day,p_minute: minute,p_schedule_version: hours.version,p_location_version: hours.location_version,p_key: key })
     setStage('actual queue check-in and history')
-    const booked = await book(date,minute);await until(() => revisionA>=1,'Actual booking revision missing')
+    const booked = await book(date,minute)
+    setStage('actual protected revision row visibility')
+    const row = await frozen.from('appointment_queue_revisions').select('revision').eq('location_id',a.scope.locationId).single()
+    expect(!row.error && row.data?.revision>=1,'Actual owner cannot read its protected revision')
+    setStage('actual Realtime booking revision');await until(() => revisionA>=1,'Actual booking revision missing')
+    setStage('actual queue check-in retry')
     const checkKey = randomUUID();const transition = (state,version,key = randomUUID()) => rpc(a.client,'doctor_transition_appointment',{ ...base,p_appointment: booked.appointment_id,p_expected_version: version,p_state: state,p_reason: '',p_key: key })
     expect((await transition('checked_in',1,checkKey)).version===2,'Actual check-in failed')
     expect((await transition('checked_in',1,checkKey)).version===2,'Actual check-in retry duplicated transition')
+    setStage('actual queue checked-in projection')
     const checked = await rpc(a.client,'doctor_appointment_board',{ ...base,p_day: date })
     expect(checked.queue.length===1 && checked.queue[0].id===booked.appointment_id,'Actual queue did not retain exactly one entry')
-    await transition('in_progress',2);await transition('completed',3)
+    setStage('actual queue administrative completion');await transition('in_progress',2);await transition('completed',3)
     const completed = await rpc(a.client,'doctor_appointment_board',{ ...base,p_day: date })
     expect(completed.queue.length===0,'Actual completion retained active queue entry')
     const history = await rpc(a.client,'doctor_appointment_history',{ ...base,p_appointment: booked.appointment_id })
@@ -86,5 +92,12 @@ export async function verifyDoctorAppointmentProvider({ api,key,admin,a,b,rpc,ex
         console.log('Actual Realtime: frozen revoked session receives no revision; independent Doctor B remains current')
       },cleanup,
     }
-  } catch(error) { await cleanup();throw error }
+  } catch(error) {
+    const metadata = await probe().catch(() => ({ available: false }))
+    console.log(`Owned Realtime failure metadata: ${JSON.stringify(metadata)}`)
+    const previousA = revisionA;const previousB = revisionB;let controlAvailable = false
+    try { await increment(a.scope.practiceId,a.scope.locationId);await increment(b.scope.practiceId,b.scope.locationId);await wait(1500);controlAvailable = true } catch { /* failure-only control stays unavailable */ }
+    console.log(`Owned Realtime failure controls: ${JSON.stringify({ available: controlAvailable,owner_update_seen: revisionA>previousA,independent_insert_seen: revisionB>previousB,foreign_scope_blocked: forbidden===0,unexpected_payload: invalidPayload })}`)
+    await cleanup();throw error
+  }
 }

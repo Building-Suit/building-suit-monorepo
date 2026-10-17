@@ -2,7 +2,6 @@
 definePageMeta({ layout: 'practice',middleware: 'doctor-auth' })
 const { context,state,copy,scopeKey,hydrated,date,form,reason,historyOpen,editorOpen,transitionOpen,canCreate,clinicOptions,days,queue,editorView,transitionView,historyView,patientOptions,slotOptions,liveLabel,liveTone,error,denied,reload,open,action,save,submitTransition,patients,offers,changeDate,changePage,historyPage } = useDoctorAppointmentsPage()
 const scopeLabel = computed(() => context.state.current ? `${context.state.current.doctorName} · ${context.state.current.locationName} · ${context.state.current.timezone}` : '')
-await context.refresh()
 await reload()
 </script>
 <template>

@@ -64,3 +64,13 @@ test('revision-only live binding ignores delete events and disposes obsolete cal
   await new Promise(resolve => setTimeout(resolve,300));assert.equal(refreshes,1,'delete events must not enter a row-authorized revision channel')
   await live.update(null,async () => {});for(const binding of bindings)binding.callback();await new Promise(resolve => setTimeout(resolve,300));assert.equal(refreshes,1);assert.equal(removed,1);await live.dispose()
 })
+
+test('failure-only Realtime diagnostics reject arbitrary output, extra fields and short secrets',async () => {
+  const { doctorRealtimeProbeSummary } = await import('../realtime-provider-probe.mjs')
+  const valid = { published: true,publishes_insert: true,publishes_update: true,primary_key: true,revision_rows: 1,subscriptions: 3,sid_claims: 3,authenticated_claims: 3,visible_claims: 1,wal_slots: 1 }
+  assert.equal(doctorRealtimeProbeSummary(JSON.stringify(valid)).available,true)
+  const secret = 'tiny-secret'
+  for(const output of [secret,JSON.stringify(secret),JSON.stringify({ ...valid,detail: secret }),JSON.stringify({ ...valid,subscriptions: secret }),JSON.stringify({ ...valid,subscriptions: 1234 }),JSON.stringify({ ...valid,published: secret }),`${JSON.stringify(valid)}\n${secret}`]) {
+    const result = doctorRealtimeProbeSummary(output);assert.deepEqual(result,{ available: false });assert.equal(JSON.stringify(result).includes(secret),false)
+  }
+})

@@ -8,18 +8,19 @@ export function useDoctorAppointmentsPage() {
   const today = (zone = nuxt.$doctorAppointmentsScope()?.timezone || 'Etc/UTC') => doctorAvailabilityToday(zone)
   const date = ref(today());const page = ref(0);const queuePage = ref(0);const form = ref<{ patientId: string; destinationId: string; date: string; minute: number | null; reason: string }>({ patientId: '',destinationId: '',date: today(),minute: null,reason: '' });const reason = ref('')
   const original = ref<DoctorAppointment | null>(null);const transitionTarget = ref<{ row: DoctorAppointment; action: Exclude<DoctorAppointment['state'],'booked'> } | null>(null);const historyTarget = ref<string | null>(null);const historyOpen = ref(false)
+  const submitted = ref<{ scope: string | null; fingerprint: string; input: DoctorAppointmentCommand } | null>(null)
   const editor = useRecordAction(() => form.value);const transition = useRecordAction(() => ({ reason: reason.value }));const query = () => ({ date: date.value,page: page.value,queuePage: queuePage.value })
-  function reset() { editor.reset();transition.reset();appointments.discard();original.value = null;transitionTarget.value = null;historyTarget.value = null;historyOpen.value = false;reason.value = '';form.value = { patientId: '',destinationId: '',date: today(),minute: null,reason: '' } }
+  function reset() { submitted.value = null;editor.reset();transition.reset();appointments.discard();original.value = null;transitionTarget.value = null;historyTarget.value = null;historyOpen.value = false;reason.value = '';form.value = { patientId: '',destinationId: '',date: today(),minute: null,reason: '' } }
   const unregister = context.registerClear(reset)
   onBeforeUnmount(() => { unregister();reset();appointments.clear();void nuxt.$doctorAppointmentsLive.update(null,async () => {}) })
   async function denied() { if([state.error,state.actionError,state.historyError,state.offersError,state.patientsError].includes('denied')) { reset();await context.refresh() } }
   async function read() { const result = await appointments.load(query());if(result)state.live = nuxt.$doctorAppointmentsLive.connected ? 'current' : 'offline';await denied();return result }
   async function bind() { const selected = nuxt.$doctorAppointmentsScope();try { await nuxt.$doctorAppointmentsLive.update(selected,async () => { await read() }) } catch { appointments.disconnected() } }
-  async function reload() { if(state.pending)return;reset();await nuxt.$doctorAppointmentsLive.update(null,async () => {}).catch(() => {});await bind();return read() }
+  async function reload() { if(state.pending)return;reset();await context.refresh();await nuxt.$doctorAppointmentsLive.update(null,async () => {}).catch(() => {});await bind();return read() }
   watch(scopeKey,() => { reset();appointments.clear();date.value = today();page.value = queuePage.value = 0;if(hydrated.value) { void bind();void read() } },{ flush: 'sync' })
   onMounted(() => { hydrated.value = true;void bind();if(scopeKey.value)void read() })
   usePageRevalidation(async () => { await context.refresh();await read() },() => hydrated.value && Boolean(scopeKey.value) && !state.pending && !editor.visible.value && !transition.visible.value && !historyOpen.value)
-  watch(editor.visible,value => { if(!value && !state.pending)appointments.discard() })
+  watch(editor.visible,value => { if(!value && !state.pending) { submitted.value = null;appointments.discard() } })
   watch(historyOpen,value => { if(!value) { historyTarget.value = null;state.history = null } })
   const row = (id: string) => state.board?.items.find(item => item.id===id) || state.board?.queue.find(item => item.id===id)
   const canCreate = computed(() => hydrated.value && Boolean(state.board?.canWrite && state.board.canReadPatients) && !state.loading)
@@ -28,17 +29,24 @@ export function useDoctorAppointmentsPage() {
   async function offers() { form.value.minute = null;if(!editor.visible.value || !form.value.destinationId)return;await appointments.offers(form.value.destinationId,form.value.date);await denied() }
   async function open(id: string | null = null) {
     const item = id ? row(id) : null;if(!hydrated.value || state.pending || (id ? !item || item.state!=='booked' || !state.board?.canWrite || !state.board.canReadPatients : !canCreate.value))return
-    appointments.discard();original.value = item ? { ...item } : null
+    submitted.value = null;appointments.discard();original.value = item ? { ...item } : null
     form.value = { patientId: item?.patientId || '',destinationId: item?.locationId || nuxt.$doctorAppointmentsScope()?.locationId || '',date: date.value<today() ? today() : date.value,minute: null,reason: '' }
     if(item)editor.edit();else editor.create();await Promise.all([offers(),...(item ? [] : [patients()])])
   }
   function command(): DoctorAppointmentCommand | null {
+    const retry = submitted.value
+    if(state.actionError==='network' && retry && retry.scope===scopeKey.value && retry.fingerprint===JSON.stringify(form.value))return { ...retry.input }
     const value = form.value;const slots = state.offers;if(!slots || slots.locationId!==value.destinationId || slots.date!==value.date || value.minute===null || !slots.slots.some(item => item.minute===value.minute && item.available))return null
     const base = { destinationId: value.destinationId,date: value.date,minute: value.minute,scheduleVersion: slots.scheduleVersion,locationVersion: slots.locationVersion }
     return original.value ? doctorAppointmentReason(value.reason) ? { kind: 'reschedule',appointmentId: original.value.id,version: original.value.version,...base,reason: value.reason.trim() } : null : state.patients?.rows.some(item => item.id===value.patientId) ? { kind: 'book',patientId: value.patientId,...base } : null
   }
   const error = (value: string | null) => !value ? null : value==='denied' ? copy.value.denied : value==='conflict' ? copy.value.conflict : value==='invalid' ? copy.value.invalid : copy.value.network
-  async function save() { const input = command();if(!editor.visible.value || !input)return;const done = await editor.run(async () => { if(!await appointments.command(input)) { await denied();throw new Error('DOCTOR_APPOINTMENT_COMMAND_FAILED') } },() => error(state.actionError) || copy.value.network);if(done) { reset();await read() } }
+  async function save() {
+    const input = command();if(!editor.visible.value || !input)return
+    submitted.value = { scope: scopeKey.value,fingerprint: JSON.stringify(form.value),input: { ...input } }
+    const done = await editor.run(async () => { if(!await appointments.command(input)) { await denied();throw new Error('DOCTOR_APPOINTMENT_COMMAND_FAILED') } },() => error(state.actionError) || copy.value.network)
+    if(done) { reset();await read() } else if(state.actionError!=='network')submitted.value = null
+  }
   function permitted(item: DoctorAppointment) {
     const board = state.board;if(!board)return []
     return doctorAppointmentTransitions(item.state).filter(action => {
