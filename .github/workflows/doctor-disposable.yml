@@ -122,6 +122,9 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Build Doctor for actual local Auth browser acceptance
+        run: pnpm --filter @building-suit/doctor-suit build
+      - run: pnpm exec playwright install --with-deps chromium
       - name: Check portable private document function
         run: pnpm exec tsc -p apps/doctor-suit/tests/tsconfig.edge.json
       - name: Verify actual disposable Doctor Auth, Storage and Functions

@@ -4,6 +4,8 @@ import { doctorDelegationCopy } from '../utils/delegationPresentation'
 definePageMeta({ layout: false, middleware: 'doctor-auth' })
 const { auth, copy, product, error } = useDoctorAuthPresentation()
 const { practice, copy: practiceCopy } = useDoctorPracticePresentation()
+const personal = useDoctorAccountPresentation()
+const { view: accountView,form: accountForm,editorOpen: accountEditorOpen } = personal
 const context = useDoctorContext()
 await context.refresh()
 if (!context.state.options.length && !auth.state.identity?.practiceId) await practice.load()
@@ -19,5 +21,5 @@ async function signOut() { await auth.signOut(); await navigateTo('/sign-in') }
 watch(() => auth.state.phase, phase => { if (phase === 'signed-out' || phase === 'unavailable') void navigateTo('/sign-in') })
 </script>
 <template>
-  <BsAccountSessionPage :availability="availability" :product="product" :title="copy.account" :description="copy.accountDescription" :status="copy.status" :status-description="auth.state.identity?.practiceId ? practiceCopy.boundaries : copy.statusDescription" :links="links" :sign-out="copy.signOut" :pending="auth.state.pending || !hydrated" :error="error" @sign-out="signOut" />
+  <BsAccountSessionPage v-model:account-form="accountForm" v-model:account-editor-open="accountEditorOpen" :settings="accountView" :availability="availability" :product="product" :title="copy.account" :description="copy.accountDescription" :status="copy.status" :status-description="auth.state.identity?.practiceId ? practiceCopy.boundaries : copy.statusDescription" :links="links" :sign-out="copy.signOut" :pending="auth.state.pending || !hydrated" :error="error" @edit-account="personal.edit" @save-account="personal.save" @reload-account="personal.account.load" @reauthenticate="personal.reauthenticate" @sign-out="signOut" />
 </template>

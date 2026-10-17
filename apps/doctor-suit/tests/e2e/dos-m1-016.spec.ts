@@ -1,0 +1,5 @@
+import { test,expect } from '@playwright/test'
+for(const ar of [false,true])test(`DOS-M1-016 provider absent ${ar ? 'AR mobile' : 'EN desktop'}: account data and mutation controls stay inaccessible`,async ({ page,context }) => {
+  await context.addCookies([{ name: 'building-suit-locale',value: ar ? 'ar' : 'en',url: 'http://127.0.0.1:4336' }]);await page.setViewportSize({ width: ar ? 390 : 1280,height: 900 });await page.route('**/*',route => ['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort())
+  await page.goto('/account');await expect(page).toHaveURL(/\/sign-in\?next=\/account$/);await expect(page.getByRole('heading',{ name: ar ? 'تسجيل الدخول غير متاح' : 'Sign-in unavailable',exact: true })).toBeVisible();await expect(page.getByRole('textbox')).toHaveCount(0);await expect(page.getByRole('button',{ name: ar ? 'تعديل بيانات الحساب' : 'Edit account details',exact: true })).toHaveCount(0);await expect(page.getByRole('checkbox')).toHaveCount(0)
+})

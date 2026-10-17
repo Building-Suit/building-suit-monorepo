@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { doctorRealtimeProbeSummary,createDoctorRealtimeWireProbe } from './realtime-provider-probe.mjs'
 import { verifyDoctorAppointmentProvider } from './appointments-actual-provider.mjs'
+import { verifyDoctorAccountProvider } from './account-actual-provider.mjs'
 import { doctorOversizedResponse } from './oversized-http.mjs'
 import { validateLocalDoctorTarget } from './local-lifecycle.mjs'
 import { DoctorProviderFailure,doctorProviderFailureSummary } from './provider-diagnostics.mjs'
@@ -100,6 +101,8 @@ try {
   if (existingBucket.error) expect(!(await storageAdmin.storage.createBucket(bucket,{ public: false,fileSizeLimit: 5242880,allowedMimeTypes: ['application/pdf','image/png','image/jpeg'] })).error,'Supported local Storage bucket creation failed')
   stage = 'real Auth and owner onboarding'; const a = await bootstrap(status.ANON_KEY,'doctor-a'); const b = await bootstrap(status.ANON_KEY,'doctor-b')
   console.log('Actual Auth: captured local confirmation email, unconfirmed denial, verified session and two independent owner practices passed')
+  await verifyDoctorAccountProvider({ root,api,key: status.ANON_KEY,project,expect,setStage: value => { stage = value } })
+  expect((await rpc(b.client,'doctor_account_settings')).in_app_confirmations===false,'Independent account preference changed')
   stage = 'actual appointment lifecycle and scoped Realtime';appointmentAcceptance = await verifyDoctorAppointmentProvider({ api,key: status.ANON_KEY,a,b,rpc,expect,probe: realtimeProbe,advanceRevision,independentWire: realtimeWire,setStage: value => { stage = value } })
   const pdf = new TextEncoder().encode('%PDF-1.7\nSynthetic administrative attachment\n%%EOF\n')
   async function endpoint(actor,operation,data = {},bytes) {
@@ -153,7 +156,7 @@ try {
   expect((await endpoint(b,'status')).status===200,'Independent Doctor B was changed by A signout')
   console.log('Actual Storage/Functions: validated private bytes, stable retry, two preserved versions, anonymous/direct/public/signed bypass denials, cross-practice and revoked-session denials passed')
   stage = 'actual queue session revocation';await appointmentAcceptance.verifyRevocation()
-  console.log('Synthetic actual-provider acceptance passed. Actual Auth, Storage, Functions and scoped Realtime paths passed; broader recovery/PKCE and hosted connections remain UNRUN.')
+  console.log('Synthetic actual-provider acceptance passed. Actual browser Auth recovery/PKCE, account reauthentication, Storage, Functions and scoped Realtime paths passed; hosted connections remain UNRUN.')
 } catch (error) {
   console.error(`Doctor actual-provider acceptance failed at ${stage}: ${doctorProviderFailureSummary(error)}`)
   process.exitCode = 1

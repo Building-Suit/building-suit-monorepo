@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      account_profiles: {
+        Row: {
+          contact_phone: string
+          in_app_confirmations: boolean
+          personal_name: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          contact_phone?: string
+          in_app_confirmations?: boolean
+          personal_name?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          contact_phone?: string
+          in_app_confirmations?: boolean
+          personal_name?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
       appointment_events: {
         Row: {
           actor_user_id: string
@@ -854,6 +878,7 @@ export type Database = {
         Args: { p_invitation: string; p_key: string; p_token: string }
         Returns: Json
       }
+      doctor_account_settings: { Args: never; Returns: Json }
       doctor_administrative_capabilities: { Args: never; Returns: string[] }
       doctor_appointment_board: {
         Args: {
@@ -1134,6 +1159,16 @@ export type Database = {
           p_practice: string
           p_reason: string
           p_state: string
+        }
+        Returns: Json
+      }
+      doctor_update_account_settings: {
+        Args: {
+          p_contact_phone: string
+          p_expected_version: number
+          p_in_app_confirmations: boolean
+          p_key: string
+          p_personal_name: string
         }
         Returns: Json
       }

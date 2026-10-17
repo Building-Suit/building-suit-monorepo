@@ -5,7 +5,7 @@ import { delegationProtocol, resetDelegationProtocol, applyDelegationFixtureInpu
 const userId = '11111111-1111-4111-8111-111111111111'
 let state
 const tokens = new Set()
-function reset() { resetDelegationProtocol(); tokens.clear(); state = { confirmed: true, active: false, sessionId: randomUUID(), marker: 'doctor-suit', logoutFails: false, outbox: [], calls: [], pkceExchanges: 0, enrollment: 'owner', profile: null, practice: null, location: null, locations: [], locationCommands: {}, draft: null, completeCalls: 0, profileCalls: 0 } }
+function reset() { resetDelegationProtocol(); tokens.clear(); state = { confirmed: true, active: false, sessionId: randomUUID(), marker: 'doctor-suit', logoutFails: false, outbox: [], calls: [], pkceExchanges: 0, enrollment: 'owner', profile: null, practice: null, location: null, locations: [], locationCommands: {}, draft: null, completeCalls: 0, profileCalls: 0, account: { personal_name: "", contact_phone: "", in_app_confirmations: false, version: 0, can_change_contact: true }, accountExpired: false, accountWrites: 0 } }
 reset()
 const user = () => ({ id: userId, aud: 'authenticated', role: 'authenticated', email: 'synthetic@example.test', email_confirmed_at: state.confirmed ? '2026-01-01T00:00:00Z' : null, app_metadata: { provider: 'email', providers: ['email'] }, user_metadata: { role: 'owner', verified: true }, identities: [], created_at: '2026-01-01T00:00:00Z' })
 const token = () => `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: userId, role: 'authenticated', aud: 'authenticated', session_id: state.sessionId, exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.synthetic-signature`
@@ -60,6 +60,7 @@ const server = http.createServer(async (req, res) => {
       if (input.auth_code !== 'synthetic-recovery-code' || !input.code_verifier) { deny('flow_state_expired'); return }
     } else if (url.searchParams.get('grant_type') === 'password' && (!state.confirmed || input.password !== 'synthetic-password-only')) { deny('invalid_credentials'); return }
     else if (url.searchParams.get('grant_type') === 'refresh_token' && !state.active) { deny(); return }
+    if (url.searchParams.get("grant_type") === "password") { state.sessionId = randomUUID(); state.accountExpired = false; state.account.can_change_contact = true }
     state.active = true; send(session()); return
   }
   if (url.pathname === '/auth/v1/resend' || url.pathname === '/auth/v1/recover') {
@@ -74,6 +75,12 @@ const server = http.createServer(async (req, res) => {
   }
   if (!state.active || !tokens.has(req.headers.authorization)) { deny(); return }
   if (url.pathname === '/auth/v1/user') { send(user()); return }
+  if (url.pathname === '/rest/v1/rpc/doctor_account_settings') { send({ ...state.account, can_change_contact: !state.accountExpired }); return }
+  if (url.pathname === '/rest/v1/rpc/doctor_update_account_settings') {
+    if (input.p_contact_phone !== state.account.contact_phone && state.accountExpired) { send({ code: '28000',message: 'DOCTOR_REAUTHENTICATION_REQUIRED' },400); return }
+    if (input.p_expected_version !== state.account.version) { send({ code: '40001',message: 'DOCTOR_ACCOUNT_CONFLICT' },400); return }
+    state.account = { personal_name: input.p_personal_name,contact_phone: input.p_contact_phone,in_app_confirmations: input.p_in_app_confirmations,version: state.account.version+1,can_change_contact: !state.accountExpired };state.accountWrites++;send(state.account);return
+  }
   if (url.pathname === '/rest/v1/rpc/doctor_session_context') { send({ product: 'doctor-suit', user_id: userId, session_id: state.sessionId, practice_id: state.practice?.id || null }); return }
   const locationContext = item => ({ practice_id: state.practice.id, practice_name: state.practice.name, doctor_name: state.profile.display_name, location_id: item.id, location_name: item.name, timezone: item.timezone, portal: 'doctor', grants_version: state.practice.version, location_version: item.version, capabilities: ['locations.read', 'locations.manage', 'patients.read','dashboard.read','appointments.read'] })
   if (url.pathname === '/rest/v1/rpc/doctor_contexts') { send(state.practice ? state.locations.filter(item => !item.archived_at).map(locationContext) : []); return }

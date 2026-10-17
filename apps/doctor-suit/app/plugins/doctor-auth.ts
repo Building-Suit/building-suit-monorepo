@@ -1,3 +1,5 @@
+import { doctorAccountRepository } from '../utils/accountRepository'
+import { createDoctorAccountController,doctorAccountState } from '../utils/accountController'
 import { doctorDashboardRepository } from '../utils/dashboardRepository'
 import { createDoctorDashboardController,doctorDashboardState } from '../utils/dashboardController'
 import { doctorAppointmentsRepository } from '../utils/appointmentsRepository'
@@ -55,6 +57,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   const state = reactive(doctorAuthState())
   const preference = useCookie<DoctorContextPreference | null>(`bs-doctor-${settings.environment}-context`, { sameSite: 'lax', path: '/', secure: provider.origin.startsWith('https:') })
   const context = createDoctorContextController(client ? doctorContextRepository(client) : null, reactive(doctorContextState()), () => state.identity, provider.environment, { read: () => preference.value, write: value => { preference.value = value } })
+  const account = createDoctorAccountController(client ? doctorAccountRepository(client) : null,reactive(doctorAccountState()),() => state.identity,provider.environment)
   const practice = createDoctorPracticeController(client ? doctorPracticeRepository(client) : null, reactive(doctorPracticeState()), () => state.identity)
   const locationsScope = (): DoctorContextScope | null => {
     const selected = context.state.current
@@ -88,7 +91,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   const team = createDoctorTeamController(delegation, reactive(doctorTeamState()), teamScope)
   const invitation = createDoctorInvitationController(delegation, reactive(doctorInvitationState()), () => state.identity)
   const controller = createDoctorAuthController(client ? doctorAuthBackend(client, settings.origin) : null, state, {
-    clear: () => { void context.clear() },
+    clear: () => { account.clear(); void context.clear() },
     locked: () => locked.value === '1', lock: () => { locked.value = '1'; context.forgetPreference() }, unlock: () => { locked.value = null },
   })
   context.registerClear(() => { practice.clear(); locations.clear(); patients.clear(); patientProfile.clear(); availability.clear(); appointments.clear(); dashboard.clear(); void appointmentsLive.update(null,async () => {}); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
@@ -99,5 +102,5 @@ export default defineNuxtPlugin((nuxtApp) => {
     })
     nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh(); void appointmentsLive.dispose() })
   }
-  return { provide: { doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
+  return { provide: { doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
 })

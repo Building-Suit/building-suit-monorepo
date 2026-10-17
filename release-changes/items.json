@@ -1211,5 +1211,36 @@
     "sources": [
       "dos-m1-015"
     ]
+  },
+  {
+    "id": "dos-m1-016",
+    "task": "DOS-M1-016",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit/app",
+      "apps/doctor-suit/tests",
+      "apps/doctor-suit/supabase/migrations/20261017061323_doctor_account_settings.sql",
+      "apps/doctor-suit/supabase/tests/dos-m1-016.sql",
+      "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+      "packages/ui/src/templates/BsAccountSessionPage.vue",
+      "apps/building-suit-docs/app/pages/components.vue",
+      ".github/workflows/doctor-disposable.yml",
+      "docs/work-packages/doctor-suit/account-settings-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Add synthetic personal account settings independent of professional profiles and membership authority. Sensitive unverified contact changes require a recent actual provider sign-in; active UID/SID checks, account-local serialization, CAS, session-bound idempotency and attributed private audit protect writes. In-app account confirmations default off, with no marketing or external delivery. Shared optional controlled dialog preserves existing consumers. Add owned real-provider browser recovery/PKCE and reauthentication acceptance without credential artifacts; hosted connections remain user-managed.",
+    "sources": [
+      "dos-m1-016"
+    ]
   }
 ]

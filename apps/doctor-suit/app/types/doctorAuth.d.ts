@@ -1,3 +1,4 @@
+import type { createDoctorAccountController } from '../utils/accountController'
 import type { createDoctorAuthController } from '../utils/authController'
 import type { createDoctorPracticeController } from '../utils/practiceController'
 import type { createDoctorContextController } from '../utils/contextController'
@@ -9,6 +10,7 @@ import type { createDoctorPatientsController } from '../utils/patientsController
 import type { DoctorLocationContext } from '../utils/locationContext'
 declare module '#app' {
   interface NuxtApp {
+    $doctorAccount: ReturnType<typeof createDoctorAccountController>
     $doctorAuth: ReturnType<typeof createDoctorAuthController>
     $doctorPractice: ReturnType<typeof createDoctorPracticeController>
     $doctorContext: ReturnType<typeof createDoctorContextController>

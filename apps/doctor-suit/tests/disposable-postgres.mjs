@@ -12,6 +12,7 @@ import { verifyPatientConcurrency } from './patients-concurrency.mjs'
 import { verifyDocumentConcurrency } from './documents-concurrency.mjs'
 import { verifyAvailabilityConcurrency } from './availability-concurrency.mjs'
 import { verifyAppointmentConcurrency } from './appointments-concurrency.mjs'
+import { verifyAccountConcurrency } from './account-concurrency.mjs'
 
 const root = fileURLToPath(new URL('../../../', import.meta.url))
 const app = `${root}apps/doctor-suit/`
@@ -60,7 +61,7 @@ try {
   docker(['exec', container, 'chmod', '644', '/usr/local/share/postgresql/extension/pgtap.control', '/usr/local/share/postgresql/extension/pgtap--1.3.4.sql'])
   sql(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create schema extensions;
     create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,is_anonymous boolean default false,banned_until timestamptz,raw_user_meta_data jsonb);
-    create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id),not_after timestamptz);
+    create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id),not_after timestamptz,created_at timestamptz default now());
     create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;
     create function auth.uid() returns uuid language sql stable as $$select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid$$;
     grant usage on schema auth,extensions to anon,authenticated,service_role;
@@ -95,6 +96,7 @@ try {
   await verifyDocumentConcurrency(container)
   await verifyAvailabilityConcurrency(container)
   await verifyAppointmentConcurrency(container)
+  await verifyAccountConcurrency(container)
   if (generate.length) {
     const output = docker(['run', '--rm', '--network', `container:${container}`,
       '-e', 'PG_META_DB_HOST=127.0.0.1', '-e', 'PG_META_DB_NAME=postgres', '-e', 'PG_META_DB_USER=postgres',
