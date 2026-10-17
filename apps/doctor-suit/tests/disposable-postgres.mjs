@@ -13,6 +13,7 @@ import { verifyDocumentConcurrency } from './documents-concurrency.mjs'
 import { verifyAvailabilityConcurrency } from './availability-concurrency.mjs'
 import { verifyAppointmentConcurrency } from './appointments-concurrency.mjs'
 import { verifyAccountConcurrency } from './account-concurrency.mjs'
+import { verifyCandidateAdmissionConcurrency } from './candidate-admission-concurrency.mjs'
 
 const root = fileURLToPath(new URL('../../../', import.meta.url))
 const app = `${root}apps/doctor-suit/`
@@ -97,6 +98,7 @@ try {
   await verifyAvailabilityConcurrency(container)
   await verifyAppointmentConcurrency(container)
   await verifyAccountConcurrency(container)
+  await verifyCandidateAdmissionConcurrency(container)
   if (generate.length) {
     const output = docker(['run', '--rm', '--network', `container:${container}`,
       '-e', 'PG_META_DB_HOST=127.0.0.1', '-e', 'PG_META_DB_NAME=postgres', '-e', 'PG_META_DB_USER=postgres',

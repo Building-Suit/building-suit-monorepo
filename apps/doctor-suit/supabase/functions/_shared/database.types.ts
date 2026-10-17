@@ -230,6 +230,65 @@ export type Database = {
           },
         ]
       }
+      doctor_candidate_admissions: {
+        Row: {
+          database_actor: string
+          evidence_ref: string
+          id: string
+          issued_at: string
+          purpose: string
+          user_id: string
+          valid_until: string
+        }
+        Insert: {
+          database_actor?: string
+          evidence_ref: string
+          id?: string
+          issued_at?: string
+          purpose: string
+          user_id: string
+          valid_until: string
+        }
+        Update: {
+          database_actor?: string
+          evidence_ref?: string
+          id?: string
+          issued_at?: string
+          purpose?: string
+          user_id?: string
+          valid_until?: string
+        }
+        Relationships: []
+      }
+      doctor_candidate_revocations: {
+        Row: {
+          admission_id: string
+          database_actor: string
+          reason: string
+          revoked_at: string
+        }
+        Insert: {
+          admission_id: string
+          database_actor?: string
+          reason: string
+          revoked_at?: string
+        }
+        Update: {
+          admission_id?: string
+          database_actor?: string
+          reason?: string
+          revoked_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_candidate_revocations_admission_id_fkey"
+            columns: ["admission_id"]
+            isOneToOne: true
+            referencedRelation: "doctor_candidate_admissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doctor_edition_policy: {
         Row: {
           change_reason: string

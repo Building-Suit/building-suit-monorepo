@@ -1,0 +1,21 @@
+{
+  "id": "dos-ae-002-candidate-admission",
+  "task": "DOS-AE-002",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261017145756_doctor_synthetic_candidate_admission.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-002-admission.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-002-ui.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-002.sql",
+    "apps/doctor-suit/tests/candidate-admission-concurrency.mjs",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-002-candidate-admission.md"
+  ],
+  "reason": "Close administrative-candidate access to default-denied, bounded, explicitly evidenced synthetic actors. Preserve current provider/session and tenant/capability checks, append-only admission/revocation history, post-lock fresh authorization and historical data. No real-user purpose, service/browser grant, paid activation or invented trial/price/merchant terms. This remains synthetic-only preparation, not original milestone completion or actual-provider/aggregate/live assurance."
+}
