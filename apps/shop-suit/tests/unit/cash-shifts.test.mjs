@@ -6,7 +6,7 @@ const migration = await readFile(new URL('../../supabase/migrations/202609282300
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_cash_shifts.sql', import.meta.url), 'utf8')
 const template = await readFile(new URL('../../../../packages/ui/src/templates/BsCashShiftsPage.vue', import.meta.url), 'utf8')
 const page = await readFile(new URL('../../app/pages/cash-shifts.vue', import.meta.url), 'utf8')
-const layout = await readFile(new URL('../../app/layouts/default.vue', import.meta.url), 'utf8')
+const layout = await readFile(new URL('../../app/utils/shopNavigation.ts', import.meta.url), 'utf8')
 const concurrencyTest = await readFile(new URL('../../../../tooling/database/test-shop-cash-local.mjs', import.meta.url), 'utf8')
 
 test('cash shifts use atomic idempotent commands and append-only reconciliation evidence', () => {

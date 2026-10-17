@@ -238,7 +238,8 @@
         "BsDocumentHeader",
         "BsDocumentLines",
         "BsDocumentTotals",
-        "BsPrintActions"
+        "BsPrintActions",
+        "BsSaleReceipt"
       ],
       "adapterBoundary": "issuer, snapshot, preformatted line/totals and print/share commands",
       "auditSources": [
@@ -278,7 +279,9 @@
       "owner": "packages/ui",
       "components": [
         "BsChangelogCard",
-        "BsChangelogTimeline"
+        "BsChangelogTimeline",
+        "BsWhatsNewSection",
+        "BsChangelogPage"
       ],
       "adapterBoundary": "Authorized, curated bilingual feed and authoritative serverNow; publishing and visibility authorization remain service-owned",
       "task": "BS-CHANGELOG-VERSION-001",
@@ -323,6 +326,260 @@
         "apps/shop-suit/app/pages/pos.vue"
       ],
       "migrationStatus": "bounded POS reference alignment in progress"
+    },
+    {
+      "family": "offline-counter-status",
+      "owner": "packages/ui",
+      "components": [
+        "BsOfflineCounterStatus"
+      ],
+      "adapterBoundary": "Product supplies localized queue states, recovery intent and server-confirmed receipt links; Shop owns encrypted persistence and replay commands. Connectivity lifecycle belongs in packages/ux."
+    },
+    {
+      "family": "commission-policy",
+      "owner": "packages/ui",
+      "components": [
+        "BsCommissionPolicyPage"
+      ],
+      "adapterBoundary": "typed policy forms, staff and draft assignment projections, formatted earning rows, translated copy and authorized semantic commands",
+      "task": "SS-BARBER-COMP-001",
+      "migrationStatus": "implemented; verification recorded in product task evidence"
+    },
+    {
+      "family": "shop-tax-settings",
+      "owner": "packages/ui",
+      "components": [
+        "BsShopTaxSettingsPage",
+        "BsEtaSettingsPage",
+        "BsShopTaxRuleFields"
+      ],
+      "adapterBoundary": "Typed tax settings, catalog projections, translated copy and authorized semantic commands; financial calculation remains server owned."
+    },
+    {
+      "family": "service-fulfillment",
+      "owner": "packages/ui",
+      "components": [
+        "BsServiceFulfillmentPage"
+      ],
+      "adapterBoundary": "Shop supplies authorized service lines, recipe/material projections, decimal quantities, history and commands; shared UI owns composition and UX owns dialog/offline interaction",
+      "task": "SS-SERV-002",
+      "migrationStatus": "implemented; automated validation in progress"
+    },
+    {
+      "family": "invoice-linked-returns",
+      "owner": "packages/ui",
+      "components": [
+        "BsDocumentReturns",
+        "BsCommerceDocumentPage"
+      ],
+      "interactionOwner": "packages/ux",
+      "adapterBoundary": "Shop supplies immutable return previews, quantities, disposition choices, original-payment allocation and authorized commands; shared UI owns dialogs and audit presentation; useReviewedCommand retains review/request identity through uncertain responses",
+      "task": "SS-PARTIAL-RETURNS-001",
+      "migrationStatus": "verified-local: shared boundaries, six workspace typechecks, Shop/docs builds and 30 browser cases passed"
+    },
+    {
+      "family": "privacy-consent",
+      "owner": "packages/ui",
+      "components": [
+        "BsPrivacyConsent"
+      ],
+      "adapterBoundary": "Products supply translated purposes and versioned consent state; shared UX owns validation, focus and optional analytics transport. No provider access before opt-in.",
+      "task": "SS-SEO-PRIVACY-001",
+      "migrationStatus": "implemented; verification recorded in Shop privacy runbook"
+    },
+    {
+      "family": "website-address",
+      "owner": "packages/ui",
+      "components": [
+        "BsWebsiteAddressSettings"
+      ],
+      "adapterBoundary": "Shop owns slug generation, validation, authorized RPCs and typed view projections; useRecordAction in packages/ux owns modal, pending and dirty-state behavior. Saving never publishes.",
+      "task": "SS-WEB-SLUG-001",
+      "migrationStatus": "additive optional settings presentation; no Suit-local components"
+    },
+    {
+      "family": "website-profile",
+      "owner": "packages/ui",
+      "components": [
+        "BsWebsiteProfileSettings"
+      ],
+      "adapterBoundary": "Shop owns private draft/publication rules, authorized tenant-scoped RPCs and typed values; useRecordAction and raster decoding in packages/ux own interaction mechanics. Catalog readiness is a server-owned integration boundary.",
+      "task": "SS-WEB-PROFILE-001",
+      "migrationStatus": "optional settings organism inside the existing registered complete business settings template; no local presentation"
+    },
+    {
+      "family": "website-catalog",
+      "owner": "packages/ui",
+      "components": [
+        "BsWebsiteCatalogSettings"
+      ],
+      "adapterBoundary": "Shop owns owner-only selective publication, source adapters, public allowlisting and cache/readiness invalidation. Shared presentation accepts typed rows/forms and emits semantic actions; useRecordAction and bounded raster decoding remain in packages/ux.",
+      "task": "SS-WEB-CATALOG-001",
+      "migrationStatus": "optional organism inside existing registered complete business settings template; no local presentation"
+    },
+    {
+      "family": "tenant-public-showcase",
+      "owner": "packages/ui",
+      "components": [
+        "BsShopPublicEntryPage",
+        "BsShopWebsitePage",
+        "BsWebsiteInquiryInbox"
+      ],
+      "adapterBoundary": "Shop owns trusted Host resolution, anonymous allowlisted reads, inquiry validation/rate limits, owner permissions and SEO. Shared complete entry template selects the existing marketing template or tenant showcase from a finite typed union. UX owns record/form interaction and BFCache refresh mechanics.",
+      "task": "SS-WEB-PUBLIC-001",
+      "migrationStatus": "registered host-aware root page and optional private owner inbox; no app-local presentation"
+    },
+    {
+      "family": "appointment-access",
+      "owner": "packages/ui",
+      "components": [
+        "BsAppointmentsPage",
+        "BsAppointmentCalendar"
+      ],
+      "adapterBoundary": "Shared appointment templates show controlled one-time credential presentation and semantic issue/rotate/revoke commands. Shop owns appointment permissions, secret lifetime, normalized phone binding and request-scoped commands. Existing shared overlay and record-action controllers remain in packages/ux.",
+      "task": "SS-WEB-APPT-ACCESS-001",
+      "migrationStatus": "optional typed access panel inside existing registered complete appointments template; no new customer portal or booking route"
+    },
+    {
+      "family": "customer-appointment-portal",
+      "owner": "packages/ui",
+      "components": [
+        "BsShopCustomerPortalPage"
+      ],
+      "adapterBoundary": "Shop owns session-scoped allowlisted history and typed localized data. Shared UI owns complete verification/history presentation and semantic actions; UX owns expiry, suspension cleanup and revalidation timing. No customer IDs, financial data, private notes or booking commands cross the template contract.",
+      "task": "SS-WEB-CUSTOMER-PORTAL-001",
+      "migrationStatus": "registered complete public route; no Suit-local composition"
+    },
+    {
+      "family": "public-appointment-booking",
+      "owner": "packages/ui",
+      "components": [
+        "BsPublicAppointmentBookingPage",
+        "BsBookingPolicySettings"
+      ],
+      "adapterBoundary": "Shop owns publication policy, scoped booking data and atomic commands. Shared UI owns complete booking/settings presentation; UX owns record dialogs, overlays and suspension/expiry lifecycle. Customer identifiers, contacts and tokens never become template authority.",
+      "task": "SS-APPT-002",
+      "migrationStatus": "registered complete public route; settings extend the canonical business template"
+    },
+    {
+      "family": "synthetic-product-preview",
+      "owner": "packages/ui",
+      "components": [
+        "BsProductPreviewPage"
+      ],
+      "adapterBoundary": "typed translated public product scope, feature availability and internal preview destinations; no auth or product queries in shared presentation",
+      "auditSources": [
+        "apps/doctor-suit/app/pages/index.vue"
+      ],
+      "task": "DOS-M1-005",
+      "migrationStatus": "implemented; candidate browser verification pending"
+    },
+    {
+      "family": "verified-account-session",
+      "owner": "packages/ui",
+      "components": [
+        "BsAccountSessionPage"
+      ],
+      "adapterBoundary": "App-owned verified identity lifecycle, provider gates and localized copy; shared templates own complete credential and current-session presentation. No metadata authority or provider calls inside UI.",
+      "task": "DOS-M1-006",
+      "migrationStatus": "registered complete synthetic account route"
+    },
+    {
+      "family": "practice-setup-overview",
+      "owner": "packages/ui",
+      "components": [
+        "BsPracticeOverviewPage"
+      ],
+      "adapterBoundary": "Typed profile/location summaries and semantic navigation; Doctor owns verified enrollment, persisted draft, optimistic commands and all data access. Shared signup enrollment adds opt-in approved-field and draft-action presentation.",
+      "task": "DOS-M1-007",
+      "migrationStatus": "registered complete synthetic owner workspace"
+    },
+    {
+      "family": "location-management",
+      "owner": "packages/ui",
+      "components": [
+        "BsLocationManagementPage"
+      ],
+      "adapterBoundary": "Complete typed location directory and record-action dialogs. Doctor owns queries, explicit scope/capabilities, draft values, idempotent commands and archive policy. Shared UX owns modal lifecycle and scope reset.",
+      "task": "DOS-M1-008",
+      "migrationStatus": "registered complete administrative route"
+    },
+    {
+      "family": "doctor-administrative-delegation",
+      "owner": "packages/ui",
+      "components": [
+        "BsAccessManagementPage",
+        "BsAccessIdentityEditor",
+        "BsInvitationAcceptancePage"
+      ],
+      "adapterBoundary": "Existing complete access and invitation templates gain opt-in controlled per-location administrative permission fields, confirmation, pagination and manual credential entry. Doctor owns verified recipient binding, one-time secret lifecycle, independent memberships, server authorization and typed commands. Shared UX owns foreground/visible-page refresh and dialog lifecycle.",
+      "task": "DOS-M1-009",
+      "migrationStatus": "registered complete synthetic team and invitation routes; granular enforcement is DOS-M1-010"
+    },
+    {
+      "family": "patient-administration",
+      "owner": "packages/ui",
+      "components": [
+        "BsPatientDirectoryPage",
+        "BsPatientIdentityFields"
+      ],
+      "adapterBoundary": "Complete scoped patient directory, recorded identity fields, duplicate-review presentation and edit/archive dialogs. Doctor owns separate opaque identity/practice relationships, entered-unverified provenance, scoped search/pagination, optimistic commands and duplicate evidence. Shared UX owns dialog lifecycle.",
+      "task": "DOS-M1-011",
+      "migrationStatus": "registered complete synthetic administrative route"
+    },
+    {
+      "family": "patient-profile-private-documents",
+      "owner": "packages/ui",
+      "components": [
+        "BsPatientProfilePage"
+      ],
+      "adapterBoundary": "Complete typed administrative patient profile, preserved activity and private attachment/version/history presentation. Doctor owns entered/unreviewed provenance, verified current scope, strict metadata and authenticated byte transport. Shared UX owns record dialogs and private preview URL disposal. No public Storage URL or clinical interpretation is supplied.",
+      "task": "DOS-M1-012",
+      "migrationStatus": "registered complete synthetic profile; acceptance in progress"
+    },
+    {
+      "family": "doctor-availability-rules",
+      "owner": "packages/ui",
+      "components": [
+        "BsAvailabilityPage"
+      ],
+      "adapterBoundary": "Complete typed weekly working-hours, exception and duration dialogs with scoped availability presentation. Doctor owns timezone-aware rules, physician-wide conflict invariants, current permissions, optimistic/idempotent commands and data. Shared UX owns confirmation and record-action lifecycle; hours edits never move appointments.",
+      "task": "DOS-M1-013",
+      "migrationStatus": "registered complete synthetic availability route; verification in progress"
+    },
+    {
+      "family": "doctor-appointments-and-waiting-queue",
+      "owner": "packages/ui",
+      "components": [
+        "BsPracticeAppointmentsPage",
+        "BsAppointmentCalendar",
+        "BsDataTable",
+        "BsEntityPicker"
+      ],
+      "adapterBoundary": "Complete appointment calendar, booking/rescheduling and state confirmation dialogs, scoped queue and paged immutable history. Doctor owns authorization, appointment state machine, patient lookup, optimistic commands and scope. Shared UX owns record actions; shared data-access owns subscription lifecycle and authoritative reconnect refresh. External notifications remain disabled.",
+      "task": "DOS-M1-014",
+      "migrationStatus": "registered complete synthetic appointment route; verification in progress"
+    },
+    {
+      "family": "doctor-read-only-audit",
+      "owner": "packages/ui",
+      "components": [
+        "BsAuditHistoryPage",
+        "BsDataTable"
+      ],
+      "adapterBoundary": "Optional read-only audit projection, controlled bounded search and paging. Doctor owns current UID/SID, practice/clinic/domain permissions, safe event projection and data. Shared defaults preserve the existing full-history consumer. No export, erasure or retention controls are enabled.",
+      "task": "DOS-M1-017",
+      "migrationStatus": "registered complete synthetic administrative and personal audit routes; verification in progress"
+    },
+    {
+      "family": "neutral-route-status",
+      "owner": "packages/ui",
+      "components": [
+        "BsRouteStatusPage"
+      ],
+      "adapterBoundary": "Complete neutral route status and known navigation destinations. Product adapters own status code, public/private metadata, HTTP response semantics and approved copy; no requested path or query is rendered.",
+      "task": "DOS-M1-019",
+      "migrationStatus": "registered neutral synthetic missing-route template; verification in progress"
     }
   ]
 }

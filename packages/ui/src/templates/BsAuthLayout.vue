@@ -39,7 +39,7 @@ useTheme()
 <style>
 .bs-auth-layout { min-height: 100dvh; background: var(--bs-bg); }
 .bs-auth-layout__panel { display: flex; align-items: center; justify-content: center; padding: var(--bs-space-9) var(--bs-space-5); background: radial-gradient(circle at 50% 18%, color-mix(in oklab, var(--bs-accent) 9%, transparent), transparent 25rem), var(--bs-bg); }
-.bs-auth-layout__form-shell { display: flex; width: 100%; max-width: 27rem; flex-direction: column; align-items: center; }
+.bs-auth-layout__form-shell { display: flex; min-inline-size: 0; width: 100%; max-width: 27rem; flex-direction: column; align-items: center; }
 .bs-auth-layout__form-shell--wide { max-width: 36rem; }
 .bs-auth-layout__mobile-logo { display: inline-flex; max-inline-size: 100%; margin-bottom: var(--bs-space-9); }
 .bs-auth-layout .ls-auth-brand { max-inline-size: 100%; }

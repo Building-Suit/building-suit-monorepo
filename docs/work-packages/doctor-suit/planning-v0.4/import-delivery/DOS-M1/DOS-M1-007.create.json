@@ -1,0 +1,523 @@
+{
+  "function": "control.create_task_with_publication_contract",
+  "review_only": true,
+  "bindings_required": [
+    "p_workstream_slug",
+    "p_model_profile",
+    "p_retry_policy_id"
+  ],
+  "arguments": {
+    "p_project_slug": "building-suit",
+    "p_workstream_slug": null,
+    "p_task_id": "DOS-M1-007",
+    "p_sequence": 70,
+    "p_priority": 100,
+    "p_title": "Doctor-led practice onboarding and profile",
+    "p_description": "Let an authenticated doctor create and maintain a practice profile and reach a usable workspace without employing a secretary. The doctor is the future subscriber; no paid entitlement is fabricated.\n\nRequirements\n- DOS-M1-R001: The doctor is the account owner and future paying subscriber; a clinic is a working location, not the permanent owner of the practice. The doctor must operate without a secretary.\n- DOS-M1-R003: M1 is the public product website plus administrative doctor/secretary browser portal, synthetic data only; clinical prescribing starts M2 and mobile remains later.\n- DOS-M1-R004: Backend-enforced access, product/session isolation, audit attribution and synthetic-only development must precede any real-patient pilot. Public copy cannot claim unimplemented or unverified capabilities.\n- DOS-M1-R005: Use Building-Suit/building-suit-monorepo, pinned stack, shared packages/ui templates and packages/ux interactions; Doctor app adapters own logic/data. Independent runtime verification and publication remain control-plane owned.\n- DOS-M1-F007: Let an authenticated doctor create and maintain a practice profile and reach a usable workspace without employing a secretary. The doctor is the future subscriber; no paid entitlement is fabricated. Acceptance: A doctor can complete onboarding alone and add an initial location. Onboarding is resumable and idempotent; double-submit does not create duplicate practices. Store only the approved profile fields; professional verification is not asserted unless independently established. Show incomplete configuration honestly; later subscription rules do not block a synthetic preview.\n\nDependencies: DOS-M1-006\nBlocking decisions: DOS-M1-GATE-START, DOS-M1-D001, DOS-M1-D002\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/supabase/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/src/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-changes/items.json\n- release-fragments/dos-m1-007.json\n\nAcceptance\n1. A doctor can complete onboarding alone and add an initial location.\n2. Onboarding is resumable and idempotent; double-submit does not create duplicate practices.\n3. Store only the approved profile fields; professional verification is not asserted unless independently established.\n4. Show incomplete configuration honestly; later subscription rules do not block a synthetic preview.\n\nVerification scenarios\n- Resume incomplete onboarding after refresh and another session.\n- Retry/double-submit while checking one practice/one owner membership.\n- Verify a secretary cannot self-promote through onboarding endpoints.\n\nExpected outputs\n- apps/doctor-suit/tests/unit/dos-m1-007.test.mjs\n- apps/doctor-suit/supabase/tests/dos-m1-007.sql\n- apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts\n- release-fragments/dos-m1-007.json\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check workspace and template boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Create and execute meaningful task-owned regression coverage\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m1-007.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m1-007-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Prove database tenant authorization and write integrity using disposable fixtures\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-007.sql\"\n    ],\n    \"commands\": [\n      \"dos-m1-007-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify the browser user journey and denial/recovery states\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts\"\n    ],\n    \"commands\": [\n      \"dos-m1-007-browser\"\n    ],\n    \"requires\": [\n      \"browser\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression including affected shared consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence\",\n    \"commands\": [\n      \"doctor-release-check\"\n    ],\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"release_check_receipt_must_match_candidate_head_and_reviewed_classification\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.\n- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.\n- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.\n\nCriterion-specific coverage\n[\n  {\n    \"case_id\": \"DOS-M1-007-C01\",\n    \"criterion_ids\": [\n      1\n    ],\n    \"assertion\": \"A doctor can complete onboarding alone and add an initial location.\",\n    \"procedure\": \"Onboard a doctor with no secretary and create the initial location through the actual form.\",\n    \"test_case_name\": \"DOS-M1-007-C01\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-007-browser\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-007-C02\",\n    \"criterion_ids\": [\n      2\n    ],\n    \"assertion\": \"Onboarding is resumable and idempotent; double-submit does not create duplicate practices.\",\n    \"procedure\": \"Replay/concurrently submit onboarding and assert one practice with resumable state.\",\n    \"test_case_name\": \"DOS-M1-007-C02\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-007.sql\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-007-data\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-007-C03\",\n    \"criterion_ids\": [\n      3\n    ],\n    \"assertion\": \"Store only the approved profile fields; professional verification is not asserted unless independently established.\",\n    \"procedure\": \"Submit unapproved profile fields and verify rejection; the UI must never label the doctor professionally verified.\",\n    \"test_case_name\": \"DOS-M1-007-C03\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-007.sql\",\n      \"apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-007-data\",\n      \"dos-m1-007-browser\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-007-C04\",\n    \"criterion_ids\": [\n      4\n    ],\n    \"assertion\": \"Show incomplete configuration honestly; later subscription rules do not block a synthetic preview.\",\n    \"procedure\": \"Leave optional configuration incomplete and confirm the synthetic workspace remains usable without invented paid entitlement.\",\n    \"test_case_name\": \"DOS-M1-007-C04\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-007-browser\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-007-RELEASE\",\n    \"criterion_ids\": [],\n    \"assertion\": \"Task-scoped release provenance and, when applicable, public inventory are complete.\",\n    \"procedure\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [\n      \"release-fragments/dos-m1-007.json\"\n    ],\n    \"command_refs\": [\n      \"doctor-release-check\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"exact-candidate-release-review\"\n    ],\n    \"acceptance_rule\": \"Preserve unrelated inventory and all accepted fragments; do not activate an operational product.\"\n  }\n]\n\nRelease ownership\n{\n  \"fragment_path\": \"release-fragments/dos-m1-007.json\",\n  \"accepted_fragments\": \"append-only; never rewrite accepted provenance\",\n  \"inventory_path\": \"release-changes/items.json\",\n  \"inventory_write_scope\": \"Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.\",\n  \"registration_rule\": \"Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.\",\n  \"receipt_rule\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\"\n}\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable.",
+    "p_task_type": "feature",
+    "p_risk_level": "high",
+    "p_model_profile": null,
+    "p_acceptance_criteria": [
+      "A doctor can complete onboarding alone and add an initial location.",
+      "Onboarding is resumable and idempotent; double-submit does not create duplicate practices.",
+      "Store only the approved profile fields; professional verification is not asserted unless independently established.",
+      "Show incomplete configuration honestly; later subscription rules do not block a synthetic preview."
+    ],
+    "p_verification_plan": [
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Check diff hygiene",
+        "command": "git diff --check"
+      },
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Check workspace and template boundaries",
+        "command": "pnpm check"
+      },
+      {
+        "version": 2,
+        "kind": "planned_test",
+        "description": "Create and execute meaningful task-owned regression coverage",
+        "expected_outputs": [
+          "apps/doctor-suit/tests/unit/dos-m1-007.test.mjs"
+        ],
+        "commands": [
+          "dos-m1-007-unit"
+        ]
+      },
+      {
+        "version": 2,
+        "kind": "planned_test",
+        "description": "Prove database tenant authorization and write integrity using disposable fixtures",
+        "expected_outputs": [
+          "apps/doctor-suit/supabase/tests/dos-m1-007.sql"
+        ],
+        "commands": [
+          "dos-m1-007-data"
+        ],
+        "requires": [
+          "database",
+          "rls-authorization"
+        ]
+      },
+      {
+        "version": 2,
+        "kind": "planned_test",
+        "description": "Verify the browser user journey and denial/recovery states",
+        "expected_outputs": [
+          "apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts"
+        ],
+        "commands": [
+          "dos-m1-007-browser"
+        ],
+        "requires": [
+          "browser"
+        ]
+      },
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Run full repository unit regression including affected shared consumers",
+        "command": "pnpm test"
+      },
+      {
+        "version": 2,
+        "kind": "external_gate",
+        "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+        "commands": [
+          "doctor-release-check"
+        ],
+        "phase": "pre_publication",
+        "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+      }
+    ],
+    "p_retry_policy_id": null,
+    "p_metadata": {
+      "business_priority": "launch-critical-for-web-preview",
+      "launch_gate": "synthetic-web-preview",
+      "verification_mode": "focused",
+      "scope_approval": "planning-authorized-execution-gated",
+      "clinical_live_data_allowed": false,
+      "allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/supabase/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/src/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-changes/items.json",
+        "release-fragments/dos-m1-007.json"
+      ],
+      "source_allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/supabase/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/src/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-changes/items.json",
+        "release-fragments/dos-m1-007.json"
+      ],
+      "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+      "artifact_revision": "doctor-suit-planning-v0.4-review-3",
+      "handoff_source": "current user intake and inspected source; not an execution authorization",
+      "milestone_id": "DOS-M1",
+      "publication_policy": {
+        "merge_authorized": false,
+        "deployment_authorized": false,
+        "hosted_database_changes_authorized": false,
+        "review_required_before_integration": true
+      },
+      "canonical_task_contract": {
+        "task_id": "DOS-M1-007",
+        "milestone_id": "DOS-M1",
+        "sequence": 70,
+        "priority": 100,
+        "title": "Doctor-led practice onboarding and profile",
+        "description": "Let an authenticated doctor create and maintain a practice profile and reach a usable workspace without employing a secretary. The doctor is the future subscriber; no paid entitlement is fabricated.\n\nRequirements\n- DOS-M1-R001: The doctor is the account owner and future paying subscriber; a clinic is a working location, not the permanent owner of the practice. The doctor must operate without a secretary.\n- DOS-M1-R003: M1 is the public product website plus administrative doctor/secretary browser portal, synthetic data only; clinical prescribing starts M2 and mobile remains later.\n- DOS-M1-R004: Backend-enforced access, product/session isolation, audit attribution and synthetic-only development must precede any real-patient pilot. Public copy cannot claim unimplemented or unverified capabilities.\n- DOS-M1-R005: Use Building-Suit/building-suit-monorepo, pinned stack, shared packages/ui templates and packages/ux interactions; Doctor app adapters own logic/data. Independent runtime verification and publication remain control-plane owned.\n- DOS-M1-F007: Let an authenticated doctor create and maintain a practice profile and reach a usable workspace without employing a secretary. The doctor is the future subscriber; no paid entitlement is fabricated. Acceptance: A doctor can complete onboarding alone and add an initial location. Onboarding is resumable and idempotent; double-submit does not create duplicate practices. Store only the approved profile fields; professional verification is not asserted unless independently established. Show incomplete configuration honestly; later subscription rules do not block a synthetic preview.\n\nDependencies: DOS-M1-006\nBlocking decisions: DOS-M1-GATE-START, DOS-M1-D001, DOS-M1-D002\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/supabase/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/src/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-changes/items.json\n- release-fragments/dos-m1-007.json\n\nAcceptance\n1. A doctor can complete onboarding alone and add an initial location.\n2. Onboarding is resumable and idempotent; double-submit does not create duplicate practices.\n3. Store only the approved profile fields; professional verification is not asserted unless independently established.\n4. Show incomplete configuration honestly; later subscription rules do not block a synthetic preview.\n\nVerification scenarios\n- Resume incomplete onboarding after refresh and another session.\n- Retry/double-submit while checking one practice/one owner membership.\n- Verify a secretary cannot self-promote through onboarding endpoints.\n\nExpected outputs\n- apps/doctor-suit/tests/unit/dos-m1-007.test.mjs\n- apps/doctor-suit/supabase/tests/dos-m1-007.sql\n- apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts\n- release-fragments/dos-m1-007.json\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check workspace and template boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Create and execute meaningful task-owned regression coverage\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m1-007.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m1-007-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Prove database tenant authorization and write integrity using disposable fixtures\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-007.sql\"\n    ],\n    \"commands\": [\n      \"dos-m1-007-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify the browser user journey and denial/recovery states\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts\"\n    ],\n    \"commands\": [\n      \"dos-m1-007-browser\"\n    ],\n    \"requires\": [\n      \"browser\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression including affected shared consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence\",\n    \"commands\": [\n      \"doctor-release-check\"\n    ],\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"release_check_receipt_must_match_candidate_head_and_reviewed_classification\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.\n- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.\n- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.\n\nCriterion-specific coverage\n[\n  {\n    \"case_id\": \"DOS-M1-007-C01\",\n    \"criterion_ids\": [\n      1\n    ],\n    \"assertion\": \"A doctor can complete onboarding alone and add an initial location.\",\n    \"procedure\": \"Onboard a doctor with no secretary and create the initial location through the actual form.\",\n    \"test_case_name\": \"DOS-M1-007-C01\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-007-browser\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-007-C02\",\n    \"criterion_ids\": [\n      2\n    ],\n    \"assertion\": \"Onboarding is resumable and idempotent; double-submit does not create duplicate practices.\",\n    \"procedure\": \"Replay/concurrently submit onboarding and assert one practice with resumable state.\",\n    \"test_case_name\": \"DOS-M1-007-C02\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-007.sql\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-007-data\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-007-C03\",\n    \"criterion_ids\": [\n      3\n    ],\n    \"assertion\": \"Store only the approved profile fields; professional verification is not asserted unless independently established.\",\n    \"procedure\": \"Submit unapproved profile fields and verify rejection; the UI must never label the doctor professionally verified.\",\n    \"test_case_name\": \"DOS-M1-007-C03\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m1-007.sql\",\n      \"apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-007-data\",\n      \"dos-m1-007-browser\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-007-C04\",\n    \"criterion_ids\": [\n      4\n    ],\n    \"assertion\": \"Show incomplete configuration honestly; later subscription rules do not block a synthetic preview.\",\n    \"procedure\": \"Leave optional configuration incomplete and confirm the synthetic workspace remains usable without invented paid entitlement.\",\n    \"test_case_name\": \"DOS-M1-007-C04\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m1-007-browser\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M1-007-RELEASE\",\n    \"criterion_ids\": [],\n    \"assertion\": \"Task-scoped release provenance and, when applicable, public inventory are complete.\",\n    \"procedure\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [\n      \"release-fragments/dos-m1-007.json\"\n    ],\n    \"command_refs\": [\n      \"doctor-release-check\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"exact-candidate-release-review\"\n    ],\n    \"acceptance_rule\": \"Preserve unrelated inventory and all accepted fragments; do not activate an operational product.\"\n  }\n]\n\nRelease ownership\n{\n  \"fragment_path\": \"release-fragments/dos-m1-007.json\",\n  \"accepted_fragments\": \"append-only; never rewrite accepted provenance\",\n  \"inventory_path\": \"release-changes/items.json\",\n  \"inventory_write_scope\": \"Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.\",\n  \"registration_rule\": \"Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.\",\n  \"receipt_rule\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\"\n}\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable.",
+        "task_type": "feature",
+        "risk_level": "high",
+        "model_profile_strategy": "require_verified_high_capability_deep_route",
+        "status": "planned",
+        "engine_stage": "pending",
+        "acceptance_criteria": [
+          "A doctor can complete onboarding alone and add an initial location.",
+          "Onboarding is resumable and idempotent; double-submit does not create duplicate practices.",
+          "Store only the approved profile fields; professional verification is not asserted unless independently established.",
+          "Show incomplete configuration honestly; later subscription rules do not block a synthetic preview."
+        ],
+        "verification_plan": [
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Check diff hygiene",
+            "command": "git diff --check"
+          },
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Check workspace and template boundaries",
+            "command": "pnpm check"
+          },
+          {
+            "version": 2,
+            "kind": "planned_test",
+            "description": "Create and execute meaningful task-owned regression coverage",
+            "expected_outputs": [
+              "apps/doctor-suit/tests/unit/dos-m1-007.test.mjs"
+            ],
+            "commands": [
+              "dos-m1-007-unit"
+            ]
+          },
+          {
+            "version": 2,
+            "kind": "planned_test",
+            "description": "Prove database tenant authorization and write integrity using disposable fixtures",
+            "expected_outputs": [
+              "apps/doctor-suit/supabase/tests/dos-m1-007.sql"
+            ],
+            "commands": [
+              "dos-m1-007-data"
+            ],
+            "requires": [
+              "database",
+              "rls-authorization"
+            ]
+          },
+          {
+            "version": 2,
+            "kind": "planned_test",
+            "description": "Verify the browser user journey and denial/recovery states",
+            "expected_outputs": [
+              "apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts"
+            ],
+            "commands": [
+              "dos-m1-007-browser"
+            ],
+            "requires": [
+              "browser"
+            ]
+          },
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Run full repository unit regression including affected shared consumers",
+            "command": "pnpm test"
+          },
+          {
+            "version": 2,
+            "kind": "external_gate",
+            "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+            "commands": [
+              "doctor-release-check"
+            ],
+            "phase": "pre_publication",
+            "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+          }
+        ],
+        "task_dependencies": [
+          "DOS-M1-006"
+        ],
+        "linked_requirement_ids": [
+          "DOS-M1-F007",
+          "DOS-M1-R001",
+          "DOS-M1-R003",
+          "DOS-M1-R004",
+          "DOS-M1-R005"
+        ],
+        "blocking_decision_ids": [
+          "DOS-M1-GATE-START",
+          "DOS-M1-D001",
+          "DOS-M1-D002"
+        ],
+        "allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/src/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-changes/items.json",
+          "release-fragments/dos-m1-007.json"
+        ],
+        "expected_outputs": [
+          "apps/doctor-suit/tests/unit/dos-m1-007.test.mjs",
+          "apps/doctor-suit/supabase/tests/dos-m1-007.sql",
+          "apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts",
+          "release-fragments/dos-m1-007.json"
+        ],
+        "verification_scenarios": [
+          "Resume incomplete onboarding after refresh and another session.",
+          "Retry/double-submit while checking one practice/one owner membership.",
+          "Verify a secretary cannot self-promote through onboarding endpoints."
+        ],
+        "objective": "Let an authenticated doctor create and maintain a practice profile and reach a usable workspace without employing a secretary. The doctor is the future subscriber; no paid entitlement is fabricated.",
+        "metadata": {
+          "business_priority": "launch-critical-for-web-preview",
+          "launch_gate": "synthetic-web-preview",
+          "verification_mode": "focused",
+          "scope_approval": "planning-authorized-execution-gated",
+          "clinical_live_data_allowed": false,
+          "allowed_paths": [
+            "apps/building-suit-docs/app/pages/components.vue",
+            "apps/doctor-suit/app/",
+            "apps/doctor-suit/supabase/",
+            "apps/doctor-suit/tests/",
+            "docs/shared/atomic-template-route-inventory.json",
+            "docs/shared/ui-ownership-manifest.json",
+            "docs/work-packages/doctor-suit/",
+            "packages/contracts/src/",
+            "packages/ui/package.json",
+            "packages/ui/src/organisms/",
+            "packages/ui/src/templates/",
+            "packages/ui/tests/",
+            "packages/ux/src/",
+            "packages/ux/tests/",
+            "release-changes/items.json",
+            "release-fragments/dos-m1-007.json"
+          ],
+          "source_allowed_paths": [
+            "apps/building-suit-docs/app/pages/components.vue",
+            "apps/doctor-suit/app/",
+            "apps/doctor-suit/supabase/",
+            "apps/doctor-suit/tests/",
+            "docs/shared/atomic-template-route-inventory.json",
+            "docs/shared/ui-ownership-manifest.json",
+            "docs/work-packages/doctor-suit/",
+            "packages/contracts/src/",
+            "packages/ui/package.json",
+            "packages/ui/src/organisms/",
+            "packages/ui/src/templates/",
+            "packages/ui/tests/",
+            "packages/ux/src/",
+            "packages/ux/tests/",
+            "release-changes/items.json",
+            "release-fragments/dos-m1-007.json"
+          ],
+          "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+          "artifact_revision": "doctor-suit-planning-v0.4-review-3",
+          "handoff_source": "current user intake and inspected source; not an execution authorization",
+          "milestone_id": "DOS-M1",
+          "publication_policy": {
+            "merge_authorized": false,
+            "deployment_authorized": false,
+            "hosted_database_changes_authorized": false,
+            "review_required_before_integration": true
+          }
+        },
+        "specific_evidence": [
+          "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+        ],
+        "model_profile": "deep",
+        "retry_policy_id": null,
+        "release_contract": {
+          "fragment_path": "release-fragments/dos-m1-007.json",
+          "accepted_fragments": "append-only; never rewrite accepted provenance",
+          "inventory_path": "release-changes/items.json",
+          "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+          "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+          "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+        },
+        "evidence_requirements": [
+          "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+          "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+          "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+          "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+          "M1 acceptance is synthetic administrative web only; prescribing, payment, patient/mobile apps and production claims remain unavailable."
+        ],
+        "source_reading": [
+          "AGENTS.md",
+          "README.md",
+          "docs/agent-workflows.md",
+          "docs/shared/git-workflow.md",
+          "packages/ui/AGENTS.md",
+          "docs/shared/design-system.md",
+          "docs/shared/interactions.md",
+          "docs/shared/data-table.md",
+          "docs/architecture/identity.md",
+          "docs/shared/database.md",
+          "docs/shared/future-suit-administration.md",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "tooling/control-plane/runner/task-prompt.mjs",
+          "tooling/control-plane/runner/verification-mode.mjs"
+        ],
+        "verification_cases": [
+          {
+            "case_id": "DOS-M1-007-C01",
+            "criterion_ids": [
+              1
+            ],
+            "assertion": "A doctor can complete onboarding alone and add an initial location.",
+            "procedure": "Onboard a doctor with no secretary and create the initial location through the actual form.",
+            "test_case_name": "DOS-M1-007-C01",
+            "required_outputs": [
+              "apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts"
+            ],
+            "command_refs": [
+              "dos-m1-007-browser"
+            ],
+            "external_evidence_required": false,
+            "evidence_types": [],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
+          },
+          {
+            "case_id": "DOS-M1-007-C02",
+            "criterion_ids": [
+              2
+            ],
+            "assertion": "Onboarding is resumable and idempotent; double-submit does not create duplicate practices.",
+            "procedure": "Replay/concurrently submit onboarding and assert one practice with resumable state.",
+            "test_case_name": "DOS-M1-007-C02",
+            "required_outputs": [
+              "apps/doctor-suit/supabase/tests/dos-m1-007.sql"
+            ],
+            "command_refs": [
+              "dos-m1-007-data"
+            ],
+            "external_evidence_required": false,
+            "evidence_types": [],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
+          },
+          {
+            "case_id": "DOS-M1-007-C03",
+            "criterion_ids": [
+              3
+            ],
+            "assertion": "Store only the approved profile fields; professional verification is not asserted unless independently established.",
+            "procedure": "Submit unapproved profile fields and verify rejection; the UI must never label the doctor professionally verified.",
+            "test_case_name": "DOS-M1-007-C03",
+            "required_outputs": [
+              "apps/doctor-suit/supabase/tests/dos-m1-007.sql",
+              "apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts"
+            ],
+            "command_refs": [
+              "dos-m1-007-data",
+              "dos-m1-007-browser"
+            ],
+            "external_evidence_required": false,
+            "evidence_types": [],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
+          },
+          {
+            "case_id": "DOS-M1-007-C04",
+            "criterion_ids": [
+              4
+            ],
+            "assertion": "Show incomplete configuration honestly; later subscription rules do not block a synthetic preview.",
+            "procedure": "Leave optional configuration incomplete and confirm the synthetic workspace remains usable without invented paid entitlement.",
+            "test_case_name": "DOS-M1-007-C04",
+            "required_outputs": [
+              "apps/doctor-suit/tests/e2e/dos-m1-007.spec.ts"
+            ],
+            "command_refs": [
+              "dos-m1-007-browser"
+            ],
+            "external_evidence_required": false,
+            "evidence_types": [],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
+          },
+          {
+            "case_id": "DOS-M1-007-RELEASE",
+            "criterion_ids": [],
+            "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+            "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+            "test_case_name": null,
+            "required_outputs": [
+              "release-fragments/dos-m1-007.json"
+            ],
+            "command_refs": [
+              "doctor-release-check"
+            ],
+            "external_evidence_required": true,
+            "evidence_types": [
+              "exact-candidate-release-review"
+            ],
+            "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+          }
+        ],
+        "acceptance_mapping": [
+          {
+            "criterion": 1,
+            "text": "A doctor can complete onboarding alone and add an initial location.",
+            "verification_case_ids": [
+              "DOS-M1-007-C01"
+            ]
+          },
+          {
+            "criterion": 2,
+            "text": "Onboarding is resumable and idempotent; double-submit does not create duplicate practices.",
+            "verification_case_ids": [
+              "DOS-M1-007-C02"
+            ]
+          },
+          {
+            "criterion": 3,
+            "text": "Store only the approved profile fields; professional verification is not asserted unless independently established.",
+            "verification_case_ids": [
+              "DOS-M1-007-C03"
+            ]
+          },
+          {
+            "criterion": 4,
+            "text": "Show incomplete configuration honestly; later subscription rules do not block a synthetic preview.",
+            "verification_case_ids": [
+              "DOS-M1-007-C04"
+            ]
+          }
+        ]
+      },
+      "canonical_task_sha256": "4bfb6eead7693992192048ce0160e859c5574d422c0138c0c8f6f42867b76208",
+      "canonical_task_schema": "review-only-task-contract-v1",
+      "source_packet_sha256": "137747121e80a74f693301f2ae854fd0ae798319c61a82142b4ee024e4b4dd83"
+    }
+  },
+  "binding_rule": "Fill required runtime values only from renewed, reviewed live evidence. Do not create a model/retry policy, fall back to a cheaper route or widen project scopes. Preserve the canonical object byte-for-byte under metadata; record resolved runtime values separately."
+}

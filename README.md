@@ -4,6 +4,8 @@ Ledger Suit, Shop Suit, Inventory Suit, Super Admin Suit and the Building Suit d
 
 Each product owns an independent Supabase production/staging pair in its own organization. Business tables and API objects use `public`. Auth identities and sessions are separate; Single Auth is deferred. Ledger and Shop's four hosted project refs are verified; Inventory's hosted pair remains intentionally unprovisioned. Shop's Production schema and scoped data copy are verified; its Staging schema is initialized and tested. SMTP, application deployment and final cutover remain pending. See [manual Supabase setup](docs/shared/supabase-manual-setup.md), the [Shop transfer record](docs/migration/shop-dedicated-projects.md) and [status](docs/work-packages/STATUS.md).
 
+Doctor Suit is being implemented as a synthetic public preview and administrative doctor/secretary browser portal in `apps/doctor-suit`. Its local data foundation is isolated; hosted projects remain unprovisioned and user-managed. Real patients, clinical care, payments and mobile availability are not enabled. Follow the [Doctor implementation contract](docs/work-packages/doctor-suit/website-contract-v0.2.md) and app README for current verification limits.
+
 ## Development
 
 Use the Node version in `.node-version` and pnpm version in `package.json`.
@@ -26,7 +28,7 @@ pnpm dev:inventory # http://localhost:3003
 pnpm dev:super-admin # http://localhost:3004
 ```
 
-The root `dev:*` commands select the active worktree with the newest changes relevant to the requested app or shared packages. They print the selected branch, path and commit before starting Nuxt. Newer uncommitted edits count; equal source activity prefers the deeper stack. Merged/closed PRs, detached and prunable worktrees are excluded. With no relevant active worktree, the original (primary) checkout is served as it stands, without switching or pulling its branch.
+The root Ledger, Shop, Inventory, Super Admin and Docs `dev:*` commands select the active worktree with the newest changes relevant to the requested app or shared packages. They print the selected branch, path and commit before starting Nuxt. Newer uncommitted edits count; equal source activity prefers the deeper stack. Merged/closed PRs, detached and prunable worktrees are excluded. With no relevant active worktree, the original (primary) checkout is served as it stands, without switching or pulling its branch.
 
 ```sh
 pnpm dev:ledger --list          # inspect selection without starting a server
@@ -50,6 +52,8 @@ Fill each ignored app `.env` with its local API URL and browser-safe publishable
 | Super Admin | `apps/super-admin-suit/supabase` | 64321 | 64322 | 64324 |
 
 Verified production/staging refs are recorded in `docs/architecture/environments.json`. Account membership roles, including the requested CEO Owner arrangement, still require verification against Supabase's Free-project quota rules in [manual setup](docs/shared/supabase-manual-setup.md). No paid resources or hosted changes are created by workspace setup.
+
+`pnpm dev:doctor` deliberately serves the current worktree on loopback port 3006; run it from the Doctor implementation worktree. Doctor browser checks use port 4336, while its independent local database/API use 65322/65321. Doctor production/staging refs remain blank.
 
 ## Workspace commands
 

@@ -5,6 +5,7 @@ export function csvCell(value: unknown): string {
 }
 
 export type BsDataTableRowAction = 'edit' | 'delete' | 'archive' | 'void'
+export { useRecordAction } from './composables/useRecordAction.ts'
 export type BsDataTableAlign = 'start' | 'center' | 'end'
 export type BsDataTableWidth = 'selection' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'content'
 export type BsDataTableSticky = 'start' | 'end'
@@ -229,3 +230,21 @@ export { usePointOfSaleSections } from './composables/usePointOfSaleSections.ts'
 export { boundedQuantity, steppedQuantity, restoreQuantityInput } from './utils/quantity.ts'
 
 export { focusAfterRecordRemoval } from './utils/collectionFocus.ts'
+export { useConnectivity } from './composables/useConnectivity.ts'
+export { readRasterImage } from './utils/readRasterImage.ts'
+
+export { localDateTimeInput } from "./utils/localDateTimeInput.ts"
+export { usePrivacyConsentFocus } from './composables/usePrivacyConsentFocus.ts'
+export { createBasicAnalytics } from './utils/basicAnalytics.ts'
+export { consentVersion, consentLifetime, consentKey, readPrivacyPreference, privacyPreference, removeAnalyticsCookies } from './utils/privacyConsent.ts'
+export type { PrivacyPreference, PrivacyPresentation } from './utils/privacyConsent.ts'
+
+export { useReviewedCommand } from './composables/useReviewedCommand.ts'
+
+export { copyDocumentImage, renderDocumentImage, downloadDocumentImage } from './utils/documentImage.ts'
+export { readPublicLogo } from './utils/readPublicLogo.ts'
+export { useFreshPageOnRestore } from './composables/useFreshPageOnRestore.ts'
+export { usePageExitCleanup } from './composables/usePageExitCleanup.ts'
+export { usePrivateSessionLifecycle } from './composables/usePrivateSessionLifecycle.ts'
+export { usePageRevalidation } from './composables/usePageRevalidation.ts'
+export { useBlobUrl } from './composables/useBlobUrl.ts'

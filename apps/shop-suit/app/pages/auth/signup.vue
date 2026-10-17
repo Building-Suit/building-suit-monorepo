@@ -77,6 +77,7 @@ function startOver() {
   form.mainLocationPhone = ''
   resetWizard()
 }
+const marketingAnalytics = useMarketingAnalytics()
 async function provisionShop() {
   const { data, error } = await supabase.auth.getUser()
   if (error || !data.user?.email_confirmed_at
@@ -86,6 +87,7 @@ async function provisionShop() {
     return
   }
   await loadShops({ force: true })
+  let created = false
   if (!currentId.value) {
     const { error } = await shopRpc.rpc('create_owner_shop', {
       p_shop_name: form.shopName.trim(), p_business_mode: form.businessMode,
@@ -97,7 +99,9 @@ async function provisionShop() {
     if (error) throw error
     await loadShops({ force: true })
     if (!currentId.value) throw new Error('Shop could not be loaded')
+    created = true
   }
+  if (created) await marketingAnalytics.track('signup_complete')
   clearDraft()
   await navigateTo('/dashboard')
 }

@@ -1,0 +1,31 @@
+{
+  "task": "DOS-M1-004",
+  "paths": [
+    "packages/ux/src/composables/useFloatingMenu.ts",
+    "packages/ui/src/organisms/BsSettingsMenu.vue",
+    "packages/ux/tests/floating-menu.test.mjs",
+    "packages/testing/playwright.settings-focus.config.ts",
+    "packages/testing/e2e/settings-menu-focus.spec.ts"
+  ],
+  "id": "dos-m1-004-settings-focus",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "reason": "Fix the existing shared settings menu keyboard and focus behavior in the already registered Shop product.",
+  "notes": {
+    "title": {
+      "en": "Use settings from the keyboard",
+      "ar": "استخدام الإعدادات بلوحة المفاتيح"
+    },
+    "summary": {
+      "en": "Move between language and theme choices and return focus when closing settings.",
+      "ar": "تنقّل بين خيارات اللغة والمظهر وأعد التركيز عند إغلاق الإعدادات."
+    },
+    "details": {
+      "en": "Opening settings focuses the first choice. Arrow keys, Home and End navigate the menu; Escape or choosing a language returns focus to the settings control.",
+      "ar": "يضع فتح الإعدادات التركيز على الخيار الأول. تتنقل مفاتيح الأسهم وHome وEnd داخل القائمة، ويعيد Escape أو اختيار اللغة التركيز إلى زر الإعدادات."
+    }
+  }
+}

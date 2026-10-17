@@ -17,3 +17,14 @@ export interface BsLandingPricing {
   noticeTestId?: string
   notice?: string
 }
+
+export interface BsLandingChangelog {
+  title: string
+  linkLabel: string
+  to: string
+  feed: import('@building-suit/contracts').ChangelogFeed
+  locale: import('@building-suit/contracts').ChangelogLocale
+  copy: import('@building-suit/contracts').ChangelogCopy
+  suit: string
+  state: 'ready' | 'loading' | 'error' | 'denied'
+}

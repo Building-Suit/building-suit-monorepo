@@ -1,0 +1,9 @@
+{
+  "id": "release-trigger-recursion-repair",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [".github/workflows/releases.yml", "tooling/releases/workflow-triggers.test.mjs", "docs/shared/release-publication-runbook.md"],
+  "reason": "Remove recursive release wake-ups from GitHub environment deployment events and lock the allowed workflow triggers. Preserve deployment readiness and authorization gates."
+}

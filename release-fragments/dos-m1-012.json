@@ -1,0 +1,22 @@
+{
+  "id": "dos-m1-012",
+  "task": "DOS-M1-012",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit",
+    ".github/workflows/doctor-disposable.yml",
+    "docs/work-packages/doctor-suit/documents-evidence.md",
+    "docs/work-packages/doctor-suit/implementation-tracker.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Add synthetic private administrative attachment metadata/version history and a request-scoped authenticated byte-validation/delivery endpoint. Keep direct/public Storage access denied and all files uploaded-unreviewed; real-provider CI is separate from SQL scaffolds. Patient-facing shared presentation and complete task acceptance remain in progress. No clinical interpretation, verified patient identity, hosted deployment or provider activation is claimed."
+}

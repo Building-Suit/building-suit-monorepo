@@ -1,0 +1,9 @@
+{
+  "id": "release-reconciliation-adoption",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [".github/workflows/releases.yml", "tooling/releases/adoption.test.mjs", "docs/shared/release-publication-runbook.md", "docs/work-packages/reconciliation-adoption.md"],
+  "reason": "CI distinguishes protected branches before publisher adoption from adopted branches whose publication configuration/readiness must still be verified. No public release, version or runtime data changes."
+}

@@ -1,0 +1,1339 @@
+[
+  {
+    "id": "shop-service-recipes",
+    "task": "SS-SERV-002",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "Service recipes and material fulfillment",
+        "ar": "\u0648\u0635\u0641\u0627\u062a \u0627\u0644\u062e\u062f\u0645\u0627\u062a \u0648\u062a\u0646\u0641\u064a\u0630 \u0627\u0644\u0645\u0648\u0627\u062f"
+      },
+      "summary": {
+        "en": "Configure optional versioned service recipes and record material use when work is completed.",
+        "ar": "\u0625\u0639\u062f\u0627\u062f \u0648\u0635\u0641\u0627\u062a \u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0644\u0644\u062e\u062f\u0645\u0627\u062a \u0628\u0625\u0635\u062f\u0627\u0631\u0627\u062a \u0648\u062a\u0633\u062c\u064a\u0644 \u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0627\u0644\u0645\u0648\u0627\u062f \u0639\u0646\u062f \u0625\u062a\u0645\u0627\u0645 \u0627\u0644\u0639\u0645\u0644."
+      },
+      "details": {
+        "en": "Ordinary services need no recipe. Payment does not complete work; authorized fulfillment records actual quantities and materials.",
+        "ar": "\u0644\u0627 \u062a\u062a\u0637\u0644\u0628 \u0627\u0644\u062e\u062f\u0645\u0627\u062a \u0627\u0644\u0639\u0627\u062f\u064a\u0629 \u0648\u0635\u0641\u0629. \u0644\u0627 \u064a\u0639\u0646\u064a \u0627\u0644\u062f\u0641\u0639 \u0625\u062a\u0645\u0627\u0645 \u0627\u0644\u0639\u0645\u0644\u061b \u064a\u0633\u062c\u0644 \u0627\u0644\u062a\u0646\u0641\u064a\u0630 \u0627\u0644\u0645\u0635\u0631\u062d \u0628\u0647 \u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0648\u0627\u0644\u0645\u0648\u0627\u062f \u0627\u0644\u0641\u0639\u0644\u064a\u0629."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/service-materials.vue",
+        "contains": "<BsServiceFulfillmentPage"
+      }
+    ]
+  },
+  {
+    "id": "shop-configurable-taxes",
+    "task": "SS-TAX-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "Configurable taxes",
+        "ar": "\u0636\u0631\u0627\u0626\u0628 \u0642\u0627\u0628\u0644\u0629 \u0644\u0644\u0625\u0639\u062f\u0627\u062f"
+      },
+      "summary": {
+        "en": "Set up tax rates for your business.",
+        "ar": "\u0625\u0639\u062f\u0627\u062f \u0645\u0639\u062f\u0644\u0627\u062a \u0627\u0644\u0636\u0631\u0627\u0626\u0628 \u0644\u0646\u0634\u0627\u0637\u0643."
+      },
+      "details": {
+        "en": "Issued documents retain their original tax calculation.",
+        "ar": "\u062a\u062d\u062a\u0641\u0638 \u0627\u0644\u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u0635\u0627\u062f\u0631\u0629 \u0628\u062d\u0633\u0627\u0628\u0627\u062a\u0647\u0627 \u0627\u0644\u0636\u0631\u064a\u0628\u064a\u0629 \u0627\u0644\u0623\u0635\u0644\u064a\u0629."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/taxes.vue",
+        "contains": "<BsShopTaxSettingsPage"
+      }
+    ]
+  },
+  {
+    "id": "shop-staff-commissions",
+    "task": "SS-BARBER-COMP-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "Optional staff commissions",
+        "ar": "\u0639\u0645\u0648\u0644\u0627\u062a \u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0644\u0644\u0645\u0648\u0638\u0641\u064a\u0646"
+      },
+      "summary": {
+        "en": "Configure service commissions and review earned amounts, adjustments and reversals.",
+        "ar": "\u0625\u0639\u062f\u0627\u062f \u0639\u0645\u0648\u0644\u0627\u062a \u0627\u0644\u062e\u062f\u0645\u0627\u062a \u0648\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0645\u0628\u0627\u0644\u063a \u0627\u0644\u0645\u0643\u062a\u0633\u0628\u0629 \u0648\u0627\u0644\u062a\u0633\u0648\u064a\u0627\u062a \u0648\u0627\u0644\u0639\u0643\u0648\u0633."
+      },
+      "details": {
+        "en": "Commission history remains separate from wages and preserves the original sale and fulfillment basis.",
+        "ar": "\u064a\u0628\u0642\u0649 \u0633\u062c\u0644 \u0627\u0644\u0639\u0645\u0648\u0644\u0627\u062a \u0645\u0646\u0641\u0635\u0644\u0627\u064b \u0639\u0646 \u0627\u0644\u0623\u062c\u0648\u0631 \u0648\u064a\u062d\u0641\u0638 \u0623\u0633\u0627\u0633 \u0627\u0644\u0628\u064a\u0639 \u0648\u0627\u0644\u062a\u0646\u0641\u064a\u0630 \u0627\u0644\u0623\u0635\u0644\u064a."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/commissions.vue",
+        "contains": "<BsCommissionPolicyPage"
+      }
+    ]
+  },
+  {
+    "id": "shop-offline-reconciliation",
+    "task": "SS-OFFLINE-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "Offline counter reconciliation",
+        "ar": "\u062a\u0633\u0648\u064a\u0629 \u0639\u0645\u0644\u064a\u0627\u062a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u062f\u0648\u0646 \u0627\u062a\u0635\u0627\u0644"
+      },
+      "summary": {
+        "en": "Keep counter operations queued when the connection drops.",
+        "ar": "\u062d\u0641\u0638 \u0639\u0645\u0644\u064a\u0627\u062a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u0641\u064a \u0642\u0627\u0626\u0645\u0629 \u0627\u0646\u062a\u0638\u0627\u0631 \u0639\u0646\u062f \u0627\u0646\u0642\u0637\u0627\u0639 \u0627\u0644\u0627\u062a\u0635\u0627\u0644."
+      },
+      "details": {
+        "en": "After reconnection, reconcile queued work with authoritative results.",
+        "ar": "\u0628\u0639\u062f \u0639\u0648\u062f\u0629 \u0627\u0644\u0627\u062a\u0635\u0627\u0644\u060c \u0633\u0648\u0650\u0651 \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a \u0627\u0644\u0645\u0624\u062c\u0644\u0629 \u0645\u0639 \u0627\u0644\u0646\u062a\u0627\u0626\u062c \u0627\u0644\u0645\u0639\u062a\u0645\u062f\u0629."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useOfflineCounter.ts",
+        "contains": "rpc.rpc('replay_offline_pos_sale'"
+      }
+    ]
+  },
+  {
+    "id": "shop-document-settings",
+    "task": "SS-SET-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "Business and document settings",
+        "ar": "\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0646\u0634\u0627\u0637 \u0648\u0627\u0644\u0645\u0633\u062a\u0646\u062f\u0627\u062a"
+      },
+      "summary": {
+        "en": "Configure how your business documents are presented.",
+        "ar": "\u0625\u0639\u062f\u0627\u062f \u0637\u0631\u064a\u0642\u0629 \u0639\u0631\u0636 \u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0646\u0634\u0627\u0637\u0643."
+      },
+      "details": {
+        "en": "Historical currency and issued document evidence remain preserved.",
+        "ar": "\u062a\u0628\u0642\u0649 \u0627\u0644\u0639\u0645\u0644\u0629 \u0627\u0644\u062a\u0627\u0631\u064a\u062e\u064a\u0629 \u0648\u0623\u062f\u0644\u0629 \u0627\u0644\u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u0635\u0627\u062f\u0631\u0629 \u0645\u062d\u0641\u0648\u0638\u0629."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/types/receipt.ts",
+        "contains": "presentation?: { documentLabel:"
+      }
+    ]
+  },
+  {
+    "id": "shop-partial-returns",
+    "task": "SS-PARTIAL-RETURNS-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Adds invoice-linked partial returns in Shop through optional shared presentation and interaction contracts.",
+    "notes": {
+      "title": {
+        "en": "Partial item returns",
+        "ar": "\u0627\u0644\u0625\u0631\u062c\u0627\u0639 \u0627\u0644\u062c\u0632\u0626\u064a \u0644\u0644\u0623\u0635\u0646\u0627\u0641"
+      },
+      "summary": {
+        "en": "Return selected items and quantities from an issued sale, with a clear breakdown of debt reduction and any refund owed.",
+        "ar": "\u0623\u0639\u062f \u0623\u0635\u0646\u0627\u0641\u064b\u0627 \u0648\u0643\u0645\u064a\u0627\u062a \u0645\u062d\u062f\u062f\u0629 \u0645\u0646 \u0641\u0627\u062a\u0648\u0631\u0629 \u0628\u064a\u0639 \u0645\u064f\u0635\u062f\u0631\u0629\u060c \u0645\u0639 \u062a\u0648\u0636\u064a\u062d \u062a\u062e\u0641\u064a\u0636 \u0627\u0644\u0645\u0633\u062a\u062d\u0642 \u0648\u0623\u064a \u0645\u0628\u0644\u063a \u0645\u0637\u0644\u0648\u0628 \u0631\u062f\u0647."
+      },
+      "details": {
+        "en": "Returns use the original sale\u2019s prices, discounts and taxes. Shop reduces that invoice\u2019s outstanding amount first, then allocates any excess to the original payments. Choose resellable or damaged stock; service returns do not restore consumed materials. Cash refunds are recorded after cash handover. Recording an externally completed refund documents a refund made outside Shop; it does not initiate a card or bank transfer. Returns and refund recording require a connection. Historical sales without sufficient original records are unavailable for partial returns.",
+        "ar": "\u062a\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u0645\u0631\u062a\u062c\u0639\u0627\u062a \u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0628\u064a\u0639 \u0627\u0644\u0623\u0635\u0644\u064a\u0629 \u0648\u062e\u0635\u0648\u0645\u0627\u062a\u0647 \u0648\u0636\u0631\u0627\u0626\u0628\u0647. \u064a\u062e\u0641\u0636 \u0627\u0644\u0645\u062a\u062c\u0631 \u0627\u0644\u0645\u0633\u062a\u062d\u0642 \u0639\u0644\u0649 \u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629 \u0646\u0641\u0633\u0647\u0627 \u0623\u0648\u0644\u0627\u064b\u060c \u062b\u0645 \u064a\u0648\u0632\u0639 \u0623\u064a \u0641\u0627\u0626\u0636 \u0639\u0644\u0649 \u0627\u0644\u062f\u0641\u0639\u0627\u062a \u0627\u0644\u0623\u0635\u0644\u064a\u0629. \u0627\u062e\u062a\u0631 \u0645\u062e\u0632\u0648\u0646\u064b\u0627 \u0635\u0627\u0644\u062d\u064b\u0627 \u0644\u0644\u0628\u064a\u0639 \u0623\u0648 \u062a\u0627\u0644\u0641\u064b\u0627\u061b \u0648\u0644\u0627 \u062a\u0639\u064a\u062f \u0645\u0631\u062a\u062c\u0639\u0627\u062a \u0627\u0644\u062e\u062f\u0645\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u062f \u0627\u0644\u0645\u0633\u062a\u0647\u0644\u0643\u0629. \u064a\u064f\u0633\u062c\u0644 \u0631\u062f \u0627\u0644\u0646\u0642\u062f \u0628\u0639\u062f \u062a\u0633\u0644\u064a\u0645\u0647 \u0641\u0639\u0644\u064a\u064b\u0627. \u064a\u0648\u062b\u0642 \u062a\u0633\u062c\u064a\u0644 \u0631\u062f \u0645\u0628\u0644\u063a \u0645\u0643\u062a\u0645\u0644 \u062e\u0627\u0631\u062c \u0627\u0644\u0645\u062a\u062c\u0631 \u0639\u0645\u0644\u064a\u0629 \u062a\u0645\u062a \u062e\u0627\u0631\u062c\u0647\u060c \u0648\u0644\u0627 \u064a\u0646\u0641\u0630 \u062a\u062d\u0648\u064a\u0644\u0627\u064b \u0639\u0628\u0631 \u0627\u0644\u0628\u0637\u0627\u0642\u0629 \u0623\u0648 \u0627\u0644\u0628\u0646\u0643. \u064a\u062a\u0637\u0644\u0628 \u0627\u0644\u0625\u0631\u062c\u0627\u0639 \u0648\u062a\u0633\u062c\u064a\u0644 \u0631\u062f \u0627\u0644\u0645\u0628\u0627\u0644\u063a \u0627\u062a\u0635\u0627\u0644\u0627\u064b. \u0644\u0627 \u064a\u062a\u0627\u062d \u0627\u0644\u0625\u0631\u062c\u0627\u0639 \u0627\u0644\u062c\u0632\u0626\u064a \u0644\u0644\u0645\u0628\u064a\u0639\u0627\u062a \u0627\u0644\u062a\u0627\u0631\u064a\u062e\u064a\u0629 \u0627\u0644\u062a\u064a \u0644\u0627 \u062a\u062a\u0648\u0641\u0631 \u0644\u0647\u0627 \u0633\u062c\u0644\u0627\u062a \u0623\u0635\u0644\u064a\u0629 \u0643\u0627\u0641\u064a\u0629."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useSaleReturns.ts",
+        "contains": "export function useSaleReturns"
+      }
+    ],
+    "sources": [
+      "shop-partial-returns"
+    ]
+  },
+  {
+    "id": "shop-receipt-image",
+    "task": "SS-RECEIPT-IMAGE-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Improves issued receipt layout and replaces text copying with a local PNG clipboard flow.",
+    "notes": {
+      "title": {
+        "en": "Receipt images",
+        "ar": "\u0635\u0648\u0631 \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a"
+      },
+      "summary": {
+        "en": "Copy an issued receipt as a clear image for pasting into WhatsApp, with an image download option when copying is unavailable.",
+        "ar": "\u0627\u0646\u0633\u062e \u0627\u0644\u0625\u064a\u0635\u0627\u0644 \u0627\u0644\u0645\u064f\u0635\u062f\u0631 \u0643\u0635\u0648\u0631\u0629 \u0648\u0627\u0636\u062d\u0629 \u0644\u0644\u0635\u0642\u0647\u0627 \u0641\u064a \u0648\u0627\u062a\u0633\u0627\u0628\u060c \u0645\u0639 \u0625\u0645\u0643\u0627\u0646\u064a\u0629 \u062a\u0646\u0632\u064a\u0644 \u0627\u0644\u0635\u0648\u0631\u0629 \u0639\u0646\u062f \u062a\u0639\u0630\u0631 \u0627\u0644\u0646\u0633\u062e."
+      },
+      "details": {
+        "en": "Arabic and English receipts share a monochrome thermal layout for preview, printing and images. Merchant and branch names, issued amounts and payment references are retained. Existing thermal and A4 print sizes remain available.",
+        "ar": "\u062a\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0648\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629 \u062a\u0646\u0633\u064a\u0642\u064b\u0627 \u062d\u0631\u0627\u0631\u064a\u064b\u0627 \u0623\u062d\u0627\u062f\u064a \u0627\u0644\u0644\u0648\u0646 \u0644\u0644\u0645\u0639\u0627\u064a\u0646\u0629 \u0648\u0627\u0644\u0637\u0628\u0627\u0639\u0629 \u0648\u0627\u0644\u0635\u0648\u0631\u060c \u0645\u0639 \u0627\u0644\u0627\u062d\u062a\u0641\u0627\u0638 \u0628\u0623\u0633\u0645\u0627\u0621 \u0627\u0644\u0645\u062a\u062c\u0631 \u0648\u0627\u0644\u0641\u0631\u0639 \u0648\u0627\u0644\u0645\u0628\u0627\u0644\u063a \u0627\u0644\u0645\u064f\u0635\u062f\u0631\u0629 \u0648\u0645\u0631\u0627\u062c\u0639 \u0627\u0644\u062f\u0641\u0639. \u062a\u0638\u0644 \u0645\u0642\u0627\u0633\u0627\u062a \u0627\u0644\u0637\u0628\u0627\u0639\u0629 \u0627\u0644\u062d\u0631\u0627\u0631\u064a\u0629 \u0648A4 \u0645\u062a\u0627\u062d\u0629."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/utils/receiptPresentation.ts",
+        "contains": "export function projectReceipt"
+      }
+    ],
+    "sources": [
+      "shop-receipt-image"
+    ]
+  },
+  {
+    "id": "ss-seo-privacy-analytics",
+    "task": "SS-SEO-PRIVACY-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Compatible public-page SEO and voluntary privacy controls are enabled only in Shop. Analytics remains configuration- and consent-gated; paid conversion measurement is disabled.",
+    "notes": {
+      "title": {
+        "en": "Privacy choices and public-page improvements",
+        "ar": "\u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0648\u062a\u062d\u0633\u064a\u0646\u0627\u062a \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0639\u0627\u0645\u0629"
+      },
+      "summary": {
+        "en": "Choose whether to allow optional visitor analytics and review clearer privacy information.",
+        "ar": "\u0627\u062e\u062a\u0631 \u0627\u0644\u0633\u0645\u0627\u062d \u0628\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0632\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0623\u0648 \u0631\u0641\u0636\u0647\u0627\u060c \u0648\u0631\u0627\u062c\u0639 \u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0623\u0648\u0636\u062d \u0639\u0646 \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629."
+      },
+      "details": {
+        "en": "Privacy settings let you accept, reject or change optional analytics choices. Analytics stays off until configured and accepted, and business records are excluded. Public pages gain sharing information and a sitemap; payment activation is not measured.",
+        "ar": "\u062a\u062a\u064a\u062d \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0642\u0628\u0648\u0644 \u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0623\u0648 \u0631\u0641\u0636\u0647\u0627 \u0623\u0648 \u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631 \u0644\u0627\u062d\u0642\u0627\u064b. \u062a\u0638\u0644 \u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0645\u062a\u0648\u0642\u0641\u0629 \u062d\u062a\u0649 \u062a\u0647\u064a\u0626\u062a\u0647\u0627 \u0648\u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0639\u0644\u064a\u0647\u0627\u060c \u0648\u062a\u064f\u0633\u062a\u0628\u0639\u062f \u0633\u062c\u0644\u0627\u062a \u0627\u0644\u0639\u0645\u0644 \u0645\u0646\u0647\u0627. \u062a\u062a\u0636\u0645\u0646 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0639\u0627\u0645\u0629 \u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0644\u0644\u0645\u0634\u0627\u0631\u0643\u0629 \u0648\u062e\u0631\u064a\u0637\u0629 \u0644\u0644\u0645\u0648\u0642\u0639\u060c \u0648\u0644\u0627 \u064a\u062a\u0645 \u0642\u064a\u0627\u0633 \u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u062f\u0641\u0639."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useShopPrivacy.ts",
+        "contains": "export function useShopPrivacy"
+      }
+    ],
+    "sources": [
+      "ss-seo-privacy-analytics"
+    ]
+  },
+  {
+    "id": "shop-eta-preparation",
+    "task": "SS-ETA-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "ETA submission preparation",
+        "ar": "\u062a\u062c\u0647\u064a\u0632 \u0625\u0631\u0633\u0627\u0644 \u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u0636\u0631\u0627\u0626\u0628 \u0627\u0644\u0645\u0635\u0631\u064a\u0629"
+      },
+      "summary": {
+        "en": "Prepare eligible tax documents and review submission attempts and status.",
+        "ar": "\u062a\u062c\u0647\u064a\u0632 \u0627\u0644\u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u0636\u0631\u064a\u0628\u064a\u0629 \u0627\u0644\u0645\u0624\u0647\u0644\u0629 \u0648\u0645\u0631\u0627\u062c\u0639\u0629 \u0645\u062d\u0627\u0648\u0644\u0627\u062a \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0648\u062d\u0627\u0644\u062a\u0647\u0627."
+      },
+      "details": {
+        "en": "Preparation is not an activated or certified compliant integration. Live submission requires separately verified issuer configuration, signing, credentials and explicit server-side enablement.",
+        "ar": "\u0644\u0627 \u064a\u0639\u0646\u064a \u0627\u0644\u062a\u062c\u0647\u064a\u0632 \u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u062a\u0643\u0627\u0645\u0644 \u0623\u0648 \u0627\u0639\u062a\u0645\u0627\u062f\u0647 \u0645\u062a\u0648\u0627\u0641\u0642\u0627\u064b. \u064a\u062a\u0637\u0644\u0628 \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0641\u0639\u0644\u064a \u0627\u0644\u062a\u062d\u0642\u0642 \u0628\u0634\u0643\u0644 \u0645\u0646\u0641\u0635\u0644 \u0645\u0646 \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0645\u0645\u0648\u0644 \u0648\u0627\u0644\u062a\u0648\u0642\u064a\u0639 \u0648\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0627\u0639\u062a\u0645\u0627\u062f \u0648\u0627\u0644\u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u0635\u0631\u064a\u062d \u0639\u0644\u0649 \u0627\u0644\u062e\u0627\u062f\u0645."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/functions/_shared/eta-worker.mjs",
+        "contains": "export function createEtaDispatcher"
+      }
+    ],
+    "sources": [
+      "shop-eta-business-invoice-support",
+      "shop-eta-submission-support"
+    ]
+  },
+  {
+    "id": "shop-upcoming-release",
+    "task": "BS-CHANGELOG-VERSION-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux",
+      "packages/nuxt-layer"
+    ],
+    "reason": "Reviewed customer-facing net change, gated by semantic evidence against current main.",
+    "notes": {
+      "title": {
+        "en": "One upcoming release",
+        "ar": "\u0625\u0635\u062f\u0627\u0631 \u0642\u0627\u062f\u0645 \u0648\u0627\u062d\u062f"
+      },
+      "summary": {
+        "en": "Review the combined changes awaiting production in English or Arabic.",
+        "ar": "\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u062a\u063a\u064a\u064a\u0631\u0627\u062a \u0627\u0644\u0645\u062c\u0645\u0639\u0629 \u0627\u0644\u062a\u064a \u062a\u0646\u062a\u0638\u0631 \u0627\u0644\u0646\u0634\u0631 \u0627\u0644\u0641\u0639\u0644\u064a \u0628\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629 \u0623\u0648 \u0627\u0644\u0639\u0631\u0628\u064a\u0629."
+      },
+      "details": {
+        "en": "The upcoming release refreshes from the current production-to-staging difference. Its version and notes freeze only after production deployment succeeds.",
+        "ar": "\u064a\u062a\u062d\u062f\u062b \u0627\u0644\u0625\u0635\u062f\u0627\u0631 \u0627\u0644\u0642\u0627\u062f\u0645 \u0648\u0641\u0642 \u0627\u0644\u0641\u0631\u0642 \u0627\u0644\u062d\u0627\u0644\u064a \u0628\u064a\u0646 \u0641\u0631\u0639 \u0627\u0644\u0625\u0646\u062a\u0627\u062c \u0648\u0628\u064a\u0626\u0629 \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631. \u064a\u062b\u0628\u062a \u0625\u0635\u062f\u0627\u0631\u0647 \u0648\u0645\u0644\u0627\u062d\u0638\u0627\u062a\u0647 \u0628\u0639\u062f \u0646\u062c\u0627\u062d \u0627\u0644\u0646\u0634\u0631 \u0627\u0644\u0641\u0639\u0644\u064a \u0641\u0642\u0637."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/usePublicChangelog.ts",
+        "contains": "client.list"
+      },
+      {
+        "path": "packages/ui/src/organisms/BsChangelogTimeline.vue",
+        "contains": "<BsTabs"
+      }
+    ],
+    "sources": [
+      "bs-task-release-publication",
+      "upcoming-net-release-preview",
+      "changelog-status-tabs",
+      "retrospective-changelog-history"
+    ]
+  },
+  {
+    "id": "shop-permission-menu-alignment",
+    "task": "SS-PERMISSION-MENU-ALIGNMENT",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Corrects bilingual role permission grouping to match the actual navigation while preserving existing grants.",
+    "notes": {
+      "title": {
+        "en": "Permissions follow the menu",
+        "ar": "\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u062a\u062a\u0628\u0639 \u0627\u0644\u0642\u0627\u0626\u0645\u0629"
+      },
+      "summary": {
+        "en": "Role permissions use the same page names and order as the Arabic and English menus.",
+        "ar": "\u062a\u0633\u062a\u062e\u062f\u0645 \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0623\u062f\u0648\u0627\u0631 \u0623\u0633\u0645\u0627\u0621 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0648\u062a\u0631\u062a\u064a\u0628\u0647\u0627 \u0646\u0641\u0633\u0647 \u0641\u064a \u0627\u0644\u0642\u0627\u0626\u0645\u062a\u064a\u0646 \u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0648\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629."
+      },
+      "details": {
+        "en": "Actions are grouped under their relevant pages. Shared capabilities stay synchronized, locked grants remain protected, and existing saved permissions are retained.",
+        "ar": "\u062a\u064f\u062c\u0645\u0639 \u0627\u0644\u0625\u062c\u0631\u0627\u0621\u0627\u062a \u062a\u062d\u062a \u0635\u0641\u062d\u0627\u062a\u0647\u0627 \u0627\u0644\u0645\u0646\u0627\u0633\u0628\u0629\u060c \u0648\u062a\u0638\u0644 \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u0634\u062a\u0631\u0643\u0629 \u0645\u062a\u0632\u0627\u0645\u0646\u0629 \u0648\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u0642\u064a\u062f\u0629 \u0645\u062d\u0645\u064a\u0629\u060c \u0645\u0639 \u0627\u0644\u0627\u062d\u062a\u0641\u0627\u0638 \u0628\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629."
+      }
+    },
+    "sources": [
+      "shop-permission-menu-alignment"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/team.vue",
+        "contains": "permissions: shopPermissionMenu("
+      }
+    ]
+  },
+  {
+    "id": "reviewed-internal-net-support",
+    "task": "BS-CHANGELOG-VERSION-001",
+    "suits": [
+      "automation-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      ".github",
+      "AGENTS.md",
+      "docs",
+      "tooling",
+      "package.json",
+      "pnpm-lock.yaml",
+      "apps",
+      "packages"
+    ],
+    "reason": "Reviewed shared scaffolding, operational control-plane changes, tests, configuration and support paths. Public Shop capabilities are separately curated with net evidence; this record grants no operational activation."
+  },
+  {
+    "id": "ss-web-customer-portal-001",
+    "task": "SS-WEB-CUSTOMER-PORTAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Adds read-only, narrowly scoped customer appointment and service history with short-lived access.",
+    "notes": {
+      "title": {
+        "en": "View your appointments securely",
+        "ar": "\u0639\u0631\u0636 \u0645\u0648\u0627\u0639\u064a\u062f\u0643 \u0628\u0623\u0645\u0627\u0646"
+      },
+      "summary": {
+        "en": "Customers can verify access to their appointments and service history at a shop.",
+        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0639\u0645\u0644\u0627\u0621 \u0627\u0644\u062a\u062d\u0642\u0642 \u0645\u0646 \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0645\u0648\u0627\u0639\u064a\u062f\u0647\u0645 \u0648\u0633\u062c\u0644 \u062e\u062f\u0645\u0627\u062a\u0647\u0645 \u0644\u062f\u0649 \u0627\u0644\u0645\u062a\u062c\u0631."
+      },
+      "details": {
+        "en": "Short-lived access shows appointment times, service, staff display name, status and explicitly public locations. Walk-in access covers one appointment. Expiry, revocation and logout clear the view; private notes and financial data stay excluded.",
+        "ar": "\u064a\u0639\u0631\u0636 \u0627\u0644\u0648\u0635\u0648\u0644 \u0642\u0635\u064a\u0631 \u0627\u0644\u0645\u062f\u0629 \u0623\u0648\u0642\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f \u0648\u0627\u0644\u062e\u062f\u0645\u0629 \u0648\u0627\u0633\u0645 \u0627\u0644\u0645\u0648\u0638\u0641 \u0648\u0627\u0644\u062d\u0627\u0644\u0629 \u0648\u0627\u0644\u0645\u0648\u0627\u0642\u0639 \u0627\u0644\u0639\u0627\u0645\u0629 \u0627\u0644\u0645\u062d\u062f\u062f\u0629. \u064a\u0642\u062a\u0635\u0631 \u0648\u0635\u0648\u0644 \u0627\u0644\u0632\u0627\u0626\u0631 \u0639\u0644\u0649 \u0645\u0648\u0639\u062f \u0648\u0627\u062d\u062f. \u064a\u0645\u0633\u062d \u0627\u0646\u062a\u0647\u0627\u0621 \u0627\u0644\u0648\u0635\u0648\u0644 \u0623\u0648 \u0625\u0644\u063a\u0627\u0624\u0647 \u0627\u0644\u0639\u0631\u0636\u060c \u0648\u062a\u0628\u0642\u0649 \u0627\u0644\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0627\u0644\u062e\u0627\u0635\u0629 \u0648\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u0645\u0633\u062a\u0628\u0639\u062f\u0629."
+      }
+    },
+    "sources": [
+      "ss-web-customer-portal-001"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/my-appointments.vue",
+        "contains": "<BsShopCustomerPortalPage"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261016114826_shop_customer_appointment_portal.sql",
+        "contains": "scope:=shop_private.appointment_access_scope(p_slug,p_token);"
+      }
+    ]
+  },
+  {
+    "id": "ss-appt-002",
+    "task": "SS-APPT-002",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Adds explicit public booking and scoped appointment management, preserving transactional availability, privacy and disabled reminder delivery.",
+    "notes": {
+      "title": {
+        "en": "Book and manage appointments online",
+        "ar": "\u062d\u062c\u0632 \u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f \u0648\u0625\u062f\u0627\u0631\u062a\u0647\u0627 \u0639\u0628\u0631 \u0627\u0644\u0645\u0648\u0642\u0639"
+      },
+      "summary": {
+        "en": "Shops can explicitly enable booking for published services, locations and staff.",
+        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u062a\u0627\u062c\u0631 \u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u062d\u062c\u0632 \u0635\u0631\u0627\u062d\u0629\u064b \u0644\u0644\u062e\u062f\u0645\u0627\u062a \u0648\u0627\u0644\u0645\u0648\u0627\u0642\u0639 \u0648\u0627\u0644\u0645\u0648\u0638\u0641\u064a\u0646 \u0627\u0644\u0645\u0646\u0634\u0648\u0631\u064a\u0646."
+      },
+      "details": {
+        "en": "Customers choose available times and can reschedule or cancel within shop rules. Guest access covers one appointment; verified customers retain their own scope. Concurrent bookings are checked transactionally. Reminders stay disabled until an approved messaging channel is configured.",
+        "ar": "\u064a\u062e\u062a\u0627\u0631 \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0623\u0648\u0642\u0627\u062a\u0627\u064b \u0645\u062a\u0627\u062d\u0629 \u0648\u064a\u0645\u0643\u0646\u0647\u0645 \u062a\u0639\u062f\u064a\u0644 \u0627\u0644\u0645\u0648\u0639\u062f \u0623\u0648 \u0625\u0644\u063a\u0627\u0624\u0647 \u0648\u0641\u0642 \u0633\u064a\u0627\u0633\u0629 \u0627\u0644\u0645\u062a\u062c\u0631. \u064a\u0642\u062a\u0635\u0631 \u0648\u0635\u0648\u0644 \u0627\u0644\u0632\u0627\u0626\u0631 \u0639\u0644\u0649 \u0645\u0648\u0639\u062f \u0648\u0627\u062d\u062f\u060c \u0648\u064a\u062d\u062a\u0641\u0638 \u0627\u0644\u0639\u0645\u064a\u0644 \u0627\u0644\u0645\u0648\u062b\u0651\u0642 \u0628\u0646\u0637\u0627\u0642\u0647 \u0627\u0644\u062e\u0627\u0635. \u062a\u064f\u0641\u062d\u0635 \u0627\u0644\u062d\u062c\u0648\u0632\u0627\u062a \u0627\u0644\u0645\u062a\u0632\u0627\u0645\u0646\u0629 \u062f\u0627\u062e\u0644 \u0627\u0644\u0645\u0639\u0627\u0645\u0644\u0629\u060c \u0648\u062a\u0628\u0642\u0649 \u0627\u0644\u062a\u0630\u0643\u064a\u0631\u0627\u062a \u0645\u0639\u0637\u0644\u0629 \u062d\u062a\u0649 \u0625\u0639\u062f\u0627\u062f \u0642\u0646\u0627\u0629 \u0631\u0633\u0627\u0626\u0644 \u0645\u0639\u062a\u0645\u062f\u0629."
+      }
+    },
+    "sources": [
+      "ss-appt-002"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/book.vue",
+        "contains": "<BsPublicAppointmentBookingPage"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261016131316_public_appointment_booking.sql",
+        "contains": "create function public.appointment_booking_command("
+      }
+    ]
+  },
+  {
+    "id": "shop-public-website",
+    "task": "SS-WEB-LAUNCH-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Curates the combined reviewed address, profile, selective catalog and public showcase/inquiry capabilities with surviving current-code evidence.",
+    "notes": {
+      "title": {
+        "en": "Publish a website for your shop",
+        "ar": "\u0646\u0634\u0631 \u0645\u0648\u0642\u0639 \u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0644\u0645\u062a\u062c\u0631\u0643"
+      },
+      "summary": {
+        "en": "Choose a shop address and publish an independent profile with selected products and services.",
+        "ar": "\u0627\u062e\u062a\u0631 \u0639\u0646\u0648\u0627\u0646\u0627\u064b \u0644\u0644\u0645\u062a\u062c\u0631 \u0648\u0627\u0646\u0634\u0631 \u0645\u0644\u0641\u0627\u064b \u0639\u0627\u0645\u0627\u064b \u0645\u0633\u062a\u0642\u0644\u0627\u064b \u0645\u0639 \u0645\u0646\u062a\u062c\u0627\u062a \u0648\u062e\u062f\u0645\u0627\u062a \u0645\u062d\u062f\u062f\u0629."
+      },
+      "details": {
+        "en": "Owners explicitly opt in after adding a logo, public contact, visible location and a published item. Public pages show selected descriptions, prices, opening hours and contact actions; visitor inquiries reach the shop privately. Unpublishing hides the website immediately while retaining its configuration. Operational and private data stay excluded.",
+        "ar": "\u064a\u0648\u0627\u0641\u0642 \u0627\u0644\u0645\u0627\u0644\u0643 \u0635\u0631\u0627\u062d\u0629\u064b \u0639\u0644\u0649 \u0627\u0644\u0646\u0634\u0631 \u0628\u0639\u062f \u0625\u0636\u0627\u0641\u0629 \u0634\u0639\u0627\u0631 \u0648\u0648\u0633\u064a\u0644\u0629 \u0627\u062a\u0635\u0627\u0644 \u0639\u0627\u0645\u0629 \u0648\u0645\u0648\u0642\u0639 \u0638\u0627\u0647\u0631 \u0648\u0639\u0646\u0635\u0631 \u0645\u0646\u0634\u0648\u0631. \u062a\u0639\u0631\u0636 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0623\u0648\u0635\u0627\u0641 \u0648\u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0648\u0633\u0627\u0639\u0627\u062a \u0627\u0644\u0639\u0645\u0644 \u0648\u0648\u0633\u0627\u0626\u0644 \u0627\u0644\u062a\u0648\u0627\u0635\u0644 \u0627\u0644\u0645\u062d\u062f\u062f\u0629\u060c \u0648\u062a\u0635\u0644 \u0627\u0633\u062a\u0641\u0633\u0627\u0631\u0627\u062a \u0627\u0644\u0632\u0648\u0627\u0631 \u0625\u0644\u0649 \u0627\u0644\u0645\u062a\u062c\u0631 \u0628\u0634\u0643\u0644 \u062e\u0627\u0635. \u064a\u062e\u0641\u064a \u0625\u0644\u063a\u0627\u0621 \u0627\u0644\u0646\u0634\u0631 \u0627\u0644\u0645\u0648\u0642\u0639 \u0641\u0648\u0631\u0627\u064b \u0645\u0639 \u0627\u0644\u0627\u062d\u062a\u0641\u0627\u0638 \u0628\u0625\u0639\u062f\u0627\u062f\u0627\u062a\u0647\u060c \u0648\u062a\u0628\u0642\u0649 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u062a\u0634\u063a\u064a\u0644\u064a\u0629 \u0648\u0627\u0644\u062e\u0627\u0635\u0629 \u0645\u0633\u062a\u0628\u0639\u062f\u0629."
+      }
+    },
+    "sources": [
+      "ss-web-slug-001",
+      "ss-web-profile-001",
+      "ss-web-catalog-001",
+      "ss-web-public-001"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261015225136_shop_website_slug_foundation.sql",
+        "contains": "insert into public.shop_website_slug_claims(slug,shop_id) values(p_slug,p_shop_id)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261015233546_shop_website_public_profile.sql",
+        "contains": "p_owner_opt_in is distinct from true then raise exception 'WEBSITE_OWNER_OPT_IN_REQUIRED'"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261016001743_shop_website_selective_catalog.sql",
+        "contains": "where c.shop_id=p_shop_id and c.published and s.active"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/usePublicWebsite.ts",
+        "contains": "const canonical=websitePageUrl(page.value.payload.profile.canonicalSlug,page.value.locale,page.value.page,domain)"
+      }
+    ]
+  },
+  {
+    "id": "shop-appointment-access",
+    "task": "SS-WEB-APPT-ACCESS-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Curates reviewed staff-managed appointment access credentials and their scoped short-lived verification contract.",
+    "notes": {
+      "title": {
+        "en": "Manage private appointment access",
+        "ar": "\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0648\u0635\u0648\u0644 \u0627\u0644\u062e\u0627\u0635 \u0644\u0644\u0645\u0648\u0627\u0639\u064a\u062f"
+      },
+      "summary": {
+        "en": "Authorized staff can issue, rotate and revoke appointment access codes.",
+        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u0648\u0638\u0641 \u0627\u0644\u0645\u062e\u0648\u0651\u0644 \u0625\u0635\u062f\u0627\u0631 \u0631\u0645\u0648\u0632 \u0627\u0644\u0648\u0635\u0648\u0644 \u0644\u0644\u0645\u0648\u0627\u0639\u064a\u062f \u0648\u062a\u063a\u064a\u064a\u0631\u0647\u0627 \u0648\u0625\u0644\u063a\u0627\u0624\u0647\u0627."
+      },
+      "details": {
+        "en": "Codes appear once and require the saved phone number to verify. Access sessions are short-lived and scoped to the customer or one walk-in appointment. Revocation and phone changes end prior access. No messages are sent automatically.",
+        "ar": "\u064a\u0638\u0647\u0631 \u0627\u0644\u0631\u0645\u0632 \u0645\u0631\u0629 \u0648\u0627\u062d\u062f\u0629 \u0648\u064a\u062a\u0637\u0644\u0628 \u0631\u0642\u0645 \u0627\u0644\u0647\u0627\u062a\u0641 \u0627\u0644\u0645\u062d\u0641\u0648\u0638 \u0644\u0644\u062a\u062d\u0642\u0642. \u062c\u0644\u0633\u0627\u062a \u0627\u0644\u0648\u0635\u0648\u0644 \u0642\u0635\u064a\u0631\u0629 \u0648\u0645\u062d\u062f\u062f\u0629 \u0628\u0646\u0637\u0627\u0642 \u0627\u0644\u0639\u0645\u064a\u0644 \u0623\u0648 \u0645\u0648\u0639\u062f \u0627\u0644\u0632\u0627\u0626\u0631 \u0627\u0644\u0648\u0627\u062d\u062f. \u064a\u0646\u0647\u064a \u0625\u0644\u063a\u0627\u0621 \u0627\u0644\u0631\u0645\u0632 \u0623\u0648 \u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0647\u0627\u062a\u0641 \u0627\u0644\u0648\u0635\u0648\u0644 \u0627\u0644\u0633\u0627\u0628\u0642\u060c \u0648\u0644\u0627 \u062a\u064f\u0631\u0633\u0644 \u0631\u0633\u0627\u0626\u0644 \u062a\u0644\u0642\u0627\u0626\u064a\u0627\u064b."
+      }
+    },
+    "sources": [
+      "ss-web-appt-access-001"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useAppointmentAccess.ts",
+        "contains": "const result=await client.rpc('appointment_access_issue',{p_shop_id:shop,p_appointment_id:id})"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useAppointmentAccess.ts",
+        "contains": "client.rpc('appointment_access_revoke',{p_shop_id:shop,p_appointment_id:id})"
+      }
+    ]
+  },
+  {
+    "id": "shop-appointment-email-reminders",
+    "task": "SS-APPT-EMAIL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Adds explicit owner and per-appointment customer control for private email reminders; delivery remains disabled or test-allowlisted.",
+    "notes": {
+      "title": {
+        "en": "Control appointment email reminders",
+        "ar": "\u0627\u0644\u062a\u062d\u0643\u0645 \u0641\u064a \u062a\u0630\u0643\u064a\u0631\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f \u0628\u0627\u0644\u0628\u0631\u064a\u062f"
+      },
+      "summary": {
+        "en": "Owners can opt in, and eligible customers can request or stop one private reminder per appointment.",
+        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u0627\u0644\u0643 \u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u062e\u064a\u0627\u0631 \u0648\u0644\u0644\u0639\u0645\u064a\u0644 \u0627\u0644\u0645\u0624\u0647\u0644 \u0637\u0644\u0628 \u062a\u0630\u0643\u064a\u0631 \u062e\u0627\u0635 \u0644\u0643\u0644 \u0645\u0648\u0639\u062f \u0623\u0648 \u0625\u064a\u0642\u0627\u0641\u0647."
+      },
+      "details": {
+        "en": "Reminders use the saved customer email, respect the appointment timezone and stop on cancellation or contact changes. Operators can activate the dormant scheduler and test or live delivery through approved configuration; sending defaults disabled.",
+        "ar": "\u062a\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u062a\u0630\u0643\u064a\u0631\u0627\u062a \u0628\u0631\u064a\u062f \u0627\u0644\u0639\u0645\u064a\u0644 \u0627\u0644\u0645\u062d\u0641\u0648\u0638 \u0648\u062a\u0631\u0627\u0639\u064a \u0627\u0644\u0645\u0646\u0637\u0642\u0629 \u0627\u0644\u0632\u0645\u0646\u064a\u0629 \u0644\u0644\u0645\u0648\u0639\u062f \u0648\u062a\u062a\u0648\u0642\u0641 \u0639\u0646\u062f \u0627\u0644\u0625\u0644\u063a\u0627\u0621 \u0623\u0648 \u062a\u063a\u064a\u064a\u0631 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u062a\u0648\u0627\u0635\u0644. \u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u0634\u063a\u0644 \u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u062c\u062f\u0648\u0644\u0629 \u0627\u0644\u062e\u0627\u0645\u0644\u0629 \u0648\u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062a\u062c\u0631\u064a\u0628\u064a \u0623\u0648 \u0627\u0644\u0641\u0639\u0644\u064a \u0639\u0628\u0631 \u0625\u0639\u062f\u0627\u062f \u0645\u0639\u062a\u0645\u062f\u060c \u0648\u064a\u0638\u0644 \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0645\u0639\u0637\u0644\u0627\u064b \u0627\u0641\u062a\u0631\u0627\u0636\u064a\u0627\u064b."
+      }
+    },
+    "sources": [
+      "ss-appt-email-001"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261016180448_appointment_email_reminders.sql",
+        "contains": "create function public.appointment_reminder_preference(p_slug text,p_token text,p_reference uuid,p_enabled boolean,p_locale text)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/functions/_shared/appointment-reminders.mjs",
+        "contains": "if (!['test','live'].includes(mode)) return null"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/usePublicBooking.ts",
+        "contains": "$fetch('/api/website/booking/reminder'"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261016184235_appointment_email_delivery_modes_scheduler.sql",
+        "contains": "create function public.shop_appointment_email_schedule(p_enabled boolean,p_project_ref text)"
+      }
+    ]
+  },
+  {
+    "id": "doctor-synthetic-foundation",
+    "task": "DOS-M1-002",
+    "suits": [
+      "doctor-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      ".github",
+      "AGENTS.md",
+      "apps/doctor-suit",
+      "package.json",
+      "packages/contracts",
+      "packages/design-tokens",
+      "packages/nuxt-layer",
+      "packages/ui",
+      "packages/ux",
+      "pnpm-lock.yaml",
+      "tooling",
+      "docs/work-packages/doctor-suit",
+      "docs/shared/atomic-template-route-inventory.json"
+    ],
+    "reason": "Recognize the new synthetic Doctor scaffold as an internal consumer of the current shared runtime and workspace tooling. Preserve all existing public items and accepted provenance; this does not activate Doctor or establish a production baseline.",
+    "sources": [
+      "dos-m1-002"
+    ]
+  },
+  {
+    "id": "doctor-private-release-consumer",
+    "task": "DOS-M1-002",
+    "suits": [
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/super-admin-suit/supabase/migrations/20261016210711_release_internal_doctor_consumer.sql"
+    ],
+    "reason": "Recognize Doctor only in private synthetic-consumer provenance. Operational registration, public enumeration, baselines, history, privileges, navigation and provider bindings remain unchanged.",
+    "sources": [
+      "dos-m1-002"
+    ]
+  },
+  {
+    "id": "doctor-synthetic-preview-ui",
+    "task": "DOS-M1-005",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/src/templates/BsProductPreviewPage.vue",
+      "packages/ui/package.json",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      ".github/workflows/doctor-disposable.yml",
+      ".github/workflows/ci.yml",
+      "README.md",
+      "AGENTS.md"
+    ],
+    "reason": "Add a data-only complete shared preview contract for synthetic Doctor implementation and document it in the component catalogue; existing operational product pages are unchanged. Doctor remains unavailable for clinical care or production signup.",
+    "sources": [
+      "dos-m1-004",
+      "dos-m1-005"
+    ]
+  },
+  {
+    "task": "DOS-M1-004",
+    "paths": [
+      "packages/ux/src/composables/useFloatingMenu.ts",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/tests/floating-menu.test.mjs",
+      "packages/testing/playwright.settings-focus.config.ts",
+      "packages/testing/e2e/settings-menu-focus.spec.ts"
+    ],
+    "id": "dos-m1-004-settings-focus",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "reason": "Fix the existing shared settings menu keyboard and focus behavior in the already registered Shop product.",
+    "notes": {
+      "title": {
+        "en": "Use settings from the keyboard",
+        "ar": "\u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0628\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d"
+      },
+      "summary": {
+        "en": "Move between language and theme choices and return focus when closing settings.",
+        "ar": "\u062a\u0646\u0642\u0651\u0644 \u0628\u064a\u0646 \u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u0644\u063a\u0629 \u0648\u0627\u0644\u0645\u0638\u0647\u0631 \u0648\u0623\u0639\u062f \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0646\u062f \u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a."
+      },
+      "details": {
+        "en": "Opening settings focuses the first choice. Arrow keys, Home and End navigate the menu; Escape or choosing a language returns focus to the settings control. The control waits for client handlers before accepting the first activation.",
+        "ar": "\u064a\u0636\u0639 \u0641\u062a\u062d \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0644\u0649 \u0627\u0644\u062e\u064a\u0627\u0631 \u0627\u0644\u0623\u0648\u0644. \u062a\u062a\u0646\u0642\u0644 \u0645\u0641\u0627\u062a\u064a\u062d \u0627\u0644\u0623\u0633\u0647\u0645 \u0648Home \u0648End \u062f\u0627\u062e\u0644 \u0627\u0644\u0642\u0627\u0626\u0645\u0629\u060c \u0648\u064a\u0639\u064a\u062f Escape \u0623\u0648 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0644\u063a\u0629 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0625\u0644\u0649 \u0632\u0631 \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a. \u064a\u0646\u062a\u0638\u0631 \u0627\u0644\u0632\u0631 \u062c\u0627\u0647\u0632\u064a\u0629 \u0645\u0639\u0627\u0644\u062c\u0627\u062a\u0647 \u0642\u0628\u0644 \u0642\u0628\u0648\u0644 \u0623\u0648\u0644 \u062a\u0646\u0634\u064a\u0637."
+      }
+    },
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": "@keydown=\"onKeydown\""
+      },
+      {
+        "path": "packages/ux/src/composables/useFloatingMenu.ts",
+        "contains": "closeMenu: menu.close, onKeydown"
+      },
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": ":disabled=\"!hydrated\""
+      }
+    ],
+    "sources": [
+      "dos-m1-004-settings-focus",
+      "dos-m1-008-settings-hydration"
+    ]
+  },
+  {
+    "task": "DOS-M1-004",
+    "paths": [
+      "packages/ux/src/composables/useFloatingMenu.ts",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/tests/floating-menu.test.mjs",
+      "packages/testing/playwright.settings-focus.config.ts",
+      "packages/testing/e2e/settings-menu-focus.spec.ts"
+    ],
+    "id": "dos-m1-004-settings-support",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "reason": "Track the same shared settings interaction fix for internal consumers without activating operational products or inventing production baselines.",
+    "sources": [
+      "dos-m1-004-settings-support"
+    ]
+  },
+  {
+    "id": "doctor-session-lifecycle",
+    "task": "DOS-M1-006",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/src/templates/BsAccountSessionPage.vue",
+      "packages/ui/src/templates/BsSignInPage.vue",
+      "packages/ui/src/templates/BsSignupPage.vue",
+      "packages/ui/src/templates/BsEmailVerificationPage.vue",
+      "packages/ui/src/templates/BsPasswordRecoveryPage.vue",
+      "packages/ui/package.json",
+      "packages/testing/playwright.auth-parity.config.ts",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/shared/realtime-adoption.json",
+      "docs/shared/realtime-adoption.md",
+      "docs/work-packages/doctor-suit/authentication-evidence.md",
+      ".github/workflows/doctor-disposable.yml",
+      "pnpm-lock.yaml",
+      "packages/ui/src/molecules/BsStateSurface.vue"
+    ],
+    "reason": "Implement synthetic Doctor account lifecycle with own provider gates, independently checked current sessions, product/environment cookies and same-origin PKCE callbacks. Shared auth templates add opt-in availability presentation; existing consumers retain default rendering. No operational registration, hosted provider changes or clinical verification is asserted.",
+    "sources": [
+      "dos-m1-006"
+    ]
+  },
+  {
+    "id": "doctor-owner-setup",
+    "task": "DOS-M1-007",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/package.json",
+      "packages/ui/src/organisms/BsSignupEnrollment.vue",
+      "packages/ui/src/templates/BsSignupPage.vue",
+      "packages/ui/src/templates/BsAccountSessionPage.vue",
+      "packages/ui/src/templates/BsPracticeOverviewPage.vue",
+      "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "packages/ui/src/types/signupPresentation.ts",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/shared/realtime-adoption.json",
+      "docs/shared/realtime-adoption.md",
+      "docs/work-packages/doctor-suit/onboarding-evidence.md",
+      "pnpm-lock.yaml"
+    ],
+    "reason": "Add synthetic owner-only practice setup and a complete shared overview, resumable database drafts, idempotent creation/profile commands, current-session cleanup and an explicit initial-location context. Shared signup and shell additions are opt-in; existing consumers keep their default fields and rendering. No operational release, clinical authority or hosted deployment is activated.",
+    "sources": [
+      "dos-m1-007"
+    ]
+  },
+  {
+    "id": "doctor-working-locations",
+    "task": "DOS-M1-008",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/package.json",
+      "packages/ui/src/templates/BsLocationManagementPage.vue",
+      "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "packages/ux/src/composables/useRecordAction.ts",
+      "packages/ux/src/index.ts",
+      "packages/ux/tests/export.test.mjs",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/shared/realtime-adoption.json",
+      "docs/shared/realtime-adoption.md",
+      "docs/work-packages/doctor-suit/locations-evidence.md",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/testing/e2e/settings-menu-focus.spec.ts"
+    ],
+    "reason": "Add synthetic doctor-owned working-location CRUD, retained archive rows, scoped secretary projections and explicit context selection with stale-read/draft/dialog invalidation. The shared location template and shell controls are opt-in. Shared record actions gain an explicit reset operation; existing consumers retain their default behavior. Doctor remains an internal preview without clinical authority or operational registration. Patient/appointment integration acceptance remains deferred to its real schema features. Internal consumers also retain provenance for the shared pre-hydration settings guard; its visible Shop behavior is separately classified as a public patch.",
+    "sources": [
+      "dos-m1-008"
+    ]
+  },
+  {
+    "id": "doctor-secretary-memberships",
+    "task": "DOS-M1-009",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/src/organisms/BsAccessIdentityEditor.vue",
+      "packages/ui/src/templates/BsAccessManagementPage.vue",
+      "packages/ui/src/templates/BsInvitationAcceptancePage.vue",
+      "packages/ui/src/types/accessPresentation.ts",
+      "packages/ux/src/composables/usePageRevalidation.ts",
+      "packages/ux/src/index.ts",
+      "packages/ux/tests/page-revalidation.test.mjs",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/shared/realtime-adoption.json",
+      "docs/shared/realtime-adoption.md",
+      "docs/work-packages/doctor-suit/delegation-evidence.md",
+      "packages/testing/playwright.auth-parity.config.ts",
+      ".github/workflows/doctor-disposable.yml"
+    ],
+    "reason": "Add synthetic recipient-and-secret-bound secretary invitations, independently scoped multi-doctor memberships, expiry/idempotency/concurrency checks and explicit status commands. Raw secrets stay outside persisted receipts and URLs. Shared template/refresh additions are opt-in; no operational registration, email delivery or clinical authority is activated.",
+    "sources": [
+      "dos-m1-009"
+    ]
+  },
+  {
+    "id": "doctor-administrative-grants",
+    "task": "DOS-M1-010",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/src/organisms/BsAccessIdentityEditor.vue",
+      "packages/ui/src/templates/BsAccessManagementPage.vue",
+      "packages/ui/src/templates/BsInvitationAcceptancePage.vue",
+      "packages/ui/src/types/accessPresentation.ts",
+      "packages/ux/src/composables/usePageRevalidation.ts",
+      "packages/ux/src/index.ts",
+      "packages/ux/tests/page-revalidation.test.mjs",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/shared/realtime-adoption.json",
+      "docs/shared/realtime-adoption.md",
+      "docs/work-packages/doctor-suit/delegation-evidence.md",
+      "packages/testing/playwright.auth-parity.config.ts",
+      ".github/workflows/doctor-disposable.yml"
+    ],
+    "reason": "Enforce approved administrative capability sets independently per location, owner-only optimistic grant replacement, exact before/after audit scope, and foreground cleanup after permission loss. Clinical/ownership delegation is rejected. Shared permission presentation is opt-in and existing consumers retain their defaults; attachment/patient integration remains deferred to its real feature paths.",
+    "sources": [
+      "dos-m1-010"
+    ]
+  },
+  {
+    "id": "doctor-patient-administration",
+    "task": "DOS-M1-011",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/package.json",
+      "packages/ui/src/templates/BsPatientDirectoryPage.vue",
+      "packages/ui/src/organisms/BsPatientIdentityFields.vue",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/doctor-suit/patients-evidence.md"
+    ],
+    "reason": "Add the synthetic Doctor patient directory with scoped server search/pagination, separate opaque identities and practice relationships, entered-unverified recorded fields, explicit duplicate review, retry-safe optimistic corrections and preserved archive history. New shared presentation is additive; existing public consumers retain their behavior. No patient Auth account, cross-practice merge or clinical/identity claim is introduced.",
+    "sources": [
+      "dos-m1-011"
+    ]
+  },
+  {
+    "id": "doctor-private-documents",
+    "task": "DOS-M1-012",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      ".github/workflows/doctor-disposable.yml",
+      "docs/work-packages/doctor-suit/documents-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md"
+    ],
+    "reason": "Add synthetic private administrative attachment metadata/version history and a request-scoped authenticated byte-validation/delivery endpoint. Keep direct/public Storage access denied and all files uploaded-unreviewed; real-provider CI is separate from SQL scaffolds. The shared patient profile uses this endpoint; actual-provider acceptance is tracked separately from PostgreSQL scaffolds. No clinical interpretation, verified patient identity, hosted deployment or provider activation is claimed.",
+    "sources": [
+      "dos-m1-012"
+    ]
+  },
+  {
+    "id": "doctor-patient-profile",
+    "task": "DOS-M1-012",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/package.json",
+      "packages/ui/src/templates/BsPatientProfilePage.vue",
+      "packages/ux/src/composables/useBlobUrl.ts",
+      "packages/ux/src/index.ts",
+      "packages/ux/tests/blob-url.test.mjs",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/doctor-suit/documents-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md"
+    ],
+    "reason": "Add the synthetic administrative patient profile, entered-unverified recorded fields and attributed history, plus private uploaded-unreviewed attachments with explicit upload/replacement/archive dialogs, immutable version history and current-authority delivery. Shared preview URLs are scoped and revoked on replacement, context loss or disposal. All presentation remains in packages/ui; apps own authorization, metadata, file transport and props. No public object link, clinical finding, identity verification or interpretation is introduced.",
+    "sources": [
+      "dos-m1-012-ui"
+    ]
+  },
+  {
+    "id": "doctor-working-hours-availability",
+    "task": "DOS-M1-013",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/package.json",
+      "packages/ui/src/templates/BsAvailabilityPage.vue",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/doctor-suit/availability-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md"
+    ],
+    "reason": "Add synthetic doctor/clinic working hours, dated closures/special openings and bounded slot duration, with one authoritative timezone-aware availability/booking rule. Actual doctor-wide exclusion and current capability/session checks prevent cross-clinic overlap; rule edits retain existing appointment times and history. New shared presentation is additive and all app logic remains product-owned. Conflict overrides are denied; clinical workflows and external notifications remain gated.",
+    "sources": [
+      "dos-m1-013"
+    ]
+  },
+  {
+    "id": "doctor-appointments-and-scoped-queue",
+    "task": "DOS-M1-014",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/package.json",
+      "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/doctor-suit/appointments-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md",
+      "pnpm-lock.yaml"
+    ],
+    "reason": "Add synthetic appointment booking, attributed retry-safe rescheduling/cancellation, explicit administrative state transitions and an authorized clinic queue. One doctor has at most one in-progress administrative visit across clinics. Shared UI owns the complete calendar, queue and controlled dialogs; app logic retains exact permissions, patient lookup, CAS/idempotency and scope. Minimal revision-only Realtime invalidations trigger authoritative refresh after join/reconnect. Private state and obsolete requests clear on context, session or grant loss. Appointment history and original clinic/timezone references survive rule/location edits and archive. External notifications and clinical authority remain disabled.",
+    "sources": [
+      "dos-m1-014"
+    ]
+  },
+  {
+    "id": "dos-m1-014-realtime-ready",
+    "task": "DOS-M1-014",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "docs/work-packages/doctor-suit/appointments-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md",
+      "packages/data-access/package.json",
+      "packages/data-access/src/postgresReadiness.ts",
+      "packages/data-access/tests/postgres-readiness.test.mjs",
+      "docs/shared/realtime.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Configure the synthetic Doctor queue client adapter with the pinned SDK Postgres subscription activation barrier before reporting a live channel and refetching. The shared Foundation and existing consumers remain unchanged. Real first booking delivery remains required.",
+    "sources": [
+      "dos-m1-014-realtime-ready"
+    ]
+  },
+  {
+    "id": "dos-m1-014-queue-actions",
+    "task": "DOS-M1-014",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/data-access/src/postgresReadiness.ts",
+      "packages/data-access/tests/postgres-readiness.test.mjs",
+      "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
+      "apps/doctor-suit/tests/e2e/dos-m1-014.auth.fixture.ts",
+      "docs/work-packages/doctor-suit/appointments-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Keep duplicate subscription acknowledgements idempotent after Postgres activation, with no false readiness timeout. Expose explicitly authorized queue actions through the shared table schema so active entries remain actionable when the selected calendar day excludes them. App-supplied capabilities and server authorization remain unchanged; synthetic administrative use only.",
+    "sources": [
+      "dos-m1-014-queue-actions"
+    ]
+  },
+  {
+    "id": "dos-m1-015",
+    "task": "DOS-M1-015",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit/app",
+      "apps/doctor-suit/tests",
+      "apps/doctor-suit/supabase/tests/dos-m1-015.sql",
+      "packages/ui/src/templates/BsPracticeOverviewPage.vue",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/work-packages/doctor-suit/dashboard-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md",
+      "release-changes/items.json",
+      "packages/ui/src/templates/BsPracticeAppointmentsPage.vue"
+    ],
+    "reason": "Add a synthetic administrative Today overview across every authorized clinic. Per-clinic local-day appointment totals and all-date active queues come from full scoped SQL populations, with independent bounded source pages. Current verified dashboard/appointment grants, patient-name redaction, exact source context and immutable history protect links. All-or-none generations/abort and authority revalidation clear obsolete multi-clinic reads. Shared presentation owns complete optional overview tables; app adapters own all queries, windows, permissions and commands. No financial/clinical metrics or provider delivery is enabled. Current appointment details are resolved only from a fresh authorized source page; complete historical data loads separately and retains every-clinic permission checks.",
+    "sources": [
+      "dos-m1-015"
+    ]
+  },
+  {
+    "id": "dos-m1-016",
+    "task": "DOS-M1-016",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit/app",
+      "apps/doctor-suit/tests",
+      "apps/doctor-suit/supabase/migrations/20261017061323_doctor_account_settings.sql",
+      "apps/doctor-suit/supabase/tests/dos-m1-016.sql",
+      "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+      "packages/ui/src/templates/BsAccountSessionPage.vue",
+      "apps/building-suit-docs/app/pages/components.vue",
+      ".github/workflows/doctor-disposable.yml",
+      "docs/work-packages/doctor-suit/account-settings-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Add synthetic personal account settings independent of professional profiles and membership authority. Sensitive unverified contact changes require a recent actual provider sign-in; active UID/SID checks, account-local serialization, CAS, session-bound idempotency and attributed private audit protect writes. In-app account confirmations default off, with no marketing or external delivery. Shared optional controlled dialog preserves existing consumers. Add owned real-provider browser recovery/PKCE and reauthentication acceptance without credential artifacts; hosted connections remain user-managed.",
+    "sources": [
+      "dos-m1-016"
+    ]
+  },
+  {
+    "id": "dos-m1-017",
+    "task": "DOS-M1-017",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit/app",
+      "apps/doctor-suit/tests",
+      "apps/doctor-suit/supabase/migrations/20261017062525_doctor_administrative_audit.sql",
+      "apps/doctor-suit/supabase/tests/dos-m1-017.sql",
+      "apps/doctor-suit/supabase/tests/dos-m1-010.sql",
+      "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+      "packages/ui/src/templates/BsAuditHistoryPage.vue",
+      "packages/ui/src/templates/BsAuthLayout.vue",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/doctor-suit/audit-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Add synthetic read-only administrative and own-account audit views with explicit audit.read and independent domain/clinic grants. Safe five-field projections omit names, contacts, credentials, paths and free-text payloads; linked archival history is preserved, IDs serialize losslessly, and client audit mutations stay denied. Shared optional search/paging/summary presentation and bounded auth-shell sizing preserve existing consumers. No bulk export, erasure, retention, clinical or provider approval is invented.",
+    "sources": [
+      "dos-m1-017"
+    ]
+  },
+  {
+    "id": "dos-m1-018",
+    "task": "DOS-M1-018",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit/tests/unit/dos-m1-018.test.mjs",
+      "apps/doctor-suit/tests/e2e/dos-m1-018.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/dos-m1-018.spec.ts",
+      "docs/work-packages/doctor-suit/usability-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Verify synthetic administrative critical journeys across both locales, both themes and mobile/desktop. Keyboard dirty protection, safe focus return, semantic labels, reduced-motion rendering, uncertain-result retries, pending duplicate exclusion, source navigation and independent secretary scopes are covered end-to-end. Cross-layer interaction/product tests distinguish unconfirmed outcomes from accepted saves. No runtime policy, clinical authority, provider activation or offline clinical write is introduced.",
+    "sources": [
+      "dos-m1-018"
+    ]
+  },
+  {
+    "id": "dos-m1-019",
+    "task": "DOS-M1-019",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit/app",
+      "apps/doctor-suit/tests/unit/dos-m1-019.test.mjs",
+      "apps/doctor-suit/tests/e2e/dos-m1-019.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/dos-m1-019.spec.ts",
+      "packages/ui/src/templates/BsRouteStatusPage.vue",
+      "packages/ui/package.json",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/doctor-suit/preview-handoff.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md",
+      "docs/work-packages/doctor-suit/implementation-history.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Complete synthetic preview metadata and a neutral shared HTTP404 handoff. Approved public copy/locale metadata is separate from private/auth routes, which remove sharing descriptions and callback/user material. No production canonical/domain, external support/store/pricing or release activation is invented. Preserve prior tracker observations as explicit history and reconcile current task/provider status for the final M1 packet.",
+    "sources": [
+      "dos-m1-019"
+    ]
+  }
+]

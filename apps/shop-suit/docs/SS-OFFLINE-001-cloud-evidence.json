@@ -1,0 +1,38 @@
+{
+  "mode": "cloud Chromium network emulation",
+  "physicalDeviceEvidence": false,
+  "authenticated": true,
+  "queuedState": "unsynced",
+  "finalState": "synced",
+  "stableRequestIds": true,
+  "lostResponseReplayed": true,
+  "rejectionReconciled": true,
+  "offlineCashMovementAndClose": true,
+  "drawer": {
+    "status": "closed",
+    "expected": 125,
+    "counted": 125,
+    "variance": 0
+  },
+  "effects": {
+    "invoices": 1,
+    "payments": 1,
+    "stockEffects": 1,
+    "drawerEffects": 1
+  },
+  "businessCurrency": "USD",
+  "queueCurrencyDisplayVerified": true,
+  "settingsStagingCommit": "2005a0a9431680c987d25a8cec1766fa231a2920",
+  "combinedSettingsQualification": {
+    "currencyChangeDuringPendingSale": "rejected by existing shift currency lock",
+    "documentSettings": "captured at server issuance; immutable after later change and duplicate replay",
+    "fractionalAmount": "20.29 preserved in invoice and payment",
+    "sqlSuites": 7,
+    "unitTests": {
+      "total": 1478,
+      "passed": 1455,
+      "skipped": 23,
+      "failed": 0
+    }
+  }
+}

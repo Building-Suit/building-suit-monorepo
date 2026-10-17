@@ -1,0 +1,75 @@
+{
+  "source_thread_id": "01a0f297-ab87-77d0-9c51-15b3b6d300fa",
+  "repository_base": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+  "verified_at": "2026-10-16",
+  "library_files": [
+    {
+      "name": "doctor-suit-m1-control-preflight-v0.3.READONLY.sql",
+      "bytes": 12810,
+      "sha256": "8ee818cfcc56a1b593215d4b38b699437a5eadfa81f2e6cf950bdb3f04943cca",
+      "library_file_id": "libfile_3f4003154ce08191a2b43388d8f75f88",
+      "version": "0"
+    },
+    {
+      "name": "doctor-suit-m1-safe-fix-v0.3.zip",
+      "bytes": 5272,
+      "sha256": "d93cef10ac13584da16b2b08ba8e855e23b74458c6568cbc80016ecae06cfe25",
+      "library_file_id": "libfile_335dc84d16d08191a58c7e93f49f31ec",
+      "version": "0"
+    },
+    {
+      "name": "doctor-suit-m1-tasks-v0.2.DRAFT.sql",
+      "bytes": 246005,
+      "sha256": "f9387e4092bdef18582020bac84e14abbd4be1bd54b80acb5719960de7dc0e89",
+      "library_file_id": "libfile_a9295dd95440819192ed143b9eddc9a9",
+      "version": "0"
+    },
+    {
+      "name": "doctor-suit-roadmap-v0.2.md",
+      "bytes": 23837,
+      "sha256": "b54ede679eb0ac0f5e66041c3cbb1ea3646c3071b4ac05b5914234653116621b",
+      "library_file_id": "libfile_984d4e8f881081919d430dc72f67cfaf",
+      "version": "0"
+    },
+    {
+      "name": "doctor-suit-website-milestone-v0.2.zip",
+      "bytes": 100677,
+      "sha256": "0712efc80cc44306dc053a72b6a7539ef8219d4391ac6def603f7d2bca5b18df",
+      "library_file_id": "libfile_eb0b9879514c8191a93d4d76350576f6",
+      "version": "0"
+    }
+  ],
+  "preserved_files": [
+    {
+      "path": "doctor-suit-planning-v0.2.json",
+      "bytes": 305292,
+      "sha256": "796387af846dbae5684af475a231b9e37b758e2ca6214e86e20ee31a1e57b161"
+    },
+    {
+      "path": "doctor-suit-m1-tasks-v0.2.DRAFT.sql",
+      "bytes": 246005,
+      "sha256": "f9387e4092bdef18582020bac84e14abbd4be1bd54b80acb5719960de7dc0e89"
+    },
+    {
+      "path": "README-DOCTOR-SUIT-M1-FIX-v0.3.md",
+      "bytes": 2858,
+      "sha256": "a3ead2f395f178f81e8da3933fcec232845112d74e5788726a3a12ff2de303bd"
+    },
+    {
+      "path": "doctor-suit-m1-control-preflight-v0.3.READONLY.sql",
+      "bytes": 12810,
+      "sha256": "8ee818cfcc56a1b593215d4b38b699437a5eadfa81f2e6cf950bdb3f04943cca"
+    },
+    {
+      "path": "doctor-suit-roadmap-v0.2.md",
+      "bytes": 23837,
+      "sha256": "b54ede679eb0ac0f5e66041c3cbb1ea3646c3071b4ac05b5914234653116621b"
+    }
+  ],
+  "archive_checks": {
+    "website_sha256sums_all_12_pass": true,
+    "standalone_roadmap_matches_archive": true,
+    "standalone_draft_matches_archive": true,
+    "standalone_preflight_matches_safe_fix": true
+  }
+}

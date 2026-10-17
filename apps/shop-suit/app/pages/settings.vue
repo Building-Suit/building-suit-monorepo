@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy } from '@building-suit/ui/types/businessSettingsPresentation'
+import { readRasterImage } from '@building-suit/ux'
+import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy, BsBusinessCurrencyView } from '@building-suit/ui/types/businessSettingsPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { PlanUsageResource } from '~/types/plans'
 import type { ReceiptPaperSize } from '~/types/receipt'
@@ -12,7 +13,7 @@ definePageMeta({ layout: 'default', middleware: ['auth'] })
 const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const confirmation = useConfirmation()
 const { locale } = useI18n()
-const { current, currentId, locations, loading, loadError: shopError, reload, loadLocations } = useShop()
+const { current, currentId, locations, loading, loadError: shopError, reload, loadLocations, refreshBusinessCurrency } = useShop()
 const { success } = useToasts()
 const ui = useUiCopy()
 const profileForm = reactive({ displayName: '' })
@@ -28,8 +29,56 @@ const locationError = ref('')
 const editingLocationId = ref<string | null>(null)
 const locationForm = reactive({ name: '', code: '', address: '', phone: '' })
 const { visible: locationDialogOpen, dirty: locationDirty } = useRecordAction(() => locationForm)
-const receiptForm = reactive({ displayName: '', address: '', phone: '', footer: '', paperSize: 'thermal_80' as ReceiptPaperSize })
+const receiptForm = reactive({ displayName: '', address: '', phone: '', footer: '', paperSize: 'thermal_80' as ReceiptPaperSize, documentLabel: '', referenceLabel: '', documentLanguage: 'ar', documentDirection: 'auto', showDescriptions: true, notes: '', logoDataUrl: '' })
+type BusinessCurrencySettings = { currency: string; locked: boolean; supportedCurrencies: string[] }
+const currencySelection = ref<string | null>(null)
+const currencyPending = ref(false)
+const currencyError = ref('')
+const currencySuccess = ref('')
+const { data: currencySettings, pending: currencyLoading, error: currencyLoadError, refresh: refreshCurrencySettings } = useAsyncData(
+  () => `shop-data:business-currency:${currentId.value ?? 'none'}`,
+  async (): Promise<BusinessCurrencySettings | null> => {
+    if (!currentId.value) return null
+    const { data, error } = await shopRpc.rpc('business_currency_settings', { p_shop_id: currentId.value })
+    if (error) throw error
+    return data as BusinessCurrencySettings
+  }, { watch: [currentId], default: () => null },
+)
+const selectedBusinessCurrency = computed<string>({
+  get: () => currencySettings.value?.locked ? currencySettings.value.currency : currencySelection.value ?? currencySettings.value?.currency ?? current.value?.business_currency ?? 'EGP',
+  set: value => { currencySelection.value = value },
+})
+watch(currentId, () => { currencySelection.value = null; currencyError.value = ''; currencySuccess.value = '' })
+const currencyView = computed<BsBusinessCurrencyView>(() => ({
+  code: currencySettings.value?.currency ?? 'EGP', locked: currencySettings.value?.locked ?? true,
+  loading: currencyLoading.value, loadError: Boolean(currencyLoadError.value), pending: currencyPending.value, error: currencyError.value, success: currencySuccess.value,
+  title: isArabic.value ? 'عملة النشاط' : 'Business currency',
+  help: isArabic.value ? 'تتغير العملة قبل أول مستند مالي فقط. أسعار الكتالوج والمسودات تحتفظ بنفس الأرقام بدون تحويل. رسوم الاشتراك منفصلة وتظل بالجنيه المصري.' : 'Change currency before the first monetary document only. Catalog and draft prices keep their numeric values with no conversion. Subscription fees are separate and remain in EGP.',
+  lockedHelp: isArabic.value ? 'العملة ثابتة بعد وجود سجل مالي، بما فيه المبيعات والمشتريات والمصروفات والمدفوعات ورصيد المخزون ووردية الخزنة.' : 'Currency is fixed once financial history exists, including sales, purchases, expenses, payments, opening stock or a cashier shift.',
+  failed: isArabic.value ? 'مقدرناش نحمّل أو نحفظ العملة.' : 'Could not load or save business currency.', retry: isArabic.value ? 'حاول تاني' : 'Retry', save: isArabic.value ? 'حفظ العملة' : 'Save currency',
+  options: [...new Set([...(currencySettings.value?.supportedCurrencies ?? []), currencySettings.value?.currency ?? 'EGP'])].map(value => ({ value, label: value })),
+}))
+async function saveBusinessCurrency() {
+  const shopId = currentId.value
+  const code = selectedBusinessCurrency.value
+  if (!shopId || !canManage.value || currencyPending.value || !currencySettings.value || currencySettings.value.locked || code === currencySettings.value.currency) return
+  const accepted = await confirmation.ask(isArabic.value ? `تغيير عملة النشاط إلى ${code}؟ أسعار الكتالوج والمسودات تحتفظ بنفس الأرقام بدون تحويل العملة.` : `Change business currency to ${code}? Catalog and draft amounts keep their numeric values; no currency conversion occurs.`)
+  if (!accepted || currentId.value !== shopId || !canManage.value) return
+  currencyPending.value = true; currencyError.value = ''; currencySuccess.value = ''
+  try {
+    const { error } = await shopRpc.rpc('save_business_currency', { p_shop_id: shopId, p_currency: code })
+    if (error) throw error
+    await refreshBusinessCurrency(shopId)
+    await refreshCurrencySettings()
+    currencySelection.value = null
+    if (currentId.value === shopId) currencySuccess.value = isArabic.value ? 'اتحفظت عملة النشاط.' : 'Business currency saved.'
+  } catch {
+    await refreshCurrencySettings()
+    if (currentId.value === shopId) currencyError.value = currencyView.value.locked ? currencyView.value.lockedHelp : currencyView.value.failed
+  } finally { currencyPending.value = false }
+}
 const receiptPending = ref(false)
+const logoPending = ref(false)
 const receiptError = ref('')
 const receiptSuccess = ref('')
 const isArabic = computed(() => locale.value === 'ar')
@@ -42,6 +91,11 @@ const { data: permissionAccess, pending: permissionPending, error: permissionErr
   return data
 }, { watch: [currentId], default: () => ({ 'settings.manage': false }) })
 const canManage = computed(() => !permissionPending.value && !permissionError.value && permissionAccess.value?.['settings.manage'] === true)
+const {form:bookingPolicyForm,open:bookingPolicyOpen,view:bookingPolicyView,edit:editBookingPolicy,save:saveBookingPolicy,refresh:refreshBookingPolicy}=useBookingPolicy(canManage)
+const { form: websiteProfileForm, optIn: websiteOwnerOptIn, open: websiteProfileOpen, view: websiteProfileView, edit: editWebsiteProfile, save: saveWebsiteProfile, logo: selectWebsiteLogo, publish: publishWebsiteProfile, unpublish: unpublishWebsiteProfile, refresh: refreshWebsiteProfile } = useWebsiteProfile(canManage)
+const { view: websiteInquiryView, filter: websiteInquiryFilter, status: websiteInquiryStatus, open: websiteInquiryOpen, edit: editWebsiteInquiry, save: saveWebsiteInquiry, refresh: refreshWebsiteInquiries, setPage: setWebsiteInquiryPage } = useWebsiteInquiries(canManage)
+const { form: websiteCatalogForm, open: websiteCatalogOpen, search: websiteCatalogSearch, view: websiteCatalogView, edit: editWebsiteCatalog, save: saveWebsiteCatalog, publish: publishWebsiteCatalog, image: selectWebsiteCatalogImage, refresh: refreshWebsiteCatalog, setPage: setWebsiteCatalogPage } = useWebsiteCatalog(canManage, refreshWebsiteProfile)
+const { slug: websiteSlug, open: websiteOpen, view: websiteAddressView, edit: editWebsiteAddress, save: saveWebsiteAddress, refresh: refreshWebsiteAddress } = useWebsiteAddress(canManage)
 async function retrySettings() { await Promise.all([reload(), refreshPermissions()]) }
 const { data: locationUsage, refresh: refreshLocationUsage } = useAsyncData(
   () => `shop-data:settings-location-usage:${currentId.value ?? 'none'}`,
@@ -54,7 +108,7 @@ const { data: locationUsage, refresh: refreshLocationUsage } = useAsyncData(
   }, { watch: [currentId], default: () => null },
 )
 const locationCapacityFull = computed(() => locationUsage.value?.atLimit === true)
-type ReceiptSettings = { displayName: string; address: string | null; phone: string | null; footer: string | null; paperSize: ReceiptPaperSize; canManage: boolean }
+type ReceiptSettings = { documentLabel?: string | null; referenceLabel?: string | null; documentLanguage?: string; documentDirection?: string; showDescriptions?: boolean; notes?: string | null; logoDataUrl?: string | null; displayName: string; address: string | null; phone: string | null; footer: string | null; paperSize: ReceiptPaperSize; canManage: boolean }
 const { data: receiptSettings, pending: receiptLoading, error: receiptLoadError, refresh: refreshReceiptSettings } = useAsyncData(
   () => `shop-data:receipt-settings:${currentId.value ?? 'none'}`,
   async (): Promise<ReceiptSettings | null> => {
@@ -174,6 +228,11 @@ watch(selectedMode, () => {
   successMessage.value = ''
 })
 
+watch(currentId, () => {
+  Object.assign(receiptForm, { displayName: '', address: '', phone: '', footer: '', paperSize: 'thermal_80', documentLabel: '', referenceLabel: '', documentLanguage: 'ar', documentDirection: 'auto', showDescriptions: true, notes: '', logoDataUrl: '' })
+  receiptError.value = ''; receiptSuccess.value = ''
+})
+
 watch(receiptSettings, (settings) => {
   if (!settings) return
   Object.assign(receiptForm, {
@@ -182,6 +241,7 @@ watch(receiptSettings, (settings) => {
     phone: settings.phone ?? '',
     footer: settings.footer ?? '',
     paperSize: settings.paperSize,
+    documentLabel: settings.documentLabel ?? '', referenceLabel: settings.referenceLabel ?? '', documentLanguage: settings.documentLanguage ?? 'ar', documentDirection: settings.documentDirection ?? 'auto', showDescriptions: settings.showDescriptions ?? true, notes: settings.notes ?? '', logoDataUrl: settings.logoDataUrl ?? '',
   })
   receiptError.value = ''
   receiptSuccess.value = ''
@@ -319,19 +379,12 @@ async function restoreLocation(locationId: string) {
 }
 
 async function saveReceiptSettings() {
-  if (!currentId.value || !canManage.value || receiptPending.value || receiptForm.displayName.trim().length < 2) return
+  if (!currentId.value || !canManage.value || receiptPending.value || logoPending.value || receiptForm.displayName.trim().length < 2) return
   receiptPending.value = true
   receiptError.value = ''
   receiptSuccess.value = ''
   try {
-    const { error } = await shopRpc.rpc('save_receipt_settings', {
-      p_shop_id: currentId.value,
-      p_display_name: receiptForm.displayName.trim(),
-      p_address: receiptForm.address.trim() || null,
-      p_phone: receiptForm.phone.trim() || null,
-      p_footer: receiptForm.footer.trim() || null,
-      p_paper_size: receiptForm.paperSize,
-    })
+    const { error } = await shopRpc.rpc('save_document_settings', { p_shop_id: currentId.value, p_settings: { ...receiptForm } })
     if (error) throw error
     await refreshReceiptSettings()
     receiptSuccess.value = copy.value.receiptSaved
@@ -354,6 +407,16 @@ const { visible: receiptActionOpen, dirty: receiptActionDirty } = receiptAction
 const settingsCopy = computed<BsBusinessSettingsCopy>(() => ({ ...copy.value,
   editProfile: isArabic.value ? 'تعديل ملف المتجر' : 'Edit shop profile',
   editMode: isArabic.value ? 'تغيير طريقة التشغيل' : 'Change business mode',
+  documentLabel: isArabic.value ? 'عنوان المستند' : 'Document label',
+  referenceLabel: isArabic.value ? 'عنوان رقم المستند' : 'Document number label',
+  documentLanguage: isArabic.value ? 'لغة المستند الافتراضية' : 'Default document language',
+  documentDirection: isArabic.value ? 'اتجاه المستند' : 'Document direction',
+  autoDirection: isArabic.value ? 'حسب اللغة' : 'Follow language',
+  showDescriptions: isArabic.value ? 'إظهار وصف البنود' : 'Show line descriptions',
+  documentNotes: isArabic.value ? 'ملاحظات المستند' : 'Document notes',
+  documentLogo: isArabic.value ? 'شعار النشاط' : 'Business logo',
+  logoHelp: isArabic.value ? 'PNG أو JPEG حتى 128 كيلوبايت. تُحفظ الصورة داخل المستند عند الإصدار.' : 'PNG or JPEG, up to 128 KiB. Image bytes are captured inside the issued document.',
+  removeLogo: isArabic.value ? 'إزالة الشعار' : 'Remove logo',
   editReceipt: isArabic.value ? 'تعديل إعدادات الإيصال' : 'Edit receipt settings',
   loading: ui('loading'), retry: ui('retry'), empty: isArabic.value ? 'افتح لوحة التحكم لاختيار متجر أو إعداد متجرك.' : 'Open Dashboard to choose or set up your Shop.',
   failed: isArabic.value ? 'مقدرناش نحمّل إعدادات النشاط. حاول تاني.' : 'Could not load business settings. Try again.',
@@ -365,7 +428,7 @@ const settingsCopy = computed<BsBusinessSettingsCopy>(() => ({ ...copy.value,
 const cashView = computed<BsBusinessCashPolicyView>(() => ({ loading: cashLoading.value, loadError: Boolean(cashLoadError.value), pending: cashPending.value, error: cashError.value, success: cashSuccess.value, disabled: !canManage.value || cashPolicy.value === null, submitDisabled: cashPolicy.value === null || cashRequired.value === cashPolicy.value }))
 const profileEditor = computed(() => ({ pending: profilePending.value, error: profileError.value, success: profileSuccess.value, dirty: profileActionDirty.value, submitDisabled: !canManage.value || profileForm.displayName.trim().length < 2 || profileForm.displayName.trim() === current.value?.name }))
 const modeEditor = computed(() => ({ pending: pending.value, error: errorMessage.value, success: successMessage.value, dirty: modeActionDirty.value, submitDisabled: !canManage.value || !current.value || selectedMode.value === current.value.business_mode }))
-const receiptEditor = computed(() => ({ pending: receiptPending.value, error: receiptError.value, success: receiptSuccess.value, dirty: receiptActionDirty.value, loading: receiptLoading.value, loadError: Boolean(receiptLoadError.value), submitDisabled: !canManage.value || receiptForm.displayName.trim().length < 2 }))
+const receiptEditor = computed(() => ({ pending: receiptPending.value || logoPending.value, error: receiptError.value, success: receiptSuccess.value, dirty: receiptActionDirty.value, loading: receiptLoading.value, loadError: Boolean(receiptLoadError.value), submitDisabled: !canManage.value || receiptForm.displayName.trim().length < 2 }))
 const receiptSummary = computed<BsBusinessReceiptSummary | null>(() => receiptSettings.value ? ({ displayName: receiptSettings.value.displayName, address: receiptSettings.value.address || '—', phone: receiptSettings.value.phone || '—', footer: receiptSettings.value.footer || '—', paperLabel: receiptSettings.value.paperSize === 'thermal_80' ? copy.value.thermal80 : copy.value.a4 }) : null)
 const locationsView = computed<BsBusinessLocationsView>(() => ({
   rows: locations.value.map(location => ({ id: location.id, name: location.name, summary: location.code || location.address || '—', badge: location.is_default ? 'default' : location.status === 'archived' ? 'archived' : null, canArchive: !location.is_default && location.status === 'active', canRestore: canManage.value && location.status === 'archived' })),
@@ -377,7 +440,106 @@ const receiptModel = computed<BsBusinessReceiptForm>({ get: () => ({ ...receiptF
 const modeModel = computed<string>({ get: () => selectedMode.value, set: value => { if (BUSINESS_MODES.includes(value as BusinessMode)) selectedMode.value = value as BusinessMode } })
 const modeLabel = computed(() => modeOptions.value.find(mode => mode.value === current.value?.business_mode)?.label || '')
 function editLocationById(id: string) { const location = locations.value.find(location => location.id === id); if (location) editLocation(location) }
+let logoSelectionVersion = 0
+async function selectDocumentLogo(selection: File | File[] | null) {
+  const file = Array.isArray(selection) ? selection[0] : selection
+  if (!file || !canManage.value || receiptPending.value || logoPending.value) return
+  logoPending.value = true
+  const shopId = currentId.value
+  const version = ++logoSelectionVersion
+  try {
+    const dataUrl = await readRasterImage(file)
+    if (version === logoSelectionVersion && shopId === currentId.value && canManage.value) receiptForm.logoDataUrl = dataUrl
+  } catch {
+    if (shopId === currentId.value) receiptError.value = isArabic.value ? 'اختار صورة PNG أو JPEG صحيحة حتى 128 كيلوبايت.' : 'Choose a valid PNG or JPEG image up to 128 KiB.'
+  } finally { logoPending.value = false }
+}
 </script>
 <template>
-  <BsBusinessSettingsPage v-model:profile-form="profileModel" v-model:location-form="locationModel" v-model:receipt-form="receiptModel" v-model:mode="modeModel" v-model:cash-required="cashRequired" v-model:profile-open="profileActionOpen" v-model:mode-open="modeActionOpen" v-model:receipt-open="receiptActionOpen" v-model:location-open="locationDialogOpen" :context="current ? { name: current.name } : null" :loading="loading || permissionPending" :shop-error="Boolean(shopError || permissionError)" :can-manage="canManage" :copy="settingsCopy" :cash="cashView" :profile-editor="profileEditor" :mode-editor="modeEditor" :receipt-editor="receiptEditor" :receipt-summary="receiptSummary" :locations-view="locationsView" :mode-options="modeOptions" :mode-label="modeLabel" @edit-profile="profileAction.edit()" @edit-mode="modeAction.edit()" @edit-receipt="receiptAction.edit()" @retry="retrySettings" @retry-cash="refreshCashPolicy()" @retry-receipt="refreshReceiptSettings()" @save-cash="saveCashPolicy" @save-profile="saveProfile" @save-mode="saveMode" @save-location="saveLocation" @save-receipt="saveReceiptSettings" @create-location="createLocation" @edit-location="editLocationById" @archive-location="archiveLocation" @restore-location="restoreLocation"/>
+  <BsBusinessSettingsPage
+    v-model:booking-policy-form="bookingPolicyForm"
+    v-model:booking-policy-open="bookingPolicyOpen"
+    v-model:website-inquiry-open="websiteInquiryOpen"
+    v-model:website-inquiry-status="websiteInquiryStatus"
+    v-model:website-inquiry-filter="websiteInquiryFilter"
+    v-model:website-catalog-form="websiteCatalogForm"
+    v-model:website-catalog-open="websiteCatalogOpen"
+    v-model:website-catalog-search="websiteCatalogSearch"
+    v-model:website-profile-form="websiteProfileForm"
+    v-model:website-profile-open="websiteProfileOpen"
+    v-model:website-owner-opt-in="websiteOwnerOptIn"
+    v-model:website-slug="websiteSlug"
+    v-model:website-open="websiteOpen"
+    v-model:business-currency="selectedBusinessCurrency"
+    v-model:profile-form="profileModel"
+    v-model:location-form="locationModel"
+    v-model:receipt-form="receiptModel"
+    v-model:mode="modeModel"
+    v-model:cash-required="cashRequired"
+    v-model:profile-open="profileActionOpen"
+    v-model:mode-open="modeActionOpen"
+    v-model:receipt-open="receiptActionOpen"
+    v-model:location-open="locationDialogOpen"
+    :booking-policy-view="bookingPolicyView"
+    :website-inquiry-view="websiteInquiryView"
+    :website-catalog-view="websiteCatalogView"
+    :website-profile-view="websiteProfileView"
+    :website-address-view="websiteAddressView"
+    :currency-view="currencyView"
+    :context="current ? { name: current.name } : null"
+    :loading="loading || permissionPending"
+    :shop-error="Boolean(shopError || permissionError)"
+    :can-manage="canManage"
+    :copy="settingsCopy"
+    :cash="cashView"
+    :profile-editor="profileEditor"
+    :mode-editor="modeEditor"
+    :receipt-editor="receiptEditor"
+    :receipt-summary="receiptSummary"
+    :locations-view="locationsView"
+    :mode-options="modeOptions"
+    :mode-label="modeLabel"
+    @edit-booking-policy="editBookingPolicy"
+    @save-booking-policy="saveBookingPolicy"
+    @retry-booking-policy="refreshBookingPolicy"
+    @edit-website-inquiry="editWebsiteInquiry"
+    @save-website-inquiry="saveWebsiteInquiry"
+    @retry-website-inquiries="refreshWebsiteInquiries()"
+    @website-inquiry-page="setWebsiteInquiryPage"
+    @edit-website-catalog="editWebsiteCatalog"
+    @save-website-catalog="saveWebsiteCatalog"
+    @retry-website-catalog="refreshWebsiteCatalog()"
+    @publish-website-catalog="publishWebsiteCatalog($event,true)"
+    @unpublish-website-catalog="publishWebsiteCatalog($event,false)"
+    @website-catalog-page="setWebsiteCatalogPage"
+    @select-website-catalog-image="selectWebsiteCatalogImage"
+    @edit-website-profile="editWebsiteProfile"
+    @save-website-profile="saveWebsiteProfile"
+    @retry-website-profile="refreshWebsiteProfile()"
+    @publish-website-profile="publishWebsiteProfile"
+    @unpublish-website-profile="unpublishWebsiteProfile"
+    @select-website-logo="selectWebsiteLogo"
+    @remove-website-logo="selectWebsiteLogo(null)"
+    @edit-website-address="editWebsiteAddress"
+    @save-website-address="saveWebsiteAddress().then(() => refreshWebsiteProfile())"
+    @retry-website-address="refreshWebsiteAddress()"
+    @save-currency="saveBusinessCurrency"
+    @retry-currency="refreshCurrencySettings()"
+    @select-logo="selectDocumentLogo"
+    @edit-profile="profileAction.edit()"
+    @edit-mode="modeAction.edit()"
+    @edit-receipt="receiptAction.edit()"
+    @retry="retrySettings"
+    @retry-cash="refreshCashPolicy()"
+    @retry-receipt="refreshReceiptSettings()"
+    @save-cash="saveCashPolicy"
+    @save-profile="saveProfile"
+    @save-mode="saveMode"
+    @save-location="saveLocation"
+    @save-receipt="saveReceiptSettings"
+    @create-location="createLocation"
+    @edit-location="editLocationById"
+    @archive-location="archiveLocation"
+    @restore-location="restoreLocation"
+  />
 </template>

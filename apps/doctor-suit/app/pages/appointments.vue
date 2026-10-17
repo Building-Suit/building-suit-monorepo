@@ -1,0 +1,9 @@
+<script setup lang="ts">
+definePageMeta({ layout: 'practice',middleware: 'doctor-auth' })
+const { context,state,copy,scopeKey,hydrated,date,form,reason,historyOpen,editorOpen,transitionOpen,canCreate,clinicOptions,days,queue,editorView,transitionView,historyView,patientOptions,slotOptions,liveLabel,liveTone,error,denied,reload,open,action,save,submitTransition,patients,offers,changeDate,changePage,historyPage } = useDoctorAppointmentsPage()
+const scopeLabel = computed(() => context.state.current ? `${context.state.current.doctorName} · ${context.state.current.locationName} · ${context.state.current.timezone}` : '')
+await reload()
+</script>
+<template>
+  <BsPracticeAppointmentsPage :key="scopeKey || 'no-context'" v-model:date="date" v-model:form="form" v-model:reason="reason" v-model:editor-open="editorOpen" v-model:transition-open="transitionOpen" v-model:history-open="historyOpen" :copy="copy" :scope-label="scopeLabel" :notice="copy.notice" :live-label="liveLabel" :live-tone="liveTone" :loading="state.loading || !hydrated" :pending="state.pending" :error="error" :denied="denied" :can-create="canCreate" :scope-key="scopeKey" :days="days" :queue="queue" :total="state.board?.total || 0" :page="state.board?.page || 0" :queue-total="state.board?.queueTotal || 0" :queue-page="state.board?.queuePage || 0" :editor="editorView" :patient-options="patientOptions" :clinic-options="clinicOptions" :slot-options="slotOptions" :transition="transitionView" :history="historyView" @retry="reload" @create="open()" @reschedule="open" @action="action" @date="changeDate" @page="(scope,page) => changePage(scope,page)" @queue-page="(scope,page) => changePage(scope,page,true)" @save="save" @confirm="submitTransition" @patients="patients" @offers="offers" @history-page="historyPage" @history-retry="historyPage()" />
+</template>

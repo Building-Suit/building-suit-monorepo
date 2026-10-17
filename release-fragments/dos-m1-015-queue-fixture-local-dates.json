@@ -1,0 +1,12 @@
+{
+  "id": "dos-m1-015-queue-fixture-local-dates",
+  "task": "DOS-M1-015",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/supabase/tests/dos-m1-015.sql",
+    "docs/work-packages/doctor-suit/implementation/keyboard-booking-focus.md"
+  ],
+  "reason": "Correct the synthetic opposite-timezone queue fixture's second clinic time so its same-doctor appointments cannot overlap when the UTC+14 and UTC-12 local dates differ by two days. Keep every SQL assertion, exclusion constraint, tenant safeguard and overdue-queue case unchanged. No product schema, hosted migration, clinical approval or operational activation change."
+}

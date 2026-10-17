@@ -23,6 +23,8 @@ User instructions take priority. Scoped rules specialize these rules within thei
 - Preserve dirty and active worktrees. Never auto-stash, reset, delete, rebase or force-push others' work. Only rewrite a solely owned branch within current authorization, with an explicit expected remote SHA and `--force-with-lease`.
 - GitHub CI and PR rules do not control external provider events. Keep feature Git deployments disabled in app Vercel configuration and verify Supabase Automatic branching is off. Use the maintained provider setup in `docs/shared/git-workflow.md`; do not claim dashboard settings are active without checking them.
 
+The owner-authorized 2026-10-15 combined batch is recorded in [staging-finished-batch](docs/work-packages/staging-finished-batch.md). For that batch only, PR318 is the single integration root and the prior separate-root/provider-recovery hold is superseded. Required GitHub CI/security checks still apply to the exact combined head. The parent performs one history-preserving merge into `stg`; do not manually deploy or wait for Vercel/Supabase recovery. This exception does not weaken product release-publication readiness or authorize `main` changes.
+
 ## Navigation and ownership
 
 | Location | Responsibility |
@@ -30,6 +32,7 @@ User instructions take priority. Scoped rules specialize these rules within thei
 | `apps/ledger-suit/` | Ledger routes, features, financial rules, content and tests |
 | `apps/shop-suit/` | Shop routes, features, inventory/shop rules, content and tests |
 | `apps/inventory-suit/` | Inventory routes, stock domain rules, content and tests |
+| `apps/doctor-suit/` | Doctor web routes, practice/location/membership and patient domain orchestration; synthetic implementation with explicit clinical/legal gates |
 | `apps/super-admin-suit/` | Super Admin control-plane routes, configuration orchestration, content and tests |
 | `apps/building-suit-docs/` | Building documentation, documentation rendering and component catalogue |
 | `packages/design-tokens/`, `packages/brand/` | Canonical tokens, generated outputs, fonts, icons and brand assets |
@@ -84,6 +87,10 @@ Use manifests, package exports and the dependency graph to find interfaces and a
 - Respect provider-managed schemas. Use supported interfaces and narrowly scoped documented integration changes.
 - Run write tests in staging or an explicitly disposable environment. Never reset a hosted business database or run destructive production fixtures.
 - Keep database deployments explicit, environment-bound, serialized and uncached. Use the maintained runbook and recovery checks appropriate to the change's risk.
+
+## Task release fragments
+
+Every task PR appends curated `release-fragments/` for private provenance/classification, and maintains agent-curated bilingual `release-changes/items.json` with distinctive current-code net-change probes and explicit private `sources` fragment links for public work. Several PRs may refine one readable item; they never imply separate versions. Run `pnpm release:check`. The active model is **one evolving upcoming release per Suit from the actual current main-to-stg tree diff**, refreshed on every staging merge; neither PR count, cumulative commits nor the old fragment activation anchor defines a release. Verify overlapping edits, reverts, removals, already-on-main/cherry-picked content and main advancement against that direct diff. Do not hide visible changes under internal support coverage or infer notes from ambiguous evidence. Public fragments whose task edits survive the actual net diff require active linked inventory evidence; a stale creation marker and a `sources` link cannot satisfy that check. Reverted/already-main edits must remain genuinely net-zero. Highest remaining meaningful major/minor/patch impact determines one target from the actual production version. Staging revisions never consume released versions. Only an exact ready candidate on authorized stg-to-main promotion freezes after production deployment success, with immutable time/content/digest. Start the next candidate from the new production baseline. Preserve every stored legacy manifest/revision and the original legacy anchor; never manufacture two prior releases or reset records. The private first-version origin is 0.0.0, not public history. Internal consumers do not justify operational product activation; public work requires active registration and explicit baseline evidence. Never edit accepted fragments, dump raw commits/tasks, invoke an LLM in CI, weaken readiness/auth gates or mask reader failures. Follow [the runbook](docs/shared/release-publication-runbook.md); parent authorization still governs integration/promotion.
 
 ## Verification and completion
 

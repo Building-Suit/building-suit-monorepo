@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import type {BsAppointmentAccessView} from '../types/appointmentAccessPresentation'
 import { useOverlayState } from '@building-suit/ux'
 import type { BsAppointmentsCopy, BsAppointmentsView, BsAppointmentChoices, BsAppointmentForm, BsAppointmentScheduleForm } from '../types/appointmentsPresentation'
-const props = defineProps<{ selectedDate?: string; copy: BsAppointmentsCopy; presentation: BsAppointmentsView; choices: BsAppointmentChoices }>()
+const props = defineProps<{ accessView?: BsAppointmentAccessView; selectedDate?: string; copy: BsAppointmentsCopy; presentation: BsAppointmentsView; choices: BsAppointmentChoices }>()
+const accessOpen=defineModel<boolean>('accessOpen',{default:false})
 const view = defineModel<string>('view', { required: true })
 const staffId = defineModel<string | null>('staffId', { required: true })
 const showForm = defineModel<boolean>('showForm', { required: true })
@@ -9,7 +11,7 @@ const showSchedule = defineModel<boolean>('showSchedule', { required: true })
 const form = defineModel<BsAppointmentForm>('form', { required: true })
 const scheduleForm = defineModel<BsAppointmentScheduleForm>('scheduleForm', { required: true })
 const scheduleMemberId = defineModel<string>('scheduleMemberId', { required: true })
-const emit = defineEmits<{ date: [value: string]; create: [walkIn: boolean]; edit: [id: string]; transition: [id: string, status: string]; move: [amount: number]; today: []; retry: []; location: [id: string]; save: []; openSchedule: []; scheduleMember: []; saveSchedule: []; addBlock: []; removeBlock: [index: number] }>()
+const emit = defineEmits<{ access:[id:string]; issueAccess:[]; revokeAccess:[]; date: [value: string]; create: [walkIn: boolean]; edit: [id: string]; transition: [id: string, status: string]; move: [amount: number]; today: []; retry: []; location: [id: string]; save: []; openSchedule: []; scheduleMember: []; saveSchedule: []; addBlock: []; removeBlock: [index: number] }>()
 function updateForm(key: keyof BsAppointmentForm, value: string | number | boolean | null | undefined) { form.value = { ...form.value, [key]: String(value ?? '') } }
 function updateSchedule(key: Exclude<keyof BsAppointmentScheduleForm, 'weekdays'>, value: string | number | boolean | null | undefined) { scheduleForm.value = { ...scheduleForm.value, [key]: String(value ?? '') } }
 function updateDay(weekday: number, key: 'enabled' | 'startsLocal' | 'endsLocal', value: string | number | boolean | null | undefined) { scheduleForm.value = { ...scheduleForm.value, weekdays: scheduleForm.value.weekdays.map(day => day.weekday === weekday ? { ...day, [key]: key === 'enabled' ? Boolean(value) : String(value ?? '') } : day) } }
@@ -78,7 +80,7 @@ const ui = useUiCopy()
         <BsButton severity="secondary" @click="emit('retry')">{{ copy.retry }}</BsButton>
       </BsPanel>
       <BsText v-else-if="!presentation.locationId" as="p" size="sm">{{ copy.noLocation }}</BsText>
-      <BsAppointmentCalendar v-else :days="presentation.days" :view="view" :copy="copy" :transitioning="presentation.transitioning" @edit="emit('edit', $event)" @transition="(id, status) => emit('transition', id, status)" @block="showBlock" @day="date => { emit('date', date); view = 'day' }" />
+      <BsAppointmentCalendar v-else :days="presentation.days" :view="view" :copy="copy" :transitioning="presentation.transitioning" @access="emit('access',$event)" @edit="emit('edit', $event)" @transition="(id, status) => emit('transition', id, status)" @block="showBlock" @day="date => { emit('date', date); view = 'day' }" />
       <BsText v-if="presentation.noStaff" role="status" as="p" size="sm">{{ copy.noStaff }}</BsText>
       <BsPanel v-if="!presentation.loading && !presentation.failed && presentation.locationId" padding="md">
         <BsHeading :level="2">{{ copy.queue }}</BsHeading>
@@ -95,6 +97,22 @@ const ui = useUiCopy()
         </BsList>
       </BsPanel>
     </template>
+    <BsDialog v-if="accessView" v-model:visible="accessOpen" :title="accessView.title" :pending="accessView.pending">
+      <BsStack gap="md">
+        <BsText as="p">{{accessView.help}}</BsText>
+        <BsText v-if="accessView.loading" role="status">{{accessView.copy.loading}}</BsText>
+        <BsAlert v-if="accessView.error" tone="error">{{accessView.error}}</BsAlert>
+        <BsText v-if="!accessView.loading">{{accessView.enabled?accessView.copy.enabled:accessView.copy.disabled}}</BsText>
+        <BsAlert v-if="!accessView.loading&&!accessView.usablePhone" tone="warning">{{accessView.copy.phoneRequired}}</BsAlert>
+        <BsField v-if="accessView.code" v-slot="field" :label="accessView.copy.code"><BsInput :id="field.id" :model-value="accessView.code" readonly dir="ltr" autocomplete="off"/></BsField>
+        <BsText v-if="accessView.code" as="p" role="status">{{accessView.copy.oneTime}}</BsText>
+        <BsInline wrap>
+          <BsButton :disabled="accessView.loading||accessView.pending||!accessView.usablePhone" :pending="accessView.pending" @click="emit('issueAccess')">{{accessView.enabled?accessView.copy.rotate:accessView.copy.issue}}</BsButton>
+          <BsButton :disabled="accessView.loading||accessView.pending||!accessView.enabled" @click="emit('revokeAccess')">{{accessView.copy.revoke}}</BsButton>
+          <BsButton :disabled="accessView.pending" @click="accessOpen=false">{{accessView.copy.close}}</BsButton>
+        </BsInline>
+      </BsStack>
+    </BsDialog>
     <BsDialog v-if="selectedBlock" v-model:visible="blockOpen" :title="copy.blockDetails || copy.scheduleTitle">
       <BsDescriptionList>
         <BsDescriptionTerm>{{ copy.blockKind }}</BsDescriptionTerm><BsDescriptionValue>{{ selectedBlock.kindLabel }}</BsDescriptionValue>

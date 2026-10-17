@@ -6,7 +6,7 @@ const migration = await readFile(new URL('../../supabase/migrations/202609282200
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_appointments.sql', import.meta.url), 'utf8')
 const template = await readFile(new URL('../../../../packages/ui/src/templates/BsAppointmentsPage.vue', import.meta.url), 'utf8')
 const page = await readFile(new URL('../../app/pages/appointments/index.vue', import.meta.url), 'utf8')
-const shell = await readFile(new URL('../../app/layouts/default.vue', import.meta.url), 'utf8')
+const shell = await readFile(new URL('../../app/utils/shopNavigation.ts', import.meta.url), 'utf8')
 
 test('appointment commands enforce tenant, availability, conflict and audit boundaries', () => {
   assert.match(migration, /pg_advisory_xact_lock/)

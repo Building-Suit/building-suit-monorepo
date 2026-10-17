@@ -1,10 +1,11 @@
-import { nextTick, onMounted, onBeforeUnmount, ref } from 'vue'
-import { useClickOutside } from './useClickOutside.ts'
+import { onMounted, onBeforeUnmount, ref } from 'vue'
+import { useMenuNavigation } from './useMenuNavigation.ts'
 
 /** Chooses a popover direction after opening and remeasures on viewport changes. */
 export function useFloatingMenu(panelSelector: string) {
-  const open = ref(false), hydrated = ref(false)
-  const root = ref<HTMLElement | null>(null)
+  const menu = useMenuNavigation(() => '', '[aria-haspopup="menu"]')
+  const { open, root, panel, onKeydown } = menu
+  const hydrated = ref(false)
   const position = ref<'top' | 'bottom'>('bottom')
   let resizeTimer: ReturnType<typeof setTimeout> | undefined
   function updatePosition() {
@@ -15,21 +16,18 @@ export function useFloatingMenu(panelSelector: string) {
     position.value = below >= height ? 'bottom' : above >= height ? 'top' : below >= above ? 'bottom' : 'top'
   }
   async function openMenu() {
-    open.value = !open.value
-    if (!open.value) return
-    await nextTick()
-    updatePosition()
+    await menu.toggle()
+    if (open.value) updatePosition()
   }
   function handleResize() {
     if (!open.value) return
     if (resizeTimer !== undefined) clearTimeout(resizeTimer)
     resizeTimer = setTimeout(updatePosition, 150)
   }
-  useClickOutside(root, () => { open.value = false })
   onMounted(() => { hydrated.value = true; window.addEventListener('resize', handleResize) })
   onBeforeUnmount(() => {
     window.removeEventListener('resize', handleResize)
     if (resizeTimer !== undefined) clearTimeout(resizeTimer)
   })
-  return { root, open, hydrated, position, openMenu }
+  return { root, panel, open, hydrated, position, openMenu, closeMenu: menu.close, onKeydown }
 }

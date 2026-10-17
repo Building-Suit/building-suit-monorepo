@@ -1,0 +1,33 @@
+{
+  "id": "dos-m1-007",
+  "task": "DOS-M1-007",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit",
+    "packages/ui/package.json",
+    "packages/ui/src/organisms/BsSignupEnrollment.vue",
+    "packages/ui/src/templates/BsSignupPage.vue",
+    "packages/ui/src/templates/BsAccountSessionPage.vue",
+    "packages/ui/src/templates/BsPracticeOverviewPage.vue",
+    "packages/ui/src/templates/BsWorkspaceShell.vue",
+    "packages/ui/src/types/signupPresentation.ts",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/realtime-adoption.json",
+    "docs/shared/realtime-adoption.md",
+    "docs/work-packages/doctor-suit/onboarding-evidence.md",
+    "pnpm-lock.yaml",
+    "release-changes/items.json"
+  ],
+  "reason": "Add synthetic owner-only practice setup and a complete shared overview, resumable database drafts, idempotent creation/profile commands, current-session cleanup and an explicit initial-location context. Shared signup and shell additions are opt-in; existing consumers keep their default fields and rendering. No operational release, clinical authority or hosted deployment is activated."
+}

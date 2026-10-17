@@ -1,0 +1,9 @@
+{
+  "id": "release-refresh-statement-evidence",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/super-admin-suit/supabase/migrations/20261016122230_release_refresh_statement_evidence.sql", "tooling/releases/catalog-diagnostics.mjs", "tooling/releases/catalog-diagnostics.test.mjs", "tooling/releases/catalog-postgrest-disposable.mjs", "docs/shared/release-publication-runbook.md"],
+  "reason": "Reproduce the refresh cardinality boundary with legitimate persisted revisions and safely classify retained/deeper contracts and statements without replacing business logic or changing hosted release history."
+}

@@ -1,0 +1,29 @@
+{
+  "id": "dos-m1-012-ui",
+  "task": "DOS-M1-012",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsPatientProfilePage.vue",
+    "packages/ux/src/composables/useBlobUrl.ts",
+    "packages/ux/src/index.ts",
+    "packages/ux/tests/blob-url.test.mjs",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/doctor-suit/documents-evidence.md",
+    "docs/work-packages/doctor-suit/implementation-tracker.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Add the synthetic administrative patient profile, entered-unverified recorded fields and attributed history, plus private uploaded-unreviewed attachments with explicit upload/replacement/archive dialogs, immutable version history and current-authority delivery. Shared preview URLs are scoped and revoked on replacement, context loss or disposal. All presentation remains in packages/ui; apps own authorization, metadata, file transport and props. No public object link, clinical finding, identity verification or interpretation is introduced."
+}

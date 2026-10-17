@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BsPurchasingView, BsSupplierForm, BsPurchaseForm, BsPurchasingFilters, BsSupplierRow, BsPurchaseRow, BsPurchasingPicker } from '@building-suit/ui/types/purchasingPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
@@ -214,7 +215,7 @@ watch(() => purchaseForm, () => {
 
 function money(value: number) {
   return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', {
-    style: 'currency', currency: 'EGP', maximumFractionDigits: 2,
+    style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20,
   }).format(value)
 }
 

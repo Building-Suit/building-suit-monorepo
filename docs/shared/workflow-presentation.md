@@ -72,3 +72,7 @@ The catalogue inventory above and ownership manifest are updated within approved
 The final Ledger and Shop production builds and documentation catalogue build exited successfully. Remaining acceptance blockers are localhost browser execution and live catalogue scope authorization; the worktree is uncommitted for control-plane publication.
 
 Shop platform billing review uses `BsAdminCommerceWorkspace` with the canonical `BsDataTable`. The queue groups tenant/status/date, current/requested/list/quoted terms and blockers, payment/reference, and gated review actions into compact stacked cells. All field projections remain product-owned; observers retain three informational columns, operators receive the review column, and approval remains disabled for product-reported usage blockers. Pagination, loading/error/retry and atomic review commands keep their existing contracts. The layout uses shared spacing, text sizes, surfaces and status semantics; it does not add a separate grid or financial formatter.
+
+### Service fulfillment
+
+`BsServiceFulfillmentPage` owns optional recipe forms, explicit completion quantities, material unit declarations, version/completion history and the supported offline status presentation. Shop supplies translated content, typed projections and semantic commands. Its record dialog uses the canonical dirty/pending/focus behavior; history uses `BsDataTable`. See `apps/shop-suit/docs/service-materials.md` for domain policy and verification limitations.

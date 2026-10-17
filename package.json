@@ -16,7 +16,8 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint && eslint packages tooling",
-    "test": "node --test apps/*/tests/unit/*.test.mjs packages/*/tests/*.test.mjs tooling/control-plane/tests/*.test.mjs tooling/database/tests/*.test.mjs tooling/git/tests/*.test.mjs tooling/new-platform/tests/*.test.mjs tooling/checks/*.test.mjs",
+    "release:check": "node tooling/releases/check.mjs",
+    "test": "node --test apps/*/tests/unit/*.test.mjs packages/*/tests/*.test.mjs tooling/control-plane/tests/*.test.mjs tooling/database/tests/*.test.mjs tooling/git/tests/*.test.mjs tooling/new-platform/tests/*.test.mjs tooling/checks/*.test.mjs tooling/releases/*.test.mjs",
     "tokens:generate": "node tooling/design-tokens/generate.mjs",
     "tokens:check": "node tooling/design-tokens/generate.mjs --check",
     "docs:generate": "node tooling/docs/generate.mjs",
@@ -42,7 +43,9 @@
     "automation:n8n:export": "node tooling/control-plane/n8n/export.mjs",
     "automation:resilience": "node tooling/control-plane/resilience/run-acceptance.mjs --check",
     "test:built-assets": "node --test apps/shop-suit/tests/integration/ss-launch-brand-production.test.mjs",
-    "check:atomic-template": "node tooling/checks/atomic-template-architecture.mjs"
+    "check:atomic-template": "node tooling/checks/atomic-template-architecture.mjs",
+    "db:test:shop:commission": "node tooling/database/test-shop-commissions-local.mjs",
+    "dev:doctor": "pnpm --filter @building-suit/doctor-suit dev --host 127.0.0.1 --port 3006"
   },
   "devDependencies": {
     "@vue/compiler-sfc": "3.5.43",

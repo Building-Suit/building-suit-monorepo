@@ -1,0 +1,42 @@
+name: Shop website hostname isolation
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/shop-website-hostname-disposable.yml'
+      - 'apps/shop-suit/**'
+      - 'packages/ui/**'
+      - 'packages/ux/**'
+permissions:
+  contents: read
+concurrency:
+  group: shop-website-hostnames-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  website-hostnames:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node --test apps/shop-suit/tests/unit/website-address.test.mjs apps/shop-suit/tests/unit/website-hostname-suffix.test.mjs
+      - run: pnpm --filter @building-suit/shop-suit typecheck
+      - run: pnpm --filter @building-suit/shop-suit lint
+      - run: pnpm --filter @building-suit/shop-suit build
+        env:
+          SUPABASE_URL: http://127.0.0.1:60321
+          SUPABASE_KEY: local-development-publishable-key
+      - run: node --test apps/shop-suit/tests/integration/website-host-built.test.mjs apps/shop-suit/tests/integration/website-public-built.test.mjs apps/shop-suit/tests/integration/appointment-access-built.test.mjs apps/shop-suit/tests/integration/customer-portal-built.test.mjs apps/shop-suit/tests/integration/public-booking-built.test.mjs apps/shop-suit/tests/integration/ss-web-launch-001-built.test.mjs apps/shop-suit/tests/integration/website-hostname-suffix-built.test.mjs
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-web-launch-001.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/website-hostname-suffix.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/website-hostname-owner.config.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: website-hostname-browser-results
+          path: test-results

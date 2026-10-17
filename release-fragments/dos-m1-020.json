@@ -1,0 +1,27 @@
+{
+  "id": "dos-m1-020",
+  "task": "DOS-M1-020",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests",
+    "apps/doctor-suit/supabase/tests/dos-m1-020.sql",
+    "docs/work-packages/doctor-suit/implementation/dos-m1-020.md",
+    "docs/work-packages/doctor-suit/implementation/m1-acceptance-inputs.json",
+    "docs/work-packages/doctor-suit/implementation-tracker.md",
+    ".github/workflows/ci.yml",
+    ".github/workflows/doctor-disposable.yml",
+    "packages/testing/playwright.doctor-workspace.config.ts",
+    "docs/work-packages/doctor-suit/implementation/m1-aggregate.md",
+    "packages/testing/playwright.doctor-shop-backend.config.ts"
+  ],
+  "reason": "Add the combined synthetic M1 acceptance harness, actual-provider cross-domain journey and independent-verifier handoff. No public runtime behavior, release activation, domain approval, integration or deployment is supplied by this test/evidence task. Preserve all prior planning and provenance; distinct task statuses remain current in the tracker. Execute the permitted M1 aggregate against the exact PR head and independently reconcile read-only GitHub command/step/artifact evidence for C03/C04. Preserve the original aggregate for ordinary work; explicitly hold n8n coverage only for this requested M1 batch and its first stg introduction. No M2 implementation or domain approval is included. Close the optional Shop signup/persistence/independent-Ledger session coverage gap through a new exact-source GitHub-hosted disposable backend run; prior-source proof is not substituted for this candidate."
+}

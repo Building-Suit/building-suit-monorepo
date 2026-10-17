@@ -1,0 +1,14 @@
+{
+  "id": "changelog-status-tabs",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["shop-suit"],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": ["packages/ui", "packages/contracts/tests", "apps/shop-suit/tests/e2e/public-changelog.spec.ts"],
+  "reason": "Separate released history from upcoming notes and remove duplicate presentation while preserving release integrity metadata.",
+  "notes": {
+    "title": {"en": "Separate released and upcoming updates", "ar": "فصل التحديثات الصادرة والقادمة"},
+    "summary": {"en": "Browse released updates first, or switch to Coming Soon.", "ar": "تصفح التحديثات الصادرة أولاً أو انتقل إلى التحديثات القادمة."},
+    "details": {"en": "The homepage shows up to three entries per tab. Released updates show their version and release date; upcoming notes show a Coming Soon label.", "ar": "تعرض الصفحة الرئيسية ثلاثة تحديثات كحد أقصى في كل تبويب. تظهر التحديثات الصادرة برقم الإصدار وتاريخه، وتظهر التحديثات القادمة بوسم قريباً."}
+  }
+}

@@ -1,4 +1,7 @@
 export interface BsReceiptView {
+  logoDataUrl?: string | null
+  notes?: string | null
+  direction?: 'ltr' | 'rtl'
   issuer: string
   issuerDetails: string[]
   invoice: string
@@ -28,6 +31,10 @@ export interface BsReceiptDocumentCopy {
   lineTotal: string
   total: string
   payment: string
+  reference: string
+  thankYou: string
+  greeting: string
+  issuedVia: string
   compliance: string
 }
 export interface BsReceiptPageCopy {
@@ -36,6 +43,7 @@ export interface BsReceiptPageCopy {
   language: string
   paperSize: string
   share: string
+  download: string
   loading: string
   loadError: string
   retry: string

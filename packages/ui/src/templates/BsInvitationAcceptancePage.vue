@@ -2,7 +2,7 @@
 import type { BsInvitationIdentityForm, BsInvitationPageCopy } from '../types/invitationPresentation'
 const form = defineModel<BsInvitationIdentityForm>('form', { required: true })
 const code = defineModel<string>('code', { required: true })
-defineProps<{
+withDefaults(defineProps<{
   product: { name: string; assetPrefix?: string; homeLabel: string; title: string; description: string }
   stage: 'loading' | 'invalid' | 'verification' | 'ready' | 'profile' | 'signup' | 'accept' | 'unavailable'
   copy: BsInvitationPageCopy
@@ -11,10 +11,11 @@ defineProps<{
   error: string
   submitDisabled: boolean
   emailMaxLength?: number
+  acceptanceCode?: { label: string; hint: string; maxLength: number }
   loginTo: string | { path: string; query: { invite: string } }
   recoverTo?: string
   verification: { resendDisabled: boolean; expired?: boolean; notice?: string }
-}>()
+}>(), { acceptanceCode: undefined, emailMaxLength: undefined, recoverTo: undefined })
 const emit = defineEmits<{ submit: []; verify: []; resend: []; login: []; switchAccount: [] }>()
 const ready = useClientReady()
 function change<K extends keyof BsInvitationIdentityForm>(key: K, value: BsInvitationIdentityForm[K]) { form.value = { ...form.value, [key]: value } }
@@ -29,7 +30,7 @@ function change<K extends keyof BsInvitationIdentityForm>(key: K, value: BsInvit
         <BsField v-slot="field" :label="copy.email"><BsInput :id="field.id" :model-value="form.email" type="email" autocomplete="email" required :maxlength="emailMaxLength" @update:model-value="change('email', String($event))" /></BsField>
         <BsField v-slot="field" :label="copy.password"><BsInput :id="field.id" :model-value="form.password" type="password" autocomplete="new-password" required minlength="8" @update:model-value="change('password', String($event))" /></BsField>
       </template>
-      <template v-else-if="stage === 'accept'"><BsText size="sm">{{ email }}</BsText><BsButton v-if="copy.switchAccount" variant="secondary" :disabled="pending" @click="emit('switchAccount')">{{ copy.switchAccount }}</BsButton></template>
+      <template v-else-if="stage === 'accept'"><BsField v-if="acceptanceCode" v-slot="field" :label="acceptanceCode.label" :hint="acceptanceCode.hint"><BsInput :id="field.id" v-model="code" type="password" autocomplete="off" :disabled="pending" :maxlength="acceptanceCode.maxLength" :aria-describedby="field.describedby" required /></BsField><BsText size="sm">{{ email }}</BsText><BsButton v-if="copy.switchAccount" variant="secondary" :disabled="pending" @click="emit('switchAccount')">{{ copy.switchAccount }}</BsButton></template>
       <template v-else-if="stage === 'ready' || stage === 'profile'">
         <BsField v-slot="field" :label="copy.email"><BsInput :id="field.id" :model-value="email" type="email" readonly dir="ltr" aria-readonly="true" /></BsField>
         <template v-if="stage === 'profile'">

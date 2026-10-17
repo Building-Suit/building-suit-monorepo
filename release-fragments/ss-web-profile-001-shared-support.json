@@ -1,0 +1,23 @@
+{
+  "id": "ss-web-profile-001-shared-support",
+  "task": "SS-WEB-PROFILE-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/shop-website-profile-disposable.yml",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/shop-website-profile-001.md",
+    "packages/ui",
+    "packages/ux",
+    "tooling/database/test-shop-website-profile-local.mjs"
+  ],
+  "reason": "Optional shared public-profile settings presentation, bounded raster decoding, catalog documentation and disposable verification; other Suit flows remain unchanged."
+}

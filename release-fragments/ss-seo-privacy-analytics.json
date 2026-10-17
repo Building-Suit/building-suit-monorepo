@@ -1,0 +1,61 @@
+{
+  "id": "ss-seo-privacy-analytics",
+  "task": "SS-SEO-PRIVACY-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/.env.example",
+    "apps/shop-suit/app/app.vue",
+    "apps/shop-suit/app/composables/useMarketingAnalytics.ts",
+    "apps/shop-suit/app/composables/useShopPrivacy.ts",
+    "apps/shop-suit/app/composables/useShopSeo.ts",
+    "apps/shop-suit/app/pages/auth/signup.vue",
+    "apps/shop-suit/app/pages/index.vue",
+    "apps/shop-suit/app/plugins/marketing-analytics.client.ts",
+    "apps/shop-suit/app/utils/legal.ts",
+    "apps/shop-suit/docs/seo-privacy-analytics.md",
+    "apps/shop-suit/nuxt.config.ts",
+    "apps/shop-suit/public/robots.txt",
+    "apps/shop-suit/server/middleware/indexing.ts",
+    "apps/shop-suit/server/routes/robots.txt.ts",
+    "apps/shop-suit/server/routes/sitemap.xml.ts",
+    "apps/shop-suit/shared/marketingAnalytics.ts",
+    "apps/shop-suit/shared/publicSeo.ts",
+    "apps/shop-suit/tests/e2e/marketing-privacy-fixture.mjs",
+    "apps/shop-suit/tests/e2e/marketing-privacy.config.ts",
+    "apps/shop-suit/tests/e2e/marketing-privacy.spec.ts",
+    "apps/shop-suit/tests/unit/marketing-privacy.test.mjs",
+    "apps/shop-suit/tests/unit/signup-session-transition.test.mjs",
+    "apps/shop-suit/tests/unit/ss-launch-legal-audit-001-1.test.mjs",
+    "packages/ui/package.json",
+    "packages/ui/src/organisms/BsMarketingPricing.vue",
+    "packages/ui/src/organisms/BsPlanCard.vue",
+    "packages/ui/src/organisms/BsPlanGrid.vue",
+    "packages/ui/src/organisms/BsPrivacyConsent.vue",
+    "packages/ui/src/templates/BsAppRoot.vue",
+    "packages/ui/src/templates/BsLandingPage.vue",
+    "packages/ux/src/composables/useLocaleDocument.ts",
+    "packages/ux/src/composables/usePrivacyConsentFocus.ts",
+    "packages/ux/src/index.ts",
+    "packages/ux/src/utils/basicAnalytics.ts",
+    "packages/ux/src/utils/privacyConsent.ts"
+  ],
+  "reason": "Compatible public-page SEO and voluntary privacy controls are enabled only in Shop. Analytics remains configuration- and consent-gated; paid conversion measurement is disabled.",
+  "notes": {
+    "title": {
+      "en": "Privacy choices and public-page improvements",
+      "ar": "خيارات الخصوصية وتحسينات الصفحات العامة"
+    },
+    "summary": {
+      "en": "Choose whether to allow optional visitor analytics and review clearer privacy information.",
+      "ar": "اختر السماح بتحليلات الزيارات الاختيارية أو رفضها، وراجع معلومات أوضح عن الخصوصية."
+    },
+    "details": {
+      "en": "Privacy settings let you accept, reject or change optional analytics choices. Analytics stays off until configured and accepted, and business records are excluded. Public pages gain sharing information and a sitemap; payment activation is not measured.",
+      "ar": "تتيح إعدادات الخصوصية قبول التحليلات الاختيارية أو رفضها أو تغيير الاختيار لاحقاً. تظل التحليلات متوقفة حتى تهيئتها والموافقة عليها، وتُستبعد سجلات العمل منها. تتضمن الصفحات العامة معلومات للمشاركة وخريطة للموقع، ولا يتم قياس تفعيل الدفع."
+    }
+  }
+}

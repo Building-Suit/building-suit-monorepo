@@ -1,0 +1,21 @@
+{
+  "id": "dos-m1-003",
+  "task": "DOS-M1-003",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit",
+    "docs/architecture/environments.json",
+    "docs/work-packages/doctor-suit",
+    ".github/workflows/doctor-disposable.yml"
+  ],
+  "reason": "Define an isolated synthetic Doctor data foundation with stored ownership, independent delegated location grants, private authorized atomic onboarding, RLS, immutable audit and disposable local-only authorization tests. Hosted entries remain blank; no operational release registration or clinical authority is granted. The new read-only CI test workflow is classified for all workspace tooling consumers."
+}

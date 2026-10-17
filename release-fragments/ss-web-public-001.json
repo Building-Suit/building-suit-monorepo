@@ -1,0 +1,27 @@
+{
+  "id": "ss-web-public-001",
+  "task": "SS-WEB-PUBLIC-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit"
+  ],
+  "reason": "Adds owner-opted-in public showcases and bounded tenant-resolved inquiries with a private owner inbox.",
+  "notes": {
+    "title": {
+      "en": "Share your public shop",
+      "ar": "شارك موقع متجرك العام"
+    },
+    "summary": {
+      "en": "Show selected products, services and public contact details in Arabic and English.",
+      "ar": "اعرض منتجات وخدمات مختارة وبيانات التواصل العامة بالعربية والإنجليزية."
+    },
+    "details": {
+      "en": "Published shops show their approved profile, catalog, visible locations and opening hours. Visitors can send a bounded inquiry, and owners privately review its status. Unpublishing hides the site immediately and retains configuration and inquiries.",
+      "ar": "تعرض المتاجر المنشورة الملف والكتالوج المعتمدين والمواقع الظاهرة ومواعيد العمل. يمكن للزائر إرسال استفسار محدود البيانات، ويتابع المالك حالته بشكل خاص. يخفي إلغاء النشر الموقع فوراً مع الاحتفاظ بالإعدادات والاستفسارات."
+    }
+  }
+}

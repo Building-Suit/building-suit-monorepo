@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { PageMeta } from '#app'
+import type { PrivacyPresentation } from '@building-suit/ux'
 const props = withDefaults(defineProps<{
+  privacy?: PrivacyPresentation
   renderPage?: boolean
   layout?: 'default' | 'landing' | 'platform-admin' | 'auth' | false
   layoutKey?: string
@@ -10,7 +12,7 @@ const props = withDefaults(defineProps<{
   toastHost?: boolean
   confirmHost?: boolean
 }>(), {
-  renderPage: true, layout: undefined, layoutKey: undefined, pageKey: undefined, pageTransition: false,
+  privacy: undefined, renderPage: true, layout: undefined, layoutKey: undefined, pageKey: undefined, pageTransition: false,
   announcer: false, toastHost: false, confirmHost: true,
 })
 // Each consuming app has its own generated layout-name union. The caller
@@ -26,5 +28,6 @@ function scopedPageKey(route: { path: string }) { return `${route.path}:${props.
     <BsSectionSkeleton v-else :rows="3" />
     <BsToastHost v-if="toastHost" />
     <BsConfirmHost v-if="confirmHost" />
+    <BsPrivacyConsent v-if="privacy" :model="privacy" />
   </div>
 </template>

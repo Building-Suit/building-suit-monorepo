@@ -1,0 +1,435 @@
+{
+  "format": "reviewed-import-proposal-v1",
+  "milestone_id": "DOS-M3",
+  "packet_file": "DOS-M3.json",
+  "packet_sha256": "7b47e36b2f5bf8788dfc5ae062524efabf8901442edfb9c18e1a840db036628d",
+  "target": {
+    "repository": "Building-Suit/building-suit-monorepo",
+    "automation_project_ref": "padtxclxwwqvvuiebhte",
+    "project_slug": "building-suit",
+    "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+    "suit_slug": "doctor-suit",
+    "workstream_slug": "doctor-suit",
+    "application_path": "apps/doctor-suit",
+    "registration_status": "missing-per-parent-readonly-observation; parent must supply reviewed registration"
+  },
+  "safe_to_apply": false,
+  "task_create_function": "control.create_task_with_publication_contract(text,text,text,integer,integer,text,text,text,text,text,jsonb,jsonb,text,jsonb)",
+  "task_ids": [
+    "DOS-M3-001",
+    "DOS-M3-002",
+    "DOS-M3-003",
+    "DOS-M3-004",
+    "DOS-M3-005",
+    "DOS-M3-006",
+    "DOS-M3-007",
+    "DOS-M3-008",
+    "DOS-M3-009",
+    "DOS-M3-010"
+  ],
+  "requirements": [
+    {
+      "requirement_id": "DOS-M3-R001",
+      "title": "Milestone boundary and invariant",
+      "summary": "Full practice operations and communications. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.",
+      "status": "proposed",
+      "provenance": "Supplied roadmap v0.2 plus current delegated scope."
+    },
+    {
+      "requirement_id": "DOS-M3-F001",
+      "title": "Appointment types and multi-location capacity",
+      "summary": "Extend scheduling with approved consultation types, buffers and cross-location capacity rules. Acceptance: Model consultation types, duration, buffers, capacity and location availability under the owning doctor; use one authoritative overlap rule shared by availability and booking. Enforce cross-location doctor commitments atomically and preserve appointment version/type history when configuration changes. Handle timezone and exception rules explicitly; any capacity override requires a permitted actor and recorded reason.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M3-001 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M3-F002",
+      "title": "Waitlist and cancellation recovery",
+      "summary": "Fill cancelled slots through consented, auditable operations without duplicate booking. Acceptance: Maintain a scoped waitlist with patient contact permission, requested time/location/type and explicit waiting/offered/accepted/expired/cancelled states. Reserve and accept an offered slot atomically with expiry and idempotency; do not send messages until approved communications are configured. Release expired offers and preserve offer history without promising priority that has not been specified.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M3-002 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M3-F003",
+      "title": "Reception and check-in exception workflows",
+      "summary": "Handle late arrivals, no-shows, walk-ins and rescheduling with clear authority. Acceptance: Define allowed late-arrival, no-show, walk-in, check-in, reschedule and queue-exit transitions with responsible actor and reason. Separate queue order from clinical urgency; no automated triage or inferred medical priority. Reconcile concurrent reception edits and reconnect state from authoritative records; doctor and secretary retain distinct capabilities.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M3-003 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M3-F004",
+      "title": "Care-team tasks and follow-up worklists",
+      "summary": "Assign authorized nonclinical follow-up work without leaking diagnoses to unprivileged staff. Acceptance: Assign administrative follow-up work to authorized members within practice/location with due date, status and audit history. Minimize worklist content to the assignee capability; clinical note/diagnosis fields are unavailable to administrative-only staff. Handle reassignment, membership revocation and duplicate completion atomically without losing task history.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M3-004 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M3-F005",
+      "title": "Patient and guardian contact/consent preferences",
+      "summary": "Capture explicit operational contact preferences and guardian relationships without marketing defaults. Acceptance: Record contact channels, purposes, consent source/time, verified relationship and revocation separately from login identity. Guardian authority is an explicit reviewed relationship with scope and expiry; matching phone/email is insufficient and marketing defaults are off. Communication eligibility is rechecked at dispatch and consent changes retain audit history; legal/minor policy remains M7 evidence.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M3-005 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M3-F006",
+      "title": "Messaging outbox and delivery tracking",
+      "summary": "Implement a provider-neutral, retry-safe outbox with consent, minimal payloads and failure visibility. Acceptance: Persist provider-neutral message intents with purpose, recipient scope, consent reference, idempotency key and minimal template parameters. Separate queued/claimed/sent/delivered/failed/unknown state; bounded retry and reconciliation preserve provider acknowledgement semantics. Redact logs and expose operational failures without message-body leakage; synthetic transport is the only default adapter.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M3-006 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M3-F007",
+      "title": "Approved communication-provider adapter",
+      "summary": "Connect only a separately approved provider/account/cost policy; no automatic purchases or unconsented outreach. Acceptance: Select only an approved provider/account/channel with documented API, permitted use, cost owner, credentials route and consent rules. Implement one adapter behind the neutral outbox with authenticated callbacks, signature verification, replay protection and status mapping. Use sandbox/synthetic recipients only until separate outreach authorization; absent provider evidence blocks enabling the adapter. Prepare evidence for DOS-M3-GATE-PROVIDER. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M3-007 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M3-F008",
+      "title": "Lab/imaging/referral operational tracking",
+      "summary": "Track referral/order fulfillment status and outside documents without assuming external APIs. Acceptance: Track operational referral/lab/imaging fulfillment without implying partner API integration or clinical review. Link outside documents to the exact request, patient relationship and encounter with source/received timestamps and review state. Authorized staff can update operational status only; clinical release and interpretation remain M2 controls.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M3-008 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M3-F009",
+      "title": "Data migration and reconciliation",
+      "summary": "Provide validated mapping, import preview, deduplication review and rollback/reconciliation plans for approved legacy data. Acceptance: Provide a versioned source-to-target mapping and synthetic import preview with row counts, validation errors, provenance and resumable batch IDs. Potential duplicates are review candidates; identity merging or cross-doctor sharing never follows contact equality. Document backup/reconciliation/rollback and approve source custody before any real import; preserve source IDs/history and exclude real datasets in this task.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M3-009 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M3-F010",
+      "title": "Operational reports and acceptance",
+      "summary": "Verify appointment, follow-up, no-show and workload reports against source records and permission scopes. Acceptance: Calculate appointment, follow-up, no-show and workload reports over authoritative scoped populations with explicit time windows and status definitions. Reconcile report totals and sampled rows to source records across pagination, cancellations and reassignment. Verify all operations/communications with synthetic recipients and document provider-disabled behavior and remaining gates.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M3-010 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    }
+  ],
+  "decisions": [
+    {
+      "decision_id": "DOS-M3-GATE-START",
+      "title": "DOS-M3 parent-controlled start gate",
+      "status": "open",
+      "decision_text": "Remain OPEN until all nine milestones are safely stored and parent verifies dependency acceptance, exact live runtime/registration/commands/paths and authorizes this milestone. Import does not grant execution.",
+      "source": "Current delegated instruction."
+    },
+    {
+      "decision_id": "DOS-M3-GATE-PROVIDER",
+      "title": "Communication provider/account/cost and sandbox permission",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M3-007 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M3-007",
+      "producer_task_id": "DOS-M3-007"
+    }
+  ],
+  "task_requirements": [
+    {
+      "task_id": "DOS-M3-001",
+      "requirement_id": "DOS-M3-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-001",
+      "requirement_id": "DOS-M3-F001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-002",
+      "requirement_id": "DOS-M3-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-002",
+      "requirement_id": "DOS-M3-F002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-003",
+      "requirement_id": "DOS-M3-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-003",
+      "requirement_id": "DOS-M3-F003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-004",
+      "requirement_id": "DOS-M3-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-004",
+      "requirement_id": "DOS-M3-F004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-005",
+      "requirement_id": "DOS-M3-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-005",
+      "requirement_id": "DOS-M3-F005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-006",
+      "requirement_id": "DOS-M3-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-006",
+      "requirement_id": "DOS-M3-F006",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-007",
+      "requirement_id": "DOS-M3-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-007",
+      "requirement_id": "DOS-M3-F007",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-008",
+      "requirement_id": "DOS-M3-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-008",
+      "requirement_id": "DOS-M3-F008",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-009",
+      "requirement_id": "DOS-M3-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-009",
+      "requirement_id": "DOS-M3-F009",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-010",
+      "requirement_id": "DOS-M3-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M3-010",
+      "requirement_id": "DOS-M3-F010",
+      "suit_slug": "doctor-suit"
+    }
+  ],
+  "task_dependencies": [
+    {
+      "task_id": "DOS-M3-001",
+      "depends_on_task_id": "DOS-M2-014",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-002",
+      "depends_on_task_id": "DOS-M3-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-003",
+      "depends_on_task_id": "DOS-M3-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-004",
+      "depends_on_task_id": "DOS-M3-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-005",
+      "depends_on_task_id": "DOS-M3-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-006",
+      "depends_on_task_id": "DOS-M3-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-007",
+      "depends_on_task_id": "DOS-M3-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-008",
+      "depends_on_task_id": "DOS-M3-007",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-009",
+      "depends_on_task_id": "DOS-M3-008",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-010",
+      "depends_on_task_id": "DOS-M3-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-010",
+      "depends_on_task_id": "DOS-M3-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-010",
+      "depends_on_task_id": "DOS-M3-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-010",
+      "depends_on_task_id": "DOS-M3-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-010",
+      "depends_on_task_id": "DOS-M3-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-010",
+      "depends_on_task_id": "DOS-M3-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-010",
+      "depends_on_task_id": "DOS-M3-007",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-010",
+      "depends_on_task_id": "DOS-M3-008",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M3-010",
+      "depends_on_task_id": "DOS-M3-009",
+      "dependency_type": "hard"
+    }
+  ],
+  "task_decisions": [
+    {
+      "task_id": "DOS-M3-001",
+      "decision_id": "DOS-M3-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M3-002",
+      "decision_id": "DOS-M3-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M3-003",
+      "decision_id": "DOS-M3-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M3-004",
+      "decision_id": "DOS-M3-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M3-005",
+      "decision_id": "DOS-M3-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M3-006",
+      "decision_id": "DOS-M3-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M3-007",
+      "decision_id": "DOS-M3-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M3-008",
+      "decision_id": "DOS-M3-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M3-008",
+      "decision_id": "DOS-M3-GATE-PROVIDER",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M3-009",
+      "decision_id": "DOS-M3-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M3-009",
+      "decision_id": "DOS-M3-GATE-PROVIDER",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M3-010",
+      "decision_id": "DOS-M3-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M3-010",
+      "decision_id": "DOS-M3-GATE-PROVIDER",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M3-007",
+      "decision_id": "DOS-M3-GATE-PROVIDER",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    }
+  ],
+  "transaction_contract": [
+    "Verify exact Automation target, live function/schema/trigger fingerprints, immutable project ID, route, model, retry policy, command registrations and publication scopes before writes.",
+    "Acquire parent-reviewed transaction serialization lock and reread every scoped ID; existing equal payload is a no-op only after full canonical comparison; any differing state/history aborts. Never overwrite existing tasks, decisions, execution or requirement history.",
+    "Create or verify the real OPEN milestone start decision before any task; create every task through supported function and link every task to that decision with blocking=true in the SAME transaction.",
+    "Create all requirement, decision and dependency links and refresh contracts after final metadata. Do not commit partial task/link batches.",
+    "Assert exact payload counts, complete links, zero ready Doctor tasks using live ready-task predicate, zero claims/runs/executions, no publication authority, and all start decisions still OPEN immediately before commit.",
+    "Dry-run rollback and review returned evidence first. Parent controls any commit; never remove a guard from the original draft SQL.",
+    "After commit read back canonical packets and zero-ready evidence. Keep all nine start gates open until parent confirms all nine safely saved; release each milestone separately in dependency order."
+  ],
+  "pending_inputs": [
+    "Parent live schema/consumer and trigger contract",
+    "Reviewed Doctor suit/workstream/app mapping (function requires active project/workstream)",
+    "Verified high-capability deep model and retry policy IDs",
+    "Approved command registration and protected publication paths",
+    "Exact no-ready-task SQL predicate and transaction/rollback proof"
+  ],
+  "live_read_hold": {
+    "action": "refresh live schema/function/trigger fingerprints",
+    "status": "explicitly-cancelled-not-retried",
+    "required_next_authorization": "renewed permission from parent/user before any live refresh or import",
+    "no_hosted_actions_performed": true
+  },
+  "readback_assertions": [
+    "All nine milestone start decisions remain open, including milestones not selected for implementation.",
+    "For every task, canonical_task_contract in stored metadata is deeply equal to the reviewed canonical task and canonical_task_sha256 matches.",
+    "Round-trip all supported top-level function arguments plus requirement/dependency/decision links; retain produced/informational decisions as blocking=false.",
+    "Compare shared project allowed_publication_paths to its locked pre-import value and require exact equality; no scope widening is part of registration.",
+    "Use the reviewed live ready-task predicate and require zero ready Doctor tasks before commit and after readback; no partial task batch may commit."
+  ]
+}
