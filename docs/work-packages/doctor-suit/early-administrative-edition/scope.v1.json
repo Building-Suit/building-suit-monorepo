@@ -1,0 +1,575 @@
+{
+  "schemaVersion": 1,
+  "editionId": "doctor-administrative-early",
+  "scopeStatus": "implementation-authorized-live-activation-blocked",
+  "authority": {
+    "sourceHead": "4ca7110f4d6efa828e0b41213e5c059bf02ba9db",
+    "startingStg": "8cabe8c57b9a6c682bba4868b3af0b0f3a640af3",
+    "originalPlansRemainUncompletedByThisEdition": true,
+    "automationImportOrActivationAuthorized": false
+  },
+  "sources": [
+    {
+      "milestone": "DOS-M1",
+      "path": "docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json",
+      "fileSha256": "8881c8b68172d75bc9827e910864c3fdd6c056119b0575e24bd49c5a87755a23"
+    },
+    {
+      "milestone": "DOS-M2",
+      "path": "docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json",
+      "fileSha256": "b442acff9a25ecbadbcf7d5f21f6fd672ae7ac10e6a5d186013cd253856f1125"
+    },
+    {
+      "milestone": "DOS-M3",
+      "path": "docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json",
+      "fileSha256": "7caf1851066eb8b2c4741be514ce4f7ee612a2570e76f94b8db3538815cf606f"
+    },
+    {
+      "milestone": "DOS-M4",
+      "path": "docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json",
+      "fileSha256": "041145f78b703fda51a0185744c7f6b2e900fbca7c7ff5dc129ad2170ed5634d"
+    },
+    {
+      "milestone": "DOS-M5",
+      "path": "docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json",
+      "fileSha256": "6ddb7b1ec6310bf2dfbbf562028c47ad1300eb6eb8e01f4cf94a54ed2b280e2b"
+    },
+    {
+      "milestone": "DOS-M6",
+      "path": "docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json",
+      "fileSha256": "eea1e06584bcd599fa13ea8a65400344e660055a7b75e4d817a0f04fe0a09240"
+    },
+    {
+      "milestone": "DOS-M7",
+      "path": "docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json",
+      "fileSha256": "9d937de32c9062852f228f79ea6f89887f39c15b20e7dc7cb485b17a273c1a0c"
+    },
+    {
+      "milestone": "DOS-M8",
+      "path": "docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json",
+      "fileSha256": "24dc2b7d993036671e2958751410e491fad1623910b08ce6418f1b702eca62a6"
+    },
+    {
+      "milestone": "DOS-M9",
+      "path": "docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json",
+      "fileSha256": "fde4ee5825fa131a2bd61a565e7c6a746a8a4e3ec74c6f53f878dbe818b8f418"
+    }
+  ],
+  "included": [
+    "appointments",
+    "private-administrative-queue",
+    "staff-location-permissions",
+    "basic-patient-administration",
+    "doctor-saas-subscription",
+    "privacy-rights-operations",
+    "supported-recovery",
+    "administrative-operational-readiness"
+  ],
+  "excluded": [
+    "clinical-records",
+    "prescriptions",
+    "diagnosis-or-dose-advice",
+    "private-document-uploads",
+    "clinical-or-free-text-notes",
+    "imports",
+    "outbound-messages",
+    "patient-charges-and-collections",
+    "mobile-apps",
+    "unapproved-paid-or-real-user-activation"
+  ],
+  "commercialTerms": null,
+  "decisions": [
+    {
+      "decisionId": "DOS-AE-D01",
+      "title": "Edition separation and implementation scope",
+      "status": "resolved",
+      "requiredEvidence": "User-authorized early administrative edition; no clinical roadmap/gate completion inferred."
+    },
+    {
+      "decisionId": "DOS-AE-D02",
+      "title": "Doctor commercial terms and expiry/downgrade access",
+      "status": "pending",
+      "requiredEvidence": "Owner-approved Doctor price/currency/interval/trial/quotas/renewal/grace/refund/cancellation and record-access policy; no Shop defaults."
+    },
+    {
+      "decisionId": "DOS-AE-D03",
+      "title": "Payment route, merchant eligibility and actual reconciliation",
+      "status": "pending",
+      "requiredEvidence": "Approved Doctor provider/manual route, merchant/entity eligibility, credentials custody and actual test/acceptance evidence."
+    },
+    {
+      "decisionId": "DOS-AE-D04",
+      "title": "Qualified SaaS tax-document applicability",
+      "status": "pending",
+      "requiredEvidence": "Qualified current review for the actual entity, SaaS business model and sale jurisdictions; no assumption from Shop or patient services."
+    },
+    {
+      "decisionId": "DOS-AE-D05",
+      "title": "Qualified privacy/real-data and rights policy",
+      "status": "pending",
+      "requiredEvidence": "Controller/processor, purpose/basis, minors/caregivers, retention/holds, export/erasure, complaints and explicit administrative real-user approval."
+    },
+    {
+      "decisionId": "DOS-AE-D06",
+      "title": "Hosting and data-flow approval",
+      "status": "pending",
+      "requiredEvidence": "Exact regions/providers/subprocessors/transfers, support access and verified contracts; user manages Doctor connections."
+    },
+    {
+      "decisionId": "DOS-AE-D07",
+      "title": "Recovery objectives and custody",
+      "status": "pending",
+      "requiredEvidence": "Approved RPO/RTO, encrypted backup scope/custody/retention, restore rights and actual hosted recovery evidence."
+    },
+    {
+      "decisionId": "DOS-AE-D08",
+      "title": "Independent financial and security acceptance",
+      "status": "pending",
+      "requiredEvidence": "Exact-candidate independent reviews, retests and resolution of critical/high launch blockers; no self-certification."
+    },
+    {
+      "decisionId": "DOS-AE-D09",
+      "title": "Operational limits and supervised administrative acceptance",
+      "status": "pending",
+      "requiredEvidence": "Approved workload thresholds, provider costs/quotas, support and incident owners, limited population/consent/stop criteria and actual user acceptance."
+    },
+    {
+      "decisionId": "DOS-AE-D10",
+      "title": "Exact-candidate public release and live activation",
+      "status": "pending",
+      "requiredEvidence": "Owner go/no-go, deployment/recovery evidence, product release registration/baseline and approved public destinations; no main promotion authorized."
+    }
+  ],
+  "liveActivationRequires": [
+    "DOS-AE-D02",
+    "DOS-AE-D03",
+    "DOS-AE-D04",
+    "DOS-AE-D05",
+    "DOS-AE-D06",
+    "DOS-AE-D07",
+    "DOS-AE-D08",
+    "DOS-AE-D09",
+    "DOS-AE-D10"
+  ],
+  "tasks": [
+    {
+      "taskId": "DOS-AE-001",
+      "title": "Edition scope and source/dependency separation",
+      "dependsOn": [],
+      "sourceTaskIds": [
+        "DOS-M1-020",
+        "DOS-M6-001",
+        "DOS-M7-010"
+      ],
+      "sourceRequirementIds": [
+        "DOS-M6-F001",
+        "DOS-M7-F010"
+      ],
+      "acceptance": [
+        {
+          "caseId": "DOS-AE-001-C01",
+          "assertion": "Keep all nine original plans, IDs, gates and completion states unchanged; the early administrative edition has its own task and acceptance IDs."
+        },
+        {
+          "caseId": "DOS-AE-001-C02",
+          "assertion": "Limit the edition to appointments, private administrative queue, staff/location permissions and basic patient administration plus the minimum SaaS/privacy/recovery controls."
+        },
+        {
+          "caseId": "DOS-AE-001-C03",
+          "assertion": "Map every extracted M6/M7 requirement and changed dependency; exclude patient charges and clinical/mobile/provider-delivery features without claiming original milestone completion."
+        },
+        {
+          "caseId": "DOS-AE-001-C04",
+          "assertion": "Record unresolved accountable owner/operator decisions without invented commercial, legal, hosting, recovery or activation values."
+        }
+      ],
+      "initialStatus": "planned"
+    },
+    {
+      "taskId": "DOS-AE-002",
+      "title": "Server-enforced administrative edition and safe data projections",
+      "dependsOn": [
+        "DOS-AE-001"
+      ],
+      "sourceTaskIds": [
+        "DOS-M1-010",
+        "DOS-M1-012",
+        "DOS-M1-014",
+        "DOS-M7-003"
+      ],
+      "sourceRequirementIds": [
+        "DOS-M7-F003",
+        "DOS-M7-F005"
+      ],
+      "acceptance": [
+        {
+          "caseId": "DOS-AE-002-C01",
+          "assertion": "Default to synthetic preview; administrative candidate/live capability sets are explicit, versioned and enforced by server/database authority, never browser metadata."
+        },
+        {
+          "caseId": "DOS-AE-002-C02",
+          "assertion": "Fail-close private document upload/access, clinical records, prescribing, clinical/free-text notes, imports, outbound messaging and patient charge collection for this edition; preserve historical code/data."
+        },
+        {
+          "caseId": "DOS-AE-002-C03",
+          "assertion": "Use fixed administrative cancellation/reschedule reason codes while preserving attributed history; omit unsupported free-text/clinical payloads from edition projections."
+        },
+        {
+          "caseId": "DOS-AE-002-C04",
+          "assertion": "Preserve fresh session, independent doctor/secretary and per-location authorization, safe queue privacy, scoped Realtime, concurrent conflict and idempotency safeguards."
+        }
+      ],
+      "initialStatus": "planned"
+    },
+    {
+      "taskId": "DOS-AE-003",
+      "title": "Configurable Doctor terms, subscriptions and entitlement enforcement",
+      "dependsOn": [
+        "DOS-AE-002"
+      ],
+      "sourceTaskIds": [
+        "DOS-M6-001",
+        "DOS-M6-002"
+      ],
+      "sourceRequirementIds": [
+        "DOS-M6-F001",
+        "DOS-M6-F002"
+      ],
+      "acceptance": [
+        {
+          "caseId": "DOS-AE-003-C01",
+          "assertion": "Represent Doctor-specific approved plan, price/currency/interval, trial, quotas, renewal, grace, expiry, refund and cancellation policies as versioned trusted data; missing values stay unconfigured."
+        },
+        {
+          "caseId": "DOS-AE-003-C02",
+          "assertion": "Doctor is the SaaS subscriber; independently invited secretary access and patient financial operations do not become subscriptions."
+        },
+        {
+          "caseId": "DOS-AE-003-C03",
+          "assertion": "Enforce current entitlements and concurrent staff/location allocation atomically and idempotently on the server, including forged plans and stale/replayed requests."
+        },
+        {
+          "caseId": "DOS-AE-003-C04",
+          "assertion": "Preserve authorized historical access and privacy/export request access on subscription expiry; do not delete history or reset trials/paid periods to enforce limits."
+        }
+      ],
+      "initialStatus": "planned"
+    },
+    {
+      "taskId": "DOS-AE-004",
+      "title": "SaaS quote and approved payment-route interface",
+      "dependsOn": [
+        "DOS-AE-003"
+      ],
+      "sourceTaskIds": [
+        "DOS-M6-003",
+        "DOS-M6-008"
+      ],
+      "sourceRequirementIds": [
+        "DOS-M6-F003",
+        "DOS-M6-F008"
+      ],
+      "acceptance": [
+        {
+          "caseId": "DOS-AE-004-C01",
+          "assertion": "Construct exact server-side SaaS quote/intents from approved immutable terms, subscriber identity, currency and current subscription; reject browser totals and arbitrary URLs."
+        },
+        {
+          "caseId": "DOS-AE-004-C02",
+          "assertion": "Keep payment route unconfigured until Doctor merchant eligibility, provider/manual-review route, credentials custody and SaaS tax-document applicability are approved."
+        },
+        {
+          "caseId": "DOS-AE-004-C03",
+          "assertion": "Separate test-provider evidence from actual provider/merchant acceptance; do not create accounts, credentials, charges or callback activation."
+        },
+        {
+          "caseId": "DOS-AE-004-C04",
+          "assertion": "No clinic service prices, patient charges, collections, receipts or tax-submission adapter are included."
+        }
+      ],
+      "initialStatus": "planned"
+    },
+    {
+      "taskId": "DOS-AE-005",
+      "title": "Verified settlement, reconciliation and subscription lifecycle",
+      "dependsOn": [
+        "DOS-AE-004"
+      ],
+      "sourceTaskIds": [
+        "DOS-M6-004",
+        "DOS-M6-005",
+        "DOS-M6-009",
+        "DOS-M6-010"
+      ],
+      "sourceRequirementIds": [
+        "DOS-M6-F004",
+        "DOS-M6-F005",
+        "DOS-M6-F009",
+        "DOS-M6-F010"
+      ],
+      "acceptance": [
+        {
+          "caseId": "DOS-AE-005-C01",
+          "assertion": "Only authenticated verified payment evidence or explicitly approved audited manual review may settle an exact matching intent/amount/currency/subscriber; redirects and pending/unknown state never activate paid access."
+        },
+        {
+          "caseId": "DOS-AE-005-C02",
+          "assertion": "Persist duplicate/out-of-order callbacks, request replays and reconciliation under transactional locks with immutable financial history."
+        },
+        {
+          "caseId": "DOS-AE-005-C03",
+          "assertion": "Implement only configured renewal/cancel/reactivate effective-date and preservation policies; reconcile unknown outcomes before retry and never invent automatic charges/refunds."
+        },
+        {
+          "caseId": "DOS-AE-005-C04",
+          "assertion": "Report SaaS invoices/payments/settlements/discrepancies separately from deferred patient revenue; retain currency separation and source links."
+        },
+        {
+          "caseId": "DOS-AE-005-C05",
+          "assertion": "Require exact-candidate independent financial review and actual payment/provider evidence before any paid/live-sale claim."
+        }
+      ],
+      "initialStatus": "planned"
+    },
+    {
+      "taskId": "DOS-AE-006",
+      "title": "Doctor-isolated Super Admin account and plan contract",
+      "dependsOn": [
+        "DOS-AE-003",
+        "DOS-AE-005"
+      ],
+      "sourceTaskIds": [
+        "DOS-M1-006",
+        "DOS-M1-007",
+        "DOS-M6-002",
+        "DOS-M6-004"
+      ],
+      "sourceRequirementIds": [
+        "DOS-M6-F002",
+        "DOS-M6-F004",
+        "DOS-M7-F005"
+      ],
+      "acceptance": [
+        {
+          "caseId": "DOS-AE-006-C01",
+          "assertion": "Reuse the versioned signed administration protocol, verified manifest/binding, operator capability checks, request replay and audit mechanics with Doctor-specific capabilities and environment identity."
+        },
+        {
+          "caseId": "DOS-AE-006-C02",
+          "assertion": "Do not reuse Shop RPCs, identity/session data, keys, prices, original trial/paid periods, receipts or subscription history; never import another app implementation."
+        },
+        {
+          "caseId": "DOS-AE-006-C03",
+          "assertion": "Doctor account onboarding and operator grant/activation require target-owned verified identity and explicit authority; no email-match ownership, automatic email verification, impersonation or source-owned password."
+        },
+        {
+          "caseId": "DOS-AE-006-C04",
+          "assertion": "Missing Doctor target binding, signing configuration, live policy or evidence returns unavailable; an operator grant is labelled separately from payment confirmation."
+        }
+      ],
+      "initialStatus": "planned"
+    },
+    {
+      "taskId": "DOS-AE-007",
+      "title": "Identity-verified privacy, consent and rights operations",
+      "dependsOn": [
+        "DOS-AE-002"
+      ],
+      "sourceTaskIds": [
+        "DOS-M7-001",
+        "DOS-M7-002",
+        "DOS-M7-004"
+      ],
+      "sourceRequirementIds": [
+        "DOS-M7-F001",
+        "DOS-M7-F002",
+        "DOS-M7-F004"
+      ],
+      "acceptance": [
+        {
+          "caseId": "DOS-AE-007-C01",
+          "assertion": "Record qualified edition-specific controller/processor, purpose/lawful basis, minors/caregivers, retention/holds, complaints and real-data approval; generated copy is not legal acceptance."
+        },
+        {
+          "caseId": "DOS-AE-007-C02",
+          "assertion": "Provide scoped identity-verified access/correction/export/erasure request cases, accountable decisions and append-only history; no direct bulk dump or guessed automatic deletion."
+        },
+        {
+          "caseId": "DOS-AE-007-C03",
+          "assertion": "Execute only approved policy outcomes with tenant/location/session isolation, partial/refused outcomes and legal/financial holds; export authorization remains independent of paid writes."
+        },
+        {
+          "caseId": "DOS-AE-007-C04",
+          "assertion": "Maintain exact browser/backend/storage/logging/support/backup provider and region/subprocessor/transfer inventory; unknown hosting approval blocks real data."
+        }
+      ],
+      "initialStatus": "planned"
+    },
+    {
+      "taskId": "DOS-AE-008",
+      "title": "Supported backup, restore and recovery qualification",
+      "dependsOn": [
+        "DOS-AE-003",
+        "DOS-AE-005",
+        "DOS-AE-007"
+      ],
+      "sourceTaskIds": [
+        "DOS-M7-006"
+      ],
+      "sourceRequirementIds": [
+        "DOS-M7-F006"
+      ],
+      "acceptance": [
+        {
+          "caseId": "DOS-AE-008-C01",
+          "assertion": "Keep approved RPO/RTO, encrypted custody, retention and restore permissions explicit and unset until owner evidence exists."
+        },
+        {
+          "caseId": "DOS-AE-008-C02",
+          "assertion": "Implement isolated synthetic backup/restore integrity verification for Doctor public/private/Auth data, entitlement/payment/audit/idempotency records and retained document metadata/bytes where applicable."
+        },
+        {
+          "caseId": "DOS-AE-008-C03",
+          "assertion": "Treat database backup, Storage object bytes and provider/Auth/function/configuration recovery as separate scopes; a database dump alone is not whole-service recovery proof."
+        },
+        {
+          "caseId": "DOS-AE-008-C04",
+          "assertion": "Measure functional disposable restoration without touching hosted data; actual hosted recovery and objective acceptance require independent operator/provider evidence."
+        }
+      ],
+      "initialStatus": "planned"
+    },
+    {
+      "taskId": "DOS-AE-009",
+      "title": "Security, redacted operations, incidents and measured limits",
+      "dependsOn": [
+        "DOS-AE-002",
+        "DOS-AE-005",
+        "DOS-AE-006",
+        "DOS-AE-007",
+        "DOS-AE-008"
+      ],
+      "sourceTaskIds": [
+        "DOS-M7-005",
+        "DOS-M7-007",
+        "DOS-M7-008"
+      ],
+      "sourceRequirementIds": [
+        "DOS-M7-F005",
+        "DOS-M7-F007",
+        "DOS-M7-F008"
+      ],
+      "acceptance": [
+        {
+          "caseId": "DOS-AE-009-C01",
+          "assertion": "Exercise tenant/doctor/location, Auth/recovery, privilege, Storage/Realtime, export and administrative access boundaries with reproducible synthetic evidence and exact-head regression."
+        },
+        {
+          "caseId": "DOS-AE-009-C02",
+          "assertion": "Track independent security findings and retests; unresolved critical/high launch blockers cannot be waived by code or a self-issued certificate."
+        },
+        {
+          "caseId": "DOS-AE-009-C03",
+          "assertion": "Provide redacted health/reconciliation/recovery signals and incident ownership/escalation/containment runbooks; never log patient payloads, credentials or send external incident messages."
+        },
+        {
+          "caseId": "DOS-AE-009-C04",
+          "assertion": "Measure synthetic workloads only against explicit approved thresholds, provider quotas/cost and support ownership; no invented capacity or hosted load claim."
+        }
+      ],
+      "initialStatus": "planned"
+    },
+    {
+      "taskId": "DOS-AE-010",
+      "title": "Nonclinical UI, onboarding and subscription presentation",
+      "dependsOn": [
+        "DOS-AE-002",
+        "DOS-AE-003",
+        "DOS-AE-005",
+        "DOS-AE-006",
+        "DOS-AE-007"
+      ],
+      "sourceTaskIds": [
+        "DOS-M1-004",
+        "DOS-M1-005",
+        "DOS-M1-007",
+        "DOS-M6-005",
+        "DOS-M7-009"
+      ],
+      "sourceRequirementIds": [
+        "DOS-M6-F005",
+        "DOS-M7-F009",
+        "DOS-M7-F010"
+      ],
+      "acceptance": [
+        {
+          "caseId": "DOS-AE-010-C01",
+          "assertion": "Keep all visual components/templates in packages/ui and interaction controllers in packages/ux; Doctor supplies logic, authorized projections and EN/AR copy."
+        },
+        {
+          "caseId": "DOS-AE-010-C02",
+          "assertion": "Present only the administrative edition with honest preview/candidate/live states and capability-aware onboarding, plan/payment/expiry status and rights access."
+        },
+        {
+          "caseId": "DOS-AE-010-C03",
+          "assertion": "No clinical record/prescription, mobile app, document upload, outgoing-message, tax-compliance, security-certification or paid/live readiness claims without corresponding accepted evidence."
+        },
+        {
+          "caseId": "DOS-AE-010-C04",
+          "assertion": "Keep independent marketing work separate; show no guessed domain, support destination, price/trial or provider destination."
+        }
+      ],
+      "initialStatus": "planned"
+    },
+    {
+      "taskId": "DOS-AE-011",
+      "title": "Exact-candidate edition acceptance and one release aggregate",
+      "dependsOn": [
+        "DOS-AE-001",
+        "DOS-AE-002",
+        "DOS-AE-003",
+        "DOS-AE-004",
+        "DOS-AE-005",
+        "DOS-AE-006",
+        "DOS-AE-007",
+        "DOS-AE-008",
+        "DOS-AE-009",
+        "DOS-AE-010"
+      ],
+      "sourceTaskIds": [
+        "DOS-M1-020",
+        "DOS-M6-010",
+        "DOS-M7-009",
+        "DOS-M7-010"
+      ],
+      "sourceRequirementIds": [
+        "DOS-M6-F010",
+        "DOS-M7-F009",
+        "DOS-M7-F010"
+      ],
+      "acceptance": [
+        {
+          "caseId": "DOS-AE-011-C01",
+          "assertion": "Collect exact-head unit, SQL/RLS/concurrency, browser, real disposable provider, shared consumer, boundary/build/type/lint and release provenance evidence; distinguish failures/skips/unrun/hosted receipts."
+        },
+        {
+          "caseId": "DOS-AE-011-C02",
+          "assertion": "Assemble independent financial/security, qualified legal/tax, approved hosting/recovery/real-user and actual payment/operator acceptance for this administrative candidate; no clinical gate is waived."
+        },
+        {
+          "caseId": "DOS-AE-011-C03",
+          "assertion": "Prepare bounded stacked PRs and one reviewed passing aggregate into stg for the parent; original M6/M7 and the full clinical product remain uncompleted."
+        },
+        {
+          "caseId": "DOS-AE-011-C04",
+          "assertion": "Keep code merge, CI deployment, hosted migrations, live activation and main promotion separate; no manual deployment, hosted mutation, credential creation, DNS/security change or home-network access."
+        },
+        {
+          "caseId": "DOS-AE-011-C05",
+          "assertion": "Do not claim sale readiness or admit real users until all edition gates and exact-candidate owner go/no-go evidence are accepted."
+        }
+      ],
+      "initialStatus": "planned"
+    }
+  ]
+}
