@@ -1,9 +1,10 @@
+import { doctorEditionMode, type DoctorEditionMode } from './administrativeEdition.ts'
 import { doctorAdministrativeCapabilities, doctorUuid, type DoctorAdministrativeCapability } from './locationContext.ts'
 export interface DoctorDelegationGrant { locationId: string; capabilities: DoctorAdministrativeCapability[] }
 export interface DoctorTeamLocation { id: string; name: string; timezone: string; archived: boolean }
 export interface DoctorTeamMember { id: string; email: string; status: 'active' | 'suspended' | 'revoked'; version: number; createdAt: string; grants: (DoctorDelegationGrant & { locationName: string; archived: boolean })[] }
 export interface DoctorTeamInvitation { id: string; email: string; status: 'pending' | 'accepted' | 'cancelled' | 'expired'; version: number; expiresAt: string; createdAt: string; grants: DoctorDelegationGrant[] }
-export interface DoctorTeamDirectory { practiceId: string; practiceName: string; members: DoctorTeamMember[]; invitations: DoctorTeamInvitation[]; locations: DoctorTeamLocation[]; memberTotal: number; invitationTotal: number; locationTotal: number }
+export interface DoctorTeamDirectory { practiceId: string; practiceName: string; edition: DoctorEditionMode; editionRevision: number; availableCapabilities: DoctorAdministrativeCapability[]; members: DoctorTeamMember[]; invitations: DoctorTeamInvitation[]; locations: DoctorTeamLocation[]; memberTotal: number; invitationTotal: number; locationTotal: number }
 export interface DoctorInvitationDetails { id: string; practiceId: string; practiceName: string; doctorName: string; expiresAt: string; status: 'pending' | 'accepted'; grants: (DoctorDelegationGrant & { locationName: string; timezone: string })[] }
 export interface DoctorTeamQuery { page: number; size: number; search: string }
 export interface DoctorInvitationForm { email: string; grants: DoctorDelegationGrant[] }
@@ -26,6 +27,7 @@ function grants(value: unknown): DoctorDelegationGrant[] {
 }
 export function doctorTeamDirectory(value: unknown, practiceId: string): DoctorTeamDirectory {
   if (!record(value) || value.practice_id!==practiceId || !text(value.practice_name) || !count(value.member_total) || !count(value.invitation_total) || !count(value.location_total)) invalid()
+  if (!doctorEditionMode(value.edition) || !version(value.edition_revision) || !Array.isArray(value.available_capabilities) || new Set(value.available_capabilities).size !== value.available_capabilities.length || value.available_capabilities.some(cap => !doctorAdministrativeCapabilities.includes(cap as DoctorAdministrativeCapability) || (value.edition === 'administrative_candidate' && ['documents.read', 'documents.write'].includes(String(cap))))) invalid()
   const locations = unique(array(value.locations).map((item): DoctorTeamLocation => {
     if (!record(item) || !doctorUuid(item.id) || !text(item.name) || !text(item.timezone) || typeof item.archived!=='boolean') invalid()
     return { id: item.id, name: item.name, timezone: item.timezone, archived: item.archived }
@@ -43,7 +45,7 @@ export function doctorTeamDirectory(value: unknown, practiceId: string): DoctorT
     if (!record(item) || !doctorUuid(item.id) || !text(item.recipient_email) || !['pending','accepted','cancelled','expired'].includes(String(item.status)) || !version(item.version) || !text(item.expires_at) || !text(item.created_at)) invalid()
     return { id: item.id, email: item.recipient_email, status: item.status as DoctorTeamInvitation['status'], version: Number(item.version), expiresAt: item.expires_at, createdAt: item.created_at, grants: grants(item.grants) }
   }))
-  return { practiceId, practiceName: value.practice_name, members, invitations, locations, memberTotal: Number(value.member_total), invitationTotal: Number(value.invitation_total), locationTotal: Number(value.location_total) }
+  return { practiceId, practiceName: value.practice_name, edition: value.edition, editionRevision: Number(value.edition_revision), availableCapabilities: [...value.available_capabilities] as DoctorAdministrativeCapability[], members, invitations, locations, memberTotal: Number(value.member_total), invitationTotal: Number(value.invitation_total), locationTotal: Number(value.location_total) }
 }
 export function doctorInvitationDetails(value: unknown, invitationId: string): DoctorInvitationDetails {
   if (!record(value) || value.invitation_id!==invitationId || !doctorUuid(value.practice_id) || !text(value.practice_name) || !text(value.doctor_name) || !text(value.expires_at) || !['pending','accepted'].includes(String(value.status))) invalid()

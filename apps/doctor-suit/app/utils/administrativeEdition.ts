@@ -8,3 +8,11 @@ export function doctorEditionMode(value: unknown): value is DoctorEditionMode {
 export function doctorAdministrativeReason(value: unknown): value is typeof doctorAdministrativeReasonCodes[number] {
   return typeof value === 'string' && doctorAdministrativeReasonCodes.includes(value as typeof doctorAdministrativeReasonCodes[number])
 }
+
+export function doctorAdministrativeReasonOptions(ar: boolean) {
+  const labels = ar ? ['طلب المريض', 'تغيير الجدول', 'تصحيح الحجز', 'إلغاء إداري'] : ['Patient request', 'Schedule change', 'Booking correction', 'Administrative cancellation']
+  return doctorAdministrativeReasonCodes.map((value, index) => ({ value, label: labels[index]! }))
+}
+export function doctorAdministrativeReasonLabel(value: unknown, ar: boolean): string {
+  return doctorAdministrativeReasonOptions(ar).find(option => option.value === value)?.label || ''
+}

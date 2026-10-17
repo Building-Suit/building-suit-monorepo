@@ -24,6 +24,7 @@ export function doctorLocationContext(value: unknown, actor: DoctorIdentity, env
     || value.capabilities.some(item => !doctorAdministrativeCapabilities.includes(item as DoctorAdministrativeCapability))) invalid()
   const edition = value.edition !== undefined || value.edition_revision !== undefined
   if (edition && (!doctorEditionMode(value.edition) || !Number.isSafeInteger(value.edition_revision) || Number(value.edition_revision) < 1)) invalid()
+  if (value.edition==='administrative_candidate' && value.capabilities.some(capability => ['documents.read','documents.write'].includes(String(capability)))) invalid()
   return { environment, userId: actor.userId, sessionId: actor.sessionId, practiceId: value.practice_id, locationId: value.location_id,
     portal: value.portal as DoctorContextScope['portal'], practiceName: value.practice_name, doctorName: value.doctor_name,
     locationName: value.location_name, timezone: value.timezone, grantsVersion: Number(value.grants_version), locationVersion: Number(value.location_version), capabilities: [...new Set(value.capabilities)] as DoctorAdministrativeCapability[],

@@ -1,3 +1,4 @@
+import { doctorAdministrativeCapabilities } from '../../app/utils/locationContext.ts'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
@@ -8,7 +9,7 @@ const actor = { userId: '51000000-0000-0000-0000-000000000003',sessionId: '52000
 const practice = '53000000-0000-0000-0000-000000000001'; const location = '54000000-0000-0000-0000-000000000001'; const invitation = '55000000-0000-0000-0000-000000000001'
 const credential = `${invitation}.${'a'.repeat(64)}`
 const details = { id: invitation,practiceId: practice,practiceName: 'Synthetic practice',doctorName: 'Synthetic doctor',expiresAt: '2026-10-18T00:00:00Z',status: 'pending',grants: [{ locationId: location,locationName: 'Synthetic clinic',timezone: 'Africa/Cairo',capabilities: ['patients.read'] }] }
-const directory = { practiceId: practice,practiceName: 'Synthetic practice',members: [],invitations: [],locations: [{ id: location,name: 'Synthetic clinic',timezone: 'Africa/Cairo',archived: false }],memberTotal: 0,invitationTotal: 0,locationTotal: 1 }
+const directory = { practiceId: practice,practiceName: 'Synthetic practice',edition: 'synthetic_preview',editionRevision: 1,availableCapabilities: [...doctorAdministrativeCapabilities],members: [],invitations: [],locations: [{ id: location,name: 'Synthetic clinic',timezone: 'Africa/Cairo',archived: false }],memberTotal: 0,invitationTotal: 0,locationTotal: 1 }
 const scope = { environment: 'local',portal: 'doctor',userId: actor.userId,sessionId: actor.sessionId,practiceId: practice,locationId: location,grantsVersion: 1,locationVersion: 1 }
 const form = () => ({ email: 'synthetic-staff@example.test',grants: [{ locationId: location,capabilities: ['patients.read'] }] })
 const deferred = () => { let resolve; let reject; const promise = new Promise((done,fail) => { resolve = done; reject = fail }); return { promise,resolve,reject } }
@@ -35,7 +36,7 @@ test('DOS-M1-009: invitation codes are exact non-URL credentials and contain 32 
   assert.notEqual(first.hash,first.token)
 })
 test('DOS-M1-009: strict projections reject another practice, clinical grants and mismatched invitation IDs', () => {
-  const dto = { practice_id: practice,practice_name: 'Synthetic',members: [],invitations: [],locations: [],member_total: 0,invitation_total: 0,location_total: 0,token_hash: 'must not propagate' }
+  const dto = { practice_id: practice,practice_name: 'Synthetic',edition: 'synthetic_preview',edition_revision: 1,available_capabilities: [...doctorAdministrativeCapabilities],members: [],invitations: [],locations: [],member_total: 0,invitation_total: 0,location_total: 0,token_hash: 'must not propagate' }
   assert.equal('token_hash' in doctorTeamDirectory(dto,practice),false)
   assert.throws(() => doctorTeamDirectory({ ...dto,practice_id: invitation },practice),/RESPONSE_INVALID/)
   const preview = { invitation_id: invitation,practice_id: practice,practice_name: 'Synthetic',doctor_name: 'Synthetic owner',expires_at: details.expiresAt,status: 'pending',grants: [{ location_id: location,location_name: 'Synthetic',timezone: 'Africa/Cairo',capabilities: ['clinical.sign'] }] }
@@ -206,4 +207,24 @@ test('DOS-M1-009: protected admission waits for an SDK revision queued as identi
   controller = createDoctorAuthController(backend,state,{ clear() {},locked: () => false,lock() {},unlock() {} })
   assert.equal(await controller.refresh(),true)
   assert.equal(state.phase,'authenticated'); assert.deepEqual(state.identity,actor); assert.equal(reads,2)
+})
+
+test('team policy changes clear editors only after an authoritative replacement, across loading gaps', async () => {
+  let value = structuredClone(directory)
+  const state = doctorTeamState()
+  const controller = createDoctorTeamController({ load: async () => value },state,() => scope)
+  let cleared = 0
+  const unregister = controller.registerPolicyChange(() => { cleared++; controller.forgetCredential() })
+  const query = { page: 0,size: 20,search: '' }
+  await controller.load(query);state.credential = 'synthetic-credential'
+  await controller.load(query)
+  assert.equal(cleared,0)
+  assert.equal(state.credential,'synthetic-credential','same-policy refresh retains the invitation delivery result')
+  value = { ...value,edition: 'administrative_candidate',editionRevision: 2,availableCapabilities: value.availableCapabilities.filter(cap => !cap.startsWith('documents.')) }
+  await controller.load(query)
+  assert.equal(cleared,1)
+  assert.equal(state.credential,'')
+  assert.equal(state.directory.edition,'administrative_candidate')
+  unregister();controller.clear();await controller.load(query)
+  assert.equal(cleared,1,'new session does not retain a previous policy listener or epoch')
 })
