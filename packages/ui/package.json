@@ -365,7 +365,9 @@
     "./templates/BsProductPreviewPage.vue": "./src/templates/BsProductPreviewPage.vue",
     "./templates/BsAccountSessionPage.vue": "./src/templates/BsAccountSessionPage.vue",
     "./templates/BsPracticeOverviewPage.vue": "./src/templates/BsPracticeOverviewPage.vue",
-    "./templates/BsLocationManagementPage.vue": "./src/templates/BsLocationManagementPage.vue"
+    "./templates/BsLocationManagementPage.vue": "./src/templates/BsLocationManagementPage.vue",
+    "./templates/BsPatientDirectoryPage.vue": "./src/templates/BsPatientDirectoryPage.vue",
+    "./organisms/BsPatientIdentityFields.vue": "./src/organisms/BsPatientIdentityFields.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

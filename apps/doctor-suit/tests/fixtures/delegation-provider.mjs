@@ -1,5 +1,6 @@
 // In-memory multi-account browser protocol fixture. Actual authority is verified in SQL suites.
 import { createHash, randomUUID } from 'node:crypto'
+import { seedPatientProtocol, patientProtocol } from './patients-provider.mjs'
 import { doctorAdministrativeCapabilities } from '../../app/utils/locationContext.ts'
 const sessions = new Map(); const refreshes = new Map()
 export function resetDelegationProtocol() { sessions.clear(); refreshes.clear() }
@@ -24,6 +25,7 @@ export function applyDelegationFixtureInput(state,input) {
 export function delegationProtocol({ state,req,url,input,send,deny }) {
   if (!state.delegation) return false
   const data = model(state)
+  if (state.patients) seedPatientProtocol(data)
   const userView = actor => ({ id: actor.id,aud: 'authenticated',role: 'authenticated',email: actor.email,email_confirmed_at: '2026-01-01T00:00:00Z',app_metadata: { provider: 'email',providers: ['email'] },user_metadata: { role: 'owner',clinical_signer: true },identities: [],created_at: '2026-01-01T00:00:00Z' })
   function issue(actor,sessionId = randomUUID()) {
     const access_token = `${Buffer.from('{"alg":"HS256","typ":"JWT"}').toString('base64url')}.${Buffer.from(JSON.stringify({ sub: actor.id,role: 'authenticated',aud: 'authenticated',session_id: sessionId,exp: Math.floor(Date.now()/1000)+3600 })).toString('base64url')}.synthetic-signature`
@@ -57,6 +59,7 @@ export function delegationProtocol({ state,req,url,input,send,deny }) {
     return [{ practice_id: practice.id,practice_name: practice.name,doctor_name: data.users.find(item => item.id===practice.owner_user_id).name,location_id: location.id,location_name: location.name,timezone: location.timezone,portal: owner(practice.id) ? 'doctor' : 'secretary',grants_version: owner(practice.id) ? practice.version : membership.version,location_version: location.version,capabilities }]
   })
   const rpc = url.pathname.replace('/rest/v1/rpc/','')
+  if (state.patients && patientProtocol({ data, actor, sessionId: session.sessionId, rpc, input, send, capability })) return true
   const reject = (code='42501') => { deny(code); return true }
   if (rpc==='doctor_session_context') { send({ product: 'doctor-suit',user_id: actor.id,session_id: session.sessionId,practice_id: ownPractice?.id || null }); return true }
   if (rpc==='doctor_contexts') { send(contexts()); return true }

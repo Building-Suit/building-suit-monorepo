@@ -515,6 +515,17 @@
       "adapterBoundary": "Existing complete access and invitation templates gain opt-in controlled per-location administrative permission fields, confirmation, pagination and manual credential entry. Doctor owns verified recipient binding, one-time secret lifecycle, independent memberships, server authorization and typed commands. Shared UX owns foreground/visible-page refresh and dialog lifecycle.",
       "task": "DOS-M1-009",
       "migrationStatus": "registered complete synthetic team and invitation routes; granular enforcement is DOS-M1-010"
+    },
+    {
+      "family": "patient-administration",
+      "owner": "packages/ui",
+      "components": [
+        "BsPatientDirectoryPage",
+        "BsPatientIdentityFields"
+      ],
+      "adapterBoundary": "Complete scoped patient directory, recorded identity fields, duplicate-review presentation and edit/archive dialogs. Doctor owns separate opaque identity/practice relationships, entered-unverified provenance, scoped search/pagination, optimistic commands and duplicate evidence. Shared UX owns dialog lifecycle.",
+      "task": "DOS-M1-011",
+      "migrationStatus": "registered complete synthetic administrative route"
     }
   ]
 }

@@ -5,6 +5,8 @@ import type { createDoctorLocationsController } from '../utils/locationsControll
 import type { DoctorContextScope } from '../utils/contextScope'
 import type { createDoctorTeamController } from '../utils/teamController'
 import type { createDoctorInvitationController } from '../utils/invitationController'
+import type { createDoctorPatientsController } from '../utils/patientsController'
+import type { DoctorLocationContext } from '../utils/locationContext'
 declare module '#app' {
   interface NuxtApp {
     $doctorAuth: ReturnType<typeof createDoctorAuthController>
@@ -14,6 +16,8 @@ declare module '#app' {
     $doctorLocationsScope: () => DoctorContextScope | null
     $doctorTeam: ReturnType<typeof createDoctorTeamController>
     $doctorTeamScope: () => DoctorContextScope | null
+    $doctorPatients: ReturnType<typeof createDoctorPatientsController>
+    $doctorPatientsScope: () => DoctorLocationContext | null
     $doctorInvitation: ReturnType<typeof createDoctorInvitationController>
   }
 }
