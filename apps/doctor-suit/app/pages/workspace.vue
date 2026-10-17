@@ -12,7 +12,7 @@ await context.refresh()
 // is never promoted just because no active location can be selected.
 if(context.state.phase==='choosing' && !context.state.options.length && !auth.state.identity?.practiceId) {
   await practice.load()
-  if(practice.state.setup?.enrollment==='owner')await navigateTo('/onboarding')
+  if(practice.state.setup?.enrollment==='owner')await navigateTo(practice.state.setup.subscriptionRequired?'/subscription':'/onboarding')
 }
 const denied = computed(() => !context.state.options.length ? { title: scopeCopy.value.choose, description: scopeCopy.value.chooseDescription } : undefined)
 const profile = computed(() => {

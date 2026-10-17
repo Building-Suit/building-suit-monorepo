@@ -6,6 +6,9 @@ export interface DoctorSaasPeriod { id: string; kind: 'trial'; termsId: string; 
 export interface DoctorSaasStatus {
   subscriberUserId: string; practiceId: string | null; state: DoctorSaasState; revision: number; periodActive: boolean
   period: DoctorSaasPeriod | null; terms: DoctorSaasTermsVersion | null
+  usage?:{clinics:number;staffMembers:number;staffInvitations:number;staffTotal:number}
+  writesAllowed?: boolean
+  observedAt?: string
   dataMode: 'synthetic'; paidActivationAvailable: false; liveActivation: false
 }
 const record = (value: unknown): value is Record<string,unknown> => Boolean(value && typeof value==='object' && !Array.isArray(value))
@@ -19,13 +22,17 @@ export function doctorSaasStatus(value: unknown,identity: DoctorIdentity): Docto
   if(!record(value) || value.subscriber_user_id!==identity.userId || value.practice_id!==identity.practiceId
     || !['unconfigured','trial','expired','scheduled','suspended'].includes(String(value.state)) || !Number.isSafeInteger(value.revision) || Number(value.revision)<0
     || value.period_active!==(value.state==='trial') || value.data_mode!=='synthetic' || value.paid_activation_available!==false || value.live_activation!==false)invalid()
-  const base = { subscriberUserId: identity.userId,practiceId: identity.practiceId,state: value.state as DoctorSaasState,revision: Number(value.revision),periodActive: value.period_active as boolean,dataMode: 'synthetic' as const,paidActivationAvailable: false as const,liveActivation: false as const }
+  if(value.business_writes_allowed!==undefined && (typeof value.business_writes_allowed!=='boolean' || (value.business_writes_allowed && !value.period_active)))invalid()
+  let usage:DoctorSaasStatus['usage']
+  if(value.usage!==undefined){const row=value.usage;if(!record(row)||['clinics','staff_members','staff_invitations','staff_total'].some(key=>!Number.isSafeInteger(row[key])||Number(row[key])<0)||row.staff_total!==Number(row.staff_members)+Number(row.staff_invitations))invalid();usage={clinics:Number(row.clinics),staffMembers:Number(row.staff_members),staffInvitations:Number(row.staff_invitations),staffTotal:Number(row.staff_total)}}
+  const observation=value.observed_at===undefined?undefined:timestamp(value.observed_at)
+  const base = { ...(usage?{usage}:{}), ...(value.business_writes_allowed===undefined?{}:{writesAllowed:value.business_writes_allowed as boolean}),...(observation?{observedAt:observation}:{}), subscriberUserId: identity.userId,practiceId: identity.practiceId,state: value.state as DoctorSaasState,revision: Number(value.revision),periodActive: value.period_active as boolean,dataMode: 'synthetic' as const,paidActivationAvailable: false as const,liveActivation: false as const }
   if(value.state==='unconfigured') { if(value.revision!==0 || value.period!==null || value.terms!==null)invalid();return { ...base,period: null,terms: null } }
   if(value.revision===0 || !record(value.period) || !doctorUuid(value.period.id) || value.period.kind!=='trial')invalid()
   const terms = doctorSaasTermsVersion(value.terms)
   if(value.period.terms_id!==terms.id || terms.trialDays<1 || value.period.accepted_document_ref!==terms.termsDocumentRef)invalid()
   const startedAt = timestamp(value.period.started_at);const endsAt = timestamp(value.period.ends_at)
-  if(startedAt>=endsAt)invalid()
+  if(startedAt>=endsAt || (observation && ((value.state==='trial' && (observation<startedAt || observation>=endsAt)) || (value.state==='expired' && observation<endsAt) || (value.state==='scheduled' && observation>=startedAt))))invalid()
   return { ...base,terms,period: { id: value.period.id,kind: 'trial',termsId: terms.id,startedAt,endsAt,acceptedDocumentRef: terms.termsDocumentRef } }
 }
 export type DoctorSaasError = 'configuration' | 'conflict' | 'trial-used' | 'trial-unavailable' | 'staff-limit' | 'clinic-limit' | 'inactive' | 'over-limit-read-only' | 'denied' | 'invalid' | 'network'

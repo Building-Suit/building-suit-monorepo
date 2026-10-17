@@ -1,3 +1,4 @@
+import{subscriptionProtocol}from'./subscription-provider.mjs'
 import { initializeMilestoneProtocol,milestoneProtocol } from './milestone-provider.mjs'
 import { seedAuditProtocol,auditProtocol } from './audit-provider.mjs'
 // In-memory multi-account browser protocol fixture. Actual authority is verified in SQL suites.
@@ -60,6 +61,7 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
   if (url.pathname==='/auth/v1/logout') { sessions.delete(req.headers.authorization); for (const [key,value] of refreshes) if (value.sessionId===session.sessionId) refreshes.delete(key); send({}); return true }
   if (url.pathname==='/auth/v1/user') { send(userView(actor)); return true }
   const ownPractice = data.practices.find(item => item.owner_user_id===actor.id)
+  if(subscriptionProtocol({state,data,actor,ownPractice,rpc:url.pathname.split('/').at(-1),input,send}))return true
   const memberFor = practice => data.memberships.find(item => item.practice_id===practice && item.user_id===actor.id && item.status==='active')
   const owner = practice => data.practices.some(item => item.id===practice && item.owner_user_id===actor.id)
   const candidate = state.edition==='administrative_candidate'

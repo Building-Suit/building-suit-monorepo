@@ -62,7 +62,7 @@ export function createDoctorContextController(repository: ReturnType<typeof doct
   }
   function expire(){
     const cleanup=clear();const cleared=generation
-    void cleanup.then(()=>{if(cleared===generation && state.error!=='cleanup')return refresh()})
+    return cleanup.then(()=>{if(cleared===generation && state.error!=='cleanup')return refresh()})
   }
   async function choose(value: string): Promise<boolean> {
     const option = state.options.find(item => doctorContextId(item) === value)
