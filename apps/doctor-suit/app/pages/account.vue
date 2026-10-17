@@ -18,7 +18,7 @@ const hydrated = ref(false)
 onMounted(() => { hydrated.value = true })
 const availability = computed(() => auth.state.phase !== 'authenticated' || !auth.state.identity ? { state: 'loading' as const, title: copy.value.checking, description: copy.value.checkingDescription } : undefined)
 async function signOut() { await auth.signOut(); await navigateTo('/sign-in') }
-watch(() => auth.state.phase, phase => { if (phase === 'signed-out' || phase === 'unavailable') void navigateTo('/sign-in') })
+watch(() => auth.state.phase, phase => { if ((phase === 'signed-out' || phase === 'unavailable') && !personal.reauthenticating.value) void navigateTo('/sign-in') })
 </script>
 <template>
   <BsAccountSessionPage v-model:account-form="accountForm" v-model:account-editor-open="accountEditorOpen" :settings="accountView" :availability="availability" :product="product" :title="copy.account" :description="copy.accountDescription" :status="copy.status" :status-description="auth.state.identity?.practiceId ? practiceCopy.boundaries : copy.statusDescription" :links="links" :sign-out="copy.signOut" :pending="auth.state.pending || !hydrated" :error="error" @edit-account="personal.edit" @save-account="personal.save" @reload-account="personal.account.load" @reauthenticate="personal.reauthenticate" @sign-out="signOut" />
