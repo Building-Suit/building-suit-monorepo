@@ -31,7 +31,7 @@ The latest user instruction is **stack and integrate M1 before starting M2**. Th
 | DOS-M1-017 | [PR362](https://github.com/Building-Suit/building-suit-monorepo/pull/362) | `3da424cdd9fb7bca61dedf8593ae25386546a019` |
 | DOS-M1-018 | [PR363](https://github.com/Building-Suit/building-suit-monorepo/pull/363) | `3ecccbf8172196a2518eaae93ce41d54b5f87117` |
 | DOS-M1-019 | [PR364](https://github.com/Building-Suit/building-suit-monorepo/pull/364) | `e53cc7bcd8b0f07c2c2287de0867c942e480d85c` |
-| DOS-M1-020 | [PR365](https://github.com/Building-Suit/building-suit-monorepo/pull/365) | `17a522223da52abbfa4907a454cfd5039c0112b7` |
+| DOS-M1-020 | [PR365](https://github.com/Building-Suit/building-suit-monorepo/pull/365) | `a4757572763bf243c8b3f064e9f7baa8a11b34d7` |
 
 PR345's pinned planning source precedes these implementation commits. The aggregate must retain each listed source as an ancestor. The source for DOS-M1-020 also includes the later reviewed evidence/configuration commits on PR365; the current aggregate manifest records its frozen implementation source before aggregation. No history is rewritten and no M2 commit is merged into this root.
 
@@ -48,3 +48,12 @@ The no-n8n scope is limited to this PR and the first stg commit introducing this
 ## Integration handoff
 
 Before the parent resolves a merge action, verify fresh PR345 target/base/head, all required exact-head results including non-skipped aggregate `verify` and `doctor-m1-evidence`, the source-ancestor/exclusion checks, and any active denial/authorization state. Supply the exact candidate SHA, source/task list and immutable artifact/log references. Do not merge via another route to bypass the denied PR345 action. Preserve all unrelated stg work. No main promotion, manual deployment, hosted migration, credentials, provider connections, real patients, prescribing, commercial activation, Automation activation or n8n/home-service access is authorized here.
+
+
+## Closing the actual Shop/Ledger backend coverage gap
+
+The recorded earlier backend success in `atomic-template-unification-acceptance.md` is prior-source support, not proof for this aggregate. The new root `doctor-m1-shop-backend` job executes the existing `shop-backend.spec.ts` assertions on this exact candidate, with the maintained backend-only configuration and privacy-only trace/screenshot overrides. It must record **one actual pass and zero skips** before independent C03 evaluation can succeed.
+
+The runner is restricted to explicitly authorized GitHub-hosted execution. It copies the complete Shop and Ledger migration chains byte-for-byte to new temporary project roots, assigns unique owned project IDs and loopback API/mail ports57321/58321, retains the current synthetic Shop seed, and disables the unnecessary Ledger development-identity seed. Original config, migrations, generated types and hosted databases are unchanged. Public keys are read from the owned CLI status in memory; no generated keys, OTP, Auth responses, browser trace or raw provider output is published. The real browser journey covers Shop signup/email OTP, product creation and persistence after reload, then confirms the same browser has no Ledger session or Ledger cookie. Local copied-project cron is unscheduled so no provider, reminder or delivery activation is performed. Only the owned projects and test output are removed.
+
+The ordinary UI sweep still reports its backend case as skipped; it is not relabeled as a pass. Its distinct actual backend execution, exact-head receipt and migration digests are required in `doctor-m1-exact-candidate-<SHA>`. Until that cloud run succeeds, this consumer coverage remains a pending gap. Shop staging wildcard/runtime configuration and reminder activation continue to await their specific user inputs and are outside this local acceptance; they do not block executing the authorized M1 checks.

@@ -35,7 +35,7 @@ export function doctorAggregateClaimIssues(packet,m2Present) {
 }
 export function summarizeDoctorEvidenceLog(value) {
   const text = stripVTControlCharacters(value);const last = pattern => [...text.matchAll(pattern)].at(-1)?.[1]
-  return { nodePass: Number(last(/(?:ℹ|#)\s*pass\s+(\d+)/g)) || null,nodeSkipped: last(/(?:ℹ|#)\s*skipped\s+(\d+)/g)===undefined ? null : Number(last(/(?:ℹ|#)\s*skipped\s+(\d+)/g)),browserPassed: [...text.matchAll(/\b(\d+)\s+passed\s+\(/g)].map(row => Number(row[1])),sqlCases: [...text.matchAll(/dos-m1-(\d{3})\.sql:\s*(\d+)\s+SQL assertions passed/g)].map(row => ({ task: `DOS-M1-${row[1]}`,count: Number(row[2]) })),actualCombined: text.includes('Actual M1 combined slice:'),actualFinal: text.includes('Synthetic actual-provider acceptance passed.') }
+  return { nodePass: Number(last(/(?:ℹ|#)\s*pass\s+(\d+)/g)) || null,nodeSkipped: last(/(?:ℹ|#)\s*skipped\s+(\d+)/g)===undefined ? null : Number(last(/(?:ℹ|#)\s*skipped\s+(\d+)/g)),browserPassed: [...text.matchAll(/\b(\d+)\s+passed\s+\(/g)].map(row => Number(row[1])),sqlCases: [...text.matchAll(/dos-m1-(\d{3})\.sql:\s*(\d+)\s+SQL assertions passed/g)].map(row => ({ task: `DOS-M1-${row[1]}`,count: Number(row[2]) })),actualShopBackend: text.includes('Actual Shop backend: 1 passed'),actualCombined: text.includes('Actual M1 combined slice:'),actualFinal: text.includes('Synthetic actual-provider acceptance passed.') }
 }
 const git = args => execFileSync('git',args,{ cwd: root,encoding: 'utf8',stdio: ['ignore','pipe','pipe'] }).trim()
 const sha256 = value => createHash('sha256').update(value).digest('hex')
@@ -51,10 +51,16 @@ async function evaluate(out) {
   if(git(['status','--porcelain']))issues.push('dirty-candidate')
   if(spawnSync('git',['diff','--quiet','4ca7110f4d6efa828e0b41213e5c059bf02ba9db','--','docs/work-packages/doctor-suit/planning-v0.4'],{ cwd: root }).status!==0)issues.push('planning-changed')
   for(const row of packet.tasks)if(row.sourceHead && spawnSync('git',['merge-base','--is-ancestor',row.sourceHead,head],{ cwd: root }).status!==0)issues.push(`ancestry:${row.taskId}`)
+  if(git(['rev-parse','--is-shallow-repository'])!=='false')issues.push('incomplete-history')
+  const ancestors = new Set(git(['rev-list',head]).split('\n'))
+  for(const excluded of packet.excludedSourceHeads || [])if(!/^[0-9a-f]{40}$/.test(excluded) || ancestors.has(excluded))issues.push('excluded-source-in-history')
   issues.push(...doctorAggregateClaimIssues(packet,existsSync(path.join(root,'docs/work-packages/doctor-suit/implementation/dos-m2-001.md')) || existsSync(path.join(root,'release-fragments/dos-m2-001.json'))))
   const workspace = JSON.parse(await readFile(path.join(out,'workspace-summary.json'),'utf8'));issues.push(...doctorWorkspaceEvidenceIssues(workspace,head))
+  const shopBackend = JSON.parse(await readFile(path.join(out,'shop-backend-summary.json'),'utf8'))
+  if(shopBackend.candidateSha!==head || shopBackend.passed!==1 || shopBackend.skipped!==0 || !shopBackend.loopbackOnly || !shopBackend.sourceMigrationsUnchanged)issues.push('actual-shop-backend-binding')
+  for(const [product,directory]of [['shop','apps/shop-suit/supabase/migrations'],['ledger','apps/ledger-suit/supabase/migrations']])for(const file of await (await import('node:fs/promises')).readdir(path.join(root,directory)))if(file.endsWith('.sql') && shopBackend.migrationHashes[`${product}/${file}`]!==sha256(await readFile(path.join(root,directory,file))))issues.push(`backend-source:${product}/${file}`)
   async function api(endpoint) { const result = await fetch(`https://api.github.com/repos/Building-Suit/building-suit-monorepo/${endpoint}`,{ headers: { Authorization: `Bearer ${token}`,Accept: 'application/vnd.github+json' },signal: AbortSignal.timeout(20000) });if(!result.ok)throw new Error('GITHUB_EVIDENCE_READ_FAILED');return result.json() }
-  const run = await api(`actions/runs/${runId}`);if(run.head_sha!==head)issues.push('workflow-head')
+  const run = await api(`actions/runs/${runId}`);if(run.head_sha!==head || run.head_branch!==packet.candidateRef)issues.push('workflow-head')
   const staging = await api('branches/stg');if(staging.commit.sha!==base)issues.push('staging-advanced')
   let doctorRun;const deadline = Date.now()+480000
   while(Date.now()<deadline) {
@@ -67,7 +73,7 @@ async function evaluate(out) {
   const rootJobs = (await api(`actions/runs/${runId}/jobs?per_page=100`)).jobs
   const doctorJobs = doctorRun ? (await api(`actions/runs/${doctorRun.id}/jobs?per_page=100`)).jobs : []
   const observed = {}
-  await Promise.all([['unit',rootJobs.find(row => row.name==='review')],['workspace',rootJobs.find(row => row.name==='verify')],...doctorJobs.map(job => [job.name,job])].map(async ([name,job]) => {
+  await Promise.all([['unit',rootJobs.find(row => row.name==='review')],['workspace',rootJobs.find(row => row.name==='verify')],['shop-backend',rootJobs.find(row => row.name==='doctor-m1-shop-backend')],...doctorJobs.map(job => [job.name,job])].map(async ([name,job]) => {
     if(!job) { issues.push(`log:${name}:missing`);return }
     for(let attempt=0;attempt<3;attempt++) {
       try {
@@ -86,6 +92,7 @@ async function evaluate(out) {
   if(!observed['doctor-auth-protocol']?.browserPassed.includes(counts.doctorAuth) || !observed['doctor-auth-protocol']?.browserPassed.includes(counts.doctorStress))issues.push('doctor-auth-population')
   if(!observed['shared-settings-browser']?.browserPassed.includes(counts.sharedAuth) || !observed['shared-settings-browser']?.browserPassed.includes(counts.sharedSettings))issues.push('shared-consumer-population')
   if(observed['doctor-sql']?.sqlCases.reduce((total,row) => total+row.count,0)!==counts.sqlTotal || !observed['doctor-sql']?.sqlCases.some(row => row.task==='DOS-M1-020' && row.count===counts.sqlCombined))issues.push('sql-population')
+  if(!observed['shop-backend']?.actualShopBackend || !observed['shop-backend']?.browserPassed.includes(counts.shopBackend))issues.push('actual-shop-backend-result')
   if(!observed['doctor-actual-provider']?.actualCombined || !observed['doctor-actual-provider']?.actualFinal)issues.push('actual-combined-result')
   const commands = []
   function command(id,jobs,jobName,stepName,argv) {
@@ -102,6 +109,7 @@ async function evaluate(out) {
   command('workspace-browser',rootJobs,'verify','Verify permitted Doctor M1 aggregate browsers',['pnpm','exec','playwright','test','-c','packages/testing/playwright.doctor-workspace.config.ts'])
   command('shared-regressions',rootJobs,'verify','Verify shared Shop regressions for Doctor M1',['pnpm','test:e2e:shared-regressions'])
   command('public-changelog',rootJobs,'verify','Verify deployed-only Shop landing changelog discovery',['pnpm','exec','playwright','test','-c','apps/shop-suit/tests/e2e/public-changelog.config.ts'])
+  command('shop-backend',rootJobs,'doctor-m1-shop-backend','Verify actual Shop signup, persistence and independent Ledger session',['node','apps/doctor-suit/tests/shop-backend-actual-provider.mjs'])
   command('sql',doctorJobs,'doctor-sql','Apply actual migrations and assert SQL/RLS authorization with synthetic fixtures',['node','apps/doctor-suit/tests/disposable-postgres.mjs'])
   command('doctor-public',doctorJobs,'doctor-browser','Verify synthetic Doctor preview in both locales, themes and viewport sizes',['pnpm','exec','playwright','test','-c','apps/doctor-suit/tests/e2e/playwright.config.ts'])
   command('doctor-auth',doctorJobs,'doctor-auth-protocol','Verify account protocol journeys without external mail or credential artifacts',['pnpm','exec','playwright','test','-c','apps/doctor-suit/tests/e2e/playwright.auth.config.ts'])
@@ -109,12 +117,12 @@ async function evaluate(out) {
   command('shared-auth',doctorJobs,'shared-settings-browser','Verify existing shared auth and access presentation retains default behavior',['pnpm','exec','playwright','test','-c','packages/testing/playwright.auth-parity.config.ts'])
   command('shared-settings',doctorJobs,'shared-settings-browser','Verify settings in existing consumers with local-only targets and no n8n access',['pnpm','exec','playwright','test','-c','packages/testing/playwright.settings-focus.config.ts'])
   command('actual-provider',doctorJobs,'doctor-actual-provider','Verify actual disposable Doctor Auth, Storage and Functions',['node','apps/doctor-suit/tests/disposable-provider.mjs'])
-  const receipt = { candidateSha: head,baseSha: base,eventBaseSha: eventBase,protectedBaseSource: 'Fresh official stg branch SHA, present in the exact candidate',observed,executionId: `${runId}:${process.env.GITHUB_RUN_ATTEMPT}:doctor-m1-evidence`,verifierIdentity: 'GitHub Actions exact-candidate evidence evaluator',inputHashes: hashes,cases: { 'DOS-M1-020-C03': 'passed','DOS-M1-020-C04': 'passed' },commands,heldObligations: [...workspace.held,{ suite: 'Optional root infrastructure tests',status: 'skipped',count: observed.unit?.nodeSkipped ?? null,reason: 'Not counted as passing product coverage' },{ case: backendCase,status: 'skipped',reason: 'Explicitly initialized disposable monorepo backend is absent; never counted as passed' }],milestoneAccepted: false,domainApprovalGranted: false,integrationClaimed: false,deploymentClaimed: false,mergeAuthorization: 'Prior PR345 merge hold remains for parent resolution' }
+  const receipt = { shopBackend,candidateSha: head,baseSha: base,eventBaseSha: eventBase,protectedBaseSource: 'Fresh official stg branch SHA, present in the exact candidate',observed,executionId: `${runId}:${process.env.GITHUB_RUN_ATTEMPT}:doctor-m1-evidence`,verifierIdentity: 'GitHub Actions exact-candidate evidence evaluator',inputHashes: hashes,cases: { 'DOS-M1-020-C03': 'passed','DOS-M1-020-C04': 'passed' },commands,heldObligations: [...workspace.held,{ suite: 'Optional root infrastructure tests',status: 'skipped',count: observed.unit?.nodeSkipped ?? null,reason: 'Not counted as passing product coverage' },{ case: backendCase,status: 'skipped-in-ui-sweep',coverage: 'Executed separately with actual isolated backends; separate one-pass/zero-skip receipt required' }],milestoneAccepted: false,domainApprovalGranted: false,integrationClaimed: false,deploymentClaimed: false,mergeAuthorization: 'Prior PR345 merge hold remains for parent resolution' }
   issues.push(...doctorMilestoneReceiptIssues({ ...packet,headSha: head },receipt))
   if(issues.length) { receipt.cases['DOS-M1-020-C03'] = 'failed';receipt.cases['DOS-M1-020-C04'] = 'failed' }
   receipt.issues = [...new Set(issues)]
   const body = JSON.stringify(receipt,null,2)+'\n';await writeFile(path.join(out,'m1-aggregate-evidence.json'),body,{ mode: 0o600 })
-  await writeFile(path.join(out,'artifact-manifest.json'),JSON.stringify({ candidateSha: head,baseSha: base,files: { 'm1-aggregate-evidence.json': sha256(body),'workspace-summary.json': sha256(await readFile(path.join(out,'workspace-summary.json'))) } },null,2)+'\n',{ mode: 0o600 })
+  await writeFile(path.join(out,'artifact-manifest.json'),JSON.stringify({ candidateSha: head,baseSha: base,files: { 'm1-aggregate-evidence.json': sha256(body),'workspace-summary.json': sha256(await readFile(path.join(out,'workspace-summary.json'))),'shop-backend-summary.json': sha256(await readFile(path.join(out,'shop-backend-summary.json'))) } },null,2)+'\n',{ mode: 0o600 })
   console.log(`DOS-M1-020-C03: ${receipt.cases['DOS-M1-020-C03']}; DOS-M1-020-C04: ${receipt.cases['DOS-M1-020-C04']}; held obligations remain explicit; no milestone/domain/merge approval supplied`)
   if(issues.length)process.exitCode = 1
 }

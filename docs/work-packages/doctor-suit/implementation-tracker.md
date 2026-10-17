@@ -53,3 +53,8 @@ This is the **current implementation ledger**, reconciled on 2026-10-17. Earlier
 M2-001–014 and M3-001–010 are not claimed implemented or accepted. Continue dependency order after M1, prepare reviewable policy packets, and keep qualified clinical/catalogue/provider gates open until their actual evidence exists. The general engineering authorization does not create professional, legal or commercial authority.
 
 Update current rows and receipts in place. Keep historical observations in the history document. Preserve every authoritative planning artifact and report ordinary implementation progress separately from final integration or domain evidence blockers.
+
+
+## M1-first aggregate status
+
+The existing staging root PR345 is prepared as the history-preserving M1-only aggregate over current stg `4441c7dd5a3b2d7ed53ae227229fc05ced64388a`. Focused M1 source through PR365 `a4757572763bf243c8b3f064e9f7baa8a11b34d7` is included; PR366 and its M2 packet/fragment are excluded and preserved on hold. Current aggregate head/checks and the independent C03/C04 artifact are authoritative in PR345. No aggregate result is inferred from stacked skipped validation, prior-source proof, an optional backend skip or successful local diagnostics. The new actual Shop/Ledger consumer job must close that gap with1pass/0skips. Parent resolves the prior PR345 merge denial using fresh exact target/head evidence; no merge route is attempted here.

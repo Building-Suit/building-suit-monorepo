@@ -139,8 +139,45 @@ jobs:
           name: browser-results
           path: test-results
           retention-days: 7
+  doctor-m1-shop-backend:
+    if: github.event_name == 'pull_request' && github.event.pull_request.number == 345
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run setup
+      - name: Build Shop and Ledger for actual isolated Auth acceptance
+        env:
+          SUPABASE_URL: http://127.0.0.1:61321
+          SUPABASE_KEY: local-development-publishable-key
+        run: |
+          pnpm --filter @building-suit/shop-suit build
+          pnpm --filter @building-suit/ledger-suit build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Verify actual Shop signup, persistence and independent Ledger session
+        env:
+          DOCTOR_SHOP_BACKEND_DISPOSABLE: '1'
+          M1_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          DOCTOR_SHOP_BACKEND_EVIDENCE: ${{ runner.temp }}/doctor-m1-shop-backend
+        run: node apps/doctor-suit/tests/shop-backend-actual-provider.mjs
+      - name: Retain sanitized actual consumer receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-m1-shop-backend-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/doctor-m1-shop-backend/shop-backend-summary.json
+          if-no-files-found: error
   doctor-m1-evidence:
-    needs: [review, branch-policy, verify]
+    needs: [review, branch-policy, verify, doctor-m1-shop-backend]
     if: always() && github.event_name == 'pull_request' && github.event.pull_request.number == 345
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -161,6 +198,12 @@ jobs:
         with:
           name: doctor-m1-workspace-${{ github.event.pull_request.head.sha || github.sha }}
           path: ${{ runner.temp }}/doctor-m1-evidence
+      - name: Fetch actual Shop/Ledger backend receipt
+        if: needs.doctor-m1-shop-backend.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: doctor-m1-shop-backend-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/doctor-m1-evidence
       - name: Independently reconcile exact-candidate command and artifact evidence
         if: always()
         env:
@@ -177,6 +220,7 @@ jobs:
             ${{ runner.temp }}/doctor-m1-evidence/m1-aggregate-evidence.json
             ${{ runner.temp }}/doctor-m1-evidence/artifact-manifest.json
             ${{ runner.temp }}/doctor-m1-evidence/workspace-summary.json
+            ${{ runner.temp }}/doctor-m1-evidence/shop-backend-summary.json
           if-no-files-found: error
           retention-days: 14
   publish-releases:

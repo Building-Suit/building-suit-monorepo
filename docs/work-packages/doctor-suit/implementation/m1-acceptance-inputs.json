@@ -2,12 +2,12 @@
   "version": 1,
   "taskId": "DOS-M1-020",
   "planningHead": "4ca7110f4d6efa828e0b41213e5c059bf02ba9db",
-  "baseSha": "e53cc7bcd8b0f07c2c2287de0867c942e480d85c",
-  "candidateRef": "codex/doctor-suit/m1-combined-acceptance",
+  "baseSha": "4441c7dd5a3b2d7ed53ae227229fc05ced64388a",
+  "candidateRef": "codex/doctor-suit/milestone-contracts",
   "headBinding": "Resolve the published GitHub PR head SHA and check-run head_sha; no self-referential commit hash is embedded.",
   "implementationIdentity": "implementation-agent",
   "expectedEvidenceCounts": {
-    "rootPassed": 1831,
+    "rootPassed": 1834,
     "rootSkipped": 23,
     "workspacePassed": 111,
     "shopRegressions": 28,
@@ -18,7 +18,8 @@
     "sharedAuth": 48,
     "sharedSettings": 12,
     "sqlTotal": 679,
-    "sqlCombined": 29
+    "sqlCombined": 29,
+    "shopBackend": 1
   },
   "independentAcceptance": "pending",
   "integration": "not-claimed",
@@ -41,7 +42,8 @@
     "lint",
     "typecheck",
     "build",
-    "release"
+    "release",
+    "shop-backend"
   ],
   "tasks": [
     {
@@ -161,16 +163,17 @@
     {
       "taskId": "DOS-M1-020",
       "canonicalTaskSha256": "b5113d109fa08913afa9b4bf81dfe9855a711c570cf097b2eeee73d9169f4135",
-      "sourceRef": "codex/doctor-suit/m1-combined-acceptance",
-      "acceptance": "pending-independent-exact-candidate-verifier"
+      "acceptance": "pending-independent-exact-candidate-verifier",
+      "sourceHead": "a4757572763bf243c8b3f064e9f7baa8a11b34d7",
+      "pullRequest": 365
     }
   ],
   "inputHashes": {
-    "docs/work-packages/doctor-suit/implementation/m1-aggregate.md": "842fc50e69fa69f8f0a106886e9f8d387d1245f0bb356defcc86f15456932d4c",
-    ".github/workflows/ci.yml": "b48fec31cd017a1203dc24397be67ca238c2593e2a8c362b9198114780941568",
+    "docs/work-packages/doctor-suit/implementation/m1-aggregate.md": "562b7152fda73d3106f7e8463276cbd2d5f62a6e0d112c7104d05baf8d17572e",
+    ".github/workflows/ci.yml": "27428078e8100e937406b396e26afeaea68820a7caad3de0428eb71ba3ed7451",
     ".github/workflows/doctor-disposable.yml": "d4519a8d97194fca9ed88feb7fac90de0a39fbd93b3a3874b1649a129fba6bc4",
     "packages/testing/playwright.doctor-workspace.config.ts": "d1a9d56d805416a0e07de847218010d31c65b777e6b4ae71d216dba99120599e",
-    "apps/doctor-suit/tests/m1-aggregate-evidence.mjs": "e65a7895c9df8e7620edb2fd1d375a79a97ba050b39d71f636788415ce1c0c92",
+    "apps/doctor-suit/tests/m1-aggregate-evidence.mjs": "84e18c55b0fb5a048da0114fffc0629431aeed2ae58d2d941eae43fef37656db",
     "apps/doctor-suit/tests/unit/dos-m1-020-evidence.test.mjs": "593159cf457d47ec3cb1f502e2ec98a7d0b20b1941a96705fa28843aff537abd",
     "apps/doctor-suit/supabase/tests/dos-m1-020.sql": "64d2c9c3458d63c2afb684bfc20781f697895ee5417b107e218b52db345bf2e3",
     "apps/doctor-suit/tests/disposable-provider.mjs": "aa75fa305e20809c0e0656617c2d72cd428e29964e5d196567159d15ac33b0b7",
@@ -181,9 +184,20 @@
     "apps/doctor-suit/tests/unit/dos-m1-020.test.mjs": "b73a58ac1f4badd84b3a8e4f845f34722cb836561a576bbb61c2a9081332148d",
     "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts": "7052244615eccfb9e7253c710bcc35a0fb4040d780d640b48b25a7026e357132",
     "apps/doctor-suit/tests/e2e/dos-m1-020.spec.ts": "82ae8bf8e36a6fd5356bf50b8bbba78b6d046166371e47e4e9e61c6b0631c7cc",
-    "docs/work-packages/doctor-suit/implementation/dos-m1-020.md": "c1df7dde35411ca06881cfb4d631ec058488a9c9ddfaeed740d0c6ffc5cc998d",
-    "docs/work-packages/doctor-suit/implementation-tracker.md": "a33ff1e7f6320d1fc6510ab7f18647393cd1fa26247918accb7a82697c5110c2",
-    "release-fragments/dos-m1-020.json": "79105d0e76fd2c7cc70ec7b8ec710f8f942380289d63feb2276a31f1137b7c76",
-    "apps/doctor-suit/app/utils/contextController.ts": "567e230155618e0dad5666f162fe68d69ccf145b11a3d5469121243ccd24162a"
-  }
+    "docs/work-packages/doctor-suit/implementation/dos-m1-020.md": "4d029b4a7c18a3f1e94a1c45e9fec7a825fc5904a3251a753835426abedb6872",
+    "docs/work-packages/doctor-suit/implementation-tracker.md": "a01dd05daf03442968367bf2b24dee264c03ae0ee31e5d80c40857296a2b92d2",
+    "release-fragments/dos-m1-020.json": "423efb5906603bb056f2e3b9189fc41ea1e0b108eb467a1f8b551a56beaa1601",
+    "apps/doctor-suit/app/utils/contextController.ts": "567e230155618e0dad5666f162fe68d69ccf145b11a3d5469121243ccd24162a",
+    "apps/doctor-suit/tests/shop-backend-actual-provider.mjs": "7161767ddef380774b5e19d58df966ff068ed30630ff2ecfb0b285aeeee8562f",
+    "apps/doctor-suit/tests/unit/dos-m1-020-shop-backend.test.mjs": "baddcec02e30245ad148a89ba460d90951e8f5cc40ea85699527e6d42f850ae5",
+    "packages/testing/playwright.doctor-shop-backend.config.ts": "8a0c1fbe9728c39c1ce05bbfbc5e297fb87602860f305fd9679af3b7689f31c3"
+  },
+  "taskBaseSha": "e53cc7bcd8b0f07c2c2287de0867c942e480d85c",
+  "aggregateRootPullRequest": 345,
+  "excludedPullRequests": [
+    366
+  ],
+  "excludedSourceHeads": [
+    "f2df37d031a8192da8b7a23afc83f0977debec6b"
+  ]
 }
