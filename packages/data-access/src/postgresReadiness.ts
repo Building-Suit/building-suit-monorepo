@@ -23,7 +23,7 @@ export function createPostgresReadinessBarrier(
       })
       status(value => {
         if(removed)return
-        if(value==='SUBSCRIBED') { joined = true;arm();reconcile() }
+        if(value==='SUBSCRIBED') { joined = true;if(!active)arm();reconcile() }
         else if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(value)) { joined = ready = active = false;cancel();callback(value) }
       })
     },

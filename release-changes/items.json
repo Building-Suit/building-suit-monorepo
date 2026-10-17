@@ -1155,5 +1155,32 @@
     "sources": [
       "dos-m1-014-realtime-ready"
     ]
+  },
+  {
+    "id": "dos-m1-014-queue-actions",
+    "task": "DOS-M1-014",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/data-access/src/postgresReadiness.ts",
+      "packages/data-access/tests/postgres-readiness.test.mjs",
+      "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
+      "apps/doctor-suit/tests/e2e/dos-m1-014.auth.fixture.ts",
+      "docs/work-packages/doctor-suit/appointments-evidence.md",
+      "docs/work-packages/doctor-suit/implementation-tracker.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Keep duplicate subscription acknowledgements idempotent after Postgres activation, with no false readiness timeout. Expose explicitly authorized queue actions through the shared table schema so active entries remain actionable when the selected calendar day excludes them. App-supplied capabilities and server authorization remain unchanged; synthetic administrative use only.",
+    "sources": [
+      "dos-m1-014-queue-actions"
+    ]
   }
 ]

@@ -21,3 +21,8 @@ test('missing readiness has a bounded failure and provider subscription errors f
 test('removed channels cannot publish a late ready/status callback or deadline',t => {
   const f = fixture(t);f.barrier.dispose();f.system(ready);f.status('SUBSCRIBED');f.tick();assert.deepEqual(f.seen,[])
 })
+
+
+test('duplicate admitted statuses do not arm a false deadline on an active stream',t => {
+  const f = fixture(t);f.system(ready);f.status('SUBSCRIBED');f.status('SUBSCRIBED');f.tick();f.system(ready);f.status('SUBSCRIBED');f.tick();assert.deepEqual(f.seen,['SUBSCRIBED']);f.barrier.dispose()
+})
