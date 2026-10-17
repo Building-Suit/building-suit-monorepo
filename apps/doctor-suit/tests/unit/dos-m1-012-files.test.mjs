@@ -95,3 +95,22 @@ test('oversized streaming rejection does not await a stalled transport cancellat
   const result = await Promise.race([doctorDocumentBytes(request).then(() => 'accepted',error => error),new Promise(resolve => setTimeout(() => resolve('blocked by cancellation'),40))])
   assert.ok(result instanceof DoctorDocumentFailure); assert.equal(result.status,413); assert.equal(cancelled,true); assert.equal(released,true)
 })
+test('near-limit declared oversize drains the bounded body to EOF before rejecting, without publishing bytes',async () => {
+  let reads = 0; let cancelled = false; let released = false
+  const request = { headers: new Headers({ 'content-length': String(DOCTOR_DOCUMENT_MAX_BYTES+1) }),body: { getReader: () => ({ read: async () => ++reads===1 ? { done: false,value: new Uint8Array(DOCTOR_DOCUMENT_MAX_BYTES+1) } : { done: true },cancel: async () => { cancelled = true },releaseLock: () => { released = true } }) } }
+  await assert.rejects(doctorDocumentBytes(request),error => error instanceof DoctorDocumentFailure && error.status===413)
+  assert.equal(reads,2); assert.equal(cancelled,false); assert.equal(released,true)
+})
+test('rejected-body drain has a finite deadline even when the sender and cancellation both stall',async () => {
+  let cancelled = false
+  const request = { headers: new Headers({ 'content-length': String(DOCTOR_DOCUMENT_MAX_BYTES+1) }),body: { getReader: () => ({ read: () => new Promise(() => {}),cancel: () => { cancelled = true; return new Promise(() => {}) },releaseLock: () => {} }) } }
+  const start = performance.now()
+  await assert.rejects(doctorDocumentBytes(request),error => error instanceof DoctorDocumentFailure && error.status===413)
+  assert.equal(cancelled,true); assert.ok(performance.now()-start<1500)
+})
+test('oversized drain reads at most the fixed discard budget from an endless sender',async () => {
+  let observed = 0; let cancelled = false; const chunk = new Uint8Array(65536)
+  const request = { headers: new Headers({ 'content-length': '9999999999' }),body: { getReader: () => ({ read: async () => { observed+=chunk.length; return { done: false,value: chunk } },cancel: async () => { cancelled = true },releaseLock: () => {} }) } }
+  await assert.rejects(doctorDocumentBytes(request),error => error instanceof DoctorDocumentFailure && error.status===413)
+  assert.equal(observed,DOCTOR_DOCUMENT_MAX_BYTES+65536); assert.equal(cancelled,true)
+})

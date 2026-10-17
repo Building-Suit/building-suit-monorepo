@@ -11,23 +11,42 @@ export function doctorDocumentFilename(value: unknown): value is string {
     && !Array.from(value).some(character => character.charCodeAt(0)<32 || character.charCodeAt(0)===127)
     && !/[\u202a-\u202e\u2066-\u2069/\\]/u.test(value)
 }
+// Some function relays cannot finish an early response while their incoming
+// body is backpressured. Discard a bounded near-limit body before replying;
+// never wait indefinitely for a sender or transport cancellation.
+async function discardRejectedBody(reader: ReadableStreamDefaultReader<Uint8Array>,budget: number) {
+  const deadline = Date.now()+500
+  while (budget>0 && Date.now()<deadline) {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    try {
+      const next = await Promise.race([reader.read(),new Promise<null>(resolve => { timer = setTimeout(() => resolve(null),Math.max(1,deadline-Date.now())) })])
+      if (!next) break
+      if (next.done) return
+      budget-=next.value.byteLength
+    } catch { break }
+    finally { clearTimeout(timer) }
+  }
+  void reader.cancel().catch(() => undefined)
+}
 export async function doctorDocumentBytes(request: Request): Promise<Uint8Array> {
   const length = request.headers.get('content-length')
-  if (length!==null && (!/^\d+$/.test(length) || Number(length)>DOCTOR_DOCUMENT_MAX_BYTES)) throw new DoctorDocumentFailure(413,'size')
+  if (length!==null && !/^\d+$/.test(length)) throw new DoctorDocumentFailure(413,'size')
+  const declaredOversize = length!==null && Number(length)>DOCTOR_DOCUMENT_MAX_BYTES
   const reader = request.body?.getReader()
-  if (!reader) throw new DoctorDocumentFailure(400,'invalid')
-  const buffer = new Uint8Array(DOCTOR_DOCUMENT_MAX_BYTES); let total = 0
+  if (!reader) throw new DoctorDocumentFailure(declaredOversize ? 413 : 400,declaredOversize ? 'size' : 'invalid')
   try {
+    if (declaredOversize) { await discardRejectedBody(reader,DOCTOR_DOCUMENT_MAX_BYTES+65536); throw new DoctorDocumentFailure(413,'size') }
+    const buffer = new Uint8Array(DOCTOR_DOCUMENT_MAX_BYTES); let total = 0
     for (;;) {
       const next = await reader.read()
       if (next.done) break
       total+=next.value.byteLength
-      if (total>DOCTOR_DOCUMENT_MAX_BYTES) { void reader.cancel().catch(() => undefined); throw new DoctorDocumentFailure(413,'size') }
+      if (total>DOCTOR_DOCUMENT_MAX_BYTES) { await discardRejectedBody(reader,65536); throw new DoctorDocumentFailure(413,'size') }
       buffer.set(next.value,total-next.value.byteLength)
     }
-  } finally { reader.releaseLock() }
-  if (total===0 || (length!==null && total!==Number(length))) throw new DoctorDocumentFailure(400,'invalid')
-  return buffer.subarray(0,total)
+    if (total===0 || (length!==null && total!==Number(length))) throw new DoctorDocumentFailure(400,'invalid')
+    return buffer.subarray(0,total)
+  } finally { try { reader.releaseLock() } catch { /* Pending rejection cleanup cannot replace the original error. */ } }
 }
 export function doctorDocumentMime(bytes: Uint8Array,filename: string,declared: string | null): DoctorFileMime {
   if (!doctorDocumentFilename(filename) || bytes.length<8 || bytes.length>DOCTOR_DOCUMENT_MAX_BYTES) throw new DoctorDocumentFailure(400,'invalid')
