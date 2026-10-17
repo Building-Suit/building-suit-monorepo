@@ -5,6 +5,8 @@ select no_plan();
 create function pg_temp.id(n integer)returns uuid language sql immutable as $$select('ae020000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid$$;
 insert into auth.users(id,email,email_confirmed_at)select pg_temp.id(n),'synthetic-edition-'||n||'@example.test',now()from generate_series(1,5)n;
 insert into auth.sessions(id,user_id)select pg_temp.id(n+10),pg_temp.id(n)from generate_series(1,5)n;
+-- Explicit bounded synthetic fixture admission; not a real-user approval.
+insert into public.doctor_candidate_admissions(user_id,purpose,evidence_ref,valid_until)select pg_temp.id(n),'synthetic_fixture','disposable-sql:dos-ae-002.sql',clock_timestamp()+interval'2 hours'from generate_series(1,5)n;
 insert into public.doctor_profiles(user_id,display_name)values(pg_temp.id(1),'Synthetic edition doctor A'),(pg_temp.id(2),'Synthetic edition doctor B');
 insert into public.practices(id,owner_user_id,name)values(pg_temp.id(21),pg_temp.id(1),'Synthetic edition A'),(pg_temp.id(22),pg_temp.id(2),'Synthetic edition B');
 insert into public.locations(id,practice_id,name,timezone)values(pg_temp.id(31),pg_temp.id(21),'Synthetic A1','Etc/UTC'),(pg_temp.id(32),pg_temp.id(22),'Synthetic B1','Etc/UTC');
