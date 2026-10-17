@@ -4,7 +4,12 @@ import type { Database } from '../types/database.types'
 import type { DoctorLocationContext } from './locationContext'
 import { doctorScopeKey } from './contextScope.ts'
 export function createDoctorAppointmentsRealtime(client: SupabaseClient<Database> | null,onDisconnect: () => void) {
-  const realtime = client ? createScopedRealtime(client) : null
+  const realtime = client ? createScopedRealtime({
+    // The pinned provider can acknowledge a channel before Postgres delivery is
+    // active. Hold admission so the shared join/reconnect refresh closes that gap.
+    channel: name => client.channel(name,{ config: { postgres_changes_options: { wait: true } } }),
+    removeChannel: channel => client.removeChannel(channel),
+  }) : null
   return {
     async update(selected: DoctorLocationContext | null,refresh: () => Promise<void>) {
       if(!realtime)return

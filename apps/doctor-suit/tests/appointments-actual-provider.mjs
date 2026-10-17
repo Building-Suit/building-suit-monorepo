@@ -17,7 +17,7 @@ export async function verifyDoctorAppointmentProvider({ api,key,a,b,rpc,expect,s
   } }
   async function until(condition,label) { const deadline = Date.now()+20000;while(!condition()) { expect(!invalidPayload,'Actual Realtime emitted unexpected data');expect(Date.now()<deadline,label);await wait(50) } }
   async function subscribe(client,locationId,callback) {
-    const channel = client.channel(`synthetic-queue-${randomUUID()}`)
+    const channel = client.channel(`synthetic-queue-${randomUUID()}`,{ config: { postgres_changes_options: { wait: true } } })
     for(const event of ['INSERT','UPDATE'])channel.on('postgres_changes',{ schema: 'public',table: 'appointment_queue_revisions',event,filter: `location_id=eq.${locationId}` },callback)
     channels.push({ client,channel })
     await new Promise((resolve,reject) => { const timer = setTimeout(() => reject(new Error('Actual Realtime join deadline')),20000);channel.subscribe(status => { if(status==='SUBSCRIBED') { clearTimeout(timer);resolve() } else if(['CHANNEL_ERROR','TIMED_OUT'].includes(status)) { clearTimeout(timer);reject(new Error('Actual Realtime join failed')) } }) })
