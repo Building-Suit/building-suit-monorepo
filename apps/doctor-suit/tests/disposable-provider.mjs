@@ -88,6 +88,21 @@ try {
   async function endpoint(actor,operation,data = {},bytes) {
     return fetch(`${api}/functions/v1/doctor-documents?op=${operation}`,{ method: 'POST',headers: { apikey: status.ANON_KEY,authorization: `Bearer ${actor.session.access_token}`,origin,'content-type': 'application/pdf','x-doctor-document': encodeURIComponent(JSON.stringify({ ...actor.scope,key: randomUUID(),...data })) },body: bytes,signal: AbortSignal.timeout(30000) })
   }
+  async function probeIngress() {
+    // Failure investigation only: fixed sizes and result categories, no bodies,
+    // headers, exception text or dynamic provider identifiers in output.
+    for (const [label,size] of [['two-mib',2097152],['four-mib',4194304],['five-mib',5242880]]) {
+      const content = new Uint8Array(size); const prefix = new TextEncoder().encode('%PDF-1.7\nSynthetic ingress fixture\n'); const suffix = new TextEncoder().encode('\n%%EOF\n')
+      content.set(prefix); content.set(suffix,size-suffix.length)
+      let category = 'transport-unavailable'
+      try {
+        const response = await endpoint(a,'upload',{ filename: `synthetic-ingress-${label}.pdf` },content)
+        category = response.status===200 ? 'accepted' : response.status===413 ? 'size-rejected' : [401,403].includes(response.status) ? 'authority-rejected' : response.status>=500 ? 'service-unavailable' : 'other-rejection'
+        await response.body?.cancel().catch(() => undefined)
+      } catch { /* fixed category only */ }
+      console.log(`Owned provider ingress probe ${label}: ${category}`)
+    }
+  }
   stage = 'actual function startup'; let ready = false
   for (let attempt=0;attempt<60;attempt++) { const response = await endpoint(a,'status').catch(() => null); if (response?.status===200) { ready = true; break } await wait(500) }
   expect(ready,'Actual authenticated Edge Function failed readiness; captured logs withheld')
@@ -105,7 +120,7 @@ try {
   const directWrite = await a.client.storage.from(bucket).upload(`bypass-${randomUUID()}.pdf`,pdf,{ contentType: 'application/pdf' }); expect(directWrite.error,'Direct client upload bypass allowed')
   stage = 'reject spoofed file'; expect((await endpoint(a,'upload',{ filename: 'spoof.pdf' },new TextEncoder().encode('<script>synthetic</script>'))).status===415,'Spoofed file accepted')
   stage = 'reject oversized file'; let oversized
-  try { oversized = await doctorOversizedResponse(`${api}/functions/v1/doctor-documents?op=upload`,{ apikey: status.ANON_KEY,authorization: `Bearer ${a.session.access_token}`,origin,'content-type': 'application/pdf','x-doctor-document': encodeURIComponent(JSON.stringify({ ...a.scope,key: randomUUID(),filename: 'large.pdf' })) },new Uint8Array(5242881)) } catch { stage = 'oversized file transport failed'; throw new Error('Synthetic oversized upload transport failed') }
+  try { oversized = await doctorOversizedResponse(`${api}/functions/v1/doctor-documents?op=upload`,{ apikey: status.ANON_KEY,authorization: `Bearer ${a.session.access_token}`,origin,'content-type': 'application/pdf','x-doctor-document': encodeURIComponent(JSON.stringify({ ...a.scope,key: randomUUID(),filename: 'large.pdf' })) },new Uint8Array(5242881)) } catch { await probeIngress(); stage = 'oversized file transport failed'; throw new Error('Synthetic oversized upload transport failed') }
   if (oversized!==413) {
     // Fixed categories only; never reflect a response body or exception detail.
     stage = ({ 400: 'oversized file bad request',401: 'oversized file session denial',403: 'oversized file scope denial',500: 'oversized file server error',502: 'oversized file gateway error',503: 'oversized file unavailable' })[oversized] || 'oversized file unexpected response'
