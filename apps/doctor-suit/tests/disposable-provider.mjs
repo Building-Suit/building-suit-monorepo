@@ -62,7 +62,7 @@ async function bootstrap(publicKey,label) {
   expect(context?.practice_id && context?.location_id,'Owned clinic context missing')
   const patient = await rpc(client,'doctor_write_patient',{ p_practice: context.practice_id,p_location: context.location_id,p_input: { name: `Synthetic ${label} patient`,phone: '',email: '',date_of_birth: null },p_key: randomUUID() })
   expect(patient.patient_id,'Patient creation failed')
-  return { client,user,session,scope: { practiceId: context.practice_id,locationId: context.location_id,patientId: patient.patient_id } }
+  return { client,user,session,sessionId: verified.session_id,scope: { practiceId: context.practice_id,locationId: context.location_id,patientId: patient.patient_id } }
 }
 try {
   validateLocalDoctorTarget(JSON.parse(await readFile(path.join(root,'docs/architecture/environments.json'),'utf8')),await readFile(path.join(app,'supabase/config.toml'),'utf8'),process.env)
@@ -94,8 +94,8 @@ try {
   const retry = await endpoint(a,'upload',{ key,filename: 'synthetic.pdf' },pdf); expect(retry.status===200 && JSON.stringify(await retry.json())===JSON.stringify(outcome),'Real upload retry changed identity')
   const directory = await rpc(a.client,'doctor_patient_documents',{ p_practice: a.scope.practiceId,p_location: a.scope.locationId,p_patient: a.scope.patientId }); expect(directory.total===1,'Actual upload must publish exactly one logical document')
   stage = 'private storage isolation'; const service = createClient(api,status.SERVICE_ROLE_KEY,options)
-  const object = await service.from('patient_document_versions').select('object_path').eq('id',outcome.versionId).single(); expect(!object.error && object.data?.object_path,'Stored immutable object locator missing')
-  const locator = object.data.object_path
+  const object = await rpc(service,'doctor_document_delivery',{ p_actor: a.user.id,p_session: a.sessionId,p_practice: a.scope.practiceId,p_location: a.scope.locationId,p_patient: a.scope.patientId,p_document: outcome.documentId,p_version: outcome.versionId }); expect(object?.object_path,'Stored immutable object locator missing')
+  const locator = object.object_path
   const anonymous = createClient(api,status.ANON_KEY,options)
   expect((await anonymous.storage.from(bucket).download(locator)).error,'Anonymous private object download allowed')
   expect((await a.client.storage.from(bucket).download(locator)).error,'Direct authenticated Storage bypass allowed')
