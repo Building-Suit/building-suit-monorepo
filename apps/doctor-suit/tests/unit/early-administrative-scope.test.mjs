@@ -59,3 +59,13 @@ test('every pending operator gate is necessary for live activation', () => {
     assert.ok(validateAdministrativeScope(approved, sources).includes('unapproved-domain-gate'))
   }
 })
+
+test('edition acceptance cannot remove any approved prerequisite edge', () => {
+  for (const task of scope.tasks) for (const dependency of task.dependsOn) {
+    const value = copy()
+    value.tasks.find(row => row.taskId === task.taskId).dependsOn = task.dependsOn.filter(id => id !== dependency)
+    assert.ok(validateAdministrativeScope(value, sources).includes(`required-dependency:${task.taskId}`))
+  }
+  const value = copy(); value.tasks.forEach(task => { task.dependsOn = [] })
+  assert.ok(validateAdministrativeScope(value, sources).includes('required-dependency:DOS-AE-011'))
+})

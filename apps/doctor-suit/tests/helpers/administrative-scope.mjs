@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto'
 
 export const sourceHead = '4ca7110f4d6efa828e0b41213e5c059bf02ba9db'
+// Approved additive edition graph; original milestone dependencies remain separately pinned.
+const requiredDependencies = [[], [1], [2], [3], [4], [3, 5], [2], [3, 5, 7], [2, 5, 6, 7, 8], [2, 3, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]
 const forbidden = ['clinical-records', 'prescriptions', 'diagnosis-or-dose-advice', 'private-document-uploads', 'clinical-or-free-text-notes', 'imports', 'outbound-messages', 'patient-charges-and-collections', 'mobile-apps', 'unapproved-paid-or-real-user-activation']
 
 /** Reference validation only: this function cannot grant domain/release approval. */
@@ -39,6 +41,8 @@ export function validateAdministrativeScope(scope, sources) {
       if (test.caseId !== id || cases.has(id) || typeof test.assertion !== 'string' || !test.assertion.trim()) errors.push(`acceptance:${id}`)
       cases.add(id)
     }
+    const required = requiredDependencies[index]?.map(number => `DOS-AE-${String(number).padStart(3, '0')}`)
+    if (!Array.isArray(task.dependsOn) || required?.some(id => !task.dependsOn.includes(id))) errors.push(`required-dependency:${expected}`)
     if (task.dependsOn?.some(id => !ids.has(id) || id === task.taskId)) errors.push(`dependency:${expected}`)
   }
   const visiting = new Set()
