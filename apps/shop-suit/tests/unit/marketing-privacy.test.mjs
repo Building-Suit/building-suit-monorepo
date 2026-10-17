@@ -1,3 +1,4 @@
+import { verifiedGoogleIdentity } from '../../app/utils/googleIdentity.ts'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
@@ -76,12 +77,13 @@ test('signup conversion follows confirmed new shop creation; failed, restored an
   const script = source.match(/<script setup lang="ts">([\s\S]*?)<\/script>/)[1]
   const ast = ts.createSourceFile('signup.ts', script, ts.ScriptTarget.Latest, true)
   const provision = ast.statements.find(statement => ts.isFunctionDeclaration(statement) && statement.name?.text === 'provisionShop').getText(ast)
-  async function scenario({ restored = false, fail = false, verified = true } = {}) {
+  async function scenario({ restored = false, fail = false, verified = true, lookupFailed = false } = {}) {
     const events = [], navigation = [], currentId = { value: restored ? 'synthetic-shop' : null }
     let created = false
     const env = {
       supabase: { auth: { getUser: async () => ({ data: { user: { email: 'synthetic@example.test', email_confirmed_at: verified ? 'synthetic-date' : null } }, error: null }) } },
       normalizeSignupEmail: value => value.toLowerCase(), form: { email: 'synthetic@example.test', shopName: 'Synthetic', businessMode: 'mixed', mainLocationName: 'Synthetic', mainLocationCode: '', mainLocationAddress: '', mainLocationPhone: '' },
+      verifiedGoogleIdentity, loadError: { value: lookupFailed ? 'unavailable' : null },
       currentId, existingAccount: { value: false }, showRecovery() {},
       loadShops: async () => { if (created) currentId.value = 'synthetic-shop' },
       shopRpc: { rpc: async () => { if (fail) return { error: new Error('synthetic response failure') }; created = true; return { error: null } } },
@@ -93,5 +95,5 @@ test('signup conversion follows confirmed new shop creation; failed, restored an
     return { events, navigation }
   }
   assert.deepEqual((await scenario()).events, ['signup_complete'])
-  for (const options of [{ restored: true }, { fail: true }, { verified: false }]) assert.deepEqual((await scenario(options)).events, [])
+  for (const options of [{ restored: true }, { fail: true }, { verified: false }, { lookupFailed: true }]) assert.deepEqual((await scenario(options)).events, [])
 })
