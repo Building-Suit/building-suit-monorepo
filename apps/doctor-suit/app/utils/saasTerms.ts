@@ -26,7 +26,7 @@ function quota(value: unknown): DoctorSaasQuota {
   if(value.kind==='limited' && integer(value.limit,2147483647))return { kind: 'limited',limit: value.limit }
   return invalid()
 }
-function termsVersion(value: unknown): DoctorSaasTermsVersion {
+export function doctorSaasTermsVersion(value: unknown): DoctorSaasTermsVersion {
   if(!record(value) || !doctorUuid(value.terms_id) || typeof value.plan_key!=='string' || !/^[a-z][a-z0-9_-]{2,63}$/.test(value.plan_key)
     || !positive(value.version) || typeof value.currency!=='string' || !/^[A-Z]{3}$/.test(value.currency) || !integer(value.currency_exponent,4)
     || (value.monthly_minor!==null && !integer(value.monthly_minor)) || (value.yearly_minor!==null && !integer(value.yearly_minor))
@@ -45,6 +45,6 @@ export function doctorSaasTerms(value: unknown,identity: DoctorIdentity): Doctor
     || value.data_mode!=='synthetic' || value.payment_route!=='unconfigured' || value.purchase_available!==false || value.live_activation!==false
     || (!value.configured && value.terms!==null) || (value.configured && value.terms===null))invalid()
   return { subscriberUserId: identity.userId,practiceId: identity.practiceId,configurationRevision: value.configuration_revision,
-    configured: value.configured,terms: value.configured ? termsVersion(value.terms) : null,
+    configured: value.configured,terms: value.configured ? doctorSaasTermsVersion(value.terms) : null,
     dataMode: 'synthetic',paymentRoute: 'unconfigured',purchaseAvailable: false,liveActivation: false }
 }
