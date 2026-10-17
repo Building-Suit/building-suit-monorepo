@@ -16,16 +16,23 @@ const session = () => {
 }
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:4337')
-  res.setHeader('Access-Control-Allow-Headers', 'authorization, apikey, content-type, x-client-info, x-supabase-api-version')
+  res.setHeader('Access-Control-Allow-Headers', 'authorization, apikey, content-type, x-client-info, x-supabase-api-version, x-doctor-document')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS')
   res.setHeader('Content-Type', 'application/json')
   res.setHeader('Cache-Control', 'no-store')
   if (req.method === 'OPTIONS') { res.end(); return }
+  const url = new URL(req.url, 'http://127.0.0.1:4338')
+  if (url.pathname==='/functions/v1/doctor-documents') {
+    const chunks = []; let size = 0
+    for await (const chunk of req) { size+=chunk.length; if (size>5242880) { res.writeHead(413).end('{}'); return }; chunks.push(chunk) }
+    const send = (value,status = 200) => res.writeHead(status).end(JSON.stringify(value))
+    if (!delegationProtocol({ state,req,res,url,input: {},rawBytes: Buffer.concat(chunks),send,deny: () => send({ error: 'session' },401) })) send({ error: 'unavailable' },503)
+    return
+  }
   let body = ''
   for await (const chunk of req) { body += chunk; if (body.length > 16384) { res.writeHead(413).end('{}'); return } }
   let input
   try { input = body ? JSON.parse(body) : {} } catch { res.writeHead(400).end('{}'); return }
-  const url = new URL(req.url, 'http://127.0.0.1:4338')
   const send = (value, status = 200) => { res.writeHead(status).end(JSON.stringify(value)) }
   const deny = (code = 'session_not_found') => send({ code, error_code: code, msg: 'Synthetic request rejected' }, 400)
   if (url.pathname === '/__fixture') {

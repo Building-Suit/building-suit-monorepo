@@ -34,6 +34,7 @@ export function doctorDocumentBackend(configuration: DoctorDocumentConfiguration
     async authorize(_actor,request,write) {
       const { data,error } = await user.rpc('doctor_patient_profile',scope(request)); checked(error)
       if (!documentRecord(data) || !documentRecord(data.patient) || data.patient.id!==request.patientId || data.patient.practice_id!==request.practiceId || data.documents_read!==true || (write && data.documents_write!==true)) throw new DoctorDocumentFailure(403,'denied')
+      await privateBucket()
       return { canWrite: data.documents_write===true }
     },
     async reserve(actor,request,material) {

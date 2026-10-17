@@ -22,7 +22,7 @@ export async function doctorDocumentBytes(request: Request): Promise<Uint8Array>
       const next = await reader.read()
       if (next.done) break
       total+=next.value.byteLength
-      if (total>DOCTOR_DOCUMENT_MAX_BYTES) { await reader.cancel().catch(() => undefined); throw new DoctorDocumentFailure(413,'size') }
+      if (total>DOCTOR_DOCUMENT_MAX_BYTES) { void reader.cancel().catch(() => undefined); throw new DoctorDocumentFailure(413,'size') }
       buffer.set(next.value,total-next.value.byteLength)
     }
   } finally { reader.releaseLock() }

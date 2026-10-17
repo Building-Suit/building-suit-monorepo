@@ -4,7 +4,7 @@ import { doctorPatientToday,validDoctorPatientForm,type DoctorPatientRow,type Do
 import { doctorPatientsCopy,doctorPatientError } from '../utils/patientsPresentation'
 const empty = () => ({ name: '',phone: '',email: '',dateOfBirth: '' })
 export function useDoctorPatientDirectory() {
-  const context = useDoctorContext(); const patients = useDoctorPatients(); const getScope = useNuxtApp().$doctorPatientsScope
+  const localePath = useLocalePath(); const context = useDoctorContext(); const patients = useDoctorPatients(); const getScope = useNuxtApp().$doctorPatientsScope
   const { locale } = useI18n(); const ar = computed(() => locale.value==='ar'); const words = computed(() => doctorPatientsCopy(ar.value))
   const hydrated = ref(false); onMounted(() => { hydrated.value = true })
   const scopeKey = computed(() => { const scope = getScope(); return scope ? doctorScopeKey(scope,'patients') : null })
@@ -44,7 +44,7 @@ export function useDoctorPatientDirectory() {
   function page(expected: string | null,value: number,size: number) { if (expected!==scopeKey.value || patients.state.pending) return; query.page = value; query.size = size; void reload() }
   function status(expected: string | null,value: string) { if (expected!==scopeKey.value || patients.state.pending || !['active','archived','all'].includes(value)) return; query.status = value as DoctorPatientQuery['status']; query.page = 0; void reload() }
   function date(value: string) { return new Intl.DateTimeFormat(ar.value ? 'ar' : 'en',{ dateStyle: 'medium',timeStyle: 'short',timeZone: getScope()?.timezone || 'Etc/UTC' }).format(new Date(value)) }
-  const rows = computed(() => (patients.state.directory?.rows || []).map(row => ({ id: row.id,name: row.name,phone: row.phone,email: row.email,dateOfBirth: row.dateOfBirth,status: row.archivedAt ? words.value.archived : words.value.active,updated: date(row.updatedAt),canEdit: canCreate.value && !row.archivedAt,canArchive: canCreate.value && !row.archivedAt })))
+  const rows = computed(() => (patients.state.directory?.rows || []).map(row => ({ id: row.id,href: localePath(`/patients/${row.id}`),name: row.name,phone: row.phone,email: row.email,dateOfBirth: row.dateOfBirth,status: row.archivedAt ? words.value.archived : words.value.active,updated: date(row.updatedAt),canEdit: canCreate.value && !row.archivedAt,canArchive: canCreate.value && !row.archivedAt })))
   const copy = computed(() => ({ ...words.value,duplicateCount: words.value.duplicateCount(patients.state.duplicates?.rows.length || 0,patients.state.duplicates?.total || 0) }))
   const latestDate = computed(() => doctorPatientToday(getScope()?.timezone || 'Etc/UTC'))
   const editorView = computed(() => ({ title: editor.mode.value==='create' ? words.value.create : words.value.edit,dirty: editor.dirty.value,pending: editor.pending.value,error: editor.error.value,latestDate: latestDate.value,submitDisabled: !validDoctorPatientForm(form.value,latestDate.value) || Boolean(patients.state.duplicates?.total && !acknowledged.value),duplicates: (patients.state.duplicates?.rows || []).map(row => ({ id: row.id,name: row.name,phone: row.phone,email: row.email,status: row.archivedAt ? words.value.archived : words.value.active })),duplicateTotal: patients.state.duplicates?.total || 0 }))

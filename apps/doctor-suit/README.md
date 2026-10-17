@@ -73,3 +73,25 @@ The synthetic minimum dataset is an entered display name plus optional recorded 
 Corrections use optimistic versions and actor-bound idempotency. On an uncertain save response, retry the same values while the editor remains open to preserve the exact command; a committed create is not treated as its own duplicate. Changing values, closing, leaving or losing context discards the local intent. Archive preserves the identity, relationship, referencing administrative history and actual clinic/actor attribution. It hides the row from the active directory, while authorized archived/all filters retain access. No hard-delete or silent reactivation command exists.
 
 The disposable PostgreSQL runner executes 80 patient assertions plus five actual patient transaction races, alongside inherited suites/races. Run `node --test apps/doctor-suit/tests/unit/dos-m1-011.test.mjs` for the fourteen stateful task units. Browser and final-check status is recorded in `docs/work-packages/doctor-suit/patients-evidence.md`; unfinished checks are not accepted. Private documents, real appointments and full Supabase service acceptance remain separate follow-up verification. Synthetic data only; hosted connections and deployment remain user-managed.
+
+Private administrative files (DOS-M1-012) use the Doctor-owned
+`supabase/functions/doctor-documents` function and `doctor-private-documents`
+private Storage bucket. Local CLI configuration bounds PDF/PNG/JPEG files to
+5 MiB. The trusted function checks actual Auth/session/scope, actual file bytes
+and the bucket configuration before finalizing metadata or delivering files.
+Browser clients receive current-authority bytes, never a public/signed object
+URL or service key. A configured private server runtime and allowed
+`DOCTOR_WEB_ORIGIN` are required; absence fails closed while saved metadata and
+history remain accessible to authorized users. No hosted setup is performed.
+`DOCTOR_LOCAL_PROVIDER=1` permits the explicitly local fixture's internal Kong
+HTTP target only; hosted runtimes require HTTPS. File versions remain unreviewed
+and archival preserves bytes/history. Retention/cleanup authority remains gated;
+unknown upload outcomes never delete possibly committed objects.
+
+`node apps/doctor-suit/tests/disposable-provider.mjs` is a separate, owned local
+Supabase Auth/Storage/Functions acceptance run (cloud CI, not the PostgreSQL
+scaffold). It refuses existing project containers/volumes or linked projects,
+captures confirmation email locally, suppresses credentials/body artifacts, and
+stops only the local project it started. It excludes Realtime, whose acceptance
+remains open. See `documents-evidence.md` and the implementation tracker for
+actual passing/failing/unrun status.

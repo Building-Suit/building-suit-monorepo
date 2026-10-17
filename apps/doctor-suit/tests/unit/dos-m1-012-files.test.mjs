@@ -89,3 +89,9 @@ test('service plan decoder rejects a foreign or malformed storage path',() => {
   assert.throws(() => doctorDocumentPlan({ ...data,object_path: `${id(99)}/${id(3)}/${id(5)}/${id(7)}.pdf` },scope),DoctorDocumentFailure)
   assert.throws(() => doctorDocumentPlan({ ...data,object_path: data.object_path+'/../a.pdf' },scope),DoctorDocumentFailure)
 })
+test('oversized streaming rejection does not await a stalled transport cancellation',async () => {
+  let cancelled = false; let released = false
+  const request = { headers: new Headers(),body: { getReader: () => ({ read: async () => ({ done: false,value: new Uint8Array(DOCTOR_DOCUMENT_MAX_BYTES+1) }),cancel: () => { cancelled = true; return new Promise(() => {}) },releaseLock: () => { released = true } }) } }
+  const result = await Promise.race([doctorDocumentBytes(request).then(() => 'accepted',error => error),new Promise(resolve => setTimeout(() => resolve('blocked by cancellation'),40))])
+  assert.ok(result instanceof DoctorDocumentFailure); assert.equal(result.status,413); assert.equal(cancelled,true); assert.equal(released,true)
+})

@@ -526,6 +526,16 @@
       "adapterBoundary": "Complete scoped patient directory, recorded identity fields, duplicate-review presentation and edit/archive dialogs. Doctor owns separate opaque identity/practice relationships, entered-unverified provenance, scoped search/pagination, optimistic commands and duplicate evidence. Shared UX owns dialog lifecycle.",
       "task": "DOS-M1-011",
       "migrationStatus": "registered complete synthetic administrative route"
+    },
+    {
+      "family": "patient-profile-private-documents",
+      "owner": "packages/ui",
+      "components": [
+        "BsPatientProfilePage"
+      ],
+      "adapterBoundary": "Complete typed administrative patient profile, preserved activity and private attachment/version/history presentation. Doctor owns entered/unreviewed provenance, verified current scope, strict metadata and authenticated byte transport. Shared UX owns record dialogs and private preview URL disposal. No public Storage URL or clinical interpretation is supplied.",
+      "task": "DOS-M1-012",
+      "migrationStatus": "registered complete synthetic profile; acceptance in progress"
     }
   ]
 }

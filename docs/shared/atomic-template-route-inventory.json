@@ -81,7 +81,8 @@
     "BsAccountSessionPage": "packages/ui/src/templates/BsAccountSessionPage.vue",
     "BsPracticeOverviewPage": "packages/ui/src/templates/BsPracticeOverviewPage.vue",
     "BsLocationManagementPage": "packages/ui/src/templates/BsLocationManagementPage.vue",
-    "BsPatientDirectoryPage": "packages/ui/src/templates/BsPatientDirectoryPage.vue"
+    "BsPatientDirectoryPage": "packages/ui/src/templates/BsPatientDirectoryPage.vue",
+    "BsPatientProfilePage": "packages/ui/src/templates/BsPatientProfilePage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2775,6 +2776,16 @@
       "status": "implemented; synthetic patient verification pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/patients/[id].vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPatientProfilePage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/patients/[id].vue",
+      "purpose": "administrative-patient-profile-private-documents",
+      "status": "implemented; synthetic private document verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -2904,6 +2915,7 @@
     "BsAccountSessionPage",
     "BsPracticeOverviewPage",
     "BsLocationManagementPage",
-    "BsPatientDirectoryPage"
+    "BsPatientDirectoryPage",
+    "BsPatientProfilePage"
   ]
 }

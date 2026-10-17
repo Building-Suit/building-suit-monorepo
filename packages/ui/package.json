@@ -367,7 +367,8 @@
     "./templates/BsPracticeOverviewPage.vue": "./src/templates/BsPracticeOverviewPage.vue",
     "./templates/BsLocationManagementPage.vue": "./src/templates/BsLocationManagementPage.vue",
     "./templates/BsPatientDirectoryPage.vue": "./src/templates/BsPatientDirectoryPage.vue",
-    "./organisms/BsPatientIdentityFields.vue": "./src/organisms/BsPatientIdentityFields.vue"
+    "./organisms/BsPatientIdentityFields.vue": "./src/organisms/BsPatientIdentityFields.vue",
+    "./templates/BsPatientProfilePage.vue": "./src/templates/BsPatientProfilePage.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

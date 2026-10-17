@@ -103,7 +103,13 @@ try {
   const signed = await a.client.storage.from(bucket).createSignedUrl(locator,60); expect(signed.error,'Direct client could mint a signed bypass URL')
   const directWrite = await a.client.storage.from(bucket).upload(`bypass-${randomUUID()}.pdf`,pdf,{ contentType: 'application/pdf' }); expect(directWrite.error,'Direct client upload bypass allowed')
   stage = 'reject spoofed file'; expect((await endpoint(a,'upload',{ filename: 'spoof.pdf' },new TextEncoder().encode('<script>synthetic</script>'))).status===415,'Spoofed file accepted')
-  stage = 'reject oversized file'; expect((await endpoint(a,'upload',{ filename: 'large.pdf' },new Uint8Array(5242881))).status===413,'Oversized file accepted')
+  stage = 'reject oversized file'; let oversized
+  try { oversized = await endpoint(a,'upload',{ filename: 'large.pdf' },new Uint8Array(5242881)) } catch { stage = 'oversized file transport failed'; throw new Error('Synthetic oversized upload transport failed') }
+  if (oversized.status!==413) {
+    // Fixed categories only; never reflect a response body or exception detail.
+    stage = ({ 400: 'oversized file bad request',401: 'oversized file session denial',403: 'oversized file scope denial',500: 'oversized file server error',502: 'oversized file gateway error',503: 'oversized file unavailable' })[oversized.status] || 'oversized file unexpected response'
+    throw new Error('Synthetic oversized upload response failed')
+  }
   stage = 'reject cross-practice file'; expect((await endpoint(b,'download',{ ...a.scope,documentId: outcome.documentId })).status===403,'Cross-practice download allowed')
   stage = 'actual bytes and replacement history'; const downloaded = await endpoint(a,'download',{ documentId: outcome.documentId }); expect(downloaded.status===200 && Buffer.from(await downloaded.arrayBuffer()).equals(Buffer.from(pdf)),'Real download bytes differ')
   const replacement = await endpoint(a,'upload',{ filename: 'replacement.pdf',documentId: outcome.documentId,expectedVersion: 1 },pdf); expect(replacement.status===200,'Real replacement failed')
