@@ -1,0 +1,23 @@
+{
+  "id": "dos-ae-003-trial-periods",
+  "task": "DOS-AE-003",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/app/utils/saasRepository.ts",
+    "apps/doctor-suit/app/utils/saasStatus.ts",
+    "apps/doctor-suit/app/utils/saasTerms.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261017153509_doctor_saas_trial_periods.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-003-trials.sql",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/saas-trial-concurrency.mjs",
+    "apps/doctor-suit/tests/unit/saas-status.test.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-003-trial-periods.md"
+  ],
+  "reason": "Prepare explicitly accepted one-time synthetic trial periods, immutable subscribed snapshots/history and owner-scoped state before clinic setup. Preserve dates through retries, expiry, suspension and offer replacement; prevent staff promotion, foreign period assignment and unverified paid activation. No offer/account is seeded, actual commercial/merchant approval is absent, and quota/write enforcement plus aggregate provider/UI/launch acceptance remain subsequent work."
+}

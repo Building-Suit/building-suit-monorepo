@@ -361,6 +361,44 @@ export type Database = {
         }
         Relationships: []
       }
+      doctor_saas_accounts: {
+        Row: {
+          changed_at: string
+          created_at: string
+          current_period_id: string
+          reason_code: string
+          revision: number
+          state: string
+          subscriber_user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          created_at?: string
+          current_period_id: string
+          reason_code: string
+          revision?: number
+          state?: string
+          subscriber_user_id: string
+        }
+        Update: {
+          changed_at?: string
+          created_at?: string
+          current_period_id?: string
+          reason_code?: string
+          revision?: number
+          state?: string
+          subscriber_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_accounts_subscriber_user_id_current_period_id_fkey"
+            columns: ["subscriber_user_id", "current_period_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_periods"
+            referencedColumns: ["subscriber_user_id", "id"]
+          },
+        ]
+      }
       doctor_saas_configuration: {
         Row: {
           change_reason: string
@@ -429,6 +467,91 @@ export type Database = {
           {
             foreignKeyName: "doctor_saas_configuration_events_previous_terms_id_fkey"
             columns: ["previous_terms_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_terms_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_saas_period_events: {
+        Row: {
+          database_actor: string
+          happened_at: string
+          next_state: string
+          period_id: string
+          previous_state: string | null
+          reason_code: string
+          revision: number
+          subscriber_user_id: string
+        }
+        Insert: {
+          database_actor?: string
+          happened_at?: string
+          next_state: string
+          period_id: string
+          previous_state?: string | null
+          reason_code: string
+          revision: number
+          subscriber_user_id: string
+        }
+        Update: {
+          database_actor?: string
+          happened_at?: string
+          next_state?: string
+          period_id?: string
+          previous_state?: string | null
+          reason_code?: string
+          revision?: number
+          subscriber_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_period_events_subscriber_user_id_period_id_fkey"
+            columns: ["subscriber_user_id", "period_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_periods"
+            referencedColumns: ["subscriber_user_id", "id"]
+          },
+        ]
+      }
+      doctor_saas_periods: {
+        Row: {
+          accepted_document_ref: string
+          created_at: string
+          database_actor: string
+          ends_at: string
+          id: string
+          kind: string
+          started_at: string
+          subscriber_user_id: string
+          terms_version_id: string
+        }
+        Insert: {
+          accepted_document_ref: string
+          created_at?: string
+          database_actor?: string
+          ends_at: string
+          id?: string
+          kind: string
+          started_at: string
+          subscriber_user_id: string
+          terms_version_id: string
+        }
+        Update: {
+          accepted_document_ref?: string
+          created_at?: string
+          database_actor?: string
+          ends_at?: string
+          id?: string
+          kind?: string
+          started_at?: string
+          subscriber_user_id?: string
+          terms_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_periods_terms_version_id_fkey"
+            columns: ["terms_version_id"]
             isOneToOne: false
             referencedRelation: "doctor_saas_terms_versions"
             referencedColumns: ["id"]
@@ -1384,6 +1507,7 @@ export type Database = {
         Returns: Json
       }
       doctor_runtime_contract: { Args: never; Returns: Json }
+      doctor_saas_status: { Args: never; Returns: Json }
       doctor_saas_terms: { Args: never; Returns: Json }
       doctor_save_onboarding_draft: {
         Args: {
@@ -1418,6 +1542,15 @@ export type Database = {
           p_practice: string
           p_status: string
           p_version: number
+        }
+        Returns: Json
+      }
+      doctor_start_saas_trial: {
+        Args: {
+          p_configuration_revision: number
+          p_document_ref: string
+          p_key: string
+          p_terms: string
         }
         Returns: Json
       }
