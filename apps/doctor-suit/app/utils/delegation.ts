@@ -57,7 +57,7 @@ export function doctorInvitationDetails(value: unknown, invitationId: string): D
 export function validDoctorDelegationGrants(values: DoctorDelegationGrant[], locations: DoctorTeamLocation[], invitation = false): boolean {
   if (!Array.isArray(values) || values.length>100 || (invitation && !values.length) || new Set(values.map(item => item.locationId)).size!==values.length) return false
   return values.every(item => locations.some(location => location.id===item.locationId && (!invitation || !location.archived))
-    && item.capabilities.length>0 && item.capabilities.length<=11 && item.capabilities.every(capability => doctorAdministrativeCapabilities.includes(capability)))
+    && item.capabilities.length>0 && item.capabilities.length<=doctorAdministrativeCapabilities.length && item.capabilities.every(capability => doctorAdministrativeCapabilities.includes(capability)))
 }
 export function doctorCanonicalGrants(values: DoctorDelegationGrant[]): DoctorDelegationGrant[] {
   return values.map(item => ({ locationId: item.locationId,capabilities: [...new Set(item.capabilities)].sort() })).sort((a,b) => a.locationId.localeCompare(b.locationId))

@@ -6,7 +6,7 @@ const emit = defineEmits<{ loadMore: []; search: [scope: string|null,value: stri
 const columns = computed(() => [{ key: 'column1',header: props.copy.date },{ key: 'column2',header: props.copy.actor },{ key: 'column3',header: props.copy.activity },{ key: 'column4',header: props.copy.record },...(!props.summaryOnly ? [{ key: 'column5',header: props.copy.changes }] : [])])
 </script>
 <template>
-  <BsStack gap="lg">
+  <BsStack class="bs-audit-history" gap="lg">
     <BsBox as="header">
       <BsHeading :level="1" size="h1">{{ copy.title }}</BsHeading>
       <BsText size="sm" tone="muted">{{ copy.subtitle }}</BsText>
@@ -15,7 +15,7 @@ const columns = computed(() => [{ key: 'column1',header: props.copy.date },{ key
       <BsLink :to="controls.backTo">{{ controls.backLabel }}</BsLink>
       <BsText as="p">{{ controls.notice }}</BsText>
       <BsText as="p">{{ controls.governance }}</BsText>
-      <BsForm :pending="loading" @submit="emit('search',controls.scopeKey,search)"><BsField v-slot="field" :label="controls.searchLabel"><BsInput :id="field.id" v-model="search" :maxlength="120" /></BsField><BsButton submit :disabled="loading">{{ controls.submitLabel }}</BsButton></BsForm>
+      <BsForm :pending="loading" @submit="emit('search',controls.scopeKey,search)"><BsField v-slot="field" :label="controls.searchLabel"><BsInput :id="field.id" v-model="search" :maxlength="120" /></BsField><BsButton type="submit" :disabled="loading">{{ controls.submitLabel }}</BsButton></BsForm>
       <BsButton v-if="errorMessage" :disabled="loading" @click="emit('retry')">{{ controls.retryLabel }}</BsButton>
     </BsStack>
     <BsCard v-if="windowLabel" role="status" as="section" padding="md">
@@ -83,3 +83,7 @@ const columns = computed(() => [{ key: 'column1',header: props.copy.date },{ key
     </BsInline>
   </BsStack>
 </template>
+
+<style>
+.bs-audit-history { inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; }
+</style>

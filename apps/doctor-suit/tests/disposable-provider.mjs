@@ -151,6 +151,15 @@ try {
   const replacement = await endpoint(a,'upload',{ filename: 'replacement.pdf',documentId: outcome.documentId,expectedVersion: 1 },pdf); expect(replacement.status===200,'Real replacement failed')
   const history = await rpc(a.client,'doctor_document_history',{ p_practice: a.scope.practiceId,p_location: a.scope.locationId,p_patient: a.scope.patientId,p_document: outcome.documentId }); expect(history.total===2 && history.versions.every(value => value.provenance==='uploaded_unreviewed' && value.uploaded_by===a.user.id),'Replacement lost immutable unreviewed provenance')
   const old = await endpoint(a,'download',{ documentId: outcome.documentId,versionId: outcome.versionId }); expect(old.status===200,'Original preserved file cannot be delivered to current authorized owner')
+  stage = 'actual scoped administrative audit';
+  const audit = await rpc(a.client,'doctor_administrative_audit',{ p_practice: a.scope.practiceId,p_query: 'document.download_requested',p_page: 0 });
+  expect(audit.total>0 && audit.items.length>0 && audit.items.every(row => typeof row.id==='string' && Object.keys(row).sort().join(',')==='actor_user_id,entity_id,event_type,happened_at,id'),'Actual audit projection missing or unsafe');
+  expect((await b.client.rpc('doctor_administrative_audit',{ p_practice: a.scope.practiceId })).error?.code==='42501','Foreign actual audit was admitted');
+  expect((await a.client.from('audit_events').update({ details: {} }).eq('id',audit.items[0].id)).error?.code==='42501','Actual audit mutation was admitted');
+  await rpc(a.client,'doctor_update_account_settings',{ p_personal_name: 'Synthetic audit account',p_contact_phone: '',p_in_app_confirmations: false,p_expected_version: 0,p_key: randomUUID() });
+  const personalAudit = await rpc(a.client,'doctor_personal_account_audit');
+  expect(personalAudit.total===1 && personalAudit.items[0].actor_user_id===a.user.id && (await rpc(b.client,'doctor_personal_account_audit')).total===0,'Actual personal audit was not account-local');
+  console.log('Actual audit: attributed document requests, safe projection, cross-practice/mutation denial and independent personal account history passed');
   stage = 'actual session revocation'; const frozen = { ...a,session: { ...a.session } }; expect(!(await a.client.auth.signOut({ scope: 'local' })).error,'Actual local session signout failed')
   const revoked = await endpoint(frozen,'download',{ documentId: outcome.documentId }); expect([401,403].includes(revoked.status),'Revoked JWT was admitted by document endpoint')
   expect((await endpoint(b,'status')).status===200,'Independent Doctor B was changed by A signout')

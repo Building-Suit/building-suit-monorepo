@@ -1,0 +1,31 @@
+{
+  "id": "dos-m1-017",
+  "task": "DOS-M1-017",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app",
+    "apps/doctor-suit/tests",
+    "apps/doctor-suit/supabase/migrations/20261017062525_doctor_administrative_audit.sql",
+    "apps/doctor-suit/supabase/tests/dos-m1-017.sql",
+    "apps/doctor-suit/supabase/tests/dos-m1-010.sql",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "packages/ui/src/templates/BsAuditHistoryPage.vue",
+    "packages/ui/src/templates/BsAuthLayout.vue",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/doctor-suit/audit-evidence.md",
+    "docs/work-packages/doctor-suit/implementation-tracker.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Add synthetic read-only administrative and own-account audit views with explicit audit.read and independent domain/clinic grants. Safe five-field projections omit names, contacts, credentials, paths and free-text payloads; linked archival history is preserved, IDs serialize losslessly, and client audit mutations stay denied. Shared optional search/paging/summary presentation and bounded auth-shell sizing preserve existing consumers. No bulk export, erasure, retention, clinical or provider approval is invented."
+}
