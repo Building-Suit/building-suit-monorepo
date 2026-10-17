@@ -28,6 +28,7 @@
     "apps/doctor-suit/app/utils/previewMetadata.ts",
     "apps/doctor-suit/app/utils/workspaceNavigation.ts",
     "apps/doctor-suit/package.json",
+    "apps/doctor-suit/tests/account-actual-provider.mjs",
     "apps/doctor-suit/tests/e2e/dos-m1-002.spec.ts",
     "apps/doctor-suit/tests/e2e/dos-m1-005.spec.ts",
     "apps/doctor-suit/tests/e2e/dos-m1-006.auth.fixture.ts",
