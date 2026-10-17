@@ -14,7 +14,7 @@ async function choose(page: Page, ar: boolean, name: string) {
 for (const ar of [false, true]) test(`DOS-M1-008 ${ar ? 'AR mobile' : 'EN desktop'} protocol fixture: explicit context, location writes and retained archive history`, async ({ page, context, request }) => {
   await page.setViewportSize({ width: ar ? 390 : 1280, height: 1000 })
   await context.addCookies([{ name: 'building-suit-locale', value: ar ? 'ar' : 'en', url: 'http://127.0.0.1:4337' }])
-  await page.goto('/sign-in')
+  await page.goto('/account')
   await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill('synthetic@example.test')
   await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
   await page.getByRole('button', { name: ar ? 'تسجيل الدخول' : 'Sign in', exact: true }).click()
@@ -59,7 +59,7 @@ for (const ar of [false, true]) test(`DOS-M1-008 ${ar ? 'AR mobile' : 'EN deskto
 
 test('DOS-M1-008 protocol fixture: an owner with every location archived retains history and can create a new working location', async ({ page, request }) => {
   await request.post(fixture, { data: { locations: [{ ...location(1, 'Archived clinic', 'Africa/Cairo'), archived_at: '2026-10-16T00:00:00Z', version: 2 }] } })
-  await page.goto('/sign-in')
+  await page.goto('/account')
   await page.getByLabel(/^Email/).fill('synthetic@example.test')
   await page.getByLabel(/^Password/).fill('synthetic-password-only')
   await page.getByRole('button', { name: 'Sign in', exact: true }).click()

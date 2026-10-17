@@ -34,17 +34,18 @@ export function doctorProviderConfiguration(values: Record<string, string | unde
   return { ...result, enabled: true, origin: origin.origin, url: backend.origin, key }
 }
 
+export const doctorHomePath = '/workspace'
 export function doctorReturnPath(value: unknown): string {
-  if (typeof value !== 'string') return '/account'
+  if (typeof value !== 'string') return doctorHomePath
   let decoded: string
-  try { decoded = decodeURIComponent(value) } catch { return '/account' }
+  try { decoded = decodeURIComponent(value) } catch { return doctorHomePath }
   if (!decoded.startsWith('/') || decoded.startsWith('//') || decoded.includes('\\')
-    || Array.from(decoded).some(character => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127)) return '/account'
+    || Array.from(decoded).some(character => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127)) return doctorHomePath
   const url = new URL(decoded, 'https://doctor.invalid')
-  if (url.origin !== 'https://doctor.invalid') return '/account'
+  if (url.origin !== 'https://doctor.invalid') return doctorHomePath
   if (['/account', '/account-activity', '/team', '/invitations/accept', '/onboarding', '/workspace', '/patients', '/availability','/appointments', '/appointments', '/locations', '/settings', '/audit'].includes(url.pathname)
     || /^\/patients\/[0-9a-f-]{36}$/i.test(url.pathname)) return url.pathname
-  return '/account'
+  return doctorHomePath
 }
 
 /** Preserve the pinned SDK's per-flow PKCE binding before removing URL material. */

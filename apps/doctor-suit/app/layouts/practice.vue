@@ -5,6 +5,7 @@ import { doctorAppointmentsCopy } from '../utils/appointmentsPresentation'
 import { doctorAvailabilityCopy } from '../utils/availabilityPresentation'
 import { doctorPatientsCopy } from '../utils/patientsPresentation'
 import { doctorDelegationCopy } from '../utils/delegationPresentation'
+import { doctorWorkspaceNavigation } from '../utils/workspaceNavigation'
 const { auth } = useDoctorAuthPresentation(false)
 const { copy } = useDoctorPracticePresentation()
 const { locale } = useI18n()
@@ -16,8 +17,8 @@ const appointmentsCopy = computed(() => doctorAppointmentsCopy(locale.value === 
 const teamCopy = computed(() => doctorDelegationCopy(locale.value === 'ar'))
 const hydrated = ref(false)
 onMounted(() => { hydrated.value = true })
-const canLocations = computed(() => context.state.current?.capabilities.some(cap => cap === 'locations.read' || cap === 'locations.manage') || (!context.state.current && Boolean(auth.state.identity?.practiceId)))
-const groups = computed(() => [{ key: 'practice', label: copy.value.workspace, links: [{ to: '/workspace', label: copy.value.workspace }, ...(context.state.current?.capabilities.includes('patients.read') ? [{ to: '/patients', label: patientsCopy.value.title }] : []), ...(context.state.current?.capabilities.some(cap => cap === 'availability.manage' || cap === 'appointments.read') ? [{ to: '/availability', label: availabilityCopy.value.title }] : []), ...(context.state.current?.capabilities.includes('appointments.read') ? [{ to: '/appointments',label: appointmentsCopy.value.title }] : []), ...((context.state.current?.capabilities.includes('audit.read') || (!context.state.options.length && auth.state.identity?.practiceId && context.state.phase==='choosing')) ? [{ to: '/audit',label: locale.value==='ar' ? 'سجل النشاط الإداري' : 'Administrative audit' }] : []), ...(canLocations.value ? [{ to: '/locations', label: scopeCopy.value.title }] : []), ...(auth.state.identity?.practiceId && (!context.state.current || context.state.current.portal === 'doctor') ? [{ to: '/onboarding', label: copy.value.edit }] : []), ...(context.state.current?.portal === 'doctor' || (!context.state.options.length && auth.state.identity?.practiceId) ? [{ to: '/team', label: teamCopy.value.teamLink }] : []), { to: '/account', label: copy.value.account }] }])
+const navigation = computed(() => doctorWorkspaceNavigation({capabilities:context.state.current?.capabilities??[],portal:context.state.current?.portal,ownsPractice:Boolean(auth.state.identity?.practiceId),hasCurrent:Boolean(context.state.current),hasOptions:Boolean(context.state.options.length),choosing:context.state.phase==='choosing'},
+  {workspace:copy.value.workspace,patients:patientsCopy.value.title,appointments:appointmentsCopy.value.title,availability:availabilityCopy.value.title,audit:locale.value==='ar'?'سجل النشاط الإداري':'Administrative audit',locations:scopeCopy.value.title,practice:copy.value.edit,team:teamCopy.value.teamLink,account:copy.value.account}))
 const caption = computed(() => {
   const selected = context.state.current
   return selected ? [selected.doctorName, selected.practiceName, selected.locationName, selected.timezone, selected.portal === 'doctor' ? scopeCopy.value.owner : scopeCopy.value.secretary].join(' · ') : scopeCopy.value.noContext
@@ -30,5 +31,5 @@ async function signOut() { await auth.signOut(); await navigateTo('/sign-in') }
 watch(() => auth.state.phase, phase => { if (phase === 'signed-out' || phase === 'unavailable') void navigateTo('/sign-in') })
 </script>
 <template>
-  <BsWorkspaceShell home-path="/workspace" product-name="Doctor Suit" :groups="groups" :labels="{ open: copy.open, close: copy.close, navigation: copy.navigation, dashboard: copy.workspace }" :context="caption" :scope-notice="{ title: copy.synthetic, description: caption }" :header-scopes="scopes" :state="state" :account="account" :logo="{ kind: 'text' }" @scope="selectScope" @retry="context.refresh()" @sign-out="signOut"><slot /></BsWorkspaceShell>
+  <BsWorkspaceShell home-path="/workspace" product-name="Doctor Suit" :groups="navigation.groups" :mobile-links="navigation.mobileLinks" :labels="{ open: copy.open, close: copy.close, navigation: copy.navigation, dashboard: copy.workspace }" :context="caption" :scope-notice="{ title: copy.synthetic, description: caption }" :header-scopes="scopes" :state="state" :account="account" :logo="{ kind: 'product' }" @scope="selectScope" @retry="context.refresh()" @sign-out="signOut"><slot /></BsWorkspaceShell>
 </template>

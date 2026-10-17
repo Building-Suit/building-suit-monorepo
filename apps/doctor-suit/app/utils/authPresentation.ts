@@ -2,7 +2,7 @@ import type { DoctorAuthError, DoctorAuthState } from './authController'
 
 export function doctorAuthCopy(ar: boolean) {
   return ar ? {
-    home: 'العودة إلى المعاينة', title: 'حساب Doctor Suit التجريبي', description: 'بيانات اصطناعية فقط. تأكيد الحساب لا يثبت التأهيل المهني أو صلاحية تقديم الرعاية.',
+    home: 'الرئيسية في Doctor Suit', title: 'مرحباً بك في Doctor Suit', description: 'المواعيد والاستقبال وإدارة الممارسة في مساحة واحدة. معاينة ببيانات تجريبية؛ تأكيد الحساب لا يثبت التأهيل المهني أو صلاحية تقديم الرعاية.',
     signIn: 'تسجيل الدخول', signUp: 'إنشاء حساب تجريبي', name: 'الاسم المعروض', email: 'البريد الإلكتروني', password: 'كلمة المرور', pending: 'جارٍ التحقق…', forgot: 'استعادة كلمة المرور',
     accountPrompt: 'ليس لديك حساب؟', passwordHint: 'استخدم 12 حرفاً على الأقل.', invalid: 'تحقق من الحقول. يجب تطابق كلمتي المرور واستخدام 12 حرفاً على الأقل.',
     verify: 'تأكيد الحساب', code: 'رمز التأكيد', verifyDescription: 'أدخل رمز البريد المسجل أو افتح رابط التأكيد في المتصفح الذي بدأ التسجيل.', expired: 'انتهت صلاحية الرمز. اطلب رمزاً جديداً.', resend: 'إعادة إرسال الرمز',
@@ -13,7 +13,7 @@ export function doctorAuthCopy(ar: boolean) {
     unavailable: 'تسجيل الدخول غير متاح', unavailableDescription: 'لم يتم إعداد اتصال Doctor Suit والتحقق منه. لا تُدخل بيانات دخول هنا.', checking: 'جارٍ التحقق من الاتصال', checkingDescription: 'لن تظهر حقول الدخول قبل التحقق من اتصال Doctor Suit.',
     errors: { unavailable: 'الاتصال غير متاح.', credentials: 'تعذّر تسجيل الدخول. تحقق من البيانات وتأكيد البريد.', expired: 'الرابط أو الرمز منتهي الصلاحية.', 'rate-limit': 'طلبات كثيرة. انتظر قبل المحاولة مجدداً.', network: 'تعذّر إتمام الطلب. تحقق من الاتصال وحاول مجدداً.', session: 'تعذّر التحقق من جلسة حالية. سجل الدخول مجدداً.', password: 'لم يقبل المزوّد كلمة المرور الجديدة.', 'sign-out': 'تم قفل العرض المحلي. لم يؤكد المزوّد إلغاء الجلسة؛ أعد المحاولة.' },
   } : {
-    home: 'Back to preview', title: 'Doctor Suit synthetic account', description: 'Synthetic data only. Account verification does not establish professional credentials or clinical authority.',
+    home: 'Doctor Suit home', title: 'Welcome to Doctor Suit', description: 'Appointments, reception and practice administration in one workspace. Synthetic data only; account verification does not establish professional credentials or clinical authority.',
     signIn: 'Sign in', signUp: 'Create synthetic account', name: 'Display name', email: 'Email', password: 'Password', pending: 'Checking…', forgot: 'Recover password',
     accountPrompt: 'Need an account?', passwordHint: 'Use at least 12 characters.', invalid: 'Check the fields. Passwords must match and contain at least 12 characters.',
     verify: 'Verify account', code: 'Verification code', verifyDescription: 'Enter the code for the registered email, or open the verification link in the browser that started signup.', expired: 'The code expired. Request another code.', resend: 'Resend code',

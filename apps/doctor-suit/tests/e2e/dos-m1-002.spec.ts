@@ -6,6 +6,8 @@ for (const locale of ['en', 'ar']) {
     const response = await page.goto('/')
     expect(response?.headers()['x-robots-tag']).toBe('noindex, nofollow')
     expect(response?.headers()['cache-control']).toContain('no-store')
+    const scope = page.getByRole('link',{name:locale==='en'?'Preview scope':'نطاق المعاينة',exact:true})
+    await scope.focus();await page.keyboard.press('Enter');await expect(page).toHaveURL(/\/preview$/)
     const button = page.getByRole('button', { name: locale === 'en' ? 'View preview scope' : 'عرض نطاق المعاينة', exact: true })
     await expect(button).toBeVisible()
     await button.focus()

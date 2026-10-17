@@ -16,7 +16,8 @@ for (const ar of [false, true]) test(`DOS-M1-006 protocol fixture ${ar ? 'AR mob
   await context.addCookies([{ name: 'bs-shop-local-auth-token', value: 'synthetic-other-product', url: 'http://127.0.0.1:4337' }])
   await page.goto('/sign-in?next=%2f%2fevil.example.test')
   await signIn(page, ar)
-  await expect(page).toHaveURL(/\/account$/)
+  await expect(page).toHaveURL(/\/onboarding$/)
+  await page.goto('/account')
   await expect(page.getByText(ar ? 'الحساب مؤكّد' : 'Account verified', { exact: true })).toBeVisible()
   await page.reload()
   await expect(page.getByText(ar ? 'الحساب مؤكّد' : 'Account verified', { exact: true })).toBeVisible()
@@ -44,7 +45,7 @@ test('DOS-M1-006 protocol fixture: signup, expired OTP, resend and verified acco
   await page.getByRole('button', { name: 'Resend code', exact: true }).click()
   for (let i = 0; i < 6; i++) await digits.nth(i).fill(String(i + 1))
   await page.getByRole('button', { name: 'Verify account', exact: true }).click()
-  await expect(page).toHaveURL(/\/account$/)
+  await expect(page).toHaveURL(/\/onboarding$/)
   expect((await (await request.get(provider)).json()).outbox).toEqual(['signup', 'signup'])
 })
 test('DOS-M1-006 protocol fixture: recovery uses same-browser PKCE and removes callback material', async ({ page, request }) => {
@@ -73,7 +74,7 @@ test('DOS-M1-006 protocol fixture: wrong product gate blocks forms and credentia
 test('DOS-M1-006 protocol fixture: revoked session cannot restore account after reload', async ({ page, request }) => {
   await page.goto('/sign-in')
   await signIn(page)
-  await expect(page).toHaveURL(/\/account$/)
+  await expect(page).toHaveURL(/\/onboarding$/)
   await request.post(provider, { data: { active: false } })
   await page.reload()
   await expect(page).toHaveURL(/\/sign-in\?next=/)
