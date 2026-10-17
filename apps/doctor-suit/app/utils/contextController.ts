@@ -27,7 +27,8 @@ export function createDoctorContextController(repository: ReturnType<typeof doct
   let initialCleanup = Promise.resolve()
   let requiresSelection = false
   let expiryTimer: unknown
-  function cancelExpiry() { if(expiryTimer!==undefined)timers?.clear(expiryTimer);expiryTimer=undefined }
+  let expirySequence=0
+  function cancelExpiry() { expirySequence++; if(expiryTimer!==undefined)timers?.clear(expiryTimer);expiryTimer=undefined }
   function scheduleExpiry(value: DoctorLocationContext,sentAt: number) {
     cancelExpiry()
     const entitlement=value.entitlement
@@ -35,15 +36,19 @@ export function createDoctorContextController(repository: ReturnType<typeof doct
     // Use the server observation and monotonic elapsed request time. A browser
     // wall-clock change cannot extend a subscription or grant access.
     const remaining=Math.max(0,Date.parse(entitlement.validUntil)-Date.parse(entitlement.observedAt)-Math.max(0,timers.now()-sentAt))
-    const deadline=timers.now()+remaining;const expected=generation
+    const deadline=timers.now()+remaining;const expected=generation;const sequence=expirySequence
     function tick() {
+      // Vue may expose current as a proxy. Authority belongs to this scheduled
+      // epoch, not raw/proxy object identity. A cancelled callback must not
+      // touch a newer timer's handle, even if it was already queued.
+      if(sequence!==expirySequence || expected!==generation || !state.current)return
       expiryTimer=undefined
-      if(expected!==generation || state.current!==value)return
       const left=deadline-timers!.now()
       if(left>0) { expiryTimer=timers!.set(tick,Math.min(Math.ceil(left),2147483647));return }
       // Remove the old authority/drafts/listeners before asking for fresh
       // history access. Only a new server response can provide another state.
-      void clear().then(()=>refresh())
+      const cleanup=clear();const cleared=generation
+      void cleanup.then(()=>{if(cleared===generation && state.error!=='cleanup')return refresh()})
     }
     expiryTimer=timers.set(tick,Math.min(Math.ceil(remaining),2147483647))
   }

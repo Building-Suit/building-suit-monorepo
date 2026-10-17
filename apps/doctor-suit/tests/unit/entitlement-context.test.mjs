@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { reactive } from 'vue'
 import assert from 'node:assert/strict'
 import { doctorEntitlement,doctorEntitlementKey } from '../../app/utils/entitlement.ts'
 import { doctorLocationContext } from '../../app/utils/locationContext.ts'
@@ -14,11 +15,11 @@ const flush=async()=>{for(let n=0;n<12;n++)await new Promise(resolve=>setImmedia
 function clock() {
   let now=0;let next=0;const jobs=new Map()
   return {now:()=>now,set(callback,delay){const id=++next;jobs.set(id,{callback,due:now+delay});return id},clear(id){jobs.delete(id)},
-    count:()=>jobs.size,next:()=>Math.min(...[...jobs.values()].map(job=>job.due)),
+    callbacks:()=>[...jobs.values()].map(job=>job.callback),count:()=>jobs.size,next:()=>Math.min(...[...jobs.values()].map(job=>job.due)),
     advance(ms){now+=ms;for(const[id,job]of[...jobs])if(job.due<=now){jobs.delete(id);job.callback()}}}
 }
 function controller(data,timers,repository={}) {
-  let preference=null;const state=doctorContextState()
+  let preference=null;const state=reactive(doctorContextState())
   const api={load:async()=>[data.value],resolve:async()=>data.value,...repository}
   const value=createDoctorContextController(api,state,()=>actor,'local',{read:()=>preference,write:value=>{preference=value}},timers)
   return {value,state,api}
@@ -80,4 +81,44 @@ test('request latency consumes the server allowance and large timers chunk witho
   const second=controller(data,long);await second.value.refresh();assert.equal(long.next(),2147483647)
   long.advance(2147483647);assert.equal(second.state.phase,'ready');assert.equal(long.next(),end)
   await second.value.clear();assert.equal(long.count(),0)
+})
+
+test('reactive refresh cancels queued stale callbacks without losing the replacement deadline',async()=>{
+  const timers=clock();const data={value:row()};const {value,state}=controller(data,timers);await value.refresh()
+  const stale=timers.callbacks()[0];const capture=value.capture('patients')
+  timers.advance(1000);data.value=row({entitlement:entitlement({observed_at:new Date(epoch+1000).toISOString()})});await value.refresh()
+  const current=timers.callbacks()[0];stale();await flush()
+  assert.equal(state.current.entitlement.state,'trial');assert.equal(capture.accepts(),true);assert.equal(timers.count(),1)
+  assert.equal(timers.next(),10000);assert.notEqual(current,stale)
+  await value.clear();assert.equal(timers.count(),0);current();await flush();assert.equal(state.current,null)
+})
+test('reactive expiry clears work synchronously while a server refresh remains pending',async()=>{
+  const timers=clock();const data={value:row()};let release
+  const {value,state,api}=controller(data,timers);await value.refresh()
+  let draft='Synthetic authority';let loads=0;value.registerClear(()=>{draft=''})
+  const capture=value.capture('patients');api.load=async()=>{loads++;return new Promise(resolve=>{release=resolve})}
+  timers.advance(10000);assert.equal(state.current,null);assert.equal(capture.signal.aborted,true)
+  await flush();assert.equal(draft,'');assert.equal(state.current,null);assert.equal(loads,1)
+  const readOnly=row({entitlement:expired()});data.value=readOnly;release([readOnly]);await flush()
+  assert.equal(state.current.entitlement.writesAllowed,false);assert.equal(state.current.entitlement.state,'expired')
+})
+test('reactive expiry cleanup cannot refresh after an explicit clear or cleanup failure',async()=>{
+  for(const failing of [false,true]){
+    const timers=clock();const data={value:row()};const {value,state,api}=controller(data,timers);await value.refresh()
+    const releases=[];let loads=0;api.load=async()=>{loads++;return[data.value]}
+    value.registerClear(()=>new Promise((resolve,reject)=>{releases.push(()=>failing?reject(Error('Synthetic cleanup failure')):resolve())}))
+    timers.advance(10000);await flush();assert.equal(state.current,null)
+    if(!failing){const clearing=value.clear();await flush();for(const release of releases)release();await clearing;await flush()}
+    else{for(const release of releases)release();await flush();assert.equal(state.error,'cleanup')}
+    assert.equal(loads,0);assert.equal(state.current,null)
+  }
+})
+test('reactive expiry rejects an older in-flight trial response after fresh historical authority',async()=>{
+  const timers=clock();const data={value:row()};const {value,state,api}=controller(data,timers);await value.refresh()
+  let release;let loads=0;const stale=row();const capture=value.capture('patients')
+  api.load=async()=>++loads===1?new Promise(resolve=>{release=resolve}):[data.value]
+  const pending=value.refresh();await flush();data.value=row({entitlement:expired()});timers.advance(10000);await flush()
+  assert.equal(state.current.entitlement.state,'expired');assert.equal(capture.accepts(),false)
+  release([stale]);await pending;await flush()
+  assert.equal(state.current.entitlement.state,'expired');assert.equal(state.current.entitlement.writesAllowed,false)
 })
