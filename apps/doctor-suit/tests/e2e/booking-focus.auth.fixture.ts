@@ -33,6 +33,7 @@ for (const ar of [true, false]) for (const width of [390, 1280]) {
       await picker.click()
       await page.getByRole('option', { name: / · Clinic A1$/ }).click()
       await expect(picker).toContainText('Clinic A1')
+      const boardDate = page.locator('main').getByLabel(copy.date, { exact: true })
       const create = page.getByRole('button', { name: copy.create, exact: true })
       await tabTo(page, create)
       await expect(create).toBeFocused()
@@ -47,6 +48,7 @@ for (const ar of [true, false]) for (const width of [390, 1280]) {
       })
       await page.evaluate(() => window.dispatchEvent(new Event('focus')))
       await expect.poll(() => captured).toBeGreaterThan(0)
+      await expect(boardDate).toHaveCount(0)
       // A read must not remove the permitted action between keyboard focus and
       // activation. The real synthetic board response is still deliberately held.
       await expect(create).toBeFocused()
@@ -54,7 +56,14 @@ for (const ar of [true, false]) for (const width of [390, 1280]) {
       const booking = page.getByRole('dialog', { name: copy.create, exact: true })
       await expect(booking).toBeVisible()
       await expect(booking.getByRole('combobox', { name: copy.patient, exact: true })).toBeVisible()
+      const delivered = page.waitForResponse('**/rest/v1/rpc/doctor_appointment_board')
       release()
+      const response = await delivered
+      expect(response.ok()).toBe(true)
+      expect(await response.finished()).toBeNull()
+      // Network completion precedes the async adapter/controller/Vue update.
+      // This control returns only after the board loading branch has cleared.
+      await expect(boardDate).toBeVisible()
       await expect(booking).toBeVisible()
       await page.keyboard.press('Escape')
       await expect(booking).toBeHidden()

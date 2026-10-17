@@ -14,7 +14,7 @@ The unchanged AR/light/390px journey passed ten local repetitions, showing the t
 
 Creation availability remains dependent on hydration and both current-board clinic capabilities. A non-mutating board read no longer changes that action's existence. Existing pending-write exclusion, context clearing, permission-denial handling, authorized patient/slot reads and server-side appointment commands remain in force. All templates/components remain in `packages/ui`; this change only corrects the app-owned capability projection.
 
-Four EN/AR × 390/1280px light-mode browser regressions hold real fixture responses without fabricating permission results. They require focus to remain on the action, Enter to open booking while the read is held, the dialog to survive delivery, and Escape to close it and return focus. All traffic stays on synthetic loopback services; trace/screenshot artifacts remain disabled for auth fixtures.
+Four EN/AR × 390/1280px light-mode browser regressions hold real fixture responses without fabricating permission results. They require focus to remain on the action, Enter to open booking while the read is held, the dialog to survive delivery, and Escape to close it and return focus. After release, they await the browser response's successful completion and the board date control returning after loading, then assert that booking remains visible. All traffic stays on synthetic loopback services; trace/screenshot artifacts remain disabled for auth fixtures.
 
 ## Verification
 
