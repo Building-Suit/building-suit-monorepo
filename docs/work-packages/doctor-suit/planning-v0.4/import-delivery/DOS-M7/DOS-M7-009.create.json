@@ -1,0 +1,350 @@
+{
+  "function": "control.create_task_with_publication_contract",
+  "review_only": true,
+  "bindings_required": [
+    "p_workstream_slug",
+    "p_model_profile",
+    "p_retry_policy_id"
+  ],
+  "arguments": {
+    "p_project_slug": "building-suit",
+    "p_workstream_slug": null,
+    "p_task_id": "DOS-M7-009",
+    "p_sequence": 7090,
+    "p_priority": 100,
+    "p_title": "Supervised pilot and clinical/user acceptance",
+    "p_description": "Run a separately authorized limited pilot, track consent and defects, and obtain independent domain approval.\n\nRequirements\n- DOS-M7-R001: Production safety, compliance and launch acceptance. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M7-F009: Run a separately authorized limited pilot, track consent and defects, and obtain independent domain approval. Acceptance: Prepare a limited supervised pilot protocol with approved population/consent, responsible clinician, support, monitoring, stop criteria and defect process. A real pilot may run only under separate explicit authorization satisfying M7 legal/hosting/real-data/security/recovery prerequisites; this task currently prepares the packet and stays blocked for live execution. Record independent clinical/user acceptance and adverse-event/defect review tied to the exact candidate, retaining unresolved issues rather than fabricating participants or results.\n\nDependencies: DOS-M7-008\nBlocking decisions: DOS-M7-GATE-START, DOS-M7-GATE-LEGAL, DOS-M7-GATE-HOSTING, DOS-M7-GATE-REAL-DATA\n\nAllowed paths\n- docs/work-packages/doctor-suit/\n- release-fragments/dos-m7-009.json\n\nAcceptance\n1. Prepare a limited supervised pilot protocol with approved population/consent, responsible clinician, support, monitoring, stop criteria and defect process.\n2. A real pilot may run only under separate explicit authorization satisfying M7 legal/hosting/real-data/security/recovery prerequisites; this task currently prepares the packet and stays blocked for live execution.\n3. Record independent clinical/user acceptance and adverse-event/defect review tied to the exact candidate, retaining unresolved issues rather than fabricating participants or results.\n\nVerification scenarios\n- Dry-run enrollment, consent withdrawal, incident stop and data access on synthetic participants.\n- Missing real-data approval or qualified supervisor prevents enrolling any real patient.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m7-009.md\n- release-fragments/dos-m7-009.json\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence\",\n    \"commands\": [\n      \"doctor-release-check\"\n    ],\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"release_check_receipt_must_match_candidate_head_and_reviewed_classification\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Only the named domain approvals and actual device/release receipts required by criterion coverage; routine checks require no human acknowledgement.\",\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"criterion_domain_or_device_evidence_required\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.\",\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"independent_automated_verifier_receipt_required\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.\n- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.\n- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.\n\nCriterion-specific coverage\n[\n  {\n    \"case_id\": \"DOS-M7-009-C01\",\n    \"criterion_ids\": [\n      1\n    ],\n    \"assertion\": \"Prepare a limited supervised pilot protocol with approved population/consent, responsible clinician, support, monitoring, stop criteria and defect process.\",\n    \"procedure\": \"Approve supervised pilot protocol, consent and stop criteria.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [],\n    \"command_refs\": [],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"accountable-human-review\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": true,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. The genuine domain approval requires accountable reviewer identity, scope/date, exact candidate and supporting references.\"\n  },\n  {\n    \"case_id\": \"DOS-M7-009-C02\",\n    \"criterion_ids\": [\n      2\n    ],\n    \"assertion\": \"A real pilot may run only under separate explicit authorization satisfying M7 legal/hosting/real-data/security/recovery prerequisites; this task currently prepares the packet and stays blocked for live execution.\",\n    \"procedure\": \"Verify the enrollment prerequisite matrix requires existing legal, hosting, real-data, security and recovery evidence plus separate explicit authorization; reject a synthetic dry run as permission.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [],\n    \"command_refs\": [],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"independent-exact-candidate-automated-verifier\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": true,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\",\n      \"automated_receipt_fields\": [\n        \"independent verifier execution ID\",\n        \"exact candidate SHA and base SHA\",\n        \"case ID and evaluated input artifact hashes\",\n        \"existing authorization/decision references where relevant\",\n        \"executed command argv, exit codes and immutable logs or reproducible document-comparison assertions\",\n        \"per-assertion result with failed, skipped, unavailable and unrun obligations distinguished\"\n      ],\n      \"missing_evidence_behavior\": \"Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification.\"\n  },\n  {\n    \"case_id\": \"DOS-M7-009-C03\",\n    \"criterion_ids\": [\n      3\n    ],\n    \"assertion\": \"Record independent clinical/user acceptance and adverse-event/defect review tied to the exact candidate, retaining unresolved issues rather than fabricating participants or results.\",\n    \"procedure\": \"Verify independent review and honest defect/participant records.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [],\n    \"command_refs\": [],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"accountable-human-review\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": true,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. The genuine domain approval requires accountable reviewer identity, scope/date, exact candidate and supporting references.\"\n  },\n  {\n    \"case_id\": \"DOS-M7-009-RELEASE\",\n    \"criterion_ids\": [],\n    \"assertion\": \"Task-scoped release provenance and, when applicable, public inventory are complete.\",\n    \"procedure\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [\n      \"release-fragments/dos-m7-009.json\"\n    ],\n    \"command_refs\": [\n      \"doctor-release-check\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"exact-candidate-release-review\"\n    ],\n    \"acceptance_rule\": \"Preserve unrelated inventory and all accepted fragments; do not activate an operational product.\"\n  }\n]\n\nRelease ownership\n{\n  \"fragment_path\": \"release-fragments/dos-m7-009.json\",\n  \"accepted_fragments\": \"append-only; never rewrite accepted provenance\",\n  \"inventory_path\": null,\n  \"inventory_write_scope\": \"Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.\",\n  \"registration_rule\": \"Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.\",\n  \"receipt_rule\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\"\n}\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m7-009.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states.",
+    "p_task_type": "research",
+    "p_risk_level": "critical",
+    "p_model_profile": null,
+    "p_acceptance_criteria": [
+      "Prepare a limited supervised pilot protocol with approved population/consent, responsible clinician, support, monitoring, stop criteria and defect process.",
+      "A real pilot may run only under separate explicit authorization satisfying M7 legal/hosting/real-data/security/recovery prerequisites; this task currently prepares the packet and stays blocked for live execution.",
+      "Record independent clinical/user acceptance and adverse-event/defect review tied to the exact candidate, retaining unresolved issues rather than fabricating participants or results."
+    ],
+    "p_verification_plan": [
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Check diff hygiene",
+        "command": "git diff --check"
+      },
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Check pinned workspace architecture and boundaries",
+        "command": "pnpm check"
+      },
+      {
+        "version": 2,
+        "kind": "external_gate",
+        "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+        "commands": [
+          "doctor-release-check"
+        ],
+        "phase": "pre_publication",
+        "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+      },
+      {
+        "version": 2,
+        "kind": "external_gate",
+        "description": "Only the named domain approvals and actual device/release receipts required by criterion coverage; routine checks require no human acknowledgement.",
+        "phase": "pre_publication",
+        "blocker": "criterion_domain_or_device_evidence_required"
+      },
+      {
+        "version": 2,
+        "kind": "external_gate",
+        "description": "Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.",
+        "phase": "pre_publication",
+        "blocker": "independent_automated_verifier_receipt_required"
+      }
+    ],
+    "p_retry_policy_id": null,
+    "p_metadata": {
+      "artifact_revision": "doctor-suit-planning-v0.4-review-3",
+      "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+      "milestone_id": "DOS-M7",
+      "allowed_paths": [
+        "docs/work-packages/doctor-suit/",
+        "release-fragments/dos-m7-009.json"
+      ],
+      "source_allowed_paths": [
+        "docs/work-packages/doctor-suit/",
+        "release-fragments/dos-m7-009.json"
+      ],
+      "clinical_live_data_allowed": false,
+      "verification_mode": "focused",
+      "scope_approval": "planning-authorized-execution-gated",
+      "publication_policy": {
+        "merge_authorized": false,
+        "deployment_authorized": false,
+        "hosted_database_changes_authorized": false,
+        "review_required_before_integration": true
+      },
+      "canonical_task_contract": {
+        "task_id": "DOS-M7-009",
+        "milestone_id": "DOS-M7",
+        "sequence": 7090,
+        "priority": 100,
+        "title": "Supervised pilot and clinical/user acceptance",
+        "objective": "Run a separately authorized limited pilot, track consent and defects, and obtain independent domain approval.",
+        "task_type": "research",
+        "risk_level": "critical",
+        "acceptance_criteria": [
+          "Prepare a limited supervised pilot protocol with approved population/consent, responsible clinician, support, monitoring, stop criteria and defect process.",
+          "A real pilot may run only under separate explicit authorization satisfying M7 legal/hosting/real-data/security/recovery prerequisites; this task currently prepares the packet and stays blocked for live execution.",
+          "Record independent clinical/user acceptance and adverse-event/defect review tied to the exact candidate, retaining unresolved issues rather than fabricating participants or results."
+        ],
+        "verification_scenarios": [
+          "Dry-run enrollment, consent withdrawal, incident stop and data access on synthetic participants.",
+          "Missing real-data approval or qualified supervisor prevents enrolling any real patient."
+        ],
+        "verification_plan": [
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Check diff hygiene",
+            "command": "git diff --check"
+          },
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Check pinned workspace architecture and boundaries",
+            "command": "pnpm check"
+          },
+          {
+            "version": 2,
+            "kind": "external_gate",
+            "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+            "commands": [
+              "doctor-release-check"
+            ],
+            "phase": "pre_publication",
+            "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+          },
+          {
+            "version": 2,
+            "kind": "external_gate",
+            "description": "Only the named domain approvals and actual device/release receipts required by criterion coverage; routine checks require no human acknowledgement.",
+            "phase": "pre_publication",
+            "blocker": "criterion_domain_or_device_evidence_required"
+          },
+          {
+            "version": 2,
+            "kind": "external_gate",
+            "description": "Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.",
+            "phase": "pre_publication",
+            "blocker": "independent_automated_verifier_receipt_required"
+          }
+        ],
+        "allowed_paths": [
+          "docs/work-packages/doctor-suit/",
+          "release-fragments/dos-m7-009.json"
+        ],
+        "expected_outputs": [
+          "docs/work-packages/doctor-suit/implementation/dos-m7-009.md",
+          "release-fragments/dos-m7-009.json"
+        ],
+        "linked_requirement_ids": [
+          "DOS-M7-R001",
+          "DOS-M7-F009"
+        ],
+        "task_dependencies": [
+          "DOS-M7-008"
+        ],
+        "blocking_decision_ids": [
+          "DOS-M7-GATE-START",
+          "DOS-M7-GATE-LEGAL",
+          "DOS-M7-GATE-HOSTING",
+          "DOS-M7-GATE-REAL-DATA"
+        ],
+        "produces_decision_ids": [],
+        "specific_evidence": [
+          "Create docs/work-packages/doctor-suit/implementation/dos-m7-009.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+          "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+        ],
+        "status": "planned",
+        "engine_stage": "pending",
+        "model_profile": "deep",
+        "model_profile_strategy": "require_verified_high_capability_deep_route",
+        "retry_policy_id": null,
+        "release_contract": {
+          "fragment_path": "release-fragments/dos-m7-009.json",
+          "accepted_fragments": "append-only; never rewrite accepted provenance",
+          "inventory_path": null,
+          "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+          "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+          "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+        },
+        "evidence_requirements": [
+          "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+          "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+          "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+          "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+          "Create docs/work-packages/doctor-suit/implementation/dos-m7-009.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+          "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+        ],
+        "source_reading": [
+          "AGENTS.md",
+          "README.md",
+          "docs/agent-workflows.md",
+          "docs/shared/git-workflow.md",
+          "packages/ui/AGENTS.md",
+          "docs/shared/design-system.md",
+          "docs/shared/interactions.md",
+          "docs/shared/data-table.md",
+          "docs/architecture/identity.md",
+          "docs/shared/database.md",
+          "docs/shared/future-suit-administration.md",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "tooling/control-plane/runner/task-prompt.mjs",
+          "tooling/control-plane/runner/verification-mode.mjs"
+        ],
+        "verification_cases": [
+          {
+            "case_id": "DOS-M7-009-C01",
+            "criterion_ids": [
+              1
+            ],
+            "assertion": "Prepare a limited supervised pilot protocol with approved population/consent, responsible clinician, support, monitoring, stop criteria and defect process.",
+            "procedure": "Approve supervised pilot protocol, consent and stop criteria.",
+            "test_case_name": null,
+            "required_outputs": [],
+            "command_refs": [],
+            "external_evidence_required": true,
+            "evidence_types": [
+              "accountable-human-review"
+            ],
+            "evidence_policy": {
+              "human_approval_required": true,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. The genuine domain approval requires accountable reviewer identity, scope/date, exact candidate and supporting references."
+          },
+          {
+            "case_id": "DOS-M7-009-C02",
+            "criterion_ids": [
+              2
+            ],
+            "assertion": "A real pilot may run only under separate explicit authorization satisfying M7 legal/hosting/real-data/security/recovery prerequisites; this task currently prepares the packet and stays blocked for live execution.",
+            "procedure": "Verify the enrollment prerequisite matrix requires existing legal, hosting, real-data, security and recovery evidence plus separate explicit authorization; reject a synthetic dry run as permission.",
+            "test_case_name": null,
+            "required_outputs": [],
+            "command_refs": [],
+            "external_evidence_required": true,
+            "evidence_types": [
+              "independent-exact-candidate-automated-verifier"
+            ],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": true,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.",
+              "automated_receipt_fields": [
+                "independent verifier execution ID",
+                "exact candidate SHA and base SHA",
+                "case ID and evaluated input artifact hashes",
+                "existing authorization/decision references where relevant",
+                "executed command argv, exit codes and immutable logs or reproducible document-comparison assertions",
+                "per-assertion result with failed, skipped, unavailable and unrun obligations distinguished"
+              ],
+              "missing_evidence_behavior": "Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification."
+          },
+          {
+            "case_id": "DOS-M7-009-C03",
+            "criterion_ids": [
+              3
+            ],
+            "assertion": "Record independent clinical/user acceptance and adverse-event/defect review tied to the exact candidate, retaining unresolved issues rather than fabricating participants or results.",
+            "procedure": "Verify independent review and honest defect/participant records.",
+            "test_case_name": null,
+            "required_outputs": [],
+            "command_refs": [],
+            "external_evidence_required": true,
+            "evidence_types": [
+              "accountable-human-review"
+            ],
+            "evidence_policy": {
+              "human_approval_required": true,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. The genuine domain approval requires accountable reviewer identity, scope/date, exact candidate and supporting references."
+          },
+          {
+            "case_id": "DOS-M7-009-RELEASE",
+            "criterion_ids": [],
+            "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+            "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+            "test_case_name": null,
+            "required_outputs": [
+              "release-fragments/dos-m7-009.json"
+            ],
+            "command_refs": [
+              "doctor-release-check"
+            ],
+            "external_evidence_required": true,
+            "evidence_types": [
+              "exact-candidate-release-review"
+            ],
+            "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+          }
+        ],
+        "acceptance_mapping": [
+          {
+            "criterion": 1,
+            "text": "Prepare a limited supervised pilot protocol with approved population/consent, responsible clinician, support, monitoring, stop criteria and defect process.",
+            "verification_case_ids": [
+              "DOS-M7-009-C01"
+            ]
+          },
+          {
+            "criterion": 2,
+            "text": "A real pilot may run only under separate explicit authorization satisfying M7 legal/hosting/real-data/security/recovery prerequisites; this task currently prepares the packet and stays blocked for live execution.",
+            "verification_case_ids": [
+              "DOS-M7-009-C02"
+            ]
+          },
+          {
+            "criterion": 3,
+            "text": "Record independent clinical/user acceptance and adverse-event/defect review tied to the exact candidate, retaining unresolved issues rather than fabricating participants or results.",
+            "verification_case_ids": [
+              "DOS-M7-009-C03"
+            ]
+          }
+        ],
+        "metadata": {
+          "artifact_revision": "doctor-suit-planning-v0.4-review-3",
+          "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+          "milestone_id": "DOS-M7",
+          "allowed_paths": [
+            "docs/work-packages/doctor-suit/",
+            "release-fragments/dos-m7-009.json"
+          ],
+          "source_allowed_paths": [
+            "docs/work-packages/doctor-suit/",
+            "release-fragments/dos-m7-009.json"
+          ],
+          "clinical_live_data_allowed": false,
+          "verification_mode": "focused",
+          "scope_approval": "planning-authorized-execution-gated",
+          "publication_policy": {
+            "merge_authorized": false,
+            "deployment_authorized": false,
+            "hosted_database_changes_authorized": false,
+            "review_required_before_integration": true
+          }
+        },
+        "description": "Run a separately authorized limited pilot, track consent and defects, and obtain independent domain approval.\n\nRequirements\n- DOS-M7-R001: Production safety, compliance and launch acceptance. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M7-F009: Run a separately authorized limited pilot, track consent and defects, and obtain independent domain approval. Acceptance: Prepare a limited supervised pilot protocol with approved population/consent, responsible clinician, support, monitoring, stop criteria and defect process. A real pilot may run only under separate explicit authorization satisfying M7 legal/hosting/real-data/security/recovery prerequisites; this task currently prepares the packet and stays blocked for live execution. Record independent clinical/user acceptance and adverse-event/defect review tied to the exact candidate, retaining unresolved issues rather than fabricating participants or results.\n\nDependencies: DOS-M7-008\nBlocking decisions: DOS-M7-GATE-START, DOS-M7-GATE-LEGAL, DOS-M7-GATE-HOSTING, DOS-M7-GATE-REAL-DATA\n\nAllowed paths\n- docs/work-packages/doctor-suit/\n- release-fragments/dos-m7-009.json\n\nAcceptance\n1. Prepare a limited supervised pilot protocol with approved population/consent, responsible clinician, support, monitoring, stop criteria and defect process.\n2. A real pilot may run only under separate explicit authorization satisfying M7 legal/hosting/real-data/security/recovery prerequisites; this task currently prepares the packet and stays blocked for live execution.\n3. Record independent clinical/user acceptance and adverse-event/defect review tied to the exact candidate, retaining unresolved issues rather than fabricating participants or results.\n\nVerification scenarios\n- Dry-run enrollment, consent withdrawal, incident stop and data access on synthetic participants.\n- Missing real-data approval or qualified supervisor prevents enrolling any real patient.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m7-009.md\n- release-fragments/dos-m7-009.json\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence\",\n    \"commands\": [\n      \"doctor-release-check\"\n    ],\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"release_check_receipt_must_match_candidate_head_and_reviewed_classification\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Only the named domain approvals and actual device/release receipts required by criterion coverage; routine checks require no human acknowledgement.\",\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"criterion_domain_or_device_evidence_required\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.\",\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"independent_automated_verifier_receipt_required\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.\n- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.\n- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.\n\nCriterion-specific coverage\n[\n  {\n    \"case_id\": \"DOS-M7-009-C01\",\n    \"criterion_ids\": [\n      1\n    ],\n    \"assertion\": \"Prepare a limited supervised pilot protocol with approved population/consent, responsible clinician, support, monitoring, stop criteria and defect process.\",\n    \"procedure\": \"Approve supervised pilot protocol, consent and stop criteria.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [],\n    \"command_refs\": [],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"accountable-human-review\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": true,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. The genuine domain approval requires accountable reviewer identity, scope/date, exact candidate and supporting references.\"\n  },\n  {\n    \"case_id\": \"DOS-M7-009-C02\",\n    \"criterion_ids\": [\n      2\n    ],\n    \"assertion\": \"A real pilot may run only under separate explicit authorization satisfying M7 legal/hosting/real-data/security/recovery prerequisites; this task currently prepares the packet and stays blocked for live execution.\",\n    \"procedure\": \"Verify the enrollment prerequisite matrix requires existing legal, hosting, real-data, security and recovery evidence plus separate explicit authorization; reject a synthetic dry run as permission.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [],\n    \"command_refs\": [],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"independent-exact-candidate-automated-verifier\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": true,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\",\n      \"automated_receipt_fields\": [\n        \"independent verifier execution ID\",\n        \"exact candidate SHA and base SHA\",\n        \"case ID and evaluated input artifact hashes\",\n        \"existing authorization/decision references where relevant\",\n        \"executed command argv, exit codes and immutable logs or reproducible document-comparison assertions\",\n        \"per-assertion result with failed, skipped, unavailable and unrun obligations distinguished\"\n      ],\n      \"missing_evidence_behavior\": \"Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification.\"\n  },\n  {\n    \"case_id\": \"DOS-M7-009-C03\",\n    \"criterion_ids\": [\n      3\n    ],\n    \"assertion\": \"Record independent clinical/user acceptance and adverse-event/defect review tied to the exact candidate, retaining unresolved issues rather than fabricating participants or results.\",\n    \"procedure\": \"Verify independent review and honest defect/participant records.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [],\n    \"command_refs\": [],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"accountable-human-review\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": true,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. The genuine domain approval requires accountable reviewer identity, scope/date, exact candidate and supporting references.\"\n  },\n  {\n    \"case_id\": \"DOS-M7-009-RELEASE\",\n    \"criterion_ids\": [],\n    \"assertion\": \"Task-scoped release provenance and, when applicable, public inventory are complete.\",\n    \"procedure\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [\n      \"release-fragments/dos-m7-009.json\"\n    ],\n    \"command_refs\": [\n      \"doctor-release-check\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"exact-candidate-release-review\"\n    ],\n    \"acceptance_rule\": \"Preserve unrelated inventory and all accepted fragments; do not activate an operational product.\"\n  }\n]\n\nRelease ownership\n{\n  \"fragment_path\": \"release-fragments/dos-m7-009.json\",\n  \"accepted_fragments\": \"append-only; never rewrite accepted provenance\",\n  \"inventory_path\": null,\n  \"inventory_write_scope\": \"Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.\",\n  \"registration_rule\": \"Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.\",\n  \"receipt_rule\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\"\n}\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m7-009.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      },
+      "canonical_task_sha256": "487608ddcbc2bfec2c277174d06a4d54e6824ef5e2a3869855ce07309b7244cd",
+      "canonical_task_schema": "review-only-task-contract-v1",
+      "source_packet_sha256": "4913c43cddaaeaf6f54d96bf4cc9c174f750dc7f83c8ea01928c17fe0f453893"
+    }
+  },
+  "binding_rule": "Fill required runtime values only from renewed, reviewed live evidence. Do not create a model/retry policy, fall back to a cheaper route or widen project scopes. Preserve the canonical object byte-for-byte under metadata; record resolved runtime values separately."
+}

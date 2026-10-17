@@ -7,11 +7,12 @@ const memberForm = defineModel<BsAccessIdentityForm>('memberForm', { default: ()
 const roleForm = defineModel<BsAccessRoleForm>('roleForm', { default: () => ({ name: '', nameAr: '', permissions: [] }) })
 const transferReason = defineModel<string>('transferReason', { default: '' })
 const props = withDefaults(defineProps<{
-  invitationEditor?: { state: BsAccessEditorState; copy: BsAccessIdentityCopy; roles: { value: string; label: string; disabled?: boolean }[]; locations?: { id: string; name: string }[]; link?: string; usage?: BsUsageItem }
-  memberEditor?: { state: BsAccessEditorState; copy: BsAccessIdentityCopy; roles: { value: string; label: string; description?: string; disabled?: boolean }[]; locations?: { id: string; name: string }[]; roleDisabled?: boolean }
+  invitationEditor?: { state: BsAccessEditorState; copy: BsAccessIdentityCopy; roles: { value: string; label: string; disabled?: boolean }[]; locations?: { id: string; name: string }[]; link?: string; usage?: BsUsageItem; grantOptions?: { key: string; label: string }[] }
+  memberEditor?: { state: BsAccessEditorState; copy: BsAccessIdentityCopy; roles: { value: string; label: string; description?: string; disabled?: boolean }[]; locations?: { id: string; name: string }[]; roleDisabled?: boolean; grantOptions?: { key: string; label: string }[] }
   roleEditor?: { state: BsAccessEditorState; names?: { english: string; arabic: string; maxLength: number; minLength?: number }; permissionLabel: string; permissions: { key: string; label: string; disabled?: boolean; section?: string; sectionLabel?: string }[]; archiveLabel?: string; usage?: BsUsageItem }
   matrix?: { visible: boolean; title: string; hint: string; permissionLabel: string; closeLabel: string; items: BsPermissionItem[]; roles: BsPermissionRole[]; grants: { role: string; permissions: string[] }[] }
   transferEditor?: { state: BsAccessEditorState; help: string; reasonLabel: string }
+  confirmationEditor?: { state: BsAccessEditorState; description: string }
   acceptance?: { title: string; help: string; error: string; pending: boolean; actionLabel: string }
   copy: BsAccessPageCopy
   tabs: { key: string; label: string; count?: number; disabled?: boolean }[]
@@ -32,7 +33,8 @@ const props = withDefaults(defineProps<{
   statusFilter?: string
   statusOptions?: { value: string; label: string }[]
   statusLabel?: string
-}>(), { available: true, invitationEditor: undefined, memberEditor: undefined, roleEditor: undefined, matrix: undefined, transferEditor: undefined, acceptance: undefined, audit: undefined, loading: false, error: null, actionError: null, pending: false, canInvite: false, canCreateRole: false, canViewMatrix: false, search: undefined, statusFilter: undefined, statusOptions: undefined, statusLabel: undefined })
+  pagination?: { page: number; size: number; total: number; label: string; previous: string; next: string }
+}>(), { available: true, invitationEditor: undefined, memberEditor: undefined, roleEditor: undefined, matrix: undefined, transferEditor: undefined, confirmationEditor: undefined, acceptance: undefined, audit: undefined, loading: false, error: null, actionError: null, pending: false, canInvite: false, canCreateRole: false, canViewMatrix: false, search: undefined, statusFilter: undefined, statusOptions: undefined, statusLabel: undefined, pagination: undefined })
 const emit = defineEmits<{
   'update:activeTab': [value: string]
   'update:search': [value: string]
@@ -48,10 +50,13 @@ const emit = defineEmits<{
   closeMatrix: []
   closeTransfer: []
   submitTransfer: []
+  closeConfirmation: []
+  confirm: []
   invite: []
   createRole: []
   matrix: []
   retry: []
+  page: [value: number]
   memberAction: [key: BsAccessMemberAction['key'], id: string]
   invitationAction: [key: string, id: string]
   roleAction: [key: 'edit' | 'remove', id: string]
@@ -110,9 +115,11 @@ const auditColumns = computed(() => props.copy.audit ? [
         <BsAccessInvitationTable :invitations="invitations" :label="copy.invitations" :empty-label="copy.noInvitations" :labels="copy.invitationColumns" :pending="pending" @action="(key, id) => emit('invitationAction', key, id)" />
       </template>
     </template>
-    <BsAccessIdentityEditor v-if="invitationEditor && invitationForm" v-model="invitationForm" :state="invitationEditor.state" :copy="invitationEditor.copy" :roles="invitationEditor.roles" :locations="invitationEditor.locations" :link="invitationEditor.link" :usage="invitationEditor.usage" @close="emit('closeInvitation')" @submit="emit('submitInvitation')" />
-    <BsAccessIdentityEditor v-if="memberEditor && memberForm" v-model="memberForm" :state="memberEditor.state" :copy="memberEditor.copy" :roles="memberEditor.roles" :locations="memberEditor.locations" :role-disabled="memberEditor.roleDisabled" email-readonly @close="emit('closeMember')" @submit="emit('submitMember')" />
+    <BsPagination v-if="pagination && available !== false && !loading && !error" :page="pagination.page" :page-size="pagination.size" :total="pagination.total" :label="pagination.label" :previous-label="pagination.previous" :next-label="pagination.next" @update:page="emit('page', $event)" />
+    <BsAccessIdentityEditor v-if="invitationEditor && invitationForm" v-model="invitationForm" :state="invitationEditor.state" :copy="invitationEditor.copy" :roles="invitationEditor.roles" :locations="invitationEditor.locations" :link="invitationEditor.link" :usage="invitationEditor.usage" :grant-options="invitationEditor.grantOptions" @close="emit('closeInvitation')" @submit="emit('submitInvitation')" />
+    <BsAccessIdentityEditor v-if="memberEditor && memberForm" v-model="memberForm" :state="memberEditor.state" :copy="memberEditor.copy" :roles="memberEditor.roles" :locations="memberEditor.locations" :role-disabled="memberEditor.roleDisabled" :grant-options="memberEditor.grantOptions" email-readonly @close="emit('closeMember')" @submit="emit('submitMember')" />
     <BsAccessRoleEditor v-if="roleEditor && roleForm" v-model="roleForm" :state="roleEditor.state" :names="roleEditor.names" :permission-label="roleEditor.permissionLabel" :permissions="roleEditor.permissions" :archive-label="roleEditor.archiveLabel" :usage="roleEditor.usage" @close="emit('closeRole')" @submit="emit('submitRole')" @archive="emit('archiveRole')" />
+    <BsRecordActionDialog v-if="confirmationEditor?.state.visible" :visible="true" :title="confirmationEditor.state.title" :dirty="confirmationEditor.state.dirty" :pending="confirmationEditor.state.pending" :error="confirmationEditor.state.error" :submit-label="confirmationEditor.state.submitLabel" :cancel-label="confirmationEditor.state.cancelLabel" :submit-disabled="confirmationEditor.state.submitDisabled" @update:visible="value => { if (!value) emit('closeConfirmation') }" @submit="emit('confirm')"><BsText>{{ confirmationEditor.description }}</BsText></BsRecordActionDialog>
     <BsDialog v-if="matrix?.visible" :visible="true" :title="matrix.title" :aria-label="matrix.title" size="lg" :pending="pending" @update:visible="value => { if (!value) emit('closeMatrix') }"><BsText size="sm" tone="muted">{{ matrix.hint }}</BsText><BsPermissionMatrix :items="matrix.items" :roles="matrix.roles" :label="matrix.permissionLabel" :grants="matrix.grants" /></BsDialog>
     <BsRecordActionDialog v-if="transferEditor?.state.visible" :visible="true" :title="transferEditor.state.title" :dirty="transferEditor.state.dirty" :pending="transferEditor.state.pending" :error="transferEditor.state.error" :submit-label="transferEditor.state.submitLabel" :cancel-label="transferEditor.state.cancelLabel" @update:visible="value => { if (!value) emit('closeTransfer') }" @submit="emit('submitTransfer')"><BsText size="sm">{{ transferEditor.help }}</BsText><BsField v-slot="field" :label="transferEditor.reasonLabel"><BsTextarea :id="field.id" v-model="transferReason" :aria-describedby="field.describedby" required :minlength="2" :maxlength="1000" :rows="3" /></BsField></BsRecordActionDialog>
   </BsStack>

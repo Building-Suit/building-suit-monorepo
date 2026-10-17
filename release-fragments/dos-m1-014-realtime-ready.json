@@ -1,0 +1,25 @@
+{
+  "id": "dos-m1-014-realtime-ready",
+  "task": "DOS-M1-014",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit",
+    "docs/work-packages/doctor-suit/appointments-evidence.md",
+    "docs/work-packages/doctor-suit/implementation-tracker.md",
+    "packages/data-access/package.json",
+    "packages/data-access/src/postgresReadiness.ts",
+    "packages/data-access/tests/postgres-readiness.test.mjs",
+    "docs/shared/realtime.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Configure the synthetic Doctor queue client adapter with the pinned SDK Postgres subscription activation barrier before reporting a live channel and refetching. The shared Foundation and existing consumers remain unchanged. Real first booking delivery remains required."
+}

@@ -1,0 +1,973 @@
+{
+  "schema": "doctor-lossless-import-delivery-v1",
+  "source_head": "7a6dcc2084000b4054010d94a04a85a408282497",
+  "source_status": "approved planning contracts; not proof of hosted import",
+  "files": [
+    {
+      "milestone_id": "DOS-M1",
+      "source_file": "DOS-M1.import-proposal.json",
+      "source_bytes": 1196029,
+      "source_sha256": "11b71af1ee91f118e17e62dd820a4a87ea931d1435fe374ca4e1fb11f428e4e9",
+      "source_git_blob_sha1": "b127a01a33bc7bf05f13ec0b3c729ad1325aa50d",
+      "packet_content_sha256": "137747121e80a74f693301f2ae854fd0ae798319c61a82142b4ee024e4b4dd83",
+      "packet_bytes": 706867,
+      "packet_file_sha256": "8881c8b68172d75bc9827e910864c3fdd6c056119b0575e24bd49c5a87755a23",
+      "top_level_key_order": [
+        "format",
+        "milestone_id",
+        "packet_file",
+        "packet_sha256",
+        "target",
+        "safe_to_apply",
+        "task_create_function",
+        "task_ids",
+        "requirements",
+        "decisions",
+        "task_requirements",
+        "task_dependencies",
+        "task_decisions",
+        "transaction_contract",
+        "pending_inputs",
+        "live_read_hold",
+        "create_task_calls",
+        "readback_assertions"
+      ],
+      "header": {
+        "artifact_id": "DOS-M1/header.json",
+        "bytes": 55551,
+        "sha256": "b352726a18dc440315cf556e85dac168bc4a63910fb1ec2ab1afd7df19cd475b",
+        "git_blob_sha1": "3c3ead7cd0cb1bcc6d4fe3317c8bd72d3d68341b"
+      },
+      "create_task_calls": [
+        {
+          "artifact_id": "DOS-M1/DOS-M1-001.create.json",
+          "bytes": 59277,
+          "sha256": "8de3bf1e5004b808b74fa59600a6cdcfd80d82e904404ec95971c8d9f0926ea2",
+          "git_blob_sha1": "746b6004714144b1c7d62cdc7ee53c89833b32be"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-002.create.json",
+          "bytes": 61612,
+          "sha256": "6dcbce57385b77b4e0868bcb78c978adaebdea2f6bfe125b1414459fb5aa04a7",
+          "git_blob_sha1": "66c8dbbf0231ec544d27acea1648e9a4f9fc264a"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-003.create.json",
+          "bytes": 55275,
+          "sha256": "3d5bf5dad0492e1e65c796f7b380b68a92e3a6344558fc7acc56d33bdbc6f93f",
+          "git_blob_sha1": "f7081abf553765be3438e944a83f8731cefb3dab"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-004.create.json",
+          "bytes": 55398,
+          "sha256": "b2d98b542be756272cea1468070383ff2c063e0751fe7940050f94206fa4c4c7",
+          "git_blob_sha1": "7537c06fff6d2e5761e7bb318fb915d8b9819d20"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-005.create.json",
+          "bytes": 51136,
+          "sha256": "269a6d8eed9158fbf2c24f0a4f3c3e87452754cf5f1f41c815f4525721be3a45",
+          "git_blob_sha1": "f4a84b6e9b855333362c16fcd1aa19c8f68e6cf1"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-006.create.json",
+          "bytes": 52947,
+          "sha256": "38030ae86181ddc2cd93fab1f97de8a4733227a38b69229b7d710370ecc943a9",
+          "git_blob_sha1": "c8d8e07664697ec302c7d8be3b68beacf98d4de5"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-007.create.json",
+          "bytes": 52798,
+          "sha256": "8cf5bfe27f1f3e7bd0fb40955e3d5945ee03490e0c0a3fa71ecb3007a4b9bcd1",
+          "git_blob_sha1": "68ed445283ba82f89c76d44aa1a2ff6868413db9"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-008.create.json",
+          "bytes": 52119,
+          "sha256": "0d63087ff60e5f3d8e6078b2079e1585678f5c23240599d30c247a2dd2978cb6",
+          "git_blob_sha1": "e8d6cf015c5d0cfb18d935a92e27c2d5a932fe37"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-009.create.json",
+          "bytes": 52624,
+          "sha256": "01df0209aefd1ced7a7ded2f576dcc59ad6177c9b1f238781780f1df82029f70",
+          "git_blob_sha1": "c689d3710cb93aa4e81a1781a09a48a304762d17"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-010.create.json",
+          "bytes": 53710,
+          "sha256": "053b745bd60ce8a3792c0ee23e9fb71710cd22d11d59a2c922d27bb018486e64",
+          "git_blob_sha1": "df29c093ae9c61fbd0a072912b3769656d7feadf"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-011.create.json",
+          "bytes": 53152,
+          "sha256": "258a6e7c59cb18f749f13ece3ff54e70cec3b63ac3b689d4a2f3964bf0a330a7",
+          "git_blob_sha1": "215cbbbe0a06adddb736b9463986d4aecb99538f"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-012.create.json",
+          "bytes": 53543,
+          "sha256": "8e1c9d5066c211f2ac2b6fe843e9c81d464323bf352291543be4b4740958d7e8",
+          "git_blob_sha1": "4105a0813b8653fd9eecee9a2466d536e71d02a6"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-013.create.json",
+          "bytes": 51764,
+          "sha256": "7488542051d8ba9e2b69bc99de339882c3eb38394fd4a68166227e8534f0e9b6",
+          "git_blob_sha1": "0395cf5de86c7c4536e2a2b0a82e1709676623ef"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-014.create.json",
+          "bytes": 52274,
+          "sha256": "b13f91e41275e41fbab08c016f49ee8ca6523465559ee327163c34bed3b24a88",
+          "git_blob_sha1": "f205d9b96b8ec5c0b3f97e486709bf1bf63e07bc"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-015.create.json",
+          "bytes": 53243,
+          "sha256": "364fb6e9d3d3b275a421082278b676cef1e878cb8a4e0866df50dc5c5614046d",
+          "git_blob_sha1": "3d7ecbe4e2883fe725f117f8705760d87f09855a"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-016.create.json",
+          "bytes": 52535,
+          "sha256": "9a05db0007030d42adf0373cd4f50b96a8f55c4ba630baab2660be25dab1eef8",
+          "git_blob_sha1": "d63c91b2802d9cea1ea7e7e7fda39733ff04546e"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-017.create.json",
+          "bytes": 57802,
+          "sha256": "833b1dc419d9a45542ed9c27a5277eedd11ad2ea52c06cf9025e65fb48fd4429",
+          "git_blob_sha1": "de4574c8568e3de7ee1a7e2f4c3f0f275a2117ba"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-018.create.json",
+          "bytes": 56733,
+          "sha256": "4b914854350c8d5e323a8eed52a65151f76e00b5e64e848170766cfb07a65f9d",
+          "git_blob_sha1": "8ecfd8edde7ae9ad009783433098a0200bd2b0a4"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-019.create.json",
+          "bytes": 54752,
+          "sha256": "29013b4f92667e4a46536b82eb45866cccef9e2313d73b3f8e25cefcac320826",
+          "git_blob_sha1": "ae27fa5d2a373c0c0a5c737577a6c868ab173e48"
+        },
+        {
+          "artifact_id": "DOS-M1/DOS-M1-020.create.json",
+          "bytes": 65867,
+          "sha256": "0564561a265c1caaec6d32e1bd8af49759d570d7a1981180350de57e29e99ab3",
+          "git_blob_sha1": "92f21cfa686de1f253e779b11a8431bb07650f11"
+        }
+      ]
+    },
+    {
+      "milestone_id": "DOS-M2",
+      "source_file": "DOS-M2.import-proposal.json",
+      "source_bytes": 765060,
+      "source_sha256": "9946aef249a10403b6db6d9729ad18091c284d103068ce3398cbdb47d30d2ed3",
+      "source_git_blob_sha1": "17d85c990c508edd973adada6cec5bf2a8e67a1e",
+      "packet_content_sha256": "5f0781743791fac72384c749d9c592454a7aa00caff2f84f451f11a5d9956567",
+      "packet_bytes": 456054,
+      "packet_file_sha256": "b442acff9a25ecbadbcf7d5f21f6fd672ae7ac10e6a5d186013cd253856f1125",
+      "top_level_key_order": [
+        "format",
+        "milestone_id",
+        "packet_file",
+        "packet_sha256",
+        "target",
+        "safe_to_apply",
+        "task_create_function",
+        "task_ids",
+        "requirements",
+        "decisions",
+        "task_requirements",
+        "task_dependencies",
+        "task_decisions",
+        "transaction_contract",
+        "pending_inputs",
+        "live_read_hold",
+        "create_task_calls",
+        "readback_assertions"
+      ],
+      "header": {
+        "artifact_id": "DOS-M2/header.json",
+        "bytes": 30331,
+        "sha256": "97b48cba5faa1998903bd094f513a80a746ff689c1609c4bbe7570ca3a7723e8",
+        "git_blob_sha1": "315651f766ba22569bc46e8429e19d8c8f39f999"
+      },
+      "create_task_calls": [
+        {
+          "artifact_id": "DOS-M2/DOS-M2-001.create.json",
+          "bytes": 47141,
+          "sha256": "10f3d74753a878ae7901209f85e36641d3a12644c5f009fbe2841c1cc4695e0f",
+          "git_blob_sha1": "14244f15f0e14f32fe297ea24930f6b8b155a0a5"
+        },
+        {
+          "artifact_id": "DOS-M2/DOS-M2-002.create.json",
+          "bytes": 50056,
+          "sha256": "1f8907f1d710bb4c9e809058f60e4ac2faa26d3739e650f2a878151663ab3c42",
+          "git_blob_sha1": "2aea0c1169e6f359002aa5e0d97318e3ff5b7fcf"
+        },
+        {
+          "artifact_id": "DOS-M2/DOS-M2-003.create.json",
+          "bytes": 50647,
+          "sha256": "f08ac38bdbf8a183fe7a56d375f06016a0fb96dbdeedb0c8e8dd09a6d14c7b42",
+          "git_blob_sha1": "267f925f85a45ae85cfd63e80e51e0ac7951c4db"
+        },
+        {
+          "artifact_id": "DOS-M2/DOS-M2-004.create.json",
+          "bytes": 47642,
+          "sha256": "bdb779cf00c74ce352f0a197bbd508e1e8607b1984a97b1860409cb948f27888",
+          "git_blob_sha1": "c9e5b641127630371daa1f3640a244445b392f2d"
+        },
+        {
+          "artifact_id": "DOS-M2/DOS-M2-005.create.json",
+          "bytes": 47207,
+          "sha256": "148dcc66abab9f05ac89ee25fab3bf6bcadaa7812f356d0ee0af2ca768167450",
+          "git_blob_sha1": "6599209b08cb353e9aeda0e0107894c553cd21cb"
+        },
+        {
+          "artifact_id": "DOS-M2/DOS-M2-006.create.json",
+          "bytes": 51041,
+          "sha256": "e1bb187f0eb6d6fac32d461d20ddbc1ed076692ef0038e703bbe62f95ee81d01",
+          "git_blob_sha1": "b1ae85c40e6e9e58f7801608734bcd5dfbba3d72"
+        },
+        {
+          "artifact_id": "DOS-M2/DOS-M2-007.create.json",
+          "bytes": 48559,
+          "sha256": "9491837c0f8b3be53db1625ca6e78ce02b870d9a10130519f39ee201d5f9826b",
+          "git_blob_sha1": "abd9dfe76315259c417a88266d3125ec02e936ba"
+        },
+        {
+          "artifact_id": "DOS-M2/DOS-M2-008.create.json",
+          "bytes": 50326,
+          "sha256": "ea9026a594bbd1b5af76fdfcc7d31ba169b18f501dda3e2fa72e98c862270dcf",
+          "git_blob_sha1": "3ae2cee06079a78ffce0e8f84e40734ec7f8515e"
+        },
+        {
+          "artifact_id": "DOS-M2/DOS-M2-009.create.json",
+          "bytes": 50498,
+          "sha256": "a8ca4aad67930d5a07389b08903ee15bdbaf303125fbb4d70212fc26078e0210",
+          "git_blob_sha1": "aba1fca5113311432ef6ae9263b3b7a5b69c0a51"
+        },
+        {
+          "artifact_id": "DOS-M2/DOS-M2-010.create.json",
+          "bytes": 49621,
+          "sha256": "6a2bf0d665d75abdc3f1ac61a816730ca517cfb63fc2b808a781f81786506ce7",
+          "git_blob_sha1": "c0551cae2b326ba8dfeca31c785cb38f5c080af7"
+        },
+        {
+          "artifact_id": "DOS-M2/DOS-M2-011.create.json",
+          "bytes": 48947,
+          "sha256": "7da990a261041348f7376a176fdaf6a1c6880bf14ef8d09329928907e67b457b",
+          "git_blob_sha1": "cd85a5a9c02d3876b3c09cb19a4d98524a88dcb4"
+        },
+        {
+          "artifact_id": "DOS-M2/DOS-M2-012.create.json",
+          "bytes": 51822,
+          "sha256": "597a3c3d3cce48f8afff71a504f287d693539b1fe9a87f979c8326eeeda7cd47",
+          "git_blob_sha1": "e6b01779ca619a7c3ad776209bf85aab43f61711"
+        },
+        {
+          "artifact_id": "DOS-M2/DOS-M2-013.create.json",
+          "bytes": 54145,
+          "sha256": "fe22c763011b5ebf2fe06e51f2651725f3a34aad56a9cfe51b52a5e169fb3af3",
+          "git_blob_sha1": "f76edf1ab93d2c3400c6eeb1a308cec1280a6763"
+        },
+        {
+          "artifact_id": "DOS-M2/DOS-M2-014.create.json",
+          "bytes": 59546,
+          "sha256": "a536229c4118bb0459240668624caf611ccd928d5736c362ecee35bfdda3568b",
+          "git_blob_sha1": "14afedf9814df2cbfe75a102603845c9d58a39b7"
+        }
+      ]
+    },
+    {
+      "milestone_id": "DOS-M3",
+      "source_file": "DOS-M3.import-proposal.json",
+      "source_bytes": 557840,
+      "source_sha256": "5a9a242ef4082c283ccdd1a8fbd212a1e00071d7ee1afbfb983468c39b44b0a6",
+      "source_git_blob_sha1": "d1c89e72102a138e82ffb2a11e3bd25dcbcfa392",
+      "packet_content_sha256": "7b47e36b2f5bf8788dfc5ae062524efabf8901442edfb9c18e1a840db036628d",
+      "packet_bytes": 334597,
+      "packet_file_sha256": "7caf1851066eb8b2c4741be514ce4f7ee612a2570e76f94b8db3538815cf606f",
+      "top_level_key_order": [
+        "format",
+        "milestone_id",
+        "packet_file",
+        "packet_sha256",
+        "target",
+        "safe_to_apply",
+        "task_create_function",
+        "task_ids",
+        "requirements",
+        "decisions",
+        "task_requirements",
+        "task_dependencies",
+        "task_decisions",
+        "transaction_contract",
+        "pending_inputs",
+        "live_read_hold",
+        "create_task_calls",
+        "readback_assertions"
+      ],
+      "header": {
+        "artifact_id": "DOS-M3/header.json",
+        "bytes": 20041,
+        "sha256": "435b627da8caba8a7b3b5caef1859aee7c3e8ba40993cf4545dcb20766c0fb52",
+        "git_blob_sha1": "46f731f92ba7f59e38ff4efb036a59c8aff95409"
+      },
+      "create_task_calls": [
+        {
+          "artifact_id": "DOS-M3/DOS-M3-001.create.json",
+          "bytes": 49595,
+          "sha256": "be29b2e1c18c4e265376497a81af18d4a246a5d821a751eae946d147e4bc62ae",
+          "git_blob_sha1": "db9f9a4920998b08a40cf4957697387a03ecc8dd"
+        },
+        {
+          "artifact_id": "DOS-M3/DOS-M3-002.create.json",
+          "bytes": 48926,
+          "sha256": "6234178fdab600da6fcc2c6045bb839b1e43d44b1b51f26f64e0ccab7eea9f84",
+          "git_blob_sha1": "095c32e1ed0a5d35059441de29217400cfe281c0"
+        },
+        {
+          "artifact_id": "DOS-M3/DOS-M3-003.create.json",
+          "bytes": 46679,
+          "sha256": "67020a53d3ff62cc1fce02bf2161e2d3c9acb97eda835cb57ad8e08a54b81f23",
+          "git_blob_sha1": "0c46299fb39784614088d560fcf46db43d6590bc"
+        },
+        {
+          "artifact_id": "DOS-M3/DOS-M3-004.create.json",
+          "bytes": 48686,
+          "sha256": "74f382e5071f0e47d22677c233c4f35ee46c0d1cb767b5296beca3759a1de333",
+          "git_blob_sha1": "832c7c95b8efe1fdf3dc41d3f90e6959b7b6d4e4"
+        },
+        {
+          "artifact_id": "DOS-M3/DOS-M3-005.create.json",
+          "bytes": 51053,
+          "sha256": "48ab6093b8a2a215876fa8574f3b19d6b63daeb71ffc77dccf852ed9cb9b20cd",
+          "git_blob_sha1": "ddf657ef80d1c3d77d6d4488d42bfbb44da8e912"
+        },
+        {
+          "artifact_id": "DOS-M3/DOS-M3-006.create.json",
+          "bytes": 49792,
+          "sha256": "1aa92dd622185206f2aa62961d306e54e37695a43f2500f0e4feccc2ce1ff43c",
+          "git_blob_sha1": "86abe18881ed873f61d1eab66b36f4e42efeb2ec"
+        },
+        {
+          "artifact_id": "DOS-M3/DOS-M3-007.create.json",
+          "bytes": 61480,
+          "sha256": "355e7284774e3592ac7a806d4e2f4635703ee13487813f3e4f064fd3eccfc75a",
+          "git_blob_sha1": "49ded318cd63d3c22c5dccd435e3f5e15110991e"
+        },
+        {
+          "artifact_id": "DOS-M3/DOS-M3-008.create.json",
+          "bytes": 48815,
+          "sha256": "0c7f7acafdeaea40197432e342745ff348ee23e394bbe6181a66f4c97181f8e6",
+          "git_blob_sha1": "c6789f85de42f960efebeaebd5e8d07e306db8c7"
+        },
+        {
+          "artifact_id": "DOS-M3/DOS-M3-009.create.json",
+          "bytes": 54526,
+          "sha256": "b44caf4ee54d5cb93328812e9b184c258f79c527d5711005f20db7a1eb38ae9a",
+          "git_blob_sha1": "2746c65c77729efb83af509cb8a57eb539c67aa6"
+        },
+        {
+          "artifact_id": "DOS-M3/DOS-M3-010.create.json",
+          "bytes": 57272,
+          "sha256": "cd7dbcdf670c3a0d379340e8a02a92fc91d358193015b14a7146a4f2554fa042",
+          "git_blob_sha1": "8da0ff62d28084e72588670f2edd98127a435aa9"
+        }
+      ]
+    },
+    {
+      "milestone_id": "DOS-M4",
+      "source_file": "DOS-M4.import-proposal.json",
+      "source_bytes": 647405,
+      "source_sha256": "8767a2dc0a70a90dfaa44460ab836a6c0a41493ae4a158ec94e6f8cda5566965",
+      "source_git_blob_sha1": "a13a60326702f242fc42540e00df01bee5a1f469",
+      "packet_content_sha256": "23922bc3cddca54dc2df5736f53fbd7ca9178240f1c53570d3a4e5bd42825a1e",
+      "packet_bytes": 382901,
+      "packet_file_sha256": "041145f78b703fda51a0185744c7f6b2e900fbca7c7ff5dc129ad2170ed5634d",
+      "top_level_key_order": [
+        "format",
+        "milestone_id",
+        "packet_file",
+        "packet_sha256",
+        "target",
+        "safe_to_apply",
+        "task_create_function",
+        "task_ids",
+        "requirements",
+        "decisions",
+        "task_requirements",
+        "task_dependencies",
+        "task_decisions",
+        "transaction_contract",
+        "pending_inputs",
+        "live_read_hold",
+        "create_task_calls",
+        "readback_assertions"
+      ],
+      "header": {
+        "artifact_id": "DOS-M4/header.json",
+        "bytes": 25574,
+        "sha256": "f0e9753303a6ac190256acd7d9c90f20b789ef073493ca96aa038a28dd570213",
+        "git_blob_sha1": "2897e1b05bbbd7c914f67d771669f165fc910174"
+      },
+      "create_task_calls": [
+        {
+          "artifact_id": "DOS-M4/DOS-M4-001.create.json",
+          "bytes": 51666,
+          "sha256": "c2c513780913a24ddbad424494c091bc6ea8177a07705c7c3199e587f72b0fe9",
+          "git_blob_sha1": "1c37b44042750cb2ae12cb36b8560c2ef4423493"
+        },
+        {
+          "artifact_id": "DOS-M4/DOS-M4-002.create.json",
+          "bytes": 59559,
+          "sha256": "99d2b75a3d36db02f680b66c93b86c67096ae823c958fa3464140618f9ea62e1",
+          "git_blob_sha1": "4c85a6ddb0a1764f7596ee209e21578c595296e0"
+        },
+        {
+          "artifact_id": "DOS-M4/DOS-M4-003.create.json",
+          "bytes": 59613,
+          "sha256": "b27977a636f45ca87941ad3ec87a1af47d102402993b3b0e0c41ab75f377cbd8",
+          "git_blob_sha1": "c43295ea1903ec44fb7037599a8cb9ff8e9f8d64"
+        },
+        {
+          "artifact_id": "DOS-M4/DOS-M4-004.create.json",
+          "bytes": 59675,
+          "sha256": "e9d963d2ec9d3b55c8daab0bde0972eb186dba820aab3b74efc9f2b8eed6de40",
+          "git_blob_sha1": "6206e3e09d229ede9d3418d4c8e33047dc1ba145"
+        },
+        {
+          "artifact_id": "DOS-M4/DOS-M4-005.create.json",
+          "bytes": 59525,
+          "sha256": "80008b7bad1ae298f39c9d283f5f662f155e288933c6a46bf847857bcf523d74",
+          "git_blob_sha1": "74b05ea56f954e08f7096f07ccf736f529d253f8"
+        },
+        {
+          "artifact_id": "DOS-M4/DOS-M4-006.create.json",
+          "bytes": 59450,
+          "sha256": "088feb73134397de440764afb781c5956871358d88ee0ff2b30f24fffd340034",
+          "git_blob_sha1": "15526606d40e1fac45844cc319388026f2641c7a"
+        },
+        {
+          "artifact_id": "DOS-M4/DOS-M4-007.create.json",
+          "bytes": 59149,
+          "sha256": "25971a32b212593aadea0de5e06ac599497ba01301426ec26caefcc883e1bd8b",
+          "git_blob_sha1": "815c40bde4b1bd6030adffbc6f9ae45ec655aff9"
+        },
+        {
+          "artifact_id": "DOS-M4/DOS-M4-008.create.json",
+          "bytes": 59220,
+          "sha256": "6665d0723dd10ea1b825d432b5a6b969849fc080be653acac1c0edd453ae7484",
+          "git_blob_sha1": "152c39f49e1c7d218ebd2a069abfd80b4a2bc7eb"
+        },
+        {
+          "artifact_id": "DOS-M4/DOS-M4-009.create.json",
+          "bytes": 62310,
+          "sha256": "ad61f21eba84736f6ac19df3c8f65d0eedabfdc04c771bf7190f94538054fe8e",
+          "git_blob_sha1": "6ef992aa0df1357a56f1a293c7dcdd517cbd0409"
+        },
+        {
+          "artifact_id": "DOS-M4/DOS-M4-010.create.json",
+          "bytes": 70437,
+          "sha256": "01da92317ed142a1d8c524ed15a906aae8fb1dc78478725845c12a39b14e4895",
+          "git_blob_sha1": "862d84850a7b80cfe8ba00495ccdbb82630af9b3"
+        }
+      ]
+    },
+    {
+      "milestone_id": "DOS-M5",
+      "source_file": "DOS-M5.import-proposal.json",
+      "source_bytes": 924086,
+      "source_sha256": "b147f0c335ab49a320a6bebfbbff1ff1e610a3b9a2c507534932785376f9b34c",
+      "source_git_blob_sha1": "62ed87c18b0b6ecc905fd1405f8ee627ceb34858",
+      "packet_content_sha256": "9ccbfda60b26fb24b8e97c2422f70fc29abda34f94c2de2f07560d48ff31d454",
+      "packet_bytes": 543530,
+      "packet_file_sha256": "6ddb7b1ec6310bf2dfbbf562028c47ad1300eb6eb8e01f4cf94a54ed2b280e2b",
+      "top_level_key_order": [
+        "format",
+        "milestone_id",
+        "packet_file",
+        "packet_sha256",
+        "target",
+        "safe_to_apply",
+        "task_create_function",
+        "task_ids",
+        "requirements",
+        "decisions",
+        "task_requirements",
+        "task_dependencies",
+        "task_decisions",
+        "transaction_contract",
+        "pending_inputs",
+        "live_read_hold",
+        "create_task_calls",
+        "readback_assertions"
+      ],
+      "header": {
+        "artifact_id": "DOS-M5/header.json",
+        "bytes": 39003,
+        "sha256": "f2b0c28cb46e1c90b749fbeb274989d7ff2d484be7aad8611a8f4831b5acde65",
+        "git_blob_sha1": "d8ea4e314b910ec00f9349a916e2e6e6fc2a5bc5"
+      },
+      "create_task_calls": [
+        {
+          "artifact_id": "DOS-M5/DOS-M5-001.create.json",
+          "bytes": 46954,
+          "sha256": "e37dbca0826b034beef0fcd4d2bc931593aa35bdab561f08f1ae843628ea15b1",
+          "git_blob_sha1": "c81ad6fcf0b0b806a9727d3502c7f20bfbb202aa"
+        },
+        {
+          "artifact_id": "DOS-M5/DOS-M5-002.create.json",
+          "bytes": 68285,
+          "sha256": "5bb12a01af086309222b197c8073f500a6d22cb4b06b7732599922abea9026b9",
+          "git_blob_sha1": "1c0a4085b9747da9e636fc735594e9535e9be994"
+        },
+        {
+          "artifact_id": "DOS-M5/DOS-M5-003.create.json",
+          "bytes": 62335,
+          "sha256": "a4d8936ddccfa2f8160b55e5d23471bd47f8a75653e6f39a1c9bbffea74fe2fc",
+          "git_blob_sha1": "addf4712e08b4fb5ba754551b50fd541d39023d3"
+        },
+        {
+          "artifact_id": "DOS-M5/DOS-M5-004.create.json",
+          "bytes": 59577,
+          "sha256": "7ba69934a8bc95ac01bcaabcde692d94c2a6f47af325221c577756b5fe45adaf",
+          "git_blob_sha1": "dd235aeb6d7e20e232a04076289465ef34d61bb1"
+        },
+        {
+          "artifact_id": "DOS-M5/DOS-M5-005.create.json",
+          "bytes": 59674,
+          "sha256": "bb2eac65cf235059aee4ba8084c9d6bb2dbd7b5320502bcad4d13b64903d99fb",
+          "git_blob_sha1": "d4b83dc0e4450f650f18d15dd77e298394fd72b0"
+        },
+        {
+          "artifact_id": "DOS-M5/DOS-M5-006.create.json",
+          "bytes": 67121,
+          "sha256": "9dd8099adb49136f050cc66a0295cfff15e4b61b64292c885691b8e138d6b9c3",
+          "git_blob_sha1": "9b5f9e80ce78e8c84878d8ec46c178adcb7b0aff"
+        },
+        {
+          "artifact_id": "DOS-M5/DOS-M5-007.create.json",
+          "bytes": 59740,
+          "sha256": "bbcfd8b111094af7acd7e6a494c2f482a402fd9f374c7b22fb0c0a256b2238a7",
+          "git_blob_sha1": "5034a9fe8b85b0525f3a3c3628c012098a144e4d"
+        },
+        {
+          "artifact_id": "DOS-M5/DOS-M5-008.create.json",
+          "bytes": 60077,
+          "sha256": "e2ac47be0c8786e2e6b17f6f3c334a5ae1309a8896850890190dbba52a1aa154",
+          "git_blob_sha1": "7c4f2fc69cc60034b0c8d7ac8b27d1ee7c6fe395"
+        },
+        {
+          "artifact_id": "DOS-M5/DOS-M5-009.create.json",
+          "bytes": 59257,
+          "sha256": "198dd2bf656e7475fa734ad219c6e2bedb5291ae3b7c032781687a901f10fbeb",
+          "git_blob_sha1": "d72d4734e07ed282b980e687580d2df4174845eb"
+        },
+        {
+          "artifact_id": "DOS-M5/DOS-M5-010.create.json",
+          "bytes": 61245,
+          "sha256": "05679cc5169508c2d06ece6ad481c12a1ba10978c1a03d9b5bfce9c603db5dcd",
+          "git_blob_sha1": "b2c7a55a4ca96a3a71dd62a64a931739b10bc75d"
+        },
+        {
+          "artifact_id": "DOS-M5/DOS-M5-011.create.json",
+          "bytes": 62185,
+          "sha256": "0976ff67018796484b4f7b2fcf2a2016275626b817e5d30b62db64189f146bce",
+          "git_blob_sha1": "68d61e8dcdc1277c31699a093ba859206153ddb6"
+        },
+        {
+          "artifact_id": "DOS-M5/DOS-M5-012.create.json",
+          "bytes": 59227,
+          "sha256": "45cc74af5f221097147b03cf16d25ad9cd9ef49986287b1cde78494f89528056",
+          "git_blob_sha1": "db58c78d57c9ab6baf2c34d0fba63608a3e29463"
+        },
+        {
+          "artifact_id": "DOS-M5/DOS-M5-013.create.json",
+          "bytes": 59743,
+          "sha256": "d1765f1469500d3c638258459b879b95c8b2cc2b67791d1278f356dbc68d1a35",
+          "git_blob_sha1": "b68b19f19e138db3d2ea91f23385e5690c20ba06"
+        },
+        {
+          "artifact_id": "DOS-M5/DOS-M5-014.create.json",
+          "bytes": 69180,
+          "sha256": "d99f61785e44e8d0a59c29ca388e2988b34c4972a3f0fec5c5579861da92ce9e",
+          "git_blob_sha1": "7b2bb4287bc4dbe3734ef124fe1058dd1cce59b4"
+        }
+      ]
+    },
+    {
+      "milestone_id": "DOS-M6",
+      "source_file": "DOS-M6.import-proposal.json",
+      "source_bytes": 564226,
+      "source_sha256": "d8d4aac382383b6f405a8d828e76fa6725018b6e945ebb3bf6e1af4ceb51dcac",
+      "source_git_blob_sha1": "c01995b6f4e9a0190cb29593229b2cae69a15a98",
+      "packet_content_sha256": "2d9f8344651d065f52c39b8da2883be2be852826a127cbd7dfe9ab57049808ea",
+      "packet_bytes": 337592,
+      "packet_file_sha256": "eea1e06584bcd599fa13ea8a65400344e660055a7b75e4d817a0f04fe0a09240",
+      "top_level_key_order": [
+        "format",
+        "milestone_id",
+        "packet_file",
+        "packet_sha256",
+        "target",
+        "safe_to_apply",
+        "task_create_function",
+        "task_ids",
+        "requirements",
+        "decisions",
+        "task_requirements",
+        "task_dependencies",
+        "task_decisions",
+        "transaction_contract",
+        "pending_inputs",
+        "live_read_hold",
+        "create_task_calls",
+        "readback_assertions"
+      ],
+      "header": {
+        "artifact_id": "DOS-M6/header.json",
+        "bytes": 24328,
+        "sha256": "d37a85849600936ae5f41b4c88445af2434da9515a77309550ef7815a1cb4470",
+        "git_blob_sha1": "7baefbdef5bc9f8b25fea3d6d2851fa6aa228302"
+      },
+      "create_task_calls": [
+        {
+          "artifact_id": "DOS-M6/DOS-M6-001.create.json",
+          "bytes": 50834,
+          "sha256": "912c81a69d18edf6be090256e9e17174daa9a7f4726a839c8a4cb2c20df2e198",
+          "git_blob_sha1": "e1bc37ad91b13f9027ee8a8d759f80ecffdd3adf"
+        },
+        {
+          "artifact_id": "DOS-M6/DOS-M6-002.create.json",
+          "bytes": 50025,
+          "sha256": "f945c842e787b3eeb77ebff3a85929d15c476af3729315e94fde899ed7934cb7",
+          "git_blob_sha1": "c92f6b6c0fd6f6a5f9f8997ca266069edc6d3f96"
+        },
+        {
+          "artifact_id": "DOS-M6/DOS-M6-003.create.json",
+          "bytes": 61542,
+          "sha256": "347bc3b2619eb8a48c31355010a2749ea861dd591a648b5fb5fc3809b9672abe",
+          "git_blob_sha1": "05ed84a33170674ad223f6c50997afb80e0f2038"
+        },
+        {
+          "artifact_id": "DOS-M6/DOS-M6-004.create.json",
+          "bytes": 49536,
+          "sha256": "24bd8c296ab4d0fa9c8516d8742a54b3732f870fbb3af41f017d4f611e9fa2b9",
+          "git_blob_sha1": "5f99f19fff9b6e912357f3fc8357438ef39b414c"
+        },
+        {
+          "artifact_id": "DOS-M6/DOS-M6-005.create.json",
+          "bytes": 49109,
+          "sha256": "50106d512806832288d9732ab17b4147d5ff9878f2dedbb5c65779a90b5d33a4",
+          "git_blob_sha1": "c4da5421f3a402d3982b76cd94d2ea6baae417f7"
+        },
+        {
+          "artifact_id": "DOS-M6/DOS-M6-006.create.json",
+          "bytes": 49308,
+          "sha256": "8079f21719a9f1795a5331d84916ee6f9f08b7109db5eabb9fb49caab4189acd",
+          "git_blob_sha1": "709262bae1db6e7ce0e82fc811f2f8cdc04cfa5c"
+        },
+        {
+          "artifact_id": "DOS-M6/DOS-M6-007.create.json",
+          "bytes": 49426,
+          "sha256": "2780f5438e88504b9aafe905be4b89c29de2f72f6a55a2d3f281f287842bd7f4",
+          "git_blob_sha1": "e44007ac78333ff17a670a70ead44dd6f7845bf9"
+        },
+        {
+          "artifact_id": "DOS-M6/DOS-M6-008.create.json",
+          "bytes": 50999,
+          "sha256": "be99c62dc7372e9a2b28230b8a5bd923885563590f18bfa9dbb6b26a3253972a",
+          "git_blob_sha1": "3493a97e562c3eaca5bc020b982fde83456e637c"
+        },
+        {
+          "artifact_id": "DOS-M6/DOS-M6-009.create.json",
+          "bytes": 49745,
+          "sha256": "9cdc21214e72e4081f5cff027b7300605fb351f3e3bd254ad9b75443f655d989",
+          "git_blob_sha1": "36238d43ab2f6109828e7422cd905f63eeca95ee"
+        },
+        {
+          "artifact_id": "DOS-M6/DOS-M6-010.create.json",
+          "bytes": 59339,
+          "sha256": "acf075ef3dbb4d84e09d8c9f9d16693968d453a4fc0fa7a39b3922b81700f52d",
+          "git_blob_sha1": "892bdf3dfd4ce4e04580ccd4e2bec9742ac236a9"
+        }
+      ]
+    },
+    {
+      "milestone_id": "DOS-M7",
+      "source_file": "DOS-M7.import-proposal.json",
+      "source_bytes": 575098,
+      "source_sha256": "2d1c8b7fcb5fb4e220b40903dde4627b853acbe20888d66deb68fe177bf4fcb1",
+      "source_git_blob_sha1": "ec47d5bffd4e762535fcf5ba0c6ce52c708e5ff1",
+      "packet_content_sha256": "4913c43cddaaeaf6f54d96bf4cc9c174f750dc7f83c8ea01928c17fe0f453893",
+      "packet_bytes": 342779,
+      "packet_file_sha256": "9d937de32c9062852f228f79ea6f89887f39c15b20e7dc7cb485b17a273c1a0c",
+      "top_level_key_order": [
+        "format",
+        "milestone_id",
+        "packet_file",
+        "packet_sha256",
+        "target",
+        "safe_to_apply",
+        "task_create_function",
+        "task_ids",
+        "requirements",
+        "decisions",
+        "task_requirements",
+        "task_dependencies",
+        "task_decisions",
+        "transaction_contract",
+        "pending_inputs",
+        "live_read_hold",
+        "create_task_calls",
+        "readback_assertions"
+      ],
+      "header": {
+        "artifact_id": "DOS-M7/header.json",
+        "bytes": 26879,
+        "sha256": "ee51ad8e3fe356c2af910e5bbba897c042c0fbb55ae885a8f2e4e390a4870c14",
+        "git_blob_sha1": "0584c82ab4c93bcb354c69d141de0fc96e5dc1ea"
+      },
+      "create_task_calls": [
+        {
+          "artifact_id": "DOS-M7/DOS-M7-001.create.json",
+          "bytes": 51380,
+          "sha256": "dced602e1371035eb64f9702cd2f0cb2b55ada4ce0461014a6934101662e2d74",
+          "git_blob_sha1": "c6286326e4261a470b5b561f9e32be92334e8e5d"
+        },
+        {
+          "artifact_id": "DOS-M7/DOS-M7-002.create.json",
+          "bytes": 46539,
+          "sha256": "6d397037718745361a26cb68abf771c08a4165f53bbc7f2e40350d5bccb1d960",
+          "git_blob_sha1": "e6eda4b9d8becf6558f3651a7e84328970d8ba0e"
+        },
+        {
+          "artifact_id": "DOS-M7/DOS-M7-003.create.json",
+          "bytes": 51357,
+          "sha256": "7f7eb41fdfb9f731d81f65795c71aa62b68873d76b0988127a268424a2396fc1",
+          "git_blob_sha1": "54e89043d8909c2a807d0914b687d7cd1870f0bd"
+        },
+        {
+          "artifact_id": "DOS-M7/DOS-M7-004.create.json",
+          "bytes": 51901,
+          "sha256": "6296ebc1855b58839098073e4194277235a2a4a59abc81bf2292d5585f5f15ee",
+          "git_blob_sha1": "6a14696f707687b62817ebb80b3ae87024f82bb9"
+        },
+        {
+          "artifact_id": "DOS-M7/DOS-M7-005.create.json",
+          "bytes": 55891,
+          "sha256": "816e037f9738462df25df8c700af42e4c542c6801c234fe0408875b2ec1e470a",
+          "git_blob_sha1": "fefabc8428e0d43bd9c662ca84ca05b7425f738c"
+        },
+        {
+          "artifact_id": "DOS-M7/DOS-M7-006.create.json",
+          "bytes": 55273,
+          "sha256": "8af937c6b2b5dc46b18a3bfb6562a86a9c4758e6e162e77f3951e14cb95b76ee",
+          "git_blob_sha1": "6c70ce7453324240ecc55489fda37a0ebbfab0e9"
+        },
+        {
+          "artifact_id": "DOS-M7/DOS-M7-007.create.json",
+          "bytes": 55818,
+          "sha256": "7d3f6e7243be3253f98e3b2d3e0b3fa85f73dac995fab943c7ff22556078597c",
+          "git_blob_sha1": "64c6b284bb3e77d5c0664e90ed4c3dfff7120dc8"
+        },
+        {
+          "artifact_id": "DOS-M7/DOS-M7-008.create.json",
+          "bytes": 58130,
+          "sha256": "dcb8d16e9b8443063e4c5e64067d7fce879877fe58ef103edb234e0be7955e54",
+          "git_blob_sha1": "4d5589d8d15254148a053ae95ff53d15e2207dbb"
+        },
+        {
+          "artifact_id": "DOS-M7/DOS-M7-009.create.json",
+          "bytes": 46043,
+          "sha256": "e309a35547de41e7415b2000483897a7bb84d2f4cd580792769d59c49e6634cd",
+          "git_blob_sha1": "298fe0ccfe3f3b9855b72f84bc4dd5c61165543c"
+        },
+        {
+          "artifact_id": "DOS-M7/DOS-M7-010.create.json",
+          "bytes": 57360,
+          "sha256": "d4c3596aad77c475978433901570778ab5159be388ed9910125279fe717058d4",
+          "git_blob_sha1": "5b5f63221196207c823e35bc9a395219a5a8b47b"
+        }
+      ]
+    },
+    {
+      "milestone_id": "DOS-M8",
+      "source_file": "DOS-M8.import-proposal.json",
+      "source_bytes": 449886,
+      "source_sha256": "e1e02a170c71e89b58ed529d51f4d18bfc024991ca71de0f5adbd1a33aff0eba",
+      "source_git_blob_sha1": "2fd02292e500623efda35b2907df55ac01438186",
+      "packet_content_sha256": "2ec8c0ac9f8d2f14e6806353fec8b97ec3e94cba3efa58e5bbde5d11d0964a27",
+      "packet_bytes": 269301,
+      "packet_file_sha256": "24dc2b7d993036671e2958751410e491fad1623910b08ce6418f1b702eca62a6",
+      "top_level_key_order": [
+        "format",
+        "milestone_id",
+        "packet_file",
+        "packet_sha256",
+        "target",
+        "safe_to_apply",
+        "task_create_function",
+        "task_ids",
+        "requirements",
+        "decisions",
+        "task_requirements",
+        "task_dependencies",
+        "task_decisions",
+        "transaction_contract",
+        "pending_inputs",
+        "live_read_hold",
+        "create_task_calls",
+        "readback_assertions"
+      ],
+      "header": {
+        "artifact_id": "DOS-M8/header.json",
+        "bytes": 18287,
+        "sha256": "27ef65442b66f0d80070e401e4f141ae22b621fb0f829852a2a7d69501747adc",
+        "git_blob_sha1": "5876da8cd3eb620b89293e3e724191d5f7dcc243"
+      },
+      "create_task_calls": [
+        {
+          "artifact_id": "DOS-M8/DOS-M8-001.create.json",
+          "bytes": 50822,
+          "sha256": "62b305acf57ed70c8273e696a2bd60b530b31e08c238924deb70e7a0944e9381",
+          "git_blob_sha1": "5bdf7fb494f044bab600869a07b81a4c9f472d7e"
+        },
+        {
+          "artifact_id": "DOS-M8/DOS-M8-002.create.json",
+          "bytes": 50074,
+          "sha256": "60f103493e3582293f9035f26f5181941ca271832dcf127838c49a8f1e137317",
+          "git_blob_sha1": "a8a71ef7f22c9c2d40c4d6c3aa817f5ae4cc2a36"
+        },
+        {
+          "artifact_id": "DOS-M8/DOS-M8-003.create.json",
+          "bytes": 51617,
+          "sha256": "c4236f1d2cd91b5ab52246ee973c006767864ab8257f37491bcda7e0ac0ebd89",
+          "git_blob_sha1": "19c9d6369498ed3b3f388f398c9bf3af93020804"
+        },
+        {
+          "artifact_id": "DOS-M8/DOS-M8-004.create.json",
+          "bytes": 50874,
+          "sha256": "c21247ddb7e9202f32faf53f01431977c06012ca4feeb3f0f35e62bb04061083",
+          "git_blob_sha1": "b11f5691b9b72e5bf780f30a7afddc48133cdca4"
+        },
+        {
+          "artifact_id": "DOS-M8/DOS-M8-005.create.json",
+          "bytes": 50619,
+          "sha256": "5bc50554b4e5e8ac265a5eca89bf45b863ae81ca3d364029c42b0e583a4f391c",
+          "git_blob_sha1": "f6798a5acd7205ab6ed599702bbf737679d98f93"
+        },
+        {
+          "artifact_id": "DOS-M8/DOS-M8-006.create.json",
+          "bytes": 50963,
+          "sha256": "3de23689fc95d5f25f931c054dd232b2e94901193d62373f2a0f814b5bc35b58",
+          "git_blob_sha1": "5bb330e330c1279b58d11d73e09800e659120093"
+        },
+        {
+          "artifact_id": "DOS-M8/DOS-M8-007.create.json",
+          "bytes": 51117,
+          "sha256": "2027bc14ca396956e14341e56119401d2ab043776a22c92d13d723087a73c8c5",
+          "git_blob_sha1": "fbfa2bc0cf596195e6edc52e28cf3caab4405026"
+        },
+        {
+          "artifact_id": "DOS-M8/DOS-M8-008.create.json",
+          "bytes": 59104,
+          "sha256": "85fc8034ee7bcf8ce5c6ba1e36433ef923df85119d438324914f48c401e0d3eb",
+          "git_blob_sha1": "d704fe2dca72cbbbcb056f759d10b5d2394c140a"
+        }
+      ]
+    },
+    {
+      "milestone_id": "DOS-M9",
+      "source_file": "DOS-M9.import-proposal.json",
+      "source_bytes": 492883,
+      "source_sha256": "acaaeebba60c6f6d86a59cf5ea4d95c415272d63613621972146bd0a6d7cb8fa",
+      "source_git_blob_sha1": "6a729865018965f620e6cbde949633b5ce5f7982",
+      "packet_content_sha256": "40aa5c0d85d363f9cf6ee581c521fb5c4ad72b6c58a2ce50bfb9b76b9863dec1",
+      "packet_bytes": 295535,
+      "packet_file_sha256": "fde4ee5825fa131a2bd61a565e7c6a746a8a4e3ec74c6f53f878dbe818b8f418",
+      "top_level_key_order": [
+        "format",
+        "milestone_id",
+        "packet_file",
+        "packet_sha256",
+        "target",
+        "safe_to_apply",
+        "task_create_function",
+        "task_ids",
+        "requirements",
+        "decisions",
+        "task_requirements",
+        "task_dependencies",
+        "task_decisions",
+        "transaction_contract",
+        "pending_inputs",
+        "live_read_hold",
+        "create_task_calls",
+        "readback_assertions"
+      ],
+      "header": {
+        "artifact_id": "DOS-M9/header.json",
+        "bytes": 26274,
+        "sha256": "6a1b3f402e8134bec9b687b7daa8bf8a045dad4cfadfaf8bb0e5d5b5cc4f8729",
+        "git_blob_sha1": "1d8a1501282ca80b0fa3f857af3ad1cd67c49585"
+      },
+      "create_task_calls": [
+        {
+          "artifact_id": "DOS-M9/DOS-M9-001.create.json",
+          "bytes": 50968,
+          "sha256": "938fca6177826ec054b26b406c4efdec1d60e6b9c40207b2d2d99f8e41413071",
+          "git_blob_sha1": "866be72bfb41d99cb8166af036f97ab89250806b"
+        },
+        {
+          "artifact_id": "DOS-M9/DOS-M9-002.create.json",
+          "bytes": 46703,
+          "sha256": "1e92291d2085b7dae133d890ef82e6a9adbfe66292ee4247018e19e1ede17575",
+          "git_blob_sha1": "b18e3d204b6df32982eb11336dc286830d6da33c"
+        },
+        {
+          "artifact_id": "DOS-M9/DOS-M9-003.create.json",
+          "bytes": 57136,
+          "sha256": "8f420e0d661924590fdf9b24c5aaeb2e80eacc81c5cd6702d9e5c4678f320eba",
+          "git_blob_sha1": "047f331530881a1d0e1a4777344ca554c5ccf3d3"
+        },
+        {
+          "artifact_id": "DOS-M9/DOS-M9-004.create.json",
+          "bytes": 61079,
+          "sha256": "906572e4285f08a4dba5d20350ed5c8dbd25bf52c330b99b47c445d121a09560",
+          "git_blob_sha1": "dea12fe40743c5ddc14c00977dc358b8b05b0c37"
+        },
+        {
+          "artifact_id": "DOS-M9/DOS-M9-005.create.json",
+          "bytes": 57251,
+          "sha256": "570c8dd38aafb0e32d757f7d570d2f168a338b7417a50bb33e4470c98bc1622c",
+          "git_blob_sha1": "80254bf11f6077418c8f936eaf03c69b9ef91713"
+        },
+        {
+          "artifact_id": "DOS-M9/DOS-M9-006.create.json",
+          "bytes": 58354,
+          "sha256": "a1e1a5751155bd6617de7b9a0cfd46fec655182beff31f9971f1f01e41ad1f69",
+          "git_blob_sha1": "fe27551a97a1f8e306287303296fd10b65051bc0"
+        },
+        {
+          "artifact_id": "DOS-M9/DOS-M9-007.create.json",
+          "bytes": 58346,
+          "sha256": "73cbdd16061f8a67756f08522fa65a781a9108ec9eaea61debd93b365e03ad71",
+          "git_blob_sha1": "d9c53941d9f6378f80c3a53a31c2f0220759a8c3"
+        },
+        {
+          "artifact_id": "DOS-M9/DOS-M9-008.create.json",
+          "bytes": 60167,
+          "sha256": "3d7361b598ee8f10c3a5deae06d1de8ea10e56e0528934eea19ae65980a6cfa1",
+          "git_blob_sha1": "213263ec05ccef486e7816ed1210578175c618f2"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "dos-m1-004",
+  "task": "DOS-M1-004",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/layouts",
+    "apps/doctor-suit/app/utils/contextScope.ts",
+    "apps/doctor-suit/tests/unit/dos-m1-004.test.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m1-004.spec.ts",
+    "apps/doctor-suit/app/app.vue"
+  ],
+  "reason": "Add Doctor context isolation and shared-shell projections. Invalidate stale reads and clear sensitive drafts on context changes; no client context grants backend authority."
+}

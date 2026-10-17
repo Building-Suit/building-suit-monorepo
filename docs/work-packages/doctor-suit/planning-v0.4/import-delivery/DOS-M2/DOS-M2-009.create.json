@@ -1,0 +1,511 @@
+{
+  "function": "control.create_task_with_publication_contract",
+  "review_only": true,
+  "bindings_required": [
+    "p_workstream_slug",
+    "p_model_profile",
+    "p_retry_policy_id"
+  ],
+  "arguments": {
+    "p_project_slug": "building-suit",
+    "p_workstream_slug": null,
+    "p_task_id": "DOS-M2-009",
+    "p_sequence": 2090,
+    "p_priority": 100,
+    "p_title": "Prescription print and patient-safe sharing",
+    "p_description": "Render readable bilingual-capable print/share output from structured data with scoped access and no public patient exposure.\n\nRequirements\n- DOS-M2-R001: Clinical records and prescriptions on the web. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M2-F009: Render readable bilingual-capable print/share output from structured data with scoped access and no public patient exposure. Acceptance: Render print output from one signed structured version with doctor, patient, location, date, version/status and unmodified instructions; bilingual layout must remain legible. Use shared pure print presentation and UX-owned download behavior; app adapters perform current permission checks. Sharing is scoped, revocable and expiry-aware with no public patient metadata, static storage URL or analytics payload; a stopped/superseded version is visibly labeled.\n\nDependencies: DOS-M2-008\nBlocking decisions: DOS-M2-GATE-START, DOS-M2-GATE-CLINICAL, DOS-M2-GATE-CATALOGUE\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/i18n/\n- apps/doctor-suit/server/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/package.json\n- packages/contracts/src/\n- packages/contracts/tests/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/src/utils/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-changes/items.json\n- release-fragments/dos-m2-009.json\n- apps/doctor-suit/supabase/tests/\n\nAcceptance\n1. Render print output from one signed structured version with doctor, patient, location, date, version/status and unmodified instructions; bilingual layout must remain legible.\n2. Use shared pure print presentation and UX-owned download behavior; app adapters perform current permission checks.\n3. Sharing is scoped, revocable and expiry-aware with no public patient metadata, static storage URL or analytics payload; a stopped/superseded version is visibly labeled.\n\nVerification scenarios\n- Print long Arabic and English instructions and compare content to the signed source version.\n- Deny expired/revoked share access and outsider object access; ensure patient names never enter public metadata.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m2-009.md\n- apps/doctor-suit/tests/unit/dos-m2-009.test.mjs\n- apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts\n- release-fragments/dos-m2-009.json\n- apps/doctor-suit/supabase/tests/dos-m2-009.sql\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Execute task-specific state, protocol and failure assertions\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m2-009.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m2-009-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression for affected consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify browser journey, denial and recovery states\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts\"\n    ],\n    \"commands\": [\n      \"dos-m2-009-browser\"\n    ],\n    \"requires\": [\n      \"browser\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence\",\n    \"commands\": [\n      \"doctor-release-check\"\n    ],\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"release_check_receipt_must_match_candidate_head_and_reviewed_classification\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify scoped database criteria with actual disposable authorization/write assertions\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m2-009.sql\"\n    ],\n    \"commands\": [\n      \"dos-m2-009-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.\n- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.\n- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.\n\nCriterion-specific coverage\n[\n  {\n    \"case_id\": \"DOS-M2-009-C01\",\n    \"criterion_ids\": [\n      1\n    ],\n    \"assertion\": \"Render print output from one signed structured version with doctor, patient, location, date, version/status and unmodified instructions; bilingual layout must remain legible.\",\n    \"procedure\": \"Print long EN/AR signed instructions and compare every field/version/status to the source.\",\n    \"test_case_name\": \"DOS-M2-009-C01\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m2-009-browser\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M2-009-C02\",\n    \"criterion_ids\": [\n      2\n    ],\n    \"assertion\": \"Use shared pure print presentation and UX-owned download behavior; app adapters perform current permission checks.\",\n    \"procedure\": \"Verify pure print presentation boundaries and permission-checked app adapter behavior.\",\n    \"test_case_name\": \"DOS-M2-009-C02\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m2-009.test.mjs\"\n    ],\n    \"command_refs\": [\n      \"pnpm check\",\n      \"dos-m2-009-unit\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M2-009-C03\",\n    \"criterion_ids\": [\n      3\n    ],\n    \"assertion\": \"Sharing is scoped, revocable and expiry-aware with no public patient metadata, static storage URL or analytics payload; a stopped/superseded version is visibly labeled.\",\n    \"procedure\": \"Expire/revoke sharing and test outsider document access and public metadata leakage.\",\n    \"test_case_name\": \"DOS-M2-009-C03\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m2-009.sql\",\n      \"apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m2-009-data\",\n      \"dos-m2-009-browser\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M2-009-RELEASE\",\n    \"criterion_ids\": [],\n    \"assertion\": \"Task-scoped release provenance and, when applicable, public inventory are complete.\",\n    \"procedure\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [\n      \"release-fragments/dos-m2-009.json\"\n    ],\n    \"command_refs\": [\n      \"doctor-release-check\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"exact-candidate-release-review\"\n    ],\n    \"acceptance_rule\": \"Preserve unrelated inventory and all accepted fragments; do not activate an operational product.\"\n  }\n]\n\nRelease ownership\n{\n  \"fragment_path\": \"release-fragments/dos-m2-009.json\",\n  \"accepted_fragments\": \"append-only; never rewrite accepted provenance\",\n  \"inventory_path\": \"release-changes/items.json\",\n  \"inventory_write_scope\": \"Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.\",\n  \"registration_rule\": \"Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.\",\n  \"receipt_rule\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\"\n}\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m2-009.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states.",
+    "p_task_type": "feature",
+    "p_risk_level": "critical",
+    "p_model_profile": null,
+    "p_acceptance_criteria": [
+      "Render print output from one signed structured version with doctor, patient, location, date, version/status and unmodified instructions; bilingual layout must remain legible.",
+      "Use shared pure print presentation and UX-owned download behavior; app adapters perform current permission checks.",
+      "Sharing is scoped, revocable and expiry-aware with no public patient metadata, static storage URL or analytics payload; a stopped/superseded version is visibly labeled."
+    ],
+    "p_verification_plan": [
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Check diff hygiene",
+        "command": "git diff --check"
+      },
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Check pinned workspace architecture and boundaries",
+        "command": "pnpm check"
+      },
+      {
+        "version": 2,
+        "kind": "planned_test",
+        "description": "Execute task-specific state, protocol and failure assertions",
+        "expected_outputs": [
+          "apps/doctor-suit/tests/unit/dos-m2-009.test.mjs"
+        ],
+        "commands": [
+          "dos-m2-009-unit"
+        ]
+      },
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Run full repository unit regression for affected consumers",
+        "command": "pnpm test"
+      },
+      {
+        "version": 2,
+        "kind": "planned_test",
+        "description": "Verify browser journey, denial and recovery states",
+        "expected_outputs": [
+          "apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts"
+        ],
+        "commands": [
+          "dos-m2-009-browser"
+        ],
+        "requires": [
+          "browser"
+        ]
+      },
+      {
+        "version": 2,
+        "kind": "external_gate",
+        "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+        "commands": [
+          "doctor-release-check"
+        ],
+        "phase": "pre_publication",
+        "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+      },
+      {
+        "version": 2,
+        "kind": "planned_test",
+        "description": "Verify scoped database criteria with actual disposable authorization/write assertions",
+        "expected_outputs": [
+          "apps/doctor-suit/supabase/tests/dos-m2-009.sql"
+        ],
+        "commands": [
+          "dos-m2-009-data"
+        ],
+        "requires": [
+          "database",
+          "rls-authorization"
+        ]
+      }
+    ],
+    "p_retry_policy_id": null,
+    "p_metadata": {
+      "artifact_revision": "doctor-suit-planning-v0.4-review-3",
+      "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+      "milestone_id": "DOS-M2",
+      "allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/i18n/",
+        "apps/doctor-suit/server/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/package.json",
+        "packages/contracts/src/",
+        "packages/contracts/tests/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/src/utils/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-changes/items.json",
+        "release-fragments/dos-m2-009.json",
+        "apps/doctor-suit/supabase/tests/"
+      ],
+      "source_allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/i18n/",
+        "apps/doctor-suit/server/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/package.json",
+        "packages/contracts/src/",
+        "packages/contracts/tests/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/src/utils/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-changes/items.json",
+        "release-fragments/dos-m2-009.json",
+        "apps/doctor-suit/supabase/tests/"
+      ],
+      "clinical_live_data_allowed": false,
+      "verification_mode": "focused",
+      "scope_approval": "planning-authorized-execution-gated",
+      "publication_policy": {
+        "merge_authorized": false,
+        "deployment_authorized": false,
+        "hosted_database_changes_authorized": false,
+        "review_required_before_integration": true
+      },
+      "canonical_task_contract": {
+        "task_id": "DOS-M2-009",
+        "milestone_id": "DOS-M2",
+        "sequence": 2090,
+        "priority": 100,
+        "title": "Prescription print and patient-safe sharing",
+        "objective": "Render readable bilingual-capable print/share output from structured data with scoped access and no public patient exposure.",
+        "task_type": "feature",
+        "risk_level": "critical",
+        "acceptance_criteria": [
+          "Render print output from one signed structured version with doctor, patient, location, date, version/status and unmodified instructions; bilingual layout must remain legible.",
+          "Use shared pure print presentation and UX-owned download behavior; app adapters perform current permission checks.",
+          "Sharing is scoped, revocable and expiry-aware with no public patient metadata, static storage URL or analytics payload; a stopped/superseded version is visibly labeled."
+        ],
+        "verification_scenarios": [
+          "Print long Arabic and English instructions and compare content to the signed source version.",
+          "Deny expired/revoked share access and outsider object access; ensure patient names never enter public metadata."
+        ],
+        "verification_plan": [
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Check diff hygiene",
+            "command": "git diff --check"
+          },
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Check pinned workspace architecture and boundaries",
+            "command": "pnpm check"
+          },
+          {
+            "version": 2,
+            "kind": "planned_test",
+            "description": "Execute task-specific state, protocol and failure assertions",
+            "expected_outputs": [
+              "apps/doctor-suit/tests/unit/dos-m2-009.test.mjs"
+            ],
+            "commands": [
+              "dos-m2-009-unit"
+            ]
+          },
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Run full repository unit regression for affected consumers",
+            "command": "pnpm test"
+          },
+          {
+            "version": 2,
+            "kind": "planned_test",
+            "description": "Verify browser journey, denial and recovery states",
+            "expected_outputs": [
+              "apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts"
+            ],
+            "commands": [
+              "dos-m2-009-browser"
+            ],
+            "requires": [
+              "browser"
+            ]
+          },
+          {
+            "version": 2,
+            "kind": "external_gate",
+            "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+            "commands": [
+              "doctor-release-check"
+            ],
+            "phase": "pre_publication",
+            "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+          },
+          {
+            "version": 2,
+            "kind": "planned_test",
+            "description": "Verify scoped database criteria with actual disposable authorization/write assertions",
+            "expected_outputs": [
+              "apps/doctor-suit/supabase/tests/dos-m2-009.sql"
+            ],
+            "commands": [
+              "dos-m2-009-data"
+            ],
+            "requires": [
+              "database",
+              "rls-authorization"
+            ]
+          }
+        ],
+        "allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-changes/items.json",
+          "release-fragments/dos-m2-009.json",
+          "apps/doctor-suit/supabase/tests/"
+        ],
+        "expected_outputs": [
+          "docs/work-packages/doctor-suit/implementation/dos-m2-009.md",
+          "apps/doctor-suit/tests/unit/dos-m2-009.test.mjs",
+          "apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts",
+          "release-fragments/dos-m2-009.json",
+          "apps/doctor-suit/supabase/tests/dos-m2-009.sql"
+        ],
+        "linked_requirement_ids": [
+          "DOS-M2-R001",
+          "DOS-M2-F009"
+        ],
+        "task_dependencies": [
+          "DOS-M2-008"
+        ],
+        "blocking_decision_ids": [
+          "DOS-M2-GATE-START",
+          "DOS-M2-GATE-CLINICAL",
+          "DOS-M2-GATE-CATALOGUE"
+        ],
+        "produces_decision_ids": [],
+        "specific_evidence": [
+          "Create docs/work-packages/doctor-suit/implementation/dos-m2-009.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+          "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+        ],
+        "status": "planned",
+        "engine_stage": "pending",
+        "model_profile": "deep",
+        "model_profile_strategy": "require_verified_high_capability_deep_route",
+        "retry_policy_id": null,
+        "release_contract": {
+          "fragment_path": "release-fragments/dos-m2-009.json",
+          "accepted_fragments": "append-only; never rewrite accepted provenance",
+          "inventory_path": "release-changes/items.json",
+          "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+          "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+          "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+        },
+        "evidence_requirements": [
+          "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+          "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+          "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+          "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+          "Create docs/work-packages/doctor-suit/implementation/dos-m2-009.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+          "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+        ],
+        "source_reading": [
+          "AGENTS.md",
+          "README.md",
+          "docs/agent-workflows.md",
+          "docs/shared/git-workflow.md",
+          "packages/ui/AGENTS.md",
+          "docs/shared/design-system.md",
+          "docs/shared/interactions.md",
+          "docs/shared/data-table.md",
+          "docs/architecture/identity.md",
+          "docs/shared/database.md",
+          "docs/shared/future-suit-administration.md",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "tooling/control-plane/runner/task-prompt.mjs",
+          "tooling/control-plane/runner/verification-mode.mjs"
+        ],
+        "verification_cases": [
+          {
+            "case_id": "DOS-M2-009-C01",
+            "criterion_ids": [
+              1
+            ],
+            "assertion": "Render print output from one signed structured version with doctor, patient, location, date, version/status and unmodified instructions; bilingual layout must remain legible.",
+            "procedure": "Print long EN/AR signed instructions and compare every field/version/status to the source.",
+            "test_case_name": "DOS-M2-009-C01",
+            "required_outputs": [
+              "apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts"
+            ],
+            "command_refs": [
+              "dos-m2-009-browser"
+            ],
+            "external_evidence_required": false,
+            "evidence_types": [],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
+          },
+          {
+            "case_id": "DOS-M2-009-C02",
+            "criterion_ids": [
+              2
+            ],
+            "assertion": "Use shared pure print presentation and UX-owned download behavior; app adapters perform current permission checks.",
+            "procedure": "Verify pure print presentation boundaries and permission-checked app adapter behavior.",
+            "test_case_name": "DOS-M2-009-C02",
+            "required_outputs": [
+              "apps/doctor-suit/tests/unit/dos-m2-009.test.mjs"
+            ],
+            "command_refs": [
+              "pnpm check",
+              "dos-m2-009-unit"
+            ],
+            "external_evidence_required": false,
+            "evidence_types": [],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
+          },
+          {
+            "case_id": "DOS-M2-009-C03",
+            "criterion_ids": [
+              3
+            ],
+            "assertion": "Sharing is scoped, revocable and expiry-aware with no public patient metadata, static storage URL or analytics payload; a stopped/superseded version is visibly labeled.",
+            "procedure": "Expire/revoke sharing and test outsider document access and public metadata leakage.",
+            "test_case_name": "DOS-M2-009-C03",
+            "required_outputs": [
+              "apps/doctor-suit/supabase/tests/dos-m2-009.sql",
+              "apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts"
+            ],
+            "command_refs": [
+              "dos-m2-009-data",
+              "dos-m2-009-browser"
+            ],
+            "external_evidence_required": false,
+            "evidence_types": [],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute."
+          },
+          {
+            "case_id": "DOS-M2-009-RELEASE",
+            "criterion_ids": [],
+            "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+            "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+            "test_case_name": null,
+            "required_outputs": [
+              "release-fragments/dos-m2-009.json"
+            ],
+            "command_refs": [
+              "doctor-release-check"
+            ],
+            "external_evidence_required": true,
+            "evidence_types": [
+              "exact-candidate-release-review"
+            ],
+            "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+          }
+        ],
+        "acceptance_mapping": [
+          {
+            "criterion": 1,
+            "text": "Render print output from one signed structured version with doctor, patient, location, date, version/status and unmodified instructions; bilingual layout must remain legible.",
+            "verification_case_ids": [
+              "DOS-M2-009-C01"
+            ]
+          },
+          {
+            "criterion": 2,
+            "text": "Use shared pure print presentation and UX-owned download behavior; app adapters perform current permission checks.",
+            "verification_case_ids": [
+              "DOS-M2-009-C02"
+            ]
+          },
+          {
+            "criterion": 3,
+            "text": "Sharing is scoped, revocable and expiry-aware with no public patient metadata, static storage URL or analytics payload; a stopped/superseded version is visibly labeled.",
+            "verification_case_ids": [
+              "DOS-M2-009-C03"
+            ]
+          }
+        ],
+        "metadata": {
+          "artifact_revision": "doctor-suit-planning-v0.4-review-3",
+          "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+          "milestone_id": "DOS-M2",
+          "allowed_paths": [
+            "apps/building-suit-docs/app/pages/components.vue",
+            "apps/doctor-suit/app/",
+            "apps/doctor-suit/i18n/",
+            "apps/doctor-suit/server/",
+            "apps/doctor-suit/tests/",
+            "docs/shared/atomic-template-route-inventory.json",
+            "docs/shared/ui-ownership-manifest.json",
+            "docs/work-packages/doctor-suit/",
+            "packages/contracts/package.json",
+            "packages/contracts/src/",
+            "packages/contracts/tests/",
+            "packages/ui/package.json",
+            "packages/ui/src/organisms/",
+            "packages/ui/src/templates/",
+            "packages/ui/src/utils/",
+            "packages/ui/tests/",
+            "packages/ux/src/",
+            "packages/ux/tests/",
+            "release-changes/items.json",
+            "release-fragments/dos-m2-009.json",
+            "apps/doctor-suit/supabase/tests/"
+          ],
+          "source_allowed_paths": [
+            "apps/building-suit-docs/app/pages/components.vue",
+            "apps/doctor-suit/app/",
+            "apps/doctor-suit/i18n/",
+            "apps/doctor-suit/server/",
+            "apps/doctor-suit/tests/",
+            "docs/shared/atomic-template-route-inventory.json",
+            "docs/shared/ui-ownership-manifest.json",
+            "docs/work-packages/doctor-suit/",
+            "packages/contracts/package.json",
+            "packages/contracts/src/",
+            "packages/contracts/tests/",
+            "packages/ui/package.json",
+            "packages/ui/src/organisms/",
+            "packages/ui/src/templates/",
+            "packages/ui/src/utils/",
+            "packages/ui/tests/",
+            "packages/ux/src/",
+            "packages/ux/tests/",
+            "release-changes/items.json",
+            "release-fragments/dos-m2-009.json",
+            "apps/doctor-suit/supabase/tests/"
+          ],
+          "clinical_live_data_allowed": false,
+          "verification_mode": "focused",
+          "scope_approval": "planning-authorized-execution-gated",
+          "publication_policy": {
+            "merge_authorized": false,
+            "deployment_authorized": false,
+            "hosted_database_changes_authorized": false,
+            "review_required_before_integration": true
+          }
+        },
+        "description": "Render readable bilingual-capable print/share output from structured data with scoped access and no public patient exposure.\n\nRequirements\n- DOS-M2-R001: Clinical records and prescriptions on the web. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M2-F009: Render readable bilingual-capable print/share output from structured data with scoped access and no public patient exposure. Acceptance: Render print output from one signed structured version with doctor, patient, location, date, version/status and unmodified instructions; bilingual layout must remain legible. Use shared pure print presentation and UX-owned download behavior; app adapters perform current permission checks. Sharing is scoped, revocable and expiry-aware with no public patient metadata, static storage URL or analytics payload; a stopped/superseded version is visibly labeled.\n\nDependencies: DOS-M2-008\nBlocking decisions: DOS-M2-GATE-START, DOS-M2-GATE-CLINICAL, DOS-M2-GATE-CATALOGUE\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/i18n/\n- apps/doctor-suit/server/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/package.json\n- packages/contracts/src/\n- packages/contracts/tests/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/src/utils/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-changes/items.json\n- release-fragments/dos-m2-009.json\n- apps/doctor-suit/supabase/tests/\n\nAcceptance\n1. Render print output from one signed structured version with doctor, patient, location, date, version/status and unmodified instructions; bilingual layout must remain legible.\n2. Use shared pure print presentation and UX-owned download behavior; app adapters perform current permission checks.\n3. Sharing is scoped, revocable and expiry-aware with no public patient metadata, static storage URL or analytics payload; a stopped/superseded version is visibly labeled.\n\nVerification scenarios\n- Print long Arabic and English instructions and compare content to the signed source version.\n- Deny expired/revoked share access and outsider object access; ensure patient names never enter public metadata.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m2-009.md\n- apps/doctor-suit/tests/unit/dos-m2-009.test.mjs\n- apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts\n- release-fragments/dos-m2-009.json\n- apps/doctor-suit/supabase/tests/dos-m2-009.sql\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Execute task-specific state, protocol and failure assertions\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m2-009.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m2-009-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression for affected consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify browser journey, denial and recovery states\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts\"\n    ],\n    \"commands\": [\n      \"dos-m2-009-browser\"\n    ],\n    \"requires\": [\n      \"browser\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence\",\n    \"commands\": [\n      \"doctor-release-check\"\n    ],\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"release_check_receipt_must_match_candidate_head_and_reviewed_classification\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify scoped database criteria with actual disposable authorization/write assertions\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m2-009.sql\"\n    ],\n    \"commands\": [\n      \"dos-m2-009-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.\n- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.\n- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.\n\nCriterion-specific coverage\n[\n  {\n    \"case_id\": \"DOS-M2-009-C01\",\n    \"criterion_ids\": [\n      1\n    ],\n    \"assertion\": \"Render print output from one signed structured version with doctor, patient, location, date, version/status and unmodified instructions; bilingual layout must remain legible.\",\n    \"procedure\": \"Print long EN/AR signed instructions and compare every field/version/status to the source.\",\n    \"test_case_name\": \"DOS-M2-009-C01\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m2-009-browser\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M2-009-C02\",\n    \"criterion_ids\": [\n      2\n    ],\n    \"assertion\": \"Use shared pure print presentation and UX-owned download behavior; app adapters perform current permission checks.\",\n    \"procedure\": \"Verify pure print presentation boundaries and permission-checked app adapter behavior.\",\n    \"test_case_name\": \"DOS-M2-009-C02\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m2-009.test.mjs\"\n    ],\n    \"command_refs\": [\n      \"pnpm check\",\n      \"dos-m2-009-unit\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M2-009-C03\",\n    \"criterion_ids\": [\n      3\n    ],\n    \"assertion\": \"Sharing is scoped, revocable and expiry-aware with no public patient metadata, static storage URL or analytics payload; a stopped/superseded version is visibly labeled.\",\n    \"procedure\": \"Expire/revoke sharing and test outsider document access and public metadata leakage.\",\n    \"test_case_name\": \"DOS-M2-009-C03\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m2-009.sql\",\n      \"apps/doctor-suit/tests/e2e/dos-m2-009.spec.ts\"\n    ],\n    \"command_refs\": [\n      \"dos-m2-009-data\",\n      \"dos-m2-009-browser\"\n    ],\n    \"external_evidence_required\": false,\n    \"evidence_types\": [],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute.\"\n  },\n  {\n    \"case_id\": \"DOS-M2-009-RELEASE\",\n    \"criterion_ids\": [],\n    \"assertion\": \"Task-scoped release provenance and, when applicable, public inventory are complete.\",\n    \"procedure\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [\n      \"release-fragments/dos-m2-009.json\"\n    ],\n    \"command_refs\": [\n      \"doctor-release-check\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"exact-candidate-release-review\"\n    ],\n    \"acceptance_rule\": \"Preserve unrelated inventory and all accepted fragments; do not activate an operational product.\"\n  }\n]\n\nRelease ownership\n{\n  \"fragment_path\": \"release-fragments/dos-m2-009.json\",\n  \"accepted_fragments\": \"append-only; never rewrite accepted provenance\",\n  \"inventory_path\": \"release-changes/items.json\",\n  \"inventory_write_scope\": \"Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.\",\n  \"registration_rule\": \"Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.\",\n  \"receipt_rule\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\"\n}\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m2-009.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      },
+      "canonical_task_sha256": "1d1d0f214cb46816c351d5b43344da9fcb7ea2c8f88bd58cb79c5a5962aeb9fa",
+      "canonical_task_schema": "review-only-task-contract-v1",
+      "source_packet_sha256": "5f0781743791fac72384c749d9c592454a7aa00caff2f84f451f11a5d9956567"
+    }
+  },
+  "binding_rule": "Fill required runtime values only from renewed, reviewed live evidence. Do not create a model/retry policy, fall back to a cheaper route or widen project scopes. Preserve the canonical object byte-for-byte under metadata; record resolved runtime values separately."
+}

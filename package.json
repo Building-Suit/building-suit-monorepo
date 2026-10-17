@@ -44,7 +44,8 @@
     "automation:resilience": "node tooling/control-plane/resilience/run-acceptance.mjs --check",
     "test:built-assets": "node --test apps/shop-suit/tests/integration/ss-launch-brand-production.test.mjs",
     "check:atomic-template": "node tooling/checks/atomic-template-architecture.mjs",
-    "db:test:shop:commission": "node tooling/database/test-shop-commissions-local.mjs"
+    "db:test:shop:commission": "node tooling/database/test-shop-commissions-local.mjs",
+    "dev:doctor": "pnpm --filter @building-suit/doctor-suit dev --host 127.0.0.1 --port 3006"
   },
   "devDependencies": {
     "@vue/compiler-sfc": "3.5.43",

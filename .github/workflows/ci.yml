@@ -33,6 +33,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 345 && github.event.pull_request.head.sha || github.sha }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -86,6 +87,7 @@ jobs:
         with:
           # Disposable public-feed regressions also replay the preserved bootstrap fragment range.
           fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 345 && github.event.pull_request.head.sha || github.sha }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -93,15 +95,39 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run setup
-      - run: pnpm typecheck
+      - run: pnpm typecheck --concurrency=2
       - run: pnpm lint
-      - run: pnpm build
+      - run: pnpm build --concurrency=2
         env:
           SUPABASE_URL: http://127.0.0.1:60321
           SUPABASE_KEY: local-development-publishable-key
       - run: pnpm test:built-assets
       - run: pnpm exec playwright install --with-deps chromium
+      - name: Resolve permitted M1 aggregate browser scope
+        id: doctor-m1-scope
+        run: node apps/doctor-suit/tests/m1-aggregate-evidence.mjs scope
+      - name: Verify permitted Doctor M1 aggregate browsers
+        if: steps.doctor-m1-scope.outputs.active == 'true'
+        env:
+          DOCTOR_WORKSPACE_REPORT: ${{ runner.temp }}/doctor-m1-workspace-raw.json
+        run: pnpm exec playwright test -c packages/testing/playwright.doctor-workspace.config.ts
+      - name: Capture Doctor M1 aggregate browser evidence
+        if: always() && steps.doctor-m1-scope.outputs.active == 'true'
+        env:
+          M1_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node apps/doctor-suit/tests/m1-aggregate-evidence.mjs workspace "${{ runner.temp }}/doctor-m1-workspace" "${{ runner.temp }}/doctor-m1-workspace-raw.json"
+      - name: Retain sanitized Doctor M1 workspace summary
+        if: always() && steps.doctor-m1-scope.outputs.active == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-m1-workspace-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/doctor-m1-workspace/workspace-summary.json
+          if-no-files-found: error
+      - name: Verify shared Shop regressions for Doctor M1
+        if: steps.doctor-m1-scope.outputs.active == 'true'
+        run: pnpm test:e2e:shared-regressions
       - run: pnpm test:e2e
+        if: steps.doctor-m1-scope.outputs.active != 'true'
       - name: Verify deployed-only Shop landing changelog discovery
         run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/public-changelog.config.ts
       - uses: actions/upload-artifact@v4
@@ -110,6 +136,90 @@ jobs:
           name: browser-results
           path: test-results
           retention-days: 7
+  doctor-m1-shop-backend:
+    if: github.event_name == 'pull_request' && github.event.pull_request.number == 345
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run setup
+      - name: Build Shop and Ledger for actual isolated Auth acceptance
+        env:
+          SUPABASE_URL: http://127.0.0.1:61321
+          SUPABASE_KEY: local-development-publishable-key
+        run: |
+          pnpm --filter @building-suit/shop-suit build
+          pnpm --filter @building-suit/ledger-suit build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Verify actual Shop signup, persistence and independent Ledger session
+        env:
+          DOCTOR_SHOP_BACKEND_DISPOSABLE: '1'
+          M1_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          DOCTOR_SHOP_BACKEND_EVIDENCE: ${{ runner.temp }}/doctor-m1-shop-backend
+        run: node apps/doctor-suit/tests/shop-backend-actual-provider.mjs
+      - name: Retain sanitized actual consumer receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-m1-shop-backend-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/doctor-m1-shop-backend/shop-backend-summary.json
+          if-no-files-found: error
+  doctor-m1-evidence:
+    needs: [review, branch-policy, verify, doctor-m1-shop-backend]
+    if: always() && github.event_name == 'pull_request' && github.event.pull_request.number == 345
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Fetch completed aggregate browser summary
+        if: needs.verify.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: doctor-m1-workspace-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/doctor-m1-evidence
+      - name: Fetch actual Shop/Ledger backend receipt
+        if: needs.doctor-m1-shop-backend.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: doctor-m1-shop-backend-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/doctor-m1-evidence
+      - name: Independently reconcile exact-candidate command and artifact evidence
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          M1_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          M1_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node apps/doctor-suit/tests/m1-aggregate-evidence.mjs evaluate "${{ runner.temp }}/doctor-m1-evidence"
+      - name: Retain Doctor M1 exact-candidate evaluation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-m1-exact-candidate-${{ github.event.pull_request.head.sha }}
+          path: |
+            ${{ runner.temp }}/doctor-m1-evidence/m1-aggregate-evidence.json
+            ${{ runner.temp }}/doctor-m1-evidence/artifact-manifest.json
+            ${{ runner.temp }}/doctor-m1-evidence/workspace-summary.json
+            ${{ runner.temp }}/doctor-m1-evidence/shop-backend-summary.json
+          if-no-files-found: error
+          retention-days: 14
   publish-releases:
     needs: [verify]
     if: always() && github.event_name == 'push' && needs.verify.result == 'success'

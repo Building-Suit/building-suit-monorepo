@@ -1,0 +1,149 @@
+{
+  "source_bytes": "verified",
+  "task_count": 14,
+  "reports": [
+    {
+      "milestone": "DOS-M2",
+      "tasks": 14,
+      "requirements": 15,
+      "decisions": 3,
+      "criterion_cases": 44,
+      "coverage": "criterion-specific-procedure-and-selected-executable/evidence",
+      "routine_checks": "independent-automated-exact-candidate-no-human-acknowledgement",
+      "canonical_metadata": "all-task-fields-deep-equal-and-hash-verified",
+      "dependency_graph": "identical-to-c9716fbf-review-baseline",
+      "release_scope": "task-fragment-and-related-inventory-only",
+      "start_gate": "open-linked-to-every-task",
+      "artifact_validation": "passed",
+      "live_import_validation": "held-cancelled-refresh-needs-renewed-permission",
+      "task_reports": [
+        {
+          "task_id": "DOS-M2-001",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 2,
+          "planned_outputs": 0,
+          "explicit_gates": 2,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-002",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 3,
+          "explicit_gates": 1,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-003",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 3,
+          "explicit_gates": 1,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-004",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 2,
+          "explicit_gates": 1,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-005",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 2,
+          "planned_outputs": 0,
+          "explicit_gates": 2,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-006",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 3,
+          "explicit_gates": 1,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-007",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 1,
+          "explicit_gates": 2,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-008",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 3,
+          "explicit_gates": 1,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-009",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 3,
+          "explicit_gates": 1,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-010",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 3,
+          "explicit_gates": 1,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-011",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 3,
+          "explicit_gates": 1,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-012",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 3,
+          "explicit_gates": 2,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-013",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 3,
+          "planned_outputs": 3,
+          "explicit_gates": 2,
+          "product_execution": "not-run"
+        },
+        {
+          "task_id": "DOS-M2-014",
+          "command_mapping": "resolved-against-repository-resolver",
+          "proposed_configuration_readiness": "passed-static-only-not-live-admission",
+          "checks": 6,
+          "planned_outputs": 3,
+          "explicit_gates": 4,
+          "product_execution": "not-run"
+        }
+      ]
+    }
+  ]
+}

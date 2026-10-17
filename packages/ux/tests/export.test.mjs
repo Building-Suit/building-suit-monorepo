@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import * as vue from 'vue'
 import ts from 'typescript'
-import { csvCell, recordSnapshot } from '../src/index.ts'
+import { csvCell, recordSnapshot, useRecordAction } from '../src/index.ts'
 import { useNavigationDisclosure } from '../src/composables/useNavigationDisclosure.ts'
 
 test('CSV export neutralizes formula text and retains numeric values', () => {
@@ -27,20 +27,7 @@ test('record snapshots are deterministic for objects, sets, and maps', () => {
 })
 
 function recordAction(getValue) {
-  const source = readFileSync(new URL('../src/composables/useRecordAction.ts', import.meta.url), 'utf8')
-    .replace("import { recordSnapshot } from '../index'", '')
-  const code = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText
-  const module = { exports: {} }
-  const globals = {
-    ref: vue.ref,
-    computed: vue.computed,
-    watch: vue.watch,
-    recordSnapshot,
-  }
-  new Function('module', 'exports', ...Object.keys(globals), code)(module, module.exports, ...Object.values(globals))
-  return module.exports.useRecordAction(getValue)
+  return useRecordAction(getValue)
 }
 
 function signupWizard(totalSteps) {
@@ -135,4 +122,41 @@ test('navigation disclosure restores focus only for an explicit close and handle
   assert.equal(focusCount, 1)
   await disclosure.close(true)
   assert.equal(focusCount, 2)
+})
+
+test('record action context reset rejects a late success without closing or unlocking a newer command', async () => {
+  const form = vue.reactive({ name: 'Synthetic first scope' })
+  const action = recordAction(() => form)
+  action.edit()
+  let oldRelease; let newRelease
+  const old = action.run(() => new Promise(resolve => { oldRelease = resolve }), () => 'Old error')
+  form.name = ''
+  action.reset()
+  assert.equal(action.visible.value, false)
+  assert.equal(action.pending.value, false)
+  assert.equal(action.dirty.value, false)
+  form.name = 'Synthetic second scope'
+  action.edit()
+  const current = action.run(() => new Promise(resolve => { newRelease = resolve }), () => 'New error')
+  oldRelease()
+  assert.equal(await old, false)
+  assert.equal(action.visible.value, true)
+  assert.equal(action.pending.value, true)
+  assert.equal(action.error.value, null)
+  newRelease()
+  assert.equal(await current, true)
+  assert.equal(action.visible.value, false)
+})
+
+test('record action context reset suppresses late error feedback from the previous scope', async () => {
+  const action = recordAction(() => ({ name: 'Synthetic' }))
+  action.edit()
+  let reject
+  const previous = action.run(() => new Promise((resolve, fail) => { reject = fail }), () => 'Previous scope failure')
+  action.reset()
+  action.create()
+  reject(new Error('Synthetic old transport failure'))
+  assert.equal(await previous, false)
+  assert.equal(action.visible.value, true)
+  assert.equal(action.error.value, null)
 })

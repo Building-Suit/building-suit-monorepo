@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { collectBatch, workspaceGraph } from './fragments.mjs'
+import { collectBatch } from './fragments.mjs'
+import { workspaceGraphAt } from './candidate.mjs'
 
 // Called by the existing required review entrypoint, inside its unique disposable container.
 export async function testBootstrap({ sql, databaseSql, parallelDatabaseSql, migration }) {
@@ -64,7 +65,6 @@ export async function testBootstrap({ sql, databaseSql, parallelDatabaseSql, mig
     if (role !== 'service_role') assert.throws(() => first(`set role ${role}; select public.release_stage_accept('{}'::jsonb);`), /permission denied/)
   }
   // Replay the preserved, real first-parent fragment range, without editing accepted fragments.
-  const graph = workspaceGraph(process.cwd())
   const stagingMerges = [
     'ecd74b1f5e3f6758bb618e67ca930b5f5f3eadd4',
     '461abc8ba1aa8b59c61a03f34d2cf0ee24cd0a8a'
@@ -73,7 +73,9 @@ export async function testBootstrap({ sql, databaseSql, parallelDatabaseSql, mig
   let publicEntries = 0
   const accept = request => parse(first(`${jwt} select public.release_stage_accept(${json(request)});`))
   for (const [index, sourceSha] of stagingMerges.entries()) {
-    const fragments = collectBatch(sourceSha, parent, graph)
+    // Historical provenance uses the consumers present at that exact tree.
+    // New apps must not retroactively rewrite accepted release fragments.
+    const fragments = collectBatch(sourceSha, parent, workspaceGraphAt(sourceSha))
     const request = { repository: 'Building-Suit/building-suit-monorepo', ref: 'refs/heads/stg', sourceSha, parentSha: parent, fragments }
     const accepted = index === 0
       ? parse((await Promise.all([0, 1].map(() => parallelDatabaseSql('bootstrap_first', `${jwt} select public.release_stage_accept(${json(request)});`))))[0])

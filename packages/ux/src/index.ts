@@ -5,6 +5,7 @@ export function csvCell(value: unknown): string {
 }
 
 export type BsDataTableRowAction = 'edit' | 'delete' | 'archive' | 'void'
+export { useRecordAction } from './composables/useRecordAction.ts'
 export type BsDataTableAlign = 'start' | 'center' | 'end'
 export type BsDataTableWidth = 'selection' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'content'
 export type BsDataTableSticky = 'start' | 'end'
@@ -245,3 +246,5 @@ export { readPublicLogo } from './utils/readPublicLogo.ts'
 export { useFreshPageOnRestore } from './composables/useFreshPageOnRestore.ts'
 export { usePageExitCleanup } from './composables/usePageExitCleanup.ts'
 export { usePrivateSessionLifecycle } from './composables/usePrivateSessionLifecycle.ts'
+export { usePageRevalidation } from './composables/usePageRevalidation.ts'
+export { useBlobUrl } from './composables/useBlobUrl.ts'

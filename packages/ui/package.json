@@ -361,7 +361,17 @@
     "./types/appointmentBookingPresentation": "./src/types/appointmentBookingPresentation.ts",
     "./templates/BsPublicAppointmentBookingPage.vue": "./src/templates/BsPublicAppointmentBookingPage.vue",
     "./organisms/BsBookingPolicySettings.vue": "./src/organisms/BsBookingPolicySettings.vue",
-    "./utils/appointmentReminderEmail": "./src/utils/appointmentReminderEmail.ts"
+    "./utils/appointmentReminderEmail": "./src/utils/appointmentReminderEmail.ts",
+    "./templates/BsProductPreviewPage.vue": "./src/templates/BsProductPreviewPage.vue",
+    "./templates/BsRouteStatusPage.vue": "./src/templates/BsRouteStatusPage.vue",
+    "./templates/BsAccountSessionPage.vue": "./src/templates/BsAccountSessionPage.vue",
+    "./templates/BsPracticeOverviewPage.vue": "./src/templates/BsPracticeOverviewPage.vue",
+    "./templates/BsLocationManagementPage.vue": "./src/templates/BsLocationManagementPage.vue",
+    "./templates/BsPatientDirectoryPage.vue": "./src/templates/BsPatientDirectoryPage.vue",
+    "./organisms/BsPatientIdentityFields.vue": "./src/organisms/BsPatientIdentityFields.vue",
+    "./templates/BsPatientProfilePage.vue": "./src/templates/BsPatientProfilePage.vue",
+    "./templates/BsAvailabilityPage.vue": "./src/templates/BsAvailabilityPage.vue",
+    "./templates/BsPracticeAppointmentsPage.vue": "./src/templates/BsPracticeAppointmentsPage.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

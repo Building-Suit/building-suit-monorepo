@@ -460,6 +460,126 @@
       "adapterBoundary": "Shop owns publication policy, scoped booking data and atomic commands. Shared UI owns complete booking/settings presentation; UX owns record dialogs, overlays and suspension/expiry lifecycle. Customer identifiers, contacts and tokens never become template authority.",
       "task": "SS-APPT-002",
       "migrationStatus": "registered complete public route; settings extend the canonical business template"
+    },
+    {
+      "family": "synthetic-product-preview",
+      "owner": "packages/ui",
+      "components": [
+        "BsProductPreviewPage"
+      ],
+      "adapterBoundary": "typed translated public product scope, feature availability and internal preview destinations; no auth or product queries in shared presentation",
+      "auditSources": [
+        "apps/doctor-suit/app/pages/index.vue"
+      ],
+      "task": "DOS-M1-005",
+      "migrationStatus": "implemented; candidate browser verification pending"
+    },
+    {
+      "family": "verified-account-session",
+      "owner": "packages/ui",
+      "components": [
+        "BsAccountSessionPage"
+      ],
+      "adapterBoundary": "App-owned verified identity lifecycle, provider gates and localized copy; shared templates own complete credential and current-session presentation. No metadata authority or provider calls inside UI.",
+      "task": "DOS-M1-006",
+      "migrationStatus": "registered complete synthetic account route"
+    },
+    {
+      "family": "practice-setup-overview",
+      "owner": "packages/ui",
+      "components": [
+        "BsPracticeOverviewPage"
+      ],
+      "adapterBoundary": "Typed profile/location summaries and semantic navigation; Doctor owns verified enrollment, persisted draft, optimistic commands and all data access. Shared signup enrollment adds opt-in approved-field and draft-action presentation.",
+      "task": "DOS-M1-007",
+      "migrationStatus": "registered complete synthetic owner workspace"
+    },
+    {
+      "family": "location-management",
+      "owner": "packages/ui",
+      "components": [
+        "BsLocationManagementPage"
+      ],
+      "adapterBoundary": "Complete typed location directory and record-action dialogs. Doctor owns queries, explicit scope/capabilities, draft values, idempotent commands and archive policy. Shared UX owns modal lifecycle and scope reset.",
+      "task": "DOS-M1-008",
+      "migrationStatus": "registered complete administrative route"
+    },
+    {
+      "family": "doctor-administrative-delegation",
+      "owner": "packages/ui",
+      "components": [
+        "BsAccessManagementPage",
+        "BsAccessIdentityEditor",
+        "BsInvitationAcceptancePage"
+      ],
+      "adapterBoundary": "Existing complete access and invitation templates gain opt-in controlled per-location administrative permission fields, confirmation, pagination and manual credential entry. Doctor owns verified recipient binding, one-time secret lifecycle, independent memberships, server authorization and typed commands. Shared UX owns foreground/visible-page refresh and dialog lifecycle.",
+      "task": "DOS-M1-009",
+      "migrationStatus": "registered complete synthetic team and invitation routes; granular enforcement is DOS-M1-010"
+    },
+    {
+      "family": "patient-administration",
+      "owner": "packages/ui",
+      "components": [
+        "BsPatientDirectoryPage",
+        "BsPatientIdentityFields"
+      ],
+      "adapterBoundary": "Complete scoped patient directory, recorded identity fields, duplicate-review presentation and edit/archive dialogs. Doctor owns separate opaque identity/practice relationships, entered-unverified provenance, scoped search/pagination, optimistic commands and duplicate evidence. Shared UX owns dialog lifecycle.",
+      "task": "DOS-M1-011",
+      "migrationStatus": "registered complete synthetic administrative route"
+    },
+    {
+      "family": "patient-profile-private-documents",
+      "owner": "packages/ui",
+      "components": [
+        "BsPatientProfilePage"
+      ],
+      "adapterBoundary": "Complete typed administrative patient profile, preserved activity and private attachment/version/history presentation. Doctor owns entered/unreviewed provenance, verified current scope, strict metadata and authenticated byte transport. Shared UX owns record dialogs and private preview URL disposal. No public Storage URL or clinical interpretation is supplied.",
+      "task": "DOS-M1-012",
+      "migrationStatus": "registered complete synthetic profile; acceptance in progress"
+    },
+    {
+      "family": "doctor-availability-rules",
+      "owner": "packages/ui",
+      "components": [
+        "BsAvailabilityPage"
+      ],
+      "adapterBoundary": "Complete typed weekly working-hours, exception and duration dialogs with scoped availability presentation. Doctor owns timezone-aware rules, physician-wide conflict invariants, current permissions, optimistic/idempotent commands and data. Shared UX owns confirmation and record-action lifecycle; hours edits never move appointments.",
+      "task": "DOS-M1-013",
+      "migrationStatus": "registered complete synthetic availability route; verification in progress"
+    },
+    {
+      "family": "doctor-appointments-and-waiting-queue",
+      "owner": "packages/ui",
+      "components": [
+        "BsPracticeAppointmentsPage",
+        "BsAppointmentCalendar",
+        "BsDataTable",
+        "BsEntityPicker"
+      ],
+      "adapterBoundary": "Complete appointment calendar, booking/rescheduling and state confirmation dialogs, scoped queue and paged immutable history. Doctor owns authorization, appointment state machine, patient lookup, optimistic commands and scope. Shared UX owns record actions; shared data-access owns subscription lifecycle and authoritative reconnect refresh. External notifications remain disabled.",
+      "task": "DOS-M1-014",
+      "migrationStatus": "registered complete synthetic appointment route; verification in progress"
+    },
+    {
+      "family": "doctor-read-only-audit",
+      "owner": "packages/ui",
+      "components": [
+        "BsAuditHistoryPage",
+        "BsDataTable"
+      ],
+      "adapterBoundary": "Optional read-only audit projection, controlled bounded search and paging. Doctor owns current UID/SID, practice/clinic/domain permissions, safe event projection and data. Shared defaults preserve the existing full-history consumer. No export, erasure or retention controls are enabled.",
+      "task": "DOS-M1-017",
+      "migrationStatus": "registered complete synthetic administrative and personal audit routes; verification in progress"
+    },
+    {
+      "family": "neutral-route-status",
+      "owner": "packages/ui",
+      "components": [
+        "BsRouteStatusPage"
+      ],
+      "adapterBoundary": "Complete neutral route status and known navigation destinations. Product adapters own status code, public/private metadata, HTTP response semantics and approved copy; no requested path or query is rendered.",
+      "task": "DOS-M1-019",
+      "migrationStatus": "registered neutral synthetic missing-route template; verification in progress"
     }
   ]
 }

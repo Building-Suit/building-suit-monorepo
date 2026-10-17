@@ -1,0 +1,9 @@
+{
+  "id": "dos-m1-001",
+  "task": "DOS-M1-001",
+  "suits": ["automation-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["docs/work-packages/doctor-suit/website-contract-v0.2.md", "docs/work-packages/doctor-suit/website-contract-v0.2.json", "tooling/checks/dos-m1-contract.test.mjs"],
+  "reason": "Specify the synthetic Doctor website and administrative portals, trace planned routes and server permissions to preserved milestone contracts, and verify scope without operational product registration or public release claims. Root test tooling is classified for its existing workspace consumers."
+}

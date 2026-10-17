@@ -1,0 +1,225 @@
+import { test, expect, type Page, type BrowserContext } from '@playwright/test'
+import { doctorDelegationCopy } from '../../app/utils/delegationPresentation'
+test.use({ actionTimeout: 10000 })
+const fixture = 'http://127.0.0.1:4338/__fixture'
+const base = 'http://127.0.0.1:4337'
+async function local(context: BrowserContext, ar: boolean) {
+  await context.addCookies([{ name: 'building-suit-locale',value: ar ? 'ar' : 'en',url: base }])
+  await context.route('**/*',route => ['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort())
+}
+async function login(page: Page,email: string,ar: boolean,path = '/account') {
+  await page.goto(path)
+  await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill(email)
+  await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
+  await page.getByRole('button',{ name: ar ? 'تسجيل الدخول' : 'Sign in',exact: true }).click()
+  await expect(page).toHaveURL(new RegExp(`${path}$`))
+  if (path==='/account') await expect(page.getByRole('button',{ name: ar ? 'تسجيل الخروج' : 'Sign out',exact: true })).toBeEnabled()
+  else await expect(page.getByLabel(doctorDelegationCopy(ar).codeLabel,{ exact: true })).toBeEnabled()
+}
+async function choose(page: Page,ar: boolean,clinic: string) {
+  try {
+    await page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true }).click()
+    await page.getByRole('option',{ name: new RegExp(` · ${clinic}$`) }).click()
+    // Selection is a verified asynchronous command; clicking its option does not
+    // mean its result/preference has reached the browser before a hard navigation.
+    await expect(page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true })).toContainText(clinic)
+    await expect(page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true })).toBeEnabled()
+  } catch (error) {
+    // Whitelisted lifecycle enums/counts only: no actor IDs, form values or tokens.
+    const diagnostic = await page.evaluate(() => {
+      const element = document.querySelector('#__nuxt')
+      const app = element && Reflect.get(element,'__vue_app__')
+      const nuxt = app?.config.globalProperties.$nuxt
+      const auth = nuxt?.$doctorAuth?.state; const context = nuxt?.$doctorContext?.state
+      return { path: location.pathname,returnToTeam: new URLSearchParams(location.search).get('next')==='/team',auth: auth?.phase ?? null,authPending: Boolean(auth?.pending),authError: auth?.error ?? null,providerReady: Boolean(auth?.providerReady),context: context?.phase ?? null,error: context?.error ?? null,options: context?.options?.length ?? null,current: Boolean(context?.current) }
+    }).catch(() => null)
+    console.info('Doctor context lifecycle diagnostic',diagnostic)
+    throw error
+  }
+}
+async function issue(page: Page,ar: boolean,clinic: string,all = false,two = false) {
+  const copy = doctorDelegationCopy(ar)
+  await page.goto('/team'); await choose(page,ar,clinic)
+  await page.getByRole('button',{ name: copy.invite,exact: true }).click()
+  const dialog = page.getByRole('dialog',{ name: copy.inviteTitle,exact: true })
+  await dialog.getByLabel(copy.email,{ exact: true }).fill('synthetic-secretary@example.test')
+  await dialog.getByRole('combobox',{ name: copy.preset,exact: true }).click()
+  await page.getByRole('option',{ name: all ? copy.all : copy.read,exact: true }).click()
+  const group = dialog.getByRole('group',{ name: `${copy.permissions}: ${clinic}`,exact: true })
+  await expect(group.getByRole('checkbox')).toHaveCount(12)
+  await expect(group.getByRole('checkbox',{ name: copy.capabilityLabels['audit.read'],exact: true })).toHaveCount(1)
+  if (!all) await group.getByRole('checkbox',{ name: copy.capabilityLabels['locations.read'],exact: true }).check()
+  if (two) {
+    await dialog.getByRole('checkbox',{ name: 'Clinic A2',exact: true }).check()
+    const other = dialog.getByRole('group',{ name: `${copy.permissions}: Clinic A2`,exact: true })
+    await expect(other.getByRole('checkbox',{ name: copy.capabilityLabels['patients.read'],exact: true })).toBeChecked()
+    await other.getByRole('checkbox',{ name: copy.capabilityLabels['patients.read'],exact: true }).uncheck()
+    await other.getByRole('checkbox',{ name: copy.capabilityLabels['dashboard.read'],exact: true }).uncheck()
+  }
+  await expect(dialog.getByRole('checkbox',{ name: /clinical|prescri|signing/i })).toHaveCount(0)
+  await dialog.getByRole('button',{ name: copy.create,exact: true }).click()
+  const credential = await dialog.getByLabel(copy.credentialLabel,{ exact: true }).inputValue()
+  expect(credential).toMatch(/^[0-9a-f-]{36}\.[0-9a-f]{64}$/)
+  await dialog.getByRole('button',{ name: copy.cancel,exact: true }).filter({ hasText: copy.cancel }).click()
+  return credential
+}
+async function accept(page: Page,code: string,ar: boolean) {
+  const copy = doctorDelegationCopy(ar)
+  await page.getByLabel(copy.codeLabel,{ exact: true }).fill(code)
+  await page.getByRole('button',{ name: copy.review,exact: true }).click()
+  await expect(page.getByRole('button',{ name: copy.accept,exact: true })).toBeEnabled()
+  await page.getByRole('button',{ name: copy.accept,exact: true }).click()
+  await expect(page.getByText(copy.acceptedNotice,{ exact: true })).toBeVisible()
+  await page.getByRole('button',{ name: copy.continue,exact: true }).click()
+  await expect(page).toHaveURL(/\/workspace$/)
+}
+test.beforeEach(async ({ request }) => {
+  await request.post(fixture,{ data: { reset: true } })
+  await request.post(fixture,{ data: { delegation: true } })
+})
+for (const ar of [false,true]) test(`DOS-M1-009/010 ${ar ? 'AR mobile' : 'EN desktop'} protocol fixture: two doctors, exact grants and open-tab revocation`,async ({ browser,request }) => {
+  test.setTimeout(90000)
+  const copy = doctorDelegationCopy(ar)
+  const options = { viewport: { width: ar ? 390 : 1280,height: 1000 } }
+  const ownerContext = await browser.newContext(options); const otherContext = await browser.newContext(options); const staffContext = await browser.newContext(options)
+  try {
+    await local(ownerContext,ar); await local(otherContext,ar); await local(staffContext,ar)
+    const owner = await ownerContext.newPage(); const other = await otherContext.newPage(); const staff = await staffContext.newPage()
+    for (const page of [owner,other,staff]) page.setDefaultTimeout(10000)
+    if (process.env.DOCTOR_PROTOCOL_STRESS==='true') {
+      for (const page of [owner,other,staff]) await (await page.context().newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: 4 })
+      for (const context of [ownerContext,otherContext,staffContext]) await context.route('**/rest/v1/rpc/**', async route => {
+        await new Promise(resolve => setTimeout(resolve,150))
+        await route.continue()
+      })
+    }
+    // Only fixed stage names enter CI logs; never credentials or request bodies.
+    const stage = (name: string) => console.info(`Doctor delegation stage: ${name}`)
+    stage('owner A invitation')
+    await login(owner,'synthetic-doctor-a@example.test',ar)
+    const a = await issue(owner,ar,'Clinic A1',false,true)
+    stage('owner B invitation')
+    await login(other,'synthetic-doctor-b@example.test',ar)
+    const b = await issue(other,ar,'Clinic B1',true)
+    stage('staff accepts A')
+    await login(staff,'synthetic-secretary@example.test',ar,'/invitations/accept')
+    await accept(staff,a,ar); await choose(staff,ar,'Clinic A1')
+    await staff.goto('/locations')
+    await expect(staff.getByRole('row',{ name: /Clinic A1/ })).toBeVisible()
+    await expect(staff.getByRole('row',{ name: /Clinic A2|Clinic B1/ })).toHaveCount(0)
+    await expect(staff.getByRole('button',{ name: ar ? 'إضافة موقع' : 'Add location',exact: true })).toHaveCount(0)
+    await expect(staff.getByRole('row',{ name: /Clinic A1/ }).getByRole('button')).toHaveCount(0)
+    stage('staff accepts B')
+    await staff.goto('/invitations/accept'); await accept(staff,b,ar)
+    await choose(staff,ar,'Clinic B1'); await staff.goto('/locations')
+    await expect(staff.getByRole('row',{ name: /Clinic B1/ })).toBeVisible()
+    await expect(staff.getByRole('row',{ name: /Clinic A1|Clinic A2/ })).toHaveCount(0)
+    await expect(staff.getByRole('button',{ name: ar ? 'إضافة موقع' : 'Add location',exact: true })).toHaveCount(0)
+    await staff.getByRole('row',{ name: /Clinic B1/ }).getByRole('button',{ name: ar ? 'تعديل الموقع' : 'Edit location',exact: true }).click()
+    const dirty = staff.getByRole('dialog',{ name: ar ? 'تعديل الموقع' : 'Edit location',exact: true })
+    await dirty.getByLabel(ar ? /^اسم الموقع/ : /^Location name/).fill('Synthetic discarded draft')
+    stage('owner B revokes')
+    await other.reload()
+    await other.getByRole('row',{ name: /synthetic-secretary@example.test/ }).getByRole('button',{ name: copy.revoke,exact: true }).click()
+    await other.getByRole('dialog',{ name: copy.actionTitle,exact: true }).getByRole('button',{ name: copy.confirm,exact: true }).click()
+    stage('staff observes revocation')
+    await staff.bringToFront(); await staff.evaluate(() => window.dispatchEvent(new Event('focus')))
+    await expect(dirty).toBeHidden()
+    await expect(staff.getByRole('row',{ name: /Clinic B1/ })).toHaveCount(0)
+    stage('staff returns to A')
+    await choose(staff,ar,'Clinic A1')
+    await expect(staff.getByRole('row',{ name: /Clinic A1/ })).toBeVisible()
+    stage('owner A removes location read')
+    await owner.reload()
+    await owner.getByRole('row',{ name: /synthetic-secretary@example.test/ }).getByRole('button',{ name: copy.edit,exact: true }).click()
+    const editor = owner.getByRole('dialog',{ name: copy.editTitle,exact: true })
+    await editor.getByRole('group',{ name: `${copy.permissions}: Clinic A1`,exact: true }).getByRole('checkbox',{ name: copy.capabilityLabels['locations.read'],exact: true }).uncheck()
+    await editor.getByRole('button',{ name: copy.save,exact: true }).click()
+    await expect(editor).toBeHidden()
+    stage('staff observes changed grants')
+    await staff.bringToFront(); await staff.evaluate(() => window.dispatchEvent(new Event('focus')))
+    await expect(staff.getByRole('row',{ name: /Clinic A1/ })).toHaveCount(0)
+    stage('staff cannot manage team')
+    await staff.goto('/team')
+    await expect(staff.getByRole('button',{ name: copy.invite,exact: true })).toHaveCount(0)
+    await expect(staff.getByRole('row',{ name: /synthetic-secretary@example.test/ })).toHaveCount(0)
+    stage('revoked invitation remains denied')
+    await staff.goto('/invitations/accept')
+    await staff.getByLabel(copy.codeLabel,{ exact: true }).fill(b)
+    await staff.getByRole('button',{ name: copy.review,exact: true }).click()
+    await expect(staff.getByText(copy.errors.denied,{ exact: true })).toBeVisible()
+    stage('verify independent memberships')
+    const result = await (await request.get(fixture)).json()
+    expect(result.delegation.memberships).toHaveLength(2)
+    const membershipA = result.delegation.memberships.find((item: { practice_id: string }) => item.practice_id.endsWith('1'))
+    const membershipB = result.delegation.memberships.find((item: { practice_id: string }) => item.practice_id.endsWith('2'))
+    expect(membershipA.status).toBe('active'); expect(membershipB.status).toBe('revoked')
+    expect(membershipA.grants.find((item: { location_id: string }) => item.location_id.endsWith('2')).capabilities).toEqual(['appointments.read'])
+    expect(result.delegation.locations.find((item: { name: string }) => item.name==='Clinic B1')).toBeTruthy()
+    expect(JSON.stringify(result)).not.toContain(a.split('.')[1]); expect(JSON.stringify(result)).not.toContain(b.split('.')[1])
+    expect(await staff.evaluate(() => document.documentElement.scrollWidth<=innerWidth+1)).toBe(true)
+  } finally {
+    // Closing an already timed-out context must not replace the original action error.
+    await Promise.allSettled([ownerContext,otherContext,staffContext].map(async context => {
+      try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() }
+    }))
+  }
+})
+test('DOS-M1-009 protocol fixture: wrong recipient and expired pending codes never grant access',async ({ browser,request }) => {
+  const copy = doctorDelegationCopy(false)
+  const context = await browser.newContext(); const strangerContext = await browser.newContext()
+  try {
+    await local(context,false); await local(strangerContext,false)
+    const stage = (name: string) => console.info(`Doctor recipient stage: ${name}`)
+    stage('owner invitation')
+    const owner = await context.newPage(); await login(owner,'synthetic-doctor-a@example.test',false)
+    const code = await issue(owner,false,'Clinic A1')
+    stage('wrong recipient sign-in')
+    const outsider = await strangerContext.newPage(); await login(outsider,'synthetic-outsider@example.test',false,'/invitations/accept')
+    await outsider.getByLabel(copy.codeLabel,{ exact: true }).fill(code)
+    await outsider.getByRole('button',{ name: copy.review,exact: true }).click()
+    await expect(outsider.getByText(copy.errors.denied,{ exact: true })).toBeVisible()
+    stage('switch account')
+    await outsider.getByRole('button',{ name: copy.switchAccount,exact: true }).click()
+    await expect(outsider).toHaveURL(/\/sign-in\?next=/)
+    expect(new URL(outsider.url()).searchParams.get('next')).toBe('/invitations/accept')
+    expect(outsider.url()).not.toContain(code)
+    await outsider.getByLabel(/^Email/).fill('synthetic-secretary@example.test')
+    await outsider.getByLabel(/^Password/).fill('synthetic-password-only')
+    await outsider.getByRole('button',{ name: 'Sign in',exact: true }).click()
+    await expect(outsider).toHaveURL(/\/invitations\/accept$/)
+    await expect(outsider.getByLabel(copy.codeLabel,{ exact: true })).toHaveValue('')
+    stage('expired invitation')
+    await request.post(fixture,{ data: { delegationAction: { kind: 'expire',id: code.split('.')[0] } } })
+    await outsider.getByLabel(copy.codeLabel,{ exact: true }).fill(code)
+    await outsider.getByRole('button',{ name: copy.review,exact: true }).click()
+    await expect(outsider.getByText(copy.errors.denied,{ exact: true })).toBeVisible()
+    const state = await (await request.get(fixture)).json(); expect(state.delegation.memberships).toHaveLength(0)
+  } finally {
+    await Promise.allSettled([context,strangerContext].map(async context => {
+      try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() }
+    }))
+  }
+})
+
+test('DOS-M1-009: foreground session reconciliation restores the protected selector after route loading',async ({ browser }) => {
+  test.setTimeout(60000)
+  const context = await browser.newContext()
+  try {
+    await local(context,false)
+    const page = await context.newPage()
+    await login(page,'synthetic-doctor-a@example.test',false)
+    await page.goto('/team'); await choose(page,false,'Clinic A1')
+    for (let cycle=0;cycle<4;cycle++) {
+      await page.reload()
+      const verified = page.waitForResponse(response => new URL(response.url()).pathname==='/rest/v1/rpc/doctor_session_context')
+      // The actual SDK handles visibility return and rechecks the same session.
+      await page.evaluate(() => { document.dispatchEvent(new Event('visibilitychange')); window.dispatchEvent(new Event('focus')) })
+      await verified
+      await choose(page,false,'Clinic A1')
+      await expect(page.getByRole('button',{ name: 'Invite secretary',exact: true })).toBeVisible()
+    }
+  } finally {
+    await Promise.allSettled([context.unrouteAll({ behavior: 'ignoreErrors' })]); await context.close()
+  }
+})

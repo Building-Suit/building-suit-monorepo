@@ -1,0 +1,9 @@
+{
+  "id": "doctor-suit-milestone-contracts",
+  "task": "DOS-PLAN-001",
+  "suits": ["automation-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["docs/work-packages/doctor-suit/planning-v0.4"],
+  "reason": "Review-only Doctor milestone planning and Automation import-contract documentation. No product implementation, operational registration, runtime activation or public release content is introduced."
+}

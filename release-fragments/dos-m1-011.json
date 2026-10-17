@@ -1,0 +1,26 @@
+{
+  "id": "dos-m1-011",
+  "task": "DOS-M1-011",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsPatientDirectoryPage.vue",
+    "packages/ui/src/organisms/BsPatientIdentityFields.vue",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/doctor-suit/patients-evidence.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Add the synthetic Doctor patient directory with scoped server search/pagination, separate opaque identities and practice relationships, entered-unverified recorded fields, explicit duplicate review, retry-safe optimistic corrections and preserved archive history. New shared presentation is additive; existing public consumers retain their behavior. No patient Auth account, cross-practice merge or clinical/identity claim is introduced."
+}

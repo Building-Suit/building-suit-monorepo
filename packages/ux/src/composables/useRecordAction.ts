@@ -1,4 +1,5 @@
-import { recordSnapshot } from '../index'
+import { computed, ref, watch } from 'vue'
+import { recordSnapshot } from '../index.ts'
 
 export type RecordActionMode = 'create' | 'edit'
 
@@ -10,6 +11,7 @@ export function useRecordAction<T>(getValue: () => T, externalVisibility?: { rea
   const error = ref<string | null>(null)
   const mode = ref<RecordActionMode>('create')
   const baseline = ref('')
+  let generation = 0
   const fingerprint = () => recordSnapshot(getValue())
   const dirty = computed(() => trackedVisibility.value && fingerprint() !== baseline.value)
   watch(() => trackedVisibility.value, open => {
@@ -34,22 +36,33 @@ export function useRecordAction<T>(getValue: () => T, externalVisibility?: { rea
     error.value = null
     visible.value = false
   }
+  /** Account/context loss must not let an older command restore or close a new form. */
+  function reset() {
+    generation++
+    visible.value = false
+    pending.value = false
+    error.value = null
+    mode.value = 'create'
+    markSaved()
+  }
   async function run(command: () => void | Promise<void>, describeError: (cause: unknown) => string): Promise<boolean> {
     if (pending.value) return false
     pending.value = true
     error.value = null
+    const captured = generation
     try {
       await command()
+      if (captured !== generation) return false
       complete()
       return true
     }
     catch (cause) {
-      fail(describeError(cause))
+      if (captured === generation) fail(describeError(cause))
       return false
     }
     finally {
-      pending.value = false
+      if (captured === generation) pending.value = false
     }
   }
-  return { visible, pending, dirty, error, mode, open, create, edit, run, fail, complete, markSaved }
+  return { visible, pending, dirty, error, mode, open, create, edit, run, fail, complete, markSaved, reset }
 }
