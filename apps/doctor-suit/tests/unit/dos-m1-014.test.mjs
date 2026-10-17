@@ -55,11 +55,12 @@ test('reschedule history rejects unbounded or malformed snapshots',() => {
 
 test('revision-only live binding ignores delete events and disposes obsolete callbacks',async () => {
   const { createDoctorAppointmentsRealtime } = await import('../../app/utils/appointmentsRealtime.ts')
-  const bindings = [];let refreshes = 0;let removed = 0
-  const channel = { on(_type,filter,callback) { bindings.push({ filter,callback });return channel },subscribe(callback) { callback('SUBSCRIBED');return channel } }
-  const client = { channel: () => channel,removeChannel: async () => { removed++;return 'ok' } }
+  const bindings = [];let refreshes = 0;let removed = 0;let systemReady
+  const channel = { on(type,filter,callback) { if(type==='system')systemReady = callback;else bindings.push({ filter,callback });return channel },subscribe(callback) { callback('SUBSCRIBED');systemReady({ extension: 'postgres_changes',status: 'ok' });return channel } }
+  let capturedOptions
+  const client = { channel: (_name,options) => { capturedOptions = options;return channel },removeChannel: async () => { removed++;return 'ok' } }
   const f = fixture();const live = createDoctorAppointmentsRealtime(client,() => {})
-  await live.update(f.scope(),async () => { refreshes++ });await new Promise(resolve => setTimeout(resolve,300));assert.equal(refreshes,1)
+  await live.update(f.scope(),async () => { refreshes++ });await new Promise(resolve => setTimeout(resolve,300));assert.equal(refreshes,1);assert.deepEqual(capturedOptions,{ config: { postgres_changes_options: { wait: true } } })
   for(const binding of bindings)if(['DELETE','*'].includes(binding.filter.event))binding.callback()
   await new Promise(resolve => setTimeout(resolve,300));assert.equal(refreshes,1,'delete events must not enter a row-authorized revision channel')
   await live.update(null,async () => {});for(const binding of bindings)binding.callback();await new Promise(resolve => setTimeout(resolve,300));assert.equal(refreshes,1);assert.equal(removed,1);await live.dispose()
@@ -76,4 +77,18 @@ test('failure-only Realtime diagnostics reject arbitrary output, extra fields an
   const wire = createDoctorRealtimeWireProbe();wire.logger('receive',`opaque-topic postgres_changes ${secret}`,{ headers: { Authorization: secret } });wire.logger('receive','opaque-topic system', { status: 'error',message: secret })
   wire.logger('receive','opaque-topic phx_reply',{ status: 'ok',response: { postgres_changes: [{ id: 0 },{ id: 7 },{ id: 'opaque-wire-binding' }] } });wire.logger('receive','opaque-topic postgres_changes',{ ids: [7],data: { type: 'UPDATE',record: { arbitrary: secret } } });
   assert.deepEqual(wire.summary(),{ change_frames: 2,insert_frames: 0,update_frames: 1,unrecognized_change_frames: 1,change_matching_ids: 1,join_bindings: 3,join_numeric_ids: 2,join_string_ids: 1,join_zero_ids: 1,system_ok: 0,system_error: 1,client_error: 0 });assert.equal(JSON.stringify(wire.summary()).includes(secret),false)
+})
+
+test('Doctor live status and reconciliation wait for the provider activation acknowledgement',async () => {
+  const { createDoctorAppointmentsRealtime } = await import('../../app/utils/appointmentsRealtime.ts')
+  let admitted;let systemReady;let refreshes = 0;let options
+  const channel = { on(type,_filter,callback) { if(type==='system')systemReady = callback;return channel },subscribe(callback) { admitted = callback;return channel } }
+  const client = { channel(_name,value) { options = value;return channel },removeChannel: async () => 'ok' }
+  const f = fixture();const live = createDoctorAppointmentsRealtime(client,() => {})
+  await live.update(f.scope(),async () => { refreshes++ })
+  assert.deepEqual(options,{ config: { postgres_changes_options: { wait: true } } })
+  await new Promise(resolve => setTimeout(resolve,300));assert.equal(live.connected,false);assert.equal(refreshes,0)
+  admitted('SUBSCRIBED');await new Promise(resolve => setTimeout(resolve,300));assert.equal(live.connected,false);assert.equal(refreshes,0)
+  systemReady({ extension: 'postgres_changes',status: 'ok' });await new Promise(resolve => setTimeout(resolve,300));assert.equal(live.connected,true);assert.equal(refreshes,1)
+  await live.dispose()
 })

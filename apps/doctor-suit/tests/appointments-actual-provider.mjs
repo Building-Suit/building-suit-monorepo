@@ -17,10 +17,16 @@ export async function verifyDoctorAppointmentProvider({ api,key,a,b,rpc,expect,s
   } }
   async function until(condition,label) { const deadline = Date.now()+20000;while(!condition()) { expect(!invalidPayload,'Actual Realtime emitted unexpected data');expect(Date.now()<deadline,label);await wait(50) } }
   async function subscribe(client,locationId,callback) {
-    const channel = client.channel(`synthetic-queue-${randomUUID()}`)
+    const channel = client.channel(`synthetic-queue-${randomUUID()}`,{ config: { postgres_changes_options: { wait: true } } })
     for(const event of ['INSERT','UPDATE'])channel.on('postgres_changes',{ schema: 'public',table: 'appointment_queue_revisions',event,filter: `location_id=eq.${locationId}` },callback)
     channels.push({ client,channel })
-    await new Promise((resolve,reject) => { const timer = setTimeout(() => reject(new Error('Actual Realtime join deadline')),20000);channel.subscribe(status => { if(status==='SUBSCRIBED') { clearTimeout(timer);resolve() } else if(['CHANNEL_ERROR','TIMED_OUT'].includes(status)) { clearTimeout(timer);reject(new Error('Actual Realtime join failed')) } }) })
+    await new Promise((resolve,reject) => {
+      let joined = false;let ready = false
+      const timer = setTimeout(() => reject(new Error('Actual Realtime join deadline')),20000)
+      const finish = () => { if(joined && ready) { clearTimeout(timer);resolve() } }
+      channel.on('system',{},payload => { if(payload.extension!=='postgres_changes')return;if(payload.status==='ok') { ready = true;finish() } else if(payload.status==='error') { clearTimeout(timer);reject(new Error('Actual Postgres subscription failed')) } })
+      channel.subscribe(status => { if(status==='SUBSCRIBED') { joined = true;finish() } else if(['CHANNEL_ERROR','TIMED_OUT'].includes(status)) { clearTimeout(timer);reject(new Error('Actual Realtime join failed')) } })
+    })
     return channel
   }
   async function increment(practiceId,locationId) { await advanceRevision(practiceId,locationId) }

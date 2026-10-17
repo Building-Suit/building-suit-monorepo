@@ -30,3 +30,7 @@ Authoritative plans: PR345 head `4ca7110f4d6efa828e0b41213e5c059bf02ba9db`, plan
 - Clinical identity, interpretation, prescribing/signing authority, approved medication/catalogue data, legal retention and provider delivery approvals remain genuine gates. Synthetic implementation may check disabled paths and validate existing evidence; it cannot approve missing authority.
 
 Update this file with exact candidate PRs, passing/failing/unrun commands and the remaining criterion portions. Never convert a partial feature or an inherited fixture result into full milestone acceptance.
+
+DOS-M1-014 follow-up: actual job117312964145 missed first booking but subsequent guarded A/B controls and matched wire frames passed. Pinned SDK documents early channel admission; Doctor now opts into the supported Postgres activation wait. Full real lifecycle/Realtime acceptance remains open until the next exact-head job passes. DOS-M1-015 has a clean child worktree/design at published parent d02f12b0; no dashboard product implementation is yet present.
+
+DOS-M1-014: job117314320672 proves SDK wait option alone insufficient; explicit channel + Postgres system-ready barrier implemented through a new shared data-access adapter, without altering pinned Foundation bytes. Provider acceptance still pending. DOS-M1-015 controller/source-link/shared-overview work is in its isolated child worktree with nine passing units; browser/SQL/full checks and publication remain pending.
