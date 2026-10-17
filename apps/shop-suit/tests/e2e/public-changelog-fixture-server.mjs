@@ -15,11 +15,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     res.writeHead(response.status, { 'content-type': 'application/json' })
     res.end(JSON.stringify(response.body))
   })
-  api.listen(46943, '127.0.0.1', () => {
+  api.listen(0, '127.0.0.1', () => {
     const child = spawn(process.execPath, ['apps/shop-suit/.output/server/index.mjs'], {
       stdio: 'inherit', env: {
         ...process.env, PORT: '4393', HOST: '127.0.0.1',
-        SUPABASE_URL: 'http://127.0.0.1:46943', NUXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:46943',
+        SUPABASE_URL: `http://127.0.0.1:${api.address().port}`, NUXT_PUBLIC_SUPABASE_URL: `http://127.0.0.1:${api.address().port}`,
         SUPABASE_KEY: 'local-fixture-publishable-key', NUXT_PUBLIC_SUPABASE_KEY: 'local-fixture-publishable-key',
         NUXT_RELEASE_CATALOG_URL: '', NUXT_RELEASE_CATALOG_PUBLISHABLE_KEY: '',
       },

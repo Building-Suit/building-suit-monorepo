@@ -11,8 +11,8 @@ import { doctorMilestoneReceiptIssues } from './milestone-evidence.mjs'
 const root = fileURLToPath(new URL('../../../',import.meta.url))
 const packetPath = 'docs/work-packages/doctor-suit/implementation/m1-acceptance-inputs.json'
 const backendCase = 'Shop signup, product persistence and independent Ledger sessions'
-const shopChangelogEvidenceFiles = new Set(['apps/shop-suit/tests/e2e/public-changelog.config.ts','apps/shop-suit/tests/e2e/public-changelog.spec.ts','apps/shop-suit/tests/e2e/public-changelog.setup.mjs','apps/shop-suit/tests/e2e/public-changelog-fixture-server.mjs','apps/shop-suit/tests/unit/public-changelog-harness.test.mjs','tooling/releases/catalog-disposable.mjs'])
-export function doctorEvidenceInputPathAllowed(file) { return typeof file==='string' && !file.includes('..') && !path.isAbsolute(file) && (['apps/doctor-suit/','docs/work-packages/doctor-suit/','packages/testing/','.github/workflows/','release-fragments/'].some(prefix => file.startsWith(prefix)) || shopChangelogEvidenceFiles.has(file)) }
+const shopEvidenceFiles = new Set(['apps/shop-suit/tests/e2e/public-changelog.config.ts','apps/shop-suit/tests/e2e/public-changelog.spec.ts','apps/shop-suit/tests/e2e/public-changelog.setup.mjs','apps/shop-suit/tests/e2e/public-changelog-fixture-server.mjs','apps/shop-suit/tests/unit/public-changelog-harness.test.mjs','tooling/releases/catalog-disposable.mjs','apps/shop-suit/tests/e2e/website-launch-fixture-server.mjs','apps/shop-suit/tests/e2e/ss-web-launch-001.spec.ts','apps/shop-suit/tests/e2e/website-hostname-suffix.config.ts','apps/shop-suit/tests/e2e/website-hostname-suffix.spec.ts','apps/shop-suit/tests/e2e/website-hostname-owner.config.ts','apps/shop-suit/tests/e2e/website-hostname-owner.spec.ts','apps/shop-suit/tests/unit/website-launch-lifecycle.test.mjs'])
+export function doctorEvidenceInputPathAllowed(file) { return typeof file==='string' && !file.includes('..') && !path.isAbsolute(file) && (['apps/doctor-suit/','docs/work-packages/doctor-suit/','packages/testing/','.github/workflows/','release-fragments/'].some(prefix => file.startsWith(prefix)) || shopEvidenceFiles.has(file)) }
 export function doctorAggregateBrowserScope({ eventName,prNumber,ref,headHasManifest,parentHasManifest }) { return (eventName==='pull_request' && prNumber===345) || (eventName==='push' && ref==='refs/heads/stg' && headHasManifest && !parentHasManifest) }
 export function summarizeDoctorWorkspace(report,candidateSha) {
   const cases = []
@@ -40,6 +40,13 @@ export function doctorShopLaunchEvidenceIssues(run,job,head,branch) {
   if(run?.head_sha!==head || run?.head_branch!==branch || run?.event!=='pull_request' || run?.path!=='.github/workflows/shop-website-launch-disposable.yml' || run?.status!=='completed' || run?.conclusion!=='success')issues.push('shop-launch-workflow')
   if(job?.name!=='website-launch' || job?.status!=='completed' || job?.conclusion!=='success')issues.push('shop-launch-job')
   for(const name of ['Full maintained Shop regression and public website SQL matrix','Run pnpm exec playwright test -c apps/shop-suit/tests/e2e/public-changelog.config.ts','Run pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-web-launch-001.config.ts'])if(job?.steps?.find(step => step.name===name)?.conclusion!=='success')issues.push('shop-launch-required-step')
+  return issues
+}
+export function doctorShopHostnameEvidenceIssues(run,job,head,branch) {
+  const issues = []
+  if(run?.head_sha!==head || run?.head_branch!==branch || run?.event!=='pull_request' || run?.path!=='.github/workflows/shop-website-hostname-disposable.yml' || run?.status!=='completed' || run?.conclusion!=='success')issues.push('shop-hostname-workflow')
+  if(job?.name!=='website-hostnames' || job?.status!=='completed' || job?.conclusion!=='success')issues.push('shop-hostname-job')
+  for(const name of ['Run pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-web-launch-001.config.ts','Run pnpm exec playwright test -c apps/shop-suit/tests/e2e/website-hostname-suffix.config.ts','Run pnpm exec playwright test -c apps/shop-suit/tests/e2e/website-hostname-owner.config.ts'])if(job?.steps?.find(step => step.name===name)?.conclusion!=='success')issues.push('shop-hostname-required-step')
   return issues
 }
 export function summarizeDoctorEvidenceLog(value) {
@@ -71,12 +78,13 @@ async function evaluate(out) {
   async function api(endpoint) { const result = await fetch(`https://api.github.com/repos/Building-Suit/building-suit-monorepo/${endpoint}`,{ headers: { Authorization: `Bearer ${token}`,Accept: 'application/vnd.github+json' },signal: AbortSignal.timeout(20000) });if(!result.ok)throw new Error('GITHUB_EVIDENCE_READ_FAILED');return result.json() }
   const run = await api(`actions/runs/${runId}`);if(run.head_sha!==head || run.head_branch!==packet.candidateRef)issues.push('workflow-head')
   const staging = await api('branches/stg');if(staging.commit.sha!==base)issues.push('staging-advanced')
-  let doctorRun,shopLaunchRun;const deadline = Date.now()+480000
+  let doctorRun,shopLaunchRun,shopHostnameRun;const deadline = Date.now()+480000
   while(Date.now()<deadline) {
-    const [runs,shopRuns] = await Promise.all([api(`actions/workflows/doctor-disposable.yml/runs?head_sha=${head}&per_page=100`),api(`actions/workflows/shop-website-launch-disposable.yml/runs?head_sha=${head}&per_page=100`)])
+    const [runs,shopRuns,hostnameRuns] = await Promise.all([api(`actions/workflows/doctor-disposable.yml/runs?head_sha=${head}&per_page=100`),api(`actions/workflows/shop-website-launch-disposable.yml/runs?head_sha=${head}&per_page=100`),api(`actions/workflows/shop-website-hostname-disposable.yml/runs?head_sha=${head}&per_page=100`)])
     doctorRun = runs.workflow_runs.find(row => row.head_sha===head && row.head_branch==='codex/doctor-suit/milestone-contracts' && row.event==='pull_request')
     shopLaunchRun = shopRuns.workflow_runs.find(row => row.head_sha===head && row.head_branch===packet.candidateRef && row.event==='pull_request')
-    if(doctorRun?.status==='completed' && shopLaunchRun?.status==='completed')break
+    shopHostnameRun = hostnameRuns.workflow_runs.find(row => row.head_sha===head && row.head_branch===packet.candidateRef && row.event==='pull_request')
+    if(doctorRun?.status==='completed' && shopLaunchRun?.status==='completed' && shopHostnameRun?.status==='completed')break
     await new Promise(resolve => setTimeout(resolve,10000))
   }
   if(!doctorRun || doctorRun.head_sha!==head || doctorRun.conclusion!=='success')issues.push('doctor-workflow')
@@ -85,8 +93,11 @@ async function evaluate(out) {
   const shopLaunchJobs = shopLaunchRun ? (await api(`actions/runs/${shopLaunchRun.id}/jobs?per_page=100`)).jobs : []
   const shopLaunchJob = shopLaunchJobs.find(row => row.name==='website-launch')
   issues.push(...doctorShopLaunchEvidenceIssues(shopLaunchRun,shopLaunchJob,head,packet.candidateRef))
+  const shopHostnameJobs = shopHostnameRun ? (await api(`actions/runs/${shopHostnameRun.id}/jobs?per_page=100`)).jobs : []
+  const shopHostnameJob = shopHostnameJobs.find(row => row.name==='website-hostnames')
+  issues.push(...doctorShopHostnameEvidenceIssues(shopHostnameRun,shopHostnameJob,head,packet.candidateRef))
   const observed = {}
-  await Promise.all([['unit',rootJobs.find(row => row.name==='review')],['workspace',rootJobs.find(row => row.name==='verify')],['shop-backend',rootJobs.find(row => row.name==='doctor-m1-shop-backend')],['shop-launch',shopLaunchJob],...doctorJobs.map(job => [job.name,job])].map(async ([name,job]) => {
+  await Promise.all([['unit',rootJobs.find(row => row.name==='review')],['workspace',rootJobs.find(row => row.name==='verify')],['shop-backend',rootJobs.find(row => row.name==='doctor-m1-shop-backend')],['shop-launch',shopLaunchJob],['shop-hostname',shopHostnameJob],...doctorJobs.map(job => [job.name,job])].map(async ([name,job]) => {
     if(!job) { issues.push(`log:${name}:missing`);return }
     for(let attempt=0;attempt<3;attempt++) {
       try {
@@ -108,6 +119,7 @@ async function evaluate(out) {
   if(!observed['shop-backend']?.actualShopBackend || !observed['shop-backend']?.browserPassed.includes(counts.shopBackend))issues.push('actual-shop-backend-result')
   if(!observed['doctor-actual-provider']?.actualCombined || !observed['doctor-actual-provider']?.actualFinal)issues.push('actual-combined-result')
   if(!observed['shop-launch']?.browserPassed.includes(counts.changelogPassed) || !observed['shop-launch']?.browserPassed.includes(counts.shopLaunchPassed))issues.push('shop-launch-browser-population')
+  if(!observed['shop-hostname']?.browserPassed.includes(counts.shopLaunchPassed) || !observed['shop-hostname']?.browserPassed.includes(counts.shopHostnameSuffixPassed) || !observed['shop-hostname']?.browserPassed.includes(counts.shopHostnameOwnerPassed))issues.push('shop-hostname-browser-population')
   const commands = []
   function command(id,jobs,jobName,stepName,argv) {
     const job = jobs.find(row => row.name===jobName);const step = job?.steps.find(row => row.name===stepName)
@@ -127,6 +139,9 @@ async function evaluate(out) {
   command('shop-launch-sql',shopLaunchJobs,'website-launch','Full maintained Shop regression and public website SQL matrix',['node','tooling/database/test-shop-website-launch-local.mjs'])
   command('shop-launch-changelog',shopLaunchJobs,'website-launch','Run pnpm exec playwright test -c apps/shop-suit/tests/e2e/public-changelog.config.ts',['pnpm','exec','playwright','test','-c','apps/shop-suit/tests/e2e/public-changelog.config.ts'])
   command('shop-launch',shopLaunchJobs,'website-launch','Run pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-web-launch-001.config.ts',['pnpm','exec','playwright','test','-c','apps/shop-suit/tests/e2e/ss-web-launch-001.config.ts'])
+  command('shop-hostname-launch',shopHostnameJobs,'website-hostnames','Run pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-web-launch-001.config.ts',['pnpm','exec','playwright','test','-c','apps/shop-suit/tests/e2e/ss-web-launch-001.config.ts'])
+  command('shop-hostname-suffix',shopHostnameJobs,'website-hostnames','Run pnpm exec playwright test -c apps/shop-suit/tests/e2e/website-hostname-suffix.config.ts',['pnpm','exec','playwright','test','-c','apps/shop-suit/tests/e2e/website-hostname-suffix.config.ts'])
+  command('shop-hostname-owner',shopHostnameJobs,'website-hostnames','Run pnpm exec playwright test -c apps/shop-suit/tests/e2e/website-hostname-owner.config.ts',['pnpm','exec','playwright','test','-c','apps/shop-suit/tests/e2e/website-hostname-owner.config.ts'])
   command('sql',doctorJobs,'doctor-sql','Apply actual migrations and assert SQL/RLS authorization with synthetic fixtures',['node','apps/doctor-suit/tests/disposable-postgres.mjs'])
   command('doctor-public',doctorJobs,'doctor-browser','Verify synthetic Doctor preview in both locales, themes and viewport sizes',['pnpm','exec','playwright','test','-c','apps/doctor-suit/tests/e2e/playwright.config.ts'])
   command('doctor-auth',doctorJobs,'doctor-auth-protocol','Verify account protocol journeys without external mail or credential artifacts',['pnpm','exec','playwright','test','-c','apps/doctor-suit/tests/e2e/playwright.auth.config.ts'])

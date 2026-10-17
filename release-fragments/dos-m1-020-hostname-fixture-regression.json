@@ -1,0 +1,20 @@
+{
+  "id": "dos-m1-020-hostname-fixture-regression",
+  "task": "DOS-M1-020",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/tests/e2e/website-launch-fixture-server.mjs",
+    "apps/shop-suit/tests/e2e/ss-web-launch-001.spec.ts",
+    "apps/shop-suit/tests/e2e/website-hostname-suffix.config.ts",
+    "apps/shop-suit/tests/e2e/website-hostname-suffix.spec.ts",
+    "apps/shop-suit/tests/e2e/public-changelog-fixture-server.mjs",
+    "apps/shop-suit/tests/unit/website-launch-lifecycle.test.mjs",
+    "apps/doctor-suit/tests/m1-aggregate-evidence.mjs",
+    "apps/doctor-suit/tests/unit/dos-m1-020-evidence.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/m1-aggregate.md",
+    "docs/work-packages/doctor-suit/implementation/m1-acceptance-inputs.json"
+  ],
+  "reason": "Prevent Shop hostname fixture collisions by moving fixed launch control endpoints below the OS outbound ephemeral range, sharing those port constants, awaiting owned API/child teardown and allocating the unrelated changelog API atomically. Preserve every launch/suffix/owner browser assertion, reject foreign listener reuse, and require exact-head hostname qualification in the independent M1 evidence gate. Internal synthetic loopback test infrastructure only; no product behavior, hosted state, credentials, clinical authority, activation or deployment."
+}

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { summarizeDoctorWorkspace,doctorWorkspaceEvidenceIssues,doctorAggregateClaimIssues,doctorAggregateBrowserScope,summarizeDoctorEvidenceLog,doctorShopLaunchEvidenceIssues,doctorEvidenceInputPathAllowed } from '../m1-aggregate-evidence.mjs'
+import { summarizeDoctorWorkspace,doctorWorkspaceEvidenceIssues,doctorAggregateClaimIssues,doctorAggregateBrowserScope,summarizeDoctorEvidenceLog,doctorShopLaunchEvidenceIssues,doctorEvidenceInputPathAllowed,doctorShopHostnameEvidenceIssues } from '../m1-aggregate-evidence.mjs'
 const head = '1'.repeat(40)
 function report() { return { stats: { expected: 111,skipped: 1,unexpected: 0,flaky: 0 },suites: [{ specs: Array.from({ length: 112 },(_,n) => ({ file: 'synthetic.spec.ts',title: n===111 ? 'Shop signup, product persistence and independent Ledger sessions' : `Synthetic case ${n}`,tests: [{ expectedStatus: n===111 ? 'skipped' : 'passed',results: [{ status: n===111 ? 'skipped' : 'passed',error: { message: 'PRIVATE_PAYLOAD_SENTINEL' } }] }] })) }] } }
 function packet() { return { independentAcceptance: 'pending',domainApprovalGranted: false,integration: 'not-claimed',deployment: 'not-performed',tasks: Array.from({ length: 20 },(_,n) => ({ taskId: `DOS-M1-${String(n+1).padStart(3,'0')}`,canonicalTaskSha256: 'a'.repeat(64) })) } }
@@ -36,4 +36,19 @@ test('every bound acceptance input is reviewable without allowing unrelated Shop
   const manifest=JSON.parse(readFileSync(new URL('../../../../docs/work-packages/doctor-suit/implementation/m1-acceptance-inputs.json',import.meta.url),'utf8'))
   for(const file of Object.keys(manifest.inputHashes))assert.equal(doctorEvidenceInputPathAllowed(file),true,file)
   for(const file of ['../release-fragments/private.json','apps/doctor-suit/../../.env','/apps/doctor-suit/tests/proof.mjs','apps/shop-suit/app/composables/usePlans.ts','tooling/releases/publisher.mjs','tooling/releases/catalog-disposable.mjs/child','apps/shop-suit/tests/unit/unreviewed.test.mjs',null,{}])assert.equal(doctorEvidenceInputPathAllowed(file),false)
+})
+
+test('hostname suffix and owner qualification cannot be skipped behind green launch or Doctor results',() => {
+  const branch='codex/doctor-suit/milestone-contracts'
+  const run={ head_sha: head,head_branch: branch,event: 'pull_request',path: '.github/workflows/shop-website-hostname-disposable.yml',status: 'completed',conclusion: 'success' }
+  const job={ name: 'website-hostnames',status: 'completed',conclusion: 'success',steps: ['ss-web-launch-001','website-hostname-suffix','website-hostname-owner'].map(name => ({ name: `Run pnpm exec playwright test -c apps/shop-suit/tests/e2e/${name}.config.ts`,conclusion: 'success' })) }
+  assert.deepEqual(doctorShopHostnameEvidenceIssues(run,job,head,branch),[])
+  for(const conclusion of ['failure','skipped','cancelled',null]) {
+    assert.ok(doctorShopHostnameEvidenceIssues({ ...run,conclusion },job,head,branch).length)
+    assert.ok(doctorShopHostnameEvidenceIssues(run,{ ...job,conclusion },head,branch).length)
+    for(let index=0;index<3;index++)assert.ok(doctorShopHostnameEvidenceIssues(run,{ ...job,steps: job.steps.map((step,n) => n===index ? { ...step,conclusion } : step) },head,branch).length)
+  }
+  for(const patch of [{ head_sha: '2'.repeat(40) },{ head_branch: 'stg' },{ event: 'push' },{ path: '.github/workflows/shop-website-launch-disposable.yml' }])assert.ok(doctorShopHostnameEvidenceIssues({ ...run,...patch },job,head,branch).length)
+  assert.ok(doctorShopHostnameEvidenceIssues(run,{ ...job,steps: [] },head,branch).length)
+  assert.ok(doctorShopHostnameEvidenceIssues(undefined,undefined,head,branch).length)
 })
