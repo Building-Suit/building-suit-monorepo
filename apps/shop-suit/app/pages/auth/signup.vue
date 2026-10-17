@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BsSignupForm, BsSignupFeatures, BsSignupView, BsSignupCopy, BsSignupVerificationCopy, BsSignupProduct, BsSignupChoices, BsSignupLinks } from '@building-suit/ui/types/signupPresentation'
 
+import { verifiedGoogleIdentity } from '~/utils/googleIdentity'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { BusinessMode } from '~/utils/businessMode'
 import { BUSINESS_MODES } from '~/utils/businessMode'
@@ -11,12 +12,15 @@ const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
 const { locale, t } = useI18n()
 const { step, advance, back, reset: resetWizard } = useSignupWizard(2)
 const verification = useVerificationTimer()
-const { currentId, loadShops } = useShop()
+const { currentId, loadShops, loadError } = useShop()
 const form = reactive({
   displayName: '', email: '', password: '', shopName: '', businessMode: 'mixed' as BusinessMode,
   mainLocationName: '', mainLocationCode: '', mainLocationAddress: '', mainLocationPhone: '',
 })
 const pending = ref(false)
+const identityLoading = ref(true)
+const identityFailed = ref(false)
+const providerIdentity = ref<ReturnType<typeof verifiedGoogleIdentity>>(null)
 const errorMessage = ref('')
 const noticeMessage = ref('')
 const awaitingOtp = ref(false)
@@ -86,7 +90,13 @@ async function provisionShop() {
     showRecovery()
     return
   }
+  const google = verifiedGoogleIdentity(data.user)
+  if (google) {
+    const { error: nameError } = await supabase.auth.updateUser({ data: { display_name: google.name || form.displayName.trim() } })
+    if (nameError) throw nameError
+  }
   await loadShops({ force: true })
+  if (loadError.value) throw new Error('Shop lookup unavailable')
   let created = false
   if (!currentId.value) {
     const { error } = await shopRpc.rpc('create_owner_shop', {
@@ -115,7 +125,7 @@ async function nextStep() {
   })
 }
 async function submit() {
-  if (pending.value) return
+  if (pending.value || identityLoading.value || identityFailed.value) return
   if (step.value === 1) { await nextStep(); return }
   errorMessage.value = ''
   if (form.shopName.trim().length < 2 || form.shopName.trim().length > 120
@@ -184,40 +194,48 @@ async function resend() {
 }
 onMounted(async () => {
   try {
-    const restored = restorePendingOnboarding(sessionStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY))
-    if (restored.status === 'active' || restored.status === 'expired') {
-      Object.assign(form, restored.draft.form)
-      verification.restore(restored.draft.expiresAt, restored.draft.resendAt)
-      recovery.value = restored.draft.recovery === true
-      awaitingOtp.value = !recovery.value
-      step.value = 2
-    }
-    else if (restored.status === 'invalid' || restored.status === 'stale') {
-      clearDraft()
-      noticeMessage.value = copy.value.stale
-    }
-  } catch { clearDraft() }
-  const { data } = await supabase.auth.getUser()
-  if (!data.user) return
-  if (!data.user.email_confirmed_at) return
-  // A restored draft must never be provisioned for a different signed-in identity.
-  if (form.email && normalizeSignupEmail(form.email) !== normalizeSignupEmail(data.user.email || '')) startOver()
-  recovery.value = false
-  existingAccount.value = true; awaitingOtp.value = false
-  form.email = normalizeSignupEmail(data.user.email || form.email)
-  form.displayName = String(data.user.user_metadata.display_name || data.user.user_metadata.full_name || form.displayName)
-  const draft = data.user.user_metadata.pending_shop
-  if (typeof draft?.name === 'string') form.shopName ||= draft.name
-  if (BUSINESS_MODES.includes(draft?.business_mode)) form.businessMode = draft.business_mode
-  if (typeof draft?.main_location_name === 'string') form.mainLocationName ||= draft.main_location_name
-  if (typeof draft?.main_location_code === 'string') form.mainLocationCode ||= draft.main_location_code
-  if (typeof draft?.main_location_address === 'string') form.mainLocationAddress ||= draft.main_location_address
-  if (typeof draft?.main_location_phone === 'string') form.mainLocationPhone ||= draft.main_location_phone
-  if (!form.mainLocationName && form.shopName) form.mainLocationName = `${form.shopName} main location`
-  step.value = 2
-  await loadShops({ force: true })
-  if (currentId.value) await navigateTo('/dashboard')
+    try {
+      const restored = restorePendingOnboarding(sessionStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY))
+      if (restored.status === 'active' || restored.status === 'expired') {
+        Object.assign(form, restored.draft.form)
+        verification.restore(restored.draft.expiresAt, restored.draft.resendAt)
+        recovery.value = restored.draft.recovery === true
+        awaitingOtp.value = !recovery.value
+        step.value = 2
+      }
+      else if (restored.status === 'invalid' || restored.status === 'stale') {
+        clearDraft()
+        noticeMessage.value = copy.value.stale
+      }
+    } catch { clearDraft() }
+    const { data, error: identityError } = await supabase.auth.getUser()
+    if (identityError && identityError.name !== 'AuthSessionMissingError') throw identityError
+    if (!data.user) return
+    if (!data.user.email_confirmed_at) return
+    // A restored draft must never be provisioned for a different signed-in identity.
+    if (form.email && normalizeSignupEmail(form.email) !== normalizeSignupEmail(data.user.email || '')) startOver()
+    providerIdentity.value = verifiedGoogleIdentity(data.user)
+    recovery.value = false
+    existingAccount.value = true; awaitingOtp.value = false
+    form.email = normalizeSignupEmail(data.user.email || form.email)
+    form.displayName = providerIdentity.value ? providerIdentity.value.name || form.displayName : String(data.user.user_metadata.display_name || data.user.user_metadata.full_name || form.displayName)
+    const draft = data.user.user_metadata.pending_shop
+    if (typeof draft?.name === 'string') form.shopName ||= draft.name
+    if (BUSINESS_MODES.includes(draft?.business_mode)) form.businessMode = draft.business_mode
+    if (typeof draft?.main_location_name === 'string') form.mainLocationName ||= draft.main_location_name
+    if (typeof draft?.main_location_code === 'string') form.mainLocationCode ||= draft.main_location_code
+    if (typeof draft?.main_location_address === 'string') form.mainLocationAddress ||= draft.main_location_address
+    if (typeof draft?.main_location_phone === 'string') form.mainLocationPhone ||= draft.main_location_phone
+    if (!form.mainLocationName && form.shopName) form.mainLocationName = `${form.shopName} main location`
+    step.value = form.displayName.trim() ? 2 : 1
+    await loadShops({ force: true })
+    if (loadError.value) throw new Error('Shop lookup unavailable')
+    if (currentId.value) await navigateTo('/dashboard')
+  } catch { identityFailed.value = true; errorMessage.value = copy.value.failed }
+  finally { identityLoading.value = false }
 })
+
+watch(form, () => { if (existingAccount.value && !identityLoading.value) saveDraft() }, { deep: true })
 
 const signupConsent = ref(false)
 const signupFeatures: BsSignupFeatures = { phone: false, jobTitle: false, organizationDetails: false, mainLocation: true, businessMode: true, passwordMinLength: 6, workspaceMinLength: 2, workspaceMaxLength: 120, locationMinLength: 2, locationMaxLength: 120, locationCodeMaxLength: 32, locationAddressMaxLength: 500, locationPhoneMaxLength: 80 }
@@ -225,12 +243,12 @@ const signupProduct: BsSignupProduct = { framed: false, name: 'Shop Suit', asset
 const signupForm = computed<BsSignupForm>({
   get: () => ({ name: form.displayName, email: form.email, password: form.password, workspaceName: form.shopName, businessMode: form.businessMode, locationName: form.mainLocationName, locationCode: form.mainLocationCode, locationAddress: form.mainLocationAddress, locationPhone: form.mainLocationPhone, phone: '', jobTitle: '', legalName: '', businessType: '', country: '', currency: '', timezone: '', fiscalMonth: 1, taxIdentifier: '' }),
   set: value => {
-    form.displayName = value.name; form.email = value.email; form.password = value.password; form.shopName = value.workspaceName
+    form.displayName = providerIdentity.value?.name || value.name; form.email = existingAccount.value ? form.email : value.email; form.password = value.password; form.shopName = value.workspaceName
     form.mainLocationName = value.locationName; form.mainLocationCode = value.locationCode; form.mainLocationAddress = value.locationAddress; form.mainLocationPhone = value.locationPhone
     if (BUSINESS_MODES.includes(value.businessMode as BusinessMode)) form.businessMode = value.businessMode as BusinessMode
   },
 })
-const signupView = computed<BsSignupView>(() => ({ stage: recovery.value ? 'recovery' : awaitingOtp.value ? 'verification' : step.value === 1 ? 'account' : 'workspace', step: step.value, pending: pending.value, error: errorMessage.value, notice: noticeMessage.value, existingAccount: existingAccount.value, hydrated: undefined, submitDisabled: false, submitLabel: step.value === 1 ? copy.value.next : copy.value.create, pendingLabel: copy.value.pending, expired: verification.expired.value, resendDisabled: verification.resendIn.value > 0, verified: existingAccount.value, canStartOver: !existingAccount.value }))
+const signupView = computed<BsSignupView>(() => ({ nameLocked: providerIdentity.value ? Boolean(providerIdentity.value.name) : undefined, stage: recovery.value ? 'recovery' : awaitingOtp.value ? 'verification' : step.value === 1 ? 'account' : 'workspace', step: step.value, pending: pending.value || identityLoading.value, error: errorMessage.value, notice: noticeMessage.value, existingAccount: existingAccount.value, hydrated: !identityLoading.value, submitDisabled: identityLoading.value || identityFailed.value, submitLabel: step.value === 1 ? copy.value.next : copy.value.create, pendingLabel: copy.value.pending, expired: verification.expired.value, resendDisabled: verification.resendIn.value > 0, verified: existingAccount.value, canStartOver: !existingAccount.value }))
 const signupCopy = computed<BsSignupCopy>(() => ({ eyebrow: 'Shop Suit', title: t('auth.signupTitle'), description: t('auth.signupSubtitle'), name: t('auth.displayName'), email: t('auth.email'), password: t('auth.password'), passwordHint: '', workspaceName: copy.value.shopName, mainLocation: copy.value.mainLocation, locationName: copy.value.mainLocationName, locationCode: copy.value.mainLocationCode, locationAddress: copy.value.mainLocationAddress, locationPhone: copy.value.mainLocationPhone, businessMode: copy.value.businessMode, businessModeHelp: copy.value.businessModeHelp, trialTitle: copy.value.trial, trialBody: copy.value.trialHelp, back: copy.value.back, formFooter: '', signIn: copy.value.signIn, recoveryTitle: copy.value.recoveryTitle, recoveryBody: copy.value.existingPending, recover: copy.value.recover, startOver: `${copy.value.changeEmail} · ${copy.value.startOver}`, phone: '', jobTitle: '', legalName: '', businessType: '', country: '', currency: '', timezone: '', fiscalMonth: '', taxIdentifier: '', optional: '', steps: [{ id: 'account', title: copy.value.account, body: copy.value.accountBody }, { id: 'shop', title: copy.value.shop, body: copy.value.shopBody }] }))
 const signupVerificationCopy = computed<BsSignupVerificationCopy>(() => ({ title: copy.value.verify, description: copy.value.verifyBody, codeLabel: copy.value.code, expiryLabel: `${copy.value.expires} ${verification.format(verification.expiresIn.value)}`, expiredLabel: copy.value.expired, submitLabel: existingAccount.value ? copy.value.retry : copy.value.verify, pendingLabel: copy.value.pending, resendLabel: verification.resendIn.value > 0 ? `${copy.value.wait} ${verification.format(verification.resendIn.value)}` : copy.value.resend }))
 const signupChoices = computed<BsSignupChoices>(() => ({ businessTypes: [], countries: [], currencies: [], fiscalMonths: [], businessModes: modeOptions.value }))
