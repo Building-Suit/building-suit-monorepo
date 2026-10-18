@@ -48,17 +48,22 @@ function headers(pairs){
   ||!text(values.keyId,160)||!text(values.audience,200)||!/^\d{1,12}$/.test(values.timestamp)||!/^[0-9a-f]{64}$/.test(values.bodyDigest))deny('DOCTOR_ADMIN_HEADERS_INVALID',400)
  return{...values,timestamp:Number(values.timestamp)}
 }
-function envelope(bytes,wire){
+function envelopeIdentity(bytes,wire){
  let body;try{body=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes))}catch{deny('DOCTOR_ADMIN_BODY_INVALID',400)}
- if(!exact(body,['protocolVersion','operation','operationVersion','requestId','correlationId','sourceBindingId','targetBindingId','targetEnvironmentId','actor','reason','payload'])
-  ||!exact(body.actor,['authorityBindingId','subjectId','roleSnapshot','sessionId'])||body.protocolVersion!==version||body.operationVersion!==version
-  ||!['requestId','correlationId','sourceBindingId','targetBindingId','targetEnvironmentId'].every(field=>body[field]===wire[field])
-  ||!uuid(body.actor.authorityBindingId)||!uuid(body.actor.subjectId)||!text(body.actor.roleSnapshot,160)
-  ||(body.actor.sessionId!==null&&!uuid(body.actor.sessionId))||body.reason!==null||!record(body.payload))deny('DOCTOR_ADMIN_BODY_INVALID',400)
- if(!operations.includes(body.operation))deny('DOCTOR_ADMIN_CAPABILITY_UNAVAILABLE',403)
- if(body.operation==='adapter.capabilities.read'?!exact(body.payload,[]):!exact(body.payload,['subscriberUserId'])||!uuid(body.payload.subscriberUserId))deny('DOCTOR_ADMIN_BODY_INVALID',400)
+ // Before consuming a nonce, bind the parsed request and external actor IDs to
+ // the authenticated wire identity. Closed schemas/capabilities are checked later.
+ if(!record(body)||!record(body.actor)||!['requestId','correlationId','sourceBindingId','targetBindingId','targetEnvironmentId'].every(field=>body[field]===wire[field])
+  ||!uuid(body.actor.authorityBindingId)||!uuid(body.actor.subjectId))deny('DOCTOR_ADMIN_BODY_INVALID',400)
  return body
 }
+function operationEnvelope(body){
+ if(!exact(body,['protocolVersion','operation','operationVersion','requestId','correlationId','sourceBindingId','targetBindingId','targetEnvironmentId','actor','reason','payload'])
+  ||!exact(body.actor,['authorityBindingId','subjectId','roleSnapshot','sessionId'])||body.protocolVersion!==version||body.operationVersion!==version
+  ||!text(body.actor.roleSnapshot,160)||(body.actor.sessionId!==null&&!uuid(body.actor.sessionId))||body.reason!==null||!record(body.payload))deny('DOCTOR_ADMIN_BODY_INVALID',400)
+ if(!operations.includes(body.operation))deny('DOCTOR_ADMIN_CAPABILITY_UNAVAILABLE',403)
+ if(body.operation==='adapter.capabilities.read'?!exact(body.payload,[]):!exact(body.payload,['subscriberUserId'])||!uuid(body.payload.subscriberUserId))deny('DOCTOR_ADMIN_BODY_INVALID',400)
+}
+function auditOperation(value){return typeof value==='string'&&value.length<=160&&/^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$/.test(value)?value:'invalid_operation'}
 function subjectProjection(value,subscriber,operation){
  if(!exact(value,['subscriberUserId','practiceId','authVerified','storedOwner','state','subscriptionRevision'])
   ||value.subscriberUserId!==subscriber||!uuid(value.practiceId)||value.authVerified!==true||value.storedOwner!==true
@@ -80,24 +85,25 @@ async function dispatchDoctorAdministration(request,dependencies){
  if(await doctorAdministrationDigest(request.bytes)!==wire.bodyDigest)deny('DOCTOR_ADMIN_DIGEST_INVALID',401)
  const verificationKey=await dependencies.readVerificationKey(binding.signingReference)
  if(!await crypto.subtle.verify('HMAC',await key(verificationKey),decode(wire.signature),new TextEncoder().encode(signing(wire))))deny('DOCTOR_ADMIN_SIGNATURE_INVALID',401)
- const body=envelope(request.bytes,wire)
- const auditContext={sourceBindingId:binding.sourceBindingId,targetBindingId:binding.targetBindingId,targetEnvironmentId:binding.targetEnvironmentId,authorityBindingId:body.actor.authorityBindingId,subjectId:body.actor.subjectId,roleSnapshot:body.actor.roleSnapshot,keyId:binding.keyId,nonce:wire.nonce,requestId:wire.requestId,correlationId:wire.correlationId,operation:body.operation,requestDigest:wire.bodyDigest,manifestDigest:binding.manifest.digest}
- // This callback MUST commit a unique source/key/nonce receipt independently
- // before returning true. Failed domain reads do not roll it back.
- if(await dependencies.consumeNonce({sourceBindingId:binding.sourceBindingId,keyId:binding.keyId,nonce:wire.nonce,requestId:wire.requestId,expiresAt:new Date(now+binding.nonceRetentionSeconds*1000).toISOString()})!==true)deny('DOCTOR_ADMIN_REPLAY_DENIED',409)
- try{const freshNow=dependencies.now?.()??Date.now(),fresh=configuration(await dependencies.loadBinding(),freshNow)
-  if(!Number.isFinite(freshNow)||JSON.stringify(fresh)!==bindingSnapshot||Math.abs(freshNow/1000-wire.timestamp)>fresh.clockSkewSeconds)deny()
- }catch{await dependencies.appendAudit({...auditContext,responseDigest:null,outcome:'operator_denied'});deny()}
-
- const complete=async(data,error,outcome)=>{
-  const status=error?403:200
-  const response={protocolVersion:version,requestId:wire.requestId,correlationId:wire.correlationId,targetBindingId:binding.targetBindingId,operation:body.operation,operationVersion:version,requestDigest:wire.bodyDigest,...(error?{error:{code:error}}:{data})}
+ const body=envelopeIdentity(request.bytes,wire)
+ const auditContext={sourceBindingId:binding.sourceBindingId,targetBindingId:binding.targetBindingId,targetEnvironmentId:binding.targetEnvironmentId,authorityBindingId:body.actor.authorityBindingId,subjectId:body.actor.subjectId,roleSnapshot:text(body.actor.roleSnapshot,160)?body.actor.roleSnapshot:'invalid_role_snapshot',keyId:binding.keyId,nonce:wire.nonce,requestId:wire.requestId,correlationId:wire.correlationId,operation:auditOperation(body.operation),requestDigest:wire.bodyDigest,manifestDigest:binding.manifest.digest}
+ const complete=async(data,error,outcome,status=error?403:200)=>{
+  const response={protocolVersion:version,requestId:wire.requestId,correlationId:wire.correlationId,targetBindingId:binding.targetBindingId,operation:auditOperation(body.operation),operationVersion:typeof body.operationVersion==='string'&&body.operationVersion.length<=20&&/^\d+\.\d+$/.test(body.operationVersion)?body.operationVersion:version,requestDigest:wire.bodyDigest,...(error?{error:{code:error}}:{data})}
   const bytes=new TextEncoder().encode(JSON.stringify(response)),responseDigest=await doctorAdministrationDigest(bytes)
-  const audit=await dependencies.appendAudit({...auditContext,responseDigest,outcome})
-  if(!uuid(audit))deny()
+  if(outcome){const audit=await dependencies.appendAudit({...auditContext,responseDigest,outcome});if(!uuid(audit))deny()}
   const signature=await doctorAdministrationSignature(verificationKey,signing({...wire,status,requestDigest:wire.bodyDigest,responseDigest},true))
   return{status,bytes,headers:{'content-type':'application/json','x-bs-algorithm':responseAlgorithm,'x-bs-protocol-version':version,'x-bs-key-id':binding.keyId,'x-bs-body-sha256':responseDigest,'x-bs-signature':signature}}
  }
+ // This callback MUST commit a unique source/key/nonce receipt independently
+ // before returning true. Failed domain reads do not roll it back.
+ const consumed=await dependencies.consumeNonce({sourceBindingId:binding.sourceBindingId,keyId:binding.keyId,nonce:wire.nonce,requestId:wire.requestId,expiresAt:new Date(now+binding.nonceRetentionSeconds*1000).toISOString()})
+ if(typeof consumed!=='boolean')deny()
+ try{const freshNow=dependencies.now?.()??Date.now(),fresh=configuration(await dependencies.loadBinding(),freshNow)
+  if(!Number.isFinite(freshNow)||JSON.stringify(fresh)!==bindingSnapshot||Math.abs(freshNow/1000-wire.timestamp)>fresh.clockSkewSeconds)deny()
+ }catch{if(consumed)await dependencies.appendAudit({...auditContext,responseDigest:null,outcome:'operator_denied'});deny()}
+ if(!consumed)return complete(null,'DOCTOR_ADMIN_REPLAY_DENIED',null,409)
+
+ try{operationEnvelope(body)}catch(error){return complete(null,error instanceof DoctorAdministrationError?error.code:'DOCTOR_ADMIN_BODY_INVALID','schema_denied')}
  const operator=binding.operators.find(value=>record(value)&&value.authorityBindingId===body.actor.authorityBindingId&&value.subjectId===body.actor.subjectId)
  if(body.actor.authorityBindingId!==binding.authorityBindingId||!binding.capabilities.includes(body.operation)
   ||!operator||!Array.isArray(operator.capabilities)||!operator.capabilities.includes(body.operation))return complete(null,'DOCTOR_ADMIN_OPERATOR_DENIED','operator_denied')

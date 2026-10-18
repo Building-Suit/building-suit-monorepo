@@ -1,0 +1,14 @@
+{
+  "id": "dos-ae-009-review-register-update",
+  "task": "DOS-AE-009",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/early-administrative-edition/review-register.v1.json",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-009-operations.md"
+  ],
+  "reason": "Record the explicitly accepted parent technical snapshot-fix review and separately pending authenticated schema-denial retest; preserve unperformed financial/security review, unknown findings and all launch gates without self-certification."
+}
