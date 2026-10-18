@@ -1,0 +1,7 @@
+# Protected release reconciliation ref admission
+
+The fallback release workflow previously expanded staging/stg and production/main for every wake-up. Environment branch restrictions apply to the triggering workflow ref, so a stg run was rejected by the production leg before any publisher step. Changing checkout.ref cannot authorize that leg. The same duplicate push wake-up also raced the authoritative workspace verification.
+
+Protected pushes retain their existing ci.yml publisher job, which needs successful verify. Fallback reconciliation now uses only completed-workflow, schedule and explicit-dispatch wake-ups, selects the environment belonging to its actual protected triggering ref, and rejects workflow_run sources whose branch/event/repository do not match. A default-main completion event for stg cannot enter staging; protected-stg CI remains the staging publication/recovery path. Default-branch schedule/adoption limitations remain explicit in the runbook.
+
+The adoption guard, protected environments/branch rules, publisher code, secret bindings, required-check enforcement, serialized environment concurrency and deployment-readiness checks are unchanged. Tests evaluate the actual YAML guard/matrix with protected, feature, PR, fork, schedule, dispatch and workflow-run contexts, and retain isolated adoption and pending/failed/cancelled/skipped verification rejection. Thirteen focused tests pass. No publisher or hosted endpoint was invoked, no workflow enabled, no environment rule changed and no main promotion performed.

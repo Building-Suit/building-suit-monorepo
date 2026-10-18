@@ -160,3 +160,10 @@ Validation uses deterministic release unit tests, disposable protocol tests (ini
 ### Authorized retrospective production history
 
 [The reviewed Shop history plan](retrospective-shop-history.md) records the owner-authorized retrospective numbering, provider/GitHub deployment receipts, exact deployed source evidence, sealed idempotent import and private-origin baseline correction. It supersedes the earlier missing-version decision blocker and initial 0.1.0 target prediction; it does not rewrite any retained reservation, manifest or timestamp. Normal publication gates, exact main-to-stg net contribution and last-good preview policy remain authoritative.
+
+
+### Reconciliation ref admission
+
+Protected pushes publish only through `ci.yml` after the authoritative `verify` job succeeds. The fallback `releases.yml` therefore does not start a second publisher on push before verification completes. Completed-workflow, schedule and explicit-dispatch wake-ups retain their existing readiness/adoption checks and select only the environment matching the actual triggering workflow ref. A default-main `workflow_run` for a staging source run is skipped; it cannot enter staging by checking out a different ref. The protected-stg CI hook remains the staging reconciliation/recovery path. Hourly/default-branch wake-ups reconcile only their own admitted environment, after separately authorized workflow adoption; this change does not activate them or promote main.
+
+GitHub documents that [environment branch rules match the workflow GITHUB_REF](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments#deployment-branches-and-tags), and [workflow_run uses the default branch](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_run). Publisher credentials, protected environment rules, required-check enforcement, immutable candidate matching and deployment-readiness checks are unchanged. No environment restrictions are relaxed and no publisher is invoked by the regression tests.
