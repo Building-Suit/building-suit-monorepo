@@ -1,0 +1,93 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select no_plan();
+create function pg_temp.id(n integer)returns uuid language sql immutable as $$select('ae330000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid$$;
+create function pg_temp.claim(n integer)returns text language sql as $$select set_config('request.jwt.claims',jsonb_build_object('sub',pg_temp.id(n),'session_id',pg_temp.id(n+10),'role','authenticated','user_metadata',jsonb_build_object('admin',true))::text,true)$$;
+insert into auth.users(id,email,email_confirmed_at)select pg_temp.id(n),'synthetic-report-'||n||'@example.test',now()from generate_series(1,4)n;
+insert into auth.sessions(id,user_id)select pg_temp.id(n+10),pg_temp.id(n)from generate_series(1,4)n;
+insert into public.doctor_candidate_admissions(id,user_id,purpose,evidence_ref,valid_until)select pg_temp.id(n+20),pg_temp.id(n),'synthetic_fixture','manual-report:'||n,clock_timestamp()+interval'2 hours'from generate_series(1,4)n;
+update public.doctor_edition_policy set mode='administrative_candidate',revision=revision+1,change_reason='Owned report cases';
+insert into public.doctor_saas_terms_versions(id,plan_key,version,status,currency,currency_exponent,monthly_minor,trial_days,staff_limit,staff_unlimited,clinic_limit,clinic_unlimited,over_limit_policy,renewal_policy,grace_days,expiry_policy,cancellation_policy,refund_policy,terms_document_ref,commercial_approval_ref,legal_approval_ref)
+ select pg_temp.id(50+n),'synthetic-report-'||n,1,'approved',case n when 1 then'EGP'else'USD'end,2,9000000000000000,0,4,false,1,false,'block_new_allocation','manual',0,'historical_read_only','period_end','manual_review','synthetic-report/'||n,'SYNTHETIC_ONLY','SYNTHETIC_ONLY'from generate_series(1,2)n;
+insert into public.doctor_saas_terms_documents(terms_version_id,document_ref,content_en,content_ar)select pg_temp.id(50+n),'synthetic-report/'||n,'Synthetic report fixture; no legal or commercial approval.','اختبار اصطناعي فقط دون اعتماد تجاري أو قانوني.'from generate_series(1,2)n;
+insert into public.doctor_manual_payment_recipients(id,account_key,address_kind,address,beneficiary_name,instructions_en,instructions_ar,currency,currency_exponent,merchant_approval_ref)
+ select pg_temp.id(70+n),pg_temp.id(80+n),'ipa','synthetic-report-'||n||'@instapay','Synthetic fixture','Never transfer funds.','لا تحول أموالاً.',case n when 1 then'EGP'else'USD'end,2,'SYNTHETIC_ONLY'from generate_series(1,2)n;
+insert into public.doctor_manual_payment_reviewers(user_id,enabled,revision,approval_ref,valid_until)values(pg_temp.id(4),true,1,'SYNTHETIC_ONLY',clock_timestamp()+interval'1 hour');
+create temporary table notices(n integer primary key,id uuid);grant all on notices to authenticated;
+create temporary table reports(name text primary key,value jsonb);grant all on reports to authenticated;
+-- Exercise authorized commands, not fabricated ledger rows. Full-population
+-- sums exceed JS safe integers; a second currency cannot be silently netted.
+do $$declare currency_index integer;n integer;q jsonb;i jsonb;notice jsonb;config integer;terms integer;begin
+ for currency_index in 1..2 loop
+  update public.doctor_saas_configuration set terms_version_id=pg_temp.id(50+currency_index),revision=revision+1,change_reason='Synthetic report currency';
+  update public.doctor_manual_payment_configuration set recipient_id=pg_temp.id(70+currency_index),enabled=true,acceptance_mode='synthetic',revision=revision+1,change_reason='Synthetic report currency';
+  select revision into config from public.doctor_manual_payment_configuration;select revision into terms from public.doctor_saas_configuration;
+  for n in (case currency_index when 1 then 1 else 28 end)..(case currency_index when 1 then 27 else 29 end)loop
+   perform pg_temp.claim(case n when 29 then 2 else 1 end);
+   q:=public.doctor_create_saas_quote(pg_temp.id(50+currency_index),terms,0,'monthly','synthetic-report/'||currency_index,pg_temp.id(100+n));
+   i:=public.doctor_prepare_saas_payment((q->>'quote_id')::uuid,pg_temp.id(200+n));
+   perform public.doctor_prepare_manual_payment((i->>'intent_id')::uuid,config,pg_temp.id(300+n));
+   notice:=public.doctor_submit_manual_payment((i->>'intent_id')::uuid,'SYNTHETIC-'||n,clock_timestamp(),config,pg_temp.id(400+n));
+   insert into notices values(n,(notice->>'id')::uuid);
+  end loop;
+ end loop;
+end $$;
+set local role authenticated;select pg_temp.claim(1);
+insert into reports values('owner',public.doctor_manual_payment_reconciliation());
+select is((select value->>'total'from reports where name='owner'),'28','own report excludes another subscriber');
+select is(jsonb_array_length((select value->'items'from reports where name='owner')),25,'page has 25 notices');
+select is(jsonb_array_length((select value->'currencies'from reports where name='owner')),2,'currencies stay separate');
+select is((select c->>'claimed_minor'from reports,jsonb_array_elements(value->'currencies')c where name='owner'and c->>'currency'='EGP'),'243000000000000000','full population exact decimal sum exceeds safe number');
+select is((select c->>'verified_minor'from reports,jsonb_array_elements(value->'currencies')c where name='owner'and c->>'currency'='EGP'),'0','customer claims are not verified funds');
+select is(public.doctor_manual_payment_reconciliation(p_page=>2)->>'total','28','pagination keeps full total');
+select is(jsonb_array_length(public.doctor_manual_payment_reconciliation(p_page=>2)->'items'),3,'second page has remaining notices');
+select is(public.doctor_manual_payment_reconciliation(p_from=>'2999-01-01Z')->>'total','0','empty date cohort');
+select is(public.doctor_manual_payment_reconciliation(p_until=>null)->>'total','28','null date leaves full cohort');
+select throws_ok($$select public.doctor_manual_payment_reconciliation(p_from=>'infinity')$$,'22023','DOCTOR_MANUAL_REPORT_QUERY_INVALID','nonfinite date denied');
+select throws_ok($$select public.doctor_manual_payment_reconciliation(p_from=>'2026-01-02Z',p_until=>'2026-01-01Z')$$,'22023','DOCTOR_MANUAL_REPORT_QUERY_INVALID','inverted window denied');
+select throws_ok($$select public.doctor_manual_payment_reconciliation(p_status=>'paid')$$,'22023','DOCTOR_MANUAL_REPORT_QUERY_INVALID','invented status denied');
+select throws_ok($$select public.doctor_manual_payment_reconciliation(p_page=>0)$$,'22023','DOCTOR_MANUAL_REPORT_QUERY_INVALID','invalid page denied');
+select throws_ok($$select public.doctor_manual_payment_reconciliation(true)$$,'42501','DOCTOR_MANUAL_REVIEW_AUTHORITY_REQUIRED','editable admin metadata grants no reviewer access');
+select pg_temp.claim(3);
+select is(public.doctor_manual_payment_reconciliation()->>'total','0','unrelated actor sees no notices');
+select pg_temp.claim(4);
+select is(public.doctor_manual_payment_reconciliation(true)->>'total','29','trusted reviewer full cohort');
+select public.doctor_review_manual_payment((select id from notices where n=1),0,'rejected','Synthetic rejected duplicate',null,null,null,null,null,false,pg_temp.id(501));
+select public.doctor_review_manual_payment((select id from notices where n=2),0,'funds_verified','Independent synthetic bank record','SYNTHETIC-BANK-2','9000000000000000','EGP',clock_timestamp(),'SYNTHETIC_ONLY',true,pg_temp.id(502));
+insert into reports values('verified',public.doctor_manual_payment_reconciliation(true));
+select is((select c->>'verified_minor'from reports,jsonb_array_elements(value->'currencies')c where name='verified'and c->>'currency'='EGP'),'9000000000000000','independently verified funds recorded');
+select is((select c->>'awaiting_activation_count'from reports,jsonb_array_elements(value->'currencies')c where name='verified'and c->>'currency'='EGP'),'1','verified funds await separate activation');
+select is((select c->>'activated_minor'from reports,jsonb_array_elements(value->'currencies')c where name='verified'and c->>'currency'='EGP'),'0','bank review does not activate');
+select is(public.doctor_manual_payment_reconciliation(true,p_status=>'rejected')->>'total','1','status filter selects full cohort');
+reset role;
+update public.doctor_manual_payment_configuration set activation_policy='inactive_account_on_review',activation_approval_ref='SYNTHETIC_ONLY',revision=revision+1,change_reason='Owned report activation';
+set local role authenticated;select pg_temp.claim(4);
+select public.doctor_activate_manual_payment((select id from notices where n=2),1,pg_temp.id(503));
+insert into reports values('activated',public.doctor_manual_payment_reconciliation(true,p_status=>'activated'));
+select is((select value->>'total'from reports where name='activated'),'1','activation status independently projected');
+select is((select value#>>'{currencies,0,activated_minor}'from reports where name='activated'),'9000000000000000','activation exact amount bound to period');
+select is((select value#>>'{currencies,0,awaiting_activation_minor}'from reports where name='activated'),'0','activated funds no longer awaiting activation');
+select is((select value#>>'{currencies,0,discrepancy_count}'from reports where name='activated'),'0','valid immutable chain reconciles');
+select is((select value#>>'{items,0,period_bound}'from reports where name='activated'),'true','stable source IDs include verified period proof');
+select is((select value#>>'{items,0,id}'from reports where name='activated'),(select id::text from notices where n=2),'source notice identity preserved');
+select is((select value->>'live_activation'from reports where name='activated'),'false','report cannot authorize live money');
+select is((select value->>'patient_revenue_included'from reports where name='activated'),'false','SaaS report excludes patient revenue');
+select throws_ok($$select * from public.doctor_manual_received_funds$$,'42501',null,'raw funds remain denied');
+reset role;
+-- Date bounds use notice creation, inclusive lower/exclusive upper.
+insert into reports select 'bounded',public.doctor_manual_payment_reconciliation(true,(select created_at from public.doctor_manual_payment_notices where id=(select id from notices where n=2)),(select created_at from public.doctor_manual_payment_notices where id=(select id from notices where n=3)),'all',1);
+select is((select value->>'total'from reports where name='bounded'),'1','UTC creation interval is half open');
+update public.doctor_manual_payment_reviewers set enabled=false,revision=revision+1,approval_ref='SYNTHETIC_REVOKED'where user_id=pg_temp.id(4);
+set local role authenticated;select pg_temp.claim(4);
+select throws_ok($$select public.doctor_manual_payment_reconciliation(true)$$,'42501','DOCTOR_MANUAL_REVIEW_AUTHORITY_REQUIRED','revoked reviewer loses report access');
+reset role;delete from auth.sessions where id=pg_temp.id(11);
+set local role authenticated;select pg_temp.claim(1);
+select throws_ok($$select public.doctor_manual_payment_reconciliation()$$,'42501',null,'stale session denied');
+set local role service_role;
+select throws_ok($$select public.doctor_manual_payment_reconciliation()$$,'42501',null,'service role has no report facade');
+set local role anon;
+select throws_ok($$select public.doctor_manual_payment_reconciliation()$$,'42501',null,'anonymous report denied');
+reset role;
+select * from finish();
+rollback;

@@ -1,0 +1,16 @@
+{
+  "id": "doctor-manual-payment-reconciliation",
+  "task": "DOS-AE-005",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/supabase/migrations/20261018132903_doctor_manual_payment_reconciliation.sql",
+    "apps/doctor-suit/supabase/tests/dos-manual-reconciliation.sql",
+    "docs/work-packages/doctor-suit/early-administrative-edition/manual-reconciliation.md",
+    "docs/work-packages/doctor-suit/early-administrative-edition/operator-decisions.md"
+  ],
+  "reason": "Synthetic read-only manual SaaS reconciliation and exact remaining operator inputs. No live activation, patient revenue, provider connection, hosted migration or release activation."
+}
