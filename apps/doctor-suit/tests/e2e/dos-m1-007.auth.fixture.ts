@@ -14,6 +14,10 @@ async function signIn(page: Page, ar = false) {
   await doctorPasswordStep(page);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
   await page.getByRole('button', { name: ar ? 'تسجيل الدخول' : 'Sign in', exact: true }).click()
   await expect(page).toHaveURL(/\/account$/)
+  // A committed SPA URL can precede account readiness and the browser cookie
+  // store. Establish the durable session before testing a separate SSR request.
+  await expect(page.getByRole('heading', { level: 1, name: ar ? 'الحساب التجريبي' : 'Synthetic account', exact: true })).toBeVisible()
+  await expect.poll(async () => (await page.context().cookies('http://127.0.0.1:4337')).some(cookie => /^bs-doctor-local-auth-token(?:\.\d+)?$/.test(cookie.name) && Boolean(cookie.value))).toBe(true)
 }
 for (const ar of [false, true]) test(`DOS-M1-007 ${ar ? 'AR mobile' : 'EN desktop'} protocol fixture: resume draft, onboard alone and maintain profile`, async ({ page, context, browser, request }) => {
   await prepare(context, ar)
@@ -30,6 +34,7 @@ for (const ar of [false, true]) test(`DOS-M1-007 ${ar ? 'AR mobile' : 'EN deskto
     const second = await resumed.newPage()
     await signIn(second, ar)
     await second.goto('/onboarding')
+    await expect(second).toHaveURL(/\/onboarding$/)
     await expect(second.getByLabel(ar ? /^الاسم المعروض للطبيب/ : /^Doctor display name/)).toHaveValue('Synthetic owner')
     // Deliver the SDK's provider-change callback after setup is mounted. It must
     // reverify the session and reload the owned server draft, without remounting.
