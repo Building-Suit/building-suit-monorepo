@@ -19,10 +19,13 @@ test('protected push and explicit dispatch select only their admitted environmen
 test('default-main completion cannot request staging or use PR proof as release authority', () => {
   assert.deepEqual(target('main', 'workflow_run', upstream('main')), [{ environment: 'production', branch: 'main' }])
   assert.deepEqual(target('main', 'workflow_run', upstream('stg')), [])
-  for (const overrides of [{ event: 'pull_request' }, { conclusion: 'failure' }, { conclusion: 'cancelled' }, { head_repository: { full_name: 'other/repository' } }]) {
+  for (const overrides of [{ event: 'pull_request' }, { head_repository: { full_name: 'other/repository' } }]) {
     assert.deepEqual(target('main', 'workflow_run', upstream('main', overrides)), [])
   }
   assert.deepEqual(target('main', 'workflow_run'), [])
+  // A publisher job can fail after verify passed. Keep the retry wake-up; the
+  // publisher still independently rejects any missing/failed verify proof.
+  for (const conclusion of ['failure', 'cancelled']) assert.deepEqual(target('main', 'workflow_run', upstream('main', { conclusion })), [{ environment: 'production', branch: 'main' }])
 })
 test('unsupported events, refs and repositories cannot select catalog credentials', () => {
   for (const eventName of ['deployment_status', 'deployment', 'pull_request', 'unknown']) assert.deepEqual(target('main', eventName), [])

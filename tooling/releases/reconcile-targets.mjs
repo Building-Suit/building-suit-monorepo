@@ -13,7 +13,7 @@ export function reconciliationTargets({ eventName, ref, repository, event = {} }
   if (!target || repository !== 'Building-Suit/building-suit-monorepo') return []
   if (eventName === 'workflow_run') {
     const run = event.workflow_run
-    if (!run || run.event !== 'push' || run.conclusion !== 'success'
+    if (!run || run.event !== 'push'
       || run.head_branch !== target.branch || run.head_repository?.full_name !== repository) return []
   }
   else if (!['push', 'schedule', 'workflow_dispatch'].includes(eventName)) return []

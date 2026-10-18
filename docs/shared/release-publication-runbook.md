@@ -170,9 +170,11 @@ for production. Checkout cannot change admission. The observed policies allow
 only those respective branches; do not broaden them to accommodate a matrix.
 Protected pushes publish only through `ci.yml` after authoritative verification.
 The fallback does not duplicate that push publisher. Explicit dispatches create
-one environment job, not two. A completed workflow must be an own-repository successful protected
-push matching the current workflow ref; PR proofs, failures and mismatched refs
-create no environment job. The publisher still independently checks the newest
+one environment job, not two. A completed workflow must be an own-repository
+protected push matching the current workflow ref; PR proofs and mismatched refs
+create no environment job. Overall workflow failure can include a publisher
+failure after verification passed, so completion remains a retry wake-up.
+The publisher still independently checks the newest
 protected verification, deployment readiness, catalog bindings and provenance.
 
 GitHub runs scheduled and workflow_run workflows from the default branch. A
