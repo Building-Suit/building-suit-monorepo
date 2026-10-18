@@ -23,7 +23,8 @@
     "apps/doctor-suit/tests/manual-payments-concurrency.mjs",
     "apps/doctor-suit/tests/disposable-postgres.mjs",
     "apps/doctor-suit/supabase/migrations/20261018110853_doctor_manual_payment_activation_evidence.sql",
-    "apps/doctor-suit/supabase/config.toml"
+    "apps/doctor-suit/supabase/config.toml",
+    "apps/doctor-suit/tests/recovery-isolated.mjs"
   ],
   "reason": "Doctor-only synthetic manual notice and independent received-funds review, with live acceptance disabled and no recipient/reviewer seeded. CI-generated schema types support the no-local-services constraint; no operational release activation or external provider connection."
 }
