@@ -16,18 +16,29 @@ permissions:
   checks: read
   statuses: read
 jobs:
-  reconcile:
-    # Never subscribe to deployment_status: these environment jobs emit it themselves.
-    # Allowed wake-ups re-read protected refs; publisher readiness remains authoritative.
+  plan:
+    # No environment or catalog credentials are requested while selecting targets.
     if: github.repository == 'Building-Suit/building-suit-monorepo'
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.targets.outputs.enabled }}
+      matrix: ${{ steps.targets.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Select authoritative targets admitted by the workflow ref
+        id: targets
+        run: node tooling/releases/reconcile-targets.mjs
+  reconcile:
+    needs: plan
+    # Never subscribe to deployment_status: these jobs emit it themselves.
+    # Publisher readiness still re-reads protected refs and remains authoritative.
+    if: needs.plan.outputs.enabled == 'true'
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - environment: staging
-            branch: stg
-          - environment: production
-            branch: main
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     environment: ${{ matrix.environment }}
     concurrency:
       group: release-catalog-${{ matrix.environment }}

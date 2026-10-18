@@ -160,3 +160,26 @@ Validation uses deterministic release unit tests, disposable protocol tests (ini
 ### Authorized retrospective production history
 
 [The reviewed Shop history plan](retrospective-shop-history.md) records the owner-authorized retrospective numbering, provider/GitHub deployment receipts, exact deployed source evidence, sealed idempotent import and private-origin baseline correction. It supersedes the earlier missing-version decision blocker and initial 0.1.0 target prediction; it does not rewrite any retained reservation, manifest or timestamp. Normal publication gates, exact main-to-stg net contribution and last-good preview policy remain authoritative.
+
+
+### Reconciliation workflow ref admission
+
+The target planner in `tooling/releases/reconcile-targets.mjs` selects only the
+environment admitted by the triggering workflow ref: `stg` for staging, `main`
+for production. Checkout cannot change admission. The observed policies allow
+only those respective branches; do not broaden them to accommodate a matrix.
+Protected pushes and explicit dispatches therefore create one environment job,
+not two. A completed workflow must be an own-repository successful protected
+push matching the current workflow ref; PR proofs, failures and mismatched refs
+create no environment job. The publisher still independently checks the newest
+protected verification, deployment readiness, catalog bindings and provenance.
+
+GitHub runs scheduled and workflow_run workflows from the default branch. A
+main-context schedule can reconcile production, but cannot reconcile staging
+under the existing stg-only policy. Staging retains the existing protected-stg
+`ci.yml` post-verification publisher and protected-stg push/dispatch retry paths.
+No staging hourly recovery is claimed active. A future automatic hourly staging
+retry needs a separately authorized dispatcher running the workflow on `stg`;
+this fix adds no write permissions, credentials or provider configuration and
+performs no dispatch or deployment. Default-main publisher adoption still needs
+its normal authorized promotion; do not promote main merely to enable retries.

@@ -24,6 +24,11 @@ const workflow = readFileSync(new URL('../../.github/workflows/releases.yml', im
 
 test('actual release workflow allows only non-recursive protected-ref wake-ups', () => {
   assertSafeTriggers(workflow)
+  assert.match(workflow, /needs: plan/ )
+  assert.match(workflow, /if: needs\.plan\.outputs\.enabled == 'true'/)
+  assert.match(workflow, /matrix: \$\{\{ fromJSON\(needs\.plan\.outputs\.matrix\) \}\}/)
+  assert.match(workflow, /run: node tooling\/releases\/reconcile-targets\.mjs/)
+  assert.doesNotMatch(workflow, /include:\n/)
   assert.match(workflow, /^ {4}environment: \$\{\{ matrix.environment \}\}$/m)
   assert.match(workflow, /^ {6}group: release-catalog-\$\{\{ matrix.environment \}\}$/m)
   assert.match(workflow, /^ {6}cancel-in-progress: false$/m)

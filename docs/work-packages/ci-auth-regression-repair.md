@@ -44,11 +44,33 @@ promotion/push validation.
 ## Separate release and Doctor findings
 
 Staging release reconciliation correctly refuses a failed protected verification.
-The release matrix's production leg on a stg event is rejected by production
-branch protection before runner steps. Release ownership and protection remain
-unchanged in this repair.
+The former release matrix requested production from stg and staging from main.
+Environment policies admit only stg and main respectively. The new preflight
+selects one admitted target, preserving publisher readiness and existing
+protected-stg CI publication. No protection or permission is changed.
 
 Doctor browser validation passed on the inherited staging head. The reported
 London DST fixture commit is therefore not included without a matching failure.
 The actual-provider job separately fails at personal-settings/preference
 isolation; the Doctor owner retains that investigation.
+
+
+## Concrete execution reduction
+
+Metadata-only root/promotion PR edits previously ran one review plus one full
+workspace validation; now neither heavy job executes, while branch-policy runs
+and existing required code-check results remain intact. This was verified by
+metadata run 39081938321 on the same c59f6678 source head as the still-active
+code-validation run 39081842930. Code-change fanout is unchanged.
+
+Release retry planning now changes protected push/dispatch environment jobs
+from two to one, and PR completion wake-ups from two to zero environment jobs
+(one cheap planner remains). In the observed stg push, one former matrix job
+was rejected before steps, so this removes a rejected check/admission attempt,
+not a second heavy publisher execution. Successful protected-main completion
+selects production only; default-main schedules do the same. Non-authoritative
+PR completion events no longer attempt an unrelated production reconciliation.
+These reductions do not claim that the historical 52-check snapshot becomes a
+specific smaller number: required source checks and provider statuses remain.
+The larger duplicate push/promotion heavy validation still needs the exact-SHA
+receipt reuse design described above; it is not implemented by this patch.
