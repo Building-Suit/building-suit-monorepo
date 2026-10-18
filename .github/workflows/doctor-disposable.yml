@@ -37,7 +37,16 @@ jobs:
         run: node --test apps/doctor-suit/tests/unit/dos-m1-003.test.mjs
       - name: Apply actual migrations and assert SQL/RLS authorization with synthetic fixtures
         # A minimal provider Auth contract is scaffolding, not full Supabase service acceptance.
-        run: node apps/doctor-suit/tests/disposable-postgres.mjs
+        run: node apps/doctor-suit/tests/disposable-postgres.mjs --types
+      - name: Retain generated public schema types (no credentials or runtime data)
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-public-schema-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            apps/doctor-suit/app/types/database.types.ts
+            apps/doctor-suit/supabase/functions/_shared/database.types.ts
+          if-no-files-found: error
+          retention-days: 7
   doctor-browser:
     runs-on: ubuntu-latest
     timeout-minutes: 10

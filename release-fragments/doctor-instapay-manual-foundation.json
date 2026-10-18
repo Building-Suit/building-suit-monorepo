@@ -1,0 +1,22 @@
+{
+  "id": "doctor-instapay-manual-foundation",
+  "task": "DOS-AE-004/005",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/supabase/migrations/20261018104321_doctor_instapay_manual_transfers.sql",
+    "apps/doctor-suit/supabase/tests/dos-instapay-manual.sql",
+    ".github/workflows/doctor-disposable.yml",
+    "docs/work-packages/doctor-suit/early-administrative-edition/instapay-manual.md",
+    "apps/doctor-suit/config/introductory-plans.v1.json",
+    "apps/doctor-suit/supabase/migrations/20261018105034_doctor_introductory_plan_catalog.sql",
+    "apps/doctor-suit/tests/unit/instapay-catalog.test.mjs",
+    "apps/doctor-suit/supabase/tests/dos-instapay-catalog.sql",
+    "apps/doctor-suit/tests/manual-payments-concurrency.mjs",
+    "apps/doctor-suit/tests/disposable-postgres.mjs"
+  ],
+  "reason": "Doctor-only synthetic manual notice and independent received-funds review, with live acceptance disabled and no recipient/reviewer seeded. CI-generated schema types support the no-local-services constraint; no operational release activation or external provider connection."
+}
