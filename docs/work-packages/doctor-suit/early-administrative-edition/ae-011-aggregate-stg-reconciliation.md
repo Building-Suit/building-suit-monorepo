@@ -13,3 +13,12 @@ The bounded DST-only fix for the parent is separately published as 829be59634835
 No protected-branch integration occurs until the parent-coordinated shared repair is incorporated and exact aggregate checks/review pass. Qualified commercial, provider, privacy, recovery, security/financial and real-user gates remain pending; there is no paid/live-sale or clinical readiness claim.
 
 Completed aggregate browser result: 62 passed, 10 failed across owner setup, disabled session controls and missing account-settings controls. The five DOS-M1-014 cases, including EN/AR DST rescheduling, pass. Aggregate units: 1,913 pass, 2 shared useRoute failures, 23 expected skips. These failures are not accepted or waived.
+
+
+## Coordinated repair and single staging root
+
+The aggregate now history-merges Shop repair PR389 through c59f6678, including its canonical committed-router/session-layout transition fix, shared fixture updates and metadata-event CI efficiency. No competing Doctor transition implementation is retained. The initial two useRoute unit failures are resolved by that repair; its first combined root run passes 1,923 units with 23 expected skips.
+
+The independent Doctor adapter fix keeps the authenticated practice-profile editor separate from the account identity summary: the shared view has an optional showVerifiedIdentity flag defaulting to existing behavior, while Doctor opts out and explicitly unlocks its practice display name. The separate confirmed account identity, backend ownership/enrollment, professional-verification and candidate policies do not change. EN/AR owner draft resume/profile editing and the two-doctor administrative journey pass with these props; final canonical-transition full-suite coverage is being rerun.
+
+Existing PR388 is now the sole Doctor root targeting stg; scope PR369 is marked superseded, with its history preserved. All 17 completed Doctor PR heads are ancestors. Clinical PR366 is excluded and remains held. Required exact aggregate checks and parent-coordinated merge still apply. Historical failures above are retained as diagnosis evidence, not as a current acceptance result. Current validation receipts are recorded on the PR after completion.
