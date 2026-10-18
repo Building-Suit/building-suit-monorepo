@@ -101,17 +101,20 @@ when a superseded workflow was cancelled. Runs 39080861742 and 39080958207
 needed force-cancellation during this repair and held up the serialized slot.
 [GitHub documents this job/step cancellation behavior](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-cancellation).
 
-All heavyweight verify steps now require both `success()` and `!cancelled()`.
-Before: an obsolete running validation could continue its full build/browser
-sequence. After: cancellation stops its running heavy step and admits zero
-remaining heavy steps; preceding failures also still stop subsequent work.
-Artifact/evidence cleanup keeps its existing always/failure conditions. A final
-cancelled-only `exit 1` prevents a run cancelled before checkout from becoming
-successful readiness evidence. Required code-check names, review/branch-policy
-requirements, the serialized workspace slot, and the non-cancelling protected
-release/publisher paths remain intact. Expression regression tests cover the
-cancelled and preceding-failure states; no extra full CI run is manufactured
-solely to benchmark cancellation.
+The verify job itself now requires `!cancelled()` alongside the unchanged
+review/branch-policy conditions. The actual supersession of db978ceb by bd7cc223
+showed that step guards alone were insufficient while `always()` remained on
+the job; its old verification continued into setup/typecheck. That observation
+is not counted as a successful cancellation benchmark.
+
+Heavy steps additionally require `success()` and `!cancelled()`, retaining prior
+failure gating. After a supersession, the job-level condition permits GitHub to
+cancel the obsolete job rather than keep the serialized slot alive. Cleanup
+retains its existing always/failure policy. Required names and all normal
+verification commands remain intact. Protected publication independently rejects
+pending, failed, cancelled and skipped verification (covered by the existing
+protected-verification tests); only completed success can publish. No extra full
+run is manufactured solely to benchmark cancellation.
 
 
 ## Canonical release/fixture alignment
@@ -119,9 +122,16 @@ solely to benchmark cancellation.
 Aggregate #388 already contained the smaller protected-ref release guard in
 `9b07fdf88e2eed683247e9e861eb0a57fdf65178`. This PR aligns with its workflow and
 regression tests, retaining the existing CI post-verification publisher rather
-than keeping a second planner implementation. The intermediate planner modules
-are removed from the final diff. Doctor's committed password-stage helper from
-`e556574fd61fac5bb8c8f6c44d5ff8a3e8987adb` is reused only in the real-provider
-account reauthentication fixture; its broader administrative fixture/config
-changes remain in the aggregate. Password submission and server verification
-are still exercised.
+than keeping a second planner implementation. Intermediate planner modules are
+removed. The committed password-stage helper from e556574f is reused only in
+the actual-provider account reauthentication fixture; broader Doctor changes
+remain in the aggregate. Password submission and server checks stay real.
+
+
+When aggregate #388 takes this branch, retain its broader account-provider
+fixture (owner setup assertions, optional home/admission inputs and granular
+reauthentication diagnostics). This branch adds only the existing password-stage
+helper/import/call to the baseline fixture; the aggregate already has those.
+Resolve any overlapping fixture hunk in favor of the aggregate's complete file.
+Canonical release guards/tests are shared with 9b07fdf8; retain the quantified
+regex spacing corrections required by root lint.
