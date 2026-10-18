@@ -1424,5 +1424,50 @@
         "contains": "props.layoutKey === undefined && authRoute.value"
       }
     ]
+  },
+  {
+    "id": "shop-xpay-presentment-verification",
+    "task": "SS-BILLING-INTERNATIONAL-PREPARATION",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/supabase/functions/_shared",
+      "apps/shop-suit/tests/unit",
+      "apps/shop-suit/app/utils/subscription-currency.mjs",
+      "apps/shop-suit/app/utils/subscription-currency.d.mts",
+      "apps/shop-suit/docs",
+      "release-changes/items.json"
+    ],
+    "reason": "Reject a foreign presentment mirror before existing EGP fulfillment, retain separate typed provider money tracks, and prepare currency-specific account checks and an unexposed preference contract. No USD charge or customer price is enabled.",
+    "notes": {
+      "title": {
+        "en": "Verify the quoted payment currency",
+        "ar": "التحقق من عملة الدفع المتفق عليها"
+      },
+      "summary": {
+        "en": "Payment confirmation checks the customer currency separately from processing totals.",
+        "ar": "يتحقق تأكيد الدفع من عملة العميل بشكل مستقل عن إجمالي معالجة الدفع."
+      },
+      "details": {
+        "en": "A payment in a different customer currency cannot fulfill an EGP subscription order. Existing EGP checkout is preserved; USD checkout is not enabled.",
+        "ar": "لا يمكن لدفعة بعملة عميل مختلفة تفعيل طلب اشتراك بالجنيه المصري. يستمر الدفع الحالي بالجنيه المصري، ولم يتم تفعيل الدفع بالدولار."
+      }
+    },
+    "sources": [
+      "shop-xpay-currency-verification"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/functions/_shared/xpay.mjs",
+        "contains": "tracks.presentment.currency !== order.currency"
+      },
+      {
+        "path": "apps/shop-suit/supabase/functions/_shared/xpay-money.mjs",
+        "contains": "amountMinor: mirror.amountTotal"
+      }
+    ]
   }
 ]

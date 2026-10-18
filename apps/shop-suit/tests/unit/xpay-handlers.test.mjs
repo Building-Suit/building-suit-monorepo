@@ -47,7 +47,7 @@ test('cross-origin checkout, unauthenticated caller and client amount tampering 
   const hostile = new Request('https://edge.example', { method: 'POST', headers: { origin: 'https://evil.example' }, body: '{}' })
   assert.equal((await createXPayCheckout(f)(hostile)).status, 403)
   assert.equal((await createXPayCheckout({ ...f, authenticate: async () => false })(checkoutRequest())).status, 401)
-  assert.equal((await createXPayCheckout(f)(checkoutRequest({ amount: 1 }))).status, 409)
+  for (const patch of [{ amount: 1 }, { currency: 'USD' }, { country: 'US' }]) assert.equal((await createXPayCheckout(f)(checkoutRequest(patch))).status, 409)
   assert.equal(f.calls.length + f.providerCalls.length, 0)
 })
 test('checkout forwards user token to quote RPC, persists provider body and strips private response fields', async () => {
@@ -307,4 +307,14 @@ test('invalid purchase intent and prior-paid identifiers fail before quote or pr
     assert.equal((await createXPayCheckout(f)(checkoutRequest(patch))).status, 409)
     assert.equal(f.calls.length + f.providerCalls.length, 0)
   }
+})
+
+test('signed foreign presentment cannot fulfill an EGP order through webhook or reconciliation', async () => {
+  const foreign = { ...paid, presentmentDetails: { currency: 'USD', amountTotal: 699, exchangeRate: 49.9, exchangeRateId: 'fx_fixture' } }
+  const f = fixture({ providerSession: foreign })
+  assert.equal((await createXPayWebhook(f)(webhook({ id: 'evt_foreign', type: 'checkout.session.completed', data: { object: foreign } }))).status, 503)
+  assert.equal(f.calls.some(call => call.name === 'shop_xpay_apply_session'), false)
+  const retry = fixture({ providerSession: foreign })
+  assert.equal((await createXPayReconciliation(retry)(new Request('https://edge.example/reconcile', { method: 'POST', body: JSON.stringify({ orderId: id, sessionId: session.id }) }))).status, 503)
+  assert.equal(retry.calls.some(call => call.name === 'shop_xpay_apply_session'), false)
 })

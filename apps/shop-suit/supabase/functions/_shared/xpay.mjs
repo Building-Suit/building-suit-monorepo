@@ -1,3 +1,4 @@
+import { xpayMoneyTracks } from './xpay-money.mjs'
 // Contract: https://docs.xpay.app/en/integrate/integration-patterns/hosted-checkout
 // This server-only adapter does not authorize a tenant or grant entitlements.
 const API = 'https://api.xpay.app'
@@ -101,6 +102,10 @@ export function validateSession(session, order, mode, { paid = false } = {}) {
     || session.metadata?.orderId !== order.id || session.currency !== order.currency
     || session.amountTotal !== order.amountMinor || !Number.isSafeInteger(session.amountTotal)
     || (order.sessionId && session.id !== order.sessionId)) throw new Error('xpay_session_mismatch')
+  // The order/SQL contract is still EGP-only. A matching processing total
+  // must never authorize a different customer-facing presentment currency.
+  const tracks = xpayMoneyTracks(session)
+  if (tracks.presentment.currency !== order.currency || tracks.presentment.amountMinor !== order.amountMinor) throw new Error('xpay_session_mismatch')
   const intentId = paymentIntentId(session)
   if (paid && (session.status !== 'complete' || session.paymentStatus !== 'paid'
     || intentId === null)) {
@@ -144,17 +149,18 @@ export async function retrieveSession({ sessionId, secretKey, mode, fetchImpl = 
 
 // Official API 1.0 AccountResponse: mode, activation, key permissions and actual
 // chargeable currency/method capabilities. No key/customer fields reach clients.
-export async function verifyMerchantReadiness({ secretKey, mode, merchantId, fetchImpl = fetch, requireCard = false }) {
+export async function verifyMerchantReadiness({ secretKey, mode, merchantId, fetchImpl = fetch, requireCard = false, chargeCurrency = 'EGP' }) {
   validKey(secretKey, mode)
+  if (!['EGP', 'USD'].includes(chargeCurrency)) throw new Error('xpay_currency_unsupported')
   const response = await fetchImpl(`${API}/account`, { redirect: 'error', signal: AbortSignal.timeout(10000), headers: { authorization: `Bearer ${secretKey}` } })
   if (!response.ok) throw new Error('xpay_account_unavailable')
   const account = await response.json()
-  const currency = account.supportedCurrencies?.find(value => value.code === 'EGP')
+  const currency = Array.isArray(account.supportedCurrencies) ? account.supportedCurrencies.find(value => value.code === chargeCurrency) : null
   if (account.id !== merchantId || account.livemode !== (mode === 'live') || account.apiKey?.mode !== mode || !['SECRET', 'RESTRICTED'].includes(account.apiKey?.type)
     || (mode === 'live' && account.livePaymentsEnabled !== true) || currency?.decimals !== 2 || !Array.isArray(currency.paymentMethodTypes)
     || !currency.paymentMethodTypes.some(method => ['card', 'fawry', 'valu', 'apple_pay'].includes(method))
     || !['CHECKOUT_SESSIONS_READ', 'CHECKOUT_SESSIONS_WRITE'].every(permission => account.apiKey?.permissions?.includes(permission))) throw new Error('xpay_account_not_ready')
-  if (requireCard && !currency.paymentMethodTypes.includes('card')) throw Object.assign(new Error('xpay_payment_method_unsupported'), { checkoutCode: 'checkout_payment_method_unsupported' })
+  if ((requireCard || chargeCurrency === 'USD') && !currency.paymentMethodTypes.includes('card')) throw Object.assign(new Error('xpay_payment_method_unsupported'), { checkoutCode: 'checkout_payment_method_unsupported' })
   return { ready: true, mode }
 }
 
