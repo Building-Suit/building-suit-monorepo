@@ -15,7 +15,10 @@
     "apps/doctor-suit/app/layouts/auth.vue",
     "apps/doctor-suit/app/pages/onboarding.vue",
     "packages/ui/src/organisms/BsSignupEnrollment.vue",
-    "packages/ui/src/types/signupPresentation.ts"
+    "packages/ui/src/types/signupPresentation.ts",
+    "apps/doctor-suit/app/app.vue",
+    "packages/ui/src/templates/BsAppRoot.vue",
+    "packages/ui/tests/app-root-transition.test.mjs"
   ],
-  "reason": "Keep the Doctor practice-profile editor separate from optional verified-account identity presentation using explicit typed flags and unlocked practice display name. Other products retain their default account identity panel/name-lock behavior. Preserve the inherited Doctor glass auth wrapper. Canonical route/session transition repair comes from the coordinated Shop PR389; no duplicate transition override, auth authority change or live activation."
+  "reason": "Preserve the canonical committed-router/session-layout repair from coordinated Shop PR389, and honor the existing explicit false transition option for Doctor asynchronous private-page navigation. Other products retain default/keyed/custom transitions. Separate the editable Doctor practice profile from optional verified-account identity presentation via typed flags. No auth/session/ownership authority changes or live activation."
 }

@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<{
   toastHost?: boolean
   confirmHost?: boolean
 }>(), {
-  privacy: undefined, renderPage: true, layout: undefined, layoutKey: undefined, pageKey: undefined, pageTransition: false,
+  privacy: undefined, renderPage: true, layout: undefined, layoutKey: undefined, pageKey: undefined, pageTransition: undefined,
   announcer: false, toastHost: false, confirmHost: true,
 })
 // Match layout/session remounts to the committed route. Nuxt's deferred
@@ -23,7 +23,7 @@ const router = useRouter()
 // transition inside it can retain an orphan page tree after session loss.
 // Unkeyed auth layouts and explicit product transitions retain their motion.
 const authRoute = computed(() => /^(?:\/auth(?:\/|$)|\/login\/?$|\/signup\/?$|\/sign-in\/?$|\/sign-up\/?$|\/recover\/?$|\/verify(?:-email)?\/?$)/.test(router.currentRoute.value.path))
-const resolvedPageTransition = computed(() => props.pageTransition || (props.layoutKey === undefined && authRoute.value ? { name: 'bs-auth-route', mode: 'out-in' as const } : false))
+const resolvedPageTransition = computed(() => props.pageTransition ?? (props.layoutKey === undefined && authRoute.value ? { name: 'bs-auth-route', mode: 'out-in' as const } : false))
 function nativeLayoutName() { return props.layout as PageMeta['layout'] }
 function scopedPageKey(currentRoute: { path: string }) { return `${currentRoute.path}:${props.pageKey}` }
 </script>
