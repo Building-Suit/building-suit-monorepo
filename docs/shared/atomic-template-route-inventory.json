@@ -2928,6 +2928,66 @@
       "status": "implemented; candidate acceptance pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/terms.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/terms.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/privacy.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/privacy.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/subscription.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/subscription.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/payments.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/payments.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/cancellation-refunds.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/cancellation-refunds.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/health-data.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/health-data.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [

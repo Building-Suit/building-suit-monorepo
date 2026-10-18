@@ -1639,5 +1639,32 @@
     "sources": [
       "doctor-annual-pricing-32"
     ]
+  },
+  {
+    "id": "doctor-bilingual-policy-drafts",
+    "task": "DOS-M1-005",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/src/templates/BsManualPaymentPage.vue",
+      "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/work-packages/doctor-suit/policy-draft-review.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Six bilingual Doctor policy review drafts with pinned version/content digest, public shared-template routes and signup/footer/billing links. Preserve exact approved SaaS version acceptance while refusing to misrepresent unapproved drafts as a live contract or health-data consent. Operator/jurisdiction/contact, qualified legal/clinical and live payment/data prerequisites remain explicit; no provider settings, migration, activation, Shop USD or financial-history change.",
+    "sources": [
+      "doctor-bilingual-policy-drafts"
+    ]
   }
 ]

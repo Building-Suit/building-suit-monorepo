@@ -1,0 +1,411 @@
+{
+  "version": "doctor-preview-policies/2026-10-18.1",
+  "status": "draft",
+  "qualifiedApproval": false,
+  "liveDataAllowed": false,
+  "livePaymentsAllowed": false,
+  "documents": {
+    "terms": {
+      "en": {
+        "title": "Draft terms of use",
+        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.1",
+        "updated": "2026-10-18",
+        "sections": [
+          {
+            "title": "Draft status and operator details",
+            "paragraphs": [
+              "This is a review draft for the synthetic administrative preview. It is not an approved live-service contract or a professional, legal or security certification. Reading or using the preview does not approve real patient processing, clinical care or live payments.",
+              "The legal operator name, registered address, registration/tax details, applicable jurisdiction, privacy/support contact, hosting/subprocessor locations and retention schedule are unconfirmed. Qualified review and these details are required before live publication and binding contract acceptance."
+            ]
+          },
+          {
+            "title": "Current service and account use",
+            "paragraphs": [
+              "Doctor Suit currently provides a synthetic administrative web preview: practice/location setup, team permissions, an administrative patient directory, appointments and reception, and attributed activity history where enabled. Use authorized test identities and synthetic records only.",
+              "Use your own authorized account, protect its credentials, and access only practices and locations granted to you. A display name, email match, subscription or invitation does not confer professional licensing, clinical authority or access to another practice."
+            ]
+          },
+          {
+            "title": "Availability and professional responsibility",
+            "paragraphs": [
+              "Clinical care, diagnosis, prescribing, medication/dose advice, mobile apps and external integrations are unavailable in this edition. Do not use the preview for emergencies or as a clinical record or decision system. No guaranteed notifications, outcomes, uptime or release dates are promised.",
+              "Professional and patient obligations remain independent of software access. Real clinical use requires separate verified clinical, licensing, legal, security and operating decisions."
+            ]
+          },
+          {
+            "title": "Commercial documents and changes",
+            "paragraphs": [
+              "Current launch prices and capacity are described in the draft subscription policy. A published list price does not activate a service or replace an issued quote. The server-approved version document and its recorded acceptance govern each synthetic trial or quote.",
+              "Changes to these draft pages must receive a new policy version. There is no assumption that an earlier acknowledgement accepts later terms, or that a policy text can grant permissions, charge a payment or activate a subscription. Liability, dispute and governing-law provisions await qualified review; none are invented in this draft."
+            ]
+          }
+        ]
+      },
+      "ar": {
+        "title": "مسودة شروط الاستخدام",
+        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.1",
+        "updated": "2026-10-18",
+        "sections": [
+          {
+            "title": "حالة المسودة وبيانات المشغّل",
+            "paragraphs": [
+              "هذه مسودة للمراجعة تخص المعاينة الإدارية الاصطناعية. ليست عقداً معتمداً لخدمة حية أو شهادة مهنية أو قانونية أو أمنية. قراءة المعاينة أو استخدامها لا يعتمد معالجة بيانات مرضى حقيقية أو رعاية سريرية أو مدفوعات حية.",
+              "لم تُؤكد هوية المشغّل القانونية وعنوانه المسجل وبيانات التسجيل والضرائب والاختصاص القضائي وجهة اتصال الخصوصية والدعم ومواقع الاستضافة ومقدمي المعالجة وجدول الاحتفاظ. يلزم توفيرها ومراجعة مختصة قبل النشر الحي وقبول عقد ملزم."
+            ]
+          },
+          {
+            "title": "الخدمة الحالية واستخدام الحساب",
+            "paragraphs": [
+              "يوفر Doctor Suit حالياً معاينة ويب إدارية اصطناعية: إعداد الممارسة والمواقع وصلاحيات الفريق ودليل إداري للمرضى والمواعيد والاستقبال وسجل نشاط منسوب إلى فاعليه حيث يُتاح. استخدم هويات اختبار مصرحاً بها وسجلات اصطناعية فقط.",
+              "استخدم حسابك المصرح به واحمِ بيانات الدخول ولا تصل إلا إلى الممارسات والمواقع الممنوحة لك. الاسم أو تطابق البريد أو الاشتراك أو الدعوة لا يمنح ترخيصاً مهنياً أو صلاحية سريرية أو وصولاً إلى ممارسة أخرى."
+            ]
+          },
+          {
+            "title": "التوفر والمسؤولية المهنية",
+            "paragraphs": [
+              "الرعاية السريرية والتشخيص والوصفات ونصائح الدواء والجرعات وتطبيقات الجوال والتكاملات الخارجية غير متاحة في هذا الإصدار. لا تستخدم المعاينة للطوارئ أو كسجل أو نظام قرار سريري. لا تُضمن الإشعارات أو النتائج أو استمرارية التشغيل أو مواعيد الإصدار.",
+              "تبقى الالتزامات المهنية والتزامات المرضى مستقلة عن الوصول إلى البرنامج. يتطلب الاستخدام السريري الحقيقي قرارات مستقلة موثقة للسلامة السريرية والترخيص والقانون والأمن والتشغيل."
+            ]
+          },
+          {
+            "title": "الوثائق التجارية والتغييرات",
+            "paragraphs": [
+              "تصف مسودة سياسة الاشتراك أسعار الإطلاق والسعات الحالية. نشر السعر لا يفعّل خدمة ولا يستبدل عرضاً صادراً. ترتبط كل تجربة أو عرض اصطناعي بوثيقة النسخة المعتمدة على الخادم وقبولها المسجل.",
+              "يلزم إصدار نسخة سياسة جديدة عند تغيير هذه المسودات. لا يُفترض أن الإقرار السابق يقبل شروطاً لاحقة أو أن نص السياسة يمنح صلاحيات أو يخصم أموالاً أو يفعّل اشتراكاً. تنتظر أحكام المسؤولية والنزاعات والقانون الحاكم مراجعة مختصة ولم تُختلق هنا."
+            ]
+          }
+        ]
+      }
+    },
+    "privacy": {
+      "en": {
+        "title": "Draft privacy notice",
+        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.1",
+        "updated": "2026-10-18",
+        "sections": [
+          {
+            "title": "Draft status and operator details",
+            "paragraphs": [
+              "This is a review draft for the synthetic administrative preview. It is not an approved live-service contract or a professional, legal or security certification. Reading or using the preview does not approve real patient processing, clinical care or live payments.",
+              "The legal operator name, registered address, registration/tax details, applicable jurisdiction, privacy/support contact, hosting/subprocessor locations and retention schedule are unconfirmed. Qualified review and these details are required before live publication and binding contract acceptance."
+            ]
+          },
+          {
+            "title": "Information used by the preview",
+            "paragraphs": [
+              "Account flows use an email address and display name; credentials and verification are handled by the configured authentication service. Practice setup collects practice/location names and timezone. Registration temporarily keeps a bounded per-tab draft of these non-secret fields for up to 24 hours; passwords, verification codes and access tokens are excluded from that draft.",
+              "Authorized administrative fixtures may include synthetic directory, appointment, team and activity records. Optional transfer evidence is private and bounded to one PDF, PNG or JPEG up to 5 MiB per notice. Avoid unnecessary information; never upload real patient records, bank credentials, card details, PINs or banking OTPs."
+            ]
+          },
+          {
+            "title": "Sessions, access and purposes",
+            "paragraphs": [
+              "Session cookies, security state, per-tab drafts and language/theme preferences support sign-in, recovery and presentation. Server checks determine verified identity, session validity, admission, practice/location access and subscription entitlements. Changing browser state or accepting a page cannot bypass those checks.",
+              "Account, operational and review data support the requested synthetic workflows, access protection and attributed audit. Access is restricted by server permissions; receipt uploads do not become public files or payment proof merely because they were submitted."
+            ]
+          },
+          {
+            "title": "Rights, retention and service providers",
+            "paragraphs": [
+              "The authenticated privacy area accepts a request for review. It does not automatically export or erase records, confirm a legal deadline or override another person’s rights, mandatory retention or financial/audit integrity. No universal retention period is approved.",
+              "Before real personal-data processing, confirm the responsible operator/controller and processor roles, lawful grounds, data-subject channels, purposes, subprocessors/locations, cross-border arrangements, retention/deletion rules and incident response. These details and any consent mechanism require applicable-jurisdiction review. No GDPR, HIPAA or local-law compliance certification is asserted."
+            ]
+          }
+        ]
+      },
+      "ar": {
+        "title": "مسودة إشعار الخصوصية",
+        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.1",
+        "updated": "2026-10-18",
+        "sections": [
+          {
+            "title": "حالة المسودة وبيانات المشغّل",
+            "paragraphs": [
+              "هذه مسودة للمراجعة تخص المعاينة الإدارية الاصطناعية. ليست عقداً معتمداً لخدمة حية أو شهادة مهنية أو قانونية أو أمنية. قراءة المعاينة أو استخدامها لا يعتمد معالجة بيانات مرضى حقيقية أو رعاية سريرية أو مدفوعات حية.",
+              "لم تُؤكد هوية المشغّل القانونية وعنوانه المسجل وبيانات التسجيل والضرائب والاختصاص القضائي وجهة اتصال الخصوصية والدعم ومواقع الاستضافة ومقدمي المعالجة وجدول الاحتفاظ. يلزم توفيرها ومراجعة مختصة قبل النشر الحي وقبول عقد ملزم."
+            ]
+          },
+          {
+            "title": "المعلومات المستخدمة في المعاينة",
+            "paragraphs": [
+              "تستخدم إجراءات الحساب البريد الإلكتروني والاسم المعروض، وتتولى خدمة المصادقة المضبوطة بيانات الدخول والتحقق. يجمع الإعداد أسماء الممارسة والموقع والمنطقة الزمنية. يحتفظ التسجيل مؤقتاً بمسودة محدودة لهذه الحقول غير السرية داخل علامة التبويب لمدة تصل إلى ٢٤ ساعة؛ ولا تشمل كلمات المرور أو رموز التحقق أو رموز الوصول.",
+              "قد تتضمن الاختبارات الإدارية المصرح بها سجلات اصطناعية للدليل والمواعيد والفريق والنشاط. دليل التحويل الاختياري خاص ومحدود بملف PDF أو PNG أو JPEG واحد حتى ٥ ميبيبايت لكل إشعار. تجنب المعلومات غير اللازمة، ولا ترفع سجلات مرضى حقيقية أو بيانات دخول بنكية أو بيانات بطاقات أو أرقام PIN أو رموز OTP بنكية."
+            ]
+          },
+          {
+            "title": "الجلسات والوصول والأغراض",
+            "paragraphs": [
+              "تدعم ملفات تعريف ارتباط الجلسة وحالة الأمان ومسودات التبويب وتفضيلات اللغة والمظهر تسجيل الدخول والاستعادة والعرض. يحدد الخادم الهوية المتحققة وصلاحية الجلسة والقبول والوصول إلى الممارسة والموقع واستحقاقات الاشتراك. تغيير حالة المتصفح أو قبول صفحة لا يتجاوز هذه الضوابط.",
+              "تدعم بيانات الحساب والتشغيل والمراجعة الإجراءات الاصطناعية المطلوبة وحماية الوصول وسجل النشاط المنسوب إلى فاعليه. تقيد صلاحيات الخادم الوصول، ولا تصبح الإيصالات ملفات عامة أو إثبات دفع لمجرد رفعها."
+            ]
+          },
+          {
+            "title": "الحقوق والاحتفاظ ومقدمو الخدمة",
+            "paragraphs": [
+              "تستقبل مساحة الخصوصية بعد المصادقة طلباً للمراجعة. لا تصدّر السجلات أو تمحوها تلقائياً ولا تؤكد مهلة قانونية ولا تتجاوز حقوق الآخرين أو الاحتفاظ الإلزامي أو سلامة السجلات المالية والتدقيق. لم تُعتمد مدة احتفاظ عامة.",
+              "قبل معالجة بيانات شخصية حقيقية، يلزم تحديد المشغّل المسؤول وأدوار المتحكم والمعالج والأسس القانونية وقنوات أصحاب البيانات والأغراض ومقدمي المعالجة ومواقعهم والترتيبات العابرة للحدود وقواعد الاحتفاظ والحذف والاستجابة للحوادث. تحتاج هذه التفاصيل وآلية الموافقة إلى مراجعة بحسب الاختصاص. لا تُدعى شهادة امتثال لـ GDPR أو HIPAA أو قانون محلي."
+            ]
+          }
+        ]
+      }
+    },
+    "subscription": {
+      "en": {
+        "title": "Draft trial and subscription policy",
+        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.1",
+        "updated": "2026-10-18",
+        "sections": [
+          {
+            "title": "Draft status and operator details",
+            "paragraphs": [
+              "This is a review draft for the synthetic administrative preview. It is not an approved live-service contract or a professional, legal or security certification. Reading or using the preview does not approve real patient processing, clinical care or live payments.",
+              "The legal operator name, registered address, registration/tax details, applicable jurisdiction, privacy/support contact, hosting/subprocessor locations and retention schedule are unconfirmed. Qualified review and these details are required before live publication and binding contract acceptance."
+            ]
+          },
+          {
+            "title": "Current launch list prices",
+            "paragraphs": [
+              "Monthly EGP prices: Starter 299, Clinic 599, Group 999. Twelve prepaid calendar months: Starter 2439.84, Clinic 4887.84, Group 8151.84 EGP. Each annual amount is exactly 32% below twelve monthly payments. Self-service setup fee is zero; tax treatment is unconfirmed.",
+              "Starter supports 1 active location and 5 total named users including the owner; Clinic 3 locations/10 users; Group 5 locations/25 users. Server staff reservations exclude the owner (4/9/24), include pending invitations and do not multiply a person across locations."
+            ]
+          },
+          {
+            "title": "Trials, periods and renewal",
+            "paragraphs": [
+              "There is no approved universal trial duration. The actual server-approved version document specifies any trial, grace, expiry, capacity and cancellation/refund policy before acceptance. Unconfigured terms cannot start a trial or purchase.",
+              "Renewal for these launch offers is manual. There is no automatic debit or invented automatic renewal. Each new quoted purchase requires the applicable version and explicit acceptance. Existing pending/paid quotes, payment amounts, period dates and history retain their original snapshots; a new catalogue does not reprice them."
+            ]
+          },
+          {
+            "title": "Features and current limitations",
+            "paragraphs": [
+              "Standard future features are included as released within plan capacity, without separate feature add-on charges. This is not a promise of a release date, lifetime-fixed pricing, unlimited usage/storage/support or externally purchased messaging/provider capacity.",
+              "Administrative availability remains separate from clinical, mobile and integration availability. A subscription or draft-policy acknowledgement does not authorize real data, medical practice or live payment activation."
+            ]
+          }
+        ]
+      },
+      "ar": {
+        "title": "مسودة سياسة التجربة والاشتراك",
+        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.1",
+        "updated": "2026-10-18",
+        "sections": [
+          {
+            "title": "حالة المسودة وبيانات المشغّل",
+            "paragraphs": [
+              "هذه مسودة للمراجعة تخص المعاينة الإدارية الاصطناعية. ليست عقداً معتمداً لخدمة حية أو شهادة مهنية أو قانونية أو أمنية. قراءة المعاينة أو استخدامها لا يعتمد معالجة بيانات مرضى حقيقية أو رعاية سريرية أو مدفوعات حية.",
+              "لم تُؤكد هوية المشغّل القانونية وعنوانه المسجل وبيانات التسجيل والضرائب والاختصاص القضائي وجهة اتصال الخصوصية والدعم ومواقع الاستضافة ومقدمي المعالجة وجدول الاحتفاظ. يلزم توفيرها ومراجعة مختصة قبل النشر الحي وقبول عقد ملزم."
+            ]
+          },
+          {
+            "title": "أسعار الإطلاق الحالية",
+            "paragraphs": [
+              "الأسعار الشهرية بالجنيه المصري: البداية 299، العيادة 599، المجموعة 999. أسعار ١٢ شهراً تقويمياً مدفوعة مقدماً: البداية 2439.84، العيادة 4887.84، المجموعة 8151.84 جنيه. يقل كل سعر سنوي بنسبة ٣٢٪ تماماً عن اثنتي عشرة دفعة شهرية. رسوم إعداد الخدمة الذاتية صفر، والمعالجة الضريبية غير مؤكدة.",
+              "تدعم البداية موقعاً نشطاً واحداً و٥ مستخدمين مسمّين بمن فيهم المالك، والعيادة ٣ مواقع و١٠ مستخدمين، والمجموعة ٥ مواقع و٢٥ مستخدماً. تستثني حجوزات مقاعد الفريق المالك (٤/٩/٢٤) وتشمل الدعوات المعلقة ولا تضاعف الشخص عبر المواقع."
+            ]
+          },
+          {
+            "title": "التجارب والفترات والتجديد",
+            "paragraphs": [
+              "لا توجد مدة تجربة عامة معتمدة. تحدد وثيقة النسخة المعتمدة على الخادم التجربة والسماح والانتهاء والسعة وسياسة الإلغاء والاسترداد قبل القبول. لا تبدأ تجربة أو عملية شراء بشروط غير مضبوطة.",
+              "تجديد عروض الإطلاق يدوي. لا يوجد خصم تلقائي أو تجديد آلي مفترض. تتطلب كل عملية شراء جديدة بعرض سعر النسخة السارية وقبولاً صريحاً. تحتفظ العروض المعلقة والمدفوعة ومبالغ الدفع وتواريخ الفترات والسجلات بنسخها الأصلية؛ ولا تعيد قائمة أسعار جديدة تسعيرها."
+            ]
+          },
+          {
+            "title": "المزايا والحدود الحالية",
+            "paragraphs": [
+              "تشمل الخطط المزايا القياسية المستقبلية عند إصدارها ضمن سعة الخطة دون رسوم إضافات منفصلة للمزايا. لا يضمن ذلك موعد إصدار أو سعراً ثابتاً مدى الحياة أو استخداماً أو تخزيناً أو دعماً غير محدود أو سعة مراسلة وخدمات خارجية مدفوعة.",
+              "يبقى التوفر الإداري مستقلاً عن توفر الرعاية السريرية والجوال والتكاملات. لا يجيز الاشتراك أو الإقرار بمسودة سياسة بيانات حقيقية أو ممارسة طبية أو تفعيل مدفوعات حية."
+            ]
+          }
+        ]
+      }
+    },
+    "payments": {
+      "en": {
+        "title": "Draft InstaPay payment policy",
+        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.1",
+        "updated": "2026-10-18",
+        "sections": [
+          {
+            "title": "Draft status and operator details",
+            "paragraphs": [
+              "This is a review draft for the synthetic administrative preview. It is not an approved live-service contract or a professional, legal or security certification. Reading or using the preview does not approve real patient processing, clinical care or live payments.",
+              "The legal operator name, registered address, registration/tax details, applicable jurisdiction, privacy/support contact, hosting/subprocessor locations and retention schedule are unconfirmed. Qualified review and these details are required before live publication and binding contract acceptance."
+            ]
+          },
+          {
+            "title": "Current route and safe instructions",
+            "paragraphs": [
+              "Live payments are unavailable. Do not send actual funds in this synthetic preview. A future transfer requires approved Doctor-specific terms and verified beneficiary instructions; no merchant identity, IPA/mobile destination or reviewer is supplied by these drafts.",
+              "Use only instructions bound by the server to your own quote and payment request. Check the beneficiary displayed by the bank before authorizing a transfer. Doctor does not request your bank login, card number, PIN, IPN PIN or banking OTP. Bank authentication belongs in the bank/InstaPay service."
+            ]
+          },
+          {
+            "title": "A notice is a claim, not activation",
+            "paragraphs": [
+              "A customer reference, screenshot or uploaded receipt alone does not prove received funds or activate a subscription. An independently authorized reviewer must check the beneficiary account, exact amount/currency and bank reference. Funds verification and paid-period activation are separate operations.",
+              "Keep the original reference and check the bank/provider transaction status if delayed. Do not send another payment merely because an upload or review is pending. An uncertain application operation retries the same retained request; it must not create a second transfer or silently change the amount."
+            ]
+          },
+          {
+            "title": "Bank issues and refunds",
+            "paragraphs": [
+              "For a wrong beneficiary, rejected/debited or unresolved transfer, use the bank/InstaPay investigation route with the original transaction reference. Doctor cannot reverse a bank transfer through a policy page. Any product refund requires a separately approved policy and independent review; no automatic refund or processing time is promised."
+            ]
+          }
+        ]
+      },
+      "ar": {
+        "title": "مسودة سياسة الدفع عبر InstaPay",
+        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.1",
+        "updated": "2026-10-18",
+        "sections": [
+          {
+            "title": "حالة المسودة وبيانات المشغّل",
+            "paragraphs": [
+              "هذه مسودة للمراجعة تخص المعاينة الإدارية الاصطناعية. ليست عقداً معتمداً لخدمة حية أو شهادة مهنية أو قانونية أو أمنية. قراءة المعاينة أو استخدامها لا يعتمد معالجة بيانات مرضى حقيقية أو رعاية سريرية أو مدفوعات حية.",
+              "لم تُؤكد هوية المشغّل القانونية وعنوانه المسجل وبيانات التسجيل والضرائب والاختصاص القضائي وجهة اتصال الخصوصية والدعم ومواقع الاستضافة ومقدمي المعالجة وجدول الاحتفاظ. يلزم توفيرها ومراجعة مختصة قبل النشر الحي وقبول عقد ملزم."
+            ]
+          },
+          {
+            "title": "المسار الحالي والتعليمات الآمنة",
+            "paragraphs": [
+              "المدفوعات الحية غير متاحة. لا ترسل أموالاً فعلية في هذه المعاينة الاصطناعية. يتطلب التحويل المستقبلي شروط Doctor معتمدة وتعليمات مستفيد متحققاً منها؛ ولا توفر هذه المسودات هوية تاجر أو عنوان IPA أو هاتف مستفيد أو مراجعاً.",
+              "استخدم فقط تعليمات الخادم المرتبطة بعرضك وطلب دفعك. تحقق من المستفيد الظاهر لدى البنك قبل تفويض التحويل. لا يطلب Doctor بيانات الدخول البنكي أو رقم البطاقة أو PIN أو IPN PIN أو OTP بنكي. تتم المصادقة البنكية داخل خدمة البنك أو InstaPay."
+            ]
+          },
+          {
+            "title": "الإشعار ادعاء وليس تفعيلًا",
+            "paragraphs": [
+              "مرجع العميل أو لقطة الشاشة أو الإيصال المرفوع وحده لا يثبت وصول الأموال ولا يفعّل اشتراكاً. يجب أن يتحقق مراجع مستقل مصرح به من حساب المستفيد والمبلغ والعملة ومرجع البنك. التحقق من الأموال وتفعيل الفترة المدفوعة عمليتان منفصلتان.",
+              "احتفظ بالمرجع الأصلي وتحقق من حالة المعاملة لدى البنك أو المزوّد عند التأخر. لا تدفع مرة أخرى لمجرد انتظار رفع أو مراجعة. تعيد العملية غير مؤكدة النتيجة الطلب المحفوظ نفسه، ولا تنشئ تحويلاً ثانياً أو تغير المبلغ بصمت."
+            ]
+          },
+          {
+            "title": "مشكلات البنك والاسترداد",
+            "paragraphs": [
+              "عند التحويل لمستفيد خاطئ أو رفض مع خصم أو معاملة غير محسومة، استخدم مسار التحقيق لدى البنك أو InstaPay مع مرجع المعاملة الأصلي. لا يستطيع Doctor عكس تحويل بنكي عبر صفحة سياسة. يتطلب استرداد رسوم المنتج سياسة مستقلة معتمدة ومراجعة منفصلة، ولا يُضمن استرداد تلقائي أو زمن معالجة."
+            ]
+          }
+        ]
+      }
+    },
+    "cancellation-refunds": {
+      "en": {
+        "title": "Draft cancellation and refund policy",
+        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.1",
+        "updated": "2026-10-18",
+        "sections": [
+          {
+            "title": "Draft status and operator details",
+            "paragraphs": [
+              "This is a review draft for the synthetic administrative preview. It is not an approved live-service contract or a professional, legal or security certification. Reading or using the preview does not approve real patient processing, clinical care or live payments.",
+              "The legal operator name, registered address, registration/tax details, applicable jurisdiction, privacy/support contact, hosting/subprocessor locations and retention schedule are unconfirmed. Qualified review and these details are required before live publication and binding contract acceptance."
+            ]
+          },
+          {
+            "title": "Manual renewal and cancellation",
+            "paragraphs": [
+              "These launch offers renew manually and do not authorize automatic charges. Not making a later purchase does not itself erase existing records. The approved version document, account state and server-derived period dates determine current access.",
+              "Cancellation, grace, downgrade and refund details require qualified commercial/legal approval where unconfigured. This draft creates no cooling-off period, fee, blanket non-refund rule, automatic cancellation command or promised refund deadline. Mandatory rights under the applicable law must be determined before live use and are not waived here."
+            ]
+          },
+          {
+            "title": "Historical records and requests",
+            "paragraphs": [
+              "Expiry preserves attributed historical records under the configured read-only rules; it does not reset a paid period or confer new write rights. Account/privacy review requests are separate from payment/refund decisions.",
+              "The legal operator/contact and approved request handling, retention/export and dispute process are still unconfirmed. Until those are supplied and approved, live cancellation/refund fulfilment is unavailable. Existing immutable financial and audit records are not silently rewritten or deleted."
+            ]
+          }
+        ]
+      },
+      "ar": {
+        "title": "مسودة سياسة الإلغاء والاسترداد",
+        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.1",
+        "updated": "2026-10-18",
+        "sections": [
+          {
+            "title": "حالة المسودة وبيانات المشغّل",
+            "paragraphs": [
+              "هذه مسودة للمراجعة تخص المعاينة الإدارية الاصطناعية. ليست عقداً معتمداً لخدمة حية أو شهادة مهنية أو قانونية أو أمنية. قراءة المعاينة أو استخدامها لا يعتمد معالجة بيانات مرضى حقيقية أو رعاية سريرية أو مدفوعات حية.",
+              "لم تُؤكد هوية المشغّل القانونية وعنوانه المسجل وبيانات التسجيل والضرائب والاختصاص القضائي وجهة اتصال الخصوصية والدعم ومواقع الاستضافة ومقدمي المعالجة وجدول الاحتفاظ. يلزم توفيرها ومراجعة مختصة قبل النشر الحي وقبول عقد ملزم."
+            ]
+          },
+          {
+            "title": "التجديد اليدوي والإلغاء",
+            "paragraphs": [
+              "تتجدد عروض الإطلاق يدوياً ولا تجيز خصماً تلقائياً. عدم شراء فترة لاحقة لا يمحو السجلات القائمة بحد ذاته. تحدد وثيقة النسخة المعتمدة وحالة الحساب وتواريخ الفترة المحسوبة على الخادم صلاحية الوصول الحالية.",
+              "تحتاج تفاصيل الإلغاء والسماح وخفض الخطة والاسترداد إلى اعتماد تجاري وقانوني مختص حيث لم تضبط. لا تنشئ هذه المسودة مهلة عدول أو رسوماً أو منعاً عاماً للاسترداد أو أمر إلغاء آلياً أو موعداً مضموناً للاسترداد. يلزم تحديد الحقوق الإلزامية بحسب القانون الساري قبل الاستخدام الحي ولا تتنازل عنها هذه المسودة."
+            ]
+          },
+          {
+            "title": "السجلات السابقة والطلبات",
+            "paragraphs": [
+              "يحافظ الانتهاء على السجلات السابقة المنسوبة إلى فاعليها وفق قواعد القراءة فقط المضبوطة، ولا يعيد ضبط فترة مدفوعة أو يمنح حقوق كتابة جديدة. طلبات مراجعة الحساب والخصوصية مستقلة عن قرارات الدفع والاسترداد.",
+              "ما زالت هوية المشغّل وجهة الاتصال وإجراءات معالجة الطلبات والاحتفاظ والتصدير والنزاع غير مؤكدة. تظل إجراءات الإلغاء والاسترداد الحية غير متاحة حتى توفيرها واعتمادها. لا تُعدل السجلات المالية والتدقيق الثابتة أو تُحذف بصمت."
+            ]
+          }
+        ]
+      }
+    },
+    "health-data": {
+      "en": {
+        "title": "Draft health-data and clinical-use safeguards",
+        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.1",
+        "updated": "2026-10-18",
+        "sections": [
+          {
+            "title": "Draft status and operator details",
+            "paragraphs": [
+              "This is a review draft for the synthetic administrative preview. It is not an approved live-service contract or a professional, legal or security certification. Reading or using the preview does not approve real patient processing, clinical care or live payments.",
+              "The legal operator name, registered address, registration/tax details, applicable jurisdiction, privacy/support contact, hosting/subprocessor locations and retention schedule are unconfirmed. Qualified review and these details are required before live publication and binding contract acceptance."
+            ]
+          },
+          {
+            "title": "Synthetic administrative scope",
+            "paragraphs": [
+              "Do not enter real patient names, identifiers, contact details, medical histories, clinical documents, prescriptions or other health data. Use synthetic fixtures only. Administrative appointment or directory information can still reveal sensitive information in a real deployment; calling a feature administrative does not remove privacy obligations.",
+              "The current edition provides no clinical diagnosis, prescribing, dose calculation, medication substitution, emergency response or professional licensing verification. Clinical permissions remain separate from owner, secretary, subscription and ordinary administrative permissions."
+            ]
+          },
+          {
+            "title": "Requirements before any real-data or clinical use",
+            "paragraphs": [
+              "Confirm the jurisdiction and accountable operator/practice roles; approved lawful processing grounds and patient notices/permissions; health-data restrictions; professional licensing and clinical governance; hosting/subprocessors and transfers; access/audit controls; retention/export/deletion; incident reporting; backup/recovery and independently checked safety/security evidence.",
+              "The responsible qualified reviewers and these decisions are not supplied by this draft. No health-data consent, DPA, clinical certification, HIPAA/GDPR compliance, local-law approval, guaranteed safety or live-readiness claim is created. A signup checkbox or policy acceptance cannot replace this evidence."
+            ]
+          }
+        ]
+      },
+      "ar": {
+        "title": "مسودة ضوابط البيانات الصحية والاستخدام السريري",
+        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.1",
+        "updated": "2026-10-18",
+        "sections": [
+          {
+            "title": "حالة المسودة وبيانات المشغّل",
+            "paragraphs": [
+              "هذه مسودة للمراجعة تخص المعاينة الإدارية الاصطناعية. ليست عقداً معتمداً لخدمة حية أو شهادة مهنية أو قانونية أو أمنية. قراءة المعاينة أو استخدامها لا يعتمد معالجة بيانات مرضى حقيقية أو رعاية سريرية أو مدفوعات حية.",
+              "لم تُؤكد هوية المشغّل القانونية وعنوانه المسجل وبيانات التسجيل والضرائب والاختصاص القضائي وجهة اتصال الخصوصية والدعم ومواقع الاستضافة ومقدمي المعالجة وجدول الاحتفاظ. يلزم توفيرها ومراجعة مختصة قبل النشر الحي وقبول عقد ملزم."
+            ]
+          },
+          {
+            "title": "النطاق الإداري الاصطناعي",
+            "paragraphs": [
+              "لا تدخل أسماء مرضى حقيقية أو معرفاتهم أو جهات اتصالهم أو تاريخهم الطبي أو مستنداتهم السريرية أو وصفاتهم أو بيانات صحية أخرى. استخدم بيانات اختبار اصطناعية فقط. قد تكشف بيانات المواعيد والدليل الإداري معلومات حساسة عند التشغيل الحقيقي؛ وتسميتها إدارية لا تلغي التزامات الخصوصية.",
+              "لا يوفر الإصدار الحالي تشخيصاً أو وصفات أو حساب جرعات أو بدائل أدوية أو استجابة للطوارئ أو تحققاً من التراخيص المهنية. تبقى الصلاحيات السريرية مستقلة عن صلاحيات المالك والسكرتير والاشتراك والإدارة العادية."
+            ]
+          },
+          {
+            "title": "المتطلبات السابقة لأي بيانات حقيقية أو استخدام سريري",
+            "paragraphs": [
+              "يلزم تأكيد الاختصاص وأدوار المشغّل والممارسة المسؤولة والأسس القانونية المعتمدة للمعالجة وإشعارات المرضى وأذوناتهم وقيود البيانات الصحية والترخيص المهني والحوكمة السريرية والاستضافة والمعالجين والتحويلات وضوابط الوصول والتدقيق والاحتفاظ والتصدير والحذف والإبلاغ عن الحوادث والنسخ الاحتياطي والاستعادة وأدلة سلامة وأمن مستقلة.",
+              "لا توفر هذه المسودة المراجعين المختصين المسؤولين أو تلك القرارات. ولا تنشئ موافقة معالجة بيانات صحية أو اتفاقية معالجة أو شهادة سريرية أو امتثالاً لـ HIPAA أو GDPR أو اعتماداً قانونياً محلياً أو ضمان سلامة أو جاهزية حية. لا يحل مربع تسجيل أو قبول سياسة محل هذه الأدلة."
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

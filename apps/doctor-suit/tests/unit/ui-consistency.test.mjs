@@ -13,7 +13,7 @@ test('bilingual canonical landing describes implemented administration with appr
     assert.ok(content.pricingTitle.trim());assert.ok(content.pricingBody.trim())
     assert.doesNotMatch(JSON.stringify(content),/\$\d|USD|EGP|free trial|تجربة مجانية|https?:|mailto:|tel:/i)
     const marketing=doctorMarketingCopy(ar);assert.deepEqual(marketing.navigation.map(link=>link.to),['/#features','/#workflow','/#pricing'])
-    assert.deepEqual(marketing.legalLinks.map(link=>link.to),['/preview'])
+    assert.deepEqual(marketing.legalLinks.map(link=>link.to),['/preview','/policies/terms','/policies/privacy','/policies/subscription','/policies/payments','/policies/cancellation-refunds','/policies/health-data'])
     assert.doesNotMatch(marketing.labels.startTrial,/free|trial|مجانية|تجربة/i)
   }
 })
