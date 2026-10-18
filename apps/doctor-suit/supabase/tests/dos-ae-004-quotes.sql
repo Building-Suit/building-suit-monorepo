@@ -80,7 +80,7 @@ select is((select count(*)from public.doctor_saas_payment_intents),1::bigint,'de
 select is((select count(*)from doctor_private.command_receipts where actor_user_id=pg_temp.id(1)and command_key in(pg_temp.id(62),pg_temp.id(69),pg_temp.id(71))),0::bigint,'denied commands leave no receipts');
 select throws_ok($$update public.doctor_saas_quotes set amount_minor=1$$,'42501','DOCTOR_SAAS_HISTORY_IMMUTABLE','quoted amount immutable');
 select throws_ok($$delete from public.doctor_saas_payment_intents$$,'42501','DOCTOR_SAAS_HISTORY_IMMUTABLE','intent history immutable');
-select throws_ok($$truncate public.doctor_saas_payment_intents$$,'42501','DOCTOR_SAAS_HISTORY_IMMUTABLE','intent history cannot truncate');
+select throws_ok($$truncate public.doctor_saas_payment_intents cascade$$,'42501','DOCTOR_SAAS_HISTORY_IMMUTABLE','intent history cannot truncate');
 select ok(not has_table_privilege(role_name,'public.'||table_name,'select,insert,update,delete,truncate'),'no raw '||role_name||' grant on '||table_name)
  from unnest(array['anon','authenticated','service_role'])role_name cross join unnest(array['doctor_saas_quotes','doctor_saas_payment_intents'])table_name;
 select ok(not has_function_privilege(role_name,function_name,'execute'),'no '||role_name||' execution: '||function_name)

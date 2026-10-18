@@ -696,6 +696,104 @@ export type Database = {
           },
         ]
       }
+      doctor_saas_synthetic_deliveries: {
+        Row: {
+          database_actor: string
+          delivery_id: string
+          disposition: string
+          event_id: string
+          intent_id: string
+          received_at: string
+          request: Json
+          result: Json
+        }
+        Insert: {
+          database_actor?: string
+          delivery_id: string
+          disposition: string
+          event_id: string
+          intent_id: string
+          received_at?: string
+          request: Json
+          result: Json
+        }
+        Update: {
+          database_actor?: string
+          delivery_id?: string
+          disposition?: string
+          event_id?: string
+          intent_id?: string
+          received_at?: string
+          request?: Json
+          result?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_synthetic_deliveries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_synthetic_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_saas_synthetic_deliveries_intent_id_fkey"
+            columns: ["intent_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_payment_intents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_saas_synthetic_events: {
+        Row: {
+          amount_minor: number
+          binding: string
+          currency: string
+          database_actor: string
+          event_ref: string
+          id: string
+          intent_id: string
+          outcome: string
+          received_at: string
+          reported_subscriber_id: string
+          source_sequence: number
+        }
+        Insert: {
+          amount_minor: number
+          binding: string
+          currency: string
+          database_actor?: string
+          event_ref: string
+          id?: string
+          intent_id: string
+          outcome: string
+          received_at?: string
+          reported_subscriber_id: string
+          source_sequence: number
+        }
+        Update: {
+          amount_minor?: number
+          binding?: string
+          currency?: string
+          database_actor?: string
+          event_ref?: string
+          id?: string
+          intent_id?: string
+          outcome?: string
+          received_at?: string
+          reported_subscriber_id?: string
+          source_sequence?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_synthetic_events_intent_id_fkey"
+            columns: ["intent_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_payment_intents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doctor_saas_terms_documents: {
         Row: {
           content_ar: string
@@ -1696,6 +1794,10 @@ export type Database = {
         Returns: Json
       }
       doctor_runtime_contract: { Args: never; Returns: Json }
+      doctor_saas_financial_status: {
+        Args: { p_page?: number; p_size?: number }
+        Returns: Json
+      }
       doctor_saas_quote: { Args: { p_quote: string }; Returns: Json }
       doctor_saas_status: { Args: never; Returns: Json }
       doctor_saas_terms: { Args: never; Returns: Json }
