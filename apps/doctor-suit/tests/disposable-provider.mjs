@@ -77,7 +77,7 @@ async function confirmedActor(publicKey,label,beforeContext) {
   const user = signin.data.user; const session = signin.data.session
   await beforeContext?.({client,user,session})
   const verified = await rpc(client,'doctor_session_context'); expect(verified.user_id===user.id && verified.session_id,'Verified session must match actual Auth identity')
-  return{client,user,session,sessionId:verified.session_id}
+  return{client,user,session,sessionId:verified.session_id,credentials:{email,password}}
 }
 async function bootstrap(publicKey,label,beforeContext,timezone='Africa/Cairo'){
   const actor=await confirmedActor(publicKey,label,beforeContext),{client,user,session,sessionId}=actor

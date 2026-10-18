@@ -56,6 +56,7 @@
     "apps/doctor-suit/tests/unit/entitlement-context.test.mjs",
     "apps/doctor-suit/tests/unit/instapay-catalog.test.mjs",
     "apps/doctor-suit/tests/unit/instapay-evidence.test.mjs",
+    "apps/doctor-suit/tests/unit/manual-payment-contracts.test.mjs",
     "apps/doctor-suit/tests/unit/manual-payment-controller.test.mjs",
     "apps/doctor-suit/tests/unit/saas-status.test.mjs",
     "docs/shared/atomic-template-route-inventory.json",

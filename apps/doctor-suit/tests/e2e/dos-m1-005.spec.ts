@@ -16,7 +16,7 @@ for (const locale of ['en', 'ar']) for (const width of [390, 1280]) for (const t
     await expect(page.locator('#pricing')).toBeVisible()
     for(const amount of ['299','599','999'])await expect(page.locator('#pricing').getByText(`${amount} ${locale==='en'?'EGP':'ج.م'}`,{exact:true})).toBeVisible()
     await expect(page.locator('#pricing').getByRole('button',{name:locale==='en'?'Live payment unavailable':'الدفع الحي غير متاح'})).toHaveCount(3)
-    await page.locator('#pricing').getByRole('button',{name:locale==='en'?'Yearly':'سنوي',exact:true}).click()
+    await page.locator('#pricing').getByRole('radio',{name:locale==='en'?'Yearly':'سنوي',exact:true}).check()
     for(const amount of ['2990','5990','9990'])await expect(page.locator('#pricing').getByText(`${amount} ${locale==='en'?'EGP':'ج.م'}`,{exact:true})).toBeVisible()
     await page.getByRole('link', { name: locale === 'en' ? 'Preview scope' : 'نطاق المعاينة',exact:true }).click()
     await expect(page).toHaveURL(/\/preview$/)
