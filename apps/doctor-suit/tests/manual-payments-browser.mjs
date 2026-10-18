@@ -9,7 +9,7 @@ export async function verifyManualPaymentBrowser({root,api,origin,key,a,b,expect
  try{
   setStage('actual manual-payment browser readiness')
   server=spawn(process.execPath,['apps/doctor-suit/.output/server/index.mjs'],{cwd:root,env:{...process.env,NITRO_HOST:'127.0.0.1',NITRO_PORT:'4341',APP_URL:origin,NUXT_PUBLIC_DOCTOR_AUTH_CONFIGURED:'true',NUXT_PUBLIC_DOCTOR_AUTH_ENVIRONMENT:'local',NUXT_PUBLIC_DOCTOR_AUTH_ORIGIN:origin,NUXT_PUBLIC_DOCTOR_AUTH_URL:api,NUXT_PUBLIC_DOCTOR_AUTH_KEY:key},detached:true,stdio:'ignore'})
-  let ready=false;for(let n=0;n<100;n++){try{if((await fetch(origin,{signal:AbortSignal.timeout(1000)})).ok){ready=true;break}}catch{}await wait(100)}expect(ready,'Payment browser app unavailable')
+  let ready=false;for(let n=0;n<100;n++){try{if((await fetch(origin,{signal:AbortSignal.timeout(1000)})).ok){ready=true;break}}catch{/* Owned process/readiness may already be unavailable. */}await wait(100)}expect(ready,'Payment browser app unavailable')
   browser=await chromium.launch({headless:true})
   async function signIn(actor){const context=await browser.newContext({viewport:{width:1280,height:1000}});await context.route('**/*',route=>[origin,api].includes(new URL(route.request().url()).origin)?route.continue():route.abort());const page=await context.newPage();page.setDefaultTimeout(20000);await page.goto(`${origin}/sign-in?next=${actor===a?'/payment-notices':'/payment-review'}`);await page.getByLabel(/^Email/).fill(actor.credentials.email);await doctorPasswordStep(page);await page.getByLabel(/^Password/).fill(actor.credentials.password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await browserExpect(page).toHaveURL(new RegExp(actor===a?'/payment-notices$':'/payment-review$'));return{context,page}}
   owner=await signIn(a);const page=owner.page
@@ -42,6 +42,6 @@ export async function verifyManualPaymentBrowser({root,api,origin,key,a,b,expect
   console.log('Actual manual-payment browser: owner annual quote/acceptance, bound instructions, submitted notice/private receipt, independent reviewer verification, active-period replacement hold and Arabic RTL mobile dark reload/history passed.')
  }finally{
   await owner?.context.close().catch(()=>{});await reviewer?.context.close().catch(()=>{});await browser?.close().catch(()=>{})
-  if(server?.pid){try{process.kill(-server.pid,'SIGTERM')}catch{}if(server.exitCode===null)await Promise.race([new Promise(resolve=>server.once('exit',resolve)),wait(5000)]);try{process.kill(-server.pid,'SIGKILL')}catch{}server.unref()}
+  if(server?.pid){try{process.kill(-server.pid,'SIGTERM')}catch{/* Owned process/readiness may already be unavailable. */}if(server.exitCode===null)await Promise.race([new Promise(resolve=>server.once('exit',resolve)),wait(5000)]);try{process.kill(-server.pid,'SIGKILL')}catch{/* Owned process/readiness may already be unavailable. */}server.unref()}
  }
 }

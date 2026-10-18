@@ -246,7 +246,7 @@ declare q public.doctor_saas_quotes;r public.doctor_manual_payment_recipients;re
  select * into review from public.doctor_manual_payment_reviews where notice_id=n.id order by revision desc limit 1;
  return jsonb_build_object('id',n.id,'subscriber_user_id',n.subscriber_user_id,'intent_id',n.intent_id,'quote_id',q.id,
  'terms_id',q.terms_version_id,'billing_interval',q.billing_interval,'amount_minor',q.amount_minor::text,'currency',q.currency,'currency_exponent',q.currency_exponent,
- 'recipient_id',r.id,'beneficiary_name',r.beneficiary_name,'transfer_reference',n.transfer_reference,'transferred_at',n.transferred_at,'created_at',n.created_at,
+ 'recipient_id',r.id,'beneficiary_name',r.beneficiary_name,'recipient_address',r.address,'recipient_kind',r.address_kind,'transfer_reference',n.transfer_reference,'transferred_at',n.transferred_at,'created_at',n.created_at,
  'status',coalesce(review.action,'submitted'),'revision',coalesce(review.revision,0),'review_reason',review.reason,
  'period_id',review.period_id,'history',coalesce((select jsonb_agg(jsonb_build_object('revision',h.revision,'action',h.action,'actor',h.actor_user_id,'reason',h.reason,'at',h.happened_at)order by h.revision)from public.doctor_manual_payment_reviews h where h.notice_id=n.id),'[]'::jsonb),'evidence',coalesce((select jsonb_agg(jsonb_build_object('id',e.id,'filename',e.filename,'mime_type',e.mime_type,'byte_size',e.byte_size,'sha256',e.sha256))from public.doctor_manual_payment_evidence e where e.notice_id=n.id),'[]'::jsonb),'requires_attention',n.requires_attention,'independent_verification_required',true,'automatic_verification',false,'live_acceptance_enabled',false);
 end $$;
