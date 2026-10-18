@@ -4,7 +4,7 @@ create table public.doctor_manual_payment_recipients(
  id uuid primary key default gen_random_uuid(),
  account_key uuid not null,
  address_kind text not null check(address_kind in('ipa','mobile')),
- address text not null check(length(btrim(address)) between 2 and 200 and address !~ '[[:cntrl:]<>]' and address !~ '://'),
+ address text not null check(length(btrim(address))>=2 and length(btrim(address))<=200 and address !~ '[[:cntrl:]<>]' and address !~ '://'),
  beneficiary_name text not null check(length(btrim(beneficiary_name)) between 2 and 200),
  instructions_en text not null check(length(btrim(instructions_en)) between 1 and 2000),
  instructions_ar text not null check(length(btrim(instructions_ar)) between 1 and 2000),
@@ -55,7 +55,7 @@ create table public.doctor_manual_payment_notices(
  recipient_id uuid not null references public.doctor_manual_payment_recipients(id),
  configuration_revision integer not null,request_id uuid not null,requires_attention boolean not null,
  foreign key(request_id,recipient_id,intent_id,subscriber_user_id)references public.doctor_manual_payment_requests(id,recipient_id,intent_id,subscriber_user_id),
- transfer_reference text not null check(length(btrim(transfer_reference)) between 2 and 200 and transfer_reference !~ '[[:cntrl:]<>]'),
+ transfer_reference text not null check(length(btrim(transfer_reference))>=2 and length(btrim(transfer_reference))<=200 and transfer_reference !~ '[[:cntrl:]<>]'),
  transferred_at timestamptz not null check(pg_catalog.isfinite(transferred_at)),
  created_at timestamptz not null default clock_timestamp(),
  unique(subscriber_user_id,id)
@@ -69,7 +69,7 @@ create table public.doctor_manual_received_funds(
  verified_by uuid not null references auth.users(id),verification_ref text not null check(length(btrim(verification_ref)) between 2 and 200),
  verified_at timestamptz not null default clock_timestamp(),
  unique(recipient_account_key,received_reference),
- check(received_reference=upper(btrim(received_reference)) and length(received_reference) between 2 and 200 and received_reference !~ '[[:cntrl:]<>]')
+ check(received_reference=upper(btrim(received_reference)) and length(received_reference)>=2 and length(received_reference)<=200 and received_reference !~ '[[:cntrl:]<>]')
 );
 create table public.doctor_manual_payment_reviews(
  id uuid primary key default gen_random_uuid(),notice_id uuid not null references public.doctor_manual_payment_notices(id),
