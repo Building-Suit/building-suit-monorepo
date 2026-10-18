@@ -1,0 +1,15 @@
+{
+  "id": "doctor-annual-pricing-32",
+  "task": "DOS-AE-004",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit",
+    "docs/work-packages/doctor-suit/early-administrative-edition",
+    "release-changes/items.json"
+  ],
+  "reason": "Owner-authorized 32 percent annual discount for new Doctor catalogue quotes, unchanged monthly prices and capacities, exact minor-unit server validation and existing shared Shop pricing-card presentation. Preserve original immutable catalogue, issued terms/quotes/intents/notices, paid periods, receipts and audit history. CI-only migration-upgrade snapshot acceptance; no live payment, legal approval, operational activation or Shop USD change."
+}

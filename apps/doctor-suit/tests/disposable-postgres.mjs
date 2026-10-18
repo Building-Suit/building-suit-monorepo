@@ -1,4 +1,5 @@
 // SQL/RLS fallback for small executors. This is not a Supabase service integration test.
+import { verifyAnnualPricingUpgrade } from './annual-pricing-upgrade.mjs'
 import{verifyDoctorIsolatedRecovery}from'./recovery-isolated.mjs'
 import { createHash, randomUUID } from 'node:crypto'
 import { mkdtemp, readFile, readdir, rm, writeFile, mkdir, chmod } from 'node:fs/promises'
@@ -91,7 +92,11 @@ try {
   // Publication interface only. No logical replication service is run here.
   sql('create publication supabase_realtime;')
   const migrations = (await readdir(`${app}supabase/migrations`)).filter(file => file.endsWith('.sql')).sort()
-  for (const file of migrations) sql(await readFile(`${app}supabase/migrations/${file}`, 'utf8'))
+  for (const file of migrations) {
+    const migration = await readFile(`${app}supabase/migrations/${file}`, 'utf8')
+    if (file === '20261018154514_doctor_annual_discount_32.sql') verifyAnnualPricingUpgrade(sql, migration, await readFile(`${app}supabase/tests/dos-instapay-manual.sql`, 'utf8'))
+    sql(migration)
+  }
   const suites = (await readdir(`${app}supabase/tests`)).filter(file => file.endsWith('.sql')).sort()
   if (!suites.length) throw new Error('No Doctor SQL suites found')
   for (const file of suites) {
