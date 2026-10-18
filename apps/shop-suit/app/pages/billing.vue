@@ -16,7 +16,16 @@ const rpc = client.schema('public')
 const { locale } = useI18n()
 const ui = useUiCopy()
 const { current, currentId, isOwner, reload: reloadShop } = useShop()
-const { data: publicPlans, isLoading: catalogPending, error: catalogError, refresh: refreshCatalog, ready: catalogReady } = usePlans()
+const subscriptionCurrency = useShopSubscriptionCurrency(async () => {
+  if (checkoutPending.value || checkoutChecking.value || openCheckout.value) { checkoutError.value = copy.value.checkoutSavedOrder; return false }
+  if (proration.quote.value) {
+    if (!await confirmation.ask(isArabic.value ? 'تغيير العملة يلغي عرض السعر الحالي. متابعة؟' : 'Changing currency abandons the current quote. Continue?')) return false
+    try { await proration.abandon() } catch { checkoutError.value = copy.value.checkoutFailed; return false }
+  }
+  clearPrivateOffer(); form.catalogTermsId = ''; checkoutVisible.value = false; explicitSelection.value = false
+  return true
+})
+const { data: publicPlans, isLoading: catalogPending, error: catalogError, refresh: refreshCatalog, ready: catalogReady } = usePlans(subscriptionCurrency.currency)
 await catalogReady
 const isArabic = computed(() => locale.value === 'ar')
 const copy = computed(() => isArabic.value ? ar : en)
@@ -85,24 +94,39 @@ const { data: billing, pending, error, refresh } = await useAsyncData(
   { watch: [currentId, isOwner, () => user.value?.id] },
 )
 
+// A paid subscription defaults to its recorded currency, irrespective of IP/cookie.
+if (billing.value?.subscription.accessState === 'active' && ['EGP','USD'].includes(billing.value.subscription.currency)) subscriptionCurrency.currency.value = billing.value.subscription.currency as 'EGP' | 'USD'
+const { data: currencyPlans, pending: currencyPlansPending, error: currencyPlansError, refresh: refreshCurrencyPlans } = await useAsyncData(
+  () => `shop-data:billing-currency:${user.value?.id}:${currentId.value}:${subscriptionCurrency.currency.value}`,
+  async (): Promise<BillingPlanOption[]> => {
+    if (subscriptionCurrency.currency.value === 'EGP' || !currentId.value || !isOwner.value) return []
+    const shop = currentId.value, uid = user.value?.id
+    const result = await rpc.rpc('shop_billing_currency_plans', { p_shop_id: shop, p_currency: subscriptionCurrency.currency.value })
+    if (result.error) throw result.error
+    if (shop !== currentId.value || uid !== user.value?.id) return []
+    return result.data ?? []
+  }, { default: () => [] },
+)
 const publicCatalogTerms = computed(() => new Set((publicPlans.value ?? [])
   .filter(plan => plan.is_purchasable && !plan.is_coming_soon)
   .map(plan => plan.catalog_terms_id)))
-const purchasablePlans = computed(() => (billing.value?.availablePlans ?? [])
+const purchasablePlans = computed(() => (subscriptionCurrency.currency.value === 'EGP' ? billing.value?.availablePlans ?? [] : currencyPlans.value)
   .filter((plan): plan is BillingPlanOption & { billingInterval: ShopPlanInterval } => publicCatalogTerms.value.has(plan.catalogTermsId)
     && (plan.billingInterval === 'monthly' || plan.billingInterval === 'annual')))
 const selectedPlan = computed(() => purchasablePlans.value.find(plan => plan.catalogTermsId === form.catalogTermsId) ?? null)
 const noticeQuote = computed(() => privatePreview.value ? { planName: privatePreview.value.displayName, effectivePriceAmount: privatePreview.value.priceAmount, currency: privatePreview.value.currency, billingInterval: privatePreview.value.billingInterval, priceSource: 'private_offer', planVariant: 'private_offer', variantName: privatePreview.value.displayName, listPriceAmount: privatePreview.value.priceAmount, resourceLimits: privatePreview.value.resourceLimits, entitlements: privatePreview.value.entitlements, blockers: privatePreview.value.blockers } : selectedPlan.value)
 const currentCatalogTermsId = computed(() => billing.value?.subscription.accessState === 'active' ? purchasablePlans.value.find(plan => plan.planSlug === billing.value?.subscription.planSlug
   && plan.planVariant === billing.value?.subscription.planVariant
-  && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '' : '')
+  && plan.billingInterval === billing.value?.subscription.billingInterval && plan.currency === billing.value?.subscription.currency)?.catalogTermsId ?? '' : '')
 const trialCatalogTermsId = computed(() => billing.value?.subscription.accessState === 'trialing' ? purchasablePlans.value.find(plan => plan.planSlug === billing.value?.subscription.planSlug
   && plan.planVariant === billing.value?.subscription.planVariant
-  && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId ?? '' : '')
+  && plan.billingInterval === billing.value?.subscription.billingInterval && plan.currency === billing.value?.subscription.currency)?.catalogTermsId ?? '' : '')
 const latestSubmission = computed(() => billing.value?.submissions?.[0] ?? null)
 const checkoutVisible = ref(false)
 const prorationEnabled = ref(false)
 const checkoutReady = ref(false)
+const checkoutCurrencies = ref<string[]>([])
+const currencyCheckoutReady = (currency: string) => checkoutReady.value && checkoutCurrencies.value.includes(currency)
 const checkoutMode = ref<'test' | 'live' | null>(null)
 const checkoutChecking = ref(false)
 const checkoutPending = ref(false)
@@ -175,6 +199,7 @@ async function loadCheckoutStatus() {
     if (sameCheckoutContext(context) && !error) { checkoutOrders.value = parseXPayDatabaseOrders(data); checkoutHistoryKnown.value = true }
     const result = await client.functions.invoke('shop-xpay-checkout', { body: { action: 'status', shopId: context.shop, locale: isArabic.value ? 'ar' : 'en' } })
     if (!sameCheckoutContext(context)) return
+    checkoutCurrencies.value = Array.isArray(result.data?.currencies) ? result.data.currencies.filter((value: unknown) => value === 'EGP' || value === 'USD') : result.data?.ready ? ['EGP'] : []
     checkoutReady.value = !result.error && result.data?.ready === true && ['test', 'live'].includes(result.data?.mode)
     checkoutMode.value = checkoutReady.value ? result.data.mode : null
     prorationEnabled.value = !result.error && result.data?.prorationEnabled === true
@@ -212,7 +237,7 @@ async function refreshCheckout(orderId = activeCheckout.value?.orderId) {
 }
 async function startCheckout(intent: 'subscribe' | 'renew' | 'change' = canChangePlan.value ? 'change' : 'subscribe', priorPaidOrderId = paymentState.value.latestPaid?.orderId ?? null) {
   const context = checkoutContext(), quote = noticeQuote.value
-  if (!context.shop || !context.user || !isOwner.value || !checkoutReady.value || checkoutPending.value || checkoutChecking.value
+  if (!context.shop || !context.user || !isOwner.value || !checkoutReady.value || (!openCheckout.value && !currencyCheckoutReady(quote?.currency ?? 'EGP')) || checkoutPending.value || checkoutChecking.value
     || (!paymentState.value.canStart && paymentState.value.phase !== 'resume' && !(intent !== 'subscribe' && paymentState.value.phase === 'confirmed'))
     || (!proration.quote.value && !openCheckout.value && (!quote || quote.blockers.length)) || billing.value?.subscription.accessState === 'suspended') return
   checkoutPending.value = true; checkoutError.value = ''; checkoutErrorCode.value = ''
@@ -223,7 +248,7 @@ async function startCheckout(intent: 'subscribe' | 'renew' | 'change' = canChang
     if (!existing && frozen && !prorationEnabled.value) throw Object.assign(new Error('checkout_failed'), { checkoutCode: 'checkout_proration_unavailable' })
     if (!existing && frozen && proration.expired.value) throw Object.assign(new Error('checkout_failed'), { checkoutCode: 'checkout_quote_stale' })
     if (!existing && frozen?.calculation.amountDueMinor === 0) {
-      const approved = await confirmation.ask(copy.value.quoteCreditConfirm(frozen.planName, money(frozen.calculation.creditAfterMinor / 100, 'EGP')))
+      const approved = await confirmation.ask(copy.value.quoteCreditConfirm(frozen.planName, money(frozen.calculation.creditAfterMinor / 100, frozen.calculation.currency)))
       if (!approved || !sameCheckoutContext(context)) return
       const settled = await proration.confirmCredit()
       if (settled?.state === 'settled' && sameCheckoutContext(context)) { checkoutVisible.value = false; await reloadShop(); await loadCheckoutStatus() }
@@ -255,7 +280,7 @@ async function startCheckout(intent: 'subscribe' | 'renew' | 'change' = canChang
 }
 watch([currentId, isOwner, () => user.value?.id], () => {
   checkoutVisible.value = false; proration.reset(); scheduled.reset(); prorationEnabled.value = false
-  ++checkoutGeneration; returnedCheckoutId = undefined; recovery = null; recoveryQueued = false; explicitSelection.value = false; checkoutHistoryKnown.value = false; checkoutReady.value = false; checkoutChecking.value = false
+  ++checkoutGeneration; returnedCheckoutId = undefined; recovery = null; recoveryQueued = false; explicitSelection.value = false; checkoutHistoryKnown.value = false; checkoutReady.value = false; checkoutCurrencies.value = []; checkoutChecking.value = false
   checkoutPending.value = false; checkoutError.value = ''; checkoutErrorCode.value = ''; checkoutOrders.value = []; checkoutCurrent.value = null; checkoutMode.value = null
   if (import.meta.client) void recoverCheckout()
 }, { flush: 'sync' })
@@ -330,7 +355,7 @@ watch([billing, purchasablePlans], () => {
   else if (!plans.some(plan => plan.catalogTermsId === form.catalogTermsId)) {
     form.catalogTermsId = plans.find(plan => plan.planSlug === billing.value?.subscription.planSlug
       && plan.planVariant === billing.value?.subscription.planVariant
-      && plan.billingInterval === billing.value?.subscription.billingInterval)?.catalogTermsId
+      && plan.billingInterval === billing.value?.subscription.billingInterval && plan.currency === billing.value?.subscription.currency)?.catalogTermsId
       ?? plans[0]?.catalogTermsId ?? ''
   }
 }, { immediate: true })
@@ -348,6 +373,7 @@ function date(value?: string | null) {
   return new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 
+async function refreshPricing() { await Promise.all([refreshCatalog(), refreshCurrencyPlans()]) }
 function money(value: number, currency: string) {
   return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency, maximumFractionDigits: 2 }).format(value)
 }
@@ -391,7 +417,7 @@ const en = {
   quoteExpires: (remaining: string) => `Start payment or confirm the credit change within ${remaining}.`, quoteSaved: 'Your checkout is saved. Do not start another payment while its result is pending.',
   quoteRestart: 'Review a new price', quoteStale: 'This price expired or your subscription changed. Review a new price before confirming. If a payment is in progress, wait for its result.',
   quoteOpen: 'A saved plan-change quote is unresolved. Resume it or discard an unstarted quote before choosing another plan.', quotePaymentUnresolved: 'The payment result has not been confirmed. Do not pay again. Contact support if the delay continues.',
-  quoteUnavailable: 'Prorated changes are currently unavailable. Your saved access and credit stay unchanged.', quoteCurrency: 'This change does not support currency conversion. Contact support to review the existing prepaid value.',
+  quoteUnavailable: 'Prorated changes are currently unavailable. Your saved access and credit stay unchanged.', quoteCurrency: 'Checkout in this currency is not enabled for this merchant. Your current subscription stays unchanged.',
   quotePeriodUnsupported: 'Your current access spans multiple or custom billing terms. This remaining-period change needs support; no new price or checkout was accepted.',
   quoteOfferExpiring: 'This private offer expires too soon to start a hosted payment. Request a fresh offer before paying.', quoteRequired: 'Review the price before confirming this plan change.', quoteCardUnsupported: 'This merchant cannot accept card payments for prorated changes. No checkout was created.',
   quoteCreditConfirm: (plan: string, credit: string) => `Confirm ${plan} using your prepaid value and credits? No new payment is due. Your remaining credit will be ${credit}.`,
@@ -440,7 +466,7 @@ const ar = {
   quoteExpires: (remaining: string) => `ابدأ الدفع أو أكد استخدام الرصيد خلال ${remaining}.`, quoteSaved: 'عملية الدفع محفوظة. لا تبدأ دفعة أخرى ما دامت نتيجتها قيد الانتظار.',
   quoteRestart: 'مراجعة سعر جديد', quoteStale: 'انتهت صلاحية السعر أو تغيّر اشتراكك. راجع سعرًا جديدًا قبل التأكيد. إذا كانت دفعة قيد المعالجة، فانتظر نتيجتها.',
   quoteOpen: 'يوجد عرض تغيير خطة محفوظ لم تُحسم حالته. استأنفه أو تجاهل العرض الذي لم يبدأ قبل اختيار خطة أخرى.', quotePaymentUnresolved: 'لم تتأكد نتيجة الدفع بعد. لا تدفع مجددًا. تواصل مع الدعم إذا استمر التأخير.',
-  quoteUnavailable: 'تغيير الخطة بحسب المدة غير متاح حاليًا. يظل الوصول والرصيد المحفوظ كما هو.', quoteCurrency: 'هذا التغيير لا يدعم تحويل العملات. تواصل مع الدعم لمراجعة القيمة المدفوعة الحالية.',
+  quoteUnavailable: 'تغيير الخطة بحسب المدة غير متاح حاليًا. يظل الوصول والرصيد المحفوظ كما هو.', quoteCurrency: 'الدفع بهذه العملة غير مفعّل لحساب التاجر. يظل اشتراكك الحالي دون تغيير.',
   quotePeriodUnsupported: 'تغطي فترة الوصول الحالية عدة دورات أو مدة فوترة مخصصة. يتطلب تغيير الفترة المتبقية مراجعة الدعم؛ لم يُعتمد سعر أو دفع جديد.',
   quoteOfferExpiring: 'سينتهي العرض الخاص قريبًا جدًا لبدء دفع مستضاف. اطلب عرضًا جديدًا قبل الدفع.', quoteRequired: 'راجع السعر قبل تأكيد تغيير الخطة.', quoteCardUnsupported: 'لا يستطيع هذا التاجر قبول الدفع بالبطاقة لتغيير الخطة بحسب المدة. لم يتم إنشاء دفع.',
   quoteCreditConfirm: (plan: string, credit: string) => `هل تريد تأكيد ${plan} باستخدام القيمة المدفوعة ورصيدك؟ لا توجد دفعة جديدة مستحقة. سيكون رصيدك المتبقي ${credit}.`,
@@ -496,7 +522,7 @@ const billingView = computed<BsBillingView>(() => {
   const dialogPhase = checkoutDialogPhase({ paymentPhase: paymentState.value.phase, newPlanReview: !!newPlanReview.value,
     quoteState: frozen?.state, blocked: !!planReviewBlocked.value, pending: checkoutPending.value })
   const frozenVariant = frozen?.details ? ({ solo_1: planPresentation.copy.oneMember, solo_2: planPresentation.copy.twoMembers, multi_2: planPresentation.copy.twoBranches, multi_3: planPresentation.copy.threeBranches } as Record<string, string>)[frozen.details.planVariant] ?? '' : ''
-  const intermediateMoney = (minor: string) => new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(Number(minor) / 100)
+  const intermediateMoney = (minor: string) => new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: frozen?.calculation.currency ?? quote?.currency ?? subscriptionCurrency.currency.value, minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(Number(minor) / 100)
   const change = scheduled.current.value
   const isDeferred = deferredChange.value
   const paymentHeld = payment?.state === 'requires_review' || payment?.state === 'pending'
@@ -512,7 +538,7 @@ const billingView = computed<BsBillingView>(() => {
     notice: sub && ['read_only', 'suspended'].includes(sub.accessState) ? copy.value.readOnly : '', details: [], providerNotice: '',
     latest: latest ? { title: copy.value.latest, status: latest.status, statusLabel: statusLabel(latest.status), summary: `${latest.requestedPlanName} · ${money(latest.effectivePriceAmount, latest.currency)}`, message: submissionMessage(latest), reason: latest.reviewReason ?? '' } : null,
     usage: { items: usageResources.value.map(usagePresentation), loading: false, failed: false },
-    pricing: { variant: 'shop', interval: planPresentation.interval, plans: planPresentation.pricingPlans.map(plan => ({ ...plan, notice: undefined })), intervalOptions: [{ value: 'monthly', label: planPresentation.copy.monthly }, { value: 'annual', label: planPresentation.copy.yearly }], copy: { cycleLabel: planPresentation.copy.cycle, loading: planPresentation.copy.loading, empty: copy.value.noPurchasable, retry: planPresentation.copy.retry, included: planPresentation.copy.included, notIncluded: planPresentation.copy.notIncluded }, annualSaving: planPresentation.annualDiscount === null ? null : planPresentation.copy.annualSaving(planPresentation.annualDiscount), columns: 3, loading: catalogPending.value, error: catalogError.value ? copy.value.catalogFailed : null, testId: 'shop-plan-cards' },
+    pricing: { currencySelection: subscriptionCurrency.selection.value, variant: 'shop', interval: planPresentation.interval, plans: planPresentation.pricingPlans.map(plan => ({ ...plan, notice: undefined })), intervalOptions: [{ value: 'monthly', label: planPresentation.copy.monthly }, { value: 'annual', label: planPresentation.copy.yearly }], copy: { cycleLabel: planPresentation.copy.cycle, loading: planPresentation.copy.loading, empty: copy.value.noPurchasable, retry: planPresentation.copy.retry, included: planPresentation.copy.included, notIncluded: planPresentation.copy.notIncluded }, annualSaving: planPresentation.annualDiscount === null ? null : planPresentation.copy.annualSaving(planPresentation.annualDiscount), columns: 3, loading: catalogPending.value || currencyPlansPending.value, error: (catalogError.value || currencyPlansError.value) ? copy.value.catalogFailed : null, testId: 'shop-plan-cards' },
     pendingChange: change ? { title: copy.value.scheduleTitle, status: copy.value.scheduleStatus[change.state], message: copy.value.scheduleHelp,
       details: [{label:copy.value.requestedPlan,value:change.planName},{label:copy.value.periodEnd,value:date(change.effectiveAt)},{label:copy.value.schedulePrice,value:`${money(change.indicativePriceAmount,change.currency)} · ${intervalLabel(change.billingInterval)}`}],
       blockers: change.blockers.map(item=>`${copy.value.resources[item.resource as PlanResourceKey]}: ${item.used} / ${item.limit}`),
@@ -525,28 +551,28 @@ const billingView = computed<BsBillingView>(() => {
         { label: copy.value.requestedPlan, value: [frozen.planName, frozenVariant].filter(Boolean).join(' · ') },
         ...(frozen.details ? Object.entries(frozen.details.resourceLimits).map(([key, limit]) => ({ label: copy.value.resources[key as PlanResourceKey], value: limit == null ? '∞' : String(limit) })) : []),
         ...(frozen.details ? Object.entries(frozen.details.entitlements).map(([key]) => ({ label: key === 'appointments' ? isArabic.value ? 'المواعيد' : 'Appointments' : isArabic.value ? 'التقارير' : 'Reports', value: isArabic.value ? 'مشمول' : 'Included' })) : []),
-        ...(frozen.details && frozen.details.listPriceAmount > frozen.details.effectivePriceAmount ? [{ label: isArabic.value ? 'خصم سعر الخطة' : 'Plan rate discount', value: money(frozen.details.listPriceAmount - frozen.details.effectivePriceAmount, 'EGP') }] : []),
-        { label: copy.value.quoteRate, value: `${money(frozen.calculation.newTermMinor / 100, 'EGP')} · ${intervalLabel(frozen.calculation.newBillingInterval)}` },
+        ...(frozen.details && frozen.details.listPriceAmount > frozen.details.effectivePriceAmount ? [{ label: isArabic.value ? 'خصم سعر الخطة' : 'Plan rate discount', value: money(frozen.details.listPriceAmount - frozen.details.effectivePriceAmount, frozen.calculation.currency) }] : []),
+        { label: copy.value.quoteRate, value: `${money(frozen.calculation.newTermMinor / 100, frozen.calculation.currency)} · ${intervalLabel(frozen.calculation.newBillingInterval)}` },
         { label: copy.value.quoteService, value: intermediateMoney(frozen.calculation.serviceValueMinor) }, { label: copy.value.quoteUnused, value: intermediateMoney(frozen.calculation.unusedPrepaidMinor) },
-        { label: copy.value.quoteExistingCredit, value: money(frozen.calculation.creditBeforeMinor / 100, 'EGP') }, { label: copy.value.quoteDue, value: money(frozen.calculation.amountDueMinor / 100, 'EGP') },
-        { label: copy.value.quoteAfter, value: money(frozen.calculation.creditAfterMinor / 100, 'EGP') }], policy: `${frozen.calculation.mode === 'no_change' ? copy.value.quoteNoChangePolicy : frozen.calculation.mode === 'remaining_period' ? copy.value.quoteRenewal(date(frozen.calculation.periodEnd)) : copy.value.quoteNewPeriod} ${copy.value.quotePrecision}`, expiry: openCheckout.value ? copy.value.quoteSaved : copy.value.quoteExpires(proration.deadline.format(proration.deadline.expiresIn.value)) } : quote && !openCheckout.value ? { title: copy.value.requestedPlan, items: [
+        { label: copy.value.quoteExistingCredit, value: money(frozen.calculation.creditBeforeMinor / 100, frozen.calculation.currency) }, { label: copy.value.quoteDue, value: money(frozen.calculation.amountDueMinor / 100, frozen.calculation.currency) },
+        { label: copy.value.quoteAfter, value: money(frozen.calculation.creditAfterMinor / 100, frozen.calculation.currency) }], policy: `${frozen.calculation.mode === 'no_change' ? copy.value.quoteNoChangePolicy : frozen.calculation.mode === 'remaining_period' ? copy.value.quoteRenewal(date(frozen.calculation.periodEnd)) : copy.value.quoteNewPeriod} ${copy.value.quotePrecision}`, expiry: openCheckout.value ? copy.value.quoteSaved : copy.value.quoteExpires(proration.deadline.format(proration.deadline.expiresIn.value)) } : quote && !openCheckout.value ? { title: copy.value.requestedPlan, items: [
         { label: copy.value.requestedPlan, value: [quote.planName, quote.variantName !== quote.planName ? quote.variantName : ''].filter(Boolean).join(' · ') },
         { label: copy.value.interval, value: intervalLabel(quote.billingInterval) },
-        ...(isDeferred ? [{label:copy.value.periodEnd,value:date(scheduled.preview.value?.effectiveAt)},{label:copy.value.quoteDue,value:money(0,'EGP')}] : []),
+        ...(isDeferred ? [{label:copy.value.periodEnd,value:date(scheduled.preview.value?.effectiveAt)},{label:copy.value.quoteDue,value:money(0,quote.currency)}] : []),
         ...Object.entries(quote.resourceLimits).map(([key, limit]) => ({ label: copy.value.resources[key as PlanResourceKey], value: limit == null ? '∞' : String(limit) })),
         ...(quote.listPriceAmount > quote.effectivePriceAmount ? [{ label: isArabic.value ? 'خصم سعر الخطة' : 'Plan rate discount', value: money(quote.listPriceAmount - quote.effectivePriceAmount, quote.currency) }] : []),
         { label: prorationEnabled.value ? copy.value.quotePlanRate : copy.value.quoteDue, value: money(quote.effectivePriceAmount, quote.currency) }], policy: isDeferred ? copy.value.scheduleHelp : copy.value.checkoutConsequences, expiry: '' } : undefined,
       restartLabel: frozen ? copy.value.quoteRestart : undefined, restartDisabled: checkoutPending.value || !!openCheckout.value,
-      quote: frozen ? `${frozen.planName} · ${money(frozen.calculation.amountDueMinor / 100, 'EGP')}` : openCheckout.value ? `${openCheckout.value.planName} · ${money(openCheckout.value.amountMinor / 100, openCheckout.value.currency)}` : quote ? `${quote.planName} · ${money(quote.effectivePriceAmount, quote.currency)} · ${intervalLabel(quote.billingInterval)}` : copy.value.noPurchasable,
+      quote: frozen ? `${frozen.planName} · ${money(frozen.calculation.amountDueMinor / 100, frozen.calculation.currency)}` : openCheckout.value ? `${openCheckout.value.planName} · ${money(openCheckout.value.amountMinor / 100, openCheckout.value.currency)}` : quote ? `${quote.planName} · ${money(quote.effectivePriceAmount, quote.currency)} · ${intervalLabel(quote.billingInterval)}` : copy.value.noPurchasable,
       restrictions: !preview ? planPresentation.pricingPlans.find(plan => plan.id === selectedPlan.value?.planSlug)?.notice : preview.blockers.length ? { title: planPresentation.copy.blocked, body: planPresentation.copy.blockers, items: preview.blockers.map(blocker => `${planPresentation.copy.resources[blocker.resource as PlanResourceKey]}: ${blocker.used} / ${blocker.limit}`), footer: copy.value.preservation } : undefined,
       consequences: isDeferred ? [copy.value.scheduleHelp] : [copy.value.checkoutConsequences, ...((prorationEnabled.value || frozen) && frozen?.calculation.amountDueMinor !== 0 ? [copy.value.quoteCardOnly] : []), ...(openCheckout.value ? [copy.value.checkoutSavedOrder] : [])],
       notice: [quote?.blockers.length ? copy.value.preservation : sub?.accessState === 'trialing' ? copy.value.checkoutTrial : ''].filter(Boolean).join(' '),
-      unavailable: isDeferred ? '' : quote && quote.currency !== 'EGP' ? copy.value.quoteCurrency : !checkoutReady.value && !checkoutChecking.value ? copy.value.checkoutUnavailable : '', action: isDeferred ? copy.value.scheduleAction : openCheckout.value ? copy.value.checkoutResume : prorationEnabled.value && !frozen ? copy.value.quotePrepare : frozen?.calculation.mode === 'no_change' ? copy.value.quoteNoChange : frozen?.calculation.amountDueMinor === 0 ? copy.value.quoteCreditAction : copy.value.checkoutAction,
-      pending: checkoutPending.value || scheduled.pending.value || scheduled.checking.value, disabled: isDeferred ? scheduled.pending.value || scheduled.checking.value || !!scheduled.error.value || !!openCheckout.value || !!privatePreview.value?.settledQuoteId || billing.value?.subscription.accessState === 'suspended' : (!openCheckout.value && !!quote && quote.currency !== 'EGP') || (!openCheckout.value && !!frozen && (proration.expired.value || !prorationEnabled.value)) || !checkoutReady.value || checkoutChecking.value || checkoutPending.value || paymentHeld || (!paymentState.value.canStart && paymentState.value.phase !== 'resume' && !canChangePlan.value) || !quote || !!quote.blockers.length
+      unavailable: isDeferred ? '' : quote && quote.currency !== 'EGP' && !currencyCheckoutReady(quote.currency) ? copy.value.quoteCurrency : !checkoutReady.value && !checkoutChecking.value ? copy.value.checkoutUnavailable : '', action: isDeferred ? copy.value.scheduleAction : openCheckout.value ? copy.value.checkoutResume : prorationEnabled.value && !frozen ? copy.value.quotePrepare : frozen?.calculation.mode === 'no_change' ? copy.value.quoteNoChange : frozen?.calculation.amountDueMinor === 0 ? copy.value.quoteCreditAction : copy.value.checkoutAction,
+      pending: checkoutPending.value || scheduled.pending.value || scheduled.checking.value, disabled: isDeferred ? scheduled.pending.value || scheduled.checking.value || !!scheduled.error.value || !!openCheckout.value || !!privatePreview.value?.settledQuoteId || billing.value?.subscription.accessState === 'suspended' : (!openCheckout.value && !!quote && !currencyCheckoutReady(quote.currency)) || (!openCheckout.value && !!frozen && (proration.expired.value || !prorationEnabled.value)) || !checkoutReady.value || (!openCheckout.value && !currencyCheckoutReady(frozen?.calculation.currency ?? quote?.currency ?? 'EGP')) || checkoutChecking.value || checkoutPending.value || paymentHeld || (!paymentState.value.canStart && paymentState.value.phase !== 'resume' && !canChangePlan.value) || !quote || !!quote.blockers.length
         || (!!newPlanReview.value && prorationEnabled.value && !frozen && (!scheduled.preview.value || scheduled.checking.value || !!scheduled.error.value)) || !!planReviewBlocked.value || !!privatePreview.value?.submissionId || !!privatePreview.value?.xpayOrderId || !!privatePreview.value?.settledQuoteId || billing.value?.subscription.accessState === 'suspended', error: scheduled.error.value ? copy.value.scheduleError : checkoutError.value || (newPlanReview.value && !prorationEnabled.value ? copy.value.quoteUnavailable : ''),
       statusMessage: newPlanReview.value && dialogPhase !== 'confirmed' ? '' : dialogPhase === 'confirmed' ? copy.value.checkoutConfirmed : dialogPhase === 'confirming' || dialogPhase === 'checking' ? copy.value.checkoutChecking : paymentMessage, phase: dialogPhase, actionVisible: isDeferred || !planReviewBlocked.value && (paymentState.value.canStart || paymentState.value.phase === 'resume' || !!canChangePlan.value), continueLabel: dialogPhase === 'confirmed' ? copy.value.checkoutContinue : '', helpLabel: copy.value.checkoutContact, helpTo: '/contact', renewLabel: '' },
     checkoutHistory: { title: copy.value.checkoutHistory, status: copy.value.access, plan: copy.value.requestedPlan, amount: copy.value.expected, date: copy.value.transferDate, empty: copy.value.checkoutEmpty,
-      rows: checkoutOrders.value.map(order => ({ id: order.orderId, status: copy.value.checkoutStates[order.state], plan: order.planName, amount: money(order.amountMinor / 100, order.currency), date: date(order.createdAt) })) },
+      rows: checkoutOrders.value.map(order => ({ id: order.orderId, status: copy.value.checkoutStates[order.state], plan: order.planName, amount: `${money(order.amountMinor / 100, order.currency)}${order.refundedAmountMinor ? ` · ${isArabic.value ? 'مسترد' : 'Refunded'} ${money(order.refundedAmountMinor / 100, order.currency)}` : ''}`, date: date(order.createdAt) })) },
     transfer: null, evidence: null, showEvidence: false, showHistory: true,
     history: (value?.submissions ?? []).map(item => ({ id: item.id, status: item.status, statusLabel: statusLabel(item.status), plan: item.requestedPlanName, expected: money(item.effectivePriceAmount, item.currency), paid: money(item.paidAmount, item.currency), reference: item.transferReference, date: date(item.transferDate), reason: item.reviewReason ?? '' })),
     trial: null, policy: null, paymentNotice: '', paymentRequired: '', compatibilityNotice: '', pricingError: '', canRequests: false,
@@ -555,5 +581,5 @@ const billingView = computed<BsBillingView>(() => {
 function chooseBillingInterval(value: string) { if (value === 'monthly' || value === 'annual') { explicitSelection.value = true; planPresentation.interval = value } }
 </script>
 <template>
-  <BsBillingPage v-model:checkout-visible="checkoutVisible" v-model:form="billingForm" variant="shop" :copy="billingCopy" :view="billingView" @retry="refresh()" @usage-retry="refresh()" @pricing-retry="refreshCatalog()" @interval="chooseBillingInterval" @variant="selectPaymentVariant" @plan="selectPaymentPlan" @private-preview="previewPrivateOffer" @private-clear="clearPrivateOffer" @checkout="submitBillingChoice" @scheduled-cancel="cancelScheduledChange" @scheduled-pay="payScheduledChange" @checkout-continue="navigateTo('/dashboard')" @checkout-restart="restartCheckoutQuote"/>
+  <BsBillingPage v-model:checkout-visible="checkoutVisible" v-model:form="billingForm" variant="shop" :copy="billingCopy" :view="billingView" @retry="refresh()" @usage-retry="refresh()" @pricing-retry="refreshPricing()" @currency="subscriptionCurrency.choose($event)" @interval="chooseBillingInterval" @variant="selectPaymentVariant" @plan="selectPaymentPlan" @private-preview="previewPrivateOffer" @private-clear="clearPrivateOffer" @checkout="submitBillingChoice" @scheduled-cancel="cancelScheduledChange" @scheduled-pay="payScheduledChange" @checkout-continue="navigateTo('/dashboard')" @checkout-restart="restartCheckoutQuote"/>
 </template>
