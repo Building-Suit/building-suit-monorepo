@@ -230,6 +230,104 @@ export type Database = {
           },
         ]
       }
+      doctor_administration_audit: {
+        Row: {
+          authority_binding_id: string
+          correlation_id: string
+          created_at: string
+          database_actor: string
+          id: string
+          key_id: string
+          manifest_digest: string
+          nonce: string
+          operation: string
+          outcome: string
+          request_digest: string
+          request_id: string
+          response_digest: string | null
+          role_snapshot: string
+          source_binding_id: string
+          subject_id: string
+          target_binding_id: string
+          target_environment_id: string
+        }
+        Insert: {
+          authority_binding_id: string
+          correlation_id: string
+          created_at?: string
+          database_actor?: string
+          id?: string
+          key_id: string
+          manifest_digest: string
+          nonce: string
+          operation: string
+          outcome: string
+          request_digest: string
+          request_id: string
+          response_digest?: string | null
+          role_snapshot: string
+          source_binding_id: string
+          subject_id: string
+          target_binding_id: string
+          target_environment_id: string
+        }
+        Update: {
+          authority_binding_id?: string
+          correlation_id?: string
+          created_at?: string
+          database_actor?: string
+          id?: string
+          key_id?: string
+          manifest_digest?: string
+          nonce?: string
+          operation?: string
+          outcome?: string
+          request_digest?: string
+          request_id?: string
+          response_digest?: string | null
+          role_snapshot?: string
+          source_binding_id?: string
+          subject_id?: string
+          target_binding_id?: string
+          target_environment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_administration_audit_source_binding_id_key_id_nonce_fkey"
+            columns: ["source_binding_id", "key_id", "nonce"]
+            isOneToOne: false
+            referencedRelation: "doctor_administration_nonces"
+            referencedColumns: ["source_binding_id", "key_id", "nonce"]
+          },
+        ]
+      }
+      doctor_administration_nonces: {
+        Row: {
+          expires_at: string
+          key_id: string
+          nonce: string
+          received_at: string
+          request_id: string
+          source_binding_id: string
+        }
+        Insert: {
+          expires_at: string
+          key_id: string
+          nonce: string
+          received_at?: string
+          request_id: string
+          source_binding_id: string
+        }
+        Update: {
+          expires_at?: string
+          key_id?: string
+          nonce?: string
+          received_at?: string
+          request_id?: string
+          source_binding_id?: string
+        }
+        Relationships: []
+      }
       doctor_candidate_admissions: {
         Row: {
           database_actor: string
@@ -1538,6 +1636,7 @@ export type Database = {
         Returns: Json
       }
       doctor_account_settings: { Args: never; Returns: Json }
+      doctor_administration_readiness: { Args: never; Returns: Json }
       doctor_administrative_audit: {
         Args: {
           p_location?: string

@@ -15,6 +15,7 @@ import { verifyAvailabilityConcurrency } from './availability-concurrency.mjs'
 import { verifyAppointmentConcurrency } from './appointments-concurrency.mjs'
 import { verifyAccountConcurrency } from './account-concurrency.mjs'
 import { verifyCandidateAdmissionConcurrency } from './candidate-admission-concurrency.mjs'
+import { verifyDoctorAdministrationProtocol } from './administration-protocol-postgres.mjs'
 import { verifySaasReconciliationConcurrency } from './saas-reconciliation-concurrency.mjs'
 import { verifySaasQuoteConcurrency } from './saas-quote-concurrency.mjs'
 import { verifySaasTrialConcurrency } from './saas-trial-concurrency.mjs'
@@ -112,6 +113,7 @@ try {
   await verifySaasReservationConcurrency(container)
   await verifySaasQuoteConcurrency(container)
   await verifySaasReconciliationConcurrency(container)
+  await verifyDoctorAdministrationProtocol(container)
   await verifyDoctorIsolatedRecovery(container)
   if (generate.length) {
     const output = docker(['run', '--rm', '--network', `container:${container}`,
