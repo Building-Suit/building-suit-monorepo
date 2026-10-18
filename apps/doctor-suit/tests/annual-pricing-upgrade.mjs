@@ -19,13 +19,13 @@ export function verifyAnnualPricingUpgrade(sql, migration, legacyFixture) {
  ]
  const snapshot = table => `coalesce((select jsonb_agg(to_jsonb(x)order by to_jsonb(x)::text)from ${table} x),'[]'::jsonb)`
  const fixture = legacyFixture.replace("'synthetic-manual',1,'approved'", "'starter',1,'approved'").replace('select * from finish();rollback;', '')
- if (fixture === legacyFixture || /rollback;\s*$/i.test(fixture)) throw new Error('Legacy pricing fixture boundary changed')
+ if (!legacyFixture.includes("'synthetic-manual',1,'approved'") || !legacyFixture.includes('select * from finish();rollback;') || /rollback;\s*$/i.test(fixture)) throw new Error('Legacy pricing fixture boundary changed')
  const before = tables.map(table => `insert into price_upgrade_before values('${table}',${snapshot(table)});`).join('\n')
  const after = tables.map(table => `select is(${snapshot(table)},(select value from price_upgrade_before where name='${table}'),'annual upgrade preserves every ${table} row');`).join('\n')
  const result = sql(`${fixture}
  create temporary table price_upgrade_before(name text primary key,value jsonb);
  ${before}
- select ok(exists(select 1 from public.doctor_manual_payment_notices where status='submitted'),'upgrade fixture contains a pending notice');
+ select ok(exists(select 1 from public.doctor_manual_payment_notices n where not exists(select 1 from public.doctor_manual_payment_reviews r where r.notice_id=n.id)),'upgrade fixture contains a pending notice');
  select ok(exists(select 1 from public.doctor_saas_periods where kind='manual_paid'),'upgrade fixture contains paid history');
  select ok(exists(select 1 from public.doctor_saas_quotes where billing_interval='yearly'and amount_minor=299000),'upgrade fixture contains the issued original annual price');
  ${migration}
