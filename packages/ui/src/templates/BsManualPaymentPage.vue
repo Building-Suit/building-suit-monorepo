@@ -20,8 +20,8 @@ watch(()=>props.view.instructions.length,count=>{if(!count)submitVisible.value=f
    <template v-if="!view.review">
     <BsAlert v-if="!view.configured" tone="info" :description="copy.unconfigured" />
     <BsPanel v-if="!view.instructions.length && !view.uploadPending" padding="md"><BsStack>
-     <BsField v-slot="field" :label="copy.plan"><BsSelect :id="field.id" :model-value="values.plan" :options="view.plans" option-label="label" option-value="value" :disabled="view.pending || view.uncertain" @update:model-value="update('plan',String($event));emit('choose')" /></BsField>
-     <BsField v-slot="field" :label="copy.interval"><BsSelect :id="field.id" :model-value="values.interval" :options="[{value:'monthly',label:copy.monthly},{value:'yearly',label:copy.yearly}]" option-label="label" option-value="value" :disabled="view.pending || view.uncertain" @update:model-value="update('interval',String($event));emit('choose')" /></BsField>
+     <BsField v-slot="field" :label="copy.plan"><BsSelect :id="field.id" :model-value="values.plan" :label="copy.plan" :options="view.plans" option-label="label" option-value="value" :disabled="view.pending || view.uncertain" @update:model-value="update('plan',String($event));emit('choose')" /></BsField>
+     <BsField v-slot="field" :label="copy.interval"><BsSelect :id="field.id" :model-value="values.interval" :label="copy.interval" :options="[{value:'monthly',label:copy.monthly},{value:'yearly',label:copy.yearly}]" option-label="label" option-value="value" :disabled="view.pending || view.uncertain" @update:model-value="update('interval',String($event));emit('choose')" /></BsField>
      <BsDescriptionList><BsDescriptionItem v-for="f in view.terms" :key="f.label" :term="f.label">{{ f.value }}</BsDescriptionItem></BsDescriptionList>
      <BsPanel v-if="view.document" padding="md"><BsHeading :level="2">{{ copy.terms }}</BsHeading><BsText v-for="(p,i) in view.document.split(/\n\s*\n/)" :key="i" as="p">{{ p }}</BsText></BsPanel>
      <BsCheckbox :model-value="values.accepted" :label="copy.accept" :disabled="view.pending || view.uncertain || !view.document" @update:model-value="update('accepted',Boolean($event))" />
