@@ -1,0 +1,21 @@
+{
+  "id": "auth-explicit-transition-coordination",
+  "task": "CI-AUTH-REGRESSION-REPAIR",
+  "suits": [
+    "doctor-suit",
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/app.vue",
+    "packages/ui/src/templates/BsAppRoot.vue",
+    "packages/ui/tests/app-root-transition.test.mjs",
+    "docs/work-packages/ci-auth-regression-repair.md"
+  ],
+  "reason": "Reuse only the committed runtime/test subset of Doctor-owner fix 2e053c1a75ce6fa6c8c981645f53e22131b0c772. Honor explicit false as an existing shared transition contract and opt the synthetic Doctor async private routes out; retain unconfigured auth motion and explicit custom transitions. No aggregate, provider, schema, security or clinical behavior is imported."
+}
