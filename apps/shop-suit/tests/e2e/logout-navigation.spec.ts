@@ -1,3 +1,4 @@
+import { advanceEmailFirstLogin } from '../../../../packages/testing/email-first-login'
 import { expect, test, type Page } from '@playwright/test'
 
 type TestApp = {
@@ -27,8 +28,11 @@ async function sessionState(page: Page, seed = false) {
 
 async function expectLogin(page: Page) {
   await expect(page).toHaveURL(/\/auth\/login$/)
-  await expect(page.getByRole('textbox', { name: 'Email', exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Log in', exact: true })).toBeVisible()
+  const email = page.getByRole('textbox', { name: 'Email', exact: true })
+  await expect(email).toHaveCount(1)
+  await expect(email).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Continue', exact: true })).toBeVisible()
+  await expect(page.locator('input[type=password]')).toHaveCount(0)
   await expect(page.getByText('Private shop a', { exact: true })).toHaveCount(0)
 }
 
@@ -43,7 +47,7 @@ test('logout renders login repeatedly and history cannot restore private pages',
   })
   for (let attempt = 0; attempt < 3; attempt++) {
     await expectLogin(page)
-    await page.getByRole('textbox', { name: 'Email', exact: true }).fill('a@example.test')
+    await advanceEmailFirstLogin(page, 'a@example.test')
     await page.locator('input[type=password]').fill('synthetic-password')
     await page.getByRole('button', { name: 'Log in', exact: true }).click()
     await expect(page).toHaveURL(/\/dashboard$/)

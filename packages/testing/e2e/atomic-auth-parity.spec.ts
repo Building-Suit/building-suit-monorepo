@@ -7,7 +7,9 @@ async function expectBorderToken(control: Locator, token: '--bs-border' | '--bs-
   const expected = await control.evaluate((element, property) => {
     const probe = document.createElement('span')
     probe.hidden = true
-    probe.style.color = getComputedStyle(element).getPropertyValue(property)
+    probe.style.color = property === '--bs-border'
+      ? 'color-mix(in srgb, var(--bs-border) 70%, transparent)'
+      : getComputedStyle(element).getPropertyValue(property)
     document.body.append(probe)
     const color = getComputedStyle(probe).color
     probe.remove()
@@ -35,6 +37,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
         await gate
         await route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ code: 'invalid_credentials', message: 'Invalid login credentials' }) })
       })
+      await page.route('**/api/auth/email-step', route => route.fulfill({ json: { canContinue: route.request().postDataJSON()?.email === 'parity@example.invalid' } }))
       await page.goto(`http://127.0.0.1:${product.port}${product.path}`)
       await expect(page.locator('form')).toHaveAttribute('data-client-ready', 'true')
       await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
@@ -42,16 +45,11 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       const email = page.locator('input[type=email]')
       const password = page.locator('input[type=password]')
       await expect(email).toBeVisible()
-      await expect(password).toBeVisible()
+      await expect(password).toHaveCount(0)
       await expectNoPageOverflow(page)
       await email.focus()
       await expect(email).toBeFocused()
       await expectBorderToken(email, '--bs-focus-ring')
-      await page.keyboard.press('Tab')
-      await expect(password).toBeFocused()
-      await expect(email).not.toBeFocused()
-      await expectBorderToken(email, '--bs-border')
-      await expectBorderToken(password, '--bs-focus-ring')
       geometries.push(await email.evaluate(element => {
         const box = element.getBoundingClientRect()
         const style = getComputedStyle(element)
@@ -62,8 +60,18 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       await page.screenshot({ path: screenshot, fullPage: true })
       await testInfo.attach(`${product.name}-${locale}-${theme}-${width}`, { path: screenshot, contentType: 'image/png' })
       await email.fill('parity@example.invalid')
+      // Both Suits use the real glass email-first stage. Shop validates the
+      // synthetic address through its own endpoint; Ledger advances locally.
+      await email.press('Enter')
+      await expect(password).toBeVisible()
+      await expect(password).toBeFocused()
+      await expect(email).toHaveAttribute('readonly', '')
+      await expect(email).not.toBeFocused()
+      await expectBorderToken(email, '--bs-border')
+      await expectBorderToken(password, '--bs-focus-ring')
       await password.fill('synthetic-test-password')
       const submit = page.locator('form button[type=submit]')
+      await expect(submit).toHaveCount(1)
       await submit.click()
       await expect(submit).toBeDisabled()
       await expect(page.locator('form')).toHaveAttribute('aria-busy', 'true')

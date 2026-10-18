@@ -1,3 +1,4 @@
+import { advanceEmailFirstLogin } from '../../../../packages/testing/email-first-login'
 import { expect, test, type Page } from '@playwright/test'
 
 async function expectWorkspace(page: Page, arabic: boolean) {
@@ -28,7 +29,7 @@ for (const locale of ['en', 'ar']) {
       if (ar) await page.getByRole('button', { name: 'فتح القائمة', exact: true }).click()
       await page.getByRole('link', { name: ar ? 'تسجيل الدخول' : 'Sign in', exact: true }).click()
       await expect(page).toHaveURL(/\/auth\/login$/)
-      await page.getByRole('textbox', { name: ar ? 'البريد الإلكتروني' : 'Email', exact: true }).fill('a@example.test')
+      await advanceEmailFirstLogin(page, 'a@example.test')
       await page.locator('input[type=password]').fill('synthetic-password')
       await page.getByRole('button', { name: ar ? 'تسجيل الدخول' : 'Log in', exact: true }).click()
       await expectWorkspace(page, ar)

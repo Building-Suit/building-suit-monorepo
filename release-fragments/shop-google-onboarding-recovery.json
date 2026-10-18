@@ -7,9 +7,10 @@
   "classification": "patch",
   "disposition": "public",
   "paths": [
-    "apps/shop-suit/app"
+    "apps/shop-suit/app",
+    "packages/ui/src/templates/BsAppRoot.vue"
   ],
-  "reason": "Resume server-verified Google sessions after callback reload, preserve provider identity, and require remaining workspace onboarding without password or duplicate provisioning.",
+  "reason": "Resume server-verified Google sessions after callback reload, preserve provider identity, and require remaining workspace onboarding without password or duplicate provisioning. Prevent a nested default transition from retaining duplicate login trees after logout in keyed session layouts.",
   "notes": {
     "title": {
       "en": "Resume Google signup safely",
@@ -20,8 +21,8 @@
       "ar": "احتفظ ببيانات Google المؤكدة أثناء استكمال بيانات متجرك."
     },
     "details": {
-      "en": "Callback refresh resumes your authenticated session. Incomplete signup retains shop details, and unavailable account checks block duplicate creation.",
-      "ar": "يستكمل تحديث صفحة العودة الجلسة المؤكدة. يحتفظ التسجيل غير المكتمل ببيانات المتجر، ويتوقف إنشاء الحساب عند تعذر التحقق لتجنب التكرار."
+      "en": "Callback refresh resumes your authenticated session. Incomplete signup retains shop details, and unavailable account checks block duplicate creation. Signing out returns to one login form.",
+      "ar": "يستكمل تحديث صفحة العودة الجلسة المؤكدة. يحتفظ التسجيل غير المكتمل ببيانات المتجر، ويتوقف إنشاء الحساب عند تعذر التحقق لتجنب التكرار. يعيد تسجيل الخروج نموذج دخول واحداً."
     }
   }
 }

@@ -1,3 +1,4 @@
+import { advanceEmailFirstLogin } from '../email-first-login'
 import { test, expect, type Page } from '@playwright/test'
 
 const docsBaseUrl =
@@ -147,7 +148,7 @@ async function shopFixture(page: Page, locale = 'en') {
   await page.context().addCookies([{ name: 'building-suit-locale', value: locale, domain: '127.0.0.1', path: '/' }])
   await page.goto(`${shopBaseUrl}/auth/login`)
   await waitForNuxtHydration(page)
-  await page.getByRole('textbox', { name: locale === 'ar' ? /البريد الإلكتروني/ : /Email/ }).fill(user.email)
+  await advanceEmailFirstLogin(page, user.email)
   await page.getByLabel(locale === 'ar' ? /كلمة المرور/ : /Password/).fill('fixture-password')
   const loginResponse = page.waitForResponse(response =>
     response.url().startsWith('http://127.0.0.1:61321/auth/v1/token')
