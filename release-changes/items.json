@@ -1431,28 +1431,24 @@
     "suits": [
       "shop-suit"
     ],
-    "classification": "patch",
+    "classification": "minor",
     "disposition": "public",
     "paths": [
-      "apps/shop-suit/supabase/functions/_shared",
-      "apps/shop-suit/tests/unit",
-      "apps/shop-suit/app/utils/subscription-currency.mjs",
-      "apps/shop-suit/app/utils/subscription-currency.d.mts",
-      "apps/shop-suit/docs"
+      "apps/shop-suit"
     ],
-    "reason": "Reject a foreign presentment mirror before existing EGP fulfillment, retain separate typed provider money tracks, and prepare currency-specific account checks and an unexposed preference contract. No USD charge or customer price is enabled.",
+    "reason": "Add fixed USD subscription comparison and explicit currency selection, paired provider money persistence, same-currency proration/credit and reviewed refund observations. Preserve EGP and keep USD charging behind disabled rollout plus merchant capability gates.",
     "notes": {
       "title": {
-        "en": "Verify the quoted payment currency",
-        "ar": "التحقق من عملة الدفع المتفق عليها"
+        "en": "Choose your subscription currency",
+        "ar": "اختر عملة الاشتراك"
       },
       "summary": {
-        "en": "Payment confirmation checks the customer currency separately from processing totals.",
-        "ar": "يتحقق تأكيد الدفع من عملة العميل بشكل مستقل عن إجمالي معالجة الدفع."
+        "en": "Compare fixed EGP and USD subscription prices with explicit currency selection.",
+        "ar": "قارن أسعار الاشتراك الثابتة بالجنيه المصري والدولار مع اختيار العملة بوضوح."
       },
       "details": {
-        "en": "A payment in a different customer currency cannot fulfill an EGP subscription order. Existing EGP checkout is preserved; USD checkout is not enabled.",
-        "ar": "لا يمكن لدفعة بعملة عميل مختلفة تفعيل طلب اشتراك بالجنيه المصري. يستمر الدفع الحالي بالجنيه المصري، ولم يتم تفعيل الدفع بالدولار."
+        "en": "Existing EGP payments are preserved. USD checkout stays unavailable until merchant eligibility is verified. Quotes, credit and refund history retain their original currency.",
+        "ar": "يستمر الدفع الحالي بالجنيه المصري. يظل الدفع بالدولار غير متاح حتى التحقق من أهلية حساب التاجر. تحتفظ عروض الأسعار والأرصدة وسجلات الاسترداد بعملتها الأصلية."
       }
     },
     "sources": [
@@ -1460,12 +1456,16 @@
     ],
     "evidence": [
       {
-        "path": "apps/shop-suit/supabase/functions/_shared/xpay.mjs",
-        "contains": "tracks.presentment.currency !== order.currency"
+        "path": "apps/shop-suit/supabase/migrations/20261018141536_international_subscription_currencies.sql",
+        "contains": "create table public.shop_xpay_money_tracks"
       },
       {
-        "path": "apps/shop-suit/supabase/functions/_shared/xpay-money.mjs",
-        "contains": "amountMinor: mirror.amountTotal"
+        "path": "apps/shop-suit/app/composables/useShopLandingEntry.ts",
+        "contains": "currencySelection: subscriptionCurrency.selection.value"
+      },
+      {
+        "path": "apps/shop-suit/app/pages/billing.vue",
+        "contains": "currencyCheckoutReady"
       }
     ]
   }

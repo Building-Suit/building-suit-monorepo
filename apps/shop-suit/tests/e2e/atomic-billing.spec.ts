@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { pilotFixture, fixtureGoto } from './pilot-fixture'
 import { expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
 for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
-  test(`X-Pay setup preserves the negotiated quote without manual writes: ${locale}, ${theme}, ${width}`, async ({ page }) => {
+  test(`Active negotiated pricing stays visible without another charge: ${locale}, ${theme}, ${width}`, async ({ page }) => {
     const arabic = locale === 'ar'
     await page.setViewportSize({ width, height: 1000 })
     await page.addInitScript(value => localStorage.setItem('building-suit.theme', value), theme)
@@ -20,13 +20,14 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(arabic ? 'الاشتراك والدفع' : 'Subscription and billing')
     await expect(page.locator('#plans')).toContainText(/349|٣٤٩/)
     await expect(page.locator('[data-plan="solo"]').getByRole('button')).toBeDisabled()
-    await page.locator('#payment').getByRole('button').first().click()
-    const checkout = page.getByTestId('hosted-checkout')
-    await expect(checkout).toContainText(plan.planName)
-    await expect(checkout).toContainText(/349|٣٤٩/)
-    await expect(page.getByRole('dialog').locator('button[type="submit"]')).toBeDisabled()
-    await expect(checkout).toContainText(arabic ? 'غير متاح بعد' : 'not available yet')
-    await expect(page.getByRole('dialog')).toHaveCount(1)
+    // Active paid access is already confirmed. The single-period policy offers
+    // Continue to your shop, not another payment for this same active term.
+    await expect(page.locator('#current-plan')).toContainText(plan.planName)
+    await expect(page.locator('#current-plan')).toContainText(/349|٣٤٩/)
+    const continueShop = page.locator('#payment').getByRole('button', { name: arabic ? 'المتابعة إلى متجرك' : 'Continue to your shop', exact: true })
+    await expect(continueShop).toBeVisible()
+    await expect(page.getByTestId('hosted-checkout')).toHaveCount(0)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
     await expect(page.locator('input[type="file"], input[type="date"], input[type="number"]')).toHaveCount(0)
     expect(calls.filter(call => /submit_shop_billing_notice|reserve_shop_billing_payment_evidence/.test(call.name))).toEqual([])
     await expectNoPageOverflow(page)
@@ -34,6 +35,9 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     while (await dismissals.count()) await dismissals.first().click()
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
     await page.screenshot({ path: `.local/atomic-template-evidence/screenshots/billing-shop-${locale}-${theme}-${width}.png`, fullPage: true, animations: 'disabled' })
+    await continueShop.click()
+    await expect(page).toHaveURL(/\/dashboard(?:[?#]|$)/)
+    expect(calls.filter(call => call.name === 'shop-xpay-checkout' && call.args.requestId)).toEqual([])
   })
 }
 

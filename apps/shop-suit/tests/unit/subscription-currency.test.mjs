@@ -61,10 +61,21 @@ test('processing EGP and presentment USD stay separate; no locally recomputed FX
   assert.throws(() => xpayMoneyTracks({ ...session, currency: 'USD' }))
   assert.throws(() => xpayMoneyTracks({ ...session, presentmentDetails: { currency: 'EGP', amountTotal: 1 } }))
 })
-test('existing EGP fulfillment rejects a foreign mirror even when processing amount matches; USD issuance remains disabled', () => {
+test('existing EGP fulfillment rejects a foreign mirror even when processing amount matches; USD binds its own presentment amount without comparing it to EGP processing', () => {
   validateSession(session, order, 'test', { paid: true })
   assert.throws(() => validateSession({ ...session, presentmentDetails: usd }, order, 'test', { paid: true }), /xpay_session_mismatch/)
   const usdOrder = { ...order, currency: 'USD', amountMinor: 699 }
-  assert.throws(() => validateSession({ ...session, presentmentDetails: usd }, usdOrder, 'test', { paid: true }))
-  assert.throws(() => checkoutBody(usdOrder, { returnUrl: 'https://shop.example/billing', cancelUrl: 'https://shop.example/billing' }))
+  validateSession({ ...session, presentmentDetails: usd }, usdOrder, 'test', { paid: true })
+  assert.throws(() => validateSession(session, usdOrder, 'test', { paid: true }))
+  const body = checkoutBody({ ...usdOrder, description: 'Solo' }, { returnUrl: 'https://shop.example/billing', cancelUrl: 'https://shop.example/billing' })
+  assert.equal(body.currency, 'USD')
+  assert.equal(body.lineItems[0].priceData.unitAmount, 699)
+  assert.deepEqual(body.paymentMethodTypes, ['card'])
+})
+
+test('the bound USD session locks processing amount and FX evidence across retrievals', () => {
+  const paid = { ...session, presentmentDetails: usd }
+  const bound = { ...order, currency: 'USD', amountMinor: 699, moneyTracks: xpayMoneyTracks(paid) }
+  validateSession(paid, bound, 'test', { paid: true })
+  for (const change of [{ amountTotal: 34901 }, { presentmentDetails: { ...usd, exchangeRateId: 'different' } }, { presentmentDetails: { ...usd, exchangeRate: 1 } }]) assert.throws(() => validateSession({ ...paid, ...change }, bound, 'test', { paid: true }))
 })

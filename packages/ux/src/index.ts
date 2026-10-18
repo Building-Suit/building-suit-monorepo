@@ -248,3 +248,6 @@ export { usePageExitCleanup } from './composables/usePageExitCleanup.ts'
 export { usePrivateSessionLifecycle } from './composables/usePrivateSessionLifecycle.ts'
 export { usePageRevalidation } from './composables/usePageRevalidation.ts'
 export { useBlobUrl } from './composables/useBlobUrl.ts'
+
+export { useGuardedChoice } from './composables/useGuardedChoice.ts'
+export { useControlledRadioGroup } from './composables/useControlledRadioGroup.ts'

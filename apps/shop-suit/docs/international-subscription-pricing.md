@@ -1,12 +1,10 @@
-# International subscription pricing preparation
+# Shop subscription currencies
 
-Checkpoint 2026-10-18. Shop alone; based on stg `9d00cc7cdf4438090afe55be65cd8f691d093ba3`. No Doctor edits, provider configuration, credentials, hosted writes or migrations. This prepares contracts and hardens existing EGP verification. **USD checkout is not enabled.** No USD catalog terms, public prices, selector UI or currency ledger are published by this checkpoint.
+Implementation: PR400, based on stg `9d00cc7cdf4438090afe55be65cd8f691d093ba3`. Shop changes are independent of Doctor work. The EGP/USD selector and currency-safe server contracts are implemented. **USD charging remains disabled pending merchant-specific verification.** No live payment/refund, provider configuration, secret, manual deployment or hosted database write is performed by this task. The forward migration is applied only by the normal CI/release process.
 
-## Existing code contracts
+## Fixed price matrix
 
-The current code catalog (not a read of hosted commercial configuration) is:
-
-| Plan/variant | EGP monthly | EGP annual | Proposed fixed USD monthly | Proposed fixed USD annual |
+| Plan/variant | EGP monthly | EGP annual | USD monthly | USD annual |
 | --- | ---: | ---: | ---: | ---: |
 | Solo / solo_1 | 349 | 2,847.84 | 6.99 | 56.99 |
 | Solo / solo_2 | 499 | 4,071.84 | 9.99 | 81.99 |
@@ -14,45 +12,70 @@ The current code catalog (not a read of hosted commercial configuration) is:
 | Multi / multi_2 | 999 | 8,151.84 | 19.99 | 162.99 |
 | Multi / multi_3 | 1,199 | 9,783.84 | 23.99 | 195.99 |
 
-USD figures are a draft fixed price book anchored to the user's 349 EGP / 6.99 USD example, not a current FX quote or an enabled offer. An authoritative CBE rate could not be retrieved (site rejected the request); proximity to current exchange rates is **unverified**. Confirm the desired commercial values before the book is activated. Do not silently recalculate USD prices when FX moves. Each annual price is a separately fixed whole-term price, not a monthly charge and not exactly the EGP catalog's 32% discount. Existing plan presentation derives each annual discount from its matching same-currency monthly term; it must not advertise a universal 32% for these draft USD values.
+EGP values are the existing code catalog, not a new read of hosted commercial configuration. USD values are fixed commercial prices anchored to the user's 349 EGP / 6.99 USD example. They are not a live FX conversion. CBE's rate page rejected this cloud request, so equivalence to the current market rate is unverified. Each annual price is an independently fixed whole-term price. The UI calculates displayed savings and monthly equivalents against the corresponding same-currency monthly term; no currency conversion is used to calculate a discount.
 
-Current checkout uses the modern Bearer-key `https://api.xpay.app/checkout/sessions` API. Legacy community.xpay.app decimal-major-unit requests and callbacks are incompatible and must not be mixed into this integration. Existing monthly and yearly subscriptions purchase one whole commercial term; automatic recurring debit is not implemented.
+The private `international_price_book` contains the ten exact integer-cent USD prices. Each available public EGP source term produces a separate immutable USD term with the same resource/entitlement snapshot and a recorded source ID. Legacy `shop_public_plan_catalog` and `current_plan_offers` keep EGP-only defaults/cardinality. Explicit `shop_subscription_currency_catalog('USD')` reads the USD catalog; a missing USD term is unavailable, with no fallback to an EGP price. Owner billing uses `shop_billing_currency_plans` for authoritative currency-specific effective prices and blockers. Negotiated overrides apply only within the matching currency; private offers retain their own currency.
 
-Prices start as decimal major units in `plan_catalog_terms`, then become exact integer minor units in frozen payment orders. XPay orders, SQL quote/proration functions, credit accounts, client quote parser and several billing display projections are explicitly EGP-only. Operational shop/POS currency settings are separate from the SaaS subscription currency and must not choose subscription prices. Existing refunds require separately authorized operator reconciliation; there is no automatic refund path to generalize.
+## Selection and availability
 
-## Verified provider contract
+Shared pricing presentation in `packages/ui` owns the EGP/USD controls alongside monthly/yearly controls. `packages/ux` owns pending/cancellable choice behavior and native radio reconciliation; Shop supplies prices, state, translated copy and commands. Existing consumers see no extra controls unless they provide the optional currency projection.
 
-Official sources inspected:
+Egypt/absent or malformed country hints default to EGP. A foreign-country hint may recommend USD; explicit selection wins and persists as a non-sensitive preference cookie. Country/IP headers, locale, query parameters and cookie values never authorize a price or unlock payment. The server freezes the authenticated owner's selected catalog term and exact amount. The Edge request whitelist still refuses client amount/currency/country injection.
 
-- [XPay pricing](https://xpay.app/pricing): supported customer currencies do not imply USD settlement; settlement is EGP.
-- [Account capability](https://docs.xpay.app/en/api-reference/account/getAccount): account `supportedCurrencies` identifies decimals and payment methods per currency. Match merchant, mode, live activation, key type and read/write permissions. EGP card support or a card issued abroad is not USD eligibility.
-- [Line items and pricing](https://docs.xpay.app/en/integrate/checkout-session/line-items-and-pricing): all lines share one native price currency; USD 6.99 is integer `699`. The response has EGP processing totals plus USD `presentmentDetails` totals. FX is locked at session creation, not computed by our frontend or server.
-- [Checkout session](https://docs.xpay.app/en/api-reference/objects/checkout-session): `presentmentDetails.amountTotal` is the customer-facing total. Top-level `amountTotal` is the processing total. Paid status, bound session/order/merchant/mode and immutable amount tracks are all required; a redirect is not payment proof.
-- [Signature verification](https://docs.xpay.app/en/integrate/webhooks/verifying-signatures): retain timestamp/raw-body HMAC, five-minute delivery window and event-ID deduplication. Signed events remain wakeups for authenticated retrieval.
-- [Refunds](https://docs.xpay.app/en/api-reference/refunds/createRefund): partial multi-currency refund amount units/track need explicit provider confirmation and a sandbox receipt. Do not guess or convert a requested USD refund into EGP locally.
+An existing active subscription initially shows its recorded currency, regardless of an IP hint or old preference. Changing the selector does not change that contract. A saved checkout prevents a currency change; abandoning a pending quote requires confirmation. The controller preserves the old selection when a change is declined, and prevents duplicate pending actions. Trials remain free; choosing display currency does not manufacture a paid term.
 
-This cloud process has no configured XPay key, merchant ID or mode. Only presence was checked; no secret value/file was read and no account request was made. Merchant-specific USD/card eligibility and real sandbox results remain unverified.
+USD price comparison is available, but a customer sees unavailable checkout until all three gates pass:
 
-## Implemented preparation
+1. The private database configuration has `enabled` and `usd_enabled` deliberately true. The migration adds `usd_enabled=false` and does not enable it.
+2. The server-only runtime has `XPAY_USD_ENABLED=true`; absence/other values keep it off. Existing `XPAY_ENABLED`, environment, origin, API-generation and mode gates remain intact.
+3. Authenticated `GET /account` verifies the actual merchant/mode/key permissions, two-decimal USD and `card` support, plus live activation for live mode. EGP card support or a foreign-issued card does not prove USD eligibility.
 
-`verifyMerchantReadiness` accepts a requested charge currency, defaults to EGP, and requires USD/card support specifically for USD checks. It never returns account/key/customer data. Current production call sites still check EGP; this parameter is not an enable switch.
+A failed USD capability check does not suppress valid EGP availability. Disabling new USD charges does not prevent authenticated retrieval and reconciliation of already-created sessions or real paid observations. No browser result, redirect or checkout-complete-but-unpaid state grants access.
 
-`xpayMoneyTracks` projects distinct typed processing/presentment amounts and locked-rate evidence. It accepts EGP-only legacy responses, rejects malformed/mismatched mirrors, and performs no FX arithmetic. Existing EGP session validation now rejects a foreign presentment mirror even if the top-level processing amount matches the EGP order. Webhook and reconciliation reject that mismatch before the existing SQL fulfillment RPC.
+## Amount tracks and financial rules
 
-`subscriptionCurrencyChoice` is a typed, pure presentation preference boundary, not wired to routes yet. Egypt/unknown hints suggest EGP; foreign-country hints suggest USD. An explicit user selection overrides the suggestion. An existing paid subscription keeps its commercial currency; a different explicit selection is identified as requiring a new currency-change quote. Country hints, query parameters, browser storage, locale, IP headers and client-submitted amounts never authorize a price or charge. The current Edge request whitelist rejects currency/country/amount injection.
+The integration stays on the modern Bearer-key `api.xpay.app/checkout/sessions` API. Legacy community.xpay.app major-unit payloads/callbacks are incompatible and are not adopted.
 
-## Minimal safe rollout plan
+A USD 6.99 line is integer `699`, with one native currency for all lines. Hosted checkout displays USD, while top-level response totals are EGP processing amounts; `presentmentDetails.amountTotal` is the customer total. XPay locks FX at session creation. Our code performs no FX calculation and never compares 699 USD cents with an EGP processing total.
 
-1. Verify merchant generation/mode and USD/card capability via authorized read-only `GET /account`; retain a secret-free evidence receipt. Run a sandbox USD session with a server-owned fixed USD term, signed webhook/retrieve, duplicate delivery, expiry and uncertain-create recovery. Confirm amount fields, locked-rate representation, fees and refund units. No live charge is needed for this proof.
-2. Add an independently versioned EGP/USD price book through product-owned catalog commands. The server returns authoritative term IDs, currency, interval, exact amount, revision and availability. No browser conversion or country-priced override. Existing EGP terms, negotiated overrides and recipient-bound private offers retain their currency; never apply an EGP override to a USD term. A missing USD price is unavailable, with no currency fallback.
-3. Extend frozen orders, paid observations, receipts, audit and reconciliation to retain **both** the USD commercial/presentment total and provider EGP processing total, plus immutable FX rate/ID. On first bind persist the provider's tracks; later retrievals must match that snapshot. Reject a changed presentment amount/currency/rate or processing amount. Never compare 699 USD cents with the EGP processing total, or calculate a provider processing amount locally. Introduce compatible forward migrations/types/tests only through normal CI; do not edit applied history.
-4. Extend the existing proration algorithm within the commercial currency: monthly/yearly rates, elapsed time, rounding and credit stay in that currency. Currency-key credit accounts and immutable ledger rows are required; no sum, debit, settlement, refund or proration may cross EGP/USD. A paid EGP period cannot fund a USD upgrade. Currency switching occurs only through a separately quoted new term after the existing period, with explicit confirmation and no automatic FX credit. Same-currency annual-to-monthly scheduling preserves the existing period and exact term policy.
-5. Preserve refund origin and cumulative amount in the original customer currency alongside provider processing/refund records. Block automation until provider clarifies partial refunds. Reconcile provider fee/FX differences separately; never rewrite the original paid amount or infer a refund from a browser result. Do not revoke or grant access twice after replay/refund events.
-6. Shared `packages/ui` owns an explicit EGP/USD selector alongside the existing monthly/yearly controls and exact currency labels across marketing/signup/billing/checkout/history. Reusable selection/pending/dirty behavior belongs in `packages/ux`; Shop supplies prices, preference and capabilities. Country recommendation is overridable and gives no price authority. Once deployed, fresh Egypt/unknown visits default EGP and foreign visits may be offered USD only if its complete server path is available. Existing subscriptions remain on their currency. Unsupported USD shows clear EN/AR unavailable copy and never opens an EGP charge disguised as USD.
-7. End-to-end acceptance: forged country/currency/amount, tenant/owner denial, all ten fixed USD/EGP term combinations, negotiated/private offers, stale quotes, monthly/yearly changes, cross-currency credit refusal, fee/FX tracks, retry/idempotency, signed replay, refund limits, EN/AR/RTL/themes/responsive/accessibility, and an unchanged EGP checkout. Do not expose the selector or declare live USD support until these gates pass.
+- `shop_xpay_orders`, paid observations, commercial payment receipts and periods retain the quoted customer currency and amount. Shared types distinguish `SubscriptionMoney<'EGP'>` processing from EGP/USD presentment.
+- `shop_xpay_money_tracks` stores the original provider EGP processing amount, customer amount/currency and locked FX ID/rate atomically at first bind/recovery. Its immutable snapshot must match every later retrieval. EGP-only historical responses remain supported; an EGP order rejects a foreign presentment mirror even when processing totals happen to match.
+- `shop_xpay_processing_receipts` records the provider's first verified-paid fee details independently. The Edge projection whitelists monetary fee fields and omits customer/card/key data. The original paid-state/flat-or-expanded PaymentIntent validator runs before this receipt is written; a later failure rolls back both tracks, receipt and access effects together.
+- Webhook raw-body HMAC, five-minute delivery window, durable event-ID deduplication, authenticated session retrieval, merchant/mode/order binding and monotonic paid state are preserved. Request retries reuse the frozen body/key, and never silently reprice a session.
+- Proration uses the unchanged exact numeric/time algorithm within the commercial currency. Monthly/yearly quotes, paid funding, rounding, settlements and credit ledger entries retain EGP or USD explicitly. Credit accounts use `(subscription_id,currency)` keys; one currency cannot consume or mutate another currency's balance. Historical EGP balances and receipts are preserved.
+- An active paid currency change is deferred to term end. It cannot spend the old currency's prepaid funding or credit through an immediate quote. The next term requires a separate explicit server quote/payment in the new currency, after expiry. Same-currency annual-to-monthly/downgrade scheduling retains the current policy. Expired old-currency credit remains separate; it is not silently converted.
 
-Remaining rollout prerequisites: merchant account capability/sandbox evidence; authoritative fixed-price activation; paired-track persistence and currency-safe financial/UI integration; explicit partial-refund semantics. This checkpoint does not claim completion of customer USD payments.
+## Refund handling
 
-## Checkpoint validation
+This feature does not initiate automatic refunds. The existing separately authorized operator process remains. Public modern API documentation does not establish unambiguous partial multi-currency refund units; the application sends no guessed partial-refund request.
 
-77 focused payment/currency/proration/scheduled-billing tests pass, including all existing XPay regression cases and new signed foreign-presentment denial before fulfillment. All three Edge entry points pass Deno 2.9.6 checking; changed provider modules pass Deno lint. Shop typecheck, changed app/test ESLint, canonical token checks, strict template/workspace boundaries and diff whitespace pass. No SQL migration or UI/template changes are included, so no new database/browser acceptance is claimed. Merchant account, provider sandbox and live payments remain unrun.
+`shop_xpay_record_refund` records an already-succeeded, reviewed provider refund through a service-only RPC. It requires original order/session binding, explicit original-currency customer minor units, EGP processing minor units, paired-track evidence declaration, a provider-evidence digest, attributed reviewer and reason. Both currencies must match the immutable original money tracks. Refund/request IDs are idempotent and globally unique. Under the same resource/subscription/order serialization as settlement, cumulative refunds cannot exceed either original amount. Pending, missing, fractional, currency-swapped, reused-key or over-refund evidence is refused.
+
+Refund observations are append-only and RLS protected; clients and service-role table writes have no grants. Owners read only the authorized aggregate on their order history, which retains the original paid amount and separately labels the refunded amount in the same customer currency. Processing/refund differences remain explicit evidence, not recomputed FX. A refund does not rewrite the original receipt or automatically revoke access. Refunded funding blocks further active proration pending operator review, so it cannot produce duplicate credit; a quote admitted before a refund becomes stale/held through funding-evidence validation.
+
+## Exact account-specific evidence still unavailable
+
+This cloud process has no configured XPay key, merchant ID or mode. Only variable presence was checked; no secret value/file was read and no merchant account request was made. Generic documentation is not account eligibility.
+
+The user can obtain evidence without sharing a secret:
+
+- In the existing merchant dashboard or through provider support, request confirmation that this exact account uses the modern checkout API and permits USD/card in the intended test/live mode. Ask whether settlement remains EGP, whether the quoted fee/tax configuration is supported, and how partial USD refunds express customer versus processing units.
+- Alternatively, an authorized operator can run read-only `GET /account` from the existing secure server/account console using its already-installed credential. Share only a redacted capability receipt: timestamp, environment/mode, account-match confirmation, `supportedCurrencies` entries for EGP/USD with decimals/methods, `livePaymentsEnabled`, and key type/mode/permission names. Do not share the Bearer key, signing secret, `clientSecret`, full headers or customer data.
+- Before enabling USD, retain sandbox evidence for a server-owned USD term: request `699` USD cents; response EGP processing total plus USD presentment `699` and locked FX evidence; signed paid retrieval; retry/duplicate delivery; pause/reconcile; and provider-confirmed full/partial refund units. Test mode is not proof of live activation. A dashboard claim that foreign cards work is insufficient.
+
+Enabling the private/runtime flags and configuring a real account are separate operator actions, not performed by this task. USD remains fail closed until these receipts exist. Staging code integration does not authorize live charges or main promotion.
+
+## Official sources
+
+- [XPay pricing](https://xpay.app/pricing) — supported presentment currencies and EGP settlement.
+- [Account capability](https://docs.xpay.app/en/api-reference/account/getAccount) — account-specific currency/method/mode permissions.
+- [Line items and pricing](https://docs.xpay.app/en/integrate/checkout-session/line-items-and-pricing) — integer amounts, single native currency, processing/presentment tracks and FX lock.
+- [Checkout session](https://docs.xpay.app/en/api-reference/objects/checkout-session) — customer mirror and paid status.
+- [Signature verification](https://docs.xpay.app/en/integrate/webhooks/verifying-signatures) — timestamp/raw-body HMAC and replay window.
+- [Refund API](https://docs.xpay.app/en/api-reference/refunds/createRefund) — provider clarification required before partial-refund automation.
+
+## Validation record
+
+The new rollback-only SQL suite exercises the full fixed USD matrix, EGP catalog compatibility, owner isolation, disabled-USD admission, paired binding/changed totals/replay, paused reconciliation, real commercial receipt currencies, monthly/yearly USD proration, separate credit accounts, cumulative paired refunds, refund funding review and an unchanged EGP settlement. It is included in the GitHub-hosted disposable Supabase payment runner. Local replay uses PostgreSQL 17 with synthetic Auth/Storage and inert Vault/Cron interfaces; it does not prove real provider Auth, scheduling or merchant compatibility. Applied migrations are unchanged.
+
+New browser cases cover EN/AR, mobile/desktop, dark/light, keyboard currency selection, all fixed terms, EGP return, country recommendation/explicit reload persistence, unavailable USD with no charge/fallback, a synthetic ready-USD server quote, and original/refunded USD history. Full regression and exact-head CI outcomes are recorded in the PR before staging integration.

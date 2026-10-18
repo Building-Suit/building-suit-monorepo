@@ -4,6 +4,7 @@ export type BsLandingPreview = { kind: 'dashboard'; label: string; title: string
 export interface BsLandingPricing {
   variant?: 'default' | 'shop'
   plans: MarketingPricingPlan[]
+  currencySelection?: { value: string; label: string; options: MarketingPricingOption[]; notice?: string; pending?: boolean }
   interval: string
   intervalOptions: MarketingPricingOption[]
   copy: MarketingPricingCopy

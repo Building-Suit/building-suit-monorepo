@@ -285,9 +285,12 @@ the PR after completion. The private-offer SQL fulfillment contract inherits
 #279 but a full signed-bridge/private-offer payment scenario remains unrun; the
 integration owner must run combined SAS/XPay checks before staging merge.
 
-## International currency preparation (2026-10-18)
+## International subscription currencies (2026-10-18)
 
-See [the currency contract and rollout plan](international-subscription-pricing.md).
-Account capability checks can verify USD/card eligibility separately, but current
-orders and fulfillment remain EGP-only. EGP session validation now also rejects a
-foreign presentment mirror before SQL fulfillment. No USD charge is enabled.
+See [the currency contract, fixed matrix and verification plan](international-subscription-pricing.md).
+EGP/USD comparison and explicit selection are implemented. Orders and receipts
+retain commercial currency alongside immutable EGP processing/FX evidence.
+Proration/credit and reviewed refund observations stay currency isolated.
+USD charging remains disabled by private/runtime gates and still requires
+account-specific USD/card capability and sandbox verification. No live USD
+payment, refund or provider configuration is performed by this task.
