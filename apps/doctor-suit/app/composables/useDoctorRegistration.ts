@@ -122,6 +122,7 @@ export function useDoctorRegistration() {
   async function resolveIdentity(captured: number) {
     if (auth.state.phase === 'checking') await auth.refresh()
     if (disposed || captured !== generation) return
+    if (!auth.state.providerReady || auth.state.phase === 'unavailable') return
     let verified: DoctorRegistrationIdentity | null
     try { verified = await auth.registrationIdentity() }
     catch { if (!disposed && captured === generation) identityUnavailable.value = true; return }

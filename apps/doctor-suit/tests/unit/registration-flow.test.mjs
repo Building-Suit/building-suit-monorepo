@@ -36,6 +36,11 @@ test('registration initialization blocks submissions until the trusted identity 
     check.resolve(null); await mount; assert.equal(f.flow.view.value.pending, false)
   } finally { await f.close() }
 })
+test('an unavailable Doctor provider retains its dedicated gate without a speculative identity retry error', async () => {
+  let calls = 0; const f = fixture({ phase: 'unavailable', lookup: async () => { calls++; throw Error('must not be called') } })
+  try { f.auth.state.providerReady = false; await f.mount(); assert.equal(calls, 0); assert.equal(f.flow.availability.value, undefined); assert.equal(f.creates(), 0) }
+  finally { await f.close() }
+})
 test('a late initial identity response after navigation cannot restore the disposed form', async () => {
   const check = deferred(), f = fixture({ lookup: () => check.promise })
   const mounting = f.mount(); await f.close(); check.resolve(verified); await mounting

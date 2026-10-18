@@ -25,5 +25,5 @@
     "release-changes/items.json",
     "tooling/git/tests/ci-workflow-efficiency.test.mjs"
   ],
-  "reason": "Synthetic Doctor checked-email registration, required practice wizard, explicit duplicate/uncertain outcomes and bounded non-secret resume with verified identity binding. Share the existing bounded request limiter without changing Shop quota policy. Preserve SID/admission/subscription/clinical safeguards and user-managed connections; no operational Doctor activation. Retain pending CI jobs in the existing serialized workspace validation group after an observed staging cancellation. Shared customer-visible form feedback is independently covered by shared-auth-form-feedback."
+  "reason": "Synthetic Doctor checked-email registration, required practice wizard, explicit duplicate/uncertain outcomes and bounded non-secret resume with verified identity binding. Use a bounded shared request limiter with the existing Shop quota pattern; leave Shop-owned files unchanged. Preserve SID/admission/subscription/clinical safeguards and user-managed connections; no operational Doctor activation. Retain pending CI jobs in the existing serialized workspace validation group after an observed staging cancellation. Shared customer-visible form feedback is independently covered by shared-auth-form-feedback."
 }
