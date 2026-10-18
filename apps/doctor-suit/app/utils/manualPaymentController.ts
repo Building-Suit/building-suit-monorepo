@@ -2,17 +2,18 @@ import type{DoctorSaasQuoteRequest}from'./saasQuoteRepository'
 import type{DoctorIdentity}from'./authController'
 import type{ManualPaymentRepository,ManualReviewInput}from'./manualPaymentRepository'
 import type{ManualCatalog,ManualConfiguration,ManualInstructions,ManualPaymentNotice}from'./manualPayments'
+import{doctorUuid}from'./locationContext.ts'
 import{manualMinor}from'./manualPayments.ts'
 import type{DoctorSaasStatus}from'./saasStatus'
 import type{DoctorSaasTermsDocument}from'./saasTermsDocument'
 export interface ManualPaymentState{
  ready:boolean;loading:boolean;pending:boolean;error:'denied'|'conflict'|'invalid'|'network'|null;uncertain:boolean;review:boolean;canReview:boolean;activationConfigured:boolean
  catalog:ManualCatalog|null;configuration:ManualConfiguration|null;account:DoctorSaasStatus|null;document:DoctorSaasTermsDocument|null
- items:ManualPaymentNotice[];page:number;total:number;selected:string|null;plan:string;interval:'monthly'|'yearly';accepted:boolean
+ detail:ManualPaymentNotice|null;items:ManualPaymentNotice[];page:number;total:number;selected:string|null;plan:string;interval:'monthly'|'yearly';accepted:boolean
  instructions:ManualInstructions|null;reference:string;at:string;file:File|null;uploadNotice:string|null
  reason:string;receivedReference:string;receivedAmount:string;receivedCurrency:string;receivedAt:string;verification:string;independent:boolean
 }
-export const manualPaymentState=():ManualPaymentState=>({ready:false,loading:false,pending:false,error:null,uncertain:false,review:false,canReview:false,activationConfigured:false,catalog:null,configuration:null,account:null,document:null,items:[],page:1,total:0,selected:null,plan:'starter',interval:'monthly',accepted:false,instructions:null,reference:'',at:'',file:null,uploadNotice:null,reason:'',receivedReference:'',receivedAmount:'',receivedCurrency:'',receivedAt:'',verification:'',independent:false})
+export const manualPaymentState=():ManualPaymentState=>({ready:false,loading:false,pending:false,error:null,uncertain:false,review:false,canReview:false,activationConfigured:false,catalog:null,configuration:null,account:null,document:null,detail:null,items:[],page:1,total:0,selected:null,plan:'starter',interval:'monthly',accepted:false,instructions:null,reference:'',at:'',file:null,uploadNotice:null,reason:'',receivedReference:'',receivedAmount:'',receivedCurrency:'',receivedAt:'',verification:'',independent:false})
 function failure(e:unknown):ManualPaymentState['error']{const c=e&&typeof e==='object'&&'code'in e?String(e.code):'';return c==='42501'?'denied':['40001','DS008','DS009','DS010','23505'].includes(c)?'conflict':['22023','23514'].includes(c)?'invalid':'network'}
 export function createManualPaymentController(repo:ManualPaymentRepository|null,state:ManualPaymentState,identity:()=>DoctorIdentity|null,environment:string,afterActivation:()=>void,key=()=>crypto.randomUUID()){
  let generation=0,loaded:string|null=null,abort=new AbortController()
@@ -20,12 +21,12 @@ export function createManualPaymentController(repo:ManualPaymentRepository|null,
  const scope=()=>{const a=identity();return a?JSON.stringify(['doctor-suit',environment,a.userId,a.sessionId,a.practiceId,'manual-payments']):null}
  const active=(g:number,s:string|null)=>g===generation&&s===scope()
  const signal=()=>AbortSignal.any([abort.signal,AbortSignal.timeout(20000)])
- const selected=()=>state.items.find(n=>n.id===state.selected)??null
+ const selected=()=>state.detail?.id===state.selected?state.detail:state.items.find(n=>n.id===state.selected)??null
  function clear(){generation++;abort.abort();abort=new AbortController();loaded=null;operation=null;Object.assign(state,manualPaymentState())}
- function upsert(row:ManualPaymentNotice){state.items=[row,...state.items.filter(n=>n.id!==row.id)].slice(0,25);state.selected=row.id}
+ function upsert(row:ManualPaymentNotice){if(state.detail?.id===row.id){state.detail=row;state.selected=row.id;return}state.items=[row,...state.items.filter(n=>n.id!==row.id)].slice(0,25);state.selected=row.id}
  async function load(review=state.review,page=state.page){
   if(state.pending)return false
-  if(loaded!==scope())clear();const actor=identity(),s=scope(),g=++generation;abort.abort();abort=new AbortController();state.loading=true;state.ready=false;state.error=null;state.review=review;state.items=[];state.selected=null
+  if(loaded!==scope())clear();const actor=identity(),s=scope(),g=++generation;abort.abort();abort=new AbortController();state.loading=true;state.ready=false;state.error=null;state.review=review;state.items=[];state.detail=null;state.selected=null
   if(!repo||!actor){state.loading=false;state.error='denied';return false}
   try{
    const canReview=await repo.capability(actor,signal());if(review&&!canReview)throw{code:'42501'}
@@ -36,6 +37,12 @@ export function createManualPaymentController(repo:ManualPaymentRepository|null,
    if(customer)[state.catalog,state.configuration,state.account]=customer
    loaded=s;state.ready=true;return true
   }catch(e){if(active(g,s))state.error=failure(e);return false}finally{if(active(g,s))state.loading=false}
+ }
+ async function open(id:string){
+  if(state.pending||operation||state.loading||!state.ready||loaded!==scope()||!repo)return false
+  if(!doctorUuid(id)){state.error='invalid';return false}
+  const actor=identity(),s=scope(),g=generation;if(!actor)return false;state.loading=true;state.detail=null;state.selected=null
+  try{const row=await repo.read(actor,state.review,id,signal());if(!active(g,s))return false;state.detail=row;select(row.id);return true}catch(e){if(active(g,s))state.error=failure(e);return false}finally{if(active(g,s))state.loading=false}
  }
  async function choose(plan=state.plan,interval=state.interval){
   if(state.pending||state.loading||operation||!repo||!state.ready||state.review||state.instructions)return false
@@ -87,5 +94,5 @@ export function createManualPaymentController(repo:ManualPaymentRepository|null,
  async function retry(){if(!operation)return false;return execute(operation.name,()=>operation!.run)}
  async function download(evidence:string){const row=selected(),actor=identity(),g=generation,s=scope();if(!repo||!actor||!row||!row.evidence.some(e=>e.id===evidence)||state.pending)return null;state.pending=true;try{const blob=await repo.download(row.id,evidence,key(),signal());return active(g,s)?blob:null}catch(e){if(active(g,s))state.error=failure(e);return null}finally{if(active(g,s))state.pending=false}}
  function skipReceipt(){if(!state.pending&&!operation){state.uploadNotice=null;state.file=null}}
- return{state,clear,load,choose,prepare,submit,upload,select,review,activate,retry,download,selected,canPrepare,skipReceipt}
+ return{state,clear,load,choose,prepare,submit,upload,select,open,review,activate,retry,download,selected,canPrepare,skipReceipt}
 }

@@ -2403,6 +2403,16 @@ export type Database = {
         Returns: Json
       }
       doctor_manual_payment_configuration: { Args: never; Returns: Json }
+      doctor_manual_payment_reconciliation: {
+        Args: {
+          p_from?: string
+          p_page?: number
+          p_review_queue?: boolean
+          p_status?: string
+          p_until?: string
+        }
+        Returns: Json
+      }
       doctor_manual_payments: {
         Args: { p_notice?: string; p_page?: number; p_review_queue?: boolean }
         Returns: Json

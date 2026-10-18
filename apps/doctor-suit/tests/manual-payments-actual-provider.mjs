@@ -1,3 +1,4 @@
+import{decodeManualReport}from'../app/utils/manualReconciliation.ts'
 import{verifyManualPaymentBrowser}from'./manual-payments-browser.mjs'
 // Actual bytes/Auth/Storage acceptance in services owned by the CI provider runner.
 import{randomUUID,createHash}from'node:crypto'
@@ -25,6 +26,9 @@ export async function verifyDoctorManualPaymentProvider({root,api,origin,key,ser
   await rpc(a.client,'doctor_prepare_manual_payment',{p_intent:intent.intent_id,p_configuration_revision:configuration.configuration_revision,p_key:randomUUID()})
   const notice=await rpc(a.client,'doctor_submit_manual_payment',{p_intent:intent.intent_id,p_reference:'SYNTHETIC-CUSTOMER-CLAIM',p_transferred_at:new Date(Date.now()-1000).toISOString(),p_configuration_revision:configuration.configuration_revision,p_key:randomUUID()})
   expect(notice.status==='submitted'&&(await rpc(a.client,'doctor_saas_status')).state==='unconfigured','Customer claim granted entitlement')
+  const reportQuery={review:false,from:null,until:null,status:'all',page:1},reportActor={userId:a.user.id,practiceId:null}
+  const claimedReport=decodeManualReport(await rpc(a.client,'doctor_manual_payment_reconciliation'),reportActor,reportQuery);expect(claimedReport.total===1&&claimedReport.currencies[0].claimed==='29900'&&claimedReport.currencies[0].verified==='0','Claim report asserted received funds')
+  expect((await rpc(b.client,'doctor_manual_payment_reconciliation')).total===0,'Foreign subscriber report leaked notices')
   setStage('actual manual receipt validated private bytes and exact retry')
   let ready=false
   for(let count=0;count<30;count++){const r=await endpoint(a,'upload',notice.id,{filename:'synthetic-receipt.pdf'},bytes).catch(()=>null);if(r?.status===200){ready=await r.json();break}await new Promise(resolve=>setTimeout(resolve,500))}
@@ -43,13 +47,16 @@ export async function verifyDoctorManualPaymentProvider({root,api,origin,key,ser
   setStage('actual independent bank review and separate paid activation')
   const common={p_notice:notice.id,p_revision:0,p_action:'funds_verified',p_reason:'Synthetic independently checked bank entry',p_received_reference:'SYNTHETIC-BANK-'+randomUUID(),p_received_minor:'29900',p_currency:'EGP',p_received_at:new Date(Date.now()-1000).toISOString(),p_verification_ref:approval,p_independently_verified:true,p_key:randomUUID()}
   const verified=await rpc(b.client,'doctor_review_manual_payment',common);expect(verified.status==='funds_verified'&&(await rpc(a.client,'doctor_saas_status')).state==='unconfigured','Funds verification activated account')
+  const verifiedReport=decodeManualReport(await rpc(a.client,'doctor_manual_payment_reconciliation'),reportActor,reportQuery);expect(verifiedReport.currencies[0].verified==='29900'&&verifiedReport.currencies[0].awaiting==='29900'&&verifiedReport.currencies[0].activated==='0','Verified report prematurely activated funds')
   await verifyManualPaymentBrowser({root,api,origin,key,a,b,expect,rpc,setStage})
   const paid=await rpc(a.client,'doctor_saas_status')
   expect(paid.state==='paid'&&paid.period.kind==='manual_paid'&&paid.period_active===true,'Actual browser activation missing server period')
   expect(paid.live_activation===false&&paid.paid_activation_available===false,'Synthetic acceptance asserted live availability')
+  const paidReport=decodeManualReport(await rpc(a.client,'doctor_manual_payment_reconciliation'),reportActor,reportQuery);expect(paidReport.total===2&&paidReport.currencies[0].verified==='328900'&&paidReport.currencies[0].activated==='299000'&&paidReport.currencies[0].awaiting==='29900'&&paidReport.currencies[0].discrepancies===0,'Paid report lost separate verified funds or immutable period binding')
   const replacement=await b.client.rpc('doctor_activate_manual_payment',{p_notice:notice.id,p_revision:1,p_key:randomUUID()})
   expect(replacement.error?.code==='DS010'&&(await rpc(a.client,'doctor_saas_status')).period.id===paid.period.id,'An older verified notice replaced the active browser-paid period')
   sql(`update public.doctor_manual_payment_reviewers set enabled=false,revision=revision+1,approval_ref='${approval}-REVOKED'where user_id='${b.user.id}';`)
+  expect((await b.client.rpc('doctor_manual_payment_reconciliation',{p_review_queue:true})).error?.code==='42501','Revoked reviewer retained reconciliation access')
   expect((await endpoint(b,'download',notice.id,{evidenceId:evidence.id})).status===403,'Revoked reviewer retained receipt access')
   expect((await endpoint(a,'download',notice.id,{evidenceId:evidence.id})).status===200,'Reviewer revocation changed independent subscriber access')
   console.log('Actual manual payments: private receipt bytes/hash, immutable retry, anonymous/direct/public/signed denials, trusted reviewer delivery, self-review denial, separate funds verification and synthetic paid activation, and post-revocation denial passed; live acceptance remains disabled.')

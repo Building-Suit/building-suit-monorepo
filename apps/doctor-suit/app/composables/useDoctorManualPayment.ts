@@ -9,6 +9,8 @@ export async function useDoctorManualPayment(review:boolean){
  async function refresh(page=controller.state.page){if(await controller.load(review,page))await controller.choose()}
  async function download(id:string){const file=controller.selected()?.evidence.find(e=>e.id===id);if(!file)return;const blob=await controller.download(id);if(blob)downloadBlob(file.filename,blob)}
  onBeforeUnmount(()=>controller.clear())
+ const notice=useRoute().query.notice
  await refresh(1)
+ if(typeof notice==='string')await controller.open(notice)
  return{controller,view,values,update,refresh,download}
 }

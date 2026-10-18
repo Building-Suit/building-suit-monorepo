@@ -30,3 +30,7 @@ The approved introductory catalogue is Starter **EGP 299/month or 2,990/year**, 
 - User-managed Doctor Vercel/Supabase connections and qualified privacy/security/financial/recovery/launch acceptance.
 
 No credential belongs in chat, source, browser props, logs or this document. Until these inputs and acceptance gates are resolved, configuration remains disabled/unconfigured and fixtures remain synthetic. No hosted migration, manual deployment, provider provisioning or main promotion is part of this task.
+
+## Candidate validation
+
+The SQL-only checkpoint passed 34 report-specific SQL/RLS assertions and generated both public schema type files in GitHub CI (artifact 12138895913, source `dc9af95b3bf249f98f65be13be69e6188a135a19`). The complete candidate additionally exercises real concurrent verification/activation during paused report reads, actual provider report transitions, owner/reviewer source navigation, status filters and Arabic RTL/mobile/dark reload. These new runtime checks must pass on the final PR head before acceptance. Local static validation passed 47 focused pure tests, Doctor typecheck/lint/build, workspace boundaries (112 templates) and release provenance; no local service was started.
