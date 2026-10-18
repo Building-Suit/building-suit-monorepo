@@ -1,0 +1,12 @@
+{
+  "id": "dos-ae-011-protocol-ci-budget",
+  "task": "DOS-AE-011",
+  "suits": ["doctor-suit", "shop-suit", "ledger-suit", "inventory-suit", "super-admin-suit", "automation-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/doctor-disposable.yml",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-011-aggregate-stg-reconciliation.md"
+  ],
+  "reason": "Allow the unchanged complete 72-case synthetic account protocol suite and four slower-CPU/RPC repetitions to finish. Exact-head CI job 117547883154 passed all ordinary cases and three stress repetitions before the 10-minute job execution limit cancelled the fourth. Raise only the job budget to 15 minutes; retain all browser timeouts, repetition counts, expiry/freshness policies and assertions."
+}
