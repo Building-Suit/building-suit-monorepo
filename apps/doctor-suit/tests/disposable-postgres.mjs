@@ -87,6 +87,7 @@ try {
   // Emulate configured bucket metadata only; the actual provider fixture uses
   // the supported Storage API and checks HTTP/private bytes independently.
   sql(`insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('doctor-private-documents','doctor-private-documents',false,5242880,array['application/pdf','image/png','image/jpeg']);`)
+  sql(`insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)values('doctor-payment-evidence','doctor-payment-evidence',false,5242880,array['application/pdf','image/png','image/jpeg']);`)
   // Publication interface only. No logical replication service is run here.
   sql('create publication supabase_realtime;')
   const migrations = (await readdir(`${app}supabase/migrations`)).filter(file => file.endsWith('.sql')).sort()
