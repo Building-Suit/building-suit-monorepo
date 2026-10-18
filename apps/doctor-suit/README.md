@@ -122,3 +122,23 @@ The [AE-006 administration contract](../../docs/work-packages/doctor-suit/early-
 [AE-009 redacted operations](../../docs/work-packages/doctor-suit/early-administrative-edition/ae-009-operations.md) exposes only own-subscriber reconciliation and privacy-intake counts. Unknown review findings, recovery objectives, capacity thresholds, incident/support ownership and hosted telemetry remain explicitly unavailable; this is not a security certificate or launch-health badge.
 
 [AE-010 administrative availability](../../docs/work-packages/doctor-suit/early-administrative-edition/ae-010-presentation.md) presents caller-scoped synthetic diagnostics inside the shared subscription template. Missing diagnostics are explicitly unavailable; invoices/settlement, operator and real-user activation remain closed. User/session/practice changes and refreshes clear previous counts, and the existing privacy-review intake remains accessible.
+
+## Diagnose a local sign-in connection
+
+“Sign-in unavailable” is a connection guard, independent of plan/pricing or subscription entitlement. In `apps/doctor-suit/.env`, configure `APP_ENV=local`, `APP_URL=http://localhost:3006` (or the exact origin you use), `DOCTOR_SUPABASE_URL` and `DOCTOR_SUPABASE_PUBLISHABLE_KEY` from the approved Doctor-only project. Never copy Shop credentials or use a service/secret key. The URL must be a bare HTTPS origin, or an HTTP loopback origin for local mode; the key must be a publishable key or legacy anon-role JWT. Local web mode may use an explicitly approved HTTPS Doctor backend.
+
+From the repository root:
+
+```sh
+cp apps/doctor-suit/.env.example apps/doctor-suit/.env  # only if the file does not already exist
+# Edit the four Doctor fields locally; never paste keys into chat.
+pnpm doctor:auth-check
+pnpm doctor:auth-check --verify
+pnpm dev:doctor
+```
+
+Stop the prior dev process before restarting; Nuxt reads these fields at startup. No local Supabase service is started by the check. Its optional `--verify` makes only the read-only `doctor_runtime_contract` RPC on the target you configured, prints no URL/key/token/response body, and requires `{ product: 'doctor-suit', version: 1, data_mode: 'synthetic' }`. Missing values, an unreachable/wrong project or absent Doctor migrations leave credentials unavailable. Have the approved CI migration path initialize the Doctor project; this command does not migrate it. Configure Auth callback allowlisting for the same origin's `/verify` and `/recover`; `localhost` and `127.0.0.1` are distinct browser origins. No manually supplied “verified” flag replaces the runtime marker.
+
+For an already built Node server use `pnpm doctor:auth-check --runtime --verify` with all five explicit runtime fields from the runtime section above, including `NUXT_PUBLIC_DOCTOR_AUTH_CONFIGURED=true`. A false flag deliberately keeps auth disabled even when a URL/key exist. Changing only build-time `DOCTOR_*` variables after a build does not populate Nitro runtime fields.
+
+Canonical entry routes are `/sign-in`, `/sign-up`, `/verify`, and `/recover`. Exact legacy `/auth/login`, `/auth/signup`, `/auth/forgot-password`, and `/auth/reset-password` entries redirect to their Doctor equivalents. Only allowlisted return destinations survive; reset callbacks retain only the existing PKCE code/flow contract. Unknown auth URLs remain genuine 404s inside the public marketing shell, without an authenticated-workspace sidebar or invented active account. Doctor's current landing CTAs already use canonical routes; a legacy URL alone does not establish that the landing emitted it.

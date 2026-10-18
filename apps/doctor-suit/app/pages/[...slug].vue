@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { doctorMissingPage } from '../utils/previewMetadata'
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'marketing' })
 const { locale } = useI18n()
 const copy = computed(() => doctorMissingPage(locale.value==='ar'))
 if(import.meta.server) { const event = useRequestEvent();if(event)setResponseStatus(event,404) }
