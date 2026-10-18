@@ -1,3 +1,6 @@
+import{doctorOperationsRepository}from'../app/utils/operationsReadiness.ts'
+import {verifyDoctorSaasFinancialProvider}from'./saas-reconciliation-actual-provider.mjs'
+import {verifyDoctorSaasQuoteProvider}from'./saas-quotes-actual-provider.mjs'
 // Actual owned administrative-candidate acceptance; every fixture value is synthetic.
 import {randomUUID,randomBytes,createHash}from'node:crypto'
 export async function verifyDoctorAdministrativeCandidateProvider({publicKey,bootstrap,confirmedActor,sql,rpc,endpoint,verifyQueue,verifyAccount,setStage,expect,legacyLocator}){
@@ -34,6 +37,13 @@ export async function verifyDoctorAdministrativeCandidateProvider({publicKey,boo
   await invite(a,staff,['patients.read','patients.write','appointments.read','queue.manage']);await invite(b,staff,['patients.read','appointments.read'])
   const contexts=await rpc(staff.client,'doctor_contexts');expect(contexts.length===2&&contexts.every(value=>value.portal==='secretary'&&value.edition==='administrative_candidate'&&value.entitlement.state==='trial')&&!contexts.find(value=>value.practice_id===b.scope.practiceId).capabilities.includes('patients.write'),'Candidate independent grants widened')
   expect((await rpc(staff.client,'doctor_session_context')).practice_id===null,'Candidate staff acquired ownership')
+  setStage('actual candidate SaaS quote and held-intent transport')
+  const heldQuote=await verifyDoctorSaasQuoteProvider({a,b,staff,rpc})
+  setStage('actual candidate synthetic financial reconciliation and owner report')
+  await verifyDoctorSaasFinancialProvider({a,b,staff,quoteId:heldQuote,sql,rpc})
+  const administration=await rpc(a.client,'doctor_administration_readiness');expect(administration.subscriber_user_id===a.user.id&&administration.state==='unavailable'&&administration.target_binding==='unconfigured'&&administration.signing==='unconfigured'&&administration.capabilities.length===0&&!administration.operator_grant_available&&!administration.payment_confirmed&&!administration.live_activation,'Unconfigured Doctor administration acquired authority')
+  setStage('actual candidate redacted subscriber operations')
+  const operations=await doctorOperationsRepository(a.client).status({userId:a.user.id,practiceId:a.scope.practiceId},new AbortController().signal);expect(operations.heldIntents===1&&operations.unknownReview===0&&operations.discrepancyReview===0&&operations.independentSecurityReview==='pending'&&!operations.recoveryQualified&&!operations.capacityAccepted&&!operations.paidActivationAvailable&&!operations.liveActivation,'Redacted candidate diagnostics inferred launch authority');await denied(staff,'doctor_operations_status',{})
   const team=await rpc(a.client,'doctor_team',{p_practice:a.scope.practiceId});expect(team.member_total===1&&team.invitation_total===1&&team.invitations.every(value=>value.status==='accepted')&&team.entitlement.state==='trial'&&!team.entitlement.can_add_staff,'Candidate reserved-seat conversion or team authority invalid')
   const deniedInvite=randomUUID();await denied(a,'doctor_invite_secretary',{p_practice:a.scope.practiceId,p_email:`synthetic-denied-${randomUUID()}@example.test`,p_grants:[{location_id:a.scope.locationId,capabilities:['patients.read']}],p_token_hash:'a'.repeat(64),p_key:deniedInvite},'DS002')
   const usage=await rpc(a.client,'doctor_saas_status');expect(usage.usage.staff_members===1&&usage.usage.staff_invitations===0&&usage.usage.staff_total===1,'Candidate reserved seat counted twice')
@@ -53,6 +63,7 @@ export async function verifyDoctorAdministrativeCandidateProvider({publicKey,boo
   const write={...base(a),p_input:{name:'Synthetic held write',phone:'',email:'',date_of_birth:null},p_key:randomUUID()}
   await denied(a,'doctor_write_patient',write,'DS006');await denied(staff,'doctor_write_patient',{...write,p_key:randomUUID()},'DS006')
   const heldProfile=await rpc(a.client,'doctor_patient_profile',{...base(a),p_patient:a.scope.patientId});expect(!heldProfile.can_write&&heldProfile.patient.id===a.scope.patientId,'Candidate held history/read projection invalid')
+  await denied(a,'doctor_prepare_saas_payment',{p_quote:heldQuote,p_key:randomUUID()},'40001')
   const heldTeam=await rpc(a.client,'doctor_team',{p_practice:a.scope.practiceId});expect(heldTeam.entitlement.state==='suspended'&&!heldTeam.entitlement.writes_allowed,'Candidate held team authority invalid')
   const heldContexts=await rpc(staff.client,'doctor_contexts');expect(heldContexts.find(value=>value.practice_id===a.scope.practiceId).entitlement.state==='suspended'&&heldContexts.find(value=>value.practice_id===b.scope.practiceId).entitlement.state==='trial','Candidate funding leaked across owners')
   await rpc(b.client,'doctor_write_patient',{...base(b),p_input:{name:'Synthetic independent candidate patient',phone:'',email:'',date_of_birth:null},p_key:randomUUID()})
@@ -68,9 +79,12 @@ export async function verifyDoctorAdministrativeCandidateProvider({publicKey,boo
     insert into public.doctor_saas_accounts(subscriber_user_id,current_period_id,state,reason_code)values('${userId}','${period}','enabled','trial_started');insert into public.doctor_saas_period_events(subscriber_user_id,revision,period_id,reason_code,next_state)values('${userId}',1,'${period}','trial_started','enabled');`)
   });clients.push(expiring.client)
   const expiryBefore=await rpc(expiring.client,'doctor_saas_status');expect(expiryBefore.state==='trial','Candidate historical-period fixture was not active initially')
+  const expiryOffer=await rpc(expiring.client,'doctor_saas_terms')
+  const expiryQuote=await rpc(expiring.client,'doctor_create_saas_quote',{p_terms:terms,p_configuration_revision:expiryOffer.configuration_revision,p_account_revision:expiryBefore.revision,p_interval:'monthly',p_document_ref:reference,p_key:randomUUID()})
   let expired;const deadline=Date.now()+30000
   do{expired=await rpc(expiring.client,'doctor_saas_status');if(expired.state==='expired')break;expect(Date.now()<deadline,'Candidate real expiry deadline exceeded');await new Promise(resolve=>setTimeout(resolve,250))}while(expired.state!=='expired')
   expect(!expired.business_writes_allowed&&expired.period.id===expiryBefore.period.id&&expired.period.ends_at===expiryBefore.period.ends_at,'Candidate expiry changed history or retained write authority')
+  await denied(expiring,'doctor_prepare_saas_payment',{p_quote:expiryQuote.quote_id,p_key:randomUUID()},'40001')
   await denied(expiring,'doctor_write_patient',{...base(expiring),p_input:{name:'Synthetic expired denial',phone:'',email:'',date_of_birth:null},p_key:randomUUID()},'DS006')
   expect((await rpc(expiring.client,'doctor_patient_profile',{...base(expiring),p_patient:expiring.scope.patientId})).patient.id===expiring.scope.patientId,'Candidate expiry removed history')
   await rpc(expiring.client,'doctor_submit_privacy_request',{p_kind:'erasure_review',p_key:randomUUID()});expect((await rpc(expiring.client,'doctor_privacy_requests')).fulfillment_available===false,'Candidate expiry created fulfillment authority')

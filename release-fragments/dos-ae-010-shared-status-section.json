@@ -1,0 +1,19 @@
+{
+  "id": "dos-ae-010-shared-status-section",
+  "task": "DOS-AE-010",
+  "suits": [
+    "doctor-suit",
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
+    "apps/building-suit-docs/app/pages/components.vue"
+  ],
+  "reason": "Opt-in typed read-only status-section presentation for the unregistered Doctor synthetic edition; existing consumers omit it and keep their rendering. Component catalogue documents the optional contract without product queries, authority or operational release registration."
+}

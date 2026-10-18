@@ -1,0 +1,14 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select no_plan();
+create function pg_temp.id(n integer)returns uuid language sql immutable as $$select('ae310000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid$$;
+select ok(doctor_private.consume_administration_nonce(pg_temp.id(1),'synthetic-schema-v1',pg_temp.id(2),pg_temp.id(3),clock_timestamp()+interval'2 minutes'),'schema-denial fixture nonce is persisted first');
+create function pg_temp.audit(operation text)returns jsonb language sql as $$select jsonb_build_object('sourceBindingId',pg_temp.id(1),'targetBindingId',pg_temp.id(4),'targetEnvironmentId',pg_temp.id(5),'authorityBindingId',pg_temp.id(6),'subjectId',pg_temp.id(7),'roleSnapshot','SYNTHETIC_SCHEMA_FIXTURE','keyId','synthetic-schema-v1','nonce',pg_temp.id(2),'requestId',pg_temp.id(3),'correlationId',pg_temp.id(8),'operation',operation,'requestDigest',repeat('a',64),'responseDigest',repeat('b',64),'manifestDigest',repeat('c',64),'outcome','schema_denied')$$;
+select ok(doctor_private.append_administration_audit(pg_temp.audit('doctor.plan.command'))is not null,'unsupported operation can be audited only as a denial');
+select is((select outcome from public.doctor_administration_audit where nonce=pg_temp.id(2)),'schema_denied','schema denial classification is retained');
+select throws_ok($$select doctor_private.append_administration_audit(pg_temp.audit('invalid/path'))$$,'23514',null,'arbitrary operation payload is not accepted in audit labels');
+select is((select count(*)from public.doctor_administration_audit where nonce=pg_temp.id(2)),1::bigint,'invalid audit label leaves no extra record');
+select ok(not has_function_privilege('authenticated','doctor_private.append_administration_audit(jsonb)','execute'),'auditing unsupported names does not grant client authority');
+select ok(not has_function_privilege('service_role','doctor_private.consume_administration_nonce(uuid,text,uuid,uuid,timestamptz)','execute'),'nonce helper remains restricted');
+select * from finish();rollback;

@@ -1,0 +1,26 @@
+{
+  "id": "dos-ae-006-administration-contract",
+  "task": "DOS-AE-006",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/README.md",
+    "apps/doctor-suit/app/utils/administrationReadiness.ts",
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/functions/_shared/doctor-administration.mjs",
+    "apps/doctor-suit/supabase/migrations/20261018024024_doctor_administration_receipts.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-006-administration.sql",
+    "apps/doctor-suit/tests/administration-protocol-postgres.mjs",
+    "apps/doctor-suit/tests/helpers/administration-packet.mjs",
+    "apps/doctor-suit/tests/unit/administration-protocol.test.mjs",
+    "apps/doctor-suit/tests/unit/administration-readiness.test.mjs",
+    "apps/doctor-suit/tests/administrative-candidate-actual-provider.mjs",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-006-administration.md"
+  ],
+  "reason": "Doctor-owned synthetic signed-read contract and durable nonce/audit conformance with strictly unavailable operational target/signing/operator/activation configuration. No other-Suit implementation/history/session/key import, credential, endpoint, account creation, operator grant or paid/live claim."
+}
