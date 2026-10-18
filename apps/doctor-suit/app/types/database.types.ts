@@ -2291,6 +2291,7 @@ export type Database = {
         }
         Returns: Json
       }
+      doctor_auth_email_exists: { Args: { p_email: string }; Returns: boolean }
       doctor_availability: {
         Args: { p_day: string; p_location: string; p_practice: string }
         Returns: Json
