@@ -13,7 +13,7 @@ try {
   let selectivePromotionVerified = false
   if (current?.base.ref === 'main' && current.head.ref === 'codex/shop-suit/usd-production') {
     const shallow = git(['rev-parse', '--is-shallow-repository']) === 'true'
-    git(['fetch', '--no-tags', ...(shallow ? ['--unshallow'] : []), 'origin', 'main', 'stg'])
+    git(['fetch', '--no-tags', ...(shallow ? ['--unshallow'] : []), 'origin', 'refs/heads/main:refs/remotes/origin/main', 'refs/heads/stg:refs/remotes/origin/stg'])
     verifySelectivePromotion(current)
     selectivePromotionVerified = true
   }
