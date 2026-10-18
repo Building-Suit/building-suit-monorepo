@@ -4,6 +4,8 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      shop_subscription_currency_catalog: { Args: { p_currency: 'EGP' | 'USD' }; Returns: import('./plans').PublicPlan[] }
+      shop_billing_currency_plans: { Args: { p_shop_id: string; p_currency: 'EGP' | 'USD' }; Returns: import('./billing').BillingPlanOption[] }
       shop_billing_change_preview: { Args:{p_shop_id:string;p_catalog_terms_id:string|null;p_private_offer?:Record<string,string|number>|null};Returns:unknown }
       shop_billing_change_schedule: { Args:{p_request_id:string;p_shop_id:string;p_catalog_terms_id:string|null;p_private_offer?:Record<string,string|number>|null};Returns:unknown }
       shop_billing_change_read: { Args:{p_shop_id:string};Returns:unknown }

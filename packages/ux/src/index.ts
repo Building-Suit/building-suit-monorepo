@@ -229,3 +229,6 @@ export { usePointOfSaleSections } from './composables/usePointOfSaleSections.ts'
 export { boundedQuantity, steppedQuantity, restoreQuantityInput } from './utils/quantity.ts'
 
 export { focusAfterRecordRemoval } from './utils/collectionFocus.ts'
+
+export { useGuardedChoice } from './composables/useGuardedChoice.ts'
+export { useControlledRadioGroup } from './composables/useControlledRadioGroup.ts'

@@ -1,3 +1,4 @@
+import { xpayMoneyTracks } from './xpay-money.mjs'
 // Contract: https://docs.xpay.app/en/integrate/integration-patterns/hosted-checkout
 // This server-only adapter does not authorize a tenant or grant entitlements.
 const API = 'https://api.xpay.app'
@@ -8,8 +9,11 @@ function requiredText(value) {
   return value
 }
 
-export function egpMinorUnits(amount) {
-  // Shop prices are decimal EGP; never silently round an invalid price.
+export function egpMinorUnits(amount) { return subscriptionMinorUnits(amount, 'EGP') }
+export function subscriptionMinorUnits(amount, currency) {
+  if (!['EGP', 'USD'].includes(currency)) throw new Error('xpay_currency_unsupported')
+  // Both supported commercial currencies use two decimal minor units.
+  // Never silently round an invalid price.
   const text = String(amount)
   if (!/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(text)) throw new Error('xpay_invalid_amount')
   const [whole, fraction = ''] = text.split('.')
@@ -39,7 +43,7 @@ function productDescription(order, locale) {
     }
   }
   for (const [key, labels] of Object.entries(features)) if (q.entitlements?.[key] === true) parts.push(labels[ar ? 1 : 0])
-  const money = minor => new Intl.NumberFormat(ar ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP' }).format(minor / 100)
+  const money = minor => new Intl.NumberFormat(ar ? 'ar-EG' : 'en-EG', { style: 'currency', currency: order.currency }).format(minor / 100)
   if (q.listPriceAmount != null && q.effectivePriceAmount != null) {
     const list = egpMinorUnits(q.listPriceAmount), effective = egpMinorUnits(q.effectivePriceAmount)
     if (list > effective) parts.push(`${ar ? 'خصم السعر' : 'Rate discount'}: ${money(list - effective)}`)
@@ -50,7 +54,7 @@ function productDescription(order, locale) {
 
 export function checkoutBody(order, { returnUrl, cancelUrl, locale = 'en' }) {
   // order MUST be a persisted server-authorized quote, never browser JSON.
-  if (!order || order.currency !== 'EGP' || !Number.isSafeInteger(order.amountMinor) || order.amountMinor <= 0
+  if (!order || !['EGP', 'USD'].includes(order.currency) || !Number.isSafeInteger(order.amountMinor) || order.amountMinor <= 0
     || !['en', 'ar'].includes(locale)) throw new Error('xpay_invalid_quote')
   const interval = order.quote?.billingInterval
   if (interval != null && !['monthly', 'annual'].includes(interval)) throw new Error('xpay_invalid_quote')
@@ -60,13 +64,13 @@ export function checkoutBody(order, { returnUrl, cancelUrl, locale = 'en' }) {
   const variantLabel = variants[variant]?.[locale === 'ar' ? 1 : 0] ?? ''
   const name = requiredText([requiredText(order.description), variantLabel, cadence].filter(Boolean).join(' · '))
   return {
-    mode: 'payment', uiMode: 'hosted', currency: 'EGP', locale,
+    mode: 'payment', uiMode: 'hosted', currency: order.currency, locale,
     expiresAfterMinutes: 30,
     afterCompletion: { type: 'redirect', redirect: { url: secureReturnUrl(returnUrl) } },
     cancelUrl: secureReturnUrl(cancelUrl),
     allowPromotionCodes: false,
-    ...(order.quote?.prorationQuoteId ? { paymentMethodTypes: ['card'] } : {}),
-    lineItems: [{ priceData: { currency: 'EGP', unitAmount: order.amountMinor,
+    ...((order.quote?.prorationQuoteId || order.currency === 'USD') ? { paymentMethodTypes: ['card'] } : {}),
+    lineItems: [{ priceData: { currency: order.currency, unitAmount: order.amountMinor,
       productData: { name, description: productDescription(order, locale) } }, quantity: 1 }],
     metadata: { orderId: requiredText(order.id), ...(interval ? { billingInterval: interval } : {}) },
     // Freeze the exact quote: account defaults must not add customer fees/VAT.
@@ -94,13 +98,19 @@ export function paymentIntentId(session) {
 export function validateSession(session, order, mode, { paid = false } = {}) {
   if (!order || typeof order.id !== 'string' || !order.id
     || typeof order.merchantId !== 'string' || !order.merchantId
-    || order.currency !== 'EGP' || !Number.isSafeInteger(order.amountMinor) || order.amountMinor <= 0
+    || !['EGP', 'USD'].includes(order.currency) || !Number.isSafeInteger(order.amountMinor) || order.amountMinor <= 0
     || !session || !['test', 'live'].includes(mode) || session.object !== 'checkout.session'
     || typeof session.id !== 'string' || !session.id.startsWith(`cs_${mode}_`)
     || session.livemode !== (mode === 'live') || session.merchantId !== order.merchantId
-    || session.metadata?.orderId !== order.id || session.currency !== order.currency
-    || session.amountTotal !== order.amountMinor || !Number.isSafeInteger(session.amountTotal)
+    || session.metadata?.orderId !== order.id || session.currency !== 'EGP'
+    || !Number.isSafeInteger(session.amountTotal) || session.amountTotal <= 0
     || (order.sessionId && session.id !== order.sessionId)) throw new Error('xpay_session_mismatch')
+  // Commercial quotes bind customer presentment; EGP processing is separate.
+  const tracks = xpayMoneyTracks(session)
+  if (tracks.presentment.currency !== order.currency || tracks.presentment.amountMinor !== order.amountMinor) throw new Error('xpay_session_mismatch')
+  if (order.moneyTracks && (tracks.processing.currency !== order.moneyTracks.processing?.currency || tracks.processing.amountMinor !== order.moneyTracks.processing?.amountMinor
+    || tracks.presentment.currency !== order.moneyTracks.presentment?.currency || tracks.presentment.amountMinor !== order.moneyTracks.presentment?.amountMinor
+    || tracks.exchangeRate?.id !== order.moneyTracks.exchangeRate?.id || tracks.exchangeRate?.rate !== order.moneyTracks.exchangeRate?.rate)) throw new Error('xpay_money_tracks_changed')
   const intentId = paymentIntentId(session)
   if (paid && (session.status !== 'complete' || session.paymentStatus !== 'paid'
     || intentId === null)) {
@@ -112,6 +122,10 @@ export function validateSession(session, order, mode, { paid = false } = {}) {
 export async function createProviderSession({ order, secretKey, mode, returnUrl, cancelUrl, locale, fetchImpl = fetch }) {
   validKey(secretKey, mode)
   const body = order.sessionRequest ?? checkoutBody(order, { returnUrl, cancelUrl, locale })
+  if (body.currency !== order.currency || body.mode !== 'payment' || body.metadata?.orderId !== order.id
+    || body.lineItems?.length !== 1 || body.lineItems[0]?.quantity !== 1
+    || body.lineItems[0]?.priceData?.currency !== order.currency || body.lineItems[0]?.priceData?.unitAmount !== order.amountMinor
+    || (order.currency === 'USD' && (body.paymentMethodTypes?.length !== 1 || body.paymentMethodTypes[0] !== 'card'))) throw new Error('xpay_invalid_quote')
   const response = await fetchImpl(`${API}/checkout/sessions`, {
     method: 'POST', redirect: 'error', signal: AbortSignal.timeout(15000),
     headers: { authorization: `Bearer ${secretKey}`, 'content-type': 'application/json',
@@ -144,17 +158,18 @@ export async function retrieveSession({ sessionId, secretKey, mode, fetchImpl = 
 
 // Official API 1.0 AccountResponse: mode, activation, key permissions and actual
 // chargeable currency/method capabilities. No key/customer fields reach clients.
-export async function verifyMerchantReadiness({ secretKey, mode, merchantId, fetchImpl = fetch, requireCard = false }) {
+export async function verifyMerchantReadiness({ secretKey, mode, merchantId, fetchImpl = fetch, requireCard = false, chargeCurrency = 'EGP' }) {
   validKey(secretKey, mode)
+  if (!['EGP', 'USD'].includes(chargeCurrency)) throw new Error('xpay_currency_unsupported')
   const response = await fetchImpl(`${API}/account`, { redirect: 'error', signal: AbortSignal.timeout(10000), headers: { authorization: `Bearer ${secretKey}` } })
   if (!response.ok) throw new Error('xpay_account_unavailable')
   const account = await response.json()
-  const currency = account.supportedCurrencies?.find(value => value.code === 'EGP')
+  const currency = Array.isArray(account.supportedCurrencies) ? account.supportedCurrencies.find(value => value.code === chargeCurrency) : null
   if (account.id !== merchantId || account.livemode !== (mode === 'live') || account.apiKey?.mode !== mode || !['SECRET', 'RESTRICTED'].includes(account.apiKey?.type)
     || (mode === 'live' && account.livePaymentsEnabled !== true) || currency?.decimals !== 2 || !Array.isArray(currency.paymentMethodTypes)
     || !currency.paymentMethodTypes.some(method => ['card', 'fawry', 'valu', 'apple_pay'].includes(method))
     || !['CHECKOUT_SESSIONS_READ', 'CHECKOUT_SESSIONS_WRITE'].every(permission => account.apiKey?.permissions?.includes(permission))) throw new Error('xpay_account_not_ready')
-  if (requireCard && !currency.paymentMethodTypes.includes('card')) throw Object.assign(new Error('xpay_payment_method_unsupported'), { checkoutCode: 'checkout_payment_method_unsupported' })
+  if ((requireCard || chargeCurrency === 'USD') && !currency.paymentMethodTypes.includes('card')) throw Object.assign(new Error('xpay_payment_method_unsupported'), { checkoutCode: 'checkout_payment_method_unsupported' })
   return { ready: true, mode }
 }
 

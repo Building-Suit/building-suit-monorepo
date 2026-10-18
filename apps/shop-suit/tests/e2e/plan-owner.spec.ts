@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { pilotFixture } from './pilot-fixture'
+import { pilotFixture, fixtureGoto } from './pilot-fixture'
 
 type RequestStatus = 'submitted' | 'under_review' | 'approved' | 'rejected' | null
 
@@ -79,10 +79,7 @@ function billing(status: RequestStatus) {
 }
 
 async function navigate(page: Page, path: string) {
-  await page.locator('#__nuxt').evaluate(async (root, destination) => {
-    const app = (root as HTMLElement & { __vue_app__?: { config: { globalProperties: { $router?: { push: (to: string) => Promise<unknown> } } } } }).__vue_app__
-    await app?.config.globalProperties.$router?.push(destination)
-  }, path)
+  await fixtureGoto(page, path)
   await expect(page).toHaveURL(new RegExp(`${path}(?:[?#]|$)`))
 }
 
@@ -240,7 +237,7 @@ for (const [locale, width, dark] of [['en', 1440, false], ['ar', 390, true]] as 
     const fixture = await pilotFixture(page, locale, 'owner', name => {
       if (name === 'shop_public_plan_catalog') return catalog
       if (name === 'shop_billing_read') return snapshot
-      if (name === 'shop-xpay-checkout') return { ready: true, mode: 'test', orders: [] }
+      if (name === 'shop-xpay-checkout') return { ready: true, mode: 'test', prorationEnabled: true, orders: [] }
       return undefined
     })
     await navigate(page, '/')
@@ -265,7 +262,7 @@ for (const [locale, width, dark] of [['en', 1440, false], ['ar', 390, true]] as 
     await expect(dialog.locator('button[type="submit"]')).toBeDisabled()
     await expect(team).toHaveAttribute('data-featured', 'true')
     await page.screenshot({ path: testInfo.outputPath('checkout-restrictions.png'), animations: 'disabled' })
-    await page.keyboard.press('Escape')
+    await dialog.getByRole('button', { name: locale === 'en' ? 'Close' : 'إغلاق', exact: true }).click()
     await expect(dialog).toBeHidden()
     await expect(plans.locator('[data-plan="solo"]').getByRole('button')).toBeFocused()
     expect(fixture.calls.filter(call => call.name === 'shop-xpay-checkout' && call.args.requestId)).toEqual([])

@@ -4657,7 +4657,7 @@ export type Database = {
           {
             foreignKeyName: "shop_proration_credit_accounts_subscription_id_fkey"
             columns: ["subscription_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "subscriptions"
             referencedColumns: ["id"]
           },
@@ -5450,6 +5450,50 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_xpay_money_tracks: {
+        Row: {
+          bound_at: string
+          exchange_rate: number | null
+          exchange_rate_id: string | null
+          order_id: string
+          presentment_amount_minor: number
+          presentment_currency: string
+          processing_amount_minor: number
+          processing_currency: string
+          session_id: string
+        }
+        Insert: {
+          bound_at?: string
+          exchange_rate?: number | null
+          exchange_rate_id?: string | null
+          order_id: string
+          presentment_amount_minor: number
+          presentment_currency: string
+          processing_amount_minor: number
+          processing_currency: string
+          session_id: string
+        }
+        Update: {
+          bound_at?: string
+          exchange_rate?: number | null
+          exchange_rate_id?: string | null
+          order_id?: string
+          presentment_amount_minor?: number
+          presentment_currency?: string
+          processing_amount_minor?: number
+          processing_currency?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_xpay_money_tracks_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "shop_xpay_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_xpay_orders: {
         Row: {
           actor_user_id: string
@@ -5639,6 +5683,88 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "shop_xpay_orders"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_xpay_processing_receipts: {
+        Row: {
+          fee_details: Json | null
+          order_id: string
+          payment_intent_id: string
+          received_at: string
+        }
+        Insert: {
+          fee_details?: Json | null
+          order_id: string
+          payment_intent_id: string
+          received_at?: string
+        }
+        Update: {
+          fee_details?: Json | null
+          order_id?: string
+          payment_intent_id?: string
+          received_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_xpay_processing_receipts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "shop_xpay_money_tracks"
+            referencedColumns: ["order_id"]
+          },
+        ]
+      }
+      shop_xpay_refund_observations: {
+        Row: {
+          id: string
+          order_id: string
+          presentment_amount_minor: number
+          presentment_currency: string
+          processing_amount_minor: number
+          processing_currency: string
+          provider_evidence_digest: string
+          reason: string
+          refund_id: string
+          request_id: string
+          reviewed_by: string
+          verified_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          presentment_amount_minor: number
+          presentment_currency: string
+          processing_amount_minor: number
+          processing_currency: string
+          provider_evidence_digest: string
+          reason: string
+          refund_id: string
+          request_id: string
+          reviewed_by: string
+          verified_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          presentment_amount_minor?: number
+          presentment_currency?: string
+          processing_amount_minor?: number
+          processing_currency?: string
+          provider_evidence_digest?: string
+          reason?: string
+          refund_id?: string
+          request_id?: string
+          reviewed_by?: string
+          verified_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_xpay_refund_observations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "shop_xpay_money_tracks"
+            referencedColumns: ["order_id"]
           },
         ]
       }
@@ -8941,6 +9067,10 @@ export type Database = {
         }
         Returns: Json
       }
+      shop_billing_currency_plans: {
+        Args: { p_currency: string; p_shop_id: string }
+        Returns: Json
+      }
       shop_billing_payment_evidence_read: {
         Args: { p_submission_id: string }
         Returns: Json
@@ -9018,6 +9148,10 @@ export type Database = {
           trial_days: number
           variant_name: string
         }[]
+      }
+      shop_subscription_currency_catalog: {
+        Args: { p_currency: string }
+        Returns: Json
       }
       shop_super_admin_account_begin: {
         Args: {
@@ -9141,6 +9275,16 @@ export type Database = {
       }
       shop_xpay_proration_status: { Args: { p_shop_id: string }; Returns: Json }
       shop_xpay_reconcile_candidates: { Args: never; Returns: Json }
+      shop_xpay_record_refund: {
+        Args: {
+          p_order_id: string
+          p_reason: string
+          p_refund: Json
+          p_request_id: string
+          p_reviewed_by: string
+        }
+        Returns: Json
+      }
       shop_xpay_schedule_reconciliation: {
         Args: { p_enabled: boolean; p_project_ref: string }
         Returns: Json
