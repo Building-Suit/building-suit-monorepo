@@ -1,3 +1,4 @@
+import { advanceEmailFirstLogin } from '../../../../packages/testing/email-first-login'
 import { expect, test, type Page } from '@playwright/test'
 
 type NuxtTestApp = {
@@ -11,8 +12,8 @@ async function login(page: Page, account: 'a' | 'b') {
     const root = document.querySelector('#__nuxt') as HTMLElement & { __vue_app__?: { config?: { globalProperties?: { $nuxt?: NuxtTestApp } } } }
     return root?.__vue_app__?.config?.globalProperties?.$nuxt?.isHydrating === false
   })
-  await page.getByLabel('Email', { exact: true }).fill(`${account}@example.test`)
-  await page.getByLabel('Password', { exact: true }).fill('synthetic-password')
+  await advanceEmailFirstLogin(page, `${account}@example.test`)
+  await page.locator('input[type=password]').fill('synthetic-password')
   await page.getByRole('button', { name: 'Log in', exact: true }).click()
   await expect(page).toHaveURL(/\/dashboard$/)
   await expect(page.getByRole('banner').getByRole('combobox', { name: 'Shop', exact: true })).toContainText(`Private shop ${account}`)

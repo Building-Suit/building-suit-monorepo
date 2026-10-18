@@ -1,0 +1,20 @@
+{
+  "id": "ci-metadata-event-efficiency",
+  "task": "CI-AUTH-REGRESSION-REPAIR",
+  "suits": [
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "doctor-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/ci.yml",
+    "tooling/git/tests/ci-workflow-efficiency.test.mjs",
+    "docs/work-packages/ci-auth-regression-repair.md"
+  ],
+  "reason": "Avoid code validation on proven title/body-only PR edits while retaining destination policy checks, all code/retarget/security validation and protected staging/release paths. Isolate metadata concurrency so editing a description cannot cancel active code validation."
+}

@@ -6,7 +6,8 @@ on:
   push:
     branches: [stg, main]
 concurrency:
-  group: verify-${{ github.ref }}
+  # Title/body edits cannot change code and must not cancel its active checks.
+  group: verify-${{ github.ref }}-${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata' || 'code' }}
   cancel-in-progress: true
 permissions:
   contents: read
@@ -27,6 +28,14 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: node tooling/git/check-pr.mjs "$PR_NUMBER"
   review:
+    # A skipped metadata run must never overwrite a required code-check result.
+    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-review' || 'review' }}
+    # Keep retarget, synchronize, reopen and protected-push validation complete.
+    # Metadata-only edits still run branch-policy, but reuse existing code work.
+    if: >-
+      github.event_name != 'pull_request' || github.event.action != 'edited' ||
+      github.event.changes.base != null ||
+      (github.event.changes.title == null && github.event.changes.body == null)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -70,6 +79,7 @@ jobs:
           RELEASE_POSTGREST_DISPOSABLE: '1'
         run: node tooling/releases/catalog-postgrest-disposable.mjs
   verify:
+    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-verify' || 'verify' }}
     needs: [review, branch-policy]
     # Stacked feature PRs get review checks and relevant local tests. Build the combined batch once.
     if: >-
