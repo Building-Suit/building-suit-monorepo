@@ -36,7 +36,7 @@ Provider/migration receipts need their own exact-head coverage before reuse.
 
 The two shared-regression commands in `ci.yml` are mutually exclusive through
 the Doctor scope output; removing either would remove coverage, not duplication.
-Full workspace concurrency remains serialized and non-cancelling. Feature
+Full workspace concurrency remains serialized; release publication remains non-cancelling. Feature
 workflows retain per-PR cancellation of obsolete heads. Stacked PRs retain their
 review and relevant suites; combined workspace builds stay on staging roots and
 promotion/push validation.
@@ -87,3 +87,24 @@ can reconcile without replaying the broader Doctor stack. The latest completed
 Doctor failure on c59f6678 had progressed past personal-settings persistence to
 "actual expired sensitive contact and fresh sign-in"; further provider-specific
 work remains with that owner.
+
+
+## Obsolete heavy-run cancellation
+
+The full verify job used a job-level `always()` envelope to handle skipped
+branch-policy dependencies on protected pushes. GitHub therefore kept it alive
+when a superseded workflow was cancelled. Runs 39080861742 and 39080958207
+needed force-cancellation during this repair and held up the serialized slot.
+[GitHub documents this job/step cancellation behavior](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-cancellation).
+
+All heavyweight verify steps now require both `success()` and `!cancelled()`.
+Before: an obsolete running validation could continue its full build/browser
+sequence. After: cancellation stops its running heavy step and admits zero
+remaining heavy steps; preceding failures also still stop subsequent work.
+Artifact/evidence cleanup keeps its existing always/failure conditions. A final
+cancelled-only `exit 1` prevents a run cancelled before checkout from becoming
+successful readiness evidence. Required code-check names, review/branch-policy
+requirements, the serialized workspace slot, and the non-cancelling protected
+release/publisher paths remain intact. Expression regression tests cover the
+cancelled and preceding-failure states; no extra full CI run is manufactured
+solely to benchmark cancellation.

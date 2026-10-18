@@ -9,9 +9,12 @@ const verifyName = workflow.match(/ {2}verify:[\s\S]*? {4}name: \$\{\{ (.*?) \}\
 const concurrency = workflow.match(/ {2}group: verify-\$\{\{ github.ref \}\}-\$\{\{ (.*?) \}\}/)[1]
 // Evaluate the actual workflow expressions for representative GitHub payloads.
 // Missing context properties evaluate to null in Actions; optional reads model it.
-function evaluate(expression, github) {
-  const source = expression.replace(/github(?:\.[A-Za-z_]+)+/g, path => path.split('.').join('?.'))
-  return Function('github', `return (${source})`)(github)
+function evaluate(expression, github, { cancelled = false, steps = {}, success = true } = {}) {
+  const source = expression.replace(/(?:github|steps)(?:\.[A-Za-z_][A-Za-z_0-9-]*)+/g, path => {
+    const [root, ...keys] = path.split('.')
+    return root + keys.map(key => `?.[${JSON.stringify(key)}]`).join('')
+  })
+  return Function('github', 'steps', 'cancelled', 'success', `return (${source})`)(github, steps, () => cancelled, () => success)
 }
 function event(action, changes, event_name = 'pull_request') {
   return { event_name, event: { action, changes } }
@@ -42,4 +45,34 @@ test('code, retarget, ambiguous edit and protected push events retain complete v
   }
   assert.match(workflow, /push:\n {4}branches: \[stg, main\]/)
   assert.match(workflow, /group: workspace-full-validation\n {6}cancel-in-progress: false/)
+})
+
+
+test('cancelled full validation stops heavy steps and cannot produce successful readiness', () => {
+  const verify = workflow.slice(workflow.indexOf('  verify:'), workflow.indexOf('  doctor-m1-shop-backend:'))
+  const conditions = [...verify.matchAll(/^ {8}if: (.+)$/gm)].map(match => match[1])
+  const heavy = conditions.filter(condition => condition.startsWith('${{ success() && !cancelled()'))
+  assert.ok(heavy.length >= 12, 'checkout, setup, build and all browser/test commands must stop')
+  const stepBlocks = verify.split(/^ {6}- /m).slice(1)
+  for (const step of stepBlocks) {
+    const condition = step.match(/^ {8}if: (.+)$/m)?.[1]
+    assert.ok(condition, 'every verify step declares its cancellation/cleanup policy')
+    assert.ok(condition.startsWith('${{ success() && !cancelled()') || condition.startsWith('always()') || condition === 'failure()' || condition === 'cancelled()')
+  }
+  const shopSuites = stepBlocks.filter(step => /run: pnpm test:e2e(?::shared-regressions)?\n/.test(step))
+  assert.equal(shopSuites.length, 2)
+  for (const active of ['true', 'false']) {
+    const steps = { 'doctor-m1-scope': { outputs: { active } } }
+    const enabled = shopSuites.filter(step => evaluate(step.match(/^ {8}if: (.+)$/m)[1].slice(3, -2).trim(), event('synchronize'), { steps }))
+    assert.equal(enabled.length, 1, 'one Shop regression path remains active on every valid scope')
+  }
+
+  for (const condition of heavy) {
+    const expression = condition.slice(3, -2).trim()
+    assert.equal(evaluate(expression, event('synchronize'), { cancelled: true }), false)
+    assert.equal(evaluate(expression, event('synchronize'), { success: false }), false)
+  }
+  assert.match(verify, /name: Reject cancelled validation as readiness evidence\n {8}if: cancelled\(\)\n {8}run: exit 1/)
+  assert.match(verify, /if: always\(\) && steps.doctor-m1-scope.outputs.active == 'true'/)
+  assert.match(workflow, /group: release-catalog/)
 })
