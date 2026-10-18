@@ -15,8 +15,8 @@ export async function verifyDoctorAdministrationProtocol(container){
   readTargetSubject:read,
   appendAudit:async entry=>sql(`select doctor_private.append_administration_audit(${literal(JSON.stringify(entry))}::jsonb);`)}
  const request=await packet({wire:{timestamp:Math.floor(now/1000)}})
- const results=await Promise.allSettled([handleDoctorAdministration(request,dependencies),handleDoctorAdministration(request,dependencies)])
- assert.equal(results.filter(result=>result.status==='fulfilled').length,1);assert.match(results.find(result=>result.status==='rejected').reason.code,/REPLAY_DENIED/)
+ const results=await Promise.all([handleDoctorAdministration(request,dependencies),handleDoctorAdministration(request,dependencies)])
+ assert.equal(results.filter(result=>result.status===200).length,1);assert.equal(results.filter(result=>result.status===409).length,1)
  assert.equal(sql(`select count(*)from public.doctor_administration_audit where request_id='${id(8)}';`),'1')
  const fresh=await packet({nonce:id(14),wire:{timestamp:Math.floor(now/1000)}})
  assert.equal((await handleDoctorAdministration(fresh,dependencies)).status,200)
@@ -26,7 +26,18 @@ export async function verifyDoctorAdministrationProtocol(container){
  assert.equal(response.status,403);assert.equal(JSON.parse(new TextDecoder().decode(response.bytes)).error.code,'DOCTOR_ADMIN_TARGET_DENIED')
  assert.equal(sql(`select count(*)from public.doctor_administration_nonces where nonce='${id(15)}';`),'1')
  assert.equal(sql(`select outcome from public.doctor_administration_audit where nonce='${id(15)}';`),'target_denied')
- await assert.rejects(handleDoctorAdministration(denied,dependencies),/REPLAY_DENIED/)
+ assert.equal((await handleDoctorAdministration(denied,dependencies)).status,409)
+ let schemaReads=0
+ for(const [nonce,body]of[[id(17),{operation:'doctor.plan.command'}],[id(18),{payload:{subscriberUserId:id(11),unexpected:'synthetic-extra'}}]]){
+  const request=await packet({nonce,body,wire:{timestamp:Math.floor(now/1000)}})
+  const dependenciesWithReadGuard={...dependencies,readTargetSubject:async()=>{schemaReads++;throw Error('schema denial cannot read target')}}
+  const response=await handleDoctorAdministration(request,dependenciesWithReadGuard)
+  assert.equal(response.status,403);assert.ok(response.headers['x-bs-signature']);assert.equal(sql(`select count(*)from public.doctor_administration_nonces where nonce='${nonce}';`),'1')
+  assert.equal(sql(`select outcome from public.doctor_administration_audit where nonce='${nonce}';`),'schema_denied')
+  assert.equal((await handleDoctorAdministration(request,dependenciesWithReadGuard)).status,409)
+  assert.equal(sql(`select count(*)from public.doctor_administration_audit where nonce='${nonce}';`),'1')
+ }
+ assert.equal(schemaReads,0)
  // Two separate open PostgreSQL sessions prove uniqueness after waiting for
  // an uncommitted conflicting insert, rather than relying on a JavaScript Set.
  function process(input,open=false){const child=spawn('docker',args,{stdio:['pipe','pipe','pipe']});let output='',errors='';child.stdout.on('data',data=>{output+=data});child.stderr.on('data',data=>{errors+=data});const done=new Promise(resolve=>child.on('close',status=>resolve({status,output,errors})));child.stdin.write(input);if(!open)child.stdin.end();return{child,done,output:()=>output}}
@@ -39,5 +50,5 @@ export async function verifyDoctorAdministrationProtocol(container){
  }finally{for(const item of[first,second])if(item?.child.exitCode===null)item.child.kill('SIGTERM')}
  assert.equal(sql(`select count(*)from public.doctor_administration_nonces where nonce='${id(16)}';`),'1')
  assert.equal(sql(`select count(*)from public.doctor_saas_accounts where subscriber_user_id='${id(11)}';`),'0')
- console.log('Four Doctor administration protocol/storage scenarios passed: authenticated synthetic response with concurrent replay denial, fresh-nonce query retry, signed target denial retaining committed nonce/audit, and separate-transaction duplicate nonce wait; no account/grant/payment/session creation')
+ console.log('Six Doctor administration protocol/storage scenarios passed: authenticated synthetic response with concurrent replay denial, fresh-nonce query retry, signed target denial retaining committed nonce/audit, separate-transaction duplicate nonce wait, unsupported-operation replay and extra-payload replay;  no account/grant/payment/session creation')
 }
