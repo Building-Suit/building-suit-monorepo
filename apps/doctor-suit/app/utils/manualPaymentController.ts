@@ -17,6 +17,7 @@ export const manualPaymentState=():ManualPaymentState=>({ready:false,loading:fal
 function failure(e:unknown):ManualPaymentState['error']{const c=e&&typeof e==='object'&&'code'in e?String(e.code):'';return c==='42501'?'denied':['40001','DS008','DS009','DS010','23505'].includes(c)?'conflict':['22023','23514'].includes(c)?'invalid':'network'}
 export function createManualPaymentController(repo:ManualPaymentRepository|null,state:ManualPaymentState,identity:()=>DoctorIdentity|null,environment:string,afterActivation:()=>void,key=()=>crypto.randomUUID()){
  let generation=0,loaded:string|null=null,abort=new AbortController()
+ let pageOwner:symbol|null=null
  let operation:{scope:string;name:string;run:(actor:DoctorIdentity,signal:AbortSignal)=>Promise<void>}|null=null
  const scope=()=>{const a=identity();return a?JSON.stringify(['doctor-suit',environment,a.userId,a.sessionId,a.practiceId,'manual-payments']):null}
  const active=(g:number,s:string|null)=>g===generation&&s===scope()
@@ -94,5 +95,6 @@ export function createManualPaymentController(repo:ManualPaymentRepository|null,
  async function retry(){if(!operation)return false;return execute(operation.name,()=>operation!.run)}
  async function download(evidence:string){const row=selected(),actor=identity(),g=generation,s=scope();if(!repo||!actor||!row||!row.evidence.some(e=>e.id===evidence)||state.pending)return null;state.pending=true;try{const blob=await repo.download(row.id,evidence,key(),signal());return active(g,s)?blob:null}catch(e){if(active(g,s))state.error=failure(e);return null}finally{if(active(g,s))state.pending=false}}
  function skipReceipt(){if(!state.pending&&!operation){state.uploadNotice=null;state.file=null}}
- return{state,clear,load,choose,prepare,submit,upload,select,open,review,activate,retry,download,selected,canPrepare,skipReceipt}
+ function claimPage(){const owner=Symbol('manual-payment-page');pageOwner=owner;return{active:()=>pageOwner===owner,release(){if(pageOwner===owner){pageOwner=null;clear()}}}}
+ return{state,clear,load,choose,prepare,submit,upload,select,open,review,activate,retry,download,selected,canPrepare,skipReceipt,claimPage}
 }

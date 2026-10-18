@@ -14,7 +14,7 @@ export async function verifyManualPaymentBrowser({root,api,origin,key,serviceKey
   async function signIn(actor){const context=await browser.newContext({viewport:{width:1280,height:1000}});await context.route('**/*',route=>[origin,api].includes(new URL(route.request().url()).origin)?route.continue():route.abort());const page=await context.newPage();page.setDefaultTimeout(20000);await page.goto(`${origin}/sign-in?next=${actor===a?'/payment-notices':'/payment-review'}`);await page.getByLabel(/^Email/).fill(actor.credentials.email);await doctorPasswordStep(page);await page.getByLabel(/^Password/).fill(actor.credentials.password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await browserExpect(page).toHaveURL(new RegExp(actor===a?'/payment-notices$':'/payment-review$'));return{context,page}}
   owner=await signIn(a);const page=owner.page
   setStage('actual owner annual quote, immutable instructions and receipt browser')
-  setStage('actual owner payment interval control');await page.getByLabel('Period',{exact:true}).click();await page.getByRole('option',{name:'Yearly — 12 months for 10',exact:true}).click()
+  setStage('actual owner payment interval control');await page.getByLabel('Period',{exact:true}).click();setStage('actual owner annual period option');await page.getByRole('option',{name:'Yearly — 12 months for 10',exact:true}).click()
   setStage('actual owner version document acceptance');await page.getByRole('checkbox',{name:/I reviewed the version document/}).check();setStage('actual owner quote preparation');await page.getByRole('button',{name:'Show synthetic transfer instructions',exact:true}).click()
   setStage('actual owner bound instructions response');await page.getByRole('heading',{name:'Instructions bound to this request',exact:true}).waitFor()
   setStage('actual owner notice dialog open');await page.getByRole('button',{name:'Record transfer notice',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Record transfer notice',exact:true})
@@ -54,6 +54,14 @@ export async function verifyManualPaymentBrowser({root,api,origin,key,serviceKey
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Manual payment mobile surface overflows')
   setStage('actual Arabic mobile reconciliation and source reload');await page.getByRole('link',{name:'مطابقة التحويلات',exact:true}).click();await page.getByRole('heading',{name:'مطابقة التحويلات اليدوية',exact:true}).waitFor();await page.reload();await page.getByRole('heading',{name:'مطابقة التحويلات اليدوية',exact:true}).waitFor();await browserExpect(page.locator('html')).toHaveAttribute('dir','rtl');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Reconciliation mobile surface overflows');await page.getByRole('row').filter({hasText:claimed[0].id}).getByRole('link',{name:'عرض الإشعار المصدر',exact:true}).click();await page.getByRole('button',{name:'synthetic-browser.pdf',exact:true}).waitFor()
   console.log('Actual manual-payment browser: owner annual quote/acceptance, bound instructions, submitted notice/private receipt, independent reviewer verification, separate twelve-month paid activation and Arabic RTL mobile dark reload/history passed.')
+ }catch(error){
+  // Fixed booleans/enums only: never emit credentials, IDs, form values or DOM text.
+  const summary=[]
+  for(const item of[owner,reviewer])if(item){try{summary.push(await item.page.evaluate(()=>{
+   const app=document.getElementById('__nuxt')?.__vue_app__?.config.globalProperties,auth=app?.$doctorAuth?.state,payment=app?.$doctorManualPayment?.state
+   return{knownRoute:['/payment-notices','/payment-review'].includes(location.pathname),auth:auth?{phase:['checking','unavailable','signed-out','verification','authenticated'].includes(auth.phase)?auth.phase:'unknown',pending:Boolean(auth.pending),identity:Boolean(auth.identity)}:null,payment:payment?{ready:Boolean(payment.ready),loading:Boolean(payment.loading),pending:Boolean(payment.pending),error:['denied','conflict','invalid','network'].includes(payment.error)?payment.error:null}:null}
+  }))}catch{summary.push({unavailable:true})}}
+  console.log('Actual manual-payment safe readiness diagnostic:',JSON.stringify(summary));throw error
  }finally{
   await owner?.context.close().catch(()=>{});await reviewer?.context.close().catch(()=>{});await browser?.close().catch(()=>{})
   if(server?.pid){try{process.kill(-server.pid,'SIGTERM')}catch{/* Owned process/readiness may already be unavailable. */}if(server.exitCode===null)await Promise.race([new Promise(resolve=>server.once('exit',resolve)),wait(5000)]);try{process.kill(-server.pid,'SIGKILL')}catch{/* Owned process/readiness may already be unavailable. */}server.unref()}
