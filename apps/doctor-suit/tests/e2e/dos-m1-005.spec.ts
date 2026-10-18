@@ -14,7 +14,8 @@ for (const locale of ['en', 'ar']) for (const width of [390, 1280]) for (const t
     await expect(page.getByText(locale === 'en' ? 'Administrative preview with synthetic data only. Clinical care and payments are unavailable.' : 'معاينة إدارية ببيانات تجريبية فقط. الرعاية السريرية والمدفوعات غير متاحتين.', { exact: true })).toBeVisible()
     await expect(page.locator('main a[href="/sign-up"]')).toBeVisible()
     await expect(page.locator('#pricing')).toBeVisible()
-    await expect(page.locator('#pricing [data-shop-pricing]')).toHaveCount(1)
+    await expect(page.locator('#pricing div[data-shop-pricing]')).toHaveCount(1)
+    await expect(page.locator('#pricing article[data-shop-pricing]')).toHaveCount(3)
     for(const amount of ['299','599','999']){const price=page.locator('#pricing').getByText(`${amount} ${locale==='en'?'EGP':'ج.م'}`,{exact:true});await price.scrollIntoViewIfNeeded();await expect(price).toBeVisible()}
     await expect(page.locator('#pricing').getByRole('button',{name:locale==='en'?'Live payment unavailable':'الدفع الحي غير متاح'})).toHaveCount(3)
     await page.locator('#pricing').getByRole('radio',{name:locale==='en'?'Yearly':'سنوي',exact:true}).check()
