@@ -121,7 +121,9 @@ try {
   if (generate.length) {
     // Registry throttling must remain a failed check after bounded retries; it
     // cannot waive schema generation or select an unpinned image.
-    const metaImage='public.ecr.aws/supabase/postgres-meta:v0.98.0'
+    // Official v0.98.0 release publishes this same build to GHCR, ECR and Docker Hub:
+    // https://github.com/supabase/postgres-meta/blob/v0.98.0/.github/workflows/release.yml
+    const metaImage='ghcr.io/supabase/postgres-meta:v0.98.0@sha256:cef71ba901751dcc242cc685cf13786935ea8926820fb342f23bb0fbef77de5a'
     for(let attempt=0;attempt<3;attempt++){
       const pull=spawnSync('docker',['pull',metaImage],{encoding:'utf8',timeout:120000,maxBuffer:1024*1024})
       if(!pull.error&&pull.status===0)break
