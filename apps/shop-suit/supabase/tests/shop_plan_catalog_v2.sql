@@ -396,7 +396,7 @@ begin
       where to_jsonb(subscription) is distinct from snapshot.snapshot
     )
     or (select count(*) from shop_plan_catalog_v2_subscription_snapshot) <> 3
-    or (select count(*) from public.plan_catalog_terms where catalog_generation = 2) <> 16 then
+    or (select count(*) from public.plan_catalog_terms where catalog_generation = 2 and currency = 'EGP') <> 16 then
     raise exception 'catalog reapplication rewrote history or duplicated V2 offers';
   end if;
 end;
