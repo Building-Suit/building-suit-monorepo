@@ -1,0 +1,25 @@
+{
+  "id": "coordinated-release-and-auth-fixtures",
+  "task": "CI-AUTH-REGRESSION-REPAIR",
+  "suits": [
+    "doctor-suit",
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/releases.yml",
+    "tooling/releases/workflow-triggers.test.mjs",
+    "tooling/releases/reconcile-targets.mjs",
+    "tooling/releases/reconcile-targets.test.mjs",
+    "apps/doctor-suit/tests/account-actual-provider.mjs",
+    "apps/doctor-suit/tests/helpers/password-step.mjs",
+    "docs/shared/release-publication-runbook.md",
+    "docs/work-packages/ci-auth-regression-repair.md"
+  ],
+  "reason": "Align with the committed release guard/tests from Doctor-owner 9b07fdf8 and reuse the bounded password-stage helper/call from e556574f. Remove intermediate planner modules and the premature duplicate push publisher. Preserve exact protected readiness and all actual password/provider assertions without importing the broader Doctor aggregate."
+}

@@ -45,7 +45,7 @@ promotion/push validation.
 
 Staging release reconciliation correctly refuses a failed protected verification.
 The former release matrix requested production from stg and staging from main.
-Environment policies admit only stg and main respectively. The new preflight
+Environment policies admit only stg and main respectively. The coordinated fallback guard
 selects one admitted target, preserving publisher readiness and existing
 protected-stg CI publication. No protection or permission is changed.
 
@@ -63,17 +63,21 @@ and existing required code-check results remain intact. This was verified by
 metadata run 39081938321 on the same c59f6678 source head as the still-active
 code-validation run 39081842930. Code-change fanout is unchanged.
 
-Release retry planning now changes protected push/dispatch environment jobs
-from two to one, and PR completion wake-ups from two to zero environment jobs
-(one cheap planner remains). In the observed stg push, one former matrix job
-was rejected before steps, so this removes a rejected check/admission attempt,
-not a second heavy publisher execution. Successful protected-main completion
-selects production only; default-main schedules do the same. Non-authoritative
-PR completion events no longer attempt an unrelated production reconciliation.
-These reductions do not claim that the historical 52-check snapshot becomes a
-specific smaller number: required source checks and provider statuses remain.
-The larger duplicate push/promotion heavy validation still needs the exact-SHA
-receipt reuse design described above; it is not implemented by this patch.
+The coordinated release implementation from Doctor-owner commit 9b07fdf8
+removes the separate push-triggered fallback workflow. Before: two workflows
+could attempt publication for one protected push (early fallback plus the
+post-verify CI publisher). After: only the existing post-verify CI hook handles
+that push. This removes one workflow run and its premature publisher attempt.
+Fallback schedule/dispatch/completion events retain one matching environment
+rather than an unconditional two-environment matrix; PR and mismatched-ref
+completion events request none. Previously rejected environment legs consumed
+no runner steps, so removing those legs is not counted as a heavy compute win.
+
+Source-change suite fanout remains unchanged. Required checks/provider statuses
+are not removed, and this does not promise that the historical 52-check snapshot
+will become a specific smaller number. Broader duplicate protected-push versus
+promotion heavy validation still needs exact-SHA receipt reuse; it is not
+implemented here.
 
 
 ## Doctor-owner coordination
@@ -108,3 +112,16 @@ requirements, the serialized workspace slot, and the non-cancelling protected
 release/publisher paths remain intact. Expression regression tests cover the
 cancelled and preceding-failure states; no extra full CI run is manufactured
 solely to benchmark cancellation.
+
+
+## Canonical release/fixture alignment
+
+Aggregate #388 already contained the smaller protected-ref release guard in
+`9b07fdf88e2eed683247e9e861eb0a57fdf65178`. This PR aligns with its workflow and
+regression tests, retaining the existing CI post-verification publisher rather
+than keeping a second planner implementation. The intermediate planner modules
+are removed from the final diff. Doctor's committed password-stage helper from
+`e556574fd61fac5bb8c8f6c44d5ff8a3e8987adb` is reused only in the real-provider
+account reauthentication fixture; its broader administrative fixture/config
+changes remain in the aggregate. Password submission and server verification
+are still exercised.

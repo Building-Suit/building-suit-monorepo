@@ -1,7 +1,5 @@
 name: Reconcile upcoming releases and freeze production
 on:
-  push:
-    branches: [stg, main]
   workflow_run:
     workflows: [Verify workspace]
     types: [completed]
@@ -16,29 +14,21 @@ permissions:
   checks: read
   statuses: read
 jobs:
-  plan:
-    # No environment or catalog credentials are requested while selecting targets.
-    if: github.repository == 'Building-Suit/building-suit-monorepo'
-    runs-on: ubuntu-latest
-    outputs:
-      enabled: ${{ steps.targets.outputs.enabled }}
-      matrix: ${{ steps.targets.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-      - name: Select authoritative targets admitted by the workflow ref
-        id: targets
-        run: node tooling/releases/reconcile-targets.mjs
   reconcile:
-    needs: plan
-    # Never subscribe to deployment_status: these jobs emit it themselves.
-    # Publisher readiness still re-reads protected refs and remains authoritative.
-    if: needs.plan.outputs.enabled == 'true'
+    # Never subscribe to deployment_status: these environment jobs emit it themselves.
+    # Protected pushes publish in ci.yml only after verify succeeds. Fallback
+    # wake-ups must match their actual workflow ref before environment admission.
+    if: >-
+      github.repository == 'Building-Suit/building-suit-monorepo' &&
+      (github.ref == 'refs/heads/stg' || github.ref == 'refs/heads/main') &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'workflow_run' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == github.ref_name &&
+        github.event.workflow_run.head_repository.full_name == github.repository))
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+      matrix: ${{ fromJSON(github.ref == 'refs/heads/stg' && '{"include":[{"environment":"staging","branch":"stg"}]}' || '{"include":[{"environment":"production","branch":"main"}]}') }}
     environment: ${{ matrix.environment }}
     concurrency:
       group: release-catalog-${{ matrix.environment }}
