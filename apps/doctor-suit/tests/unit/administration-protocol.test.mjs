@@ -13,7 +13,7 @@ test('signed Doctor read is environment/operator bound, response HMAC echoes exa
  const responseInput=['BS-S2S-RESPONSE-HMAC-SHA256','1.0','synthetic-key-v1',id(8),id(9),id(1),id(3),id(5),'synthetic-doctor-fixture','200',body.requestDigest,result.headers['x-bs-body-sha256']].join('\n')
  assert.equal(result.headers['x-bs-signature'],await doctorAdministrationSignature(material,responseInput))
  assert.equal(h.audits.length,1);assert.equal(h.audits[0].outcome,'synthetic_read');assert.ok(!Object.hasOwn(h.audits[0],'payload'));assert.ok(!Object.hasOwn(h.audits[0],'signature'))
- await assert.rejects(handleDoctorAdministration(request,h.dependencies),/REPLAY_DENIED/)
+ assert.equal((await handleDoctorAdministration(request,h.dependencies)).status,409)
  assert.equal(h.reads.length,1)
 })
 test('missing bindings, proof, key validity, manifest, versions, skew and command scope fail closed',async()=>{
@@ -22,7 +22,7 @@ test('missing bindings, proof, key validity, manifest, versions, skew and comman
  for(const change of[null,{enabled:false},{suit:'shop-suit'},{mode:'live'},{sourceEnvironmentId:id(5)},{signingReference:null},{livePolicyEvidence:null},{operatorApprovalEvidence:null},{clockSkewSeconds:null},{nonceRetentionSeconds:1},{maximumBodyBytes:null},{protocolVersion:'2.0'},{keyValidUntil:'2026-10-17T00:00:00Z'},{manifest:{...configuration().manifest,verified:false}},{manifest:{...configuration().manifest,expiresAt:'2026-10-17T00:00:00Z'}},{manifest:{...configuration().manifest,capabilities:[]}},{capabilities:['doctor.plan.command'] }]){
   const h=harness(change===null?null:{...configuration(),...change});await assert.rejects(handleDoctorAdministration(request,h.dependencies),/UNAVAILABLE/);assert.equal(h.reads.length,0)
  }
- const h=harness();await assert.rejects(handleDoctorAdministration(await packet({body:{operation:'doctor.plan.command'}}),h.dependencies),/CAPABILITY_UNAVAILABLE/)
+ const h=harness();const unsupported=await handleDoctorAdministration(await packet({body:{operation:'doctor.plan.command'}}),h.dependencies);assert.equal(unsupported.status,403);assert.equal(JSON.parse(new TextDecoder().decode(unsupported.bytes)).error.code,'DOCTOR_ADMIN_CAPABILITY_UNAVAILABLE')
  assert.equal(h.reads.length,0)
 })
 test('wrong signature, bytes, headers, binding and untrusted identity/URL payload never reach domain',async()=>{
@@ -31,17 +31,18 @@ test('wrong signature, bytes, headers, binding and untrusted identity/URL payloa
  }
  for(const wire of[{targetEnvironmentId:id(14)},{sourceBindingId:id(14)},{keyId:'foreign-key'},{audience:'shop'},{timestamp:now/1000-31},{timestamp:now/1000+31}]){const h=harness();await assert.rejects(handleDoctorAdministration(await packet({wire}),h.dependencies));assert.equal(h.reads.length,0)}
  const request=await packet();request.headers.push(['X-BS-KEY-ID','synthetic-key-v1']);await assert.rejects(handleDoctorAdministration(request,harness().dependencies),/HEADERS_INVALID/)
- for(const payload of[{email:'synthetic@example.test'},{subscriberUserId:id(11),returnUrl:'https://untrusted.example'},{subscriberUserId:id(11),password:'synthetic-not-a-credential'},{subscriberUserId:id(11),role:'owner'}]){const h=harness();await assert.rejects(handleDoctorAdministration(await packet({body:{payload}}),h.dependencies));assert.equal(h.reads.length,0)}
+ for(const payload of[{email:'synthetic@example.test'},{subscriberUserId:id(11),returnUrl:'https://untrusted.example'},{subscriberUserId:id(11),password:'synthetic-not-a-credential'},{subscriberUserId:id(11),role:'owner'}]){const h=harness();const result=await handleDoctorAdministration(await packet({body:{payload}}),h.dependencies);assert.equal(result.status,403);assert.equal(JSON.parse(new TextDecoder().decode(result.bytes)).error.code,'DOCTOR_ADMIN_BODY_INVALID');assert.equal(h.reads.length,0)}
  const bad=await packet();bad.headers.find(([name])=>name==='x-bs-signature')[1]='A'.repeat(43);await assert.rejects(handleDoctorAdministration(bad,harness().dependencies),/SIGNATURE_INVALID/)
 })
 test('signed role cannot widen operator capability; denial and target failure retain consumed nonce and audit',async()=>{
  const binding=configuration();binding.operators[0].capabilities=[]
  const h=harness(binding),request=await packet()
  assert.equal((await handleDoctorAdministration(request,h.dependencies)).status,403);assert.equal(h.audits[0].outcome,'operator_denied');assert.equal(h.seen.size,1);assert.equal(h.reads.length,0)
- await assert.rejects(handleDoctorAdministration(request,h.dependencies),/REPLAY_DENIED/)
+ assert.equal((await handleDoctorAdministration(request,h.dependencies)).status,409)
  const unverified=harness();unverified.dependencies.readTargetSubject=async()=>({subscriberUserId:id(11),practiceId:id(12),authVerified:false,storedOwner:true,state:'trial',subscriptionRevision:1})
  const denial=await handleDoctorAdministration(await packet(),unverified.dependencies);assert.equal(denial.status,403);assert.equal(JSON.parse(new TextDecoder().decode(denial.bytes)).error.code,'DOCTOR_ADMIN_TARGET_DENIED');assert.ok(denial.headers['x-bs-signature']);assert.equal(unverified.audits[0].outcome,'target_denied');assert.equal(unverified.seen.size,1)
  const failed=harness();failed.dependencies.readVerificationKey=async()=>{throw Error('synthetic provider internals must not escape')};await assert.rejects(handleDoctorAdministration(await packet(),failed.dependencies),/^Error: DOCTOR_ADMIN_UNAVAILABLE$/)
+ const uncertain=harness();uncertain.dependencies.consumeNonce=async()=>undefined;await assert.rejects(handleDoctorAdministration(await packet(),uncertain.dependencies),/UNAVAILABLE/);assert.equal(uncertain.reads.length,0);assert.equal(uncertain.audits.length,0)
 })
 
 test('revoked binding or elapsed signature window after nonce persistence cannot authorize a stale read',async()=>{
@@ -51,4 +52,14 @@ test('revoked binding or elapsed signature window after nonce persistence cannot
  const elapsed=harness(),persist=elapsed.dependencies.consumeNonce
  elapsed.dependencies.consumeNonce=async value=>{const accepted=await persist(value);elapsed.dependencies.now=()=>now+31000;return accepted}
  await assert.rejects(handleDoctorAdministration(await packet(),elapsed.dependencies),/UNAVAILABLE/);assert.equal(elapsed.reads.length,0);assert.equal(elapsed.seen.size,1)
+})
+
+test('authenticated unsupported operations and closed-schema denials consume/audit once and return verified signed errors before replay denial',async()=>{
+ for(const [body,code]of[[{operation:'doctor.plan.command'},'DOCTOR_ADMIN_CAPABILITY_UNAVAILABLE'],[{payload:{subscriberUserId:id(11),unexpected:'synthetic-extra'}},'DOCTOR_ADMIN_BODY_INVALID'],[{unexpected:'synthetic-extra'},'DOCTOR_ADMIN_BODY_INVALID']]){
+  const h=harness(),request=await packet({body}),result=await handleDoctorAdministration(request,h.dependencies),response=JSON.parse(new TextDecoder().decode(result.bytes))
+  assert.equal(result.status,403);assert.equal(response.error.code,code);assert.equal(Object.hasOwn(response,'data'),false);assert.equal(h.seen.size,1);assert.equal(h.audits.length,1);assert.equal(h.audits[0].outcome,'schema_denied');assert.equal(JSON.stringify(h.audits).includes('synthetic-extra'),false);assert.equal(h.reads.length,0)
+  const input=['BS-S2S-RESPONSE-HMAC-SHA256','1.0','synthetic-key-v1',id(8),id(9),id(1),id(3),id(5),'synthetic-doctor-fixture','403',response.requestDigest,result.headers['x-bs-body-sha256']].join('\n')
+  assert.equal(result.headers['x-bs-signature'],await doctorAdministrationSignature(material,input))
+  const replay=await handleDoctorAdministration(request,h.dependencies);assert.equal(replay.status,409);assert.equal(JSON.parse(new TextDecoder().decode(replay.bytes)).error.code,'DOCTOR_ADMIN_REPLAY_DENIED');assert.ok(replay.headers['x-bs-signature']);const replayBody=JSON.parse(new TextDecoder().decode(replay.bytes)),replayInput=['BS-S2S-RESPONSE-HMAC-SHA256','1.0','synthetic-key-v1',id(8),id(9),id(1),id(3),id(5),'synthetic-doctor-fixture','409',replayBody.requestDigest,replay.headers['x-bs-body-sha256']].join('\n');assert.equal(replay.headers['x-bs-signature'],await doctorAdministrationSignature(material,replayInput));assert.equal(h.audits.length,1);assert.equal(h.reads.length,0)
+ }
 })
