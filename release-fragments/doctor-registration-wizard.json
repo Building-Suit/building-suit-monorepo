@@ -1,0 +1,29 @@
+{
+  "id": "doctor-registration-wizard",
+  "task": "DOS-M1-006",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit",
+    "apps/shop-suit/package.json",
+    "apps/shop-suit/server/utils/inquiryRateLimit.ts",
+    "packages/auth",
+    "packages/ux",
+    "packages/ui",
+    "apps/building-suit-docs/app/pages/components.vue",
+    ".github/workflows/ci.yml",
+    "pnpm-lock.yaml",
+    "docs/work-packages/doctor-suit/registration-evidence.md",
+    "release-changes/items.json",
+    "tooling/git/tests/ci-workflow-efficiency.test.mjs"
+  ],
+  "reason": "Synthetic Doctor checked-email registration, required practice wizard, explicit duplicate/uncertain outcomes and bounded non-secret resume with verified identity binding. Share the existing bounded request limiter without changing Shop quota policy. Preserve SID/admission/subscription/clinical safeguards and user-managed connections; no operational Doctor activation. Retain pending CI jobs in the existing serialized workspace validation group after an observed staging cancellation. Shared customer-visible form feedback is independently covered by shared-auth-form-feedback."
+}

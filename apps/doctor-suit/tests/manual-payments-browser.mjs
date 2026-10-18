@@ -3,12 +3,12 @@ import{chromium,expect as browserExpect}from'@playwright/test'
 import{spawn}from'node:child_process'
 import{randomUUID}from'node:crypto'
 import{doctorPasswordStep}from'./helpers/password-step.mjs'
-export async function verifyManualPaymentBrowser({root,api,origin,key,a,b,expect,rpc,setStage}){
+export async function verifyManualPaymentBrowser({root,api,origin,key,serviceKey,a,b,expect,rpc,setStage}){
  let server,browser,owner,reviewer
  const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms)),reference='SYNTHETIC-WEB-'+randomUUID()
  try{
   setStage('actual manual-payment browser readiness')
-  server=spawn(process.execPath,['apps/doctor-suit/.output/server/index.mjs'],{cwd:root,env:{...process.env,NITRO_HOST:'127.0.0.1',NITRO_PORT:'4341',APP_URL:origin,NUXT_PUBLIC_DOCTOR_AUTH_CONFIGURED:'true',NUXT_PUBLIC_DOCTOR_AUTH_ENVIRONMENT:'local',NUXT_PUBLIC_DOCTOR_AUTH_ORIGIN:origin,NUXT_PUBLIC_DOCTOR_AUTH_URL:api,NUXT_PUBLIC_DOCTOR_AUTH_KEY:key},detached:true,stdio:'ignore'})
+  server=spawn(process.execPath,['apps/doctor-suit/.output/server/index.mjs'],{cwd:root,env:{...process.env,NITRO_HOST:'127.0.0.1',NITRO_PORT:'4341',APP_URL:origin,NUXT_PUBLIC_DOCTOR_AUTH_CONFIGURED:'true',NUXT_PUBLIC_DOCTOR_AUTH_ENVIRONMENT:'local',NUXT_PUBLIC_DOCTOR_AUTH_ORIGIN:origin,NUXT_PUBLIC_DOCTOR_AUTH_URL:api,NUXT_PUBLIC_DOCTOR_AUTH_KEY:key,NUXT_DOCTOR_AUTH_EMAIL_LOOKUP_KEY:serviceKey},detached:true,stdio:'ignore'})
   let ready=false;for(let n=0;n<100;n++){try{if((await fetch(origin,{signal:AbortSignal.timeout(1000)})).ok){ready=true;break}}catch{/* Owned process/readiness may already be unavailable. */}await wait(100)}expect(ready,'Payment browser app unavailable')
   browser=await chromium.launch({headless:true})
   async function signIn(actor){const context=await browser.newContext({viewport:{width:1280,height:1000}});await context.route('**/*',route=>[origin,api].includes(new URL(route.request().url()).origin)?route.continue():route.abort());const page=await context.newPage();page.setDefaultTimeout(20000);await page.goto(`${origin}/sign-in?next=${actor===a?'/payment-notices':'/payment-review'}`);await page.getByLabel(/^Email/).fill(actor.credentials.email);await doctorPasswordStep(page);await page.getByLabel(/^Password/).fill(actor.credentials.password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await browserExpect(page).toHaveURL(new RegExp(actor===a?'/payment-notices$':'/payment-review$'));return{context,page}}

@@ -2,7 +2,7 @@ import { doctorProviderConfiguration } from './app/utils/authConfiguration'
 const provider = doctorProviderConfiguration(process.env)
 export default defineNuxtConfig({
   extends: ['@building-suit/nuxt-layer'],
-  runtimeConfig: { public: { doctorAuth: {
+  runtimeConfig: { doctorAuthEmailLookupKey: process.env.DOCTOR_AUTH_EMAIL_LOOKUP_KEY || '', public: { doctorAuth: {
     configured: provider.enabled, environment: provider.environment, origin: provider.origin,
     url: provider.url, key: provider.key, cookiePrefix: provider.cookiePrefix,
   } } },

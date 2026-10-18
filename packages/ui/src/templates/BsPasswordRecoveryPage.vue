@@ -17,7 +17,7 @@ const visibility = usePasswordVisibility()
 const stateKey = computed(() => props.complete ? 'success' : props.mode === 'reset' && !props.valid ? 'invalid' : props.mode)
 </script>
 <template>
-  <BsStateSurface v-if="availability" :title-level="1" :state="availability.state" :title="availability.title" :description="availability.description" />
+  <BsAuthForm v-if="availability" :title="availability.title" :description="availability.description" :pending="availability.state === 'loading'" :pending-label="copy.pending" />
   <BsAuthForm v-else :eyebrow="copy.eyebrow" :title="copy.title" :description="copy.description" :pending="pending" :error="error" :submit-label="complete || (mode === 'reset' && !valid) ? undefined : copy.submit" :pending-label="copy.pending" :novalidate="mode === 'request'" @submit="emit('submit')">
     <Transition name="bs-auth-inner" mode="out-in">
       <div :key="stateKey" class="bs-password-recovery__content">

@@ -109,7 +109,7 @@ try {
   if (existingBucket.error) expect(!(await storageAdmin.storage.createBucket(bucket,{ public: false,fileSizeLimit: 5242880,allowedMimeTypes: ['application/pdf','image/png','image/jpeg'] })).error,'Supported local Storage bucket creation failed')
   stage = 'real Auth and owner onboarding'; const a = await bootstrap(status.ANON_KEY,'doctor-a'); const b = await bootstrap(status.ANON_KEY,'doctor-b')
   console.log('Actual Auth: captured local confirmation email, unconfirmed denial, verified session and two independent owner practices passed')
-  await verifyDoctorAccountProvider({ root,api,key: status.ANON_KEY,project,expect,setStage: value => { stage = value } })
+  await verifyDoctorAccountProvider({ root,api,key: status.ANON_KEY,serviceKey:status.SERVICE_ROLE_KEY,project,expect,setStage: value => { stage = value } })
   expect((await rpc(b.client,'doctor_account_settings')).in_app_confirmations===false,'Independent account preference changed')
   stage = 'actual appointment lifecycle and scoped Realtime';appointmentAcceptance = await verifyDoctorAppointmentProvider({ api,key: status.ANON_KEY,a,b,rpc,expect,probe: realtimeProbe,advanceRevision,independentWire: realtimeWire,setStage: value => { stage = value } })
   const pdf = new TextEncoder().encode('%PDF-1.7\nSynthetic administrative attachment\n%%EOF\n')
@@ -177,7 +177,7 @@ try {
   await verifyDoctorMilestoneProvider({ api,origin,publicKey: status.ANON_KEY,mail,options,setStage: value => { stage = value } })
   await appointmentAcceptance.cleanup()
   function ownedCandidateSql(input){expect(owned,'Actual candidate fixture requires run-owned services');const result=spawnSync('docker',['exec','-i',`supabase_db_${project}`,'psql','-X','-U','postgres','-d','postgres','-qAt','-v','ON_ERROR_STOP=1'],{input,encoding:'utf8',timeout:15000,maxBuffer:65536});expect(result.status===0,'Owned actual-candidate fixture SQL failed');return result.stdout.trim()}
-  await verifyDoctorAdministrativeCandidateProvider({publicKey:status.ANON_KEY,bootstrap,confirmedActor,sql:ownedCandidateSql,rpc,endpoint,legacyLocator:locator,expect,setStage:value=>{stage=value},verifyQueue:(a,b,rescheduleReason)=>verifyDoctorAppointmentProvider({api,key:status.ANON_KEY,a,b,rpc,expect,probe:realtimeProbe,advanceRevision,independentWire:realtimeWire,rescheduleReason,setStage:value=>{stage=value}}),verifyAccount:admitEmail=>verifyDoctorAccountProvider({root,api,key:status.ANON_KEY,project,expect,admitEmail,expectedHome:'/subscription',expectVersionDocument:true,setStage:value=>{stage=value}})})
+  await verifyDoctorAdministrativeCandidateProvider({publicKey:status.ANON_KEY,bootstrap,confirmedActor,sql:ownedCandidateSql,rpc,endpoint,legacyLocator:locator,expect,setStage:value=>{stage=value},verifyQueue:(a,b,rescheduleReason)=>verifyDoctorAppointmentProvider({api,key:status.ANON_KEY,a,b,rpc,expect,probe:realtimeProbe,advanceRevision,independentWire:realtimeWire,rescheduleReason,setStage:value=>{stage=value}}),verifyAccount:admitEmail=>verifyDoctorAccountProvider({root,api,key:status.ANON_KEY,serviceKey:status.SERVICE_ROLE_KEY,project,expect,admitEmail,expectedHome:'/subscription',expectVersionDocument:true,setStage:value=>{stage=value}})})
   console.log('Synthetic actual-provider acceptance passed. Actual browser Auth recovery/PKCE, account reauthentication, Storage, Functions and scoped Realtime paths passed; hosted connections remain UNRUN.')
 } catch (error) {
   console.error(`Doctor actual-provider acceptance failed at ${stage}: ${doctorProviderFailureSummary(error)}`)

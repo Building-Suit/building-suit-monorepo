@@ -66,6 +66,8 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
   const locked = useCookie<string | null>(`bs-doctor-${settings.environment}-locked`, { sameSite: 'lax', path: '/', secure: settings.origin.startsWith('https:') })
   const state = reactive(doctorAuthState())
+  const registrationHandoff = useDoctorRegistrationHandoff()
+  watch(() => state.identity?.userId, userId => { if (userId && registrationHandoff.value?.userId && registrationHandoff.value.userId !== userId) registrationHandoff.value = null })
   const preference = useCookie<DoctorContextPreference | null>(`bs-doctor-${settings.environment}-context`, { sameSite: 'lax', path: '/', secure: provider.origin.startsWith('https:') })
   const context = createDoctorContextController(client ? doctorContextRepository(client) : null, reactive(doctorContextState()), () => state.identity, provider.environment, { read: () => preference.value, write: value => { preference.value = value } },import.meta.client ? {
     now: () => performance.now(),set: (callback,delay) => window.setTimeout(callback,delay),clear: handle => window.clearTimeout(handle as number),
@@ -120,7 +122,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   const invitation = createDoctorInvitationController(delegation, reactive(doctorInvitationState()), () => state.identity)
   const controller = createDoctorAuthController(client ? doctorAuthBackend(client, settings.origin) : null, state, {
     clear: () => { manualReport.clear();manualPayment.clear();privacy.clear();subscription.clear();account.clear(); personalAudit.clear(); void context.clear() },
-    locked: () => locked.value === '1', lock: () => { locked.value = '1'; context.forgetPreference() }, unlock: () => { locked.value = null },
+    locked: () => locked.value === '1', lock: () => { registrationHandoff.value = null; if (import.meta.client) { try { window.sessionStorage.removeItem(`doctor-suit.${settings.environment}.registration.v1`) } catch { /* Storage may be denied. */ } }; locked.value = '1'; context.forgetPreference() }, unlock: () => { locked.value = null },
   })
   context.registerClear(() => { manualReport.clear();manualPayment.clear();audit.clear(); practice.clear(); locations.clear(); patients.clear(); patientProfile.clear(); availability.clear(); appointments.clear(); dashboard.clear(); void appointmentsLive.update(null,async () => {}); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
   if (import.meta.client && client) {

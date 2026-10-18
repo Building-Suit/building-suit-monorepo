@@ -26,4 +26,4 @@ useSeoMeta({ description: () => metadata.value.description,robots: () => metadat
 })
 useHead(() => ({ htmlAttrs: { lang: localeProperties.value.language || locale.value, dir: localeProperties.value.dir || 'ltr' } }))
 </script>
-<template><BsAppRoot toast-host :page-transition="false" /></template>
+<template><BsAppRoot toast-host /></template>

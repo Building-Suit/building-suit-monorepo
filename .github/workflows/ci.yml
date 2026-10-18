@@ -90,6 +90,8 @@ jobs:
     concurrency:
       group: workspace-full-validation
       cancel-in-progress: false
+      # Keep post-stg validation queued when another PR joins this serial group.
+      queue: max
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

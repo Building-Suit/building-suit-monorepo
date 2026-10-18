@@ -46,6 +46,8 @@ test('code, retarget, ambiguous edit and protected push events retain complete v
   }
   assert.match(workflow, /push:\n {4}branches: \[stg, main\]/)
   assert.match(workflow, /group: workspace-full-validation\n {6}cancel-in-progress: false/)
+  const jobConcurrency = workflow.match(/ {2}verify:[\s\S]*? {4}concurrency:\n([\s\S]*?) {4}runs-on:/)[1]
+  assert.match(jobConcurrency, /^ {6}queue: max$/m, 'serialized validation keeps pending staging jobs instead of replacing them')
 })
 
 

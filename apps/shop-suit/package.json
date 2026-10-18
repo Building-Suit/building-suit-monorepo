@@ -31,7 +31,8 @@
     "@building-suit/contracts": "workspace:*",
     "@building-suit/data-access": "workspace:*",
     "@building-suit/ui": "workspace:*",
-    "@building-suit/ux": "workspace:*"
+    "@building-suit/ux": "workspace:*",
+    "@building-suit/auth": "workspace:*"
   },
   "devDependencies": {
     "typescript": "5.9.3",

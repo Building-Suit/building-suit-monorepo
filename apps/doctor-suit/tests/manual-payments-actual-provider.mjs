@@ -48,7 +48,7 @@ export async function verifyDoctorManualPaymentProvider({root,api,origin,key,ser
   const common={p_notice:notice.id,p_revision:0,p_action:'funds_verified',p_reason:'Synthetic independently checked bank entry',p_received_reference:'SYNTHETIC-BANK-'+randomUUID(),p_received_minor:'29900',p_currency:'EGP',p_received_at:new Date(Date.now()-1000).toISOString(),p_verification_ref:approval,p_independently_verified:true,p_key:randomUUID()}
   const verified=await rpc(b.client,'doctor_review_manual_payment',common);expect(verified.status==='funds_verified'&&(await rpc(a.client,'doctor_saas_status')).state==='unconfigured','Funds verification activated account')
   const verifiedReport=decodeManualReport(await rpc(a.client,'doctor_manual_payment_reconciliation'),reportActor,reportQuery);expect(verifiedReport.currencies[0].verified==='29900'&&verifiedReport.currencies[0].awaiting==='29900'&&verifiedReport.currencies[0].activated==='0','Verified report prematurely activated funds')
-  await verifyManualPaymentBrowser({root,api,origin,key,a,b,expect,rpc,setStage})
+  await verifyManualPaymentBrowser({root,api,origin,key,serviceKey,a,b,expect,rpc,setStage})
   const paid=await rpc(a.client,'doctor_saas_status')
   expect(paid.state==='paid'&&paid.period.kind==='manual_paid'&&paid.period_active===true,'Actual browser activation missing server period')
   expect(paid.live_activation===false&&paid.paid_activation_available===false,'Synthetic acceptance asserted live availability')
