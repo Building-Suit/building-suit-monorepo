@@ -248,5 +248,75 @@ declare q public.doctor_saas_quotes;r public.doctor_manual_payment_recipients;re
  'terms_id',q.terms_version_id,'billing_interval',q.billing_interval,'amount_minor',q.amount_minor::text,'currency',q.currency,'currency_exponent',q.currency_exponent,
  'recipient_id',r.id,'beneficiary_name',r.beneficiary_name,'transfer_reference',n.transfer_reference,'transferred_at',n.transferred_at,'created_at',n.created_at,
  'status',coalesce(review.action,'submitted'),'revision',coalesce(review.revision,0),'review_reason',review.reason,
- 'period_id',review.period_id,'evidence',coalesce((select jsonb_agg(jsonb_build_object('id',e.id,'filename',e.filename,'mime_type',e.mime_type,'byte_size',e.byte_size,'sha256',e.sha256))from public.doctor_manual_payment_evidence e where e.notice_id=n.id),'[]'::jsonb),'requires_attention',n.requires_attention,'independent_verification_required',true,'automatic_verification',false,'live_acceptance_enabled',false);
+ 'period_id',review.period_id,'history',coalesce((select jsonb_agg(jsonb_build_object('revision',h.revision,'action',h.action,'actor',h.actor_user_id,'reason',h.reason,'at',h.happened_at)order by h.revision)from public.doctor_manual_payment_reviews h where h.notice_id=n.id),'[]'::jsonb),'evidence',coalesce((select jsonb_agg(jsonb_build_object('id',e.id,'filename',e.filename,'mime_type',e.mime_type,'byte_size',e.byte_size,'sha256',e.sha256))from public.doctor_manual_payment_evidence e where e.notice_id=n.id),'[]'::jsonb),'requires_attention',n.requires_attention,'independent_verification_required',true,'automatic_verification',false,'live_acceptance_enabled',false);
+end $$;
+
+create or replace function doctor_private.manual_payments(p_notice uuid,p_review_queue boolean,p_page integer)returns jsonb
+language plpgsql volatile security definer set search_path=''as $$declare actor uuid:=doctor_private.current_actor();result jsonb;begin
+ if p_page is null or p_page<1 or p_page>1000000 or p_review_queue is null then raise exception using errcode='22023',message='DOCTOR_MANUAL_QUERY_INVALID';end if;
+ if p_review_queue then perform doctor_private.require_manual_reviewer();end if;
+ if p_notice is not null then
+  select doctor_private.manual_notice_projection(n)into result from public.doctor_manual_payment_notices n
+   where n.id=p_notice and(p_review_queue or n.subscriber_user_id=actor);
+  if result is null then raise exception using errcode='42501',message='DOCTOR_ACCESS_DENIED';end if;
+  return result;
+ end if;
+ with population as materialized(select n.* from public.doctor_manual_payment_notices n where p_review_queue or n.subscriber_user_id=actor),
+ page as(select * from population order by created_at desc,id limit 25 offset(p_page-1)*25)
+ select jsonb_build_object('actor_user_id',actor,'review_queue',p_review_queue,'total',(select count(*)from population),'page',p_page,
+  'activation_configured',p_review_queue and coalesce((select enabled and acceptance_mode='synthetic'and activation_policy='inactive_account_on_review'and activation_approval_ref is not null from public.doctor_manual_payment_configuration where singleton),false),'items',coalesce((select jsonb_agg(doctor_private.manual_notice_projection(p::public.doctor_manual_payment_notices)order by p.created_at desc,p.id)from page p),'[]'::jsonb))into result;
+ return result;
+end $$;
+create function doctor_private.manual_review_capability()returns jsonb language plpgsql volatile security definer set search_path=''as $$declare actor uuid:=doctor_private.current_actor();begin
+ return jsonb_build_object('actor_user_id',actor,'can_review',exists(select 1 from public.doctor_manual_payment_reviewers where user_id=actor and enabled and valid_until>clock_timestamp()));
+end $$;
+create function public.doctor_manual_review_capability()returns jsonb language sql volatile security invoker set search_path=''as $$select doctor_private.manual_review_capability()$$;
+revoke all on function doctor_private.manual_review_capability(),public.doctor_manual_review_capability()from public,anon,authenticated,service_role;
+grant execute on function doctor_private.manual_review_capability(),public.doctor_manual_review_capability()to authenticated;
+
+create or replace function doctor_private.saas_entitlement_context(p_practice uuid)returns jsonb
+language plpgsql volatile security definer set search_path=''as $$
+declare subscriber uuid;state jsonb;usage jsonb;staff jsonb;clinics jsonb;selected text;moment timestamptz;ending timestamptz;
+ active boolean;over_limit boolean:=false;writable boolean:=false;staff_room boolean:=false;clinic_room boolean:=false;policy text;
+begin
+ select owner_user_id into subscriber from public.practices where id=p_practice;
+ if subscriber is null then raise exception using errcode='42501',message='DOCTOR_ACCESS_DENIED';end if;
+ if doctor_private.edition_mode()='synthetic_preview'then
+  return jsonb_build_object('state','preview','revision',0,'writes_allowed',true,'can_add_staff',true,'can_add_clinic',true,'over_limit',false,'valid_until',null,'observed_at',clock_timestamp());end if;
+ state:=doctor_private.saas_account_state(subscriber);selected:=state->>'state';ending:=(state#>>'{period,ends_at}')::timestamptz;moment:=clock_timestamp();
+ -- Derive clock state and observation from the same instant, even at expiry.
+ if selected in('trial','scheduled','expired')then
+  selected:=case when moment<(state#>>'{period,started_at}')::timestamptz then'scheduled'when moment>=ending then'expired'when state#>>'{period,kind}'='manual_paid'then'paid'else'trial'end;
+ end if;
+ active:=selected in('trial','paid');
+ if selected<>'unconfigured'then
+  usage:=doctor_private.saas_usage(p_practice);staff:=state->'terms'->'staff';clinics:=state->'terms'->'clinics';policy:=state#>>'{terms,over_limit_policy}';
+  if(staff->>'kind')not in('limited','unlimited')or(staff->>'kind')is null or(clinics->>'kind')not in('limited','unlimited')or(clinics->>'kind')is null
+   or policy not in('block_new_allocation','read_only_until_within_limit')or policy is null then raise exception using errcode='DS001',message='DOCTOR_SAAS_TERMS_UNCONFIGURED';end if;
+  over_limit:=(staff->>'kind'='limited'and(usage->>'staff_total')::bigint>(staff->>'limit')::bigint)
+   or(clinics->>'kind'='limited'and(usage->>'clinics')::bigint>(clinics->>'limit')::bigint);
+  writable:=active and(not over_limit or policy='block_new_allocation');
+  staff_room:=active and not over_limit and(staff->>'kind'='unlimited'or(usage->>'staff_total')::bigint<(staff->>'limit')::bigint);
+  clinic_room:=active and not over_limit and(clinics->>'kind'='unlimited'or(usage->>'clinics')::bigint<(clinics->>'limit')::bigint);
+ end if;
+ return jsonb_build_object('state',selected,'revision',(state->>'revision')::integer,'writes_allowed',writable,'can_add_staff',staff_room,'can_add_clinic',clinic_room,
+  'over_limit',over_limit,'valid_until',ending,'observed_at',moment);
+end $$;
+
+create or replace function doctor_private.saas_status()returns jsonb
+language plpgsql volatile security definer set search_path=''as $$
+declare actor uuid:=doctor_private.current_actor();practice uuid;state jsonb;moment timestamptz;kind text;writable boolean:=false;
+begin
+ if not exists(select 1 from public.doctor_saas_accounts where subscriber_user_id=actor)then perform doctor_private.require_owner_enrollment();end if;
+ select id into practice from public.practices where owner_user_id=actor;
+ state:=doctor_private.saas_account_state(actor);moment:=clock_timestamp();kind:=state->>'state';
+ if kind in('trial','paid','expired','scheduled')then
+  kind:=case when moment<(state#>>'{period,started_at}')::timestamptz then'scheduled'when moment>=(state#>>'{period,ends_at}')::timestamptz then'expired'when state#>>'{period,kind}'='manual_paid'then'paid'else'trial'end;
+ end if;
+ if kind in('trial','paid')then
+  if practice is not null then writable:=(doctor_private.saas_entitlement_context(practice)->>'writes_allowed')::boolean;
+  else writable:=state#>>'{terms,clinics,kind}'='unlimited'or(state#>>'{terms,clinics,limit}')::integer>0;end if;
+ end if;
+ return state||jsonb_build_object('business_writes_allowed',writable,'state',kind,'period_active',kind in('trial','paid'),'observed_at',moment,'subscriber_user_id',actor,'practice_id',practice,'usage',doctor_private.saas_usage(practice),
+  'data_mode','synthetic','paid_activation_available',false,'live_activation',false);
 end $$;
