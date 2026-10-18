@@ -59,3 +59,9 @@ test('source notice reads are discarded after session change and foreign denial 
  const f=fixture({read:async(_a,_r,_id,s)=>{signal=s;return new Promise(r=>{resolve=r})}});await f.controller.load();const pending=f.controller.open(id);f.setIdentity({...actor,sessionId:'new'});f.controller.clear();resolve({id,evidence:[]});assert.equal(await pending,false);assert.equal(signal.aborted,true);assert.equal(f.controller.selected(),null)
  const denied=fixture({read:async()=>{throw{code:'42501'}}});await denied.controller.load();assert.equal(await denied.controller.open(id),false);assert.equal(denied.state.error,'denied');assert.equal(denied.controller.selected(),null)
 })
+test('receipt upload through an off-page source updates details without inserting it into the queue page',async()=>{
+ const source={id:'ae340000-0000-0000-0000-000000000011',evidence:[],status:'submitted'},listed={id:'listed',evidence:[]},evidence={id:'receipt',filename:'synthetic-source.pdf'}
+ const f=fixture({queue:async()=>({items:[listed],total:26,page:1,activationConfigured:true}),read:async()=>source,upload:async()=>evidence})
+ await f.controller.load();await f.controller.open(source.id);f.state.file=new File(['%PDF-synthetic'],'synthetic-source.pdf',{type:'application/pdf'})
+ assert.equal(await f.controller.upload(),true);assert.deepEqual(f.controller.selected().evidence,[evidence]);assert.deepEqual(f.state.items,[listed]);assert.equal(f.state.total,26);assert.equal(f.state.uploadNotice,null)
+})

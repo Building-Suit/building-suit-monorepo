@@ -78,7 +78,7 @@ export function createManualPaymentController(repo:ManualPaymentRepository|null,
  }
  async function upload(){
   if(!operation&&(!state.uploadNotice||!state.file||state.review))return false
-  return execute('upload',()=>{const id=state.uploadNotice!,file=state.file!,commandKey=key(),g=generation,s=scope();return async(_actor,signal)=>{const evidence=await repo!.upload(id,file,commandKey,signal);if(active(g,s)){const row=state.items.find(n=>n.id===id);if(row)upsert({...row,evidence:[evidence]});state.file=null;state.uploadNotice=null}}})
+  return execute('upload',()=>{const id=state.uploadNotice!,file=state.file!,commandKey=key(),g=generation,s=scope();return async(_actor,signal)=>{const evidence=await repo!.upload(id,file,commandKey,signal);if(active(g,s)){const row=state.detail?.id===id?state.detail:state.items.find(n=>n.id===id);if(row)upsert({...row,evidence:[evidence]});state.file=null;state.uploadNotice=null}}})
  }
  function select(id:string){if(state.pending||operation)return;state.selected=id;const row=selected();if(!state.review&&!state.instructions){state.uploadNotice=row&&!row.evidence.length&&['submitted','under_review'].includes(row.status)?id:null;state.file=null}state.reason='';state.receivedReference='';state.receivedAmount='';state.receivedCurrency='';state.receivedAt='';state.verification='';state.independent=false}
  async function review(action:ManualReviewInput['action']){
