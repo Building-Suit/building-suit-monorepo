@@ -164,27 +164,29 @@ Validation uses deterministic release unit tests, disposable protocol tests (ini
 
 ### Reconciliation workflow ref admission
 
-The target planner in `tooling/releases/reconcile-targets.mjs` selects only the
-environment admitted by the triggering workflow ref: `stg` for staging, `main`
-for production. Checkout cannot change admission. The observed policies allow
-only those respective branches; do not broaden them to accommodate a matrix.
-Protected pushes publish only through `ci.yml` after authoritative verification.
-The fallback does not duplicate that push publisher. Explicit dispatches create
-one environment job, not two. A completed workflow must be an own-repository
-protected push matching the current workflow ref; PR proofs and mismatched refs
-create no environment job. Overall workflow failure can include a publisher
-failure after verification passed, so completion remains a retry wake-up.
-The publisher still independently checks the newest
-protected verification, deployment readiness, catalog bindings and provenance.
+Protected pushes publish through the existing `ci.yml` hook only after the
+exact protected verification succeeds. The fallback release workflow does not
+also subscribe to push: that duplicate attempt raced verification and often
+failed readiness before any publication could be authorized.
 
-GitHub runs scheduled and workflow_run workflows from the default branch. A
-main-context schedule can reconcile production, but cannot reconcile staging
-under the existing stg-only policy. Staging retains the existing protected-stg
-`ci.yml` post-verification publisher and protected-stg dispatch retry path.
-No staging hourly recovery is claimed active. A future automatic hourly staging
-retry needs a separately authorized dispatcher running the workflow on `stg`;
-this fix adds no write permissions, credentials or provider configuration and
-performs no dispatch or deployment. Default-main publisher adoption still needs
-its normal authorized promotion; do not promote main merely to enable retries.
+Fallback schedule, dispatch and completed-workflow wake-ups select only the
+environment admitted by the triggering workflow ref: `stg` for staging, `main`
+for production. Checkout cannot change admission. The observed policies admit
+only those respective branches; do not broaden them to accommodate a matrix.
+A workflow completion must be an own-repository protected push matching the
+current workflow ref. PR proofs and mismatched refs create no environment job.
+Overall workflow failure can include a publisher failure after verify passed;
+completion remains a retry wake-up, never authority to bypass readiness.
+The publisher independently enforces newest protected verification, deployment
+readiness, catalog binding, immutable provenance and exact-source checks.
+
+GitHub schedules and workflow_run execute from the default branch. A main
+schedule can reconcile production, but cannot reconcile staging under its
+stg-only policy. Staging retains the protected-stg `ci.yml` post-verification
+publisher and correctly referenced dispatch/re-run retry paths. No staging
+hourly recovery is claimed active. Future automatic hourly staging recovery
+requires a separately authorized dispatcher targeting `stg`; this fix adds no
+write permissions, credentials or provider configuration and performs no
+dispatch or deployment. Main adoption still needs normal authorized promotion.
 
 GitHub documents that [environment branch rules match the workflow GITHUB_REF](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments#deployment-branches-and-tags), and [workflow_run uses the default branch](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_run). Publisher credentials, protected environment rules, required-check enforcement, immutable candidate matching and deployment-readiness checks are unchanged. No environment restrictions are relaxed and no publisher is invoked by the regression tests.

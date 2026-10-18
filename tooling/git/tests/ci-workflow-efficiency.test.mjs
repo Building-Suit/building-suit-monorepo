@@ -4,17 +4,18 @@ import test from 'node:test'
 
 const workflow = readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8')
 const reviewIf = workflow.match(/ {2}review:[\s\S]*? {4}if: >-\n([\s\S]*?) {4}runs-on:/)[1].trim()
+const verifyIf = workflow.match(/ {2}verify:[\s\S]*? {4}if: >-\n([\s\S]*?) {4}concurrency:/)[1].trim()
 const reviewName = workflow.match(/ {2}review:[\s\S]*? {4}name: \$\{\{ (.*?) \}\}/)[1]
 const verifyName = workflow.match(/ {2}verify:[\s\S]*? {4}name: \$\{\{ (.*?) \}\}/)[1]
 const concurrency = workflow.match(/ {2}group: verify-\$\{\{ github.ref \}\}-\$\{\{ (.*?) \}\}/)[1]
 // Evaluate the actual workflow expressions for representative GitHub payloads.
 // Missing context properties evaluate to null in Actions; optional reads model it.
-function evaluate(expression, github, { cancelled = false, steps = {}, success = true } = {}) {
-  const source = expression.replace(/(?:github|steps)(?:\.[A-Za-z_][A-Za-z_0-9-]*)+/g, path => {
+function evaluate(expression, github, { cancelled = false, steps = {}, success = true, needs = {} } = {}) {
+  const source = expression.replace(/(?:github|steps|needs)(?:\.[A-Za-z_][A-Za-z_0-9-]*)+/g, path => {
     const [root, ...keys] = path.split('.')
     return root + keys.map(key => `?.[${JSON.stringify(key)}]`).join('')
   })
-  return Function('github', 'steps', 'cancelled', 'success', `return (${source})`)(github, steps, () => cancelled, () => success)
+  return Function('github', 'steps', 'needs', 'cancelled', 'success', `return (${source})`)(github, steps, needs, () => cancelled, () => success)
 }
 function event(action, changes, event_name = 'pull_request') {
   return { event_name, event: { action, changes } }
@@ -29,7 +30,7 @@ test('title/body edits do not rerun code validation or cancel a code run', () =>
   }
   assert.match(workflow, /types: \[opened, synchronize, reopened, edited\]/)
   assert.match(workflow, / {2}branch-policy:\n {4}if: github.event_name == 'pull_request'/)
-  assert.match(workflow, /always\(\) && needs.review.result == 'success'/)
+  assert.match(workflow, /!cancelled\(\) && needs.review.result == 'success'/)
 })
 test('code, retarget, ambiguous edit and protected push events retain complete validation', () => {
   for (const payload of [
@@ -49,6 +50,15 @@ test('code, retarget, ambiguous edit and protected push events retain complete v
 
 
 test('cancelled full validation stops heavy steps and cannot produce successful readiness', () => {
+  const needs = { review: { result: 'success' }, 'branch-policy': { result: 'success' } }
+  const root = { ...event('synchronize'), base_ref: 'stg' }
+  assert.equal(evaluate(verifyIf, root, { needs }), true)
+  assert.equal(evaluate(verifyIf, root, { needs, cancelled: true }), false)
+  assert.equal(evaluate(verifyIf, root, { needs: { ...needs, review: { result: 'failure' } } }), false)
+  assert.equal(evaluate(verifyIf, root, { needs: { ...needs, 'branch-policy': { result: 'failure' } } }), false)
+  assert.equal(evaluate(verifyIf, { ...root, base_ref: 'feature-parent' }, { needs }), false)
+  assert.equal(evaluate(verifyIf, event(undefined, undefined, 'push'), { needs: { ...needs, 'branch-policy': { result: 'skipped' } } }), true)
+
   const verify = workflow.slice(workflow.indexOf('  verify:'), workflow.indexOf('  doctor-m1-shop-backend:'))
   const conditions = [...verify.matchAll(/^ {8}if: (.+)$/gm)].map(match => match[1])
   const heavy = conditions.filter(condition => condition.startsWith('${{ success() && !cancelled()'))

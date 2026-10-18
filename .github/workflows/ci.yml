@@ -83,7 +83,7 @@ jobs:
     needs: [review, branch-policy]
     # Stacked feature PRs get review checks and relevant local tests. Build the combined batch once.
     if: >-
-      always() && needs.review.result == 'success' &&
+      !cancelled() && needs.review.result == 'success' &&
       (github.event_name == 'push' ||
        (needs.branch-policy.result == 'success' &&
         (github.base_ref == 'stg' || github.base_ref == 'main')))
