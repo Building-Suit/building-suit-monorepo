@@ -1,6 +1,7 @@
 // Owned synthetic financial ledger transactions; never a payment-provider adapter.
 import assert from 'node:assert/strict'
 import {spawn,spawnSync}from'node:child_process'
+import{verifySaasReportSnapshot}from'./saas-report-snapshot.mjs'
 export async function verifySaasReconciliationConcurrency(container){
  const args=['exec','-i',container,'psql','-h','127.0.0.1','-U','postgres','-v','ON_ERROR_STOP=1','-At']
  const id=n=>`ae270000-0000-0000-0000-${String(n).padStart(12,'0')}`
@@ -56,6 +57,7 @@ export async function verifySaasReconciliationConcurrency(container){
   await race(6,evidence(3,'independent-a',1,'pending',89),evidence(4,'independent-b',1,'pending',90),false)
   assert.equal(sql(`select count(*)from public.doctor_saas_periods where subscriber_user_id in('${id(1)}','${id(2)}','${id(3)}','${id(4)}');`),'0')
   assert.equal(sql(`select bool_and(state='awaiting_route_approval')from public.doctor_saas_payment_intents where subscriber_user_id in('${id(1)}','${id(2)}','${id(3)}','${id(4)}');`),'t')
+  await verifySaasReportSnapshot({container,id,claim,revision})
   console.log('Six synthetic reconciliation transactions passed: exact request replay, duplicate delivery, out-of-order evidence, conflicting request rollback, global event reuse and independent subscribers; paid activation remains unavailable')
  }finally{sql("update public.doctor_saas_configuration set terms_version_id=null,revision=revision+1,change_reason='Remove owned synthetic financial offer';")}
 }
