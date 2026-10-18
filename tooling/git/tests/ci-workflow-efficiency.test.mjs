@@ -3,10 +3,10 @@ import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 const workflow = readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8')
-const reviewIf = workflow.match(/  review:[\s\S]*?    if: >-\n([\s\S]*?)    runs-on:/)[1].trim()
-const reviewName = workflow.match(/  review:[\s\S]*?    name: \$\{\{ (.*?) \}\}/)[1]
-const verifyName = workflow.match(/  verify:[\s\S]*?    name: \$\{\{ (.*?) \}\}/)[1]
-const concurrency = workflow.match(/  group: verify-\$\{\{ github.ref \}\}-\$\{\{ (.*?) \}\}/)[1]
+const reviewIf = workflow.match(/ {2}review:[\s\S]*? {4}if: >-\n([\s\S]*?) {4}runs-on:/)[1].trim()
+const reviewName = workflow.match(/ {2}review:[\s\S]*? {4}name: \$\{\{ (.*?) \}\}/)[1]
+const verifyName = workflow.match(/ {2}verify:[\s\S]*? {4}name: \$\{\{ (.*?) \}\}/)[1]
+const concurrency = workflow.match(/ {2}group: verify-\$\{\{ github.ref \}\}-\$\{\{ (.*?) \}\}/)[1]
 // Evaluate the actual workflow expressions for representative GitHub payloads.
 // Missing context properties evaluate to null in Actions; optional reads model it.
 function evaluate(expression, github) {
@@ -25,7 +25,7 @@ test('title/body edits do not rerun code validation or cancel a code run', () =>
     assert.equal(evaluate(verifyName, payload), 'metadata-verify')
   }
   assert.match(workflow, /types: \[opened, synchronize, reopened, edited\]/)
-  assert.match(workflow, /  branch-policy:\n    if: github.event_name == 'pull_request'/)
+  assert.match(workflow, / {2}branch-policy:\n {4}if: github.event_name == 'pull_request'/)
   assert.match(workflow, /always\(\) && needs.review.result == 'success'/)
 })
 test('code, retarget, ambiguous edit and protected push events retain complete validation', () => {
@@ -40,6 +40,6 @@ test('code, retarget, ambiguous edit and protected push events retain complete v
     assert.equal(evaluate(reviewName, payload), 'review')
     assert.equal(evaluate(verifyName, payload), 'verify')
   }
-  assert.match(workflow, /push:\n    branches: \[stg, main\]/)
-  assert.match(workflow, /group: workspace-full-validation\n      cancel-in-progress: false/)
+  assert.match(workflow, /push:\n {4}branches: \[stg, main\]/)
+  assert.match(workflow, /group: workspace-full-validation\n {6}cancel-in-progress: false/)
 })
