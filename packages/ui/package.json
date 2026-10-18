@@ -373,7 +373,9 @@
     "./templates/BsAvailabilityPage.vue": "./src/templates/BsAvailabilityPage.vue",
     "./templates/BsPracticeAppointmentsPage.vue": "./src/templates/BsPracticeAppointmentsPage.vue",
     "./templates/BsSubscriptionStatusPage": "./src/templates/BsSubscriptionStatusPage.vue",
-    "./templates/BsPrivacyRequestsPage.vue": "./src/templates/BsPrivacyRequestsPage.vue"
+    "./templates/BsPrivacyRequestsPage.vue": "./src/templates/BsPrivacyRequestsPage.vue",
+    "./templates/BsManualPaymentPage.vue": "./src/templates/BsManualPaymentPage.vue",
+    "./types/manualPaymentPresentation": "./src/types/manualPaymentPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

@@ -1,6 +1,6 @@
 import type { DoctorEditionMode } from './administrativeEdition'
 export interface DoctorEntitlement {
-  state: 'preview' | 'unconfigured' | 'trial' | 'expired' | 'scheduled' | 'suspended'
+  state: 'preview' | 'unconfigured' | 'trial' | 'paid' | 'expired' | 'scheduled' | 'suspended'
   revision: number; writesAllowed: boolean; canAddStaff: boolean; canAddClinic: boolean; overLimit: boolean
   validUntil: string | null; observedAt: string
 }
@@ -14,7 +14,7 @@ function stamp(value: unknown): string {
 export function doctorEntitlement(value: unknown,edition: DoctorEditionMode | undefined): DoctorEntitlement | undefined {
   if(value===undefined && edition!=='administrative_candidate')return undefined
   if(!record(value) || !Number.isSafeInteger(value.revision) || Number(value.revision)<0
-    || !['preview','unconfigured','trial','expired','scheduled','suspended'].includes(String(value.state))
+    || !['preview','unconfigured','trial','paid','expired','scheduled','suspended'].includes(String(value.state))
     || ['writes_allowed','can_add_staff','can_add_clinic','over_limit'].some(field=>typeof value[field]!=='boolean'))invalid()
   const observedAt=stamp(value.observed_at);const validUntil=value.valid_until===null?null:stamp(value.valid_until)
   if(value.state==='preview') {
@@ -23,8 +23,8 @@ export function doctorEntitlement(value: unknown,edition: DoctorEditionMode | un
     if(edition!=='administrative_candidate')invalid()
     if(value.state==='unconfigured') { if(value.revision!==0 || validUntil!==null || value.over_limit)invalid() }
     else if(value.revision===0 || validUntil===null)invalid()
-    if(value.state!=='trial' && (value.writes_allowed || value.can_add_staff || value.can_add_clinic))invalid()
-    if(value.state==='trial' && (!validUntil || observedAt>=validUntil || (!value.over_limit && !value.writes_allowed)))invalid()
+    if(!['trial','paid'].includes(String(value.state)) && (value.writes_allowed || value.can_add_staff || value.can_add_clinic))invalid()
+    if(['trial','paid'].includes(String(value.state)) && (!validUntil || observedAt>=validUntil || (!value.over_limit && !value.writes_allowed)))invalid()
     if(value.state==='expired' && validUntil && observedAt<validUntil)invalid()
     if((value.can_add_staff || value.can_add_clinic) && (!value.writes_allowed || value.over_limit))invalid()
   }
@@ -41,7 +41,7 @@ export function createDoctorEntitlementDeadline(timers?: DoctorEntitlementTimers
   let sequence=0;let handle: unknown
   function clear(){sequence++;if(handle!==undefined)timers?.clear(handle);handle=undefined}
   function arm(value: DoctorEntitlement|undefined,sentAt: number,expired: ()=>void,accepts: ()=>boolean){
-    clear();if(!timers || value?.state!=='trial' || !value.validUntil)return
+    clear();if(!timers || !value || !['trial','paid'].includes(value.state) || !value.validUntil)return
     const token=sequence;const deadline=timers.now()+Math.max(0,Date.parse(value.validUntil)-Date.parse(value.observedAt)-Math.max(0,timers.now()-sentAt))
     function tick(){
       if(token!==sequence || !accepts())return

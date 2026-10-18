@@ -621,6 +621,20 @@
       ],
       "task": "DOS-AE-007",
       "migrationStatus": "synthetic intake only; qualified privacy gates pending"
+    },
+    {
+      "family": "manual-payment-review",
+      "owner": "packages/ui",
+      "components": [
+        "BsManualPaymentPage"
+      ],
+      "adapterBoundary": "Typed plan and version-document presentation, immutable instructions, bounded notice/history rows, private evidence commands and explicit independent bank verification. Apps own sessions, prices, recipient binding, authority, request keys and activation policy. Shared presentation grants no financial authority.",
+      "auditSources": [
+        "apps/doctor-suit/app/pages/payment-notices.vue",
+        "apps/doctor-suit/app/pages/payment-review.vue"
+      ],
+      "task": "DOS-AE-004",
+      "migrationStatus": "synthetic acceptance pending; live payment disabled"
     }
   ]
 }

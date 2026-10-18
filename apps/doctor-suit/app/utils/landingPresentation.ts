@@ -1,12 +1,12 @@
 import type { LandingContent } from '@building-suit/contracts'
-/** Implemented administrative preview only; no invented commercial offer. */
+/** Implemented administrative preview with owner-approved launch list prices. */
 export function doctorLandingContent(ar: boolean): LandingContent {
   return ar ? {
     eyebrow:'Doctor Suit · إدارة الممارسة',heroTitle:'ممارستك الطبية، في مساحة واحدة',
     heroBody:'نظّم المواعيد والاستقبال ودليل المرضى الإداري عبر مواقع عملك. احتفظ بملكية الممارسة وفوّض فريقك بصلاحيات واضحة لكل موقع.',
     createWorkspace:'إنشاء حساب',explore:'استكشف مساحة العمل',trialNote:'معاينة إدارية ببيانات تجريبية فقط. الرعاية السريرية والمدفوعات غير متاحتين.',
     featuresEyebrow:'يوم عمل أكثر وضوحاً',featuresTitle:'من الموعد إلى الاستقبال',featuresBody:'أدوات إدارية مترابطة للطبيب والسكرتير، مع سياق واضح للممارسة والموقع.',
-    workflowEyebrow:'ابدأ بطريقتك',workflowTitle:'ممارسة واحدة، ومواقع عمل متعددة',pricingEyebrow:'',pricingTitle:'',pricingBody:'',
+    workflowEyebrow:'ابدأ بطريقتك',workflowTitle:'ممارسة واحدة، ومواقع عمل متعددة',pricingEyebrow:'خطط Doctor Suit',pricingTitle:'اختر السعة المناسبة لممارستك',pricingBody:'أسعار واضحة ومزايا قياسية موحدة ضمن حدود كل خطة.',
     features:[
       {icon:'invoice',title:'المواعيد',body:'راجع المواعيد وعدّلها مع توثيق موقع العمل ومنع الالتزامات المتعارضة.'},
       {icon:'repeat',title:'الاستقبال وقائمة الانتظار',body:'تابع وصول المرضى وحالة الموعد الإدارية خلال يوم العمل.'},
@@ -23,7 +23,7 @@ export function doctorLandingContent(ar: boolean): LandingContent {
     heroBody:'Organize appointments, reception and administrative patient records across your working locations. Keep ownership of your practice and give your team clear permissions at each location.',
     createWorkspace:'Create an account',explore:'Explore the workspace',trialNote:'Administrative preview with synthetic data only. Clinical care and payments are unavailable.',
     featuresEyebrow:'A clearer working day',featuresTitle:'From appointment to reception',featuresBody:'Connected administrative tools for doctors and secretaries, with a clear practice and location context.',
-    workflowEyebrow:'Start your way',workflowTitle:'One practice, multiple working locations',pricingEyebrow:'',pricingTitle:'',pricingBody:'',
+    workflowEyebrow:'Start your way',workflowTitle:'One practice, multiple working locations',pricingEyebrow:'Doctor Suit plans',pricingTitle:'Choose capacity for your practice',pricingBody:'Clear list prices and standard features within each plan’s limits.',
     features:[
       {icon:'invoice',title:'Appointments',body:'Review and reschedule appointments with location history and checks against overlapping commitments.'},
       {icon:'repeat',title:'Reception and queues',body:'Follow arrivals and administrative appointment status throughout the working day.'},
@@ -39,10 +39,10 @@ export function doctorLandingContent(ar: boolean): LandingContent {
 }
 export function doctorMarketingCopy(ar: boolean) {
   return ar ? {
-    navigation:[{to:'/#features',label:'المزايا'},{to:'/#workflow',label:'طريقة العمل'}],legalLinks:[{to:'/preview',label:'نطاق المعاينة'}],
+    navigation:[{to:'/#features',label:'المزايا'},{to:'/#workflow',label:'طريقة العمل'},{to:'/#pricing',label:'الأسعار'}],legalLinks:[{to:'/preview',label:'نطاق المعاينة'}],
     labels:{home:'الرئيسية',navigation:'التنقل',openApp:'مساحة العمل',signIn:'تسجيل الدخول',startTrial:'إنشاء حساب',close:'إغلاق',open:'فتح القائمة',footer:'Doctor Suit من Building Suit · معاينة إدارية ببيانات تجريبية.',footerNavigation:'روابط Doctor Suit'},
   } : {
-    navigation:[{to:'/#features',label:'Features'},{to:'/#workflow',label:'How it works'}],legalLinks:[{to:'/preview',label:'Preview scope'}],
+    navigation:[{to:'/#features',label:'Features'},{to:'/#workflow',label:'How it works'},{to:'/#pricing',label:'Pricing'}],legalLinks:[{to:'/preview',label:'Preview scope'}],
     labels:{home:'Home',navigation:'Navigation',openApp:'Open workspace',signIn:'Sign in',startTrial:'Create an account',close:'Close',open:'Open menu',footer:'Doctor Suit by Building Suit · Administrative preview with synthetic data.',footerNavigation:'Doctor Suit links'},
   }
 }

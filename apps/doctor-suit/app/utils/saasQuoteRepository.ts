@@ -25,7 +25,7 @@ function closedRoute(v: unknown) {
 export function doctorSaasQuote(value: unknown,identity: DoctorIdentity): DoctorSaasQuote {
   if(!object(value) || !doctorUuid(value.quote_id) || value.subscriber_user_id!==identity.userId || value.practice_id!==identity.practiceId
     || !doctorUuid(value.terms_id) || !revision(value.configuration_revision) || value.configuration_revision<1 || !revision(value.account_revision)
-    || typeof value.account_state!=='string' || !['unconfigured','trial','scheduled','expired','suspended'].includes(value.account_state)
+    || typeof value.account_state!=='string' || !['unconfigured','trial','paid','scheduled','expired','suspended'].includes(value.account_state)
     || (value.current_period_id!==null && !doctorUuid(value.current_period_id))
     || (value.account_revision===0 ? value.current_period_id!==null || value.account_state!=='unconfigured' : value.current_period_id===null || value.account_state==='unconfigured')
     || (value.billing_interval!=='monthly' && value.billing_interval!=='yearly') || typeof value.currency!=='string' || !/^[A-Z]{3}$/.test(value.currency)

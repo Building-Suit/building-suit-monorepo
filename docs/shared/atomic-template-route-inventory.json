@@ -87,7 +87,8 @@
     "BsAvailabilityPage": "packages/ui/src/templates/BsAvailabilityPage.vue",
     "BsPracticeAppointmentsPage": "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
     "BsSubscriptionStatusPage": "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
-    "BsPrivacyRequestsPage": "packages/ui/src/templates/BsPrivacyRequestsPage.vue"
+    "BsPrivacyRequestsPage": "packages/ui/src/templates/BsPrivacyRequestsPage.vue",
+    "BsManualPaymentPage": "packages/ui/src/templates/BsManualPaymentPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2886,6 +2887,26 @@
       "dependencies": [],
       "verification": "Manual Google and Supabase sandbox OAuth browser tests required",
       "purpose": "google-oauth-callback"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/payment-notices.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsManualPaymentPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/payment-notices.vue",
+      "purpose": "synthetic-owner-manual-transfer-notices-and-private-receipts",
+      "status": "implemented; candidate acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/payment-review.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsManualPaymentPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/payment-review.vue",
+      "purpose": "independently-authorized-synthetic-funds-review-and-paid-activation",
+      "status": "implemented; candidate acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -3021,6 +3042,7 @@
     "BsAvailabilityPage",
     "BsPracticeAppointmentsPage",
     "BsSubscriptionStatusPage",
-    "BsPrivacyRequestsPage"
+    "BsPrivacyRequestsPage",
+    "BsManualPaymentPage"
   ]
 }

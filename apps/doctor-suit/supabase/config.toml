@@ -128,6 +128,11 @@ public = false
 file_size_limit = "5MiB"
 allowed_mime_types = ["application/pdf", "image/png", "image/jpeg"]
 
+[storage.buckets.doctor-payment-evidence]
+public = false
+file_size_limit = "5MiB"
+allowed_mime_types = ["application/pdf", "image/png", "image/jpeg"]
+
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]
 enabled = true
@@ -420,4 +425,8 @@ enabled = true
 # User-facing private file endpoint: platform JWT gate plus getUser and current
 # Doctor SQL session/capability checks inside the request-scoped handler.
 [functions.doctor-documents]
+verify_jwt = true
+
+# Payment evidence retains the platform JWT gate and fresh Doctor identity checks.
+[functions.doctor-payment-evidence]
 verify_jwt = true

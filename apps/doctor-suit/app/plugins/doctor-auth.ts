@@ -1,3 +1,5 @@
+import{doctorManualPaymentRepository}from'../utils/manualPaymentRepository'
+import{createManualPaymentController,manualPaymentState}from'../utils/manualPaymentController'
 import{doctorPrivacyRepository}from'../utils/privacyRepository'
 import{createDoctorPrivacyController,doctorPrivacyState}from'../utils/privacyController'
 import{doctorSaasRepository}from'../utils/saasRepository'
@@ -68,6 +70,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   } : undefined)
   const privacy=createDoctorPrivacyController(client?doctorPrivacyRepository(client):null,reactive(doctorPrivacyState()),()=>state.identity,provider.environment)
   const subscription=createDoctorSubscriptionController(client?doctorSaasRepository(client):null,reactive(doctorSubscriptionState()),()=>state.identity,()=>context.expire(),import.meta.client?{now:()=>performance.now(),set:(callback,delay)=>setTimeout(callback,delay),clear:handle=>clearTimeout(handle as ReturnType<typeof setTimeout>)}:undefined)
+  const manualPayment=createManualPaymentController(client?doctorManualPaymentRepository(client,provider.url,provider.key):null,reactive(manualPaymentState()),()=>state.identity,provider.environment,()=>{subscription.clear()})
   const account = createDoctorAccountController(client ? doctorAccountRepository(client) : null,reactive(doctorAccountState()),() => state.identity,provider.environment)
   const auditScope = () => {
     const selected = context.state.current
@@ -113,10 +116,10 @@ export default defineNuxtPlugin((nuxtApp) => {
   const team = createDoctorTeamController(delegation, reactive(doctorTeamState()), teamScope,undefined,undefined,entitlementTimers,expiredOwnerScope)
   const invitation = createDoctorInvitationController(delegation, reactive(doctorInvitationState()), () => state.identity)
   const controller = createDoctorAuthController(client ? doctorAuthBackend(client, settings.origin) : null, state, {
-    clear: () => { privacy.clear();subscription.clear();account.clear(); personalAudit.clear(); void context.clear() },
+    clear: () => { manualPayment.clear();privacy.clear();subscription.clear();account.clear(); personalAudit.clear(); void context.clear() },
     locked: () => locked.value === '1', lock: () => { locked.value = '1'; context.forgetPreference() }, unlock: () => { locked.value = null },
   })
-  context.registerClear(() => { audit.clear(); practice.clear(); locations.clear(); patients.clear(); patientProfile.clear(); availability.clear(); appointments.clear(); dashboard.clear(); void appointmentsLive.update(null,async () => {}); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
+  context.registerClear(() => { manualPayment.clear();audit.clear(); practice.clear(); locations.clear(); patients.clear(); patientProfile.clear(); availability.clear(); appointments.clear(); dashboard.clear(); void appointmentsLive.update(null,async () => {}); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
   if (import.meta.client && client) {
     const { data } = client.auth.onAuthStateChange(event => {
       // Never await SDK calls while its internal auth lock holds this callback.
@@ -124,5 +127,5 @@ export default defineNuxtPlugin((nuxtApp) => {
     })
     nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh();void context.clear(); void appointmentsLive.dispose() })
   }
-  return { provide: { doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
+  return { provide: { doctorManualPayment:manualPayment,doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
 })

@@ -1,0 +1,23 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select no_plan();
+set local role authenticated;
+select is(public.doctor_saas_plan_catalog()->>'publication_state','approved_prices','owner-authorized prices do not imply configured payment acceptance');
+select is(public.doctor_saas_plan_catalog()->>'currency','EGP','public introductory currency is explicit');
+select is(public.doctor_saas_plan_catalog()->>'self_service_setup_fee_minor','0','self-service has no setup fee');
+select is(public.doctor_saas_plan_catalog()->>'tax_status','not_determined','no fabricated tax status');
+select is(public.doctor_saas_plan_catalog()->>'live_acceptance_enabled','false','pricing does not enable live acceptance');
+select is(jsonb_array_length(public.doctor_saas_plan_catalog()->'plans'),3,'all three introductory plans visible');
+select is(public.doctor_saas_plan_catalog()#>>'{plans,0,monthly_minor}','29900','Starter quote-facing amount exact');
+select is(public.doctor_saas_plan_catalog()#>>'{plans,1,yearly_minor}','599000','Clinic prepaid yearly amount exact');
+select is(public.doctor_saas_plan_catalog()#>>'{plans,2,total_named_users}','25','Group includes the owner');
+select is(public.doctor_saas_plan_catalog()#>>'{plans,2,staff_limit_excluding_owner}','24','Group server staff quota excludes owner');
+select is(public.doctor_saas_plan_catalog()#>>'{plans,0,configured}','false','incomplete lifecycle/legal terms not approved by prices');
+select is(public.doctor_saas_plan_catalog()#>'{plans,0,terms}','null'::jsonb,'no guessed trial or legal terms seeded');
+reset role;
+select is((select count(*)from public.doctor_saas_terms_versions),0::bigint,'commercial catalog does not seed approved subscription terms');
+select is((select count(*)from public.doctor_saas_accounts),0::bigint,'pricing creates no entitlements');
+select ok(not has_table_privilege(role_name,'public.'||table_name,'select,insert,update,delete,truncate'),'raw '||role_name||' catalog grant denied')
+ from unnest(array['anon','authenticated','service_role'])role_name cross join unnest(array['doctor_introductory_plans','doctor_manual_plan_bindings'])table_name;
+select * from finish();rollback;

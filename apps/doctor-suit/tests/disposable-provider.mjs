@@ -1,3 +1,4 @@
+import{verifyDoctorManualPaymentProvider}from'./manual-payments-actual-provider.mjs'
 import{verifyDoctorAdministrativeCandidateProvider}from'./administrative-candidate-actual-provider.mjs'
 // Actual disposable Supabase Auth/Storage/Functions acceptance. No hosted target.
 import { spawn,spawnSync } from 'node:child_process'
@@ -76,7 +77,7 @@ async function confirmedActor(publicKey,label,beforeContext) {
   const user = signin.data.user; const session = signin.data.session
   await beforeContext?.({client,user,session})
   const verified = await rpc(client,'doctor_session_context'); expect(verified.user_id===user.id && verified.session_id,'Verified session must match actual Auth identity')
-  return{client,user,session,sessionId:verified.session_id}
+  return{client,user,session,sessionId:verified.session_id,credentials:{email,password}}
 }
 async function bootstrap(publicKey,label,beforeContext,timezone='Africa/Cairo'){
   const actor=await confirmedActor(publicKey,label,beforeContext),{client,user,session,sessionId}=actor
@@ -87,7 +88,7 @@ async function bootstrap(publicKey,label,beforeContext,timezone='Africa/Cairo'){
   expect(context?.practice_id && context?.location_id,'Owned clinic context missing')
   const patient = await rpc(client,'doctor_write_patient',{ p_practice: context.practice_id,p_location: context.location_id,p_input: { name: `Synthetic ${label} patient`,phone: '',email: '',date_of_birth: null },p_key: randomUUID() })
   expect(patient.patient_id,'Patient creation failed')
-  return { client,user,session,sessionId,scope: { practiceId: context.practice_id,locationId: context.location_id,patientId: patient.patient_id } }
+  return { client,user,session,sessionId,credentials:actor.credentials,scope: { practiceId: context.practice_id,locationId: context.location_id,patientId: patient.patient_id } }
 }
 try {
   validateLocalDoctorTarget(JSON.parse(await readFile(path.join(root,'docs/architecture/environments.json'),'utf8')),await readFile(path.join(app,'supabase/config.toml'),'utf8'),process.env)
@@ -101,7 +102,7 @@ try {
   expect(status.API_URL===api && status.ANON_KEY && status.SERVICE_ROLE_KEY,'Actual local target/status mismatch')
   // Never print captured CLI output, status keys, mail bodies, auth tokens or passwords.
   await writeFile(path.join(scratch,'function.env'),`DOCTOR_LOCAL_PROVIDER=1\nDOCTOR_WEB_ORIGIN=${origin}\n`,{ mode: 0o600 })
-  functions = spawn('pnpm',['exec','supabase','--workdir',app,'functions','serve','doctor-documents','--env-file',path.join(scratch,'function.env')],{ cwd: root,env: environment,detached: true,stdio: ['ignore','pipe','pipe'] })
+  functions = spawn('pnpm',['exec','supabase','--workdir',app,'functions','serve','--env-file',path.join(scratch,'function.env')],{ cwd: root,env: environment,detached: true,stdio: ['ignore','pipe','pipe'] })
   functions.stdout.on('data',data => { functionsOutput=(functionsOutput+data).slice(-20000) }); functions.stderr.on('data',data => { functionsOutput=(functionsOutput+data).slice(-20000) })
   stage = 'configured private Storage bucket'; const storageAdmin = createClient(api,status.SERVICE_ROLE_KEY,options)
   const existingBucket = await storageAdmin.storage.getBucket(bucket)
@@ -167,6 +168,7 @@ try {
   const personalAudit = await rpc(a.client,'doctor_personal_account_audit');
   expect(personalAudit.total===1 && personalAudit.items[0].actor_user_id===a.user.id && (await rpc(b.client,'doctor_personal_account_audit')).total===0,'Actual personal audit was not account-local');
   console.log('Actual audit: attributed document requests, safe projection, cross-practice/mutation denial and independent personal account history passed');
+  await verifyDoctorManualPaymentProvider({root,api,origin,key:status.ANON_KEY,serviceKey:status.SERVICE_ROLE_KEY,a,b,rpc,sql:ownedCandidateSql,expect,setStage:value=>{stage=value}})
   stage = 'actual session revocation'; const frozen = { ...a,session: { ...a.session } }; expect(!(await a.client.auth.signOut({ scope: 'local' })).error,'Actual local session signout failed')
   const revoked = await endpoint(frozen,'download',{ documentId: outcome.documentId }); expect([401,403].includes(revoked.status),'Revoked JWT was admitted by document endpoint')
   expect((await endpoint(b,'status')).status===200,'Independent Doctor B was changed by A signout')

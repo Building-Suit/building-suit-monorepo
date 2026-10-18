@@ -39,7 +39,12 @@ export async function verifyDoctorIsolatedRecovery(container) {
     const restoredArchive=decrypt(persisted);assert.equal(digest(restoredArchive),digest(archive),'Archive authentication/bytes differ')
     sql('postgres',`create database ${target} template template0;`);targetCreated=true
     run(['exec','-i',container,'pg_restore','-h','127.0.0.1','-U','postgres','--exit-on-error','--dbname',target],restoredArchive)
-    assert.equal(schema(target),beforeSchema,'Restored schema, grants, RLS, policies, triggers, constraints and functions differ')
+    const afterSchema=schema(target)
+    if(afterSchema!==beforeSchema){
+      const prior=beforeSchema.split('\n'),restored=afterSchema.split('\n'),first=prior.findIndex((line,index)=>line!==restored[index])
+      console.error(JSON.stringify({schemaDifferenceAt:first+1,before:prior.slice(Math.max(0,first-2),first+4),restored:restored.slice(Math.max(0,first-2),first+4)}))
+    }
+    assert.equal(digest(afterSchema),digest(beforeSchema),'Restored schema, grants, RLS, policies, triggers, constraints and functions differ')
     assert.equal(fingerprint(target),before,'Restored application/Auth-interface/Storage-interface rows and immutable histories differ')
     assert.equal(sql(target,`${claim(1)}select public.doctor_saas_status()->>'state';`),'trial')
     assert.equal(sql(target,`${claim(1)}select public.doctor_saas_status()->>'business_writes_allowed';`),'true')
