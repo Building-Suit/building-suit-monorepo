@@ -6,6 +6,7 @@ import { doctorAvailabilityCopy } from '../utils/availabilityPresentation'
 import { doctorPatientsCopy } from '../utils/patientsPresentation'
 import { doctorDelegationCopy } from '../utils/delegationPresentation'
 import { doctorWorkspaceNavigation } from '../utils/workspaceNavigation'
+const brand = useDoctorBrand()
 const { auth } = useDoctorAuthPresentation(false)
 const { copy } = useDoctorPracticePresentation()
 const { locale } = useI18n()
@@ -31,5 +32,5 @@ async function signOut() { await auth.signOut(); await navigateTo('/sign-in') }
 watch(() => auth.state.phase, phase => { if (phase === 'signed-out' || phase === 'unavailable') void navigateTo('/sign-in') })
 </script>
 <template>
-  <BsWorkspaceShell home-path="/workspace" product-name="Doctor Suit" :groups="navigation.groups" :mobile-links="navigation.mobileLinks" :labels="{ open: copy.open, close: copy.close, navigation: copy.navigation, dashboard: copy.workspace }" :context="caption" :scope-notice="{ title: copy.synthetic, description: caption }" :header-scopes="scopes" :state="state" :account="account" :logo="{ kind: 'product' }" @scope="selectScope" @retry="context.refresh()" @sign-out="signOut"><slot /></BsWorkspaceShell>
+  <BsWorkspaceShell home-path="/workspace" product-name="Doctor Suit" :groups="navigation.groups" :mobile-links="navigation.mobileLinks" :labels="{ open: copy.open, close: copy.close, navigation: copy.navigation, dashboard: copy.workspace }" :context="caption" :scope-notice="{ title: copy.synthetic, description: caption }" :header-scopes="scopes" :state="state" :account="account" :logo="{ kind: 'product', assetPrefix: brand.assetPrefix }" @scope="selectScope" @retry="context.refresh()" @sign-out="signOut"><slot /></BsWorkspaceShell>
 </template>

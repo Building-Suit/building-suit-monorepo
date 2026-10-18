@@ -65,6 +65,8 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - name: Verify synthetic Doctor preview in both locales, themes and viewport sizes
         run: pnpm exec playwright test -c apps/doctor-suit/tests/e2e/playwright.config.ts
+      - name: Verify canonical Doctor asset drop-in with a fresh production build
+        run: node apps/doctor-suit/tests/brand-build-fixture.mjs
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

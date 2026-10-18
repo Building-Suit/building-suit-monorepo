@@ -1503,5 +1503,74 @@
     "sources": [
       "doctor-registration-wizard"
     ]
+  },
+  {
+    "id": "doctor-brand-slots",
+    "task": "DOS-AE-010",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/brand",
+      "packages/ui/src/atoms/BsProductLogo.vue",
+      "packages/ui/tests/product-logo.test.mjs",
+      "apps/building-suit-docs/app/pages/components.vue",
+      ".github/workflows/doctor-disposable.yml",
+      "pnpm-lock.yaml",
+      "release-changes/items.json"
+    ],
+    "reason": "Register passive canonical Doctor asset slots and one product brand adapter for existing shared landing/auth/workspace consumers. Discover supplied files on normal builds, retain the monogram without artwork, and emit only supplied icon metadata. No final artwork, automatic rasterization, operational activation, clinical claim, provider setting or deployment is created. Existing registered product brands are unchanged; shared missing-image behavior is separately covered by shared-product-logo-fallback.",
+    "sources": [
+      "doctor-brand-slots"
+    ]
+  },
+  {
+    "id": "shared-product-logo-fallback",
+    "task": "DOS-AE-010",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/atoms/BsProductLogo.vue",
+      "packages/brand/src/productAssets.ts"
+    ],
+    "reason": "The existing shared product logo uses an available sibling variant after an image fails and retains its accessible monogram when both fail. Late image errors cannot affect a replacement product or collapsed mark.",
+    "notes": {
+      "title": {
+        "en": "Keep product logos visible",
+        "ar": "استمرار ظهور شعار المنتج"
+      },
+      "summary": {
+        "en": "Use the available logo variant when an image cannot load.",
+        "ar": "استخدم نسخة الشعار المتاحة عند تعذر تحميل صورة."
+      },
+      "details": {
+        "en": "If both variants are unavailable, the familiar product initial remains visible. Accessible names and responsive logo sizes stay consistent.",
+        "ar": "إذا تعذر تحميل النسختين يبقى الحرف المميز للمنتج ظاهراً، مع الحفاظ على الاسم المقروء وأحجام الشعار المتجاوبة."
+      }
+    },
+    "sources": [
+      "shared-product-logo-fallback"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/atoms/BsProductLogo.vue",
+        "contains": "@error=\"failedImage(image.src, image.variant)\""
+      },
+      {
+        "path": "packages/brand/src/productAssets.ts",
+        "contains": "variants.find(candidate => !failed.includes(candidate))"
+      }
+    ]
   }
 ]
