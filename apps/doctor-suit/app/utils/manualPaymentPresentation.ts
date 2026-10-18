@@ -1,4 +1,4 @@
-import{doctorSubscriptionCopy}from'./subscriptionPresentation'
+import{doctorSubscriptionCopy}from'./subscriptionPresentation.ts'
 import type{BsManualPaymentLabel,BsManualPaymentValues,BsManualPaymentView}from'@building-suit/ui/types/manualPaymentPresentation'
 import type{createManualPaymentController}from'./manualPaymentController'
 import{manualAmount,manualMinor}from'./manualPayments.ts'

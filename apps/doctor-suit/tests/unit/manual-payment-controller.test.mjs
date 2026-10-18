@@ -1,3 +1,4 @@
+import{manualPaymentView}from'../../app/utils/manualPaymentPresentation.ts'
 import test from'node:test'
 import assert from'node:assert/strict'
 import{createManualPaymentController,manualPaymentState}from'../../app/utils/manualPaymentController.ts'
@@ -36,4 +37,15 @@ test('notice confirmation survives an upload failure without creating a new clai
 })
 test('amount parsing uses exact decimal minor units and rejects fractional precision or exponent notation',()=>{
  assert.equal(manualMinor('299.00',2),'29900');assert.equal(manualMinor('2990',2),'299000');for(const value of['1e3','299.001','-1','0','NaN',' 299'])assert.throws(()=>manualMinor(value,2))
+})
+
+test('review projection requires entered bank material and funds confirmation never triggers activation',async()=>{
+ const n={id:'notice',subscriberId:'foreign-subscriber',intentId:'intent',quoteId:'quote',termsId:'terms',interval:'yearly',amountMinor:'299000',currency:'EGP',exponent:2,beneficiary:'Synthetic recipient',recipientAddress:'synthetic@instapay',recipientKind:'ipa',reference:'synthetic-claim',transferredAt:'2026-10-18T08:00:00Z',createdAt:'2026-10-18T08:00:01Z',status:'submitted',revision:0,reason:null,periodId:null,requiresAttention:false,evidence:[],history:[]}
+ let activations=0,bank
+ const f=fixture({queue:async()=>({items:[n],total:1,page:1,activationConfigured:true}),review:async(_a,original,input)=>{bank=input;return{...original,status:'funds_verified',revision:1,history:[{revision:1,action:'funds_verified',actor:actor.userId,reason:input.reason,at:'2026-10-18T08:00:02Z'}]}},activate:async(_a,original)=>{activations++;return{...original,status:'activated',revision:2,periodId:'period'}}})
+ await f.controller.load(true);f.controller.select('notice');assert.equal(f.state.receivedAmount,'');assert.equal(f.state.independent,false);assert.equal(manualPaymentView(f.controller,false).selected.canActivate,false)
+ Object.assign(f.state,{reason:'Independent bank check',receivedReference:'SYNTHETIC-BANK',receivedAmount:'2990.00',receivedCurrency:'EGP',receivedAt:'2026-10-18T08:00',verification:'synthetic bank record'})
+ assert.equal(manualPaymentView(f.controller,false).selected.canVerify,false);f.state.independent=true;assert.equal(manualPaymentView(f.controller,false).selected.canVerify,true)
+ assert.equal(await f.controller.review('funds_verified'),true);assert.equal(bank.amount,'299000');assert.equal(bank.independent,true);assert.equal(activations,0);assert.equal(manualPaymentView(f.controller,false).selected.canActivate,true)
+ assert.equal(await f.controller.activate(),true);assert.equal(activations,1);assert.equal(f.state.items[0].status,'activated')
 })
