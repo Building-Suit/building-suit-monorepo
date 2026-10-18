@@ -24,7 +24,8 @@ const content = computed<LandingContent>(() => ({
   pricingEyebrow: locale.value === 'ar' ? 'الخطط' : 'Plans', pricingTitle: t('pricing.title'), pricingBody: t('pricing.description'),
 }))
 
-const { data: plans, isLoading, error, refresh } = usePlans()
+const subscriptionCurrency = useShopSubscriptionCurrency()
+const { data: plans, isLoading, error, refresh } = usePlans(subscriptionCurrency.currency)
 const publicOffers = computed<ShopPlanOffer[]>(() => (plans.value ?? [])
   .filter(plan => plan.is_purchasable && !plan.is_coming_soon)
   .map(plan => ({
@@ -44,6 +45,7 @@ const publicOffers = computed<ShopPlanOffer[]>(() => (plans.value ?? [])
 
 const publicPricing = reactive(useShopPlanPresentation({ get offers() { return publicOffers.value }, action: 'signup' }))
 const landingPricing = computed(() => ({
+  currencySelection: subscriptionCurrency.selection.value,
   variant: 'shop' as const, interval: publicPricing.interval, plans: publicPricing.pricingPlans,
   intervalOptions: [{ value: 'monthly', label: publicPricing.copy.monthly }, { value: 'annual', label: publicPricing.copy.yearly }],
   copy: { cycleLabel: publicPricing.copy.cycle, loading: publicPricing.copy.loading, empty: t('pricing.empty'), retry: publicPricing.copy.retry, included: publicPricing.copy.included, notIncluded: publicPricing.copy.notIncluded },
@@ -53,5 +55,5 @@ const landingPricing = computed(() => ({
 }))
 function chooseInterval(value: string) { if (value === 'monthly' || value === 'annual') publicPricing.interval = value }
 const view = computed(() => ({kind:'marketing' as const,content:content.value,preview:{kind:'features' as const},pricing:landingPricing.value,changelog:landingChangelog.value}))
-return {view,chooseInterval,chooseVariant:publicPricing.chooseVariant,choose:publicPricing.choose,track:()=>analytics.track('pricing_cta'),refresh,refreshReleases}
+return {view,chooseCurrency:subscriptionCurrency.choose,chooseInterval,chooseVariant:publicPricing.chooseVariant,choose:publicPricing.choose,track:()=>analytics.track('pricing_cta'),refresh,refreshReleases}
 }

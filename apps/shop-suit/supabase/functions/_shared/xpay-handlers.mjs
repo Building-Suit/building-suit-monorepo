@@ -30,7 +30,7 @@ function config(env) {
     ) throw new Error('xpay_not_configured')
   // Production must never grant real access from test-mode provider results.
   if (target.mode !== mode) throw new Error('xpay_environment_mismatch')
-  return { mode, secretKey, merchantId, origin: target.origin }
+  return { mode, secretKey, merchantId, origin: target.origin, usdEnabled: env('XPAY_USD_ENABLED') === 'true' }
 }
 
 function response(data, status = 200, origin) {
@@ -46,12 +46,14 @@ async function json(request) {
   return value
 }
 const publicOrder = order => ({ orderId: order.id, state: order.state, sessionId: order.sessionId, url: order.state === 'open' ? order.url : null, expiresAt: order.expiresAt,
-  amountMinor: order.amountMinor, currency: order.currency, planName: order.description, createdAt: order.createdAt, ...(order.quote?.prorationQuoteId ? { quoteId: order.quote.prorationQuoteId, calculation: order.quote.proration } : {}) })
+  amountMinor: order.amountMinor, currency: order.currency, planName: order.description, createdAt: order.createdAt, moneyTracks: order.moneyTracks ?? null, refundedAmountMinor: order.refundedAmountMinor ?? 0, ...(order.quote?.prorationQuoteId ? { quoteId: order.quote.prorationQuoteId, calculation: order.quote.proration } : {}) })
 const databaseSession = session => ({
   id: session.id, object: session.object, merchantId: session.merchantId, livemode: session.livemode,
   currency: session.currency, amountTotal: session.amountTotal, status: session.status, paymentStatus: session.paymentStatus,
   paymentIntentId: paymentIntentId(session), metadata: { orderId: session.metadata?.orderId },
   url: session.url, expiresAt: session.expiresAt, isExpired: session.isExpired,
+  presentmentDetails: session.presentmentDetails == null ? null : { currency: session.presentmentDetails.currency, amountTotal: session.presentmentDetails.amountTotal, exchangeRate: session.presentmentDetails.exchangeRate, exchangeRateId: session.presentmentDetails.exchangeRateId },
+  processingFeeDetails: { totalDetails: session.totalDetails == null ? null : Object.fromEntries(['amountDiscount','amountShipping','amountTax','amountPlatformFee','amountCollectedVat'].filter(key => Number.isSafeInteger(session.totalDetails[key]) && session.totalDetails[key] >= 0).map(key => [key,session.totalDetails[key]])), fees: session.fees == null ? null : Object.fromEntries(['feeAmount','vatAmount','totalAmount','feePercentage'].filter(key => typeof session.fees[key] === 'number' && Number.isFinite(session.fees[key]) && session.fees[key] >= 0).map(key => [key,session.fees[key]])) },
 })
 function canRetryCreation(order) {
   if (order.quote?.prorationQuoteId && Date.now() - Date.parse(order.createdAt) > 5 * 60000) throw Object.assign(new Error('xpay_reconciliation_required'), { checkoutCode: 'checkout_payment_unresolved' })
@@ -74,7 +76,8 @@ async function reconcileOrder(order, settings, rpc, fetchImpl, locale = 'en') {
   if (!order.sessionId) {
     // Provider request dedup expires after 24h. Never create blindly after it.
     canRetryCreation(order)
-    await verifyMerchantReadiness({ ...settings, fetchImpl })
+    if (order.currency === 'USD' && !settings.usdEnabled) throw Object.assign(new Error('xpay_currency_unsupported'), { checkoutCode: 'checkout_currency_unsupported' })
+    await verifyMerchantReadiness({ ...settings, fetchImpl, chargeCurrency: order.currency, requireCard: !!order.quote?.prorationQuoteId })
     const body = order.sessionRequest ?? checkoutBody(order, { returnUrl: `${settings.origin}/billing?xpayOrder=${order.id}`, cancelUrl: `${settings.origin}/billing?xpayOrder=${order.id}&cancelled=1`, locale })
     order = await rpc('shop_xpay_prepare_session', { p_order_id: order.id, p_body: body })
     const created = await createProviderSession({ order, ...settings, fetchImpl })
@@ -106,9 +109,13 @@ export function createXPayCheckout({ env, rpc, authenticate, fetchImpl = fetch }
         const capability = await rpc('shop_xpay_checkout_status', { p_shop_id: body.shopId }, token)
         if (!capability.enabled || capability.merchantId !== settings.merchantId || capability.mode !== settings.mode) return response({ ready: false, orders: [] }, 200, settings.origin)
         const verified = await verifyMerchantReadiness({ ...settings, fetchImpl })
+        const currencies = ['EGP']
+        if (settings.usdEnabled && capability.usdEnabled) {
+          try { await verifyMerchantReadiness({ ...settings, fetchImpl, chargeCurrency: 'USD' }); currencies.push('USD') } catch { /* Currency remains unavailable; EGP stays usable. */ }
+        }
         const orders = await rpc('shop_xpay_order_read', { p_shop_id: body.shopId, p_order_id: null }, token)
         const proration = await rpc('shop_xpay_proration_status', { p_shop_id: body.shopId }, token)
-        return response({ ...verified, prorationEnabled: proration.enabled === true, creditBalanceMinor: proration.creditBalanceMinor, orders: orders.map(publicOrder) }, 200, settings.origin)
+        return response({ ...verified, currencies, creditCurrency: proration.currency, creditBalances: proration.creditBalances ?? {}, prorationEnabled: proration.enabled === true, creditBalanceMinor: proration.creditBalanceMinor, orders: orders.map(publicOrder) }, 200, settings.origin)
       }
       if (body.action === 'quote') {
         if (!UUID.test(body.requestId || '') || (body.catalogTermsId != null && !UUID.test(body.catalogTermsId)) || body.quoteId || body.orderId) throw new Error('xpay_invalid_request')
@@ -142,6 +149,8 @@ export function createXPayCheckout({ env, rpc, authenticate, fetchImpl = fetch }
         order = await reconcileOrder(order, settings, rpc, fetchImpl)
         return response(publicOrder(order), 200, settings.origin)
       }
+      if (order.currency === 'USD' && (!settings.usdEnabled || !capability.usdEnabled)) throw Object.assign(new Error('xpay_currency_unsupported'), { checkoutCode: 'checkout_currency_unsupported' })
+      if (order.currency !== 'EGP') await verifyMerchantReadiness({ ...settings, fetchImpl, chargeCurrency: order.currency })
       const sessionRequest = checkoutBody(order, { returnUrl: `${settings.origin}/billing?xpayOrder=${order.id}`, cancelUrl: `${settings.origin}/billing?xpayOrder=${order.id}&cancelled=1`, locale: body.locale })
       order = await rpc('shop_xpay_prepare_session', { p_order_id: order.id, p_body: sessionRequest })
       canRetryCreation(order)
