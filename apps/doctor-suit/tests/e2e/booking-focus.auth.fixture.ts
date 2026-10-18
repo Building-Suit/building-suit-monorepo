@@ -18,12 +18,13 @@ for (const ar of [true, false]) for (const width of [390, 1280]) {
     await request.post(fixture, { data: { reset: true } })
     await request.post(fixture, { data: { delegation: true, patients: true, documents: true, availability: true, appointments: true } })
     const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce' })
+    let page: Page | undefined
     let release: (() => void) | undefined
     try {
       await context.addCookies([{ name: 'building-suit-locale', value: ar ? 'ar' : 'en', url: 'http://127.0.0.1:4337' }])
       await context.addInitScript(() => localStorage.setItem('building-suit.theme', 'light'))
       await context.route('**/*', route => ['127.0.0.1', 'localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort())
-      const page = await context.newPage()
+      page = await context.newPage()
       await localRealtimeProtocol(page)
       const copy = doctorAppointmentsCopy(ar)
       await page.goto('/appointments')
@@ -71,7 +72,12 @@ for (const ar of [true, false]) for (const width of [390, 1280]) {
       await expect(create).toBeFocused()
     } finally {
       release?.()
-      try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() }
+      // The held board interceptor belongs to the page, not the context.
+      // Drain it before closing so late refreshes cannot reject after the test.
+      try {
+        await page?.unrouteAll({ behavior: 'wait' })
+        await context.unrouteAll({ behavior: 'wait' })
+      } finally { await context.close() }
     }
   })
 }
