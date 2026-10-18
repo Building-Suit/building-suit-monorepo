@@ -1,0 +1,22 @@
+{
+  "id": "dos-ae-009-redacted-operations",
+  "task": "DOS-AE-009",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/README.md",
+    "apps/doctor-suit/app/utils/operationsReadiness.ts",
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261018025912_doctor_redacted_operations.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-009-operations.sql",
+    "apps/doctor-suit/tests/unit/operations-readiness.test.mjs",
+    "apps/doctor-suit/tests/administrative-candidate-actual-provider.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-009-operations.md",
+    "docs/work-packages/doctor-suit/early-administrative-edition/review-register.v1.json"
+  ],
+  "reason": "Subscriber-scoped redacted synthetic diagnostic counts, explicit unknown independent findings/thresholds/recovery/ownership and incident/review procedure; no hosted health, capacity, security/financial approval, live admission or telemetry destination."
+}

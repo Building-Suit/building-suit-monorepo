@@ -1803,6 +1803,7 @@ export type Database = {
         }
         Returns: Json
       }
+      doctor_operations_status: { Args: never; Returns: Json }
       doctor_patient: {
         Args: { p_location: string; p_patient: string; p_practice: string }
         Returns: Json

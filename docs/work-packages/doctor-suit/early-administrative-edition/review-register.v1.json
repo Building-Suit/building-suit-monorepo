@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "product": "doctor-suit",
+  "scope": "early_synthetic_administrative_edition",
+  "commercialLiveApproval": false,
+  "independentReviews": [
+    {"kind": "security", "status": "not_performed", "accountableReviewer": null, "candidate": null, "evidence": null, "findings": null, "criticalHighClosureAccepted": false},
+    {"kind": "financial", "status": "not_performed", "accountableReviewer": null, "candidate": null, "evidence": null, "findings": null, "closureAccepted": false}
+  ],
+  "technicalReviewFindings": [
+    {
+      "id": "DOS-AE-FIN-REPORT-SNAPSHOT",
+      "kind": "financial_report_consistency",
+      "severity": "unclassified",
+      "source": "Parent-coordinated independent technical review of PR392",
+      "affectedCandidate": "2a45397c04edcee4f1f99108998497fbc1733bab",
+      "fixCandidate": "65ee4d4b92c89ed08febe24fad491cf751d99209",
+      "regression": "apps/doctor-suit/tests/saas-report-snapshot.mjs",
+      "localRegression": "passed_with_historical_negative_control",
+      "independentExactCandidateRetest": "pending",
+      "independentFinancialOrSecurityApproval": false
+    }
+  ],
+  "capacity": {"approvedThresholds": null, "providerQuotaCostEvidence": null, "acceptedWorkloadMeasurement": null},
+  "incidentOwnership": {"accountableOperator": null, "supportOwner": null, "escalationDestination": null},
+  "recovery": {"approvedRpo": null, "approvedRto": null, "wholeProviderScopeAccepted": false, "custodyEvidence": null}
+}
