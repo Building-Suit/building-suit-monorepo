@@ -1,0 +1,24 @@
+{
+  "id": "dos-ae-004-saas-quotes",
+  "task": "DOS-AE-004",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/README.md",
+    "apps/doctor-suit/app/utils/saasQuoteRepository.ts",
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261018022403_doctor_saas_quotes.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-004-quotes.sql",
+    "apps/doctor-suit/tests/saas-quote-concurrency.mjs",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/unit/saas-quotes.test.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-004-quotes.md",
+    "apps/doctor-suit/tests/administrative-candidate-actual-provider.mjs",
+    "apps/doctor-suit/tests/saas-quotes-actual-provider.mjs"
+  ],
+  "reason": "Synthetic exact owner-bound SaaS quotes and immutable held intents with an unconfigured payment route. No provider/merchant/tax approval, live access, paid entitlement or product release registration."
+}

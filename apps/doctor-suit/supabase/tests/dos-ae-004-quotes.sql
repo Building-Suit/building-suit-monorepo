@@ -1,0 +1,94 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select no_plan();
+create function pg_temp.id(n integer)returns uuid language sql immutable as $$select('ae240000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid$$;
+create function pg_temp.claim(n integer)returns text language sql as $$select set_config('request.jwt.claims',jsonb_build_object('sub',pg_temp.id(n),'session_id',pg_temp.id(n+10),'role','authenticated','user_metadata',jsonb_build_object('paid',true,'currency','GBP','amount_minor',1))::text,true)$$;
+insert into auth.users(id,email,email_confirmed_at)select pg_temp.id(n),'synthetic-quote-'||n||'@example.test',now()from generate_series(1,4)n;
+insert into auth.sessions(id,user_id)select pg_temp.id(n+10),pg_temp.id(n)from generate_series(1,4)n;
+insert into public.doctor_candidate_admissions(id,user_id,purpose,evidence_ref,valid_until)select pg_temp.id(n+20),pg_temp.id(n),'synthetic_fixture','disposable-quote:'||n,clock_timestamp()+interval'2 hours'from generate_series(1,4)n;
+insert into public.doctor_profiles(user_id,display_name)values(pg_temp.id(1),'Synthetic owner');
+insert into public.practices(id,owner_user_id,name)values(pg_temp.id(31),pg_temp.id(1),'Synthetic quote clinic');
+insert into public.memberships(id,practice_id,user_id,capabilities)values(pg_temp.id(32),pg_temp.id(31),pg_temp.id(3),array['patients.read']);
+update public.doctor_edition_policy set mode='administrative_candidate',revision=revision+1,change_reason='Owned synthetic quote cases';
+select ok(not exists(select 1 from public.doctor_saas_quotes),'no quotes seeded');
+select ok(not exists(select 1 from public.doctor_saas_payment_intents),'no intents seeded');
+select ok((select terms_version_id is null from public.doctor_saas_configuration),'terms stay unconfigured by default');
+set local role authenticated;select pg_temp.claim(1);
+select throws_ok($$select public.doctor_create_saas_quote(pg_temp.id(51),1,0,'monthly','synthetic-quote/v1',pg_temp.id(61))$$,'DS001','DOCTOR_SAAS_TERMS_UNCONFIGURED','no quote without approved configured terms');
+reset role;
+insert into public.doctor_saas_terms_versions(id,plan_key,version,status,currency,currency_exponent,monthly_minor,yearly_minor,trial_days,staff_limit,staff_unlimited,clinic_limit,clinic_unlimited,over_limit_policy,renewal_policy,grace_days,expiry_policy,cancellation_policy,refund_policy,terms_document_ref,commercial_approval_ref,legal_approval_ref)values
+ (pg_temp.id(51),'synthetic-quote',1,'approved','USD',2,9007199254740991,0,2,1,false,1,false,'block_new_allocation','manual',0,'historical_read_only','period_end','manual_review','synthetic-quote/v1','SYNTHETIC_COMMERCIAL','SYNTHETIC_LEGAL'),
+ (pg_temp.id(52),'synthetic-quote',2,'approved','JPY',0,97,null,2,1,false,1,false,'block_new_allocation','manual',0,'historical_read_only','period_end','manual_review','synthetic-quote/v2','SYNTHETIC_COMMERCIAL','SYNTHETIC_LEGAL');
+update public.doctor_saas_configuration set terms_version_id=pg_temp.id(51),revision=revision+1,change_reason='Owned synthetic quote offer';
+set local role authenticated;select pg_temp.claim(1);
+select throws_ok($$select public.doctor_create_saas_quote(pg_temp.id(51),2,0,'monthly','synthetic-quote/v1',pg_temp.id(61))$$,'42501','DOCTOR_SAAS_DOCUMENT_UNAVAILABLE','full approved document required');
+reset role;
+insert into public.doctor_saas_terms_documents(terms_version_id,document_ref,content_en,content_ar)values
+ (pg_temp.id(51),'synthetic-quote/v1','Synthetic quote document only; no merchant acceptance.','وثيقة اختبار اصطناعية فقط دون موافقة قانونية.'),
+ (pg_temp.id(52),'synthetic-quote/v2','Synthetic second quote document only; no merchant acceptance.','وثيقة اختبار اصطناعية ثانية فقط دون موافقة قانونية.');
+create temporary table results(name text primary key,value jsonb);grant all on results to authenticated;
+set local role authenticated;select pg_temp.claim(1);
+insert into results values('quote',public.doctor_create_saas_quote(pg_temp.id(51),2,0,'monthly','synthetic-quote/v1',pg_temp.id(61)));
+select is((select value->>'amount_minor'from results where name='quote'),'9007199254740991','exact integer amount is a decimal string without rounding');
+select is((select value->>'currency'from results where name='quote'),'USD','editable metadata cannot alter server currency');
+select is((select value->>'subscriber_user_id'from results where name='quote'),pg_temp.id(1)::text,'subscriber is fresh provider identity');
+select is((select value->>'practice_id'from results where name='quote'),pg_temp.id(31)::text,'practice comes from stored owner association');
+select is(public.doctor_create_saas_quote(pg_temp.id(51),2,0,'monthly','synthetic-quote/v1',pg_temp.id(61)),(select value from results where name='quote'),'exact retry returns same immutable quote');
+select throws_ok($$select public.doctor_create_saas_quote(pg_temp.id(51),2,0,'yearly','synthetic-quote/v1',pg_temp.id(61))$$,'22023','DOCTOR_IDEMPOTENCY_CONFLICT','one key cannot alter interval or price');
+select throws_ok($$select public.doctor_create_saas_quote(pg_temp.id(51),2,1,'monthly','synthetic-quote/v1',pg_temp.id(62))$$,'40001','DOCTOR_SAAS_ACCOUNT_CONFLICT','stale account revision rejected');
+select throws_ok($$select public.doctor_create_saas_quote(pg_temp.id(51),1,0,'monthly','synthetic-quote/v1',pg_temp.id(62))$$,'40001','DOCTOR_SAAS_TERMS_CONFLICT','stale configuration rejected');
+select throws_ok($$select public.doctor_create_saas_quote(pg_temp.id(51),2,0,'weekly','synthetic-quote/v1',pg_temp.id(62))$$,'22023','DOCTOR_SAAS_QUOTE_INVALID','unapproved interval rejected');
+select throws_ok($$select public.doctor_create_saas_quote(pg_temp.id(51),2,0,null,'synthetic-quote/v1',pg_temp.id(62))$$,'22023','DOCTOR_SAAS_QUOTE_INVALID','null interval rejected');
+select is(public.doctor_create_saas_quote(pg_temp.id(51),2,0,'yearly','synthetic-quote/v1',pg_temp.id(63))->>'amount_minor','0','explicit approved zero differs from missing price; never grants access');
+insert into results values('intent',public.doctor_prepare_saas_payment(((select value from results where name='quote')->>'quote_id')::uuid,pg_temp.id(64)));
+select is((select value->>'state'from results where name='intent'),'awaiting_route_approval','intent is explicitly held');
+select is((select value#>>'{payment_route,state}'from results where name='intent'),'unconfigured','payment route remains unconfigured');
+select is((select value#>'{payment_route,checkout_url}'from results where name='intent'),'null'::jsonb,'no checkout or arbitrary return URL');
+select is((select value#>'{payment_route,purchase_available}'from results where name='intent'),'false'::jsonb,'purchase never enabled');
+select is((select value#>'{payment_route,paid_activation_available}'from results where name='intent'),'false'::jsonb,'paid entitlement never granted');
+select is((select value#>'{payment_route,live_activation}'from results where name='intent'),'false'::jsonb,'live activation never enabled');
+select is((select value#>>'{payment_route,tax_document_applicability}'from results where name='intent'),'pending','no tax applicability inferred');
+select is((select value#>>'{payment_route,provider_acceptance}'from results where name='intent'),'unrun','synthetic evidence is not provider acceptance');
+select is(public.doctor_prepare_saas_payment(((select value from results where name='quote')->>'quote_id')::uuid,pg_temp.id(64)),(select value from results where name='intent'),'intent retry exact');
+select is(public.doctor_prepare_saas_payment(((select value from results where name='quote')->>'quote_id')::uuid,pg_temp.id(65)),(select value from results where name='intent'),'different retry key cannot create second intent');
+select pg_temp.claim(2);
+select throws_ok($$select public.doctor_saas_quote(((select value from results where name='quote')->>'quote_id')::uuid)$$,'42501','DOCTOR_ACCESS_DENIED','other owner cannot read quote');
+select throws_ok($$select public.doctor_prepare_saas_payment(((select value from results where name='quote')->>'quote_id')::uuid,pg_temp.id(66))$$,'42501','DOCTOR_ACCESS_DENIED','other owner cannot prepare foreign quote');
+select pg_temp.claim(3);
+select throws_ok($$select public.doctor_create_saas_quote(pg_temp.id(51),2,0,'monthly','synthetic-quote/v1',pg_temp.id(67))$$,'42501','DOCTOR_OWNER_ENROLLMENT_REQUIRED','delegated role cannot become subscriber');
+select pg_temp.claim(1);
+select public.doctor_start_saas_trial(pg_temp.id(51),2,'synthetic-quote/v1',pg_temp.id(68));
+select throws_ok($$select public.doctor_prepare_saas_payment(((select value from results where name='quote')->>'quote_id')::uuid,pg_temp.id(69))$$,'40001','DOCTOR_SAAS_QUOTE_STALE','subscription changed after quote prevents fresh intent');
+insert into results values('subscribed',public.doctor_create_saas_quote(pg_temp.id(51),2,1,'monthly','synthetic-quote/v1',pg_temp.id(70)));
+select is((select value->>'account_state'from results where name='subscribed'),'trial','current subscription state snapshotted');
+reset role;
+update public.doctor_saas_accounts set revision=revision+1,state='suspended',reason_code='operator_hold'where subscriber_user_id=pg_temp.id(1);
+set local role authenticated;select pg_temp.claim(1);
+select throws_ok($$select public.doctor_prepare_saas_payment(((select value from results where name='subscribed')->>'quote_id')::uuid,pg_temp.id(71))$$,'40001','DOCTOR_SAAS_QUOTE_STALE','operator hold invalidates quote');
+reset role;
+update public.doctor_saas_configuration set terms_version_id=pg_temp.id(52),revision=revision+1,change_reason='Owned synthetic replacement';
+set local role authenticated;select pg_temp.claim(2);
+select throws_ok($$select public.doctor_create_saas_quote(pg_temp.id(52),3,0,'yearly','synthetic-quote/v2',pg_temp.id(72))$$,'22023','DOCTOR_SAAS_INTERVAL_UNAVAILABLE','missing interval never becomes zero');
+select is(public.doctor_create_saas_quote(pg_temp.id(52),3,0,'monthly','synthetic-quote/v2',pg_temp.id(73))->>'currency_exponent','0','explicit zero exponent retained');
+reset role;
+insert into public.doctor_candidate_revocations(admission_id,reason)values(pg_temp.id(21),'operator_revoke');
+set local role authenticated;select pg_temp.claim(1);
+select throws_ok($$select public.doctor_create_saas_quote(pg_temp.id(51),2,0,'monthly','synthetic-quote/v1',pg_temp.id(61))$$,'42501','DOCTOR_SYNTHETIC_ADMISSION_REQUIRED','revoked admission denies even receipt replay');
+reset role;
+select is((select count(*)from public.doctor_saas_payment_intents),1::bigint,'denials leave one held intent only');
+select is((select count(*)from doctor_private.command_receipts where actor_user_id=pg_temp.id(1)and command_key in(pg_temp.id(62),pg_temp.id(69),pg_temp.id(71))),0::bigint,'denied commands leave no receipts');
+select throws_ok($$update public.doctor_saas_quotes set amount_minor=1$$,'42501','DOCTOR_SAAS_HISTORY_IMMUTABLE','quoted amount immutable');
+select throws_ok($$delete from public.doctor_saas_payment_intents$$,'42501','DOCTOR_SAAS_HISTORY_IMMUTABLE','intent history immutable');
+select throws_ok($$truncate public.doctor_saas_payment_intents$$,'42501','DOCTOR_SAAS_HISTORY_IMMUTABLE','intent history cannot truncate');
+select ok(not has_table_privilege(role_name,'public.'||table_name,'select,insert,update,delete,truncate'),'no raw '||role_name||' grant on '||table_name)
+ from unnest(array['anon','authenticated','service_role'])role_name cross join unnest(array['doctor_saas_quotes','doctor_saas_payment_intents'])table_name;
+select ok(not has_function_privilege(role_name,function_name,'execute'),'no '||role_name||' execution: '||function_name)
+ from unnest(array['anon','service_role'])role_name cross join unnest(array['public.doctor_create_saas_quote(uuid,integer,integer,text,text,uuid)','public.doctor_saas_quote(uuid)','public.doctor_prepare_saas_payment(uuid,uuid)'])function_name;
+select ok((select bool_and(relrowsecurity and relforcerowsecurity)from pg_class where oid in('public.doctor_saas_quotes'::regclass,'public.doctor_saas_payment_intents'::regclass)),'both tables force RLS');
+select is((select count(*)from public.doctor_saas_accounts),1::bigint,'quote and intent never create subscription account');
+select is(pg_get_function_arguments('public.doctor_create_saas_quote(uuid,integer,integer,text,text,uuid)'::regprocedure),
+ 'p_terms uuid, p_configuration_revision integer, p_account_revision integer, p_interval text, p_document_ref text, p_key uuid',
+ 'public quote contract accepts no browser amount, currency, subscriber, provider or URL');
+select is(pg_get_function_arguments('public.doctor_prepare_saas_payment(uuid,uuid)'::regprocedure),'p_quote uuid, p_key uuid','intent accepts only owner-bound quote and idempotency key');
+select * from finish();rollback;

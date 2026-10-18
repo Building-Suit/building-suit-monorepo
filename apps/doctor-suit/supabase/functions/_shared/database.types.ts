@@ -506,6 +506,38 @@ export type Database = {
           },
         ]
       }
+      doctor_saas_payment_intents: {
+        Row: {
+          created_at: string
+          id: string
+          quote_id: string
+          state: string
+          subscriber_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          quote_id: string
+          state?: string
+          subscriber_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          quote_id?: string
+          state?: string
+          subscriber_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_payment_intents_subscriber_user_id_quote_id_fkey"
+            columns: ["subscriber_user_id", "quote_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_quotes"
+            referencedColumns: ["subscriber_user_id", "id"]
+          },
+        ]
+      }
       doctor_saas_period_events: {
         Row: {
           database_actor: string
@@ -584,6 +616,79 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "doctor_saas_periods_terms_version_id_fkey"
+            columns: ["terms_version_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_terms_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_saas_quotes: {
+        Row: {
+          accepted_document_ref: string
+          account_revision: number
+          account_state: string
+          amount_minor: number
+          billing_interval: string
+          configuration_revision: number
+          created_at: string
+          currency: string
+          currency_exponent: number
+          current_period_id: string | null
+          id: string
+          practice_id: string | null
+          subscriber_user_id: string
+          terms_version_id: string
+        }
+        Insert: {
+          accepted_document_ref: string
+          account_revision: number
+          account_state: string
+          amount_minor: number
+          billing_interval: string
+          configuration_revision: number
+          created_at?: string
+          currency: string
+          currency_exponent: number
+          current_period_id?: string | null
+          id?: string
+          practice_id?: string | null
+          subscriber_user_id: string
+          terms_version_id: string
+        }
+        Update: {
+          accepted_document_ref?: string
+          account_revision?: number
+          account_state?: string
+          amount_minor?: number
+          billing_interval?: string
+          configuration_revision?: number
+          created_at?: string
+          currency?: string
+          currency_exponent?: number
+          current_period_id?: string | null
+          id?: string
+          practice_id?: string | null
+          subscriber_user_id?: string
+          terms_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_quotes_practice_id_fkey"
+            columns: ["practice_id"]
+            isOneToOne: false
+            referencedRelation: "practices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_saas_quotes_subscriber_user_id_current_period_id_fkey"
+            columns: ["subscriber_user_id", "current_period_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_periods"
+            referencedColumns: ["subscriber_user_id", "id"]
+          },
+          {
+            foreignKeyName: "doctor_saas_quotes_terms_version_id_fkey"
             columns: ["terms_version_id"]
             isOneToOne: false
             referencedRelation: "doctor_saas_terms_versions"
@@ -1426,6 +1531,17 @@ export type Database = {
         Returns: Json
       }
       doctor_contexts: { Args: never; Returns: Json }
+      doctor_create_saas_quote: {
+        Args: {
+          p_account_revision: number
+          p_configuration_revision: number
+          p_document_ref: string
+          p_interval: string
+          p_key: string
+          p_terms: string
+        }
+        Returns: Json
+      }
       doctor_document_delivery: {
         Args: {
           p_actor: string
@@ -1533,6 +1649,10 @@ export type Database = {
         Returns: Json
       }
       doctor_practice_setup: { Args: never; Returns: Json }
+      doctor_prepare_saas_payment: {
+        Args: { p_key: string; p_quote: string }
+        Returns: Json
+      }
       doctor_privacy_requests: { Args: never; Returns: Json }
       doctor_reschedule_appointment: {
         Args: {
@@ -1576,6 +1696,7 @@ export type Database = {
         Returns: Json
       }
       doctor_runtime_contract: { Args: never; Returns: Json }
+      doctor_saas_quote: { Args: { p_quote: string }; Returns: Json }
       doctor_saas_status: { Args: never; Returns: Json }
       doctor_saas_terms: { Args: never; Returns: Json }
       doctor_saas_terms_document: { Args: { p_terms: string }; Returns: Json }
