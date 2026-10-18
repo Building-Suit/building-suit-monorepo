@@ -7,7 +7,7 @@ test('exact legacy entries preserve only canonical safe return paths and intende
  assert.deepEqual(doctorAuthEntryRedirect('/auth/login',{returnTo:'/account?private=discard',code:'discard',token:'discard'}),{path:'/sign-in',query:{next:'/account'}})
  assert.deepEqual(doctorAuthEntryRedirect('/auth/login/',{next:'//evil.example.test'}),{path:'/sign-in',query:{next:'/workspace'}})
  assert.deepEqual(doctorAuthEntryRedirect('/auth/signup',{}),{path:'/sign-up',query:{}})
- assert.deepEqual(doctorAuthEntryRedirect('/auth/forgot-password',{code:'discard'}),{path:'/recover',query:{}})
+ assert.deepEqual(doctorAuthEntryRedirect('/auth/forgot-password',{code:'discard',next:'/account'}),{path:'/recover',query:{}})
  assert.deepEqual(doctorAuthEntryRedirect('/auth/reset-password',{code:'synthetic-code',sb_flow_id:'synthetic-flow-123',redirect:'https://evil.example.test'}),{path:'/recover',query:{code:'synthetic-code',sb_flow_id:'synthetic-flow-123'}})
  for(const p of['/auth/unknown','/auth/login/extra','/sign-in','/auth/login//'])assert.equal(doctorAuthEntryRedirect(p,{}),null)
 })

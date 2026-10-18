@@ -22,7 +22,7 @@ export async function exerciseDoctorAuthEntries(page:Page,configured:boolean,ar:
  }
  for(const[legacy,canonical]of[['/auth/login','/sign-in'],['/auth/signup','/sign-up'],['/auth/forgot-password','/recover'],['/auth/reset-password','/recover']]){
   await page.goto(`${legacy}?next=%2Faccount&unsafe=DO_NOT_REFLECT_SENTINEL`);await surface(canonical!)
-  expect(new URL(page.url()).searchParams.get('next')).toBe('/account');expect(page.url()).not.toContain('DO_NOT_REFLECT_SENTINEL')
+  expect(new URL(page.url()).searchParams.get('next')).toBe(canonical==='/recover'?null:'/account');expect(page.url()).not.toContain('DO_NOT_REFLECT_SENTINEL')
   await page.reload();await surface(canonical!);await clientRoute(page,legacy!);await surface(canonical!)
  }
  await page.goto('/auth/login?returnTo=https%3A%2F%2Fevil.example.test');await surface('/sign-in');expect(new URL(page.url()).searchParams.get('next')).toBe('/workspace')

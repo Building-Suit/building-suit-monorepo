@@ -6,7 +6,7 @@ export function doctorAuthEntryRedirect(path:string,query:Record<string,unknown>
  if(!target)return null
  const safe:Record<string,string>={}
  const next=query.next??query.returnTo
- if(next!==undefined)safe.next=doctorReturnPath(next)
+ if(next!==undefined&&target!=='/recover')safe.next=doctorReturnPath(next)
  if(key==='/auth/reset-password'){
   const callback=doctorPkceCallback(query)
   if(callback){safe.code=callback.code;if(callback.flowId)safe.sb_flow_id=callback.flowId}
