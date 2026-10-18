@@ -1,6 +1,7 @@
 <script setup lang="ts">
 defineProps<{
  copy:{title:string;description:string;notice:string;loading:string;retry:string;status:string;terms:string;unconfigured:string;paymentUnavailable:string;accept:string;start:string;account:string;continue:string;documentBody:string;documentUnavailable:string}
+ paymentAction?:{label:string;to:string}
  additionalStatus?:{title:string;description:string;fields:{label:string;value:string}[];error:string|null;action?:{label:string;to:string}}|null
  document:{title:string;body:string}|null;loading:boolean;pending:boolean;ready:boolean;error:string|null;status:string;statusFields:{label:string;value:string}[];termsFields:{label:string;value:string}[];canStart:boolean;canContinue:boolean
 }>()
@@ -20,6 +21,6 @@ const emit=defineEmits<{retry:[];start:[]}>()
    <BsAlert tone="info" :description="copy.paymentUnavailable" />
    <BsPanel v-if="additionalStatus" padding="md"><BsStack gap="md"><BsHeading :level="2">{{ additionalStatus.title }}</BsHeading><BsText as="p">{{ additionalStatus.description }}</BsText><BsAlert v-if="additionalStatus.error" tone="info" :description="additionalStatus.error" /><BsDescriptionList v-else><BsDescriptionItem v-for="field in additionalStatus.fields" :key="field.label" :term="field.label">{{ field.value }}</BsDescriptionItem></BsDescriptionList><BsLink v-if="additionalStatus.action" :to="additionalStatus.action.to">{{ additionalStatus.action.label }}</BsLink></BsStack></BsPanel>
   </template>
-  <BsInline><BsButton :disabled="pending || loading" @click="emit('retry')">{{ copy.retry }}</BsButton><BsLink v-if="canContinue" to="/onboarding">{{ copy.continue }}</BsLink><BsLink to="/account">{{ copy.account }}</BsLink></BsInline>
+  <BsInline><BsLink v-if="paymentAction" :to="paymentAction.to">{{ paymentAction.label }}</BsLink><BsButton :disabled="pending || loading" @click="emit('retry')">{{ copy.retry }}</BsButton><BsLink v-if="canContinue" to="/onboarding">{{ copy.continue }}</BsLink><BsLink to="/account">{{ copy.account }}</BsLink></BsInline>
  </BsStack>
 </template>

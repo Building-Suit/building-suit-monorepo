@@ -32,7 +32,7 @@ export function createDoctorContextController(repository: ReturnType<typeof doct
   function scheduleExpiry(value: DoctorLocationContext,sentAt: number) {
     cancelExpiry()
     const entitlement=value.entitlement
-    if(!timers || entitlement?.state!=='trial' || !entitlement.validUntil)return
+    if(!timers || !entitlement || !['trial','paid'].includes(entitlement.state) || !entitlement.validUntil)return
     // Use the server observation and monotonic elapsed request time. A browser
     // wall-clock change cannot extend a subscription or grant access.
     const remaining=Math.max(0,Date.parse(entitlement.validUntil)-Date.parse(entitlement.observedAt)-Math.max(0,timers.now()-sentAt))

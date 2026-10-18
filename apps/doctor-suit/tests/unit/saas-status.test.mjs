@@ -37,3 +37,11 @@ test('known SaaS failures are bounded UI categories without private backend text
   for(const [code,expected]of Object.entries({ DS001: 'configuration',DS002: 'staff-limit',DS003: 'clinic-limit',DS004: 'trial-used',DS005: 'trial-unavailable',DS006: 'inactive',DS007: 'over-limit-read-only','40001': 'conflict','42501': 'denied','22023': 'invalid' }))assert.equal(doctorSaasFailure({ code,message: 'SYNTHETIC_PRIVATE_BACKEND_DETAIL' }),expected)
   assert.equal(doctorSaasFailure({ code: 'unknown',message: 'SYNTHETIC_PRIVATE_BACKEND_DETAIL' }),'network')
 })
+
+test('paid status requires a server-bound manual-paid period and permits zero trial days',()=>{
+ const paid={...status('trial'),state:'paid',period:{...period(),kind:'manual_paid'},terms:{...terms(),trial_days:0},business_writes_allowed:true,observed_at:'2026-10-18T15:00:00Z'}
+ assert.equal(doctorSaasStatus(paid,actor).period.kind,'manual_paid');assert.equal(doctorSaasStatus(paid,actor).periodActive,true)
+ assert.throws(()=>doctorSaasStatus({...paid,period:period()},actor),/RESPONSE_INVALID/)
+ assert.throws(()=>doctorSaasStatus({...paid,state:'trial'},actor),/RESPONSE_INVALID/)
+ assert.throws(()=>doctorSaasStatus({...paid,observed_at:'2026-10-20T15:00:00Z'},actor),/RESPONSE_INVALID/)
+})

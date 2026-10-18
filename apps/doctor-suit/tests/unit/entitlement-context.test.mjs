@@ -1,7 +1,7 @@
 import test from 'node:test'
 import { reactive } from 'vue'
 import assert from 'node:assert/strict'
-import { doctorEntitlement,doctorEntitlementKey } from '../../app/utils/entitlement.ts'
+import { doctorEntitlement,doctorEntitlementKey,createDoctorEntitlementDeadline } from '../../app/utils/entitlement.ts'
 import { doctorLocationContext } from '../../app/utils/locationContext.ts'
 import { doctorScopeKey } from '../../app/utils/contextScope.ts'
 import { createDoctorContextController,doctorContextState } from '../../app/utils/contextController.ts'
@@ -27,7 +27,7 @@ function controller(data,timers,repository={}) {
 test('candidate entitlement metadata is mandatory and invalid state/authority couplings fail closed',()=>{
   assert.equal(doctorEntitlement(undefined,undefined),undefined)
   assert.throws(()=>doctorEntitlement(undefined,'administrative_candidate'),/RESPONSE_INVALID/)
-  for(const change of [{state:'paid'},{revision:0},{revision:1.5},{writes_allowed:'true'},{can_add_staff:'true'},{valid_until:null},{observed_at:'invalid'},
+  for(const change of [{state:'unsupported'},{revision:0},{revision:1.5},{writes_allowed:'true'},{can_add_staff:'true'},{valid_until:null},{observed_at:'invalid'},
     {state:'expired'},{state:'suspended'},{state:'unconfigured'},{over_limit:true},{writes_allowed:false}])assert.throws(()=>doctorEntitlement(entitlement(change),'administrative_candidate'),/RESPONSE_INVALID/)
   const unconfigured={state:'unconfigured',revision:0,writes_allowed:false,can_add_staff:false,can_add_clinic:false,over_limit:false,valid_until:null,observed_at:new Date(epoch).toISOString()}
   assert.equal(doctorEntitlement(unconfigured,'administrative_candidate').writesAllowed,false)
@@ -121,4 +121,14 @@ test('reactive expiry rejects an older in-flight trial response after fresh hist
   assert.equal(state.current.entitlement.state,'expired');assert.equal(capture.accepts(),false)
   release([stale]);await pending;await flush()
   assert.equal(state.current.entitlement.state,'expired');assert.equal(state.current.entitlement.writesAllowed,false)
+})
+
+test('server-paid entitlement uses the same expiry deadline and never extends from local receipt evidence',()=>{
+ const paid=doctorEntitlement(entitlement({state:'paid'}),'administrative_candidate');assert.equal(paid.writesAllowed,true)
+ const timers=clock();let expired=0;const deadline=createDoctorEntitlementDeadline(timers);deadline.arm(paid,0,()=>expired++,()=>true);timers.advance(9999);assert.equal(expired,0);timers.advance(1);assert.equal(expired,1)
+ assert.throws(()=>doctorEntitlement(entitlement({state:'paid',observed_at:new Date(epoch+10001).toISOString()}),'administrative_candidate'),/RESPONSE_INVALID/)
+})
+
+test('a paid context expires captured work at the server deadline with the original period preserved',async()=>{
+ const timers=clock(),data={value:row({entitlement:entitlement({state:'paid'})})};let offline=false;const {value,state}=controller(data,timers,{resolve:async()=>{if(offline)throw Error('offline');return data.value}});await value.refresh();const capture=value.capture('patients');offline=true;timers.advance(10000);assert.equal(capture.signal.aborted,true);assert.equal(capture.accepts(),false);assert.equal(state.current,null)
 })
