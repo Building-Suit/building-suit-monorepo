@@ -1,0 +1,21 @@
+{
+  "id": "dos-ae-010-administrative-presentation",
+  "task": "DOS-AE-010",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/README.md",
+    "apps/doctor-suit/app/pages/subscription.vue",
+    "apps/doctor-suit/app/utils/saasController.ts",
+    "apps/doctor-suit/app/utils/saasRepository.ts",
+    "apps/doctor-suit/app/utils/subscriptionPresentation.ts",
+    "apps/doctor-suit/tests/unit/subscription-controller.test.mjs",
+    "apps/doctor-suit/tests/fixtures/subscription-provider.mjs",
+    "apps/doctor-suit/tests/e2e/dos-ae-003-subscription.auth.fixture.ts",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-010-presentation.md"
+  ],
+  "reason": "Synthetic administrative availability and own-account diagnostics with EN/AR unavailable/review feedback, scope-cleared reads and known privacy-review navigation; no live/payment/operator/clinical claim or release activation."
+}

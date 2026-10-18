@@ -62,3 +62,22 @@ test('configured automatic renewal, grace, cancellation and refund variants are 
  const{state,value}=setup({terms:async()=>configured,status:async()=>status()});await value.load()
  for(const ar of[false,true]){const view=doctorSubscriptionView(state,ar),rows=new Map(view.termsFields.map(row=>[row.label,row.value]));assert.equal(rows.get(view.copy.renewal),view.copy.automatic);assert.equal(rows.get(view.copy.grace),'3');assert.equal(rows.get(view.copy.cancellation),view.copy.immediate);assert.equal(rows.get(view.copy.refund),view.copy.noRefund)}
 })
+
+test('late diagnostics never restore across user, session or practice replacement',async()=>{
+ for(const change of[{userId:id(2)},{sessionId:id(12)},{practiceId:id(21)}]){
+  let release;const{state,value,identity}=setup({terms:async()=>offer(),status:async()=>status(),readiness:async()=>new Promise(resolve=>{release=resolve})})
+  const pending=value.load();await flush();value.clear();identity({...actor,...change});release({operations:{heldIntents:999},administration:{}})
+  assert.equal(await pending,false);assert.equal(state.readiness,null);assert.equal(state.status,null);assert.equal(doctorSubscriptionView(state,false).additionalStatus,null)
+ }
+})
+test('diagnostic failure is explicit, preserves no stale count and grants no payment/operator authority',async()=>{
+ const{state,value}=setup({terms:async()=>offer(),status:async()=>status(),readiness:async()=>{throw Error('Synthetic diagnostics unavailable')}})
+ assert.equal(await value.load(),true);assert.equal(state.readiness,null);assert.equal(state.error,null);assert.equal(value.canStart(),true)
+ for(const ar of[false,true]){const view=doctorSubscriptionView(state,ar);assert.equal(typeof view.copy.readinessTitle,'string');assert.equal(view.additionalStatus.error,view.copy.readinessUnavailable);assert.deepEqual(view.additionalStatus.fields,[]);assert.equal(view.additionalStatus.action.to,'/privacy')}
+})
+test('both locales show only authorized read-only diagnostics and closed action/review states',async()=>{
+ const readiness={operations:{heldIntents:7,unknownReview:2,discrepancyReview:1,privacyRequestsAwaitingReview:3,observedAt:new Date(epoch).toISOString(),paidActivationAvailable:false,liveActivation:false},administration:{operatorGrantAvailable:false,paymentConfirmed:false,liveActivation:false}}
+ const{state,value}=setup({terms:async()=>offer(),status:async()=>status(),readiness:async()=>readiness});await value.load()
+ for(const ar of[false,true]){const view=doctorSubscriptionView(state,ar),rows=new Map(view.additionalStatus.fields.map(row=>[row.label,row.value]));assert.equal(view.additionalStatus.error,null);assert.equal(rows.get(view.copy.heldIntents),'7');assert.equal(rows.get(view.copy.unknownReview),'2');assert.equal(rows.get(view.copy.discrepancyReview),'1');assert.equal(rows.get(view.copy.privacyReview),'3');for(const label of[view.copy.financialActions,view.copy.operatorActivation,view.copy.liveAdmission])assert.equal(rows.get(label),view.copy.unavailable);assert.equal(rows.get(view.copy.requiredReviews),view.copy.pendingReviews)}
+ value.clear();assert.equal(state.readiness,null)
+})
