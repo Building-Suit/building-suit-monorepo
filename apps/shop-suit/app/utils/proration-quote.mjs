@@ -19,7 +19,7 @@ export function parseProrationQuote(value) {
   const c = value?.calculation
   if (!value || !isXPayOrderId(value.quoteId) || !id(value.shopId) || !id(value.catalogTermsId) || !id(value.planName)
     || (value.privateOfferId != null && !id(value.privateOfferId)) || !states.has(value.state) || !timestamp(value.createdAt) || !timestamp(value.expiresAt)
-    || !c || c.version !== 1 || c.currency !== 'EGP' || !modes.has(c.mode) || !['monthly', 'annual'].includes(c.newBillingInterval)
+    || !c || c.version !== 1 || !['EGP','USD'].includes(c.currency) || !modes.has(c.mode) || !['monthly', 'annual'].includes(c.newBillingInterval)
     || !minor(c.amountDueMinor) || !minor(c.creditBeforeMinor) || !minor(c.creditAfterMinor) || !minor(c.newTermMinor) || c.newTermMinor === 0
     || ![1,12].includes(c.periodMonths) || c.periodMonths !== (c.newBillingInterval === 'monthly' ? 1 : 12)
     || !['verified_settlement','frozen_quote'].includes(c.periodStartPolicy)
@@ -31,7 +31,7 @@ export function parseProrationQuote(value) {
     || (value.xpayOrderId != null && !isXPayOrderId(value.xpayOrderId))) throw new Error('invalid_proration_quote')
   return { quoteId: value.quoteId, shopId: value.shopId, catalogTermsId: value.catalogTermsId, privateOfferId: value.privateOfferId ?? null,
     planName: value.planName, details: parseDetails(value.details,c.newBillingInterval), state: value.state, createdAt: value.createdAt, expiresAt: value.expiresAt, xpayOrderId: value.xpayOrderId ?? null,
-    calculation: { currency: 'EGP', mode: c.mode, amountDueMinor: c.amountDueMinor, creditBeforeMinor: c.creditBeforeMinor, creditAfterMinor: c.creditAfterMinor,
+    calculation: { currency: c.currency, mode: c.mode, amountDueMinor: c.amountDueMinor, creditBeforeMinor: c.creditBeforeMinor, creditAfterMinor: c.creditAfterMinor,
       newTermMinor: c.newTermMinor, unusedPrepaidMinor: c.unusedPrepaidMinor, serviceValueMinor: c.serviceValueMinor,
       newBillingInterval: c.newBillingInterval, periodStart: c.periodStart ?? null, periodEnd: c.periodEnd ?? null, periodMonths: c.periodMonths,
       periodStartPolicy: c.periodStartPolicy, transition: c.transition, quotedAt: c.quotedAt } }

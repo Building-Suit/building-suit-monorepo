@@ -1424,5 +1424,49 @@
         "contains": "props.layoutKey === undefined && authRoute.value"
       }
     ]
+  },
+  {
+    "id": "shop-xpay-presentment-verification",
+    "task": "SS-BILLING-INTERNATIONAL-PREPARATION",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Add fixed USD subscription comparison and explicit currency selection, paired provider money persistence, same-currency proration/credit and reviewed refund observations. Preserve EGP and keep USD charging behind disabled rollout plus merchant capability gates.",
+    "notes": {
+      "title": {
+        "en": "Choose your subscription currency",
+        "ar": "اختر عملة الاشتراك"
+      },
+      "summary": {
+        "en": "Compare fixed EGP and USD subscription prices with explicit currency selection.",
+        "ar": "قارن أسعار الاشتراك الثابتة بالجنيه المصري والدولار مع اختيار العملة بوضوح."
+      },
+      "details": {
+        "en": "Existing EGP payments are preserved. USD checkout stays unavailable until merchant eligibility is verified. Quotes, credit and refund history retain their original currency.",
+        "ar": "يستمر الدفع الحالي بالجنيه المصري. يظل الدفع بالدولار غير متاح حتى التحقق من أهلية حساب التاجر. تحتفظ عروض الأسعار والأرصدة وسجلات الاسترداد بعملتها الأصلية."
+      }
+    },
+    "sources": [
+      "shop-xpay-currency-verification"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261018141536_international_subscription_currencies.sql",
+        "contains": "create table public.shop_xpay_money_tracks"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useShopLandingEntry.ts",
+        "contains": "currencySelection: subscriptionCurrency.selection.value"
+      },
+      {
+        "path": "apps/shop-suit/app/pages/billing.vue",
+        "contains": "currencyCheckoutReady"
+      }
+    ]
   }
 ]

@@ -1,0 +1,24 @@
+{
+  "id": "shop-international-pricing-inventory-support",
+  "task": "SS-BILLING-INTERNATIONAL-PREPARATION",
+  "suits": [
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "doctor-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "release-changes/items.json",
+    "packages/ui",
+    "packages/ux",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "tooling/database/shop-xpay-disposable.mjs",
+    "tooling/database/test-shop-local.mjs",
+    "tooling/database/shop-proration-disposable.mjs"
+  ],
+  "reason": "Provide optional shared controlled currency selection, cancellable pending/native-radio behavior, component documentation and disposable payment-suite wiring. Other consumers keep defaults; private bookkeeping does not activate any other product."
+}

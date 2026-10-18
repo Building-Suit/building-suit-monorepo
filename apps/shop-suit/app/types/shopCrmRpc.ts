@@ -4,6 +4,8 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      shop_subscription_currency_catalog: { Args: { p_currency: 'EGP' | 'USD' }; Returns: import('./plans').PublicPlan[] }
+      shop_billing_currency_plans: { Args: { p_shop_id: string; p_currency: 'EGP' | 'USD' }; Returns: import('./billing').BillingPlanOption[] }
       shop_booking_settings:{Args:{p_shop_id:string};Returns:unknown}
       shop_booking_settings_save:{Args:{p_shop_id:string;p_policy:import('../../shared/appointmentBooking').BookingPolicy;p_staff:{membershipId:string;publicName:string}[]};Returns:undefined}
       appointment_customer_portal: {Args:{p_slug:string;p_token:string;p_bucket?:string;p_page?:number};Returns:import('../../shared/customerPortal').CustomerPortal|{authenticated:false}}
