@@ -426,3 +426,7 @@ enabled = true
 # Doctor SQL session/capability checks inside the request-scoped handler.
 [functions.doctor-documents]
 verify_jwt = true
+
+# Payment evidence retains the platform JWT gate and fresh Doctor identity checks.
+[functions.doctor-payment-evidence]
+verify_jwt = true

@@ -119,10 +119,21 @@ try {
   await verifyManualPaymentConcurrency(container)
   await verifyDoctorIsolatedRecovery(container)
   if (generate.length) {
+    // Registry throttling must remain a failed check after bounded retries; it
+    // cannot waive schema generation or select an unpinned image.
+    const metaImage='public.ecr.aws/supabase/postgres-meta:v0.98.0'
+    for(let attempt=0;attempt<3;attempt++){
+      const pull=spawnSync('docker',['pull',metaImage],{encoding:'utf8',timeout:120000,maxBuffer:1024*1024})
+      if(!pull.error&&pull.status===0)break
+      const transient=/toomanyrequests|rate exceeded|429|timed? ?out|502|503|temporary failure/i.test(String(pull.stderr))
+      if(attempt===2||!transient)throw new Error('Pinned PostgreSQL Meta image unavailable; schema generation remains unverified')
+      console.log('Pinned PostgreSQL Meta registry temporarily unavailable; retrying the same image')
+      await new Promise(resolve=>setTimeout(resolve,[5000,15000][attempt]))
+    }
     const output = docker(['run', '--rm', '--network', `container:${container}`,
       '-e', 'PG_META_DB_HOST=127.0.0.1', '-e', 'PG_META_DB_NAME=postgres', '-e', 'PG_META_DB_USER=postgres',
       '-e', 'PG_META_GENERATE_TYPES=typescript', '-e', 'PG_META_GENERATE_TYPES_INCLUDED_SCHEMAS=public',
-      '-e', 'PG_META_GENERATE_TYPES_DETECT_ONE_TO_ONE_RELATIONSHIPS=true', 'public.ecr.aws/supabase/postgres-meta:v0.98.0'])
+      '-e', 'PG_META_GENERATE_TYPES_DETECT_ONE_TO_ONE_RELATIONSHIPS=true', metaImage])
     if (!output.startsWith('export type Json') || !output.includes('doctor_onboard:')) throw new Error('Unexpected PostgreSQL Meta type output')
     await mkdir(`${app}app/types`, { recursive: true })
     await writeFile(`${app}app/types/database.types.ts`, output)

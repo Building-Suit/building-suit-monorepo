@@ -38,7 +38,7 @@ export function createManualPaymentController(repo:ManualPaymentRepository|null,
   }catch(e){if(active(g,s))state.error=failure(e);return false}finally{if(active(g,s))state.loading=false}
  }
  async function choose(plan=state.plan,interval=state.interval){
-  if(state.pending||operation||!repo||!state.ready||state.review||state.instructions)return false
+  if(state.pending||state.loading||operation||!repo||!state.ready||state.review||state.instructions)return false
   state.plan=plan;state.interval=interval;state.accepted=false;state.document=null
   const terms=state.catalog?.plans.find(p=>p.key===plan)?.terms;if(!terms)return false
   const g=generation,s=scope();state.loading=true
@@ -55,7 +55,7 @@ export function createManualPaymentController(repo:ManualPaymentRepository|null,
   catch(e){if(active(g,s)){state.error=failure(e);state.uncertain=state.error==='network';if(!state.uncertain)operation=null}return false}
   finally{if(active(g,s))state.pending=false}
  }
- function canPrepare(){const plan=state.catalog?.plans.find(p=>p.key===state.plan);return Boolean(!state.review&&state.configuration?.configured&&plan?.terms&&state.document?.termsId===plan.terms.id&&state.accepted&&state.account&&!state.instructions&&!state.pending&&!state.loading&&state.ready&&!operation)}
+ function canPrepare(){const plan=state.catalog?.plans.find(p=>p.key===state.plan);return Boolean(!state.review&&state.configuration?.configured&&plan?.terms&&state.document?.termsId===plan.terms.id&&state.accepted&&state.account&&!state.instructions&&!state.uploadNotice&&!state.pending&&!state.loading&&state.ready&&!operation)}
  async function prepare(){
   if(!operation&&!canPrepare())return false
   return execute('prepare',()=>{
