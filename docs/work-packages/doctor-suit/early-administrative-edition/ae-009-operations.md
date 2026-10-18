@@ -14,7 +14,7 @@ The application decoder verifies caller identity, count consistency and every cl
 
 [review-register.v1.json](review-register.v1.json) separates unperformed independent security/financial reviews from implementation findings. `findings: null` means unassessed, not no findings. Accountable reviewer, exact candidate, dated evidence, severity, affected scope, closure and exact-candidate retest must be supplied by the corresponding genuine reviewer. The agent cannot self-issue those acceptances or waive unresolved critical/high launch blockers.
 
-The known report-snapshot correctness finding records its affected/fix heads and deterministic local negative/positive regression. Its independent exact-candidate retest remains pending in this register; implementation test success is not qualified financial or security approval. Preserve source findings and append reviewed resolution evidence rather than replacing a finding with a blank success state.
+The known report-snapshot correctness finding records its affected/fix heads and deterministic local negative/positive regression. The parent-coordinated technical reviewer accepted the exact `65ee4d4b` fix source and regression for this correctness finding. That acceptance is not qualified financial/security approval. The authenticated protocol schema/nonce finding and its `36d49d1f` fix are separately recorded with technical retest pending. Preserve source findings and append reviewed resolution evidence rather than replacing a finding with a blank success state.
 
 ## Incident procedure and ownership prerequisites
 
@@ -44,3 +44,5 @@ These are source/command references; final acceptance must attach passing exact-
 C01 technical boundaries and C03 redacted signals/runbook are implemented. C02 independent review/closure and C04 approved workload/provider/support acceptance remain genuine prerequisites. No original clinical, legal or operational release gate is satisfied by this packet.
 
 Local task evidence: 1,269 SQL assertions (32 AE-009), 85 real transaction/protocol-storage scenarios and the 45-table encrypted isolated application-database restore passed. Root units: 1,948 pass and 23 explicit optional-infrastructure skips. Required focused type/lint/build, Edge types, boundaries, release validation and exact-head provider CI remain separate receipts; none supplies independent security/financial acceptance or approved performance/recovery objectives.
+
+After incorporating the authenticated schema-denial correction from PR393, combined local verification passes 1,276 SQL assertions and 87 transaction/protocol-storage scenarios with the same 45-table isolated restore. The report-snapshot technical review is accepted for its exact fix; the protocol correction's independent technical retest and all genuine financial/security/operational approvals remain separately pending.

@@ -4,8 +4,24 @@
   "scope": "early_synthetic_administrative_edition",
   "commercialLiveApproval": false,
   "independentReviews": [
-    {"kind": "security", "status": "not_performed", "accountableReviewer": null, "candidate": null, "evidence": null, "findings": null, "criticalHighClosureAccepted": false},
-    {"kind": "financial", "status": "not_performed", "accountableReviewer": null, "candidate": null, "evidence": null, "findings": null, "closureAccepted": false}
+    {
+      "kind": "security",
+      "status": "not_performed",
+      "accountableReviewer": null,
+      "candidate": null,
+      "evidence": null,
+      "findings": null,
+      "criticalHighClosureAccepted": false
+    },
+    {
+      "kind": "financial",
+      "status": "not_performed",
+      "accountableReviewer": null,
+      "candidate": null,
+      "evidence": null,
+      "findings": null,
+      "closureAccepted": false
+    }
   ],
   "technicalReviewFindings": [
     {
@@ -17,11 +33,42 @@
       "fixCandidate": "65ee4d4b92c89ed08febe24fad491cf751d99209",
       "regression": "apps/doctor-suit/tests/saas-report-snapshot.mjs",
       "localRegression": "passed_with_historical_negative_control",
+      "independentExactCandidateRetest": "accepted_parent_coordinated_technical_review",
+      "independentFinancialOrSecurityApproval": false,
+      "retestEvidence": {
+        "date": "2026-10-18",
+        "acceptedCandidate": "65ee4d4b92c89ed08febe24fad491cf751d99209",
+        "scope": "Report-snapshot fix source and deterministic regression accepted by the parent technical reviewer; no financial/security certification."
+      }
+    },
+    {
+      "id": "DOS-AE-ADMIN-SCHEMA-NONCE",
+      "kind": "authenticated_protocol_denial_ordering",
+      "severity": "unclassified",
+      "source": "Parent-coordinated independent technical review of PR393",
+      "affectedCandidate": "6337466a260ebe4f2f051dcf9b40e38354ea2373",
+      "fixCandidate": "36d49d1fb1ff9ae95c42acd0c1eb384c908862b3",
+      "regression": "apps/doctor-suit/tests/unit/administration-protocol.test.mjs",
+      "persistedRegression": "apps/doctor-suit/tests/administration-protocol-postgres.mjs",
+      "localRegression": "passed_with_signed_schema_denial_and_replay",
       "independentExactCandidateRetest": "pending",
       "independentFinancialOrSecurityApproval": false
     }
   ],
-  "capacity": {"approvedThresholds": null, "providerQuotaCostEvidence": null, "acceptedWorkloadMeasurement": null},
-  "incidentOwnership": {"accountableOperator": null, "supportOwner": null, "escalationDestination": null},
-  "recovery": {"approvedRpo": null, "approvedRto": null, "wholeProviderScopeAccepted": false, "custodyEvidence": null}
+  "capacity": {
+    "approvedThresholds": null,
+    "providerQuotaCostEvidence": null,
+    "acceptedWorkloadMeasurement": null
+  },
+  "incidentOwnership": {
+    "accountableOperator": null,
+    "supportOwner": null,
+    "escalationDestination": null
+  },
+  "recovery": {
+    "approvedRpo": null,
+    "approvedRto": null,
+    "wholeProviderScopeAccepted": false,
+    "custodyEvidence": null
+  }
 }
