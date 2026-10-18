@@ -169,9 +169,10 @@ environment admitted by the triggering workflow ref: `stg` for staging, `main`
 for production. Checkout cannot change admission. The observed policies allow
 only those respective branches; do not broaden them to accommodate a matrix.
 Protected pushes and explicit dispatches therefore create one environment job,
-not two. A completed workflow must be an own-repository successful protected
-push matching the current workflow ref; PR proofs, failures and mismatched refs
-create no environment job. The publisher still independently checks the newest
+not two. A completed workflow must be an own-repository completed protected
+push matching the current workflow ref; PR proofs and mismatched refs create no environment job. Overall workflow
+failure can include a publisher retry failure after verify passed; completion
+therefore remains a retry wake-up, never authority to bypass readiness. The publisher still independently checks the newest
 protected verification, deployment readiness, catalog bindings and provenance.
 
 GitHub runs scheduled and workflow_run workflows from the default branch. A
