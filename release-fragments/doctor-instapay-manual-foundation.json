@@ -59,6 +59,7 @@
     "apps/doctor-suit/tests/unit/manual-payment-contracts.test.mjs",
     "apps/doctor-suit/tests/unit/manual-payment-controller.test.mjs",
     "apps/doctor-suit/tests/unit/saas-status.test.mjs",
+    "apps/doctor-suit/tests/unit/ui-consistency.test.mjs",
     "docs/shared/atomic-template-route-inventory.json",
     "docs/shared/ui-ownership-manifest.json",
     "docs/work-packages/doctor-suit/early-administrative-edition/instapay-manual.md",
