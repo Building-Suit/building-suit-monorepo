@@ -1,8 +1,13 @@
 {
   "id": "doctor-instapay-manual-foundation",
-  "task": "DOS-AE-004/005",
+  "task": "DOS-AE-004",
   "suits": [
-    "doctor-suit"
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
   ],
   "classification": "internal",
   "disposition": "internal",
