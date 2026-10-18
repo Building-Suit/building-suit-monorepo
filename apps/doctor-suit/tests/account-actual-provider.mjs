@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 import { spawn,spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 export async function verifyDoctorAccountProvider({ root,api,key,serviceKey,project,expect,setStage,admitEmail,expectedHome='/onboarding',expectVersionDocument=false }) {
-  const origin = 'http://127.0.0.1:4341';let server;let browser;let context;let token = '';let changedPolicy = false
+  const origin = 'http://127.0.0.1:4341';let server;let browser;let context;let page;let token = '';let changedPolicy = false
   const pause = milliseconds => new Promise(resolve => setTimeout(resolve,milliseconds))
   function policy(seconds) {
     expect([20,900].includes(seconds),'Owned account policy fixture rejected')
@@ -33,7 +33,7 @@ export async function verifyDoctorAccountProvider({ root,api,key,serviceKey,proj
     await until(async () => { try { return (await fetch(`${origin}/`,{ signal: AbortSignal.timeout(1000) })).ok } catch { return false } })
     browser = await chromium.launch({ headless: true });context = await browser.newContext({ viewport: { width: 1280,height: 1000 } })
     await context.route('**/*',route => [origin,api].includes(new URL(route.request().url()).origin) ? route.continue() : route.abort())
-    const page = await context.newPage();page.setDefaultTimeout(15000)
+    page = await context.newPage();page.setDefaultTimeout(15000)
     page.on('response',async response => { try { if(response.url().startsWith(`${api}/auth/v1/token`) && response.ok()) { const body = await response.json();if(typeof body.access_token==='string')token = body.access_token } } catch { /* No diagnostics from credential-bearing responses. */ } })
     const email = `synthetic-web-${randomUUID()}@example.test`;const password = `Synthetic-${randomUUID()}!9`;const newPassword = `Synthetic-${randomUUID()}!8`
     setStage('actual browser signup and PKCE confirmation');policy(20);changedPolicy = true
@@ -72,6 +72,13 @@ export async function verifyDoctorAccountProvider({ root,api,key,serviceKey,proj
     const invalid = await createClient(api,key,{ auth: { persistSession: false,autoRefreshToken: false } }).auth.signInWithPassword({ email,password });expect(Boolean(invalid.error) && !invalid.data.session,'Old password survived actual reset');const valid = await createClient(api,key,{ auth: { persistSession: false,autoRefreshToken: false } }).auth.signInWithPassword({ email,password: newPassword });expect(!valid.error && Boolean(valid.data.session),'New password did not admit actual sign-in')
     setStage('actual reused recovery code denial');await page.goto(callback.href);await page.getByText('The recovery link is invalid or expired. Request another link.',{ exact: true }).waitFor();expect(await page.getByLabel('Password',{ exact: true }).count()===0,'Reused PKCE code exposed reset form')
     console.log('Actual browser Auth: signup PKCE, URL scrubbing, expired contact denial, new-SID reauthentication, frozen SID denial, same-browser recovery, wrong-browser/reused-code denial and password replacement passed')
+  } catch(error) {
+    // Whitelisted state only: no account IDs, addresses, credentials, values or DOM text.
+    if(page)try{console.log('Actual account safe readiness diagnostic:',JSON.stringify(await page.evaluate(()=>{
+      const auth=document.getElementById('__nuxt')?.__vue_app__?.config.globalProperties?.$doctorAuth?.state
+      return{route:['/sign-up','/verify','/onboarding','/subscription','/account','/sign-in','/recover'].includes(location.pathname)?location.pathname:'other',auth:auth?{phase:['checking','unavailable','signed-out','verification','authenticated'].includes(auth.phase)?auth.phase:'unknown',pending:Boolean(auth.pending),identity:Boolean(auth.identity),error:['unavailable','credentials','exists','expired','rate-limit','network','session','password','sign-out'].includes(auth.error)?auth.error:null}:null,passwordControls:Math.min(2,document.querySelectorAll('input[type=password]').length),otpControls:Boolean(document.querySelector('input[autocomplete=one-time-code]'))}
+    })))}catch{/* A closed page supplies no diagnostic. */}
+    throw error
   } finally {
     token = '';await context?.close().catch(() => {});await browser?.close().catch(() => {})
     if(server?.pid) { try { process.kill(-server.pid,'SIGTERM') } catch { /* owned process exited */ }await Promise.race([new Promise(resolve => server.once('exit',resolve)),pause(2000)]);try { process.kill(-server.pid,'SIGKILL') } catch { /* owned group exited */ }server.unref() }
