@@ -1,5 +1,29 @@
 {
- "id":"doctor-auth-entry-routing","task":"DOS-M1-006","suits":["automation-suit","doctor-suit","inventory-suit","ledger-suit","shop-suit","super-admin-suit"],"classification":"internal","disposition":"internal",
- "paths":["apps/doctor-suit/app/utils/authEntry.ts","apps/doctor-suit/app/utils/authDiagnostics.ts","apps/doctor-suit/app/middleware/doctor-auth-entry.global.ts","apps/doctor-suit/app/pages/[...slug].vue","apps/doctor-suit/.env.example","apps/doctor-suit/README.md","apps/doctor-suit/tests/unit/auth-entry.test.mjs","apps/doctor-suit/tests/e2e/auth-entry-journeys.ts","apps/doctor-suit/tests/e2e/auth-entry.spec.ts","apps/doctor-suit/tests/e2e/auth-entry.auth.fixture.ts","tooling/doctor/auth-preflight.mjs","package.json"],
- "reason":"Doctor-only canonical auth entry compatibility and neutral public missing-route shell, plus a read-only setup diagnostic that emits no configuration values or credentials. Shared tooling classification covers the root script only. Existing provider-marker, session, plan-independent auth and safe-return protections remain enforced; no hosted setting or deployment is changed."
+  "id": "doctor-auth-entry-routing",
+  "task": "DOS-M1-006",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/authEntry.ts",
+    "apps/doctor-suit/app/utils/authDiagnostics.ts",
+    "apps/doctor-suit/app/middleware/doctor-auth-entry.global.ts",
+    "apps/doctor-suit/app/pages",
+    "apps/doctor-suit/.env.example",
+    "apps/doctor-suit/README.md",
+    "apps/doctor-suit/tests/unit/auth-entry.test.mjs",
+    "apps/doctor-suit/tests/e2e/auth-entry-journeys.ts",
+    "apps/doctor-suit/tests/e2e/auth-entry.spec.ts",
+    "apps/doctor-suit/tests/e2e/auth-entry.auth.fixture.ts",
+    "tooling/doctor/auth-preflight.mjs",
+    "package.json"
+  ],
+  "reason": "Doctor-only canonical auth entry compatibility and neutral public missing-route shell, plus a read-only setup diagnostic that emits no configuration values or credentials. Shared tooling classification covers the root script only. Existing provider-marker, session, plan-independent auth and safe-return protections remain enforced; no hosted setting or deployment is changed."
 }
