@@ -36,6 +36,7 @@ export async function verifyManualPaymentConcurrency(container){
    const q=sql(`select id from public.doctor_saas_quotes where subscriber_user_id='${id(n)}'`)
    sql(`${claim(n)}select public.doctor_prepare_saas_payment('${q}','${id(120+n)}');`)
    intents[n]=sql(`select id from public.doctor_saas_payment_intents where quote_id='${q}'`)
+   if(n!==7)sql(`${claim(n)}select public.doctor_prepare_manual_payment('${intents[n]}',${config},'${id(130+n)}');`)
   }
   const moment=sql('select clock_timestamp()')
   const submit=(n,key=140+n)=>`${claim(n)}select public.doctor_submit_manual_payment('${intents[n]}','SYNTHETIC-${n}','${moment}',${config},'${id(key)}');`
@@ -50,11 +51,11 @@ export async function verifyManualPaymentConcurrency(container){
   assert.notEqual(revoked.status,0);assert.match(revoked.errors,/DOCTOR_MANUAL_REVIEW_AUTHORITY_REQUIRED/)
   const admission=await race(4,`select doctor_private.saas_lock_subscriber('${id(4)}');insert into public.doctor_candidate_revocations(admission_id,reason)values('${id(24)}','operator_revoke');`,submit(4))
   assert.notEqual(admission.status,0);assert.match(admission.errors,/DOCTOR_SYNTHETIC_ADMISSION_REQUIRED/)
-  const disabled=await race(5,`update public.doctor_manual_payment_configuration set enabled=false,revision=revision+1,change_reason='Disable while submission waits';`,submit(7),'transactionid')
+  const disabled=await race(5,`update public.doctor_manual_payment_configuration set enabled=false,revision=revision+1,change_reason='Disable while submission waits';`,`${claim(7)}select public.doctor_prepare_manual_payment('${intents[7]}',${config},'${id(147)}');`,'transactionid')
   assert.notEqual(disabled.status,0);assert.match(disabled.errors,/DOCTOR_MANUAL_PAYMENT_UNCONFIGURED/)
   assert.equal(sql(`select count(*)from doctor_private.command_receipts where (actor_user_id,command_key)in(('${id(5)}','${id(181)}'),('${id(4)}','${id(144)}'),('${id(7)}','${id(147)}'))`),'0')
   assert.equal(sql(`select count(*)from public.doctor_saas_accounts where subscriber_user_id in('${id(1)}','${id(2)}','${id(3)}','${id(4)}','${id(7)}')`),'0')
-  console.log('Five manual-payment transaction scenarios passed: duplicate notice retry, concurrent bank-reference reuse, reviewer revocation after wait, subscriber admission revocation after wait and configuration withdrawal after wait; no entitlement created')
+  console.log('Five manual-payment transaction scenarios passed: duplicate notice retry, concurrent bank-reference reuse, reviewer revocation after wait, subscriber admission revocation after wait and instruction-configuration withdrawal after wait; no entitlement created')
  }finally{
   sql("update public.doctor_manual_payment_configuration set enabled=false,recipient_id=null,acceptance_mode='disabled',revision=revision+1,change_reason='Complete owned manual fixture';")
   sql(`update public.doctor_manual_payment_reviewers set enabled=false,revision=revision+1,approval_ref='SYNTHETIC_FIXTURE_COMPLETE'where user_id in('${id(5)}','${id(6)}');`)

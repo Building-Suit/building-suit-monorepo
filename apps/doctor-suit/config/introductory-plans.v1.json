@@ -7,8 +7,37 @@
   "annualMonthlyPayments": 10,
   "selfServiceSetupFeeMinor": 0,
   "plans": [
-    {"key":"starter","nameEn":"Starter","nameAr":"البداية","monthlyMinor":19900,"yearlyMinor":199000,"clinicLimit":1,"totalNamedUsers":5,"staffLimitExcludingOwner":4},
-    {"key":"clinic","nameEn":"Clinic","nameAr":"العيادة","monthlyMinor":39900,"yearlyMinor":399000,"clinicLimit":3,"totalNamedUsers":10,"staffLimitExcludingOwner":9},
-    {"key":"group","nameEn":"Group","nameAr":"المجموعة","monthlyMinor":69900,"yearlyMinor":699000,"clinicLimit":5,"totalNamedUsers":25,"staffLimitExcludingOwner":24}
-  ]
+    {
+      "key": "starter",
+      "nameEn": "Starter",
+      "nameAr": "البداية",
+      "monthlyMinor": 19900,
+      "yearlyMinor": 199000,
+      "clinicLimit": 1,
+      "totalNamedUsers": 5,
+      "staffLimitExcludingOwner": 4
+    },
+    {
+      "key": "clinic",
+      "nameEn": "Clinic",
+      "nameAr": "العيادة",
+      "monthlyMinor": 39900,
+      "yearlyMinor": 399000,
+      "clinicLimit": 3,
+      "totalNamedUsers": 10,
+      "staffLimitExcludingOwner": 9
+    },
+    {
+      "key": "group",
+      "nameEn": "Group",
+      "nameAr": "المجموعة",
+      "monthlyMinor": 69900,
+      "yearlyMinor": 699000,
+      "clinicLimit": 5,
+      "totalNamedUsers": 25,
+      "staffLimitExcludingOwner": 24
+    }
+  ],
+  "decisionStatus": "provisional_pending_user_comparison",
+  "published": false
 }

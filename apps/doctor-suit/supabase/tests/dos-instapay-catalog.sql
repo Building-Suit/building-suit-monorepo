@@ -3,6 +3,7 @@ create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
 set local role authenticated;
+select is(public.doctor_saas_plan_catalog()->>'publication_state','provisional','unaccepted proposal is not a published commercial offer');
 select is(public.doctor_saas_plan_catalog()->>'currency','EGP','public introductory currency is explicit');
 select is(public.doctor_saas_plan_catalog()->>'self_service_setup_fee_minor','0','self-service has no setup fee');
 select is(public.doctor_saas_plan_catalog()->>'tax_status','not_determined','no fabricated tax status');

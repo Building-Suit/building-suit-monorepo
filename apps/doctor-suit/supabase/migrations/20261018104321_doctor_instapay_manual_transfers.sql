@@ -42,12 +42,19 @@ create table public.doctor_manual_payment_reviewer_events(
  enabled boolean not null,approval_ref text not null,valid_until timestamptz not null,
  database_actor text not null,happened_at timestamptz not null default clock_timestamp(),primary key(user_id,revision)
 );
+create table public.doctor_manual_payment_requests(
+ id uuid primary key default gen_random_uuid(),subscriber_user_id uuid not null references auth.users(id),
+ intent_id uuid not null unique references public.doctor_saas_payment_intents(id),
+ recipient_id uuid not null references public.doctor_manual_payment_recipients(id),configuration_revision integer not null,
+ created_at timestamptz not null default clock_timestamp(),unique(id,recipient_id,intent_id,subscriber_user_id)
+);
 create table public.doctor_manual_payment_notices(
  id uuid primary key default gen_random_uuid(),
  subscriber_user_id uuid not null references auth.users(id),
  intent_id uuid not null unique references public.doctor_saas_payment_intents(id),
  recipient_id uuid not null references public.doctor_manual_payment_recipients(id),
- configuration_revision integer not null,
+ configuration_revision integer not null,request_id uuid not null,requires_attention boolean not null,
+ foreign key(request_id,recipient_id,intent_id,subscriber_user_id)references public.doctor_manual_payment_requests(id,recipient_id,intent_id,subscriber_user_id),
  transfer_reference text not null check(length(btrim(transfer_reference)) between 2 and 200 and transfer_reference !~ '[[:cntrl:]<>]'),
  transferred_at timestamptz not null check(pg_catalog.isfinite(transferred_at)),
  created_at timestamptz not null default clock_timestamp(),
@@ -82,7 +89,7 @@ insert into public.doctor_manual_payment_configuration_events(revision,recipient
  select revision,recipient_id,enabled,acceptance_mode,change_reason,session_user from public.doctor_manual_payment_configuration;
 
 do $$declare name text;begin
- foreach name in array array['doctor_manual_payment_recipients','doctor_manual_payment_configuration','doctor_manual_payment_configuration_events','doctor_manual_payment_reviewers','doctor_manual_payment_reviewer_events','doctor_manual_payment_notices','doctor_manual_received_funds','doctor_manual_payment_reviews']loop
+ foreach name in array array['doctor_manual_payment_recipients','doctor_manual_payment_configuration','doctor_manual_payment_configuration_events','doctor_manual_payment_reviewers','doctor_manual_payment_reviewer_events','doctor_manual_payment_requests','doctor_manual_payment_notices','doctor_manual_received_funds','doctor_manual_payment_reviews']loop
   execute format('alter table public.%I enable row level security',name);
   execute format('alter table public.%I force row level security',name);
   execute format('create policy %I on public.%I for all to postgres using(true)with check(true)',name||'_owner',name);
@@ -151,12 +158,44 @@ declare q public.doctor_saas_quotes;r public.doctor_manual_payment_recipients;re
  'terms_id',q.terms_version_id,'billing_interval',q.billing_interval,'amount_minor',q.amount_minor::text,'currency',q.currency,'currency_exponent',q.currency_exponent,
  'recipient_id',r.id,'beneficiary_name',r.beneficiary_name,'transfer_reference',n.transfer_reference,'transferred_at',n.transferred_at,'created_at',n.created_at,
  'status',coalesce(review.action,'submitted'),'revision',coalesce(review.revision,0),'review_reason',review.reason,
- 'period_id',review.period_id,'independent_verification_required',true,'automatic_verification',false,'live_acceptance_enabled',false);
+ 'period_id',review.period_id,'requires_attention',n.requires_attention,'independent_verification_required',true,'automatic_verification',false,'live_acceptance_enabled',false);
+end $$;
+create function doctor_private.prepare_manual_payment(p_intent uuid,p_configuration_revision integer,p_key uuid)returns jsonb
+language plpgsql volatile security definer set search_path=''as $$
+declare actor uuid:=doctor_private.current_actor();i public.doctor_saas_payment_intents;q public.doctor_saas_quotes;
+ c public.doctor_manual_payment_configuration;r public.doctor_manual_payment_recipients;item public.doctor_manual_payment_requests;
+ prior doctor_private.command_receipts;state jsonb;result jsonb;
+ request jsonb:=jsonb_build_object('command','manual.payment.prepare','intent',p_intent,'configuration_revision',p_configuration_revision);
+begin
+ if p_intent is null or p_key is null or p_configuration_revision is null then raise exception using errcode='22023',message='DOCTOR_MANUAL_SUBMISSION_INVALID';end if;
+ if current_setting('transaction_isolation')<>'read committed'then raise exception using errcode='25001',message='DOCTOR_SAAS_ISOLATION_REQUIRED';end if;
+ perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(actor::text,0));perform doctor_private.saas_lock_subscriber(actor);
+ perform doctor_private.current_actor();perform doctor_private.require_owner_enrollment();
+ select * into i from public.doctor_saas_payment_intents where id=p_intent and subscriber_user_id=actor;
+ if not found then raise exception using errcode='42501',message='DOCTOR_ACCESS_DENIED';end if;
+ select * into prior from doctor_private.command_receipts where actor_user_id=actor and command_key=p_key;
+ if found then if prior.request<>request then raise exception using errcode='22023',message='DOCTOR_IDEMPOTENCY_CONFLICT';end if;return prior.result;end if;
+ select * into c from public.doctor_manual_payment_configuration where singleton for share;
+ select * into r from public.doctor_manual_payment_recipients where id=c.recipient_id;
+ perform doctor_private.current_actor();perform doctor_private.require_owner_enrollment();
+ if not coalesce(c.enabled and c.acceptance_mode='synthetic'and r.id is not null,false)then raise exception using errcode='DS008',message='DOCTOR_MANUAL_PAYMENT_UNCONFIGURED';end if;
+ if c.revision<>p_configuration_revision then raise exception using errcode='40001',message='DOCTOR_MANUAL_CONFIGURATION_CONFLICT';end if;
+ select * into q from public.doctor_saas_quotes where id=i.quote_id;state:=doctor_private.saas_account_state(actor);
+ if not doctor_private.saas_offer_selected(q.terms_version_id,q.configuration_revision)or q.currency<>r.currency or q.currency_exponent<>r.currency_exponent or q.amount_minor<=0
+  or(state->>'revision')::integer<>q.account_revision or(state#>>'{period,id}')::uuid is distinct from q.current_period_id or state->>'state'='suspended'
+ then raise exception using errcode='40001',message='DOCTOR_SAAS_QUOTE_STALE';end if;
+ insert into public.doctor_manual_payment_requests(subscriber_user_id,intent_id,recipient_id,configuration_revision)values(actor,i.id,r.id,c.revision)on conflict(intent_id)do nothing;
+ select * into item from public.doctor_manual_payment_requests where intent_id=i.id;
+ select * into r from public.doctor_manual_payment_recipients where id=item.recipient_id;
+ result:=jsonb_build_object('request_id',item.id,'intent_id',i.id,'quote_id',q.id,'subscriber_user_id',actor,'configuration_revision',item.configuration_revision,
+  'recipient',jsonb_build_object('id',r.id,'kind',r.address_kind,'address',r.address,'beneficiary_name',r.beneficiary_name,'instructions_en',r.instructions_en,'instructions_ar',r.instructions_ar),
+  'amount_minor',q.amount_minor::text,'currency',q.currency,'currency_exponent',q.currency_exponent,'acceptance_mode','synthetic','live_acceptance_enabled',false);
+ insert into doctor_private.command_receipts values(actor,p_key,request,result);return result;
 end $$;
 create function doctor_private.submit_manual_payment(p_intent uuid,p_reference text,p_transferred_at timestamptz,p_configuration_revision integer,p_key uuid)returns jsonb
 language plpgsql volatile security definer set search_path=''as $$
 declare actor uuid:=doctor_private.current_actor();i public.doctor_saas_payment_intents;q public.doctor_saas_quotes;c public.doctor_manual_payment_configuration;
- r public.doctor_manual_payment_recipients;n public.doctor_manual_payment_notices;prior doctor_private.command_receipts;result jsonb;state jsonb;
+ r public.doctor_manual_payment_recipients;prepared public.doctor_manual_payment_requests;n public.doctor_manual_payment_notices;prior doctor_private.command_receipts;result jsonb;state jsonb;
  request jsonb:=jsonb_build_object('command','manual.payment.submit','intent',p_intent,'reference',p_reference,'transferred_at',p_transferred_at,'configuration_revision',p_configuration_revision);
 begin
  if p_intent is null or p_key is null or p_reference is null or length(btrim(p_reference))not between 2 and 200 or p_reference~'[[:cntrl:]<>]'
@@ -173,24 +212,21 @@ begin
   if prior.request<>request then raise exception using errcode='22023',message='DOCTOR_IDEMPOTENCY_CONFLICT';end if;
   return prior.result;
  end if;
- select * into c from public.doctor_manual_payment_configuration where singleton for share;
- select * into r from public.doctor_manual_payment_recipients where id=c.recipient_id;
- perform doctor_private.current_actor();perform doctor_private.require_owner_enrollment();
- if not coalesce(c.enabled and c.acceptance_mode='synthetic' and r.id is not null,false)then raise exception using errcode='DS008',message='DOCTOR_MANUAL_PAYMENT_UNCONFIGURED';end if;
- if c.revision<>p_configuration_revision then raise exception using errcode='40001',message='DOCTOR_MANUAL_CONFIGURATION_CONFLICT';end if;
- select * into q from public.doctor_saas_quotes where id=i.quote_id;
- state:=doctor_private.saas_account_state(actor);
- if q.currency<>r.currency or q.currency_exponent<>r.currency_exponent or q.amount_minor<=0
-  or(state->>'revision')::integer<>q.account_revision or(state#>>'{period,id}')::uuid is distinct from q.current_period_id
-  or not doctor_private.saas_offer_selected(q.terms_version_id,q.configuration_revision)
- then raise exception using errcode='40001',message='DOCTOR_SAAS_QUOTE_STALE';end if;
+ -- A claim about an already-instructed transfer must remain recordable after
+ -- recipient rotation, offer expiry or configuration withdrawal. It grants no
+ -- funds/entitlement authority and retains its original recipient snapshot.
+ select * into prepared from public.doctor_manual_payment_requests where intent_id=i.id and subscriber_user_id=actor;
+ if not found then raise exception using errcode='DS008',message='DOCTOR_MANUAL_PAYMENT_UNCONFIGURED';end if;
+ if prepared.configuration_revision<>p_configuration_revision then raise exception using errcode='40001',message='DOCTOR_MANUAL_CONFIGURATION_CONFLICT';end if;
+ select * into r from public.doctor_manual_payment_recipients where id=prepared.recipient_id;
+ select * into q from public.doctor_saas_quotes where id=i.quote_id;state:=doctor_private.saas_account_state(actor);
  select * into n from public.doctor_manual_payment_notices where intent_id=i.id;
  if found then
   if n.transfer_reference<>btrim(p_reference)or n.transferred_at<>p_transferred_at or n.recipient_id<>r.id then
    raise exception using errcode='22023',message='DOCTOR_MANUAL_NOTICE_EXISTS';end if;
  else
-  insert into public.doctor_manual_payment_notices(subscriber_user_id,intent_id,recipient_id,configuration_revision,transfer_reference,transferred_at)
-  values(actor,i.id,r.id,c.revision,btrim(p_reference),p_transferred_at)returning * into n;
+  insert into public.doctor_manual_payment_notices(subscriber_user_id,intent_id,recipient_id,configuration_revision,request_id,requires_attention,transfer_reference,transferred_at)
+  values(actor,i.id,r.id,prepared.configuration_revision,prepared.id,not doctor_private.saas_offer_selected(q.terms_version_id,q.configuration_revision)or(state->>'revision')::integer<>q.account_revision or state->>'state'='suspended',btrim(p_reference),p_transferred_at)returning * into n;
  end if;
  result:=doctor_private.manual_notice_projection(n);
  insert into doctor_private.command_receipts values(actor,p_key,request,result);
@@ -261,6 +297,7 @@ begin
  return result;
 end $$;
 create function public.doctor_manual_payment_configuration()returns jsonb language sql volatile security invoker set search_path=''as $$select doctor_private.manual_payment_configuration()$$;
+create function public.doctor_prepare_manual_payment(p_intent uuid,p_configuration_revision integer,p_key uuid)returns jsonb language sql volatile security invoker set search_path=''as $$select doctor_private.prepare_manual_payment(p_intent,p_configuration_revision,p_key)$$;
 create function public.doctor_submit_manual_payment(p_intent uuid,p_reference text,p_transferred_at timestamptz,p_configuration_revision integer,p_key uuid)returns jsonb language sql volatile security invoker set search_path=''as $$select doctor_private.submit_manual_payment(p_intent,p_reference,p_transferred_at,p_configuration_revision,p_key)$$;
 create function public.doctor_manual_payments(p_notice uuid default null,p_review_queue boolean default false,p_page integer default 1)returns jsonb language sql volatile security invoker set search_path=''as $$select doctor_private.manual_payments(p_notice,p_review_queue,p_page)$$;
 create function public.doctor_review_manual_payment(p_notice uuid,p_revision integer,p_action text,p_reason text,p_received_reference text,p_received_minor text,p_currency text,p_received_at timestamptz,p_verification_ref text,p_independently_verified boolean,p_key uuid)returns jsonb language sql volatile security invoker set search_path=''as $$select doctor_private.review_manual_payment(p_notice,p_revision,p_action,p_reason,p_received_reference,p_received_minor,p_currency,p_received_at,p_verification_ref,p_independently_verified,p_key)$$;
@@ -270,3 +307,6 @@ revoke all on function doctor_private.saas_offer_selected(uuid,integer),doctor_p
 grant execute on function doctor_private.manual_payment_configuration(),doctor_private.submit_manual_payment(uuid,text,timestamptz,integer,uuid),doctor_private.manual_payments(uuid,boolean,integer),doctor_private.review_manual_payment(uuid,integer,text,text,text,text,text,timestamptz,text,boolean,uuid)to authenticated;
 revoke all on function public.doctor_manual_payment_configuration(),public.doctor_submit_manual_payment(uuid,text,timestamptz,integer,uuid),public.doctor_manual_payments(uuid,boolean,integer),public.doctor_review_manual_payment(uuid,integer,text,text,text,text,text,timestamptz,text,boolean,uuid)from public,anon,authenticated,service_role;
 grant execute on function public.doctor_manual_payment_configuration(),public.doctor_submit_manual_payment(uuid,text,timestamptz,integer,uuid),public.doctor_manual_payments(uuid,boolean,integer),public.doctor_review_manual_payment(uuid,integer,text,text,text,text,text,timestamptz,text,boolean,uuid)to authenticated;
+
+revoke all on function doctor_private.prepare_manual_payment(uuid,integer,uuid),public.doctor_prepare_manual_payment(uuid,integer,uuid)from public,anon,authenticated,service_role;
+grant execute on function doctor_private.prepare_manual_payment(uuid,integer,uuid),public.doctor_prepare_manual_payment(uuid,integer,uuid)to authenticated;

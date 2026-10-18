@@ -1,8 +1,8 @@
 # Doctor manual InstaPay implementation
 
-The user selected InstaPay instead of X-Pay for the initial route, then delegated competitive introductory prices and limits. This changes the payment route and commercial price inputs; it supplies no clinical, qualified legal/tax or live-release approval. No customer payments or production activation are authorized. Work starts from stg `c08d64fd6de5ff16cd1202826103cee9846f6b81`; all nine original plans and Automation remain untouched.
+The user selected InstaPay instead of X-Pay for the initial route, then delegated competitive introductory price research and limits; the latest comparison request leaves the proposed prices provisional. This changes the payment route and commercial price inputs; it supplies no clinical, qualified legal/tax or live-release approval. No customer payments or production activation are authorized. Work starts from stg `c08d64fd6de5ff16cd1202826103cee9846f6b81`; all nine original plans and Automation remain untouched.
 
-## Commercial decision — 2026-10-18
+## Provisional commercial proposal — 2026-10-18
 
 Canonical source: `apps/doctor-suit/config/introductory-plans.v1.json`, mirrored by the checked forward migration and consistency tests.
 
@@ -12,7 +12,7 @@ Canonical source: `apps/doctor-suit/config/introductory-plans.v1.json`, mirrored
 | Clinic | 399 | 3,990 | 3 | 10 | 9 |
 | Group | 699 | 6,990 | 5 | 25 | 24 |
 
-A year is 12 calendar months for ten monthly payments (16.7% saving). Self-service activation has no setup fee. These are introductory prices, without a crossed-out former price, lifetime promise, tax-treatment claim, clinical-release claim, or unlimited storage/support promise. All qualified administrative features are included. Unit economics remain provisional; profitability is not established.
+A year is 12 calendar months for ten monthly payments (16.7% saving). Self-service activation has no setup fee. These are unpublished provisional introductory prices, without a crossed-out former price, lifetime promise, tax-treatment claim, clinical-release claim, or unlimited storage/support promise. All qualified administrative features are included. Unit economics remain provisional; profitability is not established.
 
 Parent-coordinated research accessed 2026-10-18: [Tabeeb Hub](https://tabeeb-hub.com/en/pricing) 149/249/449 EGP; [ClinicsAdmin](https://clinicsadmin.com/en) 250/500 monthly and 2,500/5,000 yearly; [Clinbeam](https://clinbeam.com/pricing) 599/1,199/2,499; [Tabbaba](https://tabbaba.com/pricing/) 799/1,599/3,299 and a 2,500 setup charge. These are the parent's current official-source research observations, not feature-equivalence or audited unit-economics findings. Tabeeb Hub has a lower starting price, so Doctor is not described as cheapest.
 
@@ -26,4 +26,4 @@ Recipient configuration is versioned and unconfigured by default. It has no inve
 
 This checkpoint supplies the server notice/review foundation and safe published price catalog. Paid-period activation, private receipt bytes and customer/admin presentation are the next focused implementation slice; this document does not claim those unfinished paths pass. Live acceptance remains disabled. Database/service fixtures run in GitHub CI under the no-local-services instruction; static and pure unit checks can run in this cloud workspace. Generated types are retained from the migrated disposable CI database, not handwritten.
 
-Exact remaining inputs: Doctor-approved recipient IPA/mobile destination and bank-displayed beneficiary/merchant identity; accountable independent reviewer user IDs and authority; actual trial, grace and renewal/activation/downgrade/cancellation/refund policies where unconfigured; qualified terms/tax applicability and applicable real-data/hosting/recovery/launch decisions. Prices and clinic/user limits above are decided. Provider secrets must stay in approved operator custody and are not requested in chat.
+Exact remaining inputs: Doctor-approved recipient IPA/mobile destination and bank-displayed beneficiary/merchant identity; accountable independent reviewer user IDs and authority; actual trial, grace and renewal/activation/downgrade/cancellation/refund policies where unconfigured; qualified terms/tax applicability and applicable real-data/hosting/recovery/launch decisions. The price/limit proposal above is provisional pending the user’s comparison decision; no commercial offer is published. Provider secrets must stay in approved operator custody and are not requested in chat.

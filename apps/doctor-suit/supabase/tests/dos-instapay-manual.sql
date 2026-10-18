@@ -30,6 +30,7 @@ insert into public.doctor_manual_payment_recipients(id,account_key,address_kind,
 update public.doctor_manual_payment_configuration set recipient_id=pg_temp.id(71),enabled=true,acceptance_mode='synthetic',revision=revision+1,change_reason='Disposable fixture only';
 insert into public.doctor_manual_payment_reviewers(user_id,enabled,revision,approval_ref,valid_until)values(pg_temp.id(4),true,1,'SYNTHETIC_REVIEWER',clock_timestamp()+interval'1 hour'),(pg_temp.id(1),true,1,'SYNTHETIC_SELF_REVIEW_DENIAL',clock_timestamp()+interval'1 hour');
 set local role authenticated;select pg_temp.claim(1);
+insert into results values('request-a',public.doctor_prepare_manual_payment(((select value from results where name='intent-a')->>'intent_id')::uuid,2,pg_temp.id(90)));
 insert into results values('notice-a',public.doctor_submit_manual_payment(((select value from results where name='intent-a')->>'intent_id')::uuid,'SYNTHETIC-CUSTOMER-REF',(select value from moments),2,pg_temp.id(63)));
 select is((select value->>'status'from results where name='notice-a'),'submitted','customer claim stays submitted');
 select is((select value->>'automatic_verification'from results where name='notice-a'),'false','no automatic verification');
@@ -43,6 +44,7 @@ select throws_ok($$select public.doctor_manual_payments(((select value from resu
 select throws_ok($$select public.doctor_manual_payments(null,true,1)$$,'42501','DOCTOR_MANUAL_REVIEW_AUTHORITY_REQUIRED','editable admin metadata grants no review access');
 insert into results values('quote-b',public.doctor_create_saas_quote(pg_temp.id(51),2,0,'monthly','synthetic-manual/v1',pg_temp.id(65)));
 insert into results values('intent-b',public.doctor_prepare_saas_payment(((select value from results where name='quote-b')->>'quote_id')::uuid,pg_temp.id(66)));
+insert into results values('request-b',public.doctor_prepare_manual_payment(((select value from results where name='intent-b')->>'intent_id')::uuid,2,pg_temp.id(91)));
 insert into results values('notice-b',public.doctor_submit_manual_payment(((select value from results where name='intent-b')->>'intent_id')::uuid,'SAME-CUSTOMER-COPIED-REF',(select value from moments),2,pg_temp.id(67)));
 select pg_temp.claim(3);
 select throws_ok($$select public.doctor_submit_manual_payment(((select value from results where name='intent-a')->>'intent_id')::uuid,'SYNTHETIC-CUSTOMER-REF',(select value from moments),2,pg_temp.id(68))$$,'42501','DOCTOR_OWNER_ENROLLMENT_REQUIRED','delegated practice permission is not subscriber authority');
@@ -72,6 +74,6 @@ select throws_ok($$select public.doctor_manual_payments(null,true,1)$$,'42501','
 select throws_ok($$select public.doctor_review_manual_payment(((select value from results where name='notice-a')->>'id')::uuid,1,'funds_verified','Checked beneficiary bank record',' bank-ref ','19900','EGP',(select value from moments),'SYNTHETIC_BENEFICIARY_BANK_RECORD',true,pg_temp.id(83))$$,'42501','DOCTOR_MANUAL_REVIEW_AUTHORITY_REQUIRED','revocation denies even successful command replay');
 reset role;
 select ok(not has_table_privilege(role_name,'public.'||table_name,'select,insert,update,delete,truncate'),'no raw '||role_name||' grant on '||table_name)
- from unnest(array['anon','authenticated','service_role'])role_name cross join unnest(array['doctor_manual_payment_recipients','doctor_manual_payment_configuration','doctor_manual_payment_configuration_events','doctor_manual_payment_reviewers','doctor_manual_payment_reviewer_events','doctor_manual_payment_notices','doctor_manual_received_funds','doctor_manual_payment_reviews'])table_name;
-select ok((select bool_and(relrowsecurity and relforcerowsecurity)from pg_class where relname like 'doctor_manual_%'and relnamespace='public'::regnamespace),'manual tables force RLS');
+ from unnest(array['anon','authenticated','service_role'])role_name cross join unnest(array['doctor_manual_payment_recipients','doctor_manual_payment_configuration','doctor_manual_payment_configuration_events','doctor_manual_payment_reviewers','doctor_manual_payment_reviewer_events','doctor_manual_payment_requests','doctor_manual_payment_notices','doctor_manual_received_funds','doctor_manual_payment_reviews'])table_name;
+select ok((select bool_and(relrowsecurity and relforcerowsecurity)from pg_class where relkind='r'and relname like 'doctor_manual_%'and relnamespace='public'::regnamespace),'manual tables force RLS');
 select * from finish();rollback;
