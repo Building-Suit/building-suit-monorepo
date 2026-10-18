@@ -46,9 +46,19 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     expect(contrast).toBeGreaterThanOrEqual(4.5)
     const inactivePeriod = page.getByRole('button', { name: locale === 'ar' ? 'شهر' : 'Month', exact: true })
     await expect(inactivePeriod).toHaveAttribute('aria-pressed', 'false')
-    // The approved Shop dashboard uses bordered surface buttons instead of
-    // transparent chips; the inactive control should match the card surface.
-    const surface = await panel.evaluate(element => getComputedStyle(element).backgroundColor)
+    // Cards paint a gradient, so their background-color is transparent. The
+    // period controls belong to the surface toolbar, not the first metric card.
+    const toolbar = page.getByRole('toolbar').filter({ has: inactivePeriod })
+    const surface = await toolbar.evaluate(element => {
+      const probe = document.createElement('span')
+      probe.style.backgroundColor = 'var(--bs-surface)'
+      element.append(probe)
+      const color = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      return color
+    })
+    await expect(panel).not.toHaveCSS('background-image', 'none')
+    await expect(toolbar).toHaveCSS('background-color', surface)
     await expect(inactivePeriod).toHaveCSS('background-color', surface)
     expect(await activePeriod.evaluate(element => getComputedStyle(element).backgroundColor)).not.toBe(surface)
     await expectNoPageOverflow(page)
