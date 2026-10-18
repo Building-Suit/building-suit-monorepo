@@ -1,3 +1,5 @@
+import{doctorOperationsRepository}from'../app/utils/operationsReadiness.ts'
+import {verifyDoctorSaasFinancialProvider}from'./saas-reconciliation-actual-provider.mjs'
 import {verifyDoctorSaasQuoteProvider}from'./saas-quotes-actual-provider.mjs'
 // Actual owned administrative-candidate acceptance; every fixture value is synthetic.
 import {randomUUID,randomBytes,createHash}from'node:crypto'
@@ -37,6 +39,11 @@ export async function verifyDoctorAdministrativeCandidateProvider({publicKey,boo
   expect((await rpc(staff.client,'doctor_session_context')).practice_id===null,'Candidate staff acquired ownership')
   setStage('actual candidate SaaS quote and held-intent transport')
   const heldQuote=await verifyDoctorSaasQuoteProvider({a,b,staff,rpc})
+  setStage('actual candidate synthetic financial reconciliation and owner report')
+  await verifyDoctorSaasFinancialProvider({a,b,staff,quoteId:heldQuote,sql,rpc})
+  const administration=await rpc(a.client,'doctor_administration_readiness');expect(administration.subscriber_user_id===a.user.id&&administration.state==='unavailable'&&administration.target_binding==='unconfigured'&&administration.signing==='unconfigured'&&administration.capabilities.length===0&&!administration.operator_grant_available&&!administration.payment_confirmed&&!administration.live_activation,'Unconfigured Doctor administration acquired authority')
+  setStage('actual candidate redacted subscriber operations')
+  const operations=await doctorOperationsRepository(a.client).status({userId:a.user.id,practiceId:a.scope.practiceId},new AbortController().signal);expect(operations.heldIntents===1&&operations.unknownReview===0&&operations.discrepancyReview===0&&operations.independentSecurityReview==='pending'&&!operations.recoveryQualified&&!operations.capacityAccepted&&!operations.paidActivationAvailable&&!operations.liveActivation,'Redacted candidate diagnostics inferred launch authority');await denied(staff,'doctor_operations_status',{})
   const team=await rpc(a.client,'doctor_team',{p_practice:a.scope.practiceId});expect(team.member_total===1&&team.invitation_total===1&&team.invitations.every(value=>value.status==='accepted')&&team.entitlement.state==='trial'&&!team.entitlement.can_add_staff,'Candidate reserved-seat conversion or team authority invalid')
   const deniedInvite=randomUUID();await denied(a,'doctor_invite_secretary',{p_practice:a.scope.practiceId,p_email:`synthetic-denied-${randomUUID()}@example.test`,p_grants:[{location_id:a.scope.locationId,capabilities:['patients.read']}],p_token_hash:'a'.repeat(64),p_key:deniedInvite},'DS002')
   const usage=await rpc(a.client,'doctor_saas_status');expect(usage.usage.staff_members===1&&usage.usage.staff_invitations===0&&usage.usage.staff_total===1,'Candidate reserved seat counted twice')
