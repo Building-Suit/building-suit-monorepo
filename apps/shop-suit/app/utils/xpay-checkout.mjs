@@ -7,18 +7,29 @@ export function xpayHostedUrl(value, sessionId) {
   if (url.origin !== 'https://checkout.xpay.app' || url.pathname !== `/c/${sessionId}` || url.username || url.password || url.search || url.hash) throw new Error('invalid_checkout_url')
   return url.href
 }
+function parseMoneyTracks(value, order) {
+  if (value == null) return null // Historical EGP receipts predate paired snapshots.
+  const p = value.processing, c = value.presentment, fx = value.exchangeRate
+  if (p?.currency !== 'EGP' || !Number.isSafeInteger(p.amountMinor) || p.amountMinor <= 0
+    || c?.currency !== order.currency || c.amountMinor !== order.amountMinor
+    || (order.currency === 'EGP' ? p.amountMinor !== c.amountMinor || fx != null
+      : typeof fx?.id !== 'string' || !fx.id || fx.id.length > 255 || typeof fx.rate !== 'number' || !Number.isFinite(fx.rate) || fx.rate <= 0)) throw new Error('invalid_checkout_money')
+  return { processing: { currency: 'EGP', amountMinor: p.amountMinor }, presentment: { currency: c.currency, amountMinor: c.amountMinor }, exchangeRate: fx == null ? null : { id: fx.id, rate: fx.rate } }
+}
 export function parseXPayOrder(value) {
-  if (!value || !isXPayOrderId(value.orderId) || !states.has(value.state) || value.currency !== 'EGP'
+  if (!value || !isXPayOrderId(value.orderId) || !states.has(value.state) || !['EGP','USD'].includes(value.currency)
     || !Number.isSafeInteger(value.amountMinor) || value.amountMinor <= 0 || typeof value.planName !== 'string' || !value.planName
+    || (value.refundedAmountMinor != null && (!Number.isSafeInteger(value.refundedAmountMinor) || value.refundedAmountMinor < 0 || value.refundedAmountMinor > value.amountMinor))
     || (value.quoteId != null && !isXPayOrderId(value.quoteId)) || typeof value.createdAt !== 'string' || !Number.isFinite(Date.parse(value.createdAt))) throw new Error('invalid_checkout_order')
   return { orderId: value.orderId, state: value.state, amountMinor: value.amountMinor, currency: value.currency, planName: value.planName,
+    moneyTracks: parseMoneyTracks(value.moneyTracks, value), refundedAmountMinor: value.refundedAmountMinor ?? 0,
     sessionId: value.sessionId ?? null, url: value.url == null ? null : xpayHostedUrl(value.url, value.sessionId),
     expiresAt: typeof value.expiresAt === 'string' ? value.expiresAt : null, createdAt: value.createdAt, ...(value.quoteId ? { quoteId: value.quoteId } : {}) }
 }
 export function parseXPayDatabaseOrders(value) {
   if (!Array.isArray(value) || value.length > 20) throw new Error('invalid_checkout_history')
   return value.map(order => parseXPayOrder({ orderId: order.id, state: order.state, amountMinor: order.amountMinor, currency: order.currency,
-    planName: order.description, sessionId: order.sessionId, url: order.state === 'open' ? order.url : null, expiresAt: order.expiresAt, createdAt: order.createdAt, quoteId: order.quote?.prorationQuoteId }))
+    planName: order.description, sessionId: order.sessionId, url: order.state === 'open' ? order.url : null, expiresAt: order.expiresAt, createdAt: order.createdAt, quoteId: order.quote?.prorationQuoteId, moneyTracks: order.moneyTracks, refundedAmountMinor: order.refundedAmountMinor }))
 }
 export function checkoutAttemptKey(userId, shopId) { return `shop-xpay-attempt:${userId}:${shopId}` }
 export function checkoutAttempt(storage, key, selection, createId) {

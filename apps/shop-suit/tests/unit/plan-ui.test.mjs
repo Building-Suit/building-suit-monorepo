@@ -23,7 +23,7 @@ test('inventory and purchase access notices describe subscription access in both
 })
 
 test('owner billing uses the canonical purchasable catalog and effective server quote', () => {
-  assert.match(billing, /usePlans\(\)/)
+  assert.match(billing, /usePlans\(subscriptionCurrency\.currency\)/)
   assert.match(billing, /publicCatalogTerms/)
   assert.match(billing, /form\.catalogTermsId/)
   assert.match(billing, /noticeQuote\.value/)
@@ -31,7 +31,7 @@ test('owner billing uses the canonical purchasable catalog and effective server 
   assert.match(billing, /effectivePriceAmount/)
   assert.match(billing, /priceSource === 'override'/)
   assert.doesNotMatch(billing, /349|699|1099/)
-  assert.match(pricing, /usePlans\(\)/)
+  assert.match(pricing, /usePlans\(subscriptionCurrency\.currency\)/)
   assert.match(pricing, /plan\.is_purchasable && !plan\.is_coming_soon/)
   assert.match(pricingTree, /<BsMarketingPricing/)
   assert.match(pricing, /pricing\.notes\.allPlansIncludeFreeTrial/)

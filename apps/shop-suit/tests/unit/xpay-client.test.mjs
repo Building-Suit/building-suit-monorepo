@@ -7,7 +7,7 @@ test('only the exact provider session URL may leave the app', () => {
   for (const url of ['https://checkout.xpay.app.evil.test/c/cs_test_fixture', 'https://evil.test/c/cs_test_fixture', `${order.url}?redirect=evil`, `${order.url}#token`, 'https://u:p@checkout.xpay.app/c/cs_test_fixture', 'javascript:alert(1)', 'https://checkout.xpay.app/c/cs_test_other']) assert.throws(() => parseXPayOrder({ ...order, url }))
 })
 test('invalid payment authority fails closed and response secrets are never retained', () => {
-  for (const patch of [{ state: 'success' }, { amountMinor: -1 }, { amountMinor: 1.5 }, { currency: 'USD' }, { orderId: 'redirect-success' }, { createdAt: 'invalid' }]) assert.throws(() => parseXPayOrder({ ...order, ...patch }))
+  for (const patch of [{ state: 'success' }, { amountMinor: -1 }, { amountMinor: 1.5 }, { currency: 'EUR' }, { orderId: 'redirect-success' }, { createdAt: 'invalid' }]) assert.throws(() => parseXPayOrder({ ...order, ...patch }))
   assert.equal('clientSecret' in parseXPayOrder({ ...order, clientSecret: 'secret', customer: { email: 'private' } }), false)
   assert.throws(() => parseXPayDatabaseOrders(new Array(21).fill(order)))
 })

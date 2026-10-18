@@ -11,14 +11,14 @@ const baseOrder = { id, idempotencyKey: id, shopId: shop, merchantId: 'merchant-
 const session = { id: 'cs_test_fixture', object: 'checkout.session', merchantId: 'merchant-fixture', livemode: false, metadata: { orderId: id }, currency: 'EGP', amountTotal: 34900, status: 'open', paymentStatus: 'unpaid', paymentIntentId: 'pi_test_fixture', isExpired: false, expiresAt: new Date(Date.now() + 1800000).toISOString(), url: 'https://checkout.xpay.app/c/cs_test_fixture', clientSecret: 'not-for-rpc', customer: { email: 'must-not-log@example.test' } }
 const paid = { ...session, status: 'complete', paymentStatus: 'paid' }
 const checkoutRequest = patch => new Request('https://edge.example/checkout', { method: 'POST', headers: { origin: vars.SHOP_BILLING_RETURN_ORIGIN, authorization: 'Bearer user-token', 'content-type': 'application/json' }, body: JSON.stringify({ requestId: id, shopId: shop, catalogTermsId: terms, locale: 'en', ...patch }) })
-function fixture({ providerSession = session, failedRpc, dedup = false } = {}) {
+function fixture({ providerSession = session, failedRpc, dedup = false, currency = 'EGP', usdEnabled = false, usdSupported = false } = {}) {
   const calls = [], providerCalls = []
-  let order = { ...baseOrder }
+  let order = { ...baseOrder, currency, amountMinor: currency === 'USD' ? 699 : baseOrder.amountMinor }
   const rpc = async (name, args, caller, intent) => {
     calls.push({ name, args, caller, intent })
     if (name === failedRpc) throw new Error('private SQL/provider body')
     if (name === 'shop_xpay_proration_status') return { enabled: false, creditBalanceMinor: 0 }
-    if (name === 'shop_xpay_checkout_status') return { enabled: true, mode: 'test', merchantId: 'merchant-fixture' }
+    if (name === 'shop_xpay_checkout_status') return { enabled: true, mode: 'test', merchantId: 'merchant-fixture', usdEnabled }
     if (name === 'shop_xpay_order_create' || name === 'shop_xpay_server_order') return order
     if (name === 'shop_xpay_order_read') return [order]
     if (name === 'shop_xpay_prepare_session') { order = { ...order, sessionRequest: args.p_body }; return order }
@@ -28,8 +28,8 @@ function fixture({ providerSession = session, failedRpc, dedup = false } = {}) {
     if (name === 'shop_xpay_reconcile_candidates') return [order]
     throw new Error('unexpected rpc')
   }
-  const fetchImpl = async (url, options) => { providerCalls.push({ url, options }); return Response.json(url.endsWith('/account') ? { id: 'merchant-fixture', livemode: false, livePaymentsEnabled: false, supportedCurrencies: [{ code: 'EGP', decimals: 2, paymentMethodTypes: ['card'] }], apiKey: { type: 'SECRET', mode: 'test', permissions: ['CHECKOUT_SESSIONS_READ', 'CHECKOUT_SESSIONS_WRITE'] } } : providerSession) }
-  return { env, rpc, fetchImpl, authenticate: async () => true, authorizeServer: async () => true, calls, providerCalls }
+  const fetchImpl = async (url, options) => { providerCalls.push({ url, options }); return Response.json(url.endsWith('/account') ? { id: 'merchant-fixture', livemode: false, livePaymentsEnabled: false, supportedCurrencies: [{ code: 'EGP', decimals: 2, paymentMethodTypes: ['card'] }, ...(usdSupported ? [{ code: 'USD', decimals: 2, paymentMethodTypes: ['card'] }] : [])], apiKey: { type: 'SECRET', mode: 'test', permissions: ['CHECKOUT_SESSIONS_READ', 'CHECKOUT_SESSIONS_WRITE'] } } : providerSession) }
+  return { env: name => name === 'XPAY_USD_ENABLED' ? String(usdEnabled) : env(name), rpc, fetchImpl, authenticate: async () => true, authorizeServer: async () => true, calls, providerCalls }
 }
 function webhook(event = { id: 'evt_fixture', type: 'checkout.session.completed', data: { object: paid } }) {
   const body = JSON.stringify(event), timestamp = Math.floor(Date.now() / 1000)
@@ -47,7 +47,7 @@ test('cross-origin checkout, unauthenticated caller and client amount tampering 
   const hostile = new Request('https://edge.example', { method: 'POST', headers: { origin: 'https://evil.example' }, body: '{}' })
   assert.equal((await createXPayCheckout(f)(hostile)).status, 403)
   assert.equal((await createXPayCheckout({ ...f, authenticate: async () => false })(checkoutRequest())).status, 401)
-  assert.equal((await createXPayCheckout(f)(checkoutRequest({ amount: 1 }))).status, 409)
+  for (const patch of [{ amount: 1 }, { currency: 'USD' }, { country: 'US' }]) assert.equal((await createXPayCheckout(f)(checkoutRequest(patch))).status, 409)
   assert.equal(f.calls.length + f.providerCalls.length, 0)
 })
 test('checkout forwards user token to quote RPC, persists provider body and strips private response fields', async () => {
@@ -307,4 +307,44 @@ test('invalid purchase intent and prior-paid identifiers fail before quote or pr
     assert.equal((await createXPayCheckout(f)(checkoutRequest(patch))).status, 409)
     assert.equal(f.calls.length + f.providerCalls.length, 0)
   }
+})
+
+test('signed foreign presentment cannot fulfill an EGP order through webhook or reconciliation', async () => {
+  const foreign = { ...paid, presentmentDetails: { currency: 'USD', amountTotal: 699, exchangeRate: 49.9, exchangeRateId: 'fx_fixture' } }
+  const f = fixture({ providerSession: foreign })
+  assert.equal((await createXPayWebhook(f)(webhook({ id: 'evt_foreign', type: 'checkout.session.completed', data: { object: foreign } }))).status, 503)
+  assert.equal(f.calls.some(call => call.name === 'shop_xpay_apply_session'), false)
+  const retry = fixture({ providerSession: foreign })
+  assert.equal((await createXPayReconciliation(retry)(new Request('https://edge.example/reconcile', { method: 'POST', body: JSON.stringify({ orderId: id, sessionId: session.id }) }))).status, 503)
+  assert.equal(retry.calls.some(call => call.name === 'shop_xpay_apply_session'), false)
+})
+
+
+test('USD checkout requires independent rollout and merchant USD/card capability, preserving EGP availability', async () => {
+  const foreign = { ...session, presentmentDetails: { currency: 'USD', amountTotal: 699, exchangeRate: 49.9, exchangeRateId: 'fx_fixture' } }
+  for (const options of [{ usdEnabled: false, usdSupported: true }, { usdEnabled: true, usdSupported: false }]) {
+    const f = fixture({ ...options, currency: 'USD', providerSession: foreign })
+    assert.equal((await createXPayCheckout(f)(checkoutRequest())).status, 409)
+    assert.equal(f.providerCalls.some(call => call.options.method === 'POST'), false)
+  }
+  const f = fixture({ currency: 'USD', usdEnabled: true, usdSupported: true, providerSession: foreign })
+  const result = await createXPayCheckout(f)(checkoutRequest())
+  assert.equal(result.status, 200)
+  const customer = await result.json()
+  assert.equal(customer.currency, 'USD')
+  assert.equal(customer.amountMinor, 699)
+  const request = JSON.parse(f.providerCalls.find(call => call.options.method === 'POST').options.body)
+  assert.equal(request.currency, 'USD')
+  assert.equal(request.lineItems[0].priceData.unitAmount, 699)
+  const receipt = f.calls.find(call => call.name === 'shop_xpay_bind_session').args.p_session
+  assert.equal(receipt.currency, 'EGP')
+  assert.equal(receipt.amountTotal, 34900)
+  assert.equal(receipt.presentmentDetails.currency, 'USD')
+  assert.equal(receipt.presentmentDetails.amountTotal, 699)
+})
+test('USD availability failure never suppresses valid EGP checkout status', async () => {
+  const f = fixture({ usdEnabled: true, usdSupported: false })
+  const result = await createXPayCheckout(f)(checkoutRequest({ action: 'status' }))
+  assert.equal(result.status, 200)
+  assert.deepEqual((await result.json()).currencies, ['EGP'])
 })
