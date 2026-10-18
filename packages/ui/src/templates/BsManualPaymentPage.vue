@@ -31,7 +31,7 @@ watch(()=>props.view.instructions.length,count=>{if(!count)submitVisible.value=f
     <BsRecordActionDialog v-model:visible="submitVisible" :title="copy.submit" :pending="view.pending" :dirty="Boolean(values.reference || values.at)" :submit-label="copy.submit" :submit-disabled="!view.canSubmit" :cancel-label="copy.cancel" :error="view.error" @submit="emit('submit')">
      <BsField v-slot="field" :label="copy.reference" required><BsInput :id="field.id" :model-value="values.reference" required maxlength="200" :disabled="view.uncertain" @update:model-value="update('reference',String($event))" /></BsField>
      <BsField v-slot="field" :label="copy.at" required><BsInput :id="field.id" type="datetime-local" :model-value="values.at" required :disabled="view.uncertain" @update:model-value="update('at',String($event))" /></BsField>
-     <BsText as="p">{{ copy.claimOnly }}</BsText>
+     <BsText as="p">{{ copy.claimOnly }}</BsText><BsButton v-if="view.uncertain" :disabled="view.pending" @click="emit('retryOperation')">{{ copy.retryOperation }}</BsButton>
     </BsRecordActionDialog>
     <BsPanel v-if="view.uploadPending" padding="md"><BsStack><BsAlert tone="success" :description="copy.uploadPending"/><BsFileInput :label="copy.receipt" :model-value="values.file" accept="application/pdf,image/png,image/jpeg" :disabled="view.pending || view.uncertain" @update:model-value="update('file',Array.isArray($event)?null:$event)" /><BsText as="p">{{ copy.receiptHelp }}</BsText><BsButton :disabled="!view.canUpload" :pending="view.pending" @click="emit('upload')">{{ copy.upload }}</BsButton><BsButton :disabled="view.pending || view.uncertain" @click="emit('skipReceipt')">{{ copy.skipReceipt }}</BsButton></BsStack></BsPanel>
    </template>

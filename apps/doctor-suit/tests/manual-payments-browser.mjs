@@ -19,7 +19,15 @@ export async function verifyManualPaymentBrowser({root,api,origin,key,a,b,expect
   setStage('actual owner bound instructions response');await page.getByRole('heading',{name:'Instructions bound to this request',exact:true}).waitFor()
   setStage('actual owner notice dialog open');await page.getByRole('button',{name:'Record transfer notice',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Record transfer notice',exact:true})
   setStage('actual owner notice reference field');await dialog.getByLabel(/^Transfer reference/).fill(reference);setStage('actual owner notice timestamp field');await dialog.getByLabel(/^Transfer time/).fill('2026-10-18T08:00')
-  setStage('actual owner notice submission');await dialog.getByRole('button',{name:'Record transfer notice',exact:true}).click();await dialog.waitFor({state:'hidden'})
+  setStage('actual owner committed notice response loss and stable retry')
+  let loseResponse=true
+  await page.route(`${api}/rest/v1/rpc/doctor_submit_manual_payment`,async route=>{
+   if(!loseResponse)return route.continue()
+   loseResponse=false;const response=await route.fetch();expect(response.ok(),'Synthetic committed-response fixture failed');await response.dispose();await route.abort('failed')
+  })
+  await dialog.getByRole('button',{name:'Record transfer notice',exact:true}).click()
+  await dialog.getByRole('button',{name:'Retry same operation',exact:true}).click();await dialog.waitFor({state:'hidden'})
+  expect((await rpc(a.client,'doctor_manual_payments')).items.filter(n=>n.transfer_reference===reference).length===1,'Lost response/retry created duplicate transfer notices')
   setStage('actual owner receipt file selection and upload');await page.locator('input[type=file]').setInputFiles({name:'synthetic-browser.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.7\nSynthetic browser receipt only\n%%EOF\n')});await page.getByRole('button',{name:'Upload private receipt',exact:true}).click()
   const row=page.getByRole('row').filter({hasText:reference});await row.getByRole('button',{name:'View',exact:true}).click();await page.getByRole('button',{name:'synthetic-browser.pdf',exact:true}).waitFor()
   expect((await rpc(a.client,'doctor_manual_payments')).items.find(n=>n.transfer_reference===reference)?.status==='submitted','Browser receipt verified funds')
