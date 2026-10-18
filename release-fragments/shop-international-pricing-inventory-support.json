@@ -1,0 +1,18 @@
+{
+  "id": "shop-international-pricing-inventory-support",
+  "task": "SS-BILLING-INTERNATIONAL-PREPARATION",
+  "suits": [
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "doctor-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "release-changes/items.json"
+  ],
+  "reason": "Curate bilingual Shop payment-currency verification evidence in the shared private release inventory. This bookkeeping adds no other Suit feature, publication or operational activation."
+}

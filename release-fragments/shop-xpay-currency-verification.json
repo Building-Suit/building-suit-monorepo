@@ -11,8 +11,7 @@
     "apps/shop-suit/tests/unit",
     "apps/shop-suit/app/utils/subscription-currency.mjs",
     "apps/shop-suit/app/utils/subscription-currency.d.mts",
-    "apps/shop-suit/docs",
-    "release-changes/items.json"
+    "apps/shop-suit/docs"
   ],
   "reason": "Reject a foreign presentment mirror before existing EGP fulfillment, retain separate typed provider money tracks, and prepare currency-specific account checks and an unexposed preference contract. No USD charge or customer price is enabled.",
   "notes": {
