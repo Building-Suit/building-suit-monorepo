@@ -1,18 +1,18 @@
 # Doctor manual InstaPay implementation
 
-The user selected InstaPay instead of X-Pay for the initial route, then delegated competitive introductory price research and limits; the latest comparison request leaves the proposed prices provisional. This changes the payment route and commercial price inputs; it supplies no clinical, qualified legal/tax or live-release approval. No customer payments or production activation are authorized. Work starts from stg `c08d64fd6de5ff16cd1202826103cee9846f6b81`; all nine original plans and Automation remain untouched.
+The user selected InstaPay instead of X-Pay for the initial route, then authorized the full-vision launch list prices after the comparison. This changes the payment route and commercial price inputs; it supplies no clinical, qualified legal/tax or live-release approval. No customer payments or production activation are authorized. Work starts from stg `c08d64fd6de5ff16cd1202826103cee9846f6b81`; all nine original plans and Automation remain untouched.
 
-## Provisional commercial proposal — 2026-10-18
+## Authorized launch list prices — 2026-10-18
 
 Canonical source: `apps/doctor-suit/config/introductory-plans.v1.json`, mirrored by the checked forward migration and consistency tests.
 
 | Plan | Monthly EGP | Prepaid yearly EGP | Active clinic locations | Total named users including owner | Server staff reservations excluding owner |
 |---|---:|---:|---:|---:|---:|
-| Starter | 199 | 1,990 | 1 | 5 | 4 |
-| Clinic | 399 | 3,990 | 3 | 10 | 9 |
-| Group | 699 | 6,990 | 5 | 25 | 24 |
+| Starter | 299 | 2,990 | 1 | 5 | 4 |
+| Clinic | 599 | 5,990 | 3 | 10 | 9 |
+| Group | 999 | 9,990 | 5 | 25 | 24 |
 
-A year is 12 calendar months for ten monthly payments (16.7% saving). Self-service activation has no setup fee. These are unpublished provisional introductory prices, without a crossed-out former price, lifetime promise, tax-treatment claim, clinical-release claim, or unlimited storage/support promise. All qualified administrative features are included. Unit economics remain provisional; profitability is not established.
+A year is 12 calendar months for ten monthly payments (16.7% saving). Self-service activation has no setup fee. These are the user-selected launch list prices, without a crossed-out former price, lifetime promise, tax-treatment claim, clinical-release claim, or unlimited storage/support promise. All qualified administrative features are included. Unit economics remain provisional; profitability is not established.
 
 Parent-coordinated research accessed 2026-10-18: [Tabeeb Hub](https://tabeeb-hub.com/en/pricing) 149/249/449 EGP; [ClinicsAdmin](https://clinicsadmin.com/en) 250/500 monthly and 2,500/5,000 yearly; [Clinbeam](https://clinbeam.com/pricing) 599/1,199/2,499; [Tabbaba](https://tabbaba.com/pricing/) 799/1,599/3,299 and a 2,500 setup charge. These are the parent's current official-source research observations, not feature-equivalence or audited unit-economics findings. Tabeeb Hub has a lower starting price, so Doctor is not described as cheapest.
 
@@ -26,6 +26,8 @@ Recipient configuration is versioned and unconfigured by default. It has no inve
 
 This checkpoint supplies the server notice/review foundation and safe published price catalog. The next slice adds separate configured synthetic paid-period activation and private receipt byte handling; customer/admin presentation and actual byte acceptance are still in progress; this document does not claim those unfinished paths pass. Live acceptance remains disabled. Database/service fixtures run in GitHub CI under the no-local-services instruction; static and pure unit checks can run in this cloud workspace. Generated types are retained from the migrated disposable CI database, not handwritten.
 
-Exact remaining inputs: Doctor-approved recipient IPA/mobile destination and bank-displayed beneficiary/merchant identity; accountable independent reviewer user IDs and authority; actual trial, grace and renewal/activation/downgrade/cancellation/refund policies where unconfigured; qualified terms/tax applicability and applicable real-data/hosting/recovery/launch decisions. The price/limit proposal above is provisional pending the user’s comparison decision; no commercial offer is published. Provider secrets must stay in approved operator custody and are not requested in chat.
+Exact remaining inputs: Doctor-approved recipient IPA/mobile destination and bank-displayed beneficiary/merchant identity; accountable independent reviewer user IDs and authority; actual trial, grace and renewal/activation/downgrade/cancellation/refund policies where unconfigured; qualified terms/tax applicability and applicable real-data/hosting/recovery/launch decisions. The prices/limits above are authorized for publication; no recipient, complete lifecycle/legal terms, real payment acceptance or production activation is supplied by that decision. Provider secrets must stay in approved operator custody and are not requested in chat.
 
 The activation policy is unconfigured by default. The implemented bounded policy, `inactive_account_on_review`, activates only an unconfigured/expired account after independent funds verification, current frozen-offer/account checks and a separately recorded policy reference. Active trials, suspended accounts, stale accounts/offers and unknown configurations remain held for review. It does not invent proration, active-period replacement, grace, automatic charges or refund rules. Month/year bounds are server-derived calendar intervals. Synthetic test activation does not grant real-user, clinical or live-payment approval.
+
+The final user decision supersedes the earlier provisional 199/399/699 proposal. Standard future product features are included as released, without separate feature add-on charges, within plan capacity. This promises neither availability before implementation nor delivery dates, lifetime-fixed subscription pricing, unlimited usage/storage/support, or externally purchased messaging/provider capacity. Current administrative capabilities and future clinical/mobile/integration scope must be labeled separately in every offer surface.

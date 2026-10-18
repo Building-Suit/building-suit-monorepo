@@ -19,7 +19,7 @@ export async function verifyManualPaymentConcurrency(container){
  insert into auth.sessions(id,user_id)values${[1,2,3,4,5,6,7].map(n=>`('${id(n+10)}','${id(n)}')`).join(',')};
  insert into public.doctor_candidate_admissions(id,user_id,purpose,evidence_ref,valid_until)values${[1,2,3,4,5,6,7].map(n=>`('${id(n+20)}','${id(n)}','synthetic_fixture','manual-race:${n}',clock_timestamp()+interval'2 hours')`).join(',')};
  insert into public.doctor_saas_terms_versions(id,plan_key,version,status,currency,currency_exponent,monthly_minor,trial_days,staff_limit,staff_unlimited,clinic_limit,clinic_unlimited,over_limit_policy,renewal_policy,grace_days,expiry_policy,cancellation_policy,refund_policy,terms_document_ref,commercial_approval_ref,legal_approval_ref)
- values('${id(51)}','synthetic-manual-race',1,'approved','EGP',2,19900,0,4,false,1,false,'block_new_allocation','manual',0,'historical_read_only','period_end','manual_review','synthetic-manual-race/v1','SYNTHETIC_ONLY','SYNTHETIC_ONLY');
+ values('${id(51)}','synthetic-manual-race',1,'approved','EGP',2,29900,0,4,false,1,false,'block_new_allocation','manual',0,'historical_read_only','period_end','manual_review','synthetic-manual-race/v1','SYNTHETIC_ONLY','SYNTHETIC_ONLY');
  insert into public.doctor_saas_terms_documents(terms_version_id,document_ref,content_en,content_ar)values('${id(51)}','synthetic-manual-race/v1','Synthetic concurrency fixture document only; no legal or commercial approval.','وثيقة اصطناعية لاختبار التزامن فقط، وليست موافقة قانونية أو تجارية.');
  update public.doctor_saas_configuration set terms_version_id='${id(51)}',revision=revision+1,change_reason='Disposable manual races';
  update public.doctor_edition_policy set mode='administrative_candidate',revision=revision+1,change_reason='Disposable manual races';
@@ -44,7 +44,7 @@ export async function verifyManualPaymentConcurrency(container){
   assert.equal(sql(`select count(*)from public.doctor_manual_payment_notices where intent_id='${intents[1]}'`),'1')
   for(const n of[2,3])sql(submit(n))
   const notices=Object.fromEntries([1,2,3].map(n=>[n,sql(`select id from public.doctor_manual_payment_notices where intent_id='${intents[n]}'`)]))
-  const verify=(reviewer,n,key=160+n)=>`${claim(reviewer)}select public.doctor_review_manual_payment('${notices[n]}',0,'funds_verified','Independent beneficiary record','SAME-BANK-REFERENCE','19900','EGP','${moment}','SYNTHETIC_BANK_RECORD',true,'${id(key)}');`
+  const verify=(reviewer,n,key=160+n)=>`${claim(reviewer)}select public.doctor_review_manual_payment('${notices[n]}',0,'funds_verified','Independent beneficiary record','SAME-BANK-REFERENCE','29900','EGP','${moment}','SYNTHETIC_BANK_RECORD',true,'${id(key)}');`
   const reused=await race(2,verify(5,1),verify(6,2),'transactionid');assert.notEqual(reused.status,0);assert.match(reused.errors,/unique constraint/)
   assert.equal(sql(`select count(*)from public.doctor_manual_received_funds where recipient_account_key='${id(72)}'`),'1')
   sql("update public.doctor_manual_payment_configuration set activation_policy='inactive_account_on_review',activation_approval_ref='SYNTHETIC_ONLY',revision=revision+1,change_reason='Owned activation race';")

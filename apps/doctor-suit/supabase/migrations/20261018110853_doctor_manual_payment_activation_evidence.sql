@@ -170,7 +170,7 @@ create function doctor_private.reserve_manual_evidence(p_actor uuid,p_session uu
 language plpgsql volatile security definer set search_path=''as $$
 declare previous jsonb;item doctor_private.manual_evidence_intents;n public.doctor_manual_payment_notices;begin
  previous:=doctor_private.document_actor(p_actor,p_session);
- if p_notice is null or p_key is null or p_filename is null or char_length(p_filename)not between 1 and 160 or btrim(p_filename)<>p_filename or p_filename~'[[:cntrl:]]'or position('/'in p_filename)>0 or position(chr(92)in p_filename)>0or p_mime is null or p_mime not in('application/pdf','image/png','image/jpeg')
+ if p_notice is null or p_key is null or p_filename is null or char_length(p_filename)not between 1 and 160 or btrim(p_filename)<>p_filename or p_filename~'[[:cntrl:]]'or position('/'in p_filename)>0 or position(chr(92)in p_filename)>0 or p_mime is null or p_mime not in('application/pdf','image/png','image/jpeg')
   or(p_mime='application/pdf'and right(lower(p_filename),4)<>'.pdf')or(p_mime='image/png'and right(lower(p_filename),4)<>'.png')or(p_mime='image/jpeg'and right(lower(p_filename),4)<>'.jpg'and right(lower(p_filename),5)<>'.jpeg')
   or p_size is null or p_size not between 1 and 5242880 or p_sha is null or p_sha!~'^[a-f0-9]{64}$'then raise exception using errcode='22023',message='DOCTOR_DOCUMENT_INVALID';end if;
  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_actor::text,0));

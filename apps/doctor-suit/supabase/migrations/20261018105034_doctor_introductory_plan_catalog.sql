@@ -1,17 +1,17 @@
--- Provisional introductory commercial proposal, 2026-10-18.
+-- Owner-authorized launch list prices, 2026-10-18.
 -- Publishing these prices does not approve trial, legal/tax, merchant or live use.
 create table public.doctor_introductory_plans(
  plan_key text primary key,name_en text not null,name_ar text not null,
  monthly_minor bigint not null check(monthly_minor>0),yearly_minor bigint not null check(yearly_minor=monthly_minor*10),
  clinic_limit integer not null check(clinic_limit>0),total_named_users integer not null check(total_named_users>1),
  staff_limit_excluding_owner integer not null check(staff_limit_excluding_owner=total_named_users-1),
- decision_ref text not null default 'provisional-competitive-research-2026-10-18',
+ decision_ref text not null default 'owner-selected-full-vision-launch-2026-10-18',
  created_at timestamptz not null default clock_timestamp()
 );
 insert into public.doctor_introductory_plans(plan_key,name_en,name_ar,monthly_minor,yearly_minor,clinic_limit,total_named_users,staff_limit_excluding_owner)values
- ('starter','Starter','البداية',19900,199000,1,5,4),
- ('clinic','Clinic','العيادة',39900,399000,3,10,9),
- ('group','Group','المجموعة',69900,699000,5,25,24);
+ ('starter','Starter','البداية',29900,299000,1,5,4),
+ ('clinic','Clinic','العيادة',59900,599000,3,10,9),
+ ('group','Group','المجموعة',99900,999000,5,25,24);
 create table public.doctor_manual_plan_bindings(
  plan_key text primary key references public.doctor_introductory_plans(plan_key),
  terms_version_id uuid references public.doctor_saas_terms_versions(id),
@@ -63,7 +63,7 @@ language sql stable security definer set search_path=''as $$
 $$;
 create function doctor_private.saas_plan_catalog()returns jsonb
 language sql stable security definer set search_path=''as $$
- select jsonb_build_object('version',1,'publication_state','provisional','currency','EGP','currency_exponent',2,'annual_calendar_months',12,'annual_monthly_payments',10,
+ select jsonb_build_object('version',1,'publication_state','approved_prices','currency','EGP','currency_exponent',2,'annual_calendar_months',12,'annual_monthly_payments',10,
   'self_service_setup_fee_minor','0','tax_status','not_determined','live_acceptance_enabled',false,'configuration_revision',c.revision,
   'plans',coalesce((select jsonb_agg(jsonb_build_object('key',p.plan_key,'name_en',p.name_en,'name_ar',p.name_ar,'monthly_minor',p.monthly_minor::text,
    'yearly_minor',p.yearly_minor::text,'clinic_limit',p.clinic_limit,'total_named_users',p.total_named_users,'staff_limit_excluding_owner',p.staff_limit_excluding_owner,

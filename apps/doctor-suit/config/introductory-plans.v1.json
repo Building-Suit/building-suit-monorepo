@@ -11,8 +11,8 @@
       "key": "starter",
       "nameEn": "Starter",
       "nameAr": "البداية",
-      "monthlyMinor": 19900,
-      "yearlyMinor": 199000,
+      "monthlyMinor": 29900,
+      "yearlyMinor": 299000,
       "clinicLimit": 1,
       "totalNamedUsers": 5,
       "staffLimitExcludingOwner": 4
@@ -21,8 +21,8 @@
       "key": "clinic",
       "nameEn": "Clinic",
       "nameAr": "العيادة",
-      "monthlyMinor": 39900,
-      "yearlyMinor": 399000,
+      "monthlyMinor": 59900,
+      "yearlyMinor": 599000,
       "clinicLimit": 3,
       "totalNamedUsers": 10,
       "staffLimitExcludingOwner": 9
@@ -31,13 +31,14 @@
       "key": "group",
       "nameEn": "Group",
       "nameAr": "المجموعة",
-      "monthlyMinor": 69900,
-      "yearlyMinor": 699000,
+      "monthlyMinor": 99900,
+      "yearlyMinor": 999000,
       "clinicLimit": 5,
       "totalNamedUsers": 25,
       "staffLimitExcludingOwner": 24
     }
   ],
-  "decisionStatus": "provisional_pending_user_comparison",
-  "published": false
+  "decisionStatus": "owner_authorized_launch_prices",
+  "published": true,
+  "futureFeaturePolicy": "standard_features_as_released_within_plan_capacity_no_feature_addon_charges"
 }
