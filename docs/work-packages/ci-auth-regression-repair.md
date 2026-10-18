@@ -135,3 +135,12 @@ helper/import/call to the baseline fixture; the aggregate already has those.
 Resolve any overlapping fixture hunk in favor of the aggregate's complete file.
 Canonical release guards/tests are shared with 9b07fdf8; retain the quantified
 regex spacing corrections required by root lint.
+
+
+### Aggregate shared Shop browser follow-up
+
+Bounded child based on PR388 `ca2f3e73dcccce9a1869fb2556c5a31a38f445bf`; prior uncommitted experiments remain in `/workspace/shop-stg-ci-auth` and are excluded. The existing two defects were reproduced against this aggregate build before edits: a transparent gradient-card background-color compared with an opaque inactive period button, and an awaited private router promise garbage-collected after its landing destination was already rendered.
+
+The dashboard assertion now resolves canonical `--bs-surface` in the owning filter toolbar, checks both toolbar and inactive button against it, and retains card gradient/geometry, active contrast/differentiation, navigation and overflow assertions. Pricing uses the existing SSR-aware hydrated document helper; all locale/theme/viewport/pricing/keyboard/checkout assertions remain. Additional EN/AR real Open app link scenarios verify a landing-to-workspace transition without a document reload or duplicate main/pricing trees. Runtime source and design tokens are unchanged. Parent Doctor owner integrates the reviewed commit and owns aggregate exact-head CI and staging integration.
+
+Validation: aggregate Shop build passes; full shared Shop regression suite passes 30/30 with pinned Chromium (including all original 28 cases and two added EN/AR real-link cases); changed-test ESLint and workspace/token/strict-template boundaries pass. Arabic dark desktop dashboard screenshot inspected. The two original failure classes reproduced before the fix. No test timeout or case matrix was relaxed.
