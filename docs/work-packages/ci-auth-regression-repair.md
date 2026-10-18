@@ -74,3 +74,16 @@ These reductions do not claim that the historical 52-check snapshot becomes a
 specific smaller number: required source checks and provider statuses remain.
 The larger duplicate push/promotion heavy validation still needs the exact-SHA
 receipt reuse design described above; it is not implemented by this patch.
+
+
+## Doctor-owner coordination
+
+The three runtime/test files from committed Doctor-owner fix
+`2e053c1a75ce6fa6c8c981645f53e22131b0c772` are reused here: Doctor's explicit
+transition opt-out, the shared root's nullish fallback, and the shared contract
+test. Aggregate documentation and unrelated Doctor source are not copied.
+Aggregate #388 already contains the original commit; identical shared content
+can reconcile without replaying the broader Doctor stack. The latest completed
+Doctor failure on c59f6678 had progressed past personal-settings persistence to
+"actual expired sensitive contact and fresh sign-in"; further provider-specific
+work remains with that owner.
