@@ -10,6 +10,8 @@ export interface DoctorContextState {
   error: DoctorContextError
 }
 export function doctorContextState(): DoctorContextState { return { phase: 'idle', options: [], current: null, error: null } }
+export interface DoctorContextTimers { now(): number; set(callback: () => void,delay: number): unknown; clear(handle: unknown): void }
+const stableContext = (value: DoctorLocationContext) => JSON.stringify({ ...value,...(value.entitlement ? { entitlement: { ...value.entitlement,observedAt: '' } } : {}) })
 function failure(error: unknown): DoctorContextError {
   const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : ''
   if (code === '42501') return 'denied'
@@ -18,20 +20,49 @@ function failure(error: unknown): DoctorContextError {
   return 'network'
 }
 export function createDoctorContextController(repository: ReturnType<typeof doctorContextRepository> | null, state: DoctorContextState,
-  actor: () => DoctorIdentity | null, environment: DoctorContextScope['environment'], preferences: { read(): unknown; write(value: DoctorContextPreference | null): void }) {
+  actor: () => DoctorIdentity | null, environment: DoctorContextScope['environment'], preferences: { read(): unknown; write(value: DoctorContextPreference | null): void },timers?: DoctorContextTimers) {
   const lifecycle = createDoctorContextLifecycle()
   let generation = 0
   let controller = new AbortController()
   let initialCleanup = Promise.resolve()
   let requiresSelection = false
+  let expiryTimer: unknown
+  let expirySequence=0
+  function cancelExpiry() { expirySequence++; if(expiryTimer!==undefined)timers?.clear(expiryTimer);expiryTimer=undefined }
+  function scheduleExpiry(value: DoctorLocationContext,sentAt: number) {
+    cancelExpiry()
+    const entitlement=value.entitlement
+    if(!timers || entitlement?.state!=='trial' || !entitlement.validUntil)return
+    // Use the server observation and monotonic elapsed request time. A browser
+    // wall-clock change cannot extend a subscription or grant access.
+    const remaining=Math.max(0,Date.parse(entitlement.validUntil)-Date.parse(entitlement.observedAt)-Math.max(0,timers.now()-sentAt))
+    const deadline=timers.now()+remaining;const expected=generation;const sequence=expirySequence
+    function tick() {
+      // Vue may expose current as a proxy. Authority belongs to this scheduled
+      // epoch, not raw/proxy object identity. A cancelled callback must not
+      // touch a newer timer's handle, even if it was already queued.
+      if(sequence!==expirySequence || expected!==generation || !state.current)return
+      expiryTimer=undefined
+      const left=deadline-timers!.now()
+      if(left>0) { expiryTimer=timers!.set(tick,Math.min(Math.ceil(left),2147483647));return }
+      // Remove the old authority/drafts/listeners before asking for fresh
+      // history access. Only a new server response can provide another state.
+      expire()
+    }
+    expiryTimer=timers.set(tick,Math.min(Math.ceil(remaining),2147483647))
+  }
   const identity = () => { const value = actor(); return value ? `${value.userId}:${value.sessionId}` : null }
-  function invalidate() { generation++; controller.abort(); controller = new AbortController(); state.current = null }
+  function invalidate() { cancelExpiry();generation++; controller.abort(); controller = new AbortController(); state.current = null }
   function clear() {
     invalidate(); requiresSelection = false; state.options = []; state.phase = 'idle'; state.error = null
     refreshFlight = null; refreshQueued = false
     const captured = generation
     initialCleanup = lifecycle.transition(null).catch(() => { if (captured === generation) { state.phase = 'error'; state.error = 'cleanup' } })
     return initialCleanup
+  }
+  function expire(){
+    const cleanup=clear();const cleared=generation
+    return cleanup.then(()=>{if(cleared===generation && state.error!=='cleanup')return refresh()})
   }
   async function choose(value: string): Promise<boolean> {
     const option = state.options.find(item => doctorContextId(item) === value)
@@ -42,12 +73,14 @@ export function createDoctorContextController(repository: ReturnType<typeof doct
       await Promise.all([initialCleanup, lifecycle.transition(null)])
       if (captured !== generation || expectedActor !== identity()) return false
       if (!repository || !currentActor || !option) { state.phase = 'choosing'; state.error = !currentActor ? 'session' : !repository ? 'unavailable' : 'denied'; preferences.write(null); return false }
+      const sentAt=timers?.now()??0
       const result = doctorLocationContext(await repository.resolve(option.practiceId, option.locationId, option.grantsVersion, signal), currentActor, environment)
       if (captured !== generation || expectedActor !== identity() || signal.aborted) return false
       if (doctorContextId(result) !== value) throw Object.assign(new Error('Context mismatch'), { code: '42501' })
       await lifecycle.transition(result)
       if (captured !== generation || expectedActor !== identity() || signal.aborted) return false
       state.current = result; requiresSelection = false; state.phase = 'ready'
+      scheduleExpiry(result,sentAt)
       preferences.write({ userId: currentActor.userId, sessionId: currentActor.sessionId, practiceId: result.practiceId, locationId: result.locationId })
       return true
     } catch (error) {
@@ -63,13 +96,14 @@ export function createDoctorContextController(repository: ReturnType<typeof doct
     if (!state.current) state.phase = 'loading'
     const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(10000)])
     try {
+      const sentAt=timers?.now()??0
       const options = doctorLocationContexts(await repository.load(signal), currentActor, environment)
       if (captured !== generation || expectedActor !== identity() || signal.aborted) return false
       const previous = state.current
       state.options = options; state.error = null
       if (previous) {
         const retained = options.find(item => doctorContextId(item) === doctorContextId(previous))
-        if (retained && JSON.stringify(retained) === JSON.stringify(previous)) { state.phase = 'ready'; return true }
+        if (retained && stableContext(retained) === stableContext(previous)) { state.current=retained;scheduleExpiry(retained,sentAt);state.phase = 'ready'; return true }
         if (retained) return choose(doctorContextId(retained))
         // A revoked/archived scope must not silently switch to another doctor's context.
         requiresSelection = true
@@ -108,7 +142,7 @@ export function createDoctorContextController(repository: ReturnType<typeof doct
     refreshFlight = flight
     return flight
   }
-  return { state, clear, refresh, choose, forgetPreference: () => preferences.write(null),
+  return { state,expire, clear, refresh, choose, forgetPreference: () => preferences.write(null),
     capture(feature: string, query: unknown = null) {
       if (state.phase !== 'ready' || !state.current) throw new Error('DOCTOR_CONTEXT_REQUIRED')
       return lifecycle.capture(feature, query)

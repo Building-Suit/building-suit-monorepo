@@ -728,12 +728,16 @@
       ".github/workflows/doctor-disposable.yml",
       ".github/workflows/ci.yml",
       "README.md",
-      "AGENTS.md"
+      "AGENTS.md",
+      "packages/ui/src/templates/BsLandingPage.vue",
+      "packages/ui/src/templates/BsPracticeOverviewPage.vue",
+      "pnpm-lock.yaml"
     ],
-    "reason": "Add a data-only complete shared preview contract for synthetic Doctor implementation and document it in the component catalogue; existing operational product pages are unchanged. Doctor remains unavailable for clinical care or production signup.",
+    "reason": "Keep Doctor as a synthetic internal consumer while using the canonical shared landing, auth configuration, responsive workspace navigation and administrative dashboard presentation. Preserve the earlier preview contract and its provenance in the catalogue. Existing operational consumers retain supplied pricing and their shared auth/token sources; no Doctor commercial offer, clinical authority, production signup readiness or operational registration is created.",
     "sources": [
       "dos-m1-004",
-      "dos-m1-005"
+      "dos-m1-005",
+      "dos-ae-010-ui-consistency"
     ]
   },
   {
@@ -1373,6 +1377,51 @@
       {
         "path": "apps/shop-suit/app/composables/useWebsiteAddress.ts",
         "contains": "\u0627\u062d\u062c\u0632 \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0647\u0646\u0627\u060c \u0648\u0631\u0627\u062c\u0639 \u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0639\u0627\u0645 \u0644\u0644\u0645\u062a\u062c\u0631 \u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0646\u0634\u0631 \u0648\u0645\u0639\u0631\u0641\u0629 \u062d\u0627\u0644\u062a\u0647."
+      }
+    ]
+  },
+  {
+    "id": "shop-google-onboarding-recovery",
+    "task": "SS-AUTH-GOOGLE-RECOVERY",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app",
+      "packages/ui/src/templates/BsAppRoot.vue"
+    ],
+    "reason": "Resume server-verified Google sessions after callback reload, preserve provider identity, and require remaining workspace onboarding without password or duplicate provisioning. Prevent a nested default transition from retaining duplicate login trees after logout in keyed session layouts.",
+    "notes": {
+      "title": {
+        "en": "Resume Google signup safely",
+        "ar": "كمّل التسجيل باستخدام Google بأمان"
+      },
+      "summary": {
+        "en": "Keep your verified Google identity while completing your shop details.",
+        "ar": "احتفظ ببيانات Google المؤكدة أثناء استكمال بيانات متجرك."
+      },
+      "details": {
+        "en": "Callback refresh resumes your authenticated session. Incomplete signup retains shop details, and unavailable account checks block duplicate creation. Signing out returns to one login form.",
+        "ar": "يستكمل تحديث صفحة العودة الجلسة المؤكدة. يحتفظ التسجيل غير المكتمل ببيانات المتجر، ويتوقف إنشاء الحساب عند تعذر التحقق لتجنب التكرار. يعيد تسجيل الخروج نموذج دخول واحداً."
+      }
+    },
+    "sources": [
+      "shop-google-onboarding-recovery"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/auth/google-callback.vue",
+        "contains": "verifiedGoogleIdentity(user)"
+      },
+      {
+        "path": "apps/shop-suit/app/pages/auth/signup.vue",
+        "contains": "identityFailed.value = true"
+      },
+      {
+        "path": "packages/ui/src/templates/BsAppRoot.vue",
+        "contains": "props.layoutKey === undefined && authRoute.value"
       }
     ]
   }

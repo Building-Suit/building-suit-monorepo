@@ -1,0 +1,17 @@
+{
+  "id": "dos-ae-011-actual-candidate-provider",
+  "task": "DOS-AE-011",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/account-actual-provider.mjs",
+    "apps/doctor-suit/tests/appointments-actual-provider.mjs",
+    "apps/doctor-suit/tests/disposable-provider.mjs",
+    "apps/doctor-suit/tests/administrative-candidate-actual-provider.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-011-actual-candidate-provider.md"
+  ],
+  "reason": "Add a separate real disposable Supabase administrative-candidate acceptance phase for explicit versioned trial, quotas, invitation reservation, Realtime/history, hold/expiry, recovery and direct/Edge excluded-document denial. Preserve legacy preview checks and all genuine gates; actual acceptance requires exact-head CI success."
+}

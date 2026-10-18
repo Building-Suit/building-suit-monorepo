@@ -1,0 +1,17 @@
+{
+  "id": "dos-ae-003-allocation-quotas",
+  "task": "DOS-AE-003",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/saasStatus.ts",
+    "apps/doctor-suit/supabase/migrations/20261017162051_doctor_saas_allocation_quotas.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-003-quotas.sql",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/saas-quota-concurrency.mjs",
+    "apps/doctor-suit/tests/unit/saas-status.test.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-003-allocation-quotas.md"
+  ],
+  "reason": "Enforce owner-bound atomic synthetic clinic/staff quotas, reserve pending invitation seats and validate final usage, time and provider authority at commit. Preserve security reductions, receipts, grants, trial dates and history; prevent cross-owner funding and partial onboarding. Complete business-write/context/UI and actual candidate provider acceptance remain subsequent work. No real commercial offer, merchant route, paid activation, live approval or original clinical dependency is enabled."
+}

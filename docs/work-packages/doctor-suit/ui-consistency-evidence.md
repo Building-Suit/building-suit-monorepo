@@ -1,0 +1,15 @@
+# Doctor shared UI consistency — DOS-AE-010
+
+The synthetic Doctor administrative consumer uses the canonical shared marketing, authentication and practice-shell family. Product content, permission-filtered navigation and source commands remain in Doctor; presentation stays in `packages/ui`. The landing has actual sign-in/sign-up links and a scope disclosure, with no fabricated prices, clinical approval or available payment service. New verified owners enter the existing setup flow; accepted deep links retain their authorized destination. Shared `BsSignInPage`, global tokens and brand assets are unchanged.
+
+The practice dashboard retains authoritative per-location totals, queue rows, pagination and source-history commands while using shared KPI cards. Its mobile source-history initialization serializes the initial read with a Realtime connection refresh. Appointment and queue authorization remains server-owned. The rescheduling regression selects the available 09:00 destination slot: the old 09:40 fixture overlaps its seeded commitment when the future day crosses the London daylight-saving boundary. The shared overview uses a section inside the shell’s existing main landmark.
+
+## Local evidence
+
+Cloud-loopback production preview: `http://127.0.0.1:4386`, built from this worktree into `/tmp/doctor-ui-consistency-final`. Public screenshots are stored outside the repository at `/workspace/artifacts/doctor-ui-20261017/`, with a capture manifest and exact-source version record. Captures cover `/` and `/sign-in`, English desktop/light and Arabic mobile/dark. All four responses are HTTP 200 with no horizontal overflow. This preview has no configured identity provider: sign-in truthfully displays its unavailable state and exposes no credential form.
+
+Validation: all seven application builds, the six other shared consumers' type checks, Doctor type/lint checks, strict UI boundaries and Edge type checks passed. Root units passed 1,875 tests with 23 expected optional skips. Shared authentication/access/public/signup browser regressions passed 48 cases; shared settings passed 12. Doctor public regressions passed 46 cases, with the corrected configurable-port metadata handoff passing all 8 additional cases. The full 66-case authenticated protocol run subsequently passed with zero retries. The actual-provider signup probe now checks the new owner’s `/onboarding` destination, then explicitly opens `/account` for its retained identity/settings/PKCE/recovery checks; exact-head provider CI remains required. No hosted provider assurance is implied by browser protocol fixtures.
+
+## Stack and exclusions
+
+This focused child starts from PR376 commit `014fd5513b4a853dc0e48bda9f56f1edc9326970`. The parent's pending invitation reservation fix and the separate entitlement-context worktree were explicitly excluded at branch creation and remain preserved. Clinical PR366 remains held. Candidate provider evidence, commercial/legal operator inputs and the parent-coordinated aggregate staging merge remain separate obligations. No deployment, hosted migration, Automation activation or protected-branch promotion is performed here.

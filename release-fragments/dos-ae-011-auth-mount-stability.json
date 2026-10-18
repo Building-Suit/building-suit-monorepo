@@ -1,0 +1,24 @@
+{
+  "id": "dos-ae-011-auth-mount-stability",
+  "task": "DOS-AE-011",
+  "suits": [
+    "doctor-suit",
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/layouts/auth.vue",
+    "apps/doctor-suit/app/pages/onboarding.vue",
+    "packages/ui/src/organisms/BsSignupEnrollment.vue",
+    "packages/ui/src/types/signupPresentation.ts",
+    "apps/doctor-suit/app/app.vue",
+    "packages/ui/src/templates/BsAppRoot.vue",
+    "packages/ui/tests/app-root-transition.test.mjs"
+  ],
+  "reason": "Preserve the canonical committed-router/session-layout repair from coordinated Shop PR389, and honor the existing explicit false transition option for Doctor asynchronous private-page navigation. Other products retain default/keyed/custom transitions. Separate the editable Doctor practice profile from optional verified-account identity presentation via typed flags. No auth/session/ownership authority changes or live activation."
+}

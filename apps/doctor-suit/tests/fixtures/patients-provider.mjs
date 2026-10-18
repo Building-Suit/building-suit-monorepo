@@ -16,12 +16,12 @@ export function seedPatientProtocol(data) {
     }
   })
 }
-export function patientProtocol({ data,actor,sessionId,rpc,input,send,capability }) {
+export function patientProtocol({ businessWritable=()=>true, data,actor,sessionId,rpc,input,send,capability }) {
   if (!['doctor_patients','doctor_patient','doctor_patient_duplicate_review','doctor_write_patient','doctor_archive_patient'].includes(rpc)) return false
   const reject = (code='42501',message='DOCTOR_ACCESS_DENIED') => { send({ code,message },400); return true }
   const location = data.locations.find(item => item.id===input.p_location && item.practice_id===input.p_practice && !item.archived_at)
   if (!location || !capability(input.p_practice,location.id,'patients.read')) return reject()
-  const canWrite = capability(input.p_practice,location.id,'patients.write')
+  const canWrite = businessWritable(input.p_practice) && capability(input.p_practice,location.id,'patients.write')
   const scoped = data.patientRows.filter(item => item.practice_id===input.p_practice)
   if (rpc==='doctor_patients') {
     const size = input.p_size ?? 25; const page = input.p_page ?? 0; const search = input.p_search || ''; const status = input.p_status || 'active'

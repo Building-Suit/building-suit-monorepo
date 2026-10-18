@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createDoctorRealtimeWireProbe } from './realtime-provider-probe.mjs'
 import { doctorAvailabilityToday } from '../app/utils/availability.ts'
 const wait = ms => new Promise(resolve => setTimeout(resolve,ms))
-export async function verifyDoctorAppointmentProvider({ api,key,a,b,rpc,expect,setStage,probe,advanceRevision,independentWire }) {
+export async function verifyDoctorAppointmentProvider({ api,key,a,b,rpc,expect,setStage,probe,advanceRevision,independentWire,rescheduleReason='Synthetic reconnect reschedule' }) {
   const ownerWire = createDoctorRealtimeWireProbe()
   const frozen = createClient(api,key,{ auth: { persistSession: false,autoRefreshToken: false,detectSessionInUrl: false },accessToken: async () => a.session.access_token,realtime: { logger: ownerWire.logger } })
   const channels = [];let revisionA = 0;let revisionB = 0;let forbidden = 0;let invalidPayload = false
@@ -74,7 +74,7 @@ export async function verifyDoctorAppointmentProvider({ api,key,a,b,rpc,expect,s
     const future = new Date(`${date}T00:00:00Z`);future.setUTCDate(future.getUTCDate()+7);const day = future.toISOString().slice(0,10)
     setStage('actual Realtime disconnected reschedule')
     const later = await book(day,540);expect((await frozen.removeChannel(channelA))==='ok','Actual Realtime disconnect failed')
-    const move = { ...base,p_appointment: later.appointment_id,p_expected_version: 1,p_destination: a.scope.locationId,p_day: day,p_minute: 560,p_schedule_version: hours.version,p_location_version: hours.location_version,p_reason: 'Synthetic reconnect reschedule',p_key: randomUUID() }
+    const move = { ...base,p_appointment: later.appointment_id,p_expected_version: 1,p_destination: a.scope.locationId,p_day: day,p_minute: 560,p_schedule_version: hours.version,p_location_version: hours.location_version,p_reason: rescheduleReason,p_key: randomUUID() }
     expect((await rpc(a.client,'doctor_reschedule_appointment',move)).version===2,'Actual disconnected reschedule failed')
     expect((await rpc(a.client,'doctor_reschedule_appointment',move)).version===2,'Actual reschedule retry duplicated transition')
     channelA = await subscribe(frozen,a.scope.locationId,observe(a.scope.practiceId,a.scope.locationId,value => { revisionA = Math.max(revisionA,value) }))
@@ -86,6 +86,7 @@ export async function verifyDoctorAppointmentProvider({ api,key,a,b,rpc,expect,s
     expect(forbidden===0 && !invalidPayload,'Actual Realtime scope/payload denial failed')
     console.log('Actual appointments/Realtime: one checked-in entry, attributed lifecycle, reschedule retry, disconnect/refetch and isolated revision-only channels passed')
     return {
+      sample:{appointmentId:booked.appointment_id,day:date},
       async verifyRevocation() {
         setStage('actual Realtime frozen-session revocation')
         const denied = await frozen.rpc('doctor_appointment_board',{ ...base,p_day: day });expect(denied.error?.code==='42501','Frozen Auth SID remained valid for appointment refresh')

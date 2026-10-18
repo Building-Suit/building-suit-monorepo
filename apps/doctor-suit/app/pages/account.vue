@@ -13,7 +13,7 @@ const practiceLinks = computed(() => auth.state.identity?.practiceId || context.
 const { locale } = useI18n()
 const scopeCopy = computed(() => doctorLocationsCopy(locale.value === 'ar'))
 const teamCopy = computed(() => doctorDelegationCopy(locale.value === 'ar'))
-const links = computed(() => [{ label: locale.value==='ar' ? 'نشاط حسابي الشخصي' : 'My account activity',to: '/account-activity' },...practiceLinks.value, ...(auth.state.identity?.practiceId ? [{ label: teamCopy.value.teamLink, to: '/team' }] : []), { label: teamCopy.value.acceptLink, to: '/invitations/accept' }])
+const links = computed(() => [{label:locale.value==='ar'?'طلبات خصوصية حسابي':'My account privacy requests',to:'/privacy'},...(auth.state.identity?.practiceId || practice.state.setup?.enrollment==='owner'?[{label:locale.value==='ar'?'اشتراك Doctor Suit':'Doctor Suit subscription',to:'/subscription'}]:[]),{ label: locale.value==='ar' ? 'نشاط حسابي الشخصي' : 'My account activity',to: '/account-activity' },...practiceLinks.value, ...(auth.state.identity?.practiceId ? [{ label: teamCopy.value.teamLink, to: '/team' }] : []), { label: teamCopy.value.acceptLink, to: '/invitations/accept' }])
 const hydrated = ref(false)
 onMounted(() => { hydrated.value = true })
 const availability = computed(() => auth.state.phase !== 'authenticated' || !auth.state.identity ? { state: 'loading' as const, title: copy.value.checking, description: copy.value.checkingDescription } : undefined)

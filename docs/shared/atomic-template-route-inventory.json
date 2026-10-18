@@ -85,7 +85,9 @@
     "BsPatientDirectoryPage": "packages/ui/src/templates/BsPatientDirectoryPage.vue",
     "BsPatientProfilePage": "packages/ui/src/templates/BsPatientProfilePage.vue",
     "BsAvailabilityPage": "packages/ui/src/templates/BsAvailabilityPage.vue",
-    "BsPracticeAppointmentsPage": "packages/ui/src/templates/BsPracticeAppointmentsPage.vue"
+    "BsPracticeAppointmentsPage": "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
+    "BsSubscriptionStatusPage": "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
+    "BsPrivacyRequestsPage": "packages/ui/src/templates/BsPrivacyRequestsPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2635,10 +2637,19 @@
     {
       "source": "apps/doctor-suit/app/pages/index.vue",
       "kind": "route",
-      "destination": "packages/ui/src/templates/BsProductPreviewPage.vue",
+      "destination": "packages/ui/src/templates/BsLandingPage.vue",
       "domainAdapter": "apps/doctor-suit/app/pages/index.vue",
-      "purpose": "synthetic-public-product-preview",
-      "status": "implemented; browser acceptance pending",
+      "purpose": "canonical-administrative-product-landing",
+      "status": "implemented; local EN/AR acceptance required",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/layouts/marketing.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsMarketingLayout.vue",
+      "domainAdapter": "apps/doctor-suit/app/layouts/marketing.vue",
+      "status": "implemented; local EN/AR acceptance required",
       "verification": "not-yet-accepted",
       "dependencies": []
     },
@@ -2841,6 +2852,26 @@
       "purpose": "neutral-missing-route"
     },
     {
+      "source": "apps/doctor-suit/app/pages/subscription.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/subscription.vue",
+      "purpose": "owner-bound-synthetic-subscription-status-and-trial",
+      "status": "implemented; candidate verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/privacy.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPrivacyRequestsPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/privacy.vue",
+      "purpose": "synthetic-own-account-privacy-review-intake",
+      "status": "implemented; qualified privacy fulfillment unavailable",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
       "source": "apps/shop-suit/app/pages/auth/google-callback.vue",
       "kind": "route",
       "currentSharedTemplates": [
@@ -2988,6 +3019,8 @@
     "BsPatientDirectoryPage",
     "BsPatientProfilePage",
     "BsAvailabilityPage",
-    "BsPracticeAppointmentsPage"
+    "BsPracticeAppointmentsPage",
+    "BsSubscriptionStatusPage",
+    "BsPrivacyRequestsPage"
   ]
 }

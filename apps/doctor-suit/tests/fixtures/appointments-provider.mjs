@@ -1,3 +1,4 @@
+import { doctorAdministrativeReason } from '../../app/utils/administrativeEdition.ts'
 // Owned HTTP browser protocol. Actual state/lock/RLS and Realtime have separate obligations.
 import { randomUUID } from 'node:crypto'
 import { instant,availabilityProtocol } from './availability-provider.mjs'
@@ -18,7 +19,7 @@ export function seedAppointmentProtocol(data) {
     }
   })
 }
-export function appointmentProtocol({ data,actor,sessionId,rpc,input,send,capability }) {
+export function appointmentProtocol({ businessWritable=()=>true, candidate = false,data,actor,sessionId,rpc,input,send,capability }) {
   if(!['doctor_appointment_board','doctor_appointment_history','doctor_book_appointment','doctor_reschedule_appointment','doctor_transition_appointment'].includes(rpc))return false
   const reject = (code='42501',message='DOCTOR_ACCESS_DENIED') => { send({ code,message },400);return true }
   const location = data.locations.find(item => item.id===input.p_location && item.practice_id===input.p_practice && !item.archived_at)
@@ -28,7 +29,7 @@ export function appointmentProtocol({ data,actor,sessionId,rpc,input,send,capabi
   const projection = item => ({ ...item,patient_name: can('patients.read') ? data.patientRows.find(patient => patient.id===item.patient_id)?.name || null : null })
   if(rpc==='doctor_appointment_board') {
     const items = scoped.filter(item => doctorAvailabilityToday(location.timezone,new Date(item.starts_at))===input.p_day).sort((a,b) => a.starts_at.localeCompare(b.starts_at) || a.id.localeCompare(b.id));const queue = scoped.filter(item => ['checked_in','in_progress'].includes(item.state)).sort((a,b) => a.checked_in_at.localeCompare(b.checked_in_at) || a.id.localeCompare(b.id));const page = input.p_page || 0;const queuePage = input.p_queue_page || 0
-    send({ practice_id: input.p_practice,location_id: location.id,date: input.p_day,timezone: location.timezone,location_version: location.version,items: items.slice(page*20,page*20+20).map(projection),page,total: items.length,queue: queue.slice(queuePage*20,queuePage*20+20).map(projection),queue_page: queuePage,queue_total: queue.length,revision: data.appointmentRevisions[location.id] || 0,can_write: Boolean(can('appointments.write')),can_queue: Boolean(can('queue.manage')),can_read_patients: Boolean(can('patients.read')),external_notifications: 'disabled' });return true
+    send({ practice_id: input.p_practice,location_id: location.id,date: input.p_day,timezone: location.timezone,location_version: location.version,items: items.slice(page*20,page*20+20).map(projection),page,total: items.length,queue: queue.slice(queuePage*20,queuePage*20+20).map(projection),queue_page: queuePage,queue_total: queue.length,revision: data.appointmentRevisions[location.id] || 0,can_write: businessWritable(input.p_practice) && Boolean(can('appointments.write')),can_queue: businessWritable(input.p_practice) && Boolean(can('queue.manage')),can_read_patients: Boolean(can('patients.read')),external_notifications: 'disabled' });return true
   }
   let item = scoped.find(item => item.id===input.p_appointment)
   if(rpc==='doctor_appointment_history') {
@@ -41,6 +42,7 @@ export function appointmentProtocol({ data,actor,sessionId,rpc,input,send,capabi
     if(!can(['cancelled','no_show'].includes(input.p_state) ? 'appointments.write' : 'queue.manage'))return reject()
     if(item.state==='checked_in' && input.p_state==='cancelled' && !can('queue.manage'))return reject()
   } else if(!destination || !can('appointments.write') || !can('patients.read') || !can('appointments.read',destination) || !can('appointments.write',destination) || !can('patients.read',destination))return reject()
+  if(candidate && (rpc==='doctor_reschedule_appointment' || (rpc==='doctor_transition_appointment' && ['cancelled','no_show'].includes(input.p_state))) && !doctorAdministrativeReason(input.p_reason))return reject('22023','DOCTOR_APPOINTMENT_REASON_REQUIRED')
   const key = `${actor.id}:${input.p_key}`;const fingerprint = JSON.stringify([sessionId,rpc,input]);const receipt = data.appointmentCommands[key]
   if(receipt) { if(receipt.fingerprint!==fingerprint)return reject('22023','DOCTOR_IDEMPOTENCY_CONFLICT');send(receipt.result);return true }
   if(rpc!=='doctor_book_appointment' && (!item || item.version!==input.p_expected_version))return reject('40001','DOCTOR_APPOINTMENT_CONFLICT')

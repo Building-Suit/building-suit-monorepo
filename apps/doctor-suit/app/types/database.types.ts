@@ -230,6 +230,149 @@ export type Database = {
           },
         ]
       }
+      doctor_candidate_admissions: {
+        Row: {
+          database_actor: string
+          evidence_ref: string
+          id: string
+          issued_at: string
+          purpose: string
+          user_id: string
+          valid_until: string
+        }
+        Insert: {
+          database_actor?: string
+          evidence_ref: string
+          id?: string
+          issued_at?: string
+          purpose: string
+          user_id: string
+          valid_until: string
+        }
+        Update: {
+          database_actor?: string
+          evidence_ref?: string
+          id?: string
+          issued_at?: string
+          purpose?: string
+          user_id?: string
+          valid_until?: string
+        }
+        Relationships: []
+      }
+      doctor_candidate_revocations: {
+        Row: {
+          admission_id: string
+          database_actor: string
+          reason: string
+          revoked_at: string
+        }
+        Insert: {
+          admission_id: string
+          database_actor?: string
+          reason: string
+          revoked_at?: string
+        }
+        Update: {
+          admission_id?: string
+          database_actor?: string
+          reason?: string
+          revoked_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_candidate_revocations_admission_id_fkey"
+            columns: ["admission_id"]
+            isOneToOne: true
+            referencedRelation: "doctor_candidate_admissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_edition_policy: {
+        Row: {
+          change_reason: string
+          changed_at: string
+          mode: string
+          revision: number
+          singleton: boolean
+        }
+        Insert: {
+          change_reason: string
+          changed_at?: string
+          mode: string
+          revision: number
+          singleton?: boolean
+        }
+        Update: {
+          change_reason?: string
+          changed_at?: string
+          mode?: string
+          revision?: number
+          singleton?: boolean
+        }
+        Relationships: []
+      }
+      doctor_edition_policy_events: {
+        Row: {
+          change_reason: string
+          database_actor: string
+          happened_at: string
+          next_mode: string
+          previous_mode: string | null
+          revision: number
+        }
+        Insert: {
+          change_reason: string
+          database_actor: string
+          happened_at?: string
+          next_mode: string
+          previous_mode?: string | null
+          revision: number
+        }
+        Update: {
+          change_reason?: string
+          database_actor?: string
+          happened_at?: string
+          next_mode?: string
+          previous_mode?: string | null
+          revision?: number
+        }
+        Relationships: []
+      }
+      doctor_privacy_requests: {
+        Row: {
+          created_at: string
+          database_actor: string
+          id: string
+          kind: string
+          request_key: string
+          session_id: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          database_actor?: string
+          id?: string
+          kind: string
+          request_key: string
+          session_id: string
+          state?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          database_actor?: string
+          id?: string
+          kind?: string
+          request_key?: string
+          session_id?: string
+          state?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       doctor_profiles: {
         Row: {
           created_at: string
@@ -248,6 +391,319 @@ export type Database = {
           display_name?: string
           professional_verification?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      doctor_saas_accounts: {
+        Row: {
+          changed_at: string
+          created_at: string
+          current_period_id: string
+          reason_code: string
+          revision: number
+          state: string
+          subscriber_user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          created_at?: string
+          current_period_id: string
+          reason_code: string
+          revision?: number
+          state?: string
+          subscriber_user_id: string
+        }
+        Update: {
+          changed_at?: string
+          created_at?: string
+          current_period_id?: string
+          reason_code?: string
+          revision?: number
+          state?: string
+          subscriber_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_accounts_subscriber_user_id_current_period_id_fkey"
+            columns: ["subscriber_user_id", "current_period_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_periods"
+            referencedColumns: ["subscriber_user_id", "id"]
+          },
+        ]
+      }
+      doctor_saas_configuration: {
+        Row: {
+          change_reason: string
+          changed_at: string
+          revision: number
+          singleton: boolean
+          terms_version_id: string | null
+        }
+        Insert: {
+          change_reason: string
+          changed_at?: string
+          revision: number
+          singleton?: boolean
+          terms_version_id?: string | null
+        }
+        Update: {
+          change_reason?: string
+          changed_at?: string
+          revision?: number
+          singleton?: boolean
+          terms_version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_configuration_terms_version_id_fkey"
+            columns: ["terms_version_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_terms_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_saas_configuration_events: {
+        Row: {
+          change_reason: string
+          database_actor: string
+          happened_at: string
+          next_terms_id: string | null
+          previous_terms_id: string | null
+          revision: number
+        }
+        Insert: {
+          change_reason: string
+          database_actor: string
+          happened_at?: string
+          next_terms_id?: string | null
+          previous_terms_id?: string | null
+          revision: number
+        }
+        Update: {
+          change_reason?: string
+          database_actor?: string
+          happened_at?: string
+          next_terms_id?: string | null
+          previous_terms_id?: string | null
+          revision?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_configuration_events_next_terms_id_fkey"
+            columns: ["next_terms_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_terms_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_saas_configuration_events_previous_terms_id_fkey"
+            columns: ["previous_terms_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_terms_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_saas_period_events: {
+        Row: {
+          database_actor: string
+          happened_at: string
+          next_state: string
+          period_id: string
+          previous_state: string | null
+          reason_code: string
+          revision: number
+          subscriber_user_id: string
+        }
+        Insert: {
+          database_actor?: string
+          happened_at?: string
+          next_state: string
+          period_id: string
+          previous_state?: string | null
+          reason_code: string
+          revision: number
+          subscriber_user_id: string
+        }
+        Update: {
+          database_actor?: string
+          happened_at?: string
+          next_state?: string
+          period_id?: string
+          previous_state?: string | null
+          reason_code?: string
+          revision?: number
+          subscriber_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_period_events_subscriber_user_id_period_id_fkey"
+            columns: ["subscriber_user_id", "period_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_periods"
+            referencedColumns: ["subscriber_user_id", "id"]
+          },
+        ]
+      }
+      doctor_saas_periods: {
+        Row: {
+          accepted_document_ref: string
+          created_at: string
+          database_actor: string
+          ends_at: string
+          id: string
+          kind: string
+          started_at: string
+          subscriber_user_id: string
+          terms_version_id: string
+        }
+        Insert: {
+          accepted_document_ref: string
+          created_at?: string
+          database_actor?: string
+          ends_at: string
+          id?: string
+          kind: string
+          started_at: string
+          subscriber_user_id: string
+          terms_version_id: string
+        }
+        Update: {
+          accepted_document_ref?: string
+          created_at?: string
+          database_actor?: string
+          ends_at?: string
+          id?: string
+          kind?: string
+          started_at?: string
+          subscriber_user_id?: string
+          terms_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_periods_terms_version_id_fkey"
+            columns: ["terms_version_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_saas_terms_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_saas_terms_documents: {
+        Row: {
+          content_ar: string
+          content_en: string
+          created_at: string
+          database_actor: string
+          document_ref: string
+          terms_version_id: string
+        }
+        Insert: {
+          content_ar: string
+          content_en: string
+          created_at?: string
+          database_actor?: string
+          document_ref: string
+          terms_version_id: string
+        }
+        Update: {
+          content_ar?: string
+          content_en?: string
+          created_at?: string
+          database_actor?: string
+          document_ref?: string
+          terms_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_saas_terms_documents_terms_version_id_fkey"
+            columns: ["terms_version_id"]
+            isOneToOne: true
+            referencedRelation: "doctor_saas_terms_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_saas_terms_versions: {
+        Row: {
+          cancellation_policy: string | null
+          clinic_limit: number | null
+          clinic_unlimited: boolean | null
+          commercial_approval_ref: string | null
+          created_at: string
+          currency: string | null
+          currency_exponent: number | null
+          database_actor: string
+          expiry_policy: string | null
+          grace_days: number | null
+          id: string
+          legal_approval_ref: string | null
+          monthly_minor: number | null
+          over_limit_policy: string | null
+          plan_key: string
+          refund_policy: string | null
+          renewal_policy: string | null
+          staff_limit: number | null
+          staff_unlimited: boolean | null
+          status: string
+          terms_document_ref: string | null
+          trial_days: number | null
+          version: number
+          yearly_minor: number | null
+        }
+        Insert: {
+          cancellation_policy?: string | null
+          clinic_limit?: number | null
+          clinic_unlimited?: boolean | null
+          commercial_approval_ref?: string | null
+          created_at?: string
+          currency?: string | null
+          currency_exponent?: number | null
+          database_actor?: string
+          expiry_policy?: string | null
+          grace_days?: number | null
+          id?: string
+          legal_approval_ref?: string | null
+          monthly_minor?: number | null
+          over_limit_policy?: string | null
+          plan_key: string
+          refund_policy?: string | null
+          renewal_policy?: string | null
+          staff_limit?: number | null
+          staff_unlimited?: boolean | null
+          status: string
+          terms_document_ref?: string | null
+          trial_days?: number | null
+          version: number
+          yearly_minor?: number | null
+        }
+        Update: {
+          cancellation_policy?: string | null
+          clinic_limit?: number | null
+          clinic_unlimited?: boolean | null
+          commercial_approval_ref?: string | null
+          created_at?: string
+          currency?: string | null
+          currency_exponent?: number | null
+          database_actor?: string
+          expiry_policy?: string | null
+          grace_days?: number | null
+          id?: string
+          legal_approval_ref?: string | null
+          monthly_minor?: number | null
+          over_limit_policy?: string | null
+          plan_key?: string
+          refund_policy?: string | null
+          renewal_policy?: string | null
+          staff_limit?: number | null
+          staff_unlimited?: boolean | null
+          status?: string
+          terms_document_ref?: string | null
+          trial_days?: number | null
+          version?: number
+          yearly_minor?: number | null
         }
         Relationships: []
       }
@@ -889,6 +1345,7 @@ export type Database = {
         Returns: Json
       }
       doctor_administrative_capabilities: { Args: never; Returns: string[] }
+      doctor_administrative_edition: { Args: never; Returns: Json }
       doctor_appointment_board: {
         Args: {
           p_day: string
@@ -1076,6 +1533,7 @@ export type Database = {
         Returns: Json
       }
       doctor_practice_setup: { Args: never; Returns: Json }
+      doctor_privacy_requests: { Args: never; Returns: Json }
       doctor_reschedule_appointment: {
         Args: {
           p_appointment: string
@@ -1118,6 +1576,9 @@ export type Database = {
         Returns: Json
       }
       doctor_runtime_contract: { Args: never; Returns: Json }
+      doctor_saas_status: { Args: never; Returns: Json }
+      doctor_saas_terms: { Args: never; Returns: Json }
+      doctor_saas_terms_document: { Args: { p_terms: string }; Returns: Json }
       doctor_save_onboarding_draft: {
         Args: {
           p_display_name: string
@@ -1152,6 +1613,19 @@ export type Database = {
           p_status: string
           p_version: number
         }
+        Returns: Json
+      }
+      doctor_start_saas_trial: {
+        Args: {
+          p_configuration_revision: number
+          p_document_ref: string
+          p_key: string
+          p_terms: string
+        }
+        Returns: Json
+      }
+      doctor_submit_privacy_request: {
+        Args: { p_key: string; p_kind: string }
         Returns: Json
       }
       doctor_team: {

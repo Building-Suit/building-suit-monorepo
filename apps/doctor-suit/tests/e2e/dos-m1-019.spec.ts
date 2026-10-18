@@ -12,7 +12,7 @@ for(const ar of [false,true])for(const theme of ['light','dark'])for(const width
       expect(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth+1)).toBe(true)
     }
     const copy = doctorMissingPage(ar);const response = await page.goto('/missing-synthetic-destination?credential=DO_NOT_REFLECT_SENTINEL');expect(response?.status()).toBe(404);await expect(page.getByRole('heading',{ name: copy.title,exact: true })).toBeVisible();await expect(page.locator('meta[property^="og:"],meta[name^="twitter:"]')).toHaveCount(0);expect(await page.locator('body').innerText()).not.toContain('DO_NOT_REFLECT_SENTINEL');expect(await page.title()).not.toContain('missing-synthetic-destination');expect(await page.locator('meta').evaluateAll(elements => elements.map(element => element.getAttribute('content')).join(' '))).not.toContain('DO_NOT_REFLECT_SENTINEL')
-    await page.getByRole('link',{ name: copy.links[0].label,exact: true }).click();await expect(page).toHaveURL('http://127.0.0.1:4336/');await page.goto('/another-missing-synthetic-destination');await page.getByRole('link',{ name: copy.links[1].label,exact: true }).click();await expect(page).toHaveURL(/\/preview$/)
-    for(const path of ['/sitemap.xml','/sitemap_index.xml'])expect((await request.get(`http://127.0.0.1:4336${path}`)).status()).toBe(404)
+    await page.getByRole('link',{ name: copy.links[0].label,exact: true }).click();await expect(page).toHaveURL(new URL('/',response!.url()).href);await page.goto('/another-missing-synthetic-destination');await page.getByRole('link',{ name: copy.links[1].label,exact: true }).click();await expect(page).toHaveURL(/\/preview$/)
+    for(const path of ['/sitemap.xml','/sitemap_index.xml'])expect((await request.get(path)).status()).toBe(404)
   } finally { try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() } }
 })

@@ -19,7 +19,7 @@ function updateText(key: Exclude<keyof BsSignupForm, 'fiscalMonth'>, value: stri
   <BsAuthForm v-else-if="view.stage !== 'verification'" :eyebrow="copy.eyebrow || undefined" :title="copy.title" :description="copy.description" :pending="view.pending" :data-hydrated="view.hydrated" @submit="emit('submit')">
     <BsSignupWizard :step="view.step" :steps="copy.steps" :pending="view.pending" :error="view.error" :notice="view.notice" :back-label="copy.back || undefined" :submit-label="view.submitLabel" :pending-label="view.pendingLabel" :submit-disabled="view.submitDisabled" @back="emit('back')">
       <BsGrid v-if="view.stage === 'account'" :columns="2">
-        <BsField v-slot="field" :label="copy.name" required><BsInput :id="field.id" :model-value="form.name" :readonly="view.existingAccount && Boolean(form.name.trim())" autocomplete="name" required @update:model-value="updateText('name', $event)" /></BsField>
+        <BsField v-slot="field" :label="copy.name" required><BsInput :id="field.id" :model-value="form.name" :readonly="view.nameLocked ?? (view.existingAccount && Boolean(form.name.trim()))" autocomplete="name" required @update:model-value="updateText('name', $event)" /></BsField>
         <BsField v-if="features.phone" v-slot="field" :label="copy.phone" required><BsInput :id="field.id" :model-value="form.phone" type="tel" autocomplete="tel" dir="ltr" required @update:model-value="updateText('phone', $event)" /></BsField>
         <BsField v-if="features.jobTitle" v-slot="field" :label="copy.jobTitle" required><BsInput :id="field.id" :model-value="form.jobTitle" required @update:model-value="updateText('jobTitle', $event)" /></BsField>
         <BsField v-slot="field" :label="copy.email" required><BsInput :id="field.id" :model-value="form.email" type="email" autocomplete="email" dir="ltr" :readonly="view.existingAccount" required @update:model-value="updateText('email', $event)" /></BsField>
@@ -28,14 +28,14 @@ function updateText(key: Exclude<keyof BsSignupForm, 'fiscalMonth'>, value: stri
       <BsStack v-else>
         <!-- Verified Supabase identity is not editable. Google supplies only
              name/email; shop details still require normal owner onboarding. -->
-        <section v-if="view.existingAccount" class="bs-signup-verified-identity">
+        <section v-if="view.existingAccount && view.showVerifiedIdentity !== false" class="bs-signup-verified-identity">
           <BsGrid :columns="2">
             <BsField v-slot="field" :label="copy.name"><BsInput :id="field.id" :model-value="form.name" type="text" readonly aria-readonly="true" autocomplete="off" tabindex="-1" /></BsField>
             <BsField v-slot="field" :label="copy.email"><BsInput :id="field.id" :model-value="form.email" type="email" readonly aria-readonly="true" dir="ltr" autocomplete="off" tabindex="-1" /></BsField>
           </BsGrid>
         </section>
         <BsGrid :columns="2">
-          <BsField v-if="features.profileName" v-slot="field" :label="copy.name" required><BsInput :id="field.id" :model-value="form.name" :readonly="view.existingAccount && Boolean(form.name.trim())" autocomplete="name" required :maxlength="features.profileNameMaxLength" @update:model-value="updateText('name', $event)" /></BsField>
+          <BsField v-if="features.profileName" v-slot="field" :label="copy.name" required><BsInput :id="field.id" :model-value="form.name" :readonly="view.nameLocked ?? (view.existingAccount && Boolean(form.name.trim()))" autocomplete="name" required :maxlength="features.profileNameMaxLength" @update:model-value="updateText('name', $event)" /></BsField>
           <BsField v-if="features.standaloneTimezone && !features.organizationDetails" v-slot="field" :label="copy.timezone" required><BsInput :id="field.id" :model-value="form.timezone" dir="ltr" required @update:model-value="updateText('timezone', $event)" /></BsField>
           <BsField v-slot="field" :label="copy.workspaceName" required><BsInput :id="field.id" :model-value="form.workspaceName" :minlength="features.workspaceMinLength ?? undefined" :maxlength="features.workspaceMaxLength ?? undefined" required @update:model-value="updateText('workspaceName', $event)" /></BsField>
           <template v-if="features.organizationDetails">

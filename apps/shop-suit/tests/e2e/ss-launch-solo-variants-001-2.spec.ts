@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { pilotFixture } from './pilot-fixture'
+import { pilotFixture, fixtureGoto } from './pilot-fixture'
 
 type RequestStatus = 'submitted' | 'under_review' | 'approved' | 'rejected' | null
 
@@ -83,10 +83,10 @@ function billing(status: RequestStatus) {
 }
 
 async function navigate(page: Page, path: string) {
-  await page.locator('#__nuxt').evaluate(async (root, destination) => {
-    const app = (root as HTMLElement & { __vue_app__?: { config: { globalProperties: { $router?: { push: (to: string) => Promise<unknown> } } } } }).__vue_app__
-    await app?.config.globalProperties.$router?.push(destination)
-  }, path)
+  // Pricing tests enter through an actual hydrated document. Awaiting an
+  // internal router promise across a keyed layout replacement can outlive its
+  // old page context even after the destination is rendered.
+  await fixtureGoto(page, path)
   await expect(page).toHaveURL(new RegExp(`${path}(?:[?#]|$)`))
 }
 
@@ -148,5 +148,21 @@ for (const locale of ['en', 'ar']) {
     await expect(page.getByRole('dialog').locator('button[type="submit"]')).toBeDisabled()
     expect(calls.filter(call => call.name === 'submit_shop_billing_notice')).toEqual([])
 
+  })
+}
+
+for (const locale of ['en', 'ar']) {
+  test(`Solo public-to-workspace navigation uses rendered links: ${locale}`, async ({ page }) => {
+    await setup(page, locale, { status: null })
+    await fixtureGoto(page, '/')
+    const documentStartedAt = await page.evaluate(() => performance.timeOrigin)
+    await page.getByRole('link', { name: locale === 'ar' ? 'فتح النظام' : 'Open app', exact: true }).click()
+    await expect(page).toHaveURL(/\/dashboard(?:[?#]|$)/)
+    await expect(page.getByRole('heading', { level: 1, name: locale === 'ar' ? 'لوحة التحكم' : 'Operating dashboard' })).toBeVisible()
+    // A real NuxtLink must navigate without reloading the document or leaving
+    // duplicate page trees when the landing layout becomes the workspace.
+    expect(await page.evaluate(() => performance.timeOrigin)).toBe(documentStartedAt)
+    await expect(page.getByRole('main')).toHaveCount(1)
+    await expect(page.getByTestId('shop-plan-cards')).toHaveCount(0)
   })
 }

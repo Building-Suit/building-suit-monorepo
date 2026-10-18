@@ -1,3 +1,7 @@
+import{doctorPrivacyRepository}from'../utils/privacyRepository'
+import{createDoctorPrivacyController,doctorPrivacyState}from'../utils/privacyController'
+import{doctorSaasRepository}from'../utils/saasRepository'
+import{createDoctorSubscriptionController,doctorSubscriptionState}from'../utils/saasController'
 import { doctorScopeKey } from '../utils/contextScope'
 import { doctorAuditRepository } from '../utils/auditRepository'
 import { createDoctorAuditController,doctorAuditState } from '../utils/auditController'
@@ -59,7 +63,11 @@ export default defineNuxtPlugin((nuxtApp) => {
   const locked = useCookie<string | null>(`bs-doctor-${settings.environment}-locked`, { sameSite: 'lax', path: '/', secure: settings.origin.startsWith('https:') })
   const state = reactive(doctorAuthState())
   const preference = useCookie<DoctorContextPreference | null>(`bs-doctor-${settings.environment}-context`, { sameSite: 'lax', path: '/', secure: provider.origin.startsWith('https:') })
-  const context = createDoctorContextController(client ? doctorContextRepository(client) : null, reactive(doctorContextState()), () => state.identity, provider.environment, { read: () => preference.value, write: value => { preference.value = value } })
+  const context = createDoctorContextController(client ? doctorContextRepository(client) : null, reactive(doctorContextState()), () => state.identity, provider.environment, { read: () => preference.value, write: value => { preference.value = value } },import.meta.client ? {
+    now: () => performance.now(),set: (callback,delay) => window.setTimeout(callback,delay),clear: handle => window.clearTimeout(handle as number),
+  } : undefined)
+  const privacy=createDoctorPrivacyController(client?doctorPrivacyRepository(client):null,reactive(doctorPrivacyState()),()=>state.identity,provider.environment)
+  const subscription=createDoctorSubscriptionController(client?doctorSaasRepository(client):null,reactive(doctorSubscriptionState()),()=>state.identity,()=>context.expire(),import.meta.client?{now:()=>performance.now(),set:(callback,delay)=>setTimeout(callback,delay),clear:handle=>clearTimeout(handle as ReturnType<typeof setTimeout>)}:undefined)
   const account = createDoctorAccountController(client ? doctorAccountRepository(client) : null,reactive(doctorAccountState()),() => state.identity,provider.environment)
   const auditScope = () => {
     const selected = context.state.current
@@ -82,7 +90,9 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
     return null
   }
-  const locations = createDoctorLocationsController(client ? doctorLocationsRepository(client) : null, reactive(doctorLocationsState()), locationsScope)
+  const entitlementTimers=import.meta.client?{now:()=>performance.now(),set:(callback:()=>void,delay:number)=>setTimeout(callback,delay),clear:(handle:unknown)=>clearTimeout(handle as ReturnType<typeof setTimeout>)}:undefined
+  const expiredOwnerScope=()=>context.expire()
+  const locations = createDoctorLocationsController(client ? doctorLocationsRepository(client) : null, reactive(doctorLocationsState()), locationsScope,undefined,entitlementTimers,expiredOwnerScope)
   const patientsScope = () => {
     const selected = context.state.current
     return selected?.locationId && selected.capabilities.includes('patients.read') ? selected : null
@@ -100,10 +110,10 @@ export default defineNuxtPlugin((nuxtApp) => {
     const selected = locationsScope()
     return selected?.portal === 'doctor' && selected.practiceId === state.identity?.practiceId ? selected : null
   }
-  const team = createDoctorTeamController(delegation, reactive(doctorTeamState()), teamScope)
+  const team = createDoctorTeamController(delegation, reactive(doctorTeamState()), teamScope,undefined,undefined,entitlementTimers,expiredOwnerScope)
   const invitation = createDoctorInvitationController(delegation, reactive(doctorInvitationState()), () => state.identity)
   const controller = createDoctorAuthController(client ? doctorAuthBackend(client, settings.origin) : null, state, {
-    clear: () => { account.clear(); personalAudit.clear(); void context.clear() },
+    clear: () => { privacy.clear();subscription.clear();account.clear(); personalAudit.clear(); void context.clear() },
     locked: () => locked.value === '1', lock: () => { locked.value = '1'; context.forgetPreference() }, unlock: () => { locked.value = null },
   })
   context.registerClear(() => { audit.clear(); practice.clear(); locations.clear(); patients.clear(); patientProfile.clear(); availability.clear(); appointments.clear(); dashboard.clear(); void appointmentsLive.update(null,async () => {}); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
@@ -112,7 +122,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       // Never await SDK calls while its internal auth lock holds this callback.
       if (event !== 'INITIAL_SESSION') controller.providerChanged()
     })
-    nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh(); void appointmentsLive.dispose() })
+    nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh();void context.clear(); void appointmentsLive.dispose() })
   }
-  return { provide: { doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
+  return { provide: { doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
 })

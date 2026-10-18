@@ -221,7 +221,7 @@ async function onOAuth(provider: 'google') {
     }
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: callback.toString() },
+      options: { redirectTo: callback.toString(), scopes: 'openid email profile' },
     })
     if (error) throw error
   }

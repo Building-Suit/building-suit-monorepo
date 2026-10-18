@@ -469,10 +469,25 @@
       ],
       "adapterBoundary": "typed translated public product scope, feature availability and internal preview destinations; no auth or product queries in shared presentation",
       "auditSources": [
-        "apps/doctor-suit/app/pages/index.vue"
+        "apps/building-suit-docs/app/pages/components.vue"
       ],
       "task": "DOS-M1-005",
       "migrationStatus": "implemented; candidate browser verification pending"
+    },
+    {
+      "family": "product-marketing",
+      "owner": "packages/ui",
+      "components": [
+        "BsLandingPage",
+        "BsMarketingLayout"
+      ],
+      "adapterBoundary": "Product supplies truthful localized content, destinations and approved optional pricing. Shared templates own hero, preview, feature/workflow sections, header/footer and responsive composition. Missing commercial terms do not create placeholder offers.",
+      "auditSources": [
+        "apps/doctor-suit/app/pages/index.vue",
+        "apps/doctor-suit/app/layouts/marketing.vue"
+      ],
+      "task": "DOS-AE-010",
+      "migrationStatus": "implemented; canonical Doctor landing with local acceptance required"
     },
     {
       "family": "verified-account-session",
@@ -580,6 +595,32 @@
       "adapterBoundary": "Complete neutral route status and known navigation destinations. Product adapters own status code, public/private metadata, HTTP response semantics and approved copy; no requested path or query is rendered.",
       "task": "DOS-M1-019",
       "migrationStatus": "registered neutral synthetic missing-route template; verification in progress"
+    },
+    {
+      "family": "owner-subscription-status",
+      "owner": "packages/ui",
+      "components": [
+        "BsSubscriptionStatusPage"
+      ],
+      "adapterBoundary": "Product supplies authorized subscription state, exact configured terms, synthetic trial eligibility and semantic commands. Shared UI owns status/terms/acceptance composition. No purchase/live defaults.",
+      "auditSources": [
+        "apps/doctor-suit/app/pages/subscription.vue"
+      ],
+      "task": "DOS-AE-003",
+      "migrationStatus": "implemented; candidate acceptance pending"
+    },
+    {
+      "family": "privacy-request-intake",
+      "owner": "packages/ui",
+      "components": [
+        "BsPrivacyRequestsPage"
+      ],
+      "adapterBoundary": "Shared presentation receives coded own-account review options, bounded rows and semantic commands. Product owns identity, immutable intake and authority; no export/erasure/legal fulfillment.",
+      "auditSources": [
+        "apps/doctor-suit/app/pages/privacy.vue"
+      ],
+      "task": "DOS-AE-007",
+      "migrationStatus": "synthetic intake only; qualified privacy gates pending"
     }
   ]
 }

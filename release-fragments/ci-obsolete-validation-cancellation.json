@@ -1,0 +1,20 @@
+{
+  "id": "ci-obsolete-validation-cancellation",
+  "task": "CI-AUTH-REGRESSION-REPAIR",
+  "suits": [
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "doctor-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/ci.yml",
+    "tooling/git/tests/ci-workflow-efficiency.test.mjs",
+    "docs/work-packages/ci-auth-regression-repair.md"
+  ],
+  "reason": "Stop heavy steps of superseded workflow runs despite the existing job-level always envelope. Preserve prior-success gating, cleanup, required check names and serialized release paths. Cancelled validation explicitly fails rather than satisfying readiness; no test or provider validation is removed."
+}

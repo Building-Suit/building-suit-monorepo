@@ -27,13 +27,13 @@ export function seedAvailabilityProtocol(data) {
   const location = data.locations[0]; const practice = data.practices[0]
   data.scheduleCommitments = [{ id: randomUUID(),practice_id: practice.id,doctor_user_id: practice.owner_user_id,location_id: location.id,starts_at: instant(data.scheduleTestDay,780,location.timezone),ends_at: instant(data.scheduleTestDay,800,location.timezone),state: 'booked',version: 1 }]
 }
-export function availabilityProtocol({ data,actor,rpc,input,send,capability }) {
+export function availabilityProtocol({ businessWritable=()=>true, data,actor,rpc,input,send,capability }) {
   if (!['doctor_schedule','doctor_write_schedule','doctor_availability'].includes(rpc)) return false
   const reject = (code='42501',message='DOCTOR_ACCESS_DENIED') => { send({ code,message },400); return true }
   const location = data.locations.find(item => item.id===input.p_location && item.practice_id===input.p_practice && !item.archived_at)
   const canManage = location && capability(input.p_practice,location.id,'availability.manage')
   if (!location || (!canManage && !capability(input.p_practice,location.id,'appointments.read'))) return reject()
-  const configuration = () => ({ practice_id: input.p_practice,location_id: location.id,timezone: location.timezone,location_version: location.version,...(data.scheduleRules[location.id] || { slot_minutes: 20,weekly: [],exceptions: [],version: 0 }),can_manage: Boolean(canManage),override_policy: 'deny',existing_commitments: data.scheduleCommitments.filter(item => item.practice_id===input.p_practice && item.location_id===location.id).length })
+  const configuration = () => ({ practice_id: input.p_practice,location_id: location.id,timezone: location.timezone,location_version: location.version,...(data.scheduleRules[location.id] || { slot_minutes: 20,weekly: [],exceptions: [],version: 0 }),can_manage: businessWritable(input.p_practice) && Boolean(canManage),override_policy: 'deny',existing_commitments: data.scheduleCommitments.filter(item => item.practice_id===input.p_practice && item.location_id===location.id).length })
   if (rpc==='doctor_schedule') { send(configuration()); return true }
   if (rpc==='doctor_write_schedule') {
     if (!canManage) return reject()

@@ -69,14 +69,23 @@ test('signup survives session establishment and provisioning while operational c
   const { descriptor: appRootDescriptor } = parse(await readFile(new URL('../../../../packages/ui/src/templates/BsAppRoot.vue', import.meta.url), 'utf8'))
   const appRootCode = stripTypeScriptTypes(compileScript(appRootDescriptor, { id: 'shared-app-root', inlineTemplate: true }).content)
     .replace(/from (['"])vue\1/g, `from '${import.meta.resolve('vue')}'`)
-  const { default: SharedAppRoot } = await import(`data:text/javascript;base64,${Buffer.from(appRootCode).toString('base64')}`)
+  globalThis.__signupSessionFixture = env
+  const sharedRootCode = `import { computed } from '${import.meta.resolve('vue')}';
+    const { useRouter } = globalThis.__signupSessionFixture;
+    ${appRootCode}`
+  const { default: SharedAppRoot } = await import(`data:text/javascript;base64,${Buffer.from(sharedRootCode).toString('base64')}`)
+  delete globalThis.__signupSessionFixture
   app.component('BsAppRoot', SharedAppRoot)
   const layoutNames = []
+  const pageTransitions = []
   app.component('NuxtLayout', defineComponent({ props: ['name'], setup: (props, { slots }) => () => {
     layoutNames.push(props.name ?? route.meta.layout)
     return slots.default?.()
   } }))
-  app.component('NuxtPage', defineComponent({ props: ['pageKey'], setup: (props) => () => h(Page, { key: typeof props.pageKey === 'function' ? props.pageKey(committedRoute.value ?? route) : props.pageKey }) }))
+  app.component('NuxtPage', defineComponent({ props: ['pageKey', 'transition'], setup: (props) => () => {
+    pageTransitions.push(props.transition)
+    return h(Page, { key: typeof props.pageKey === 'function' ? props.pageKey(committedRoute.value ?? route) : props.pageKey })
+  } }))
   app.component('NuxtRouteAnnouncer', defineComponent({ setup: () => () => null }))
   app.component('BsToastHost', defineComponent({ setup: () => () => null }))
   app.component('BsPrivacyConsent', defineComponent({ setup: () => () => null }))
@@ -90,6 +99,7 @@ test('signup survives session establishment and provisioning while operational c
   app.mount(node())
   try {
     assert.equal(layoutNames.at(-1), 'auth', 'signup retains its registered authentication layout')
+    assert.equal(pageTransitions.at(-1), false, 'keyed session layouts must not nest a second page transition')
     user.value = { id: 'verified-owner' }
     await nextTick()
     currentId.value = 'owner-shop'
@@ -106,6 +116,7 @@ test('signup survives session establishment and provisioning while operational c
 
     route.path = '/dashboard'
     await nextTick()
+    assert.equal(pageTransitions.at(-1), false)
     assert.equal(unmounts, 1)
     currentId.value = 'another-shop'
     await nextTick()
@@ -170,4 +181,22 @@ test('signup survives session establishment and provisioning while operational c
       assert.equal(layoutNames.at(-1), 'auth', `${path} must retain its registered frame despite stale metadata`)
     }
   } finally { app.unmount() }
+
+  route.path = '/auth/login'
+  committedRoute.value = null
+  for (const [props, expected] of [
+    [{}, { name: 'bs-auth-route', mode: 'out-in' }],
+    [{ layoutKey: 'session-layout' }, false],
+    [{ layoutKey: 'session-layout', pageTransition: { name: 'product-motion' } }, { name: 'product-motion' }],
+  ]) {
+    const transitions = []
+    const probe = renderer.createApp(SharedAppRoot, props)
+    for (const [name, component] of Object.entries(app._context.components)) probe.component(name, component)
+    probe.component('NuxtPage', defineComponent({ props: ['transition'], setup: props => () => {
+      transitions.push(props.transition)
+      return h('main')
+    } }))
+    probe.mount(node())
+    try { assert.deepEqual(transitions.at(-1), expected) } finally { probe.unmount() }
+  }
 })

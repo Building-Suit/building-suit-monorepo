@@ -1,6 +1,9 @@
+import {doctorEditionMode,type DoctorEditionMode}from'./administrativeEdition.ts'
 export interface DoctorSetupForm { displayName: string; practiceName: string; locationName: string; timezone: string }
 export interface DoctorSetupDraft extends DoctorSetupForm { commandKey: string; version: number }
 export interface DoctorPracticeSetup {
+  edition?: DoctorEditionMode
+  subscriptionRequired?: boolean
   enrollment: 'owner' | 'delegated-only'
   profile: { displayName: string; professionalVerification: 'unverified' } | null
   practice: { id: string; name: string; version: number } | null
@@ -18,12 +21,14 @@ export function doctorSetupDraft(value: unknown): DoctorSetupDraft {
 }
 export function doctorPracticeSetup(value: unknown): DoctorPracticeSetup {
   if (!record(value) || !['owner', 'delegated-only'].includes(String(value.enrollment))) invalid()
+  if(value.edition!==undefined && (!doctorEditionMode(value.edition) || typeof value.subscription_required!=='boolean'))invalid()
   const p = value.profile; const w = value.practice; const l = value.location
   if (p !== null && (!record(p) || !text(p.display_name) || p.professional_verification !== 'unverified')) invalid()
   if (w !== null && (!record(w) || !uuid(w.id) || !text(w.name) || !version(w.version))) invalid()
   if (l !== null && (!record(l) || !uuid(l.id) || !text(l.name) || !text(l.timezone) || !version(l.version))) invalid()
   if (Boolean(w) !== Boolean(p) || (l && !w) || (value.enrollment === 'delegated-only' && (w || p))) invalid()
   return {
+    ...(value.edition?{edition:value.edition as DoctorEditionMode,subscriptionRequired:value.subscription_required as boolean}:{}),
     enrollment: value.enrollment as DoctorPracticeSetup['enrollment'],
     profile: p ? { displayName: p.display_name as string, professionalVerification: 'unverified' } : null,
     practice: w ? { id: w.id as string, name: w.name as string, version: w.version as number } : null,

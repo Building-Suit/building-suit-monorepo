@@ -1,0 +1,15 @@
+{
+  "id": "dos-ae-011-onboarding-provider-recheck",
+  "task": "DOS-AE-011",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/composables/useDoctorOnboardingDraft.ts",
+    "apps/doctor-suit/app/pages/onboarding.vue",
+    "apps/doctor-suit/tests/unit/onboarding-refresh.test.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m1-007.auth.fixture.ts",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-011-aggregate-stg-reconciliation.md"
+  ],
+  "reason": "Reload owned onboarding setup after SDK provider revalidation clears the previous scope. Clear local form state while identity is unverified; fence late prior-session results, retain scoped failed-save drafts for explicit retry, preserve delegated/subscription denial and avoid network retry loops. Add deterministic provider-change browser coverage without weakening any original owner assertion or backend authority."
+}

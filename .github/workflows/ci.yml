@@ -6,7 +6,8 @@ on:
   push:
     branches: [stg, main]
 concurrency:
-  group: verify-${{ github.ref }}
+  # Title/body edits cannot change code and must not cancel its active checks.
+  group: verify-${{ github.ref }}-${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata' || 'code' }}
   cancel-in-progress: true
 permissions:
   contents: read
@@ -27,6 +28,14 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: node tooling/git/check-pr.mjs "$PR_NUMBER"
   review:
+    # A skipped metadata run must never overwrite a required code-check result.
+    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-review' || 'review' }}
+    # Keep retarget, synchronize, reopen and protected-push validation complete.
+    # Metadata-only edits still run branch-policy, but reuse existing code work.
+    if: >-
+      github.event_name != 'pull_request' || github.event.action != 'edited' ||
+      github.event.changes.base != null ||
+      (github.event.changes.title == null && github.event.changes.body == null)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -70,10 +79,11 @@ jobs:
           RELEASE_POSTGREST_DISPOSABLE: '1'
         run: node tooling/releases/catalog-postgrest-disposable.mjs
   verify:
+    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-verify' || 'verify' }}
     needs: [review, branch-policy]
     # Stacked feature PRs get review checks and relevant local tests. Build the combined batch once.
     if: >-
-      always() && needs.review.result == 'success' &&
+      !cancelled() && needs.review.result == 'success' &&
       (github.event_name == 'push' ||
        (needs.branch-policy.result == 'success' &&
         (github.base_ref == 'stg' || github.base_ref == 'main')))
@@ -84,30 +94,41 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        if: ${{ success() && !cancelled() }}
         with:
           # Disposable public-feed regressions also replay the preserved bootstrap fragment range.
           fetch-depth: 0
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 345 && github.event.pull_request.head.sha || github.sha }}
       - uses: pnpm/action-setup@v4
+        if: ${{ success() && !cancelled() }}
       - uses: actions/setup-node@v4
+        if: ${{ success() && !cancelled() }}
         with:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+        if: ${{ success() && !cancelled() }}
       - run: pnpm run setup
+        if: ${{ success() && !cancelled() }}
       - run: pnpm typecheck --concurrency=2
+        if: ${{ success() && !cancelled() }}
       - run: pnpm lint
+        if: ${{ success() && !cancelled() }}
       - run: pnpm build --concurrency=2
+        if: ${{ success() && !cancelled() }}
         env:
           SUPABASE_URL: http://127.0.0.1:60321
           SUPABASE_KEY: local-development-publishable-key
       - run: pnpm test:built-assets
+        if: ${{ success() && !cancelled() }}
       - run: pnpm exec playwright install --with-deps chromium
+        if: ${{ success() && !cancelled() }}
       - name: Resolve permitted M1 aggregate browser scope
+        if: ${{ success() && !cancelled() }}
         id: doctor-m1-scope
         run: node apps/doctor-suit/tests/m1-aggregate-evidence.mjs scope
       - name: Verify permitted Doctor M1 aggregate browsers
-        if: steps.doctor-m1-scope.outputs.active == 'true'
+        if: ${{ success() && !cancelled() && (steps.doctor-m1-scope.outputs.active == 'true') }}
         env:
           DOCTOR_WORKSPACE_REPORT: ${{ runner.temp }}/doctor-m1-workspace-raw.json
         run: pnpm exec playwright test -c packages/testing/playwright.doctor-workspace.config.ts
@@ -124,11 +145,12 @@ jobs:
           path: ${{ runner.temp }}/doctor-m1-workspace/workspace-summary.json
           if-no-files-found: error
       - name: Verify shared Shop regressions for Doctor M1
-        if: steps.doctor-m1-scope.outputs.active == 'true'
+        if: ${{ success() && !cancelled() && (steps.doctor-m1-scope.outputs.active == 'true') }}
         run: pnpm test:e2e:shared-regressions
       - run: pnpm test:e2e
-        if: steps.doctor-m1-scope.outputs.active != 'true'
+        if: ${{ success() && !cancelled() && (steps.doctor-m1-scope.outputs.active != 'true') }}
       - name: Verify deployed-only Shop landing changelog discovery
+        if: ${{ success() && !cancelled() }}
         run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/public-changelog.config.ts
       - uses: actions/upload-artifact@v4
         if: failure()
@@ -136,6 +158,10 @@ jobs:
           name: browser-results
           path: test-results
           retention-days: 7
+      # A cancelled run must never satisfy verify, even if cancelled before checkout.
+      - name: Reject cancelled validation as readiness evidence
+        if: cancelled()
+        run: exit 1
   doctor-m1-shop-backend:
     if: github.event_name == 'pull_request' && github.event.pull_request.number == 345
     runs-on: ubuntu-latest

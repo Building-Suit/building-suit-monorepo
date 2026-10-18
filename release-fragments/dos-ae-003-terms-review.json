@@ -1,0 +1,33 @@
+{
+  "id": "dos-ae-003-terms-review",
+  "task": "DOS-AE-003",
+  "suits": [
+    "doctor-suit",
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/doctor-suit/app/pages/subscription.vue",
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/app/utils/saasController.ts",
+    "apps/doctor-suit/app/utils/saasRepository.ts",
+    "apps/doctor-suit/app/utils/saasTermsDocument.ts",
+    "apps/doctor-suit/app/utils/subscriptionPresentation.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261017233704_doctor_saas_terms_documents.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-003-terms-document.sql",
+    "apps/doctor-suit/tests/e2e/dos-ae-003-subscription.auth.fixture.ts",
+    "apps/doctor-suit/tests/fixtures/subscription-provider.mjs",
+    "apps/doctor-suit/tests/unit/saas-document.test.mjs",
+    "apps/doctor-suit/tests/unit/subscription-controller.test.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-003-terms-review.md",
+    "packages/ui/src/templates/BsSubscriptionStatusPage.vue"
+  ],
+  "reason": "Complete exact configured-version review with all lifecycle policies and immutable bilingual document text; block UI acceptance when the document is unavailable. Bind current/prior owner reads, reject foreign versions and preserve legal/commercial/provider gates, no live seeded terms or document."
+}

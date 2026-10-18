@@ -1,0 +1,15 @@
+{
+  "id": "dos-ae-008-isolated-recovery",
+  "task": "DOS-AE-008",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/recovery-isolated.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-008-isolated-recovery.md"
+  ],
+  "reason": "Add functional encrypted synthetic application-database restore proof in a new database inside the owned network-isolated SQL fixture. Compare exact schema/data/history/authority and reject tampering; preserve genuine recovery objectives/custody/provider/clinical/legal gates as pending. No hosted or whole-service recovery claim."
+}
