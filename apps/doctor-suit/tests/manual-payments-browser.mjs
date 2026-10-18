@@ -14,13 +14,13 @@ export async function verifyManualPaymentBrowser({root,api,origin,key,a,b,expect
   async function signIn(actor){const context=await browser.newContext({viewport:{width:1280,height:1000}});await context.route('**/*',route=>[origin,api].includes(new URL(route.request().url()).origin)?route.continue():route.abort());const page=await context.newPage();page.setDefaultTimeout(20000);await page.goto(`${origin}/sign-in?next=${actor===a?'/payment-notices':'/payment-review'}`);await page.getByLabel(/^Email/).fill(actor.credentials.email);await doctorPasswordStep(page);await page.getByLabel(/^Password/).fill(actor.credentials.password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await browserExpect(page).toHaveURL(new RegExp(actor===a?'/payment-notices$':'/payment-review$'));return{context,page}}
   owner=await signIn(a);const page=owner.page
   setStage('actual owner annual quote, immutable instructions and receipt browser')
-  await page.getByLabel('Period',{exact:true}).click();await page.getByRole('option',{name:'Yearly — 12 months for 10',exact:true}).click()
-  await page.getByRole('checkbox',{name:/I reviewed the version document/}).check();await page.getByRole('button',{name:'Show synthetic transfer instructions',exact:true}).click()
-  await page.getByRole('heading',{name:'Instructions bound to this request',exact:true}).waitFor()
-  await page.getByRole('button',{name:'Record transfer notice',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Record transfer notice',exact:true})
+  setStage('actual owner payment interval control');await page.getByLabel('Period',{exact:true}).click();await page.getByRole('option',{name:'Yearly — 12 months for 10',exact:true}).click()
+  setStage('actual owner version document acceptance');await page.getByRole('checkbox',{name:/I reviewed the version document/}).check();setStage('actual owner quote preparation');await page.getByRole('button',{name:'Show synthetic transfer instructions',exact:true}).click()
+  setStage('actual owner bound instructions response');await page.getByRole('heading',{name:'Instructions bound to this request',exact:true}).waitFor()
+  setStage('actual owner notice dialog open');await page.getByRole('button',{name:'Record transfer notice',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Record transfer notice',exact:true})
   await dialog.getByLabel('Transfer reference',{exact:true}).fill(reference);await dialog.getByLabel('Transfer time',{exact:true}).fill('2026-10-18T08:00')
-  await dialog.getByRole('button',{name:'Record transfer notice',exact:true}).click();await dialog.waitFor({state:'hidden'})
-  await page.locator('input[type=file]').setInputFiles({name:'synthetic-browser.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.7\nSynthetic browser receipt only\n%%EOF\n')});await page.getByRole('button',{name:'Upload private receipt',exact:true}).click()
+  setStage('actual owner notice submission');await dialog.getByRole('button',{name:'Record transfer notice',exact:true}).click();await dialog.waitFor({state:'hidden'})
+  setStage('actual owner receipt file selection and upload');await page.locator('input[type=file]').setInputFiles({name:'synthetic-browser.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.7\nSynthetic browser receipt only\n%%EOF\n')});await page.getByRole('button',{name:'Upload private receipt',exact:true}).click()
   const row=page.getByRole('row').filter({hasText:reference});await row.getByRole('button',{name:'View',exact:true}).click();await page.getByRole('button',{name:'synthetic-browser.pdf',exact:true}).waitFor()
   expect((await rpc(a.client,'doctor_manual_payments')).items.find(n=>n.transfer_reference===reference)?.status==='submitted','Browser receipt verified funds')
   reviewer=await signIn(b);const review=reviewer.page
