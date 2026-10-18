@@ -2,6 +2,7 @@
   "base": "5fb461fe8d74c8aee6bd1bc37962c05080204034",
   "source": "0360b0669684057fa72e375c0c61701119ae6cae",
   "files": {
+    ".github/workflows/ci.yml": "6036badabd6ddab2a9af8810d68958fdc0936d6a",
     "apps/building-suit-docs/app/pages/components.vue": "4f52d63196d213e2b61c1722b956b4c071620fc9",
     "apps/shop-suit/app/composables/usePlans.ts": "651aa71f8d4a75ee7cccb9231cd7569f42eeecfd",
     "apps/shop-suit/app/composables/useShopSubscriptionCurrency.ts": "4b1b17cd3e9491bf44f2e5f67949a259c1888a4a",

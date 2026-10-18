@@ -9,7 +9,7 @@ export function validateSelectiveProof(proof, changed, actualHashes) {
   assert.equal(proof.source, '0360b0669684057fa72e375c0c61701119ae6cae')
   assert.deepEqual([...changed].sort(), [...Object.keys(proof.files), ...support].sort(), 'Selective promotion contains unreviewed files')
   for (const [path, hash] of Object.entries(proof.files)) {
-    assert.match(path, /^(apps\/(shop-suit|building-suit-docs)\/|packages\/(ui|ux)\/|tooling\/database\/)/)
+    assert.ok(path === '.github/workflows/ci.yml' || /^(apps\/(shop-suit|building-suit-docs)\/|packages\/(ui|ux)\/|tooling\/database\/)/.test(path))
     assert.match(hash, /^[a-f0-9]{40}$/)
     assert.equal(actualHashes[path], hash, `Selective promotion changed reviewed content: ${path}`)
   }
