@@ -25,7 +25,7 @@ test('policy links are known public destinations; metadata never treats caller m
   for(const link of doctorPolicyLinks(ar)){
    assert.match(link.to,/^\/policies\/[a-z-]+$/)
    const meta=doctorPageMetadata(link.to,ar,{title:'PRIVATE_SENTINEL',description:'PRIVATE_SENTINEL'})
-   assert.equal(meta.publicPage,true);assert.ok(meta.title.endsWith(link.label));assert.match(meta.description,/2026-10-18.1/);assert.equal(meta.robots,'noindex, nofollow');assert.doesNotMatch(JSON.stringify(meta),/PRIVATE_SENTINEL/)
+   assert.equal(meta.publicPage,true);assert.ok(meta.title.endsWith(link.label));assert.match(meta.description,/2026-10-18.2/);assert.equal(meta.robots,'noindex, nofollow');assert.doesNotMatch(JSON.stringify(meta),/PRIVATE_SENTINEL/)
   }
  }
  for(const path of['/policies/unknown','/policies/terms?code=SECRET','/privacy','/subscription'])assert.equal(doctorPageMetadata(path,false,{title:'SECRET',description:'SECRET'}).publicPage,false)

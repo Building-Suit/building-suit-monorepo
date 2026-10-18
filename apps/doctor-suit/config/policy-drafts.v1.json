@@ -1,5 +1,5 @@
 {
-  "version": "doctor-preview-policies/2026-10-18.1",
+  "version": "doctor-preview-policies/2026-10-18.2",
   "status": "draft",
   "qualifiedApproval": false,
   "liveDataAllowed": false,
@@ -8,7 +8,7 @@
     "terms": {
       "en": {
         "title": "Draft terms of use",
-        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.1",
+        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.2",
         "updated": "2026-10-18",
         "sections": [
           {
@@ -43,7 +43,7 @@
       },
       "ar": {
         "title": "مسودة شروط الاستخدام",
-        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.1",
+        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.2",
         "updated": "2026-10-18",
         "sections": [
           {
@@ -80,7 +80,7 @@
     "privacy": {
       "en": {
         "title": "Draft privacy notice",
-        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.1",
+        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.2",
         "updated": "2026-10-18",
         "sections": [
           {
@@ -93,7 +93,7 @@
           {
             "title": "Information used by the preview",
             "paragraphs": [
-              "Account flows use an email address and display name; credentials and verification are handled by the configured authentication service. Practice setup collects practice/location names and timezone. Registration temporarily keeps a bounded per-tab draft of these non-secret fields for up to 24 hours; passwords, verification codes and access tokens are excluded from that draft.",
+              "Account flows use an email address and display name; credentials and verification are handled by the configured authentication service. Practice setup collects practice/location names and timezone. Registration uses a bounded per-tab draft of these non-secret fields, resumable for up to 24 hours. That validity limit is not an automatic browser-storage deletion or retention guarantee; passwords, verification codes and access tokens are excluded from that draft.",
               "Authorized administrative fixtures may include synthetic directory, appointment, team and activity records. Optional transfer evidence is private and bounded to one PDF, PNG or JPEG up to 5 MiB per notice. Avoid unnecessary information; never upload real patient records, bank credentials, card details, PINs or banking OTPs."
             ]
           },
@@ -115,7 +115,7 @@
       },
       "ar": {
         "title": "مسودة إشعار الخصوصية",
-        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.1",
+        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.2",
         "updated": "2026-10-18",
         "sections": [
           {
@@ -128,7 +128,7 @@
           {
             "title": "المعلومات المستخدمة في المعاينة",
             "paragraphs": [
-              "تستخدم إجراءات الحساب البريد الإلكتروني والاسم المعروض، وتتولى خدمة المصادقة المضبوطة بيانات الدخول والتحقق. يجمع الإعداد أسماء الممارسة والموقع والمنطقة الزمنية. يحتفظ التسجيل مؤقتاً بمسودة محدودة لهذه الحقول غير السرية داخل علامة التبويب لمدة تصل إلى ٢٤ ساعة؛ ولا تشمل كلمات المرور أو رموز التحقق أو رموز الوصول.",
+              "تستخدم إجراءات الحساب البريد الإلكتروني والاسم المعروض، وتتولى خدمة المصادقة المضبوطة بيانات الدخول والتحقق. يجمع الإعداد أسماء الممارسة والموقع والمنطقة الزمنية. يستخدم التسجيل مسودة محدودة لهذه الحقول غير السرية داخل علامة التبويب، قابلة للاستئناف حتى ٢٤ ساعة. حد الصلاحية هذا ليس ضماناً لحذف تخزين المتصفح تلقائياً أو لمدّة الاحتفاظ؛ ولا تشمل كلمات المرور أو رموز التحقق أو رموز الوصول.",
               "قد تتضمن الاختبارات الإدارية المصرح بها سجلات اصطناعية للدليل والمواعيد والفريق والنشاط. دليل التحويل الاختياري خاص ومحدود بملف PDF أو PNG أو JPEG واحد حتى ٥ ميبيبايت لكل إشعار. تجنب المعلومات غير اللازمة، ولا ترفع سجلات مرضى حقيقية أو بيانات دخول بنكية أو بيانات بطاقات أو أرقام PIN أو رموز OTP بنكية."
             ]
           },
@@ -152,7 +152,7 @@
     "subscription": {
       "en": {
         "title": "Draft trial and subscription policy",
-        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.1",
+        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.2",
         "updated": "2026-10-18",
         "sections": [
           {
@@ -187,7 +187,7 @@
       },
       "ar": {
         "title": "مسودة سياسة التجربة والاشتراك",
-        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.1",
+        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.2",
         "updated": "2026-10-18",
         "sections": [
           {
@@ -224,7 +224,7 @@
     "payments": {
       "en": {
         "title": "Draft InstaPay payment policy",
-        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.1",
+        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.2",
         "updated": "2026-10-18",
         "sections": [
           {
@@ -258,7 +258,7 @@
       },
       "ar": {
         "title": "مسودة سياسة الدفع عبر InstaPay",
-        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.1",
+        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.2",
         "updated": "2026-10-18",
         "sections": [
           {
@@ -294,7 +294,7 @@
     "cancellation-refunds": {
       "en": {
         "title": "Draft cancellation and refund policy",
-        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.1",
+        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.2",
         "updated": "2026-10-18",
         "sections": [
           {
@@ -322,7 +322,7 @@
       },
       "ar": {
         "title": "مسودة سياسة الإلغاء والاسترداد",
-        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.1",
+        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.2",
         "updated": "2026-10-18",
         "sections": [
           {
@@ -352,7 +352,7 @@
     "health-data": {
       "en": {
         "title": "Draft health-data and clinical-use safeguards",
-        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.1",
+        "intro": "Draft for review · synthetic administrative preview only. Version doctor-preview-policies/2026-10-18.2",
         "updated": "2026-10-18",
         "sections": [
           {
@@ -380,7 +380,7 @@
       },
       "ar": {
         "title": "مسودة ضوابط البيانات الصحية والاستخدام السريري",
-        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.1",
+        "intro": "مسودة للمراجعة · معاينة إدارية اصطناعية فقط. النسخة doctor-preview-policies/2026-10-18.2",
         "updated": "2026-10-18",
         "sections": [
           {

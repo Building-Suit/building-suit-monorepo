@@ -1,6 +1,6 @@
 {
-  "version": "doctor-preview-policies/2026-10-18.1",
-  "sha256": "60e07b5320370ee3193460472b58f0fb864c420a444edab11d3534e775095d99",
+  "version": "doctor-preview-policies/2026-10-18.2",
+  "sha256": "43935c93d304392be7bf3b56fd5a1824f00ffb2e47660298f9c18661020d749d",
   "status": "draft",
   "acceptanceMode": "review_only",
   "qualifiedReview": null,

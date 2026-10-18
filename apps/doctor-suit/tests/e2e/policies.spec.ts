@@ -10,7 +10,7 @@ for(const locale of['en','ar']as const)for(const width of[390,1280])test(`public
  for(const[index,key]of keys.entries()){
   await page.locator('footer').getByRole('link',{name:names[locale][index],exact:true}).click()
   await expect(page).toHaveURL(new RegExp(`/policies/${key}$`));await expect(page.getByRole('heading',{level:1,name:names[locale][index],exact:true})).toBeVisible()
-  await expect(page.getByText(/doctor-preview-policies\/2026-10-18\.1/)).toBeVisible();await expect(page.locator('html')).toHaveAttribute('dir',locale==='ar'?'rtl':'ltr')
+  await expect(page.getByText(/doctor-preview-policies\/2026-10-18\.2/)).toBeVisible();await expect(page.locator('html')).toHaveAttribute('dir',locale==='ar'?'rtl':'ltr')
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true)
   await expect(page.locator('main input[type=checkbox]')).toHaveCount(0)
  }
