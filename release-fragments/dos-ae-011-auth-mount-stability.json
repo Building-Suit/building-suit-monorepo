@@ -1,0 +1,21 @@
+{
+  "id": "dos-ae-011-auth-mount-stability",
+  "task": "DOS-AE-011",
+  "suits": [
+    "doctor-suit",
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/layouts/auth.vue",
+    "apps/doctor-suit/app/pages/onboarding.vue",
+    "packages/ui/src/organisms/BsSignupEnrollment.vue",
+    "packages/ui/src/types/signupPresentation.ts"
+  ],
+  "reason": "Keep the Doctor practice-profile editor separate from optional verified-account identity presentation using explicit typed flags and unlocked practice display name. Other products retain their default account identity panel/name-lock behavior. Preserve the inherited Doctor glass auth wrapper. Canonical route/session transition repair comes from the coordinated Shop PR389; no duplicate transition override, auth authority change or live activation."
+}

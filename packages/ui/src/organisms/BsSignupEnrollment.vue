@@ -28,7 +28,7 @@ function updateText(key: Exclude<keyof BsSignupForm, 'fiscalMonth'>, value: stri
       <BsStack v-else>
         <!-- Verified Supabase identity is not editable. Google supplies only
              name/email; shop details still require normal owner onboarding. -->
-        <section v-if="view.existingAccount" class="bs-signup-verified-identity">
+        <section v-if="view.existingAccount && view.showVerifiedIdentity !== false" class="bs-signup-verified-identity">
           <BsGrid :columns="2">
             <BsField v-slot="field" :label="copy.name"><BsInput :id="field.id" :model-value="form.name" type="text" readonly aria-readonly="true" autocomplete="off" tabindex="-1" /></BsField>
             <BsField v-slot="field" :label="copy.email"><BsInput :id="field.id" :model-value="form.email" type="email" readonly aria-readonly="true" dir="ltr" autocomplete="off" tabindex="-1" /></BsField>
