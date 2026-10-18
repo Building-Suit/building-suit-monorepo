@@ -13,7 +13,8 @@ export async function runProrationConcurrency(connection) {
   // Synthetic pre-policy accepted credit quote, never an exposed runtime API.
   const prior = await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261013190345_proration_checkout_windows.sql', import.meta.url), 'utf8')
   await admin.query(prior.slice(prior.indexOf('create or replace function public.shop_xpay_proration_quote('), prior.indexOf('create or replace function public.shop_xpay_proration_order('))
-    .replace('create or replace function public.shop_xpay_proration_quote(', 'create function pg_temp.historical_quote_create('))
+    .replace('create or replace function public.shop_xpay_proration_quote(', 'create function pg_temp.historical_quote_create(')
+    .replace('on conflict(subscription_id) do nothing', 'on conflict(subscription_id,currency) do nothing'))
   const paidOwner = randomUUID(), quoteOwner = randomUUID()
   let clientCount = 0
   async function concurrent(actor, sql, params, key) {
