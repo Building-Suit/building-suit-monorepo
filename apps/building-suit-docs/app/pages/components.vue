@@ -119,6 +119,7 @@ const tableColumns = computed(() => [
   { key: 'amount', field: 'amount', header: isArabic.value ? 'القيمة' : 'Value', sortable: true, align: 'end' as const, width: 'sm' as const },
 ])
 const pricingInterval = ref('monthly')
+const pricingCurrency = ref('EGP')
 const { success: toastSuccess } = useToasts()
 function verifyForm() { formError.value = isArabic.value ? 'راجع القيمة وحاول مرة أخرى.' : 'Review the value and try again.' }
 const filters = ref({ global: { value: null, matchMode: 'contains' } })
@@ -422,17 +423,20 @@ const invitationPreviewCopy={
       <BsBillingPage v-model:checkout-visible="billingExampleDialogVisible" v-model:form="billingExampleForm" variant="shop" :copy="billingExampleCopy" :view="billingExampleView" :show-header="false"/>
     </BsContentSection>
     <BsContentSection id="pricing" :title="isArabic ? 'خطط التسويق' : 'Marketing plans'" :description="isArabic ? 'البطاقات ودورة الفوترة والإجراءات تأتي من مكوّن مشترك.' : 'Cards, billing-cycle controls, states, and actions come from one shared organism.'">
+      <!-- Optional currencySelection is controlled independently of cadence; eligibility remains server-owned. -->
       <BsMarketingPricing
         variant="shop"
+        :currency-selection="{ value: pricingCurrency, label: isArabic ? 'عملة الاشتراك' : 'Subscription currency', options: [{ value: 'EGP', label: 'EGP' }, { value: 'USD', label: 'USD' }], notice: isArabic ? 'مثال عرض فقط؛ لا ينشئ دفعة.' : 'Presentation example; no payment is created.' }"
         :interval="pricingInterval"
         :interval-options="[{ value: 'monthly', label: isArabic ? 'شهري' : 'Monthly' }, { value: 'yearly', label: isArabic ? 'سنوي' : 'Yearly' }]"
         :copy="{ cycleLabel: isArabic ? 'دورة الفوترة' : 'Billing cycle', loading: ui('loading'), empty: ui('empty'), retry: isArabic ? 'إعادة المحاولة' : 'Retry', included: isArabic ? 'مشمول' : 'Included', notIncluded: isArabic ? 'غير مشمول' : 'Not included' }"
         :annual-saving="pricingInterval === 'yearly' ? (isArabic ? 'وفّر ٢٠٪ مع الدفع السنوي' : 'Save 20% with yearly billing') : null"
         :plans="[
-          { id: 'starter', name: isArabic ? 'البداية' : 'Starter', description: isArabic ? 'للعمل الجديد.' : 'For a new operation.', badge: isArabic ? 'الأكثر شيوعًا' : 'Most popular', badgeTone: 'featured', promoted: true, price: pricingInterval === 'yearly' ? 'EGP 4,800' : 'EGP 500', priceNote: pricingInterval === 'yearly' ? (isArabic ? 'تُدفع سنويًا' : 'billed yearly') : (isArabic ? 'شهريًا' : 'per month'), features: [{ key: 'records', included: true, text: isArabic ? 'تقارير أساسية' : 'Core reports' }], action: { label: isArabic ? 'ابدأ التجربة' : 'Start trial', to: '#', variant: 'primary' } },
+          { id: 'starter', name: isArabic ? 'البداية' : 'Starter', description: isArabic ? 'للعمل الجديد.' : 'For a new operation.', badge: isArabic ? 'الأكثر شيوعًا' : 'Most popular', badgeTone: 'featured', promoted: true, price: pricingCurrency === 'USD' ? (pricingInterval === 'yearly' ? 'USD 96' : 'USD 10') : (pricingInterval === 'yearly' ? 'EGP 4,800' : 'EGP 500'), priceNote: pricingInterval === 'yearly' ? (isArabic ? 'تُدفع سنويًا' : 'billed yearly') : (isArabic ? 'شهريًا' : 'per month'), features: [{ key: 'records', included: true, text: isArabic ? 'تقارير أساسية' : 'Core reports' }], action: { label: isArabic ? 'ابدأ التجربة' : 'Start trial', to: '#', variant: 'primary' } },
           { id: 'scale', name: isArabic ? 'التوسع' : 'Scale', description: isArabic ? 'للفرق الأكبر.' : 'For larger teams.', pricingUnavailable: isArabic ? 'السعر قريبًا' : 'Pricing coming soon', unavailable: true, action: { label: isArabic ? 'قريبًا' : 'Coming soon', disabled: true } },
         ]"
         :columns="3"
+        @update:currency="pricingCurrency = $event"
         @update:interval="pricingInterval = $event"
       />
     </BsContentSection>

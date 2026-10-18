@@ -11,6 +11,7 @@ export function checkoutRpcError(name, status, payload) {
     SHOP_PRORATION_QUOTE_STALE: 'checkout_quote_stale', SHOP_PRORATION_QUOTE_OPEN: 'checkout_quote_open',
     SHOP_PRORATION_PERIOD_UNSUPPORTED: 'checkout_period_unsupported', XPAY_CURRENCY_UNSUPPORTED: 'checkout_currency_unsupported',
     SHOP_PRORATION_CREDIT_CONFIRMATION_REQUIRED: 'checkout_credit_confirmation_required', SHOP_PRORATION_PAYMENT_UNRESOLVED: 'checkout_payment_unresolved',
+    SHOP_PRORATION_REFUND_REVIEW_REQUIRED: 'checkout_payment_unresolved',
     SHOP_PRORATION_NOT_ENABLED: 'checkout_proration_unavailable', SHOP_PRORATION_CURRENCY_MISMATCH: 'checkout_currency_unsupported',
     XPAY_OFFER_EXPIRING: 'checkout_offer_expiring', PLAN_CHANGE_BLOCKED: 'checkout_plan_change_blocked', SHOP_PRORATION_QUOTE_REQUIRED: 'checkout_quote_required',
   }

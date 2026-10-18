@@ -1,5 +1,6 @@
+import type { XPayMoneyTracks } from '../../shared/subscriptionMoney'
 export type XPayOrderState = 'creating' | 'open' | 'pending' | 'expired' | 'failed' | 'paid' | 'requires_review'
-export type XPayOrder = { orderId: string; quoteId?: string; state: XPayOrderState; amountMinor: number; currency: 'EGP'; planName: string; sessionId: string | null; url: string | null; expiresAt: string | null; createdAt: string }
+export type XPayOrder = { orderId: string; quoteId?: string; state: XPayOrderState; amountMinor: number; currency: 'EGP' | 'USD'; planName: string; sessionId: string | null; url: string | null; expiresAt: string | null; createdAt: string; moneyTracks?: XPayMoneyTracks | null; refundedAmountMinor?: number }
 export function isXPayOrderId(value: unknown): value is string
 export function xpayHostedUrl(value: unknown, sessionId: unknown): string
 export function parseXPayOrder(value: unknown): XPayOrder

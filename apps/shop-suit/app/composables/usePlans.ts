@@ -1,32 +1,18 @@
+import { computed, toValue, type MaybeRefOrGetter } from 'vue';
 import { useAsyncData, useSupabaseClient } from '#imports';
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc';
-import type { PlanResourceLimits } from '~/types/plans';
 
-export type PublicPlan = {
-  id: string;
-  name: string;
-  slug: string;
-  catalog_terms_id: string;
-  plan_variant: 'standard' | 'solo_1' | 'solo_2' | 'multi_2' | 'multi_3';
-  variant_name: string;
-  price_amount: number;
-  currency: string;
-  billing_interval: 'monthly' | 'annual';
-  trial_days: number;
-  features: { inventory?: boolean } | null;
-  resource_limits: PlanResourceLimits;
-  is_purchasable: boolean;
-  is_coming_soon: boolean;
-};
+import type { PublicPlan } from '~/types/plans';
+export type { PublicPlan } from '~/types/plans';
 
-export const usePlans = () => {
+export const usePlans = (currency: MaybeRefOrGetter<'EGP' | 'USD'> = 'EGP') => {
   const supabase = useSupabaseClient<ShopRpcDatabase>();
   const request = useAsyncData<PublicPlan[]>(
-    'shop-crm-public-plans',
+    computed(() => `shop-crm-public-plans:${toValue(currency)}`),
     async () => {
-      const { data: plans, error: queryError } = await supabase
-        .schema('public')
-        .rpc('shop_public_plan_catalog');
+      const { data: plans, error: queryError } = toValue(currency) === 'EGP'
+        ? await supabase.schema('public').rpc('shop_public_plan_catalog')
+        : await supabase.schema('public').rpc('shop_subscription_currency_catalog', { p_currency: 'USD' });
 
       if (queryError) throw queryError;
       return (plans ?? []) as PublicPlan[];
