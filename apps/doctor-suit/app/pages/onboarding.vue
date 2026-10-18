@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { usePageExitCleanup } from '@building-suit/ux'
 import { doctorSetupForm } from '../utils/practiceSetup'
+import { useDoctorOnboardingDraft } from '../composables/useDoctorOnboardingDraft'
 definePageMeta({ layout: false, middleware: 'doctor-auth' })
 const { auth, product, availability: authAvailability } = useDoctorAuthPresentation(false)
 const { practice, copy, error } = useDoctorPracticePresentation()
@@ -10,10 +11,12 @@ await practice.load()
 if(practice.state.setup?.subscriptionRequired)await navigateTo('/subscription')
 const initial = doctorSetupForm(practice.state.setup || { enrollment: 'owner', profile: null, practice: null, location: null, draft: null })
 const form = ref({ name: initial.displayName, workspaceName: initial.practiceName, locationName: initial.locationName, timezone: initial.timezone, phone: '', jobTitle: '', email: '', password: '', legalName: '', businessType: '', country: '', currency: '', fiscalMonth: 1, taxIdentifier: '', locationCode: '', locationAddress: '', locationPhone: '', businessMode: '' })
+useDoctorOnboardingDraft(auth.state, practice, form)
+watch(() => practice.state.setup?.subscriptionRequired, required => { if (required) void navigateTo('/subscription') })
 const otp = ref('')
 const consent = ref(false)
 const editing = computed(() => Boolean(practice.state.setup?.practice))
-const availability = computed(() => authAvailability.value || (!hydrated.value || practice.state.phase === 'loading' ? { state: 'loading' as const, title: copy.value.loading, description: copy.value.description }
+const availability = computed(() => authAvailability.value || (!hydrated.value || practice.state.phase === 'loading' || practice.state.setup?.subscriptionRequired ? { state: 'loading' as const, title: copy.value.loading, description: copy.value.description }
   : practice.state.phase === 'denied' ? { state: 'permission' as const, title: copy.value.denied, description: copy.value.deniedDescription }
     : !practice.state.setup ? { state: 'error' as const, title: copy.value.loading, description: error.value || copy.value.missing } : undefined))
 const features = computed(() => ({ profileName: true, profileNameMaxLength: 120, standaloneTimezone: !editing.value, locationContactFields: false, phone: false, jobTitle: false, organizationDetails: false, mainLocation: !editing.value, businessMode: false, passwordMinLength: 12, workspaceMinLength: 1, workspaceMaxLength: 160, locationMinLength: 1, locationMaxLength: 160, locationCodeMaxLength: null, locationAddressMaxLength: null, locationPhoneMaxLength: null }))

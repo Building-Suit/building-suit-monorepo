@@ -2,6 +2,7 @@ import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { doctorDashboardCopy } from '../../app/utils/dashboardPresentation'
 import { test, expect, type Page, type BrowserContext } from '@playwright/test'
 const fixture = 'http://127.0.0.1:4338/__fixture'
+type MountedDoctorRoot = Element & { __vue_app__: { config: { globalProperties: { $doctorAuth: { providerChanged(): void } } } } }
 test.beforeEach(async ({ request }) => { await request.post(fixture, { data: { reset: true, completeDelayMs: 250 } }); await request.post(fixture, { data: { completeDelayMs: 250 } }) })
 async function prepare(context: BrowserContext, ar: boolean) {
   await context.addCookies([{ name: 'building-suit-locale', value: ar ? 'ar' : 'en', url: 'http://127.0.0.1:4337' }])
@@ -29,6 +30,13 @@ for (const ar of [false, true]) test(`DOS-M1-007 ${ar ? 'AR mobile' : 'EN deskto
     const second = await resumed.newPage()
     await signIn(second, ar)
     await second.goto('/onboarding')
+    await expect(second.getByLabel(ar ? /^الاسم المعروض للطبيب/ : /^Doctor display name/)).toHaveValue('Synthetic owner')
+    // Deliver the SDK's provider-change callback after setup is mounted. It must
+    // reverify the session and reload the owned server draft, without remounting.
+    const setupReads = () => request.get(fixture).then(response => response.json()).then(state => state.calls.filter((call: string) => call === 'POST /rest/v1/rpc/doctor_practice_setup').length)
+    const previousReads = await setupReads()
+    await second.evaluate(() => (document.querySelector('#__nuxt') as MountedDoctorRoot).__vue_app__.config.globalProperties.$doctorAuth.providerChanged())
+    await expect.poll(setupReads).toBeGreaterThan(previousReads)
     await expect(second.getByLabel(ar ? /^الاسم المعروض للطبيب/ : /^Doctor display name/)).toHaveValue('Synthetic owner')
     await second.getByLabel(ar ? /^اسم الممارسة/ : /^Practice name/).fill('Synthetic practice')
     await second.getByLabel(ar ? /^اسم الموقع/ : /^Location name/).fill('Synthetic first location')
