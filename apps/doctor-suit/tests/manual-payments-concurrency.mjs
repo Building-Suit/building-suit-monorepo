@@ -1,3 +1,4 @@
+import{verifyManualReportSnapshot}from'./manual-reconciliation-snapshot.mjs'
 // Executed only by the maintained disposable GitHub CI PostgreSQL runner.
 import assert from 'node:assert/strict'
 import {spawn,spawnSync}from'node:child_process'
@@ -48,6 +49,7 @@ export async function verifyManualPaymentConcurrency(container){
   const reused=await race(2,verify(5,1),verify(6,2),'transactionid');assert.notEqual(reused.status,0);assert.match(reused.errors,/unique constraint/)
   assert.equal(sql(`select count(*)from public.doctor_manual_received_funds where recipient_account_key='${id(72)}'`),'1')
   sql("update public.doctor_manual_payment_configuration set activation_policy='inactive_account_on_review',activation_approval_ref='SYNTHETIC_ONLY',revision=revision+1,change_reason='Owned activation race';")
+  await verifyManualReportSnapshot({container,id,claim,verify:`${claim(6)}select public.doctor_review_manual_payment('${notices[3]}',0,'funds_verified','Independent snapshot bank record','SNAPSHOT-BANK-3','29900','EGP','${moment}','SYNTHETIC_BANK_RECORD',true,'${id(195)}');`,activate:`${claim(6)}select public.doctor_activate_manual_payment('${notices[3]}',1,'${id(196)}');`})
   const activate=(reviewer,key)=>`${claim(reviewer)}select public.doctor_activate_manual_payment('${notices[1]}',1,'${id(key)}');`
   const activated=await race(6,activate(6,197),activate(5,198));assert.notEqual(activated.status,0);assert.match(activated.errors,/DOCTOR_MANUAL_REVIEW_CONFLICT/)
   assert.equal(sql(`select count(*)from public.doctor_saas_periods where subscriber_user_id='${id(1)}'and kind='manual_paid'`),'1')
@@ -59,7 +61,7 @@ export async function verifyManualPaymentConcurrency(container){
   const disabled=await race(5,`update public.doctor_manual_payment_configuration set enabled=false,revision=revision+1,change_reason='Disable while submission waits';`,`${claim(7)}select public.doctor_prepare_manual_payment('${intents[7]}',${config},'${id(147)}');`,'transactionid')
   assert.notEqual(disabled.status,0);assert.match(disabled.errors,/DOCTOR_MANUAL_PAYMENT_UNCONFIGURED/)
   assert.equal(sql(`select count(*)from doctor_private.command_receipts where (actor_user_id,command_key)in(('${id(5)}','${id(181)}'),('${id(4)}','${id(144)}'),('${id(7)}','${id(147)}'))`),'0')
-  assert.equal(sql(`select count(*)from public.doctor_saas_accounts where subscriber_user_id in('${id(1)}','${id(2)}','${id(3)}','${id(4)}','${id(7)}')`),'1')
+  assert.equal(sql(`select count(*)from public.doctor_saas_accounts where subscriber_user_id in('${id(1)}','${id(2)}','${id(3)}','${id(4)}','${id(7)}')`),'2')
   console.log('Six manual-payment transaction scenarios passed: duplicate notice retry, concurrent bank-reference reuse, reviewer revocation after wait, subscriber admission revocation after wait and instruction-configuration withdrawal after wait and competing paid activation; exactly one server-derived synthetic period')
  }finally{
   sql("update public.doctor_manual_payment_configuration set enabled=false,recipient_id=null,acceptance_mode='disabled',revision=revision+1,change_reason='Complete owned manual fixture';")

@@ -88,7 +88,8 @@
     "BsPracticeAppointmentsPage": "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
     "BsSubscriptionStatusPage": "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
     "BsPrivacyRequestsPage": "packages/ui/src/templates/BsPrivacyRequestsPage.vue",
-    "BsManualPaymentPage": "packages/ui/src/templates/BsManualPaymentPage.vue"
+    "BsManualPaymentPage": "packages/ui/src/templates/BsManualPaymentPage.vue",
+    "BsPaymentReconciliationPage": "packages/ui/src/templates/BsPaymentReconciliationPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2907,6 +2908,26 @@
       "status": "implemented; candidate acceptance pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/payment-reconciliation.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPaymentReconciliationPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/payment-reconciliation.vue",
+      "purpose": "read-only-synthetic-manual-payment-reconciliation",
+      "status": "implemented; candidate acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/payment-review-reconciliation.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPaymentReconciliationPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/payment-review-reconciliation.vue",
+      "purpose": "read-only-synthetic-manual-payment-reconciliation",
+      "status": "implemented; candidate acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -3043,6 +3064,7 @@
     "BsPracticeAppointmentsPage",
     "BsSubscriptionStatusPage",
     "BsPrivacyRequestsPage",
-    "BsManualPaymentPage"
+    "BsManualPaymentPage",
+    "BsPaymentReconciliationPage"
   ]
 }

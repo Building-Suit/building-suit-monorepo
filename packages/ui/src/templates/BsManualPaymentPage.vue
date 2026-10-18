@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type{BsManualPaymentValues,BsManualPaymentView}from'../types/manualPaymentPresentation'
-const props=defineProps<{view:BsManualPaymentView;values:BsManualPaymentValues}>()
+const props=defineProps<{view:BsManualPaymentView;values:BsManualPaymentValues;reconciliationAction?:{to:string;label:string}}>()
 const emit=defineEmits<{'update:values':[values:BsManualPaymentValues];choose:[];prepare:[];submit:[];upload:[];skipReceipt:[];retry:[];retryOperation:[];select:[id:string];review:[action:'under_review'|'rejected'|'funds_verified'];activate:[];download:[id:string];page:[page:number]}>()
 const copy=computed(()=>props.view.copy)
 const columns=computed(()=>[{key:'id',field:'id' as const,header:copy.value.id},{key:'reference',field:'reference' as const,header:copy.value.reference},{key:'amount',field:'amount' as const,header:copy.value.amount},{key:'status',field:'status' as const,header:copy.value.status},{key:'open',header:copy.value.open}])
@@ -10,7 +10,7 @@ watch(()=>props.view.instructions.length,count=>{if(!count)submitVisible.value=f
 </script>
 <template>
  <BsStack gap="lg">
-  <BsPageHeader :title="copy.title" :subtitle="copy.description" />
+  <BsPageHeader :title="copy.title" :subtitle="copy.description"><template #actions><BsLink v-if="reconciliationAction" :to="reconciliationAction.to">{{ reconciliationAction.label }}</BsLink></template></BsPageHeader>
   <BsAlert tone="info" :description="copy.notice" />
   <BsAlert v-if="view.error" tone="error" :description="view.error" />
   <BsAlert v-if="view.uncertain" tone="warning" :description="copy.uncertain" />

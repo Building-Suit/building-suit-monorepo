@@ -375,7 +375,9 @@
     "./templates/BsSubscriptionStatusPage": "./src/templates/BsSubscriptionStatusPage.vue",
     "./templates/BsPrivacyRequestsPage.vue": "./src/templates/BsPrivacyRequestsPage.vue",
     "./templates/BsManualPaymentPage.vue": "./src/templates/BsManualPaymentPage.vue",
-    "./types/manualPaymentPresentation": "./src/types/manualPaymentPresentation.ts"
+    "./types/manualPaymentPresentation": "./src/types/manualPaymentPresentation.ts",
+    "./templates/BsPaymentReconciliationPage.vue": "./src/templates/BsPaymentReconciliationPage.vue",
+    "./types/paymentReconciliationPresentation": "./src/types/paymentReconciliationPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

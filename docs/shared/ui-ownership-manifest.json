@@ -635,6 +635,20 @@
       ],
       "task": "DOS-AE-004",
       "migrationStatus": "synthetic acceptance pending; live payment disabled"
+    },
+    {
+      "family": "manual-payment-reconciliation",
+      "owner": "packages/ui",
+      "components": [
+        "BsPaymentReconciliationPage"
+      ],
+      "adapterBoundary": "Typed read-only filtered totals and source rows; apps own identity, reviewer grants, exact money, UTC cohort filters and authorized queries. No financial mutation or approval.",
+      "auditSources": [
+        "apps/doctor-suit/app/pages/payment-reconciliation.vue",
+        "apps/doctor-suit/app/pages/payment-review-reconciliation.vue"
+      ],
+      "task": "DOS-AE-005",
+      "migrationStatus": "synthetic acceptance pending; live payment disabled"
     }
   ]
 }
