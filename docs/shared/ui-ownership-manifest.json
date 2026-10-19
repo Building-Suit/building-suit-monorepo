@@ -12,6 +12,19 @@
   "components": [],
   "workflowFamilies": [
     {
+      "family": "workspace-chrome",
+      "owner": "packages/ui",
+      "components": [
+        "BsAppShell",
+        "BsWorkspaceShell",
+        "BsSideMenu",
+        "BsSidebarAccount"
+      ],
+      "adapterBoundary": "Product-supplied navigation, scopes, account, trial, notification and registry projections; shared rail/collapse/drawer defaults with no standalone top header. Shop variant controls catalogue filtering only.",
+      "task": "SHARED-WORKSPACE-CHROME-20261019",
+      "migrationStatus": "implemented-source: rendered and local check verification unrun at owner instruction"
+    },
+    {
       "family": "money",
       "owner": "packages/ui",
       "components": [
@@ -270,9 +283,9 @@
       "components": [
         "BsAdministrationShell"
       ],
-      "adapterBoundary": "App-supplied registry, context navigation, selection, translated labels and intent handlers; no product queries or authorization",
+      "adapterBoundary": "App-supplied registry, context navigation, selection, translated labels and intent handlers; canonical BsAppShell frame and drawer; no product queries or authorization",
       "task": "BS-SA-SHELL-001",
-      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
+      "migrationStatus": "implemented-source: canonical frame convergence; rendered/local verification unrun at owner instruction"
     },
     {
       "family": "changelog",
