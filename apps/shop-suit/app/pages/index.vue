@@ -23,6 +23,7 @@ const journey = computed<BsLandingJourney>(() => locale.value === 'ar' ? ({
   description: 'من أول طلب إلى آخر مراجعة لليوم. مساحة واحدة لمنتجاتك ومبيعاتك وفريقك، لتبقى قريبًا من تفاصيل متجرك.',
   primaryAction: t('auth.signupAction'), secondaryAction: 'اكتشف التفاصيل', note: t('hero.noCreditCard'),
   skip: 'انتقل إلى التفاصيل', scrollHint: 'مرّر لتتابع عملية البيع', illustrative: 'واجهة توضيحية · متجر ومعاملة تجريبيان',
+  loading: { label: 'نجهّز لك التجربة…', continue: 'المتابعة إلى الموقع' },
   navigation: { dashboard: 'لوحة التحكم', pos: 'نقطة البيع', products: 'المنتجات', sales: 'المبيعات' },
   preview: {
     title: 'نظرة على يومك', subtitle: 'الموقع الرئيسي', total: 'الإجمالي', catalog: 'الكتالوج',
@@ -59,6 +60,7 @@ const journey = computed<BsLandingJourney>(() => locale.value === 'ar' ? ({
   description: 'From the first order to the last look at your day. One workspace for your catalogue, sales and team. Every detail, closer at hand.',
   primaryAction: t('auth.signupAction'), secondaryAction: 'Explore the details', note: t('hero.noCreditCard'),
   skip: 'Skip to the details', scrollHint: 'Scroll to follow one sale', illustrative: 'Illustrative interface · Fictional shop and transaction',
+  loading: { label: 'Preparing your experience…', continue: 'Continue to site' },
   navigation: { dashboard: 'Dashboard', pos: 'Point of sale', products: 'Products', sales: 'Sales' },
   preview: {
     title: 'Your day, in view', subtitle: 'Main location', total: 'Total', catalog: 'Catalogue', customer: 'Customer',

@@ -436,9 +436,10 @@
       "owner": "packages/ui",
       "components": [
         "BsAppointmentsPage",
-        "BsAppointmentCalendar"
+        "BsAppointmentCalendar",
+        "BsMiniCalendar"
       ],
-      "adapterBoundary": "Shared appointment templates show controlled one-time credential presentation and semantic issue/rotate/revoke commands. Shop owns appointment permissions, secret lifetime, normalized phone binding and request-scoped commands. Existing shared overlay and record-action controllers remain in packages/ux.",
+      "adapterBoundary": "Shared appointment templates own the month and timed calendar workspace, compact entries, controlled date/filter inputs, detail actions and one-time credential presentation. Calendar overlap layout and keyboard navigation belong to shared UX; the Doctor agenda presentation remains available. Shop owns loaded-window filtering, appointment permissions, secret lifetime, normalized phone binding and scoped queries/commands. Existing shared overlay and record-action controllers remain in packages/ux.",
       "task": "SS-WEB-APPT-ACCESS-001",
       "migrationStatus": "optional typed access panel inside existing registered complete appointments template; no new customer portal or booking route"
     },

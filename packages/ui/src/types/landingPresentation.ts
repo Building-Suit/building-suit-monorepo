@@ -13,6 +13,7 @@ export interface BsLandingJourney {
   skip: string
   scrollHint: string
   illustrative: string
+  loading: { label: string; continue: string }
   navigation: { dashboard: string; pos: string; products: string; sales: string }
   preview: {
     title: string; subtitle: string; total: string; catalog: string; customer: string

@@ -251,3 +251,8 @@ export { useBlobUrl } from './composables/useBlobUrl.ts'
 
 export { useGuardedChoice } from './composables/useGuardedChoice.ts'
 export { useControlledRadioGroup } from './composables/useControlledRadioGroup.ts'
+
+export { useCalendarDatePicker } from './composables/useCalendarDatePicker.ts'
+export { layoutCalendarIntervals } from './utils/calendarIntervals.ts'
+export type { CalendarInterval } from './utils/calendarIntervals.ts'
+export { useCalendarSlotNavigation } from './composables/useCalendarSlotNavigation.ts'
