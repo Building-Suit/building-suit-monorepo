@@ -88,7 +88,7 @@ jobs:
        (needs.branch-policy.result == 'success' &&
         (github.base_ref == 'stg' || github.base_ref == 'main')))
     concurrency:
-      group: workspace-full-validation
+      group: workspace-full-validation${{ github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'codex/shop-suit/usd-production' && '-shop-usd-production' || '' }}
       cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 25
