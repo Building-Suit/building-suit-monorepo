@@ -1,0 +1,34 @@
+{
+  "id": "shop-calendar-navigation-20261019",
+  "task": "SHOP-CALENDAR-NAVIGATION-20261019",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/pages/appointments/index.vue",
+    "packages/ui/src/molecules/BsMiniCalendar.vue",
+    "packages/ui/src/organisms/BsAppointmentCalendar.vue",
+    "packages/ui/src/templates/BsAppointmentsPage.vue",
+    "packages/ui/src/types/appointmentsPresentation.ts",
+    "packages/ux/src/composables/useCalendarDatePicker.ts",
+    "packages/ux/src/composables/useCalendarSlotNavigation.ts",
+    "packages/ux/src/utils/calendarIntervals.ts"
+  ],
+  "reason": "Use a compact month picker and clearer calendar controls when reviewing appointments.",
+  "notes": {
+    "title": {
+      "en": "Easier appointment date navigation",
+      "ar": "تنقل أسهل بين تواريخ المواعيد"
+    },
+    "summary": {
+      "en": "Use a compact month picker and clearer calendar controls when reviewing appointments.",
+      "ar": "استخدم تقويمًا شهريًا مصغرًا وعناصر تنقل أوضح عند مراجعة المواعيد."
+    },
+    "details": {
+      "en": "Choose the displayed date from the appointment calendar and review the selected day with the existing staff, location and appointment controls.",
+      "ar": "اختر التاريخ المعروض من تقويم المواعيد وراجع اليوم المحدد مع عناصر الموظف والموقع والمواعيد الحالية."
+    }
+  }
+}

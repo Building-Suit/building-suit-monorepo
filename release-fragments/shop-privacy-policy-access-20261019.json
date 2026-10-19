@@ -1,0 +1,32 @@
+{
+  "id": "shop-privacy-policy-access-20261019",
+  "task": "SHOP-PRIVACY-POLICY-ACCESS-20261019",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/pages/privacy.vue",
+    "apps/shop-suit/app/composables/useShopPrivacy.ts",
+    "packages/ui/src/templates/BsPublicLegalPage.vue",
+    "packages/ui/src/organisms/BsPrivacyConsent.vue",
+    "packages/ux/src/composables/usePrivacyConsentFocus.ts",
+    "packages/ux/src/utils/privacyConsent.ts"
+  ],
+  "reason": "Open privacy settings directly from the Shop Suit privacy policy.",
+  "notes": {
+    "title": {
+      "en": "Reopen privacy preferences from the policy",
+      "ar": "إعادة فتح تفضيلات الخصوصية من السياسة"
+    },
+    "summary": {
+      "en": "Open privacy settings directly from the Shop Suit privacy policy.",
+      "ar": "افتح إعدادات الخصوصية مباشرة من سياسة خصوصية Shop Suit."
+    },
+    "details": {
+      "en": "Review and change optional analytics preferences using the policy page action, with the existing consent and keyboard-focus behavior.",
+      "ar": "راجع تفضيلات التحليلات الاختيارية وعدلها من الإجراء الموجود في صفحة السياسة، مع الحفاظ على سلوك الموافقة وتركيز لوحة المفاتيح."
+    }
+  }
+}

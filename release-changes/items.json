@@ -1468,5 +1468,181 @@
         "contains": "currencyCheckoutReady"
       }
     ]
+  },
+  {
+    "id": "shop-landing-ready-20261019",
+    "task": "SHOP-LANDING-READY-20261019",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/index.vue",
+      "apps/shop-suit/app/layouts/landing.vue",
+      "packages/ui/src/templates/BsLandingPage.vue",
+      "packages/ui/src/templates/BsShopPublicEntryPage.vue",
+      "packages/ui/src/organisms/BsShopLandingJourney.vue",
+      "packages/ui/src/types/landingPresentation.ts",
+      "packages/ux/src/composables/useLandingMotion.ts"
+    ],
+    "reason": "The Shop Suit story opens with a branded loader, fills the screen and keeps its laptop visible through the closing scene.",
+    "notes": {
+      "title": {
+        "en": "A ready-to-scroll introduction",
+        "ar": "مقدمة جاهزة للتصفح"
+      },
+      "summary": {
+        "en": "The Shop Suit story opens with a branded loader, fills the screen and keeps its laptop visible through the closing scene.",
+        "ar": "تبدأ حكاية Shop Suit بمؤشر تحميل يحمل الشعار، وتملأ الشاشة مع بقاء الحاسوب ظاهرًا في المشهد الختامي."
+      },
+      "details": {
+        "en": "Wait for page assets before the illustrated transaction begins. Follow the saved sample sale forward or backward, reach the changelog from navigation, and retain the separate tenant website entry.",
+        "ar": "انتظر اكتمال أصول الصفحة قبل بدء المعاملة التوضيحية، وتابع البيع التجريبي للأمام أو الخلف، وافتح سجل التحديثات من القائمة مع الحفاظ على المدخل المستقل لموقع المتجر."
+      }
+    },
+    "evidence": [
+      {
+        "path": "packages/ux/src/composables/useLandingMotion.ts",
+        "contains": "const isLoading = ref(preload)"
+      },
+      {
+        "path": "packages/ui/src/templates/BsLandingPage.vue",
+        "contains": "shop-landing-loader-critical"
+      }
+    ],
+    "sources": [
+      "shop-landing-ready-20261019"
+    ]
+  },
+  {
+    "id": "shop-calendar-navigation-20261019",
+    "task": "SHOP-CALENDAR-NAVIGATION-20261019",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/appointments/index.vue",
+      "packages/ui/src/molecules/BsMiniCalendar.vue",
+      "packages/ui/src/organisms/BsAppointmentCalendar.vue",
+      "packages/ui/src/templates/BsAppointmentsPage.vue",
+      "packages/ui/src/types/appointmentsPresentation.ts",
+      "packages/ux/src/composables/useCalendarDatePicker.ts",
+      "packages/ux/src/composables/useCalendarSlotNavigation.ts",
+      "packages/ux/src/utils/calendarIntervals.ts"
+    ],
+    "reason": "Use a compact month picker and clearer calendar controls when reviewing appointments.",
+    "notes": {
+      "title": {
+        "en": "Easier appointment date navigation",
+        "ar": "تنقل أسهل بين تواريخ المواعيد"
+      },
+      "summary": {
+        "en": "Use a compact month picker and clearer calendar controls when reviewing appointments.",
+        "ar": "استخدم تقويمًا شهريًا مصغرًا وعناصر تنقل أوضح عند مراجعة المواعيد."
+      },
+      "details": {
+        "en": "Choose the displayed date from the appointment calendar and review the selected day with the existing staff, location and appointment controls.",
+        "ar": "اختر التاريخ المعروض من تقويم المواعيد وراجع اليوم المحدد مع عناصر الموظف والموقع والمواعيد الحالية."
+      }
+    },
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsAppointmentsPage.vue",
+        "contains": "<BsMiniCalendar"
+      },
+      {
+        "path": "packages/ux/src/composables/useCalendarSlotNavigation.ts",
+        "contains": "export function useCalendarSlotNavigation"
+      }
+    ],
+    "sources": [
+      "shop-calendar-navigation-20261019"
+    ]
+  },
+  {
+    "id": "shop-pos-receipt-preview-20261019",
+    "task": "SHOP-POS-RECEIPT-PREVIEW-20261019",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux"
+    ],
+    "reason": "Open saved counter receipts in a preview with language, paper-size, printing and image-sharing controls.",
+    "notes": {
+      "title": {
+        "en": "Preview your recent counter receipts",
+        "ar": "معاينة إيصالات نقطة البيع الأخيرة"
+      },
+      "summary": {
+        "en": "Open saved counter receipts in a preview with language, paper-size, printing and image-sharing controls.",
+        "ar": "افتح إيصالات نقطة البيع المحفوظة في معاينة تتضمن اللغة وحجم الورق والطباعة ومشاركة الصورة."
+      },
+      "details": {
+        "en": "Review recent receipts within your own shop, location and staff access. The counter also presents clearer payment choices and quantity editing; receipt access remains authorized by the server.",
+        "ar": "راجع الإيصالات الأخيرة ضمن صلاحيات متجرك وموقعك وموظفك، مع خيارات دفع وتحرير كميات أوضح في نقطة البيع. يظل الوصول إلى الإيصالات خاضعًا لتفويض الخادم."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/usePosReceipt.ts",
+        "contains": "rpc.rpc('list_own_pos_receipts'"
+      },
+      {
+        "path": "packages/ui/src/templates/BsPointOfSalePage.vue",
+        "contains": "<BsReceiptPreviewDialog"
+      }
+    ],
+    "sources": [
+      "shop-pos-receipt-preview-20261019"
+    ]
+  },
+  {
+    "id": "shop-privacy-policy-access-20261019",
+    "task": "SHOP-PRIVACY-POLICY-ACCESS-20261019",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/privacy.vue",
+      "apps/shop-suit/app/composables/useShopPrivacy.ts",
+      "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "packages/ui/src/organisms/BsPrivacyConsent.vue",
+      "packages/ux/src/composables/usePrivacyConsentFocus.ts",
+      "packages/ux/src/utils/privacyConsent.ts"
+    ],
+    "reason": "Open privacy settings directly from the Shop Suit privacy policy.",
+    "notes": {
+      "title": {
+        "en": "Reopen privacy preferences from the policy",
+        "ar": "إعادة فتح تفضيلات الخصوصية من السياسة"
+      },
+      "summary": {
+        "en": "Open privacy settings directly from the Shop Suit privacy policy.",
+        "ar": "افتح إعدادات الخصوصية مباشرة من سياسة خصوصية Shop Suit."
+      },
+      "details": {
+        "en": "Review and change optional analytics preferences using the policy page action, with the existing consent and keyboard-focus behavior.",
+        "ar": "راجع تفضيلات التحليلات الاختيارية وعدلها من الإجراء الموجود في صفحة السياسة، مع الحفاظ على سلوك الموافقة وتركيز لوحة المفاتيح."
+      }
+    },
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/privacy.vue",
+        "contains": ":privacy-settings-label=\"privacy.copy.settings\""
+      }
+    ],
+    "sources": [
+      "shop-privacy-policy-access-20261019"
+    ]
   }
 ]
