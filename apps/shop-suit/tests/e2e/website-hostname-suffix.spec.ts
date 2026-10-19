@@ -1,10 +1,11 @@
 import {test,expect,type Page} from '@playwright/test'
 import {expectNoPageOverflow} from '../../../../packages/testing/browser-foundation'
 import {drainLoopbackRoutes} from '../fixtures/loopback-teardown'
+import {websiteLaunchApiPorts} from './website-launch-fixture-server.mjs'
 const hosts=/^https:\/\/(?:[a-z-]+(?:\.stg)?\.shops\.building-suit\.com|stg\.shop\.building-suit\.com)\//
 test.afterEach(async({page},info)=>drainLoopbackRoutes(page,info,'**/*'))
 async function mounted(page:Page){await page.waitForFunction(()=>{const root=document.getElementById('__nuxt') as HTMLElement&{__vue_app__?:{config:{globalProperties:{$nuxt:{isHydrating:boolean}}}}};return root?.__vue_app__?.config.globalProperties.$nuxt.isHydrating===false})}
-test.beforeEach(async({request})=>{await request.post('http://127.0.0.1:46936/control',{data:{reset:true}})})
+test.beforeEach(async({request})=>{await request.post(`http://127.0.0.1:${websiteLaunchApiPorts.staging}/control`,{data:{reset:true}})})
 for(const locale of ['en','ar'])for(const width of [390,1440])test(`staging suffix journey ${locale} ${width}`,async({page,context})=>{
  const ar=locale==='ar',seen:string[]=[],origin='https://alpha-tools.stg.shops.building-suit.com',query=ar?'':'?lang=en'
  await page.setViewportSize({width,height:1000})

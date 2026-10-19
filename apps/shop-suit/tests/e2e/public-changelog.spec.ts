@@ -1,6 +1,5 @@
-import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { test, expect } from '@playwright/test'
 const text = { en: 'Deployed counter update', ar: 'تحديث نقطة البيع المنشور' }
 const now = '2026-10-15T12:00:00Z'
@@ -94,14 +93,9 @@ test('resuming and navigating refreshes the trusted clock without resetting firs
   await expect(page.locator('main .bs-changelog').getByText('New',{exact:true})).toHaveCount(0)
 })
 
-for (const locale of ['en','ar'] as const) test(`${locale}: actual batch promotion feed keeps at most three newest entries in the teaser`,async({page},testInfo)=>{
+for (const locale of ['en','ar'] as const) test(`${locale}: actual batch promotion feed keeps at most three newest entries in the teaser`,async({page})=>{
   test.setTimeout(60000)
-  const output=testInfo.outputPath('promoted-public-feed.json')
-  // This creates only uniquely named disposable Docker databases; the output is the actual anon RPC projection.
-  execFileSync(process.execPath,['tooling/releases/catalog-disposable.mjs','--public-feed',output],{
-    cwd:fileURLToPath(new URL('../../../../',import.meta.url)),timeout:45000,stdio:'pipe',
-  })
-  const feed=JSON.parse(readFileSync(output,'utf8'))
+  const feed=JSON.parse(readFileSync(join(process.env.SHOP_PUBLIC_CHANGELOG_FEEDS!, 'released.json'),'utf8'))
   const publishedAt=feed.entries[0].publishedAt
   expect(new Set(feed.entries.map((row:{publishedAt:string})=>row.publishedAt)).size).toBe(1)
   await page.emulateMedia({reducedMotion:'reduce'})
@@ -127,13 +121,9 @@ for (const locale of ['en','ar'] as const) test(`${locale}: actual batch promoti
   expect(await page.locator('main .bs-changelog time').first().getAttribute('datetime')).toBe(publishedAt)
 })
 
-for (const locale of ['en','ar'] as const) test(`${locale}: actual evolving candidate stays in its separate tab`,async({page},testInfo)=>{
+for (const locale of ['en','ar'] as const) test(`${locale}: actual evolving candidate stays in its separate tab`,async({page})=>{
   test.setTimeout(60000)
-  const output=testInfo.outputPath('candidate-public-feed.json')
-  execFileSync(process.execPath,['tooling/releases/catalog-disposable.mjs','--candidate-feed',output],{
-    cwd:fileURLToPath(new URL('../../../../',import.meta.url)),timeout:45000,stdio:'pipe',
-  })
-  const feed=JSON.parse(readFileSync(output,'utf8'))
+  const feed=JSON.parse(readFileSync(join(process.env.SHOP_PUBLIC_CHANGELOG_FEEDS!, 'candidate.json'),'utf8'))
   await page.emulateMedia({reducedMotion:'reduce'})
   await page.context().addCookies([{name:'building-suit-locale',value:locale,url:'http://127.0.0.1:4393'}])
   await page.route('**/api/changelog',route=>route.fulfill({json:feed}))

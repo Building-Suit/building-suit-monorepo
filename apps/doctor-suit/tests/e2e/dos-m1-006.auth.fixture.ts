@@ -1,3 +1,4 @@
+import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { test, expect } from '@playwright/test'
 const provider = 'http://127.0.0.1:4338/__fixture'
 test.beforeEach(async ({ request, page }) => {
@@ -6,7 +7,7 @@ test.beforeEach(async ({ request, page }) => {
 })
 async function signIn(page: import('@playwright/test').Page, ar = false) {
   await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill('synthetic@example.test')
-  await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
+  await doctorPasswordStep(page);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
   await page.getByRole('button', { name: ar ? 'تسجيل الدخول' : 'Sign in', exact: true }).click()
 }
 for (const ar of [false, true]) test(`DOS-M1-006 protocol fixture ${ar ? 'AR mobile light' : 'EN desktop dark'}: sign-in, safe redirect, isolated cookies and logout`, async ({ page, context }) => {
@@ -16,7 +17,8 @@ for (const ar of [false, true]) test(`DOS-M1-006 protocol fixture ${ar ? 'AR mob
   await context.addCookies([{ name: 'bs-shop-local-auth-token', value: 'synthetic-other-product', url: 'http://127.0.0.1:4337' }])
   await page.goto('/sign-in?next=%2f%2fevil.example.test')
   await signIn(page, ar)
-  await expect(page).toHaveURL(/\/account$/)
+  await expect(page).toHaveURL(/\/onboarding$/)
+  await page.goto('/account')
   await expect(page.getByText(ar ? 'الحساب مؤكّد' : 'Account verified', { exact: true })).toBeVisible()
   await page.reload()
   await expect(page.getByText(ar ? 'الحساب مؤكّد' : 'Account verified', { exact: true })).toBeVisible()
@@ -31,20 +33,27 @@ for (const ar of [false, true]) test(`DOS-M1-006 protocol fixture ${ar ? 'AR mob
   await expect(page).toHaveURL(/\/sign-in\?next=/)
 })
 test('DOS-M1-006 protocol fixture: signup, expired OTP, resend and verified account', async ({ page, request }) => {
+  await request.post(provider, { data: { emailExists: false } })
   await page.goto('/sign-up')
   await page.getByLabel(/^Display name/).fill('Synthetic doctor')
   await page.getByLabel(/^Email/).fill('synthetic@example.test')
-  await page.getByLabel(/^Password/).fill('synthetic-password-only')
+  await doctorPasswordStep(page);await page.getByLabel(/^Password/).fill('synthetic-password-only')
+  await page.getByRole('button', { name: 'Continue', exact: true }).click()
+  await page.getByLabel(/^Practice name/).fill('Synthetic registration practice')
+  await page.getByLabel(/^First location name/).fill('Synthetic registration location')
+  await page.getByLabel(/^Timezone/).fill('Africa/Cairo')
   await page.getByRole('button', { name: 'Create synthetic account', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Verify account', exact: true })).toBeVisible()
   const digits = page.locator('input[autocomplete="one-time-code"], input[inputmode="numeric"]')
   for (let i = 0; i < 6; i++) await digits.nth(i).fill('0')
   await page.getByRole('button', { name: 'Verify account', exact: true }).click()
   await expect(page.getByText('The link or code expired.', { exact: true })).toBeVisible()
+  await page.clock.install()
+  await page.clock.fastForward(61000)
   await page.getByRole('button', { name: 'Resend code', exact: true }).click()
   for (let i = 0; i < 6; i++) await digits.nth(i).fill(String(i + 1))
   await page.getByRole('button', { name: 'Verify account', exact: true }).click()
-  await expect(page).toHaveURL(/\/account$/)
+  await expect(page).toHaveURL(/\/onboarding$/)
   expect((await (await request.get(provider)).json()).outbox).toEqual(['signup', 'signup'])
 })
 test('DOS-M1-006 protocol fixture: recovery uses same-browser PKCE and removes callback material', async ({ page, request }) => {
@@ -57,7 +66,7 @@ test('DOS-M1-006 protocol fixture: recovery uses same-browser PKCE and removes c
   expect(outbox.pkceChallengeProvided).toBe(true)
   await page.goto(`/recover?code=synthetic-recovery-code${outbox.flowId ? `&sb_flow_id=${encodeURIComponent(outbox.flowId)}` : ''}`)
   await expect(page).toHaveURL(/\/recover$/)
-  await page.getByLabel(/^Password/).fill('new-synthetic-password')
+  await doctorPasswordStep(page);await page.getByLabel(/^Password/).fill('new-synthetic-password')
   await page.getByLabel(/^Confirm password/).fill('new-synthetic-password')
   await page.getByRole('button', { name: 'Set password', exact: true }).click()
   await expect(page.getByText('Password updated', { exact: true })).toBeVisible()
@@ -73,7 +82,7 @@ test('DOS-M1-006 protocol fixture: wrong product gate blocks forms and credentia
 test('DOS-M1-006 protocol fixture: revoked session cannot restore account after reload', async ({ page, request }) => {
   await page.goto('/sign-in')
   await signIn(page)
-  await expect(page).toHaveURL(/\/account$/)
+  await expect(page).toHaveURL(/\/onboarding$/)
   await request.post(provider, { data: { active: false } })
   await page.reload()
   await expect(page).toHaveURL(/\/sign-in\?next=/)

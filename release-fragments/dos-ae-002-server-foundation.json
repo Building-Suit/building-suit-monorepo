@@ -1,0 +1,19 @@
+{
+  "id": "dos-ae-002-server-foundation",
+  "task": "DOS-AE-002",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/administrativeEdition.ts",
+    "apps/doctor-suit/app/utils/contextScope.ts",
+    "apps/doctor-suit/app/utils/locationContext.ts",
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261017140852_doctor_early_administrative_edition.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-002.sql",
+    "apps/doctor-suit/tests/unit/administrative-edition.test.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-002-server-foundation.md"
+  ],
+  "reason": "Prepare the synthetic-only administrative edition server/context foundation: owner/delegate/service document denial, retained stored grants/history, fixed reason codes, safe history projection, revision-scoped cache clearing and no live configuration path. Preserve all M1 regressions and immutable planning. UI bindings and full candidate/provider/assurance acceptance remain separate; no clinical waiver, approved commercial terms, real-user admission, paid-sale readiness, hosted recovery or operational activation is granted."
+}

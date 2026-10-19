@@ -1,7 +1,5 @@
 name: Reconcile upcoming releases and freeze production
 on:
-  push:
-    branches: [stg, main]
   workflow_run:
     workflows: [Verify workspace]
     types: [completed]
@@ -18,16 +16,19 @@ permissions:
 jobs:
   reconcile:
     # Never subscribe to deployment_status: these environment jobs emit it themselves.
-    # Allowed wake-ups re-read protected refs; publisher readiness remains authoritative.
-    if: github.repository == 'Building-Suit/building-suit-monorepo'
+    # Protected pushes publish in ci.yml only after verify succeeds. Fallback
+    # wake-ups must match their actual workflow ref before environment admission.
+    if: >-
+      github.repository == 'Building-Suit/building-suit-monorepo' &&
+      (github.ref == 'refs/heads/stg' || github.ref == 'refs/heads/main') &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'workflow_run' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == github.ref_name &&
+        github.event.workflow_run.head_repository.full_name == github.repository))
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - environment: staging
-            branch: stg
-          - environment: production
-            branch: main
+      matrix: ${{ fromJSON(github.ref == 'refs/heads/stg' && '{"include":[{"environment":"staging","branch":"stg"}]}' || '{"include":[{"environment":"production","branch":"main"}]}') }}
     environment: ${{ matrix.environment }}
     concurrency:
       group: release-catalog-${{ matrix.environment }}

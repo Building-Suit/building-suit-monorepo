@@ -1,3 +1,4 @@
+import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { test, expect, type Page, type BrowserContext } from '@playwright/test'
 import { doctorDelegationCopy } from '../../app/utils/delegationPresentation'
 test.use({ actionTimeout: 10000 })
@@ -10,7 +11,7 @@ async function local(context: BrowserContext, ar: boolean) {
 async function login(page: Page,email: string,ar: boolean,path = '/account') {
   await page.goto(path)
   await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill(email)
-  await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
+  await doctorPasswordStep(page);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
   await page.getByRole('button',{ name: ar ? 'تسجيل الدخول' : 'Sign in',exact: true }).click()
   await expect(page).toHaveURL(new RegExp(`${path}$`))
   if (path==='/account') await expect(page.getByRole('button',{ name: ar ? 'تسجيل الخروج' : 'Sign out',exact: true })).toBeEnabled()
@@ -185,7 +186,7 @@ test('DOS-M1-009 protocol fixture: wrong recipient and expired pending codes nev
     expect(new URL(outsider.url()).searchParams.get('next')).toBe('/invitations/accept')
     expect(outsider.url()).not.toContain(code)
     await outsider.getByLabel(/^Email/).fill('synthetic-secretary@example.test')
-    await outsider.getByLabel(/^Password/).fill('synthetic-password-only')
+    await doctorPasswordStep(outsider);await outsider.getByLabel(/^Password/).fill('synthetic-password-only')
     await outsider.getByRole('button',{ name: 'Sign in',exact: true }).click()
     await expect(outsider).toHaveURL(/\/invitations\/accept$/)
     await expect(outsider.getByLabel(copy.codeLabel,{ exact: true })).toHaveValue('')

@@ -1,0 +1,18 @@
+{
+  "id": "dos-ae-006-authenticated-schema-denials",
+  "task": "DOS-AE-006",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/supabase/functions/_shared/doctor-administration.mjs",
+    "apps/doctor-suit/supabase/migrations/20261018031441_doctor_administration_schema_denials.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-006-schema-denials.sql",
+    "apps/doctor-suit/tests/unit/administration-protocol.test.mjs",
+    "apps/doctor-suit/tests/administration-protocol-postgres.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-006-administration.md"
+  ],
+  "reason": "Commit authenticated bound nonces before operation/schema checks; sign and audit unsupported/extra-field denials once and reject identical replay. Audit labels widen without changing the three-read execution allowlist, grants or unavailable operational/live authority."
+}

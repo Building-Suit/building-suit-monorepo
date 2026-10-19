@@ -1,0 +1,30 @@
+{
+  "id": "shared-auth-form-feedback",
+  "task": "DOS-M1-006",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/organisms/BsAuthForm.vue",
+    "packages/ui/src/organisms/BsSignupWizard.vue",
+    "packages/ui/src/templates/BsSignInPage.vue",
+    "packages/ux/src/composables/useSignupWizard.ts"
+  ],
+  "reason": "Shared auth feedback forwards the supplied pending label, focuses the editable field after a signup step and rejects late advances after reset. Checked-email presentation closes revoked password approval; existing product adapters retain identity and validation ownership.",
+  "notes": {
+    "title": {
+      "en": "Smoother signup steps",
+      "ar": "خطوات تسجيل أكثر سلاسة"
+    },
+    "summary": {
+      "en": "Move between signup steps with clearer focus and progress feedback.",
+      "ar": "تنقّل بين خطوات التسجيل بتركيز أوضح وإشعارات تقدم مناسبة."
+    },
+    "details": {
+      "en": "The next editable field receives keyboard focus, pending feedback uses the form’s label, and an old validation response cannot advance a reset wizard.",
+      "ar": "ينتقل تركيز لوحة المفاتيح إلى الحقل التالي القابل للتحرير، وتستخدم حالة الانتظار نص النموذج، ولا تنقل استجابة تحقق قديمة معالجاً أُعيد ضبطه."
+    }
+  }
+}

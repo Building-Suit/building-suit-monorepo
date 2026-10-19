@@ -160,3 +160,33 @@ Validation uses deterministic release unit tests, disposable protocol tests (ini
 ### Authorized retrospective production history
 
 [The reviewed Shop history plan](retrospective-shop-history.md) records the owner-authorized retrospective numbering, provider/GitHub deployment receipts, exact deployed source evidence, sealed idempotent import and private-origin baseline correction. It supersedes the earlier missing-version decision blocker and initial 0.1.0 target prediction; it does not rewrite any retained reservation, manifest or timestamp. Normal publication gates, exact main-to-stg net contribution and last-good preview policy remain authoritative.
+
+
+### Reconciliation workflow ref admission
+
+Protected pushes publish through the existing `ci.yml` hook only after the
+exact protected verification succeeds. The fallback release workflow does not
+also subscribe to push: that duplicate attempt raced verification and often
+failed readiness before any publication could be authorized.
+
+Fallback schedule, dispatch and completed-workflow wake-ups select only the
+environment admitted by the triggering workflow ref: `stg` for staging, `main`
+for production. Checkout cannot change admission. The observed policies admit
+only those respective branches; do not broaden them to accommodate a matrix.
+A workflow completion must be an own-repository protected push matching the
+current workflow ref. PR proofs and mismatched refs create no environment job.
+Overall workflow failure can include a publisher failure after verify passed;
+completion remains a retry wake-up, never authority to bypass readiness.
+The publisher independently enforces newest protected verification, deployment
+readiness, catalog binding, immutable provenance and exact-source checks.
+
+GitHub schedules and workflow_run execute from the default branch. A main
+schedule can reconcile production, but cannot reconcile staging under its
+stg-only policy. Staging retains the protected-stg `ci.yml` post-verification
+publisher and correctly referenced dispatch/re-run retry paths. No staging
+hourly recovery is claimed active. Future automatic hourly staging recovery
+requires a separately authorized dispatcher targeting `stg`; this fix adds no
+write permissions, credentials or provider configuration and performs no
+dispatch or deployment. Main adoption still needs normal authorized promotion.
+
+GitHub documents that [environment branch rules match the workflow GITHUB_REF](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments#deployment-branches-and-tags), and [workflow_run uses the default branch](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_run). Publisher credentials, protected environment rules, required-check enforcement, immutable candidate matching and deployment-readiness checks are unchanged. No environment restrictions are relaxed and no publisher is invoked by the regression tests.

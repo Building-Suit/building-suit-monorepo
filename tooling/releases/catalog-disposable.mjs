@@ -6,9 +6,18 @@ import { createChangelogClient } from '../../packages/data-access/src/changelog.
 import { filterChangelog, selectChangelogReleases, isChangelogNew } from '../../packages/contracts/src/changelog.ts'
 import { spawnSync, spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
+import { join } from 'node:path'
 const outputArgs = process.argv.slice(2)
-if (outputArgs.length && (outputArgs.length !== 2 || !['--public-feed','--candidate-feed'].includes(outputArgs[0]) || !outputArgs[1])) throw new Error('Expected optional --public-feed or --candidate-feed output path')
+if (outputArgs.length && (outputArgs.length !== 2 || !['--public-feed','--candidate-feed','--browser-feeds'].includes(outputArgs[0]) || !outputArgs[1])) throw new Error('Expected optional --public-feed/--candidate-feed output path or --browser-feeds directory')
+const publicOutput = outputArgs[0] === '--browser-feeds' ? join(outputArgs[1], 'released.json') : outputArgs[0] === '--public-feed' ? outputArgs[1] : undefined
+const candidateOutput = outputArgs[0] === '--browser-feeds' ? join(outputArgs[1], 'candidate.json') : outputArgs[0] === '--candidate-feed' ? outputArgs[1] : undefined
 const container = `bs-release-test-${randomUUID()}`
+// A bounded browser setup may interrupt this process. Remove only its unique
+// disposable container, including when interruption occurs after feed creation.
+for (const [signal, code] of [['SIGTERM', 143], ['SIGINT', 130]]) process.once(signal, () => {
+  spawnSync('docker', ['rm', '-fv', container], { stdio: 'ignore', timeout: 10000 })
+  process.exit(code)
+})
 function docker(args, input) {
   const result = spawnSync('docker',args,{input,encoding:'utf8',timeout:120000})
   if (result.status !== 0) throw new Error(result.stderr || 'Disposable Docker command failed')
@@ -122,9 +131,9 @@ try {
   const expiry=new Date(Date.parse(productionFeed.entries[0].publishedAt)+48*60*60*1000).toISOString()
   assert.ok(teaser.every(row=>isChangelogNew(row,client.serverNow)&&!isChangelogNew(row,expiry)))
   for(const forbidden of ['BS-TEST','fragments','sourceSha','parentSha','paths','classification','digest','ordinal','baseline_evidence']) assert.ok(!JSON.stringify(productionFeed).includes(forbidden),forbidden)
-  if(outputArgs[0] === '--public-feed') writeFileSync(outputArgs[1],JSON.stringify(productionFeed)+'\n')
+  if(publicOutput) writeFileSync(publicOutput,JSON.stringify(productionFeed)+'\n')
   await testBootstrap({ sql, parallelDatabaseSql: (database, statement) => parallelSql(statement, database), databaseSql: (database, statement) => docker(['exec','-i',container,'psql','-U','postgres','-d',database,'-v','ON_ERROR_STOP=1','-At'], statement),
     migration: new URL('../../apps/super-admin-suit/supabase/migrations/20261015212440_first_official_release_bootstrap.sql', import.meta.url) })
-  await testCandidates({ outputPath: outputArgs[0] === '--candidate-feed' ? outputArgs[1] : undefined, sql, parallelDatabaseSql: (database, statement) => parallelSql(statement, database), databaseSql: (database, statement) => docker(['exec','-i',container,'psql','-U','postgres','-d',database,'-v','ON_ERROR_STOP=1','-At'], statement) })
+  await testCandidates({ outputPath: candidateOutput, sql, parallelDatabaseSql: (database, statement) => parallelSql(statement, database), databaseSql: (database, statement) => docker(['exec','-i',container,'psql','-U','postgres','-d',database,'-v','ON_ERROR_STOP=1','-At'], statement) })
   console.log('Disposable PostgreSQL release acceptance passed: atomic allocation, concurrent retry, ordering, recovery, authorization, immutable timestamps, projection and batch promotion')
 } finally { docker(['rm','-fv',container]) }

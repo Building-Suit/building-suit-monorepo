@@ -2,15 +2,38 @@
   "version": 1,
   "taskId": "DOS-M1-020",
   "planningHead": "4ca7110f4d6efa828e0b41213e5c059bf02ba9db",
-  "baseSha": "e53cc7bcd8b0f07c2c2287de0867c942e480d85c",
-  "candidateRef": "codex/doctor-suit/m1-combined-acceptance",
+  "baseSha": "4441c7dd5a3b2d7ed53ae227229fc05ced64388a",
+  "candidateRef": "codex/doctor-suit/milestone-contracts",
   "headBinding": "Resolve the published GitHub PR head SHA and check-run head_sha; no self-referential commit hash is embedded.",
   "implementationIdentity": "implementation-agent",
+  "expectedEvidenceCounts": {
+    "rootPassed": 1844,
+    "rootSkipped": 23,
+    "workspacePassed": 111,
+    "shopRegressions": 28,
+    "changelogPassed": 14,
+    "doctorPublic": 54,
+    "doctorAuth": 56,
+    "doctorStress": 4,
+    "sharedAuth": 48,
+    "sharedSettings": 12,
+    "sqlTotal": 679,
+    "sqlCombined": 29,
+    "shopBackend": 1,
+    "shopLaunchPassed": 12,
+    "shopHostnameSuffixPassed": 4,
+    "shopHostnameOwnerPassed": 2
+  },
   "independentAcceptance": "pending",
   "integration": "not-claimed",
   "deployment": "not-performed",
   "domainApprovalGranted": false,
   "requiredCommands": [
+    "workspace-browser",
+    "built-assets",
+    "shared-regressions",
+    "public-changelog",
+    "doctor-stress",
     "unit",
     "sql",
     "actual-provider",
@@ -22,7 +45,14 @@
     "lint",
     "typecheck",
     "build",
-    "release"
+    "release",
+    "shop-backend",
+    "shop-launch-sql",
+    "shop-launch-changelog",
+    "shop-launch",
+    "shop-hostname-launch",
+    "shop-hostname-suffix",
+    "shop-hostname-owner"
   ],
   "tasks": [
     {
@@ -142,11 +172,18 @@
     {
       "taskId": "DOS-M1-020",
       "canonicalTaskSha256": "b5113d109fa08913afa9b4bf81dfe9855a711c570cf097b2eeee73d9169f4135",
-      "sourceRef": "codex/doctor-suit/m1-combined-acceptance",
-      "acceptance": "pending-independent-exact-candidate-verifier"
+      "acceptance": "pending-independent-exact-candidate-verifier",
+      "sourceHead": "a4757572763bf243c8b3f064e9f7baa8a11b34d7",
+      "pullRequest": 365
     }
   ],
   "inputHashes": {
+    "docs/work-packages/doctor-suit/implementation/m1-aggregate.md": "975006c761500b50ae561d8a5906c7a88e467ed591a8fbbbd4bc45ebf49c9fac",
+    ".github/workflows/ci.yml": "e4bc193162ab7e74426d094ef730996bcfb4a9bea939136ab5aca66377e1e18e",
+    ".github/workflows/doctor-disposable.yml": "d4519a8d97194fca9ed88feb7fac90de0a39fbd93b3a3874b1649a129fba6bc4",
+    "packages/testing/playwright.doctor-workspace.config.ts": "d1a9d56d805416a0e07de847218010d31c65b777e6b4ae71d216dba99120599e",
+    "apps/doctor-suit/tests/m1-aggregate-evidence.mjs": "162e8ff76962675abcc8b0b8ef75ac2281be7b381224956f64c0fe653fd9f5e2",
+    "apps/doctor-suit/tests/unit/dos-m1-020-evidence.test.mjs": "504946650160700e709e304ed8ae578e3456add7876ab173e6810f2b5199b176",
     "apps/doctor-suit/supabase/tests/dos-m1-020.sql": "64d2c9c3458d63c2afb684bfc20781f697895ee5417b107e218b52db345bf2e3",
     "apps/doctor-suit/tests/disposable-provider.mjs": "aa75fa305e20809c0e0656617c2d72cd428e29964e5d196567159d15ac33b0b7",
     "apps/doctor-suit/tests/fixtures/delegation-provider.mjs": "86b3d681469380e2b9868180aee1eb4dd8ad2481fc3d1fa5b793590ad113f89f",
@@ -156,9 +193,37 @@
     "apps/doctor-suit/tests/unit/dos-m1-020.test.mjs": "b73a58ac1f4badd84b3a8e4f845f34722cb836561a576bbb61c2a9081332148d",
     "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts": "7052244615eccfb9e7253c710bcc35a0fb4040d780d640b48b25a7026e357132",
     "apps/doctor-suit/tests/e2e/dos-m1-020.spec.ts": "82ae8bf8e36a6fd5356bf50b8bbba78b6d046166371e47e4e9e61c6b0631c7cc",
-    "docs/work-packages/doctor-suit/implementation/dos-m1-020.md": "016bf834c25366ae213eef7c08b5e5c6654761334a8db90721d289554923caed",
-    "docs/work-packages/doctor-suit/implementation-tracker.md": "1b687ca0251ced1995057b8b87d1ee5bed002302ead0408566258efefacdbdc5",
-    "release-fragments/dos-m1-020.json": "6d5ea9a8cae40d36c40e32f0eac60c8d6e88680f1b2fafe828b43b0867780adc",
-    "apps/doctor-suit/app/utils/contextController.ts": "567e230155618e0dad5666f162fe68d69ccf145b11a3d5469121243ccd24162a"
-  }
+    "docs/work-packages/doctor-suit/implementation/dos-m1-020.md": "4d029b4a7c18a3f1e94a1c45e9fec7a825fc5904a3251a753835426abedb6872",
+    "docs/work-packages/doctor-suit/implementation-tracker.md": "a01dd05daf03442968367bf2b24dee264c03ae0ee31e5d80c40857296a2b92d2",
+    "release-fragments/dos-m1-020.json": "423efb5906603bb056f2e3b9189fc41ea1e0b108eb467a1f8b551a56beaa1601",
+    "apps/doctor-suit/app/utils/contextController.ts": "567e230155618e0dad5666f162fe68d69ccf145b11a3d5469121243ccd24162a",
+    "apps/doctor-suit/tests/shop-backend-actual-provider.mjs": "7161767ddef380774b5e19d58df966ff068ed30630ff2ecfb0b285aeeee8562f",
+    "apps/doctor-suit/tests/unit/dos-m1-020-shop-backend.test.mjs": "baddcec02e30245ad148a89ba460d90951e8f5cc40ea85699527e6d42f850ae5",
+    "packages/testing/playwright.doctor-shop-backend.config.ts": "8a0c1fbe9728c39c1ce05bbfbc5e297fb87602860f305fd9679af3b7689f31c3",
+    ".github/workflows/shop-website-launch-disposable.yml": "96f31a1c3d0c2f3deb5895e9be043e55c32639637e1f9eca67b7e55cc3b5e90f",
+    "apps/shop-suit/tests/e2e/public-changelog.config.ts": "b55d64a106b3f1a03c88cd5f50f4d9f6eaa19546313425742b25b700519f8cb6",
+    "apps/shop-suit/tests/e2e/public-changelog.spec.ts": "f85d9eab2d960dbfbf59dc6d690c95e22e7ec834c1bc8434f20d4b509d66dcc8",
+    "apps/shop-suit/tests/e2e/public-changelog.setup.mjs": "91eba32a0fe645dbcdd2c3478f992de04287162496f7a5b0a738420558b7ed88",
+    "apps/shop-suit/tests/e2e/public-changelog-fixture-server.mjs": "74f1608a0010b1b635a6bcafca3f782ff0ba52db827a1e09a5ed2174f3888a8f",
+    "apps/shop-suit/tests/unit/public-changelog-harness.test.mjs": "0241974a018993c5b77a68bd3cd157493b5080d55d909de6a355546453ca67e8",
+    "tooling/releases/catalog-disposable.mjs": "688fab2d9e49454bf5794aef9136614b5c240a03a3d195f252f7b8296c15237c",
+    "release-fragments/dos-m1-020-shop-changelog-regression.json": "15bd9cd0184d8cd4de686c85eb5c48e6b316e769376767306c17492e3da83f61",
+    "apps/shop-suit/tests/e2e/website-launch-fixture-server.mjs": "8886162ec6a20125e2ba6be164fe65eb126135910df0713d3871d1e145130234",
+    "apps/shop-suit/tests/e2e/ss-web-launch-001.spec.ts": "0c113c56166c623efcd97599873eb35bc29bcc163c6955da29184349f982d9cf",
+    "apps/shop-suit/tests/e2e/website-hostname-suffix.config.ts": "efc819633a78c0d7d8db3e6b2ad5a9c34bea0a7a5341c9b95a7685e1bb656e38",
+    "apps/shop-suit/tests/e2e/website-hostname-suffix.spec.ts": "073887d409b822e79326a41ee2f5d999075aec4f13fcb1115e101579ba3851dd",
+    "apps/shop-suit/tests/e2e/website-hostname-owner.config.ts": "df7eea0be26d29e12457f7a605e4b80093c8c2f3d11a6b3db2cc489e4dfebb9f",
+    "apps/shop-suit/tests/e2e/website-hostname-owner.spec.ts": "442592701e2bb691deb7cc39d2d89d1e3fd49e0ba147f287b7bc74d8755c9f0a",
+    "apps/shop-suit/tests/unit/website-launch-lifecycle.test.mjs": "aa35c7ddccc992cef9ac56c04ea5e921f2422d2a72aa10d0c0521a13400e9e13",
+    ".github/workflows/shop-website-hostname-disposable.yml": "1ee3e73148dcb45843c37bfab695b4176f62b7b5b0542da9ef909126be020afa",
+    "release-fragments/dos-m1-020-hostname-fixture-regression.json": "cfd6854100a57f789f0099e7358a777ae0991220c34ab7e09186d6c464fa0375"
+  },
+  "taskBaseSha": "e53cc7bcd8b0f07c2c2287de0867c942e480d85c",
+  "aggregateRootPullRequest": 345,
+  "excludedPullRequests": [
+    366
+  ],
+  "excludedSourceHeads": [
+    "f2df37d031a8192da8b7a23afc83f0977debec6b"
+  ]
 }

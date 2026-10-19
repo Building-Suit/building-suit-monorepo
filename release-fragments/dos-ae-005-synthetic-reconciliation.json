@@ -1,0 +1,25 @@
+{
+  "id": "dos-ae-005-synthetic-reconciliation",
+  "task": "DOS-AE-005",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/README.md",
+    "apps/doctor-suit/app/utils/saasFinancialRepository.ts",
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261018023210_doctor_saas_reconciliation.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-004-quotes.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-005-reconciliation.sql",
+    "apps/doctor-suit/tests/saas-reconciliation-concurrency.mjs",
+    "apps/doctor-suit/tests/saas-reconciliation-actual-provider.mjs",
+    "apps/doctor-suit/tests/administrative-candidate-actual-provider.mjs",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/unit/saas-financial.test.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-005-reconciliation.md"
+  ],
+  "reason": "Private synthetic evidence/replay/reconciliation ledger and subscriber-only exact currency-separated held-intent reporting; no paid settlement, provider callback, invoice, lifecycle execution, merchant approval or live authority."
+}

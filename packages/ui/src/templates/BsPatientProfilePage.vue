@@ -6,6 +6,7 @@ const props = defineProps<{
   title: string; scopeLabel: string; backHref: string; notice: string; loading: boolean; error: string | null; denied: string | null
   profile: { name: string; fields: { label: string; value: string }[]; source: string } | null
   activity: { id: number; event: string; actor: string; location: string; date: string; version: string }[]; activityCount: string
+  documentsEnabled?: boolean
   documents: { rows: FileRow[]; total: number; page: number; size: number; loading: boolean; error: string | null; denied: boolean; canUpload: boolean; pending: boolean; actionError: string | null }
   upload: { title: string; dirty: boolean; pending: boolean; error: string | null; disabled: boolean }
   history: { rows: VersionRow[]; total: number; page: number; loading: boolean; error: string | null; events: { id: number; event: string; actor: string; location: string; date: string }[] }
@@ -33,7 +34,7 @@ function canAction(action: BsDataTableRowAction,row: FileRow) { return action===
     <template v-else-if="profile">
       <BsPanel padding="md"><BsStack gap="md"><BsHeading :level="2">{{ copy.identity }}</BsHeading><BsText as="p">{{ profile.source }}</BsText><BsDescriptionList :columns="2"><BsDescriptionItem v-for="field in profile.fields" :key="field.label" :term="field.label">{{ field.value }}</BsDescriptionItem></BsDescriptionList></BsStack></BsPanel>
       <BsPanel padding="md"><BsStack gap="md"><BsHeading :level="2">{{ copy.activity }}</BsHeading><BsText as="p" size="sm">{{ activityCount }}</BsText><BsDataTable :value="activity" :columns="activityColumns" row-key="id" :label="copy.activity" /></BsStack></BsPanel>
-      <BsPanel padding="md"><BsStack gap="md">
+      <BsPanel v-if="documentsEnabled !== false" padding="md"><BsStack gap="md">
         <BsInline justify="between"><BsHeading :level="2">{{ copy.attachments }}</BsHeading><BsButton v-if="documents.canUpload" variant="primary" :disabled="documents.pending" @click="emit('upload')">{{ copy.upload }}</BsButton></BsInline>
         <BsAlert tone="info" :description="copy.attachmentNotice" />
         <BsAlert v-if="documents.actionError" tone="error" :description="documents.actionError" />
@@ -48,13 +49,13 @@ function canAction(action: BsDataTableRowAction,row: FileRow) { return action===
         </template>
       </BsStack></BsPanel>
     </template>
-    <BsRecordActionDialog v-model:visible="uploadOpen" :title="upload.title" :dirty="upload.dirty" :pending="upload.pending" :error="upload.error" :submit-label="copy.save" :cancel-label="copy.cancel" :submit-disabled="upload.disabled" @submit="emit('save')"><BsText as="p">{{ copy.unreviewed }}</BsText><BsFileDrop v-model="file" :label="copy.file" :description="copy.fileHelp" accept="application/pdf,image/png,image/jpeg" :disabled="upload.pending" /></BsRecordActionDialog>
-    <BsDialog v-model:visible="historyOpen" :title="copy.history" size="lg" :pending="documents.pending">
+    <BsRecordActionDialog v-if="documentsEnabled !== false" v-model:visible="uploadOpen" :title="upload.title" :dirty="upload.dirty" :pending="upload.pending" :error="upload.error" :submit-label="copy.save" :cancel-label="copy.cancel" :submit-disabled="upload.disabled" @submit="emit('save')"><BsText as="p">{{ copy.unreviewed }}</BsText><BsFileDrop v-model="file" :label="copy.file" :description="copy.fileHelp" accept="application/pdf,image/png,image/jpeg" :disabled="upload.pending" /></BsRecordActionDialog>
+    <BsDialog v-if="documentsEnabled !== false" v-model:visible="historyOpen" :title="copy.history" size="lg" :pending="documents.pending">
       <BsStack gap="md"><BsAlert tone="info" :description="copy.unreviewed" /><BsStateSurface v-if="history.error" state="error" :title="history.error"><BsButton @click="emit('retryHistory')">{{ copy.retry }}</BsButton></BsStateSurface>
         <BsDataTable :value="history.rows" :columns="versionColumns" row-key="id" :label="copy.history" :loading="history.loading" lazy paginator :first="history.page*20" :page-size="20" :total-records="history.total" @page="emit('historyPage',$event.page)"><template #cell-delivery="{ row }"><BsInline><BsButton :disabled="!row.canDownload || documents.pending" @click="emit('download',row.documentId,row.id)">{{ copy.download }}</BsButton><BsButton v-if="row.canPreview" :disabled="!row.canDownload || documents.pending" @click="emit('preview',row.documentId,row.id)">{{ copy.preview }}</BsButton></BsInline></template></BsDataTable>
         <BsDataTable :value="history.events" :columns="eventColumns" row-key="id" :label="copy.activity" />
       </BsStack>
     </BsDialog>
-    <BsDialog v-model:visible="previewOpen" :title="preview.name" size="lg"><BsStack gap="md"><BsAlert tone="info" :description="copy.unreviewed" /><BsImage v-if="preview.url" :src="preview.url" :alt="preview.name" fit="contain" /></BsStack></BsDialog>
+    <BsDialog v-if="documentsEnabled !== false" v-model:visible="previewOpen" :title="preview.name" size="lg"><BsStack gap="md"><BsAlert tone="info" :description="copy.unreviewed" /><BsImage v-if="preview.url" :src="preview.url" :alt="preview.name" fit="contain" /></BsStack></BsDialog>
   </BsStack>
 </template>

@@ -1,13 +1,14 @@
 import {drainLoopbackRoutes} from '../fixtures/loopback-teardown'
 import {test,expect,type Page} from '@playwright/test'
 import {expectNoPageOverflow} from '../../../../packages/testing/browser-foundation'
+import {websiteLaunchApiPorts} from './website-launch-fixture-server.mjs'
 const hosts=/^https:\/\/(?:[a-z-]+\.shops\.building-suit\.com|shop\.building-suit\.com)\//
 test.afterEach(async({page},info)=>drainLoopbackRoutes(page,info,hosts))
 async function mounted(page:Page){await page.waitForFunction(()=>{const root=document.getElementById('__nuxt') as HTMLElement&{__vue_app__?:{config:{globalProperties:{$nuxt:{isHydrating:boolean}}}}};return root?.__vue_app__?.config.globalProperties.$nuxt.isHydrating===false})}
 async function keyboardChoice(page:Page,label:string){const field=page.getByRole('combobox',{name:label,exact:true});await field.focus();await field.press('Enter');await field.press('ArrowDown');await field.press('Enter');await expect(page.getByRole('listbox')).toHaveCount(0)}
 async function transport(page:Page){await page.route(hosts,async route=>{const request=route.request(),url=new URL(request.url());const response=await route.fetch({url:'http://127.0.0.1:4341'+url.pathname+url.search,headers:{...request.headers(),host:url.host},maxRedirects:0,maxRetries:request.method()==='GET'?1:0});await route.fulfill({response})})}
 async function semantics(page:Page,locale:'en'|'ar'){await expect(page.locator('html')).toHaveAttribute('lang',locale);await expect(page.locator('html')).toHaveAttribute('dir',locale==='ar'?'rtl':'ltr');await expect(page.getByRole('main')).toHaveCount(1);await expect(page.getByRole('heading',{level:1})).toHaveCount(1);await expectNoPageOverflow(page);await page.keyboard.press('Tab');expect(await page.evaluate(()=>document.activeElement?.tagName)).not.toBe('BODY')}
-test.beforeEach(async({request})=>{await request.post('http://127.0.0.1:46931/control',{data:{reset:true}})})
+test.beforeEach(async({request})=>{await request.post(`http://127.0.0.1:${websiteLaunchApiPorts.production}/control`,{data:{reset:true}})})
 for(const locale of ['en','ar'])for(const width of [390,820,1440])for(const theme of ['light','dark'])test(`launch owner-published/customer journey ${locale} ${width} ${theme}`,async({page,context,request})=>{
  const ar=locale==='ar';await page.setViewportSize({width,height:1000});await page.addInitScript(v=>localStorage.setItem('building-suit.theme',v),theme);await transport(page)
  const url='https://alpha-tools.shops.building-suit.com/',suffix=ar?'':'?lang=en'
@@ -24,9 +25,9 @@ for(const locale of ['en','ar'])for(const width of [390,820,1440])for(const them
  await page.screenshot({path:test.info().outputPath('verified-portal.png'),fullPage:true})
  await page.goto('https://beta-tools.shops.building-suit.com/my-appointments'+suffix);await mounted(page);await expect(page.locator('ol > li')).toHaveCount(0);await expect(page.getByRole('textbox',{name:ar?'رمز الوصول':'Access code',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Alpha appointment',exact:true})).toHaveCount(0)
  if(width===390&&theme==='light'){
-  await request.post('http://127.0.0.1:46931/control',{data:{slug:'alpha-tools',state:'draft'}})
+  await request.post(`http://127.0.0.1:${websiteLaunchApiPorts.production}/control`,{data:{slug:'alpha-tools',state:'draft'}})
   const hidden=await page.goto(url+suffix);expect(hidden?.status()).toBe(404);await expect(page.locator('body')).toHaveText('Not Found')
-  await request.post('http://127.0.0.1:46931/control',{data:{slug:'alpha-tools',state:'published'}})
+  await request.post(`http://127.0.0.1:${websiteLaunchApiPorts.production}/control`,{data:{slug:'alpha-tools',state:'published'}})
  }
  // Changelog UI uses a synthetic public contract; the real SAS adapter and
  // provider baseline readiness are qualified separately, never bypassed here.

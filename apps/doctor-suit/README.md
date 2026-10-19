@@ -112,3 +112,49 @@ real cross-clinic/rule/timezone/grant races independently of HTTP browser fixtur
 The server applies current rule/location versions, one shared doctor-wide conflict rule, optimistic appointment versions and exact retry receipts after the practice lock. A partial unique index permits only one in-progress visit per doctor. The appointment itself is its unique queue entry. Rescheduling/cancellation append history and preserve clocks, origin clinic/timezone and attribution. Future bookings and active queue entries block clinic archive; explicit queue resolution permits archival while foreign keys retain history. Rule or clinic edits never move/cancel appointments.
 
 Only the three-column `appointment_queue_revisions` interface joins the documented Supabase Realtime publication. RLS checks fresh sessions, active clinics and current read grants; authenticated direct writes remain denied. The shared scoped subscription controller refetches authorized boards on initial join and reconnect. App scope/SID/grant changes abort reads/commands, discard private projections and remove old subscriptions. Outgoing patient notifications remain disabled. Local SQL/browser transports and actual cloud service acceptance are recorded separately in `appointments-evidence.md`; no hosted connections or deployments are configured here.
+
+Synthetic SaaS quote/intent preparation is documented in [AE-004](../../docs/work-packages/doctor-suit/early-administrative-edition/ae-004-quotes.md). Quotes bind approved immutable terms to the fresh subscriber and current subscription; intents remain `awaiting_route_approval`. Payment routes stay unconfigured, with no checkout URL, paid/live activation, provider integration or tax decision. The application adapter exposes only typed selections and held responses; there is no purchase UI.
+
+The [AE-005 synthetic reconciliation foundation](../../docs/work-packages/doctor-suit/early-administrative-edition/ae-005-reconciliation.md) records fixture-only financial evidence privately and reports exact currency-separated held SaaS quotes with immutable source links. Synthetic confirmations cannot settle money or change subscriptions. Real provider/manual settlement, invoices, renewal/cancel/reactivate execution and independent financial acceptance remain unavailable.
+
+The [AE-006 administration contract](../../docs/work-packages/doctor-suit/early-administrative-edition/ae-006-administration.md) provides Doctor-owned signed synthetic read conformance, durable nonce/audit storage and a strictly unavailable operational readiness projection. It provisions no Super Admin target binding, signing credential, bridge endpoint, account creation or operator activation; operator grants and payment confirmation remain separate and unavailable.
+
+[AE-009 redacted operations](../../docs/work-packages/doctor-suit/early-administrative-edition/ae-009-operations.md) exposes only own-subscriber reconciliation and privacy-intake counts. Unknown review findings, recovery objectives, capacity thresholds, incident/support ownership and hosted telemetry remain explicitly unavailable; this is not a security certificate or launch-health badge.
+
+[AE-010 administrative availability](../../docs/work-packages/doctor-suit/early-administrative-edition/ae-010-presentation.md) presents caller-scoped synthetic diagnostics inside the shared subscription template. Missing diagnostics are explicitly unavailable; invoices/settlement, operator and real-user activation remain closed. User/session/practice changes and refreshes clear previous counts, and the existing privacy-review intake remains accessible.
+
+## Diagnose a local sign-in connection
+
+“Sign-in unavailable” is a connection guard, independent of plan/pricing or subscription entitlement. In `apps/doctor-suit/.env`, configure `APP_ENV=local`, `APP_URL=http://localhost:3006` (or the exact origin you use), `DOCTOR_SUPABASE_URL` and `DOCTOR_SUPABASE_PUBLISHABLE_KEY` from the approved Doctor-only project. Never copy Shop credentials or use a service/secret key. The URL must be a bare HTTPS origin, or an HTTP loopback origin for local mode; the key must be a publishable key or legacy anon-role JWT. Local web mode may use an explicitly approved HTTPS Doctor backend.
+
+From the repository root:
+
+```sh
+cp apps/doctor-suit/.env.example apps/doctor-suit/.env  # only if the file does not already exist
+# Edit the four Doctor fields locally; never paste keys into chat.
+pnpm doctor:auth-check
+pnpm doctor:auth-check --verify
+pnpm dev:doctor
+```
+
+Stop the prior dev process before restarting; Nuxt reads these fields at startup. No local Supabase service is started by the check. Its optional `--verify` makes only the read-only `doctor_runtime_contract` RPC on the target you configured, prints no URL/key/token/response body, and requires `{ product: 'doctor-suit', version: 1, data_mode: 'synthetic' }`. Missing values, an unreachable/wrong project or absent Doctor migrations leave credentials unavailable. Have the approved CI migration path initialize the Doctor project; this command does not migrate it. Configure Auth callback allowlisting for the same origin's `/verify` and `/recover`; `localhost` and `127.0.0.1` are distinct browser origins. No manually supplied “verified” flag replaces the runtime marker.
+
+For an already built Node server use `pnpm doctor:auth-check --runtime --verify` with all five explicit runtime fields from the runtime section above, including `NUXT_PUBLIC_DOCTOR_AUTH_CONFIGURED=true`. A false flag deliberately keeps auth disabled even when a URL/key exist. Changing only build-time `DOCTOR_*` variables after a build does not populate Nitro runtime fields.
+
+Canonical entry routes are `/sign-in`, `/sign-up`, `/verify`, and `/recover`. Exact legacy `/auth/login`, `/auth/signup`, `/auth/forgot-password`, and `/auth/reset-password` entries redirect to their Doctor equivalents. Only allowlisted return destinations survive; reset callbacks retain only the existing PKCE code/flow contract. Unknown auth URLs remain genuine 404s inside the public marketing shell, without an authenticated-workspace sidebar or invented active account. Doctor's current landing CTAs already use canonical routes; a legacy URL alone does not establish that the landing emitted it.
+
+
+### Checked-email registration (DOS-M1-006 / DOS-M1-007)
+
+Doctor uses the shared sign-in/signup forms and auth route transitions. Sign-in checks the email before revealing the password; signup checks before advancing and again before creating an account. The private server setting `DOCTOR_AUTH_EMAIL_LOOKUP_KEY` (or Nitro runtime `NUXT_DOCTOR_AUTH_EMAIL_LOOKUP_KEY`) must belong to this Doctor environment. It calls only the service-role-only boolean `doctor_auth_email_exists` RPC. It is never public configuration or an authorization decision. Missing configuration or an unavailable/malformed lookup fails closed. The bounded server quotas are 12 requests per caller and 4 per caller/email in ten minutes, per server instance, following Shop’s architecture. Production-wide trusted edge/WAF quotas remain an operator requirement; these counters do not claim distributed enforcement.
+
+The two steps collect display name (120 characters), email/password (minimum 12 characters), practice name (160), first location name (160) and a valid IANA timezone. No additional business or professional credentials are inferred. Account creation distinguishes challenge, duplicate/recovery and a genuinely verified session. Existing verified identities skip password creation and redundant OTP; names are locked only when supplied by a verified matching provider identity. Practice writes still require the real SID, server enrollment/admission and subscription decisions. Registration does not grant clinical authority, a trial or paid access.
+
+A per-tab draft at `doctor-suit.<environment>.registration.v1` expires after 24 hours and excludes passwords, OTPs, tokens and authority. The app-scoped handoff retains the same non-secret fields when browser storage is denied, but cannot survive a document reload without storage. Challenge expiry is one hour and resend cooldown is one minute. An interrupted signup request resumes in explicit recovery, never automatically repeats account creation. Drafts bind to a verified UID/email before import into authorized onboarding. Transient verification failure preserves the draft for retry; a confirmed account mismatch or explicit abandonment/sign-out clears it. Existing server draft revisions and idempotent completion remain authoritative.
+
+Ordinary auth links use Nuxt client navigation. The connection card remains in the shared auth shell; recovery only starts an initial check when required. The security reload on a persisted BFCache restoration remains deliberate. Runtime/provider/browser regressions run only in GitHub’s owned disposable environment; local checks do not start services.
+
+
+### Canonical Doctor logo replacement
+
+Drop the final SVGs into `packages/brand/assets/` as `doctor-suit-wordmark-light.svg`, `doctor-suit-wordmark-dark.svg`, `doctor-suit-mark-light.svg` and `doctor-suit-mark-dark.svg`. A fresh normal CI build discovers them and the shared Nuxt layer serves them at `/brand/`; no later code edits are needed. Until artwork exists the D monogram remains. Landing, all auth frames, onboarding and expanded/collapsed workspace navigation use `useDoctorBrand`. See `packages/brand/README.md` for exact paths, preferred canvases, light/dark meaning, optional supplied favicon files and replacement checks. No favicon/PNG/social-card generation or hosted email branding is implied.

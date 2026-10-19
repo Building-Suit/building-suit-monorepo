@@ -4,7 +4,6 @@ export interface SignupWizardStep {
   title: string
   body?: string
 }
-
 const props = withDefaults(defineProps<{
   step: number
   steps: SignupWizardStep[]
@@ -23,14 +22,18 @@ const props = withDefaults(defineProps<{
   pendingLabel: undefined,
   submitDisabled: false,
 })
-
 const emit = defineEmits<{ back: [] }>()
 const ui = useUiCopy()
 const current = computed(() => props.steps[props.step - 1])
+const headingId = computed(() => `signup-step-${current.value?.id ?? props.step}`)
+function focusStage(element: Element) {
+  const control = element.querySelector<HTMLElement>('input:not([readonly]):not([disabled]),select:not([disabled]),button:not([disabled])')
+  control?.focus({ preventScroll: true })
+}
 </script>
 <template>
-  <section class="bs-signup-wizard" :aria-labelledby="`signup-step-${current?.id}`">
-    <ol class="bs-signup-wizard__steps" :aria-label="ui('step')">
+  <section class="bs-signup-wizard" :aria-labelledby="current ? headingId : undefined">
+    <ol v-if="steps.length > 1" class="bs-signup-wizard__steps" :aria-label="ui('step')">
       <li
         v-for="(item, index) in steps"
         :key="item.id"
@@ -42,10 +45,12 @@ const current = computed(() => props.steps[props.step - 1])
         <div class="bs-signup-wizard__step-copy"><p>{{ item.title }}</p><small v-if="item.body">{{ item.body }}</small></div>
       </li>
     </ol>
-    <header class="bs-signup-wizard__header">
-      <div><p class="bs-signup-wizard__count">{{ ui('step') }} {{ step }} / {{ steps.length }}</p><h2 :id="`signup-step-${current?.id}`">{{ current?.title }}</h2></div>
+    <header v-if="current" class="bs-signup-wizard__header">
+      <div><p class="bs-signup-wizard__count">{{ ui('step') }} {{ step }} / {{ steps.length }}</p><h2 :id="headingId">{{ current.title }}</h2></div>
     </header>
-    <div class="bs-signup-wizard__content"><slot :step="step" :step-descriptor="current" /></div>
+    <Transition name="bs-auth-wizard-stage" mode="out-in" @after-enter="focusStage">
+      <div :key="`${step}:${current?.id ?? 'single'}`" class="bs-signup-wizard__content"><slot :step="step" :step-descriptor="current" /></div>
+    </Transition>
     <p v-if="notice" role="status" class="bs-signup-wizard__notice">{{ notice }}</p>
     <p v-if="error" role="alert" tabindex="-1" class="ls-error bs-signup-wizard__error">{{ error }}</p>
     <div class="bs-signup-wizard__actions">
@@ -55,7 +60,6 @@ const current = computed(() => props.steps[props.step - 1])
     <div v-if="$slots.footer" class="bs-signup-wizard__footer"><slot name="footer" /></div>
   </section>
 </template>
-
 <style>
 .bs-signup-wizard { display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr); gap: var(--bs-space-6); }
 .bs-signup-wizard__steps { display: flex; gap: var(--bs-space-3); padding: 0; margin: 0; list-style: none; }

@@ -1,0 +1,21 @@
+{
+  "id": "release-reconcile-protected-ref-targets",
+  "task": "CI-RELEASE-REF-ADMISSION",
+  "suits": [
+    "doctor-suit",
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/releases.yml",
+    "tooling/releases/workflow-triggers.test.mjs",
+    "docs/shared/release-publication-runbook.md",
+    "docs/work-packages/release-reconcile-ref-admission.md"
+  ],
+  "reason": "Prevent fallback reconciliation from admitting a production matrix leg on a stg workflow ref. Keep protected push publication after verify in ci.yml; bind fallback environment selection to its actual protected workflow ref and reject mismatched/PR/fork sources. Preserve adoption, publisher/readiness, environment protection, secret bindings and concurrency. No hosted publication, workflow activation, environment-rule change or main promotion is performed."
+}

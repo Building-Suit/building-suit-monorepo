@@ -210,6 +210,15 @@ importers:
 
   apps/doctor-suit:
     dependencies:
+      '@building-suit/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@building-suit/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
+      '@building-suit/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@building-suit/data-access':
         specifier: workspace:*
         version: link:../../packages/data-access

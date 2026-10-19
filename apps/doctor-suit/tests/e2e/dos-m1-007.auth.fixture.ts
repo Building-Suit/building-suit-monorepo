@@ -1,17 +1,23 @@
+import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { doctorDashboardCopy } from '../../app/utils/dashboardPresentation'
 import { test, expect, type Page, type BrowserContext } from '@playwright/test'
 const fixture = 'http://127.0.0.1:4338/__fixture'
+type MountedDoctorRoot = Element & { __vue_app__: { config: { globalProperties: { $doctorAuth: { providerChanged(): void } } } } }
 test.beforeEach(async ({ request }) => { await request.post(fixture, { data: { reset: true, completeDelayMs: 250 } }); await request.post(fixture, { data: { completeDelayMs: 250 } }) })
 async function prepare(context: BrowserContext, ar: boolean) {
   await context.addCookies([{ name: 'building-suit-locale', value: ar ? 'ar' : 'en', url: 'http://127.0.0.1:4337' }])
   await context.route('**/*', route => ['127.0.0.1', 'localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort())
 }
 async function signIn(page: Page, ar = false) {
-  await page.goto('/sign-in')
+  await page.goto('/account')
   await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill('synthetic@example.test')
-  await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
+  await doctorPasswordStep(page);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
   await page.getByRole('button', { name: ar ? 'تسجيل الدخول' : 'Sign in', exact: true }).click()
   await expect(page).toHaveURL(/\/account$/)
+  // A committed SPA URL can precede account readiness and the browser cookie
+  // store. Establish the durable session before testing a separate SSR request.
+  await expect(page.getByRole('heading', { level: 1, name: ar ? 'الحساب التجريبي' : 'Synthetic account', exact: true })).toBeVisible()
+  await expect.poll(async () => (await page.context().cookies('http://127.0.0.1:4337')).some(cookie => /^bs-doctor-local-auth-token(?:\.\d+)?$/.test(cookie.name) && Boolean(cookie.value))).toBe(true)
 }
 for (const ar of [false, true]) test(`DOS-M1-007 ${ar ? 'AR mobile' : 'EN desktop'} protocol fixture: resume draft, onboard alone and maintain profile`, async ({ page, context, browser, request }) => {
   await prepare(context, ar)
@@ -28,6 +34,14 @@ for (const ar of [false, true]) test(`DOS-M1-007 ${ar ? 'AR mobile' : 'EN deskto
     const second = await resumed.newPage()
     await signIn(second, ar)
     await second.goto('/onboarding')
+    await expect(second).toHaveURL(/\/onboarding$/)
+    await expect(second.getByLabel(ar ? /^الاسم المعروض للطبيب/ : /^Doctor display name/)).toHaveValue('Synthetic owner')
+    // Deliver the SDK's provider-change callback after setup is mounted. It must
+    // reverify the session and reload the owned server draft, without remounting.
+    const setupReads = () => request.get(fixture).then(response => response.json()).then(state => state.calls.filter((call: string) => call === 'POST /rest/v1/rpc/doctor_practice_setup').length)
+    const previousReads = await setupReads()
+    await second.evaluate(() => (document.querySelector('#__nuxt') as MountedDoctorRoot).__vue_app__.config.globalProperties.$doctorAuth.providerChanged())
+    await expect.poll(setupReads).toBeGreaterThan(previousReads)
     await expect(second.getByLabel(ar ? /^الاسم المعروض للطبيب/ : /^Doctor display name/)).toHaveValue('Synthetic owner')
     await second.getByLabel(ar ? /^اسم الممارسة/ : /^Practice name/).fill('Synthetic practice')
     await second.getByLabel(ar ? /^اسم الموقع/ : /^Location name/).fill('Synthetic first location')
@@ -39,8 +53,8 @@ for (const ar of [false, true]) test(`DOS-M1-007 ${ar ? 'AR mobile' : 'EN deskto
     await expect(second.getByText(ar ? 'المؤهلات المهنية غير متحقق منها' : 'Professional credentials unverified', { exact: true })).toBeVisible()
     await expect(second.getByText('Africa/Cairo', { exact: true })).toBeVisible()
     const overview = doctorDashboardCopy(ar)
-    await expect(second.getByText(overview.today,{ exact: true }).locator('..').locator('dd')).toHaveText('0')
-    await expect(second.getByText(overview.queue,{ exact: true }).first().locator('..').locator('dd')).toHaveText('0')
+    await expect(second.getByRole('group',{ name: overview.today,exact: true }).getByText('0',{ exact: true })).toHaveText('0')
+    await expect(second.getByRole('group',{ name: overview.queue,exact: true }).getByText('0',{ exact: true })).toHaveText('0')
     expect(await second.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
     await expect(second.getByRole('status').filter({ hasText: 'Synthetic practice · Synthetic first location · Africa/Cairo' })).toBeVisible()
     await expect(second.getByRole('main')).toHaveCount(1)

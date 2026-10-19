@@ -1,0 +1,19 @@
+{
+  "id": "dos-ae-003-terms-foundation",
+  "task": "DOS-AE-003",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/app/utils/saasTerms.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261017151214_doctor_versioned_saas_terms.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-003-terms.sql",
+    "apps/doctor-suit/tests/unit/saas-terms.test.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-003-terms-foundation.md"
+  ],
+  "reason": "Prepare immutable Doctor-specific terms and an authenticated owner/prospective-owner projection with all unknown values unconfigured. Explicit quota, money precision, trial/renewal/grace/expiry/refund/cancellation and over-limit policies require complete approved data; no offer is seeded and commercial configuration cannot enable purchase or live admission. No original clinical dependency waiver, actual merchant approval, subscription/settlement mutation or operational activation."
+}

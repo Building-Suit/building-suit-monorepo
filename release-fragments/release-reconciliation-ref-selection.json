@@ -1,0 +1,23 @@
+{
+  "id": "release-reconciliation-ref-selection",
+  "task": "CI-AUTH-REGRESSION-REPAIR",
+  "suits": [
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "doctor-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/releases.yml",
+    "tooling/releases/reconcile-targets.mjs",
+    "tooling/releases/reconcile-targets.test.mjs",
+    "tooling/releases/workflow-triggers.test.mjs",
+    "docs/shared/release-publication-runbook.md",
+    "docs/work-packages/ci-auth-regression-repair.md"
+  ],
+  "reason": "Select an environment only when its triggering protected workflow ref is admitted. Reject PR/completion/ref mismatches before requesting environment credentials; preserve publisher readiness, serialization, and protected-stg CI retry paths without provider, permission, credential or branch-policy changes."
+}

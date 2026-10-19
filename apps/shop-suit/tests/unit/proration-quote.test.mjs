@@ -15,7 +15,7 @@ test('frozen server amounts and unrounded strings survive without client recalcu
 test('zero credit changes require the explicit transition; malformed amounts, currency and expiry fail closed',()=>{
  const zero={...fixture,calculation:{...fixture.calculation,amountDueMinor:0,creditAfterMinor:23333,transition:'explicit_credit_transition'}}
  assert.equal(parseProrationQuote(zero).calculation.amountDueMinor,0)
- for(const patch of [{amountDueMinor:-1},{amountDueMinor:1.5},{amountDueMinor:NaN},{currency:'USD'},{unusedPrepaidMinor:'Infinity'},{periodMonths:12},{expiresAt:'2026-10-15T12:15:00Z'},{mode:'activated'},{transition:'paid'}]) assert.throws(()=>parseProrationQuote({...fixture,calculation:{...fixture.calculation,...patch}}))
+ for(const patch of [{amountDueMinor:-1},{amountDueMinor:1.5},{amountDueMinor:NaN},{currency:'EUR'},{unusedPrepaidMinor:'Infinity'},{periodMonths:12},{expiresAt:'2026-10-15T12:15:00Z'},{mode:'activated'},{transition:'paid'}]) assert.throws(()=>parseProrationQuote({...fixture,calculation:{...fixture.calculation,...patch}}))
  assert.throws(()=>parseProrationQuote({...zero,calculation:{...zero.calculation,transition:'verified_xpay_payment'}}))
 })
 

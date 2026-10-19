@@ -284,3 +284,13 @@ entry-point checks passed. Browser and disposable SQL results are recorded in
 the PR after completion. The private-offer SQL fulfillment contract inherits
 #279 but a full signed-bridge/private-offer payment scenario remains unrun; the
 integration owner must run combined SAS/XPay checks before staging merge.
+
+## International subscription currencies (2026-10-18)
+
+See [the currency contract, fixed matrix and verification plan](international-subscription-pricing.md).
+EGP/USD comparison and explicit selection are implemented. Orders and receipts
+retain commercial currency alongside immutable EGP processing/FX evidence.
+Proration/credit and reviewed refund observations stay currency isolated.
+USD charging remains disabled by private/runtime gates and still requires
+account-specific USD/card capability and sandbox verification. No live USD
+payment, refund or provider configuration is performed by this task.

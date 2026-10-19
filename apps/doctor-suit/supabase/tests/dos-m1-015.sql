@@ -23,7 +23,9 @@ select pg_temp.id('a9',n),pg_temp.id('a3',1),pg_temp.id('a1',1),pg_temp.id('a4',
 from generate_series(1,45)n cross join lateral(select(pg_temp.day(1)::timestamp at time zone 'Pacific/Kiritimati')+(n-1)*interval '20 minutes' stamp)s;
 insert into public.appointments(id,practice_id,doctor_user_id,location_id,patient_id,starts_at,ends_at,timezone,location_name,state,created_by,checked_in_at)
 select pg_temp.id('a9',100+n),pg_temp.id('a3',1),pg_temp.id('a1',1),pg_temp.id('a4',2),pg_temp.id('a8',1),stamp,stamp+interval '20 minutes','Etc/GMT+12','Queue A2',case when n=1 then 'booked'else 'checked_in'end,pg_temp.id('a1',1),case when n=2 then clock_timestamp()end
-from generate_series(1,2)n cross join lateral(select((pg_temp.day(2)-case when n=2 then 7 else 0 end)+time '23:00')at time zone 'Etc/GMT+12' stamp)s;
+-- UTC+14 and UTC-12 local dates differ by one or two days. 15:00 stays
+-- outside this doctor's 15-hour A1 population in either date relationship.
+from generate_series(1,2)n cross join lateral(select((pg_temp.day(2)-case when n=2 then 7 else 0 end)+time '15:00')at time zone 'Etc/GMT+12' stamp)s;
 insert into public.appointment_events(practice_id,appointment_id,actor_user_id,location_id,event_type,record_version,details)
 select practice_id,id,created_by,location_id,'appointment.booked',1,'{}'::jsonb from public.appointments where id::text like 'a9000000-%';
 -- Minimal historical clinic-reference fixture; lifecycle creation is verified in DOS-M1-014.

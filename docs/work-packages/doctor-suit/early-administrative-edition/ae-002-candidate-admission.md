@@ -1,0 +1,13 @@
+# DOS-AE-002 synthetic candidate admission
+
+This child follows PR371. It closes unrestricted actor admission in the `administrative_candidate` database policy; it does not grant real-user admission or complete the edition's aggregate acceptance.
+
+No actors are seeded. Each candidate actor requires a database-owned, append-only `synthetic_fixture` admission with an evidence reference and expiry within 24 hours. A separate append-only revocation can close that admission sooner. Both tables force RLS, permit only the managed database owner, and deny client, anonymous and service API privileges. There is no public grant command, real-user purpose, clinical authority or live activation mode. These are technical test-admission limits, not subscription trial terms.
+
+The verified provider user/session remains mandatory. User metadata, a valid provider session alone, a service API key and an owner role do not create admission. Admission does not create practice ownership, membership, location permissions, excluded document access or paid entitlements. Existing explicitly synthetic preview behavior remains compatible.
+
+Current actor authority is volatile and uses the current clock. This allows the existing transactional rechecks to observe provider/admission revocation after a lock wait. PostgreSQL documents the snapshot difference between stable and volatile functions in [Function Volatility](https://www.postgresql.org/docs/17/xfunc-volatility.html). The immutable static grant-domain helper and historical rows remain unchanged.
+
+Disposable acceptance explicitly selects the candidate. Thirty-two SQL assertions cover default denial, metadata forgery, tenant isolation, expired/future/revoked admissions, immutable evidence and ACLs. Three real transaction scenarios prove post-lock revocation, denial of an old successful command receipt after revocation, and progress by an independent actor. All 741 inherited SQL assertions and 39 inherited transaction scenarios also pass. Public schema types are generated from the migrated disposable database with pinned PostgreSQL Meta 0.98.0; no hand-edited generated types.
+
+The SQL fixture supplies minimal provider interfaces; it is not actual Auth/Storage/Realtime acceptance. Aggregate acceptance must switch the owned disposable real provider to `administrative_candidate`, add explicit synthetic actor admissions, and verify direct and Edge document denial, context/team projections and Realtime authorization. Previously passing provider tests remain `synthetic_preview` evidence. No hosted access, credential or provider changes, manual deployment, Automation action, clinical dependency waiver or main/staging merge is included.

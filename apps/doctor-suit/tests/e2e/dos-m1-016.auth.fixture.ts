@@ -1,3 +1,4 @@
+import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { test,expect } from '@playwright/test'
 import { doctorAccountCopy } from '../../app/utils/accountPresentation'
 const fixture = 'http://127.0.0.1:4338/__fixture'
@@ -8,7 +9,7 @@ for(const ar of [false,true])test(`DOS-M1-016-C01/C02/C03/C04 ${ar ? 'AR mobile 
     await context.addCookies([{ name: 'building-suit-locale',value: ar ? 'ar' : 'en',url: 'http://127.0.0.1:4337' }]);await context.addInitScript(theme => localStorage.setItem('building-suit.theme',theme),ar ? 'light' : 'dark')
     await context.route('**/*',route => ['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort())
     const page = await context.newPage()
-    async function login() { await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill('synthetic@example.test');await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only');await page.getByRole('button',{ name: ar ? 'تسجيل الدخول' : 'Sign in',exact: true }).click();await expect(page).toHaveURL(/\/account$/) }
+    async function login() { await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill('synthetic@example.test');await doctorPasswordStep(page);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only');await page.getByRole('button',{ name: ar ? 'تسجيل الدخول' : 'Sign in',exact: true }).click();await expect(page).toHaveURL(/\/account$/) }
     await page.goto('/account');await login();await expect(page.getByRole('heading',{ name: copy.title,exact: true })).toBeVisible()
     await expect(page.getByText(copy.unavailable,{ exact: true })).toBeVisible();await expect(page.getByRole('button',{ name: /Subscribe|Export|اشتراك|تصدير/ })).toHaveCount(0)
     await page.getByRole('button',{ name: copy.edit,exact: true }).click();let dialog = page.getByRole('dialog',{ name: copy.edit,exact: true })

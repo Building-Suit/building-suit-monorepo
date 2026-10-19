@@ -1,0 +1,33 @@
+{
+  "id": "dos-ae-003-write-offers",
+  "task": "DOS-AE-003",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/composables/useDoctorLocationManagement.ts",
+    "apps/doctor-suit/app/composables/useDoctorTeamManagement.ts",
+    "apps/doctor-suit/app/pages/team.vue",
+    "apps/doctor-suit/app/plugins/doctor-auth.ts",
+    "apps/doctor-suit/app/utils/contextController.ts",
+    "apps/doctor-suit/app/utils/delegation.ts",
+    "apps/doctor-suit/app/utils/entitlement.ts",
+    "apps/doctor-suit/app/utils/locations.ts",
+    "apps/doctor-suit/app/utils/locationsController.ts",
+    "apps/doctor-suit/app/utils/teamController.ts",
+    "apps/doctor-suit/supabase/migrations/20261017224601_doctor_saas_write_projections.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-003-write-offers.sql",
+    "apps/doctor-suit/tests/e2e/dos-ae-002.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-ae-003-write-offers.auth.fixture.ts",
+    "apps/doctor-suit/tests/fixtures/appointments-provider.mjs",
+    "apps/doctor-suit/tests/fixtures/availability-provider.mjs",
+    "apps/doctor-suit/tests/fixtures/delegation-provider.mjs",
+    "apps/doctor-suit/tests/fixtures/patients-provider.mjs",
+    "apps/doctor-suit/tests/unit/administrative-presentation.test.mjs",
+    "apps/doctor-suit/tests/unit/saas-write-offers.test.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-003-write-offers.md"
+  ],
+  "reason": "Bind patient/schedule/appointment/queue and clinic/team business write offers to current stored-owner subscription, preserve historical reads and security reductions, and expire Vue reactive owner read models safely even without active clinics. Validate synthetic metadata and stale-draft denial; no commercial defaults, clinical/document scope, paid/live activation or hosted mutation."
+}

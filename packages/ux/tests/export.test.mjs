@@ -1,9 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
 import * as vue from 'vue'
-import ts from 'typescript'
-import { csvCell, recordSnapshot, useRecordAction } from '../src/index.ts'
+import { csvCell, recordSnapshot, useRecordAction, useSignupWizard } from '../src/index.ts'
 import { useNavigationDisclosure } from '../src/composables/useNavigationDisclosure.ts'
 
 test('CSV export neutralizes formula text and retains numeric values', () => {
@@ -31,14 +29,7 @@ function recordAction(getValue) {
 }
 
 function signupWizard(totalSteps) {
-  const source = readFileSync(new URL('../src/composables/useSignupWizard.ts', import.meta.url), 'utf8')
-  const code = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText
-  const module = { exports: {} }
-  const globals = { ref: vue.ref, computed: vue.computed }
-  new Function('module', 'exports', ...Object.keys(globals), code)(module, module.exports, ...Object.values(globals))
-  return module.exports.useSignupWizard(totalSteps)
+  return useSignupWizard(totalSteps)
 }
 
 test('record actions standardize create/edit, dirty, pending, failure, and completion state', async () => {

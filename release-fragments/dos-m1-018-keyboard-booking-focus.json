@@ -1,0 +1,13 @@
+{
+  "id": "dos-m1-018-keyboard-booking-focus",
+  "task": "DOS-M1-018",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/composables/useDoctorAppointmentsPage.ts",
+    "apps/doctor-suit/tests/e2e/booking-focus.auth.fixture.ts",
+    "docs/work-packages/doctor-suit/implementation/keyboard-booking-focus.md"
+  ],
+  "reason": "Keep the permitted booking action mounted during non-mutating board refreshes in the synthetic Doctor administrative preview, preserving keyboard focus and Enter activation. Retain hydration, clinic capability, pending-write and server authorization guards. Add deterministic held-response focus/booking regressions in EN/AR and mobile/desktop. Existing M1 keyboard assertions and all clinical, provider and operational activation gates remain intact."
+}

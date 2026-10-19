@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { doctorLocationsCopy } from '../utils/locationsPresentation'
 definePageMeta({ layout: 'practice', middleware: 'doctor-auth' })
-const { copy } = useDoctorPracticePresentation()
+const { practice,copy } = useDoctorPracticePresentation()
+const auth = useDoctorAuth()
 const context = useDoctorContext()
 const dashboard = useDoctorDashboardPage()
 const { locale } = useI18n()
 const scopeCopy = computed(() => doctorLocationsCopy(locale.value === 'ar'))
 await context.refresh()
+// A new owner enters the existing setup flow; an independently invited actor
+// is never promoted just because no active location can be selected.
+if(context.state.phase==='choosing' && !context.state.options.length && !auth.state.identity?.practiceId) {
+  await practice.load()
+  if(practice.state.setup?.enrollment==='owner')await navigateTo(practice.state.setup.subscriptionRequired?'/subscription':'/onboarding')
+}
 const denied = computed(() => !context.state.options.length ? { title: scopeCopy.value.choose, description: scopeCopy.value.chooseDescription } : undefined)
 const profile = computed(() => {
   const selected = context.state.current

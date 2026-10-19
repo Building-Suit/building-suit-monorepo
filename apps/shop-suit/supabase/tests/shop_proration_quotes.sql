@@ -40,7 +40,7 @@ DO $$
 declare patch jsonb; x jsonb; invalid integer:=0;
 begin
  for patch in select value from jsonb_array_elements('[
- {"status":"suspended"},{"source":"browser_claim"},{"currency":"USD"},
+ {"status":"suspended"},{"source":"browser_claim"},{"currency":"EUR"},
  {"prepaid":"NaN"},{"prepaid":"Infinity"},{"prepaid":"-1"},
  {"newMinor":0},{"balance":-1},{"newInterval":"weekly"},
  {"oldInterval":"weekly"},{"asOf":"infinity"},{"cycleStart":"2026-12-05"},

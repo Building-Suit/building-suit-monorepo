@@ -1,3 +1,4 @@
+import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { test,expect,type BrowserContext,type Page } from '@playwright/test'
 import { doctorAvailabilityCopy } from '../../app/utils/availabilityPresentation'
 import { doctorDelegationCopy } from '../../app/utils/delegationPresentation'
@@ -16,7 +17,7 @@ async function lifecycle(page: Page) {
   console.info('Doctor availability lifecycle',diagnostic)
 }
 async function login(page: Page,email: string,ar: boolean) {
-  await page.goto('/availability'); await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill(email); await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
+  await page.goto('/availability'); await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill(email); await doctorPasswordStep(page);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
   await page.getByRole('button',{ name: ar ? 'تسجيل الدخول' : 'Sign in',exact: true }).click(); try { await expect(page).toHaveURL(url => url.pathname==='/availability') } catch (error) { await lifecycle(page); throw error }
 }
 async function choose(page: Page,ar: boolean,clinic: string) {

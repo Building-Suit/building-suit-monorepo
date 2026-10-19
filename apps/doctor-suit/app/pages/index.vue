@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { doctorPublicPreview } from '../utils/publicPreview'
-definePageMeta({ layout: false })
+import { doctorLaunchPricing } from '../utils/launchPricing'
+import { doctorLandingContent } from '../utils/landingPresentation'
+definePageMeta({ layout: 'marketing' })
+const interval=ref('monthly')
+const pricing=computed(()=>doctorLaunchPricing(locale.value==='ar',interval.value))
 const { locale } = useI18n()
-const content = computed(() => doctorPublicPreview(locale.value === 'ar'))
-const scopeVisible = ref(false)
+const content = computed(() => doctorLandingContent(locale.value === 'ar'))
 </script>
-<template><BsProductPreviewPage v-bind="content" :scope-visible="scopeVisible" @inspect-scope="scopeVisible = true" /></template>
+<template><BsLandingPage :content="content" :pricing="pricing" :preview="{ kind:'features' }" signup-path="/sign-up" @interval="interval=$event" /></template>

@@ -1,0 +1,15 @@
+{
+  "id": "dos-ae-001-administrative-edition-scope",
+  "task": "DOS-AE-001",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/early-administrative-edition/README.md",
+    "docs/work-packages/doctor-suit/early-administrative-edition/operator-decisions.md",
+    "docs/work-packages/doctor-suit/early-administrative-edition/scope.v1.json",
+    "apps/doctor-suit/tests/helpers/administrative-scope.mjs",
+    "apps/doctor-suit/tests/unit/early-administrative-scope.test.mjs"
+  ],
+  "reason": "Record the owner-authorized early administrative edition as 11 additive DOS-AE tasks with 46 acceptance cases and nine pinned unchanged source plans. Separate SaaS-only M6/M7 extraction from full clinical milestones; retain excluded clinical/document/notes/messaging/patient-collection capabilities and unresolved commercial, provider, tax, privacy, hosting, recovery, independent-review and live-activation gates. Reference consistency checks grant no product completion, clinical waiver, paid-sale readiness, real-data approval or operational activation."
+}

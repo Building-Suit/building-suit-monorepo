@@ -1,0 +1,39 @@
+{
+  "id": "dos-ae-002-ui-binding",
+  "task": "DOS-AE-002",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/doctor-suit/app/composables/useDoctorAppointmentsPage.ts",
+    "apps/doctor-suit/app/composables/useDoctorTeamManagement.ts",
+    "apps/doctor-suit/app/pages/appointments.vue",
+    "apps/doctor-suit/app/pages/patients/[id].vue",
+    "apps/doctor-suit/app/utils/administrativeEdition.ts",
+    "apps/doctor-suit/app/utils/delegation.ts",
+    "apps/doctor-suit/app/utils/delegationForms.ts",
+    "apps/doctor-suit/app/utils/locationContext.ts",
+    "apps/doctor-suit/app/utils/teamController.ts",
+    "apps/doctor-suit/supabase/migrations/20261017144047_doctor_administrative_presentation.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-002-ui.sql",
+    "apps/doctor-suit/tests/e2e/dos-ae-002.auth.fixture.ts",
+    "apps/doctor-suit/tests/fixtures/appointments-provider.mjs",
+    "apps/doctor-suit/tests/fixtures/delegation-provider.mjs",
+    "apps/doctor-suit/tests/unit/administrative-edition.test.mjs",
+    "apps/doctor-suit/tests/unit/administrative-presentation.test.mjs",
+    "apps/doctor-suit/tests/unit/dos-m1-009.test.mjs",
+    "apps/doctor-suit/tests/unit/dos-m1-010.test.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-002-ui-binding.md",
+    "packages/ui/src/templates/BsPatientProfilePage.vue",
+    "packages/ui/src/templates/BsPracticeAppointmentsPage.vue"
+  ],
+  "reason": "Bind the synthetic-only Doctor administrative candidate to server-supplied effective team permissions and bilingual coded appointment reasons; omit excluded document presentation. Shared optional props preserve existing consumer defaults. Preserve stored historical grants and all original clinical dependencies; no real-user admission, merchant/commercial approval or operational activation. This prepares the early edition behind existing synthetic boundaries; it does not publish a product release."
+}

@@ -1,0 +1,25 @@
+{
+  "id": "doctor-brand-slots",
+  "task": "DOS-AE-010",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit",
+    "packages/brand",
+    "packages/ui/src/atoms/BsProductLogo.vue",
+    "packages/ui/tests/product-logo.test.mjs",
+    "apps/building-suit-docs/app/pages/components.vue",
+    ".github/workflows/doctor-disposable.yml",
+    "pnpm-lock.yaml",
+    "release-changes/items.json"
+  ],
+  "reason": "Register passive canonical Doctor asset slots and one product brand adapter for existing shared landing/auth/workspace consumers. Discover supplied files on normal builds, retain the monogram without artwork, and emit only supplied icon metadata. No final artwork, automatic rasterization, operational activation, clinical claim, provider setting or deployment is created. Existing registered product brands are unchanged; shared missing-image behavior is separately covered by shared-product-logo-fallback."
+}

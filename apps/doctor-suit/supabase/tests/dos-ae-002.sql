@@ -1,0 +1,91 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select no_plan();
+create function pg_temp.id(n integer)returns uuid language sql immutable as $$select('ae020000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid$$;
+insert into auth.users(id,email,email_confirmed_at)select pg_temp.id(n),'synthetic-edition-'||n||'@example.test',now()from generate_series(1,5)n;
+insert into auth.sessions(id,user_id)select pg_temp.id(n+10),pg_temp.id(n)from generate_series(1,5)n;
+-- Explicit bounded synthetic fixture admission; not a real-user approval.
+insert into public.doctor_candidate_admissions(user_id,purpose,evidence_ref,valid_until)select pg_temp.id(n),'synthetic_fixture','disposable-sql:dos-ae-002.sql',clock_timestamp()+interval'2 hours'from generate_series(1,5)n;
+insert into public.doctor_profiles(user_id,display_name)values(pg_temp.id(1),'Synthetic edition doctor A'),(pg_temp.id(2),'Synthetic edition doctor B');
+insert into public.practices(id,owner_user_id,name)values(pg_temp.id(21),pg_temp.id(1),'Synthetic edition A'),(pg_temp.id(22),pg_temp.id(2),'Synthetic edition B');
+insert into public.locations(id,practice_id,name,timezone)values(pg_temp.id(31),pg_temp.id(21),'Synthetic A1','Etc/UTC'),(pg_temp.id(32),pg_temp.id(22),'Synthetic B1','Etc/UTC');
+insert into public.memberships(id,practice_id,user_id,capabilities)values
+ (pg_temp.id(41),pg_temp.id(21),pg_temp.id(3),array['patients.read','documents.read','documents.write']),
+ (pg_temp.id(42),pg_temp.id(21),pg_temp.id(4),array['documents.read']);
+insert into public.membership_locations(practice_id,membership_id,location_id)values(pg_temp.id(21),pg_temp.id(41),pg_temp.id(31)),(pg_temp.id(21),pg_temp.id(42),pg_temp.id(31));
+insert into public.patient_identities(id)values(pg_temp.id(51));
+insert into public.practice_patients(id,practice_id,patient_identity_id,display_name,created_location_id,created_by)
+ values(pg_temp.id(61),pg_temp.id(21),pg_temp.id(51),'Synthetic administrative patient',pg_temp.id(31),pg_temp.id(1));
+insert into public.appointments(id,practice_id,doctor_user_id,location_id,patient_id,starts_at,ends_at,timezone,location_name,state,created_by,version)
+ values(pg_temp.id(71),pg_temp.id(21),pg_temp.id(1),pg_temp.id(31),pg_temp.id(61),now()+interval'7 days',now()+interval'7 days 20 minutes','Etc/UTC','Synthetic A1','cancelled',pg_temp.id(1),2);
+insert into public.appointment_events(practice_id,appointment_id,actor_user_id,location_id,event_type,record_version,details)
+ values(pg_temp.id(21),pg_temp.id(71),pg_temp.id(1),pg_temp.id(31),'appointment.cancelled',2,'{"from":"booked","to":"cancelled","reason":"SYNTHETIC_HISTORICAL_FREE_TEXT","unknown_note":"SYNTHETIC_UNKNOWN_NOTE"}');
+create function pg_temp.claim(n integer)returns text language sql as $$select set_config('request.jwt.claims',jsonb_build_object('sub',pg_temp.id(n),'session_id',pg_temp.id(n+10),'role','authenticated','user_metadata',jsonb_build_object('edition','synthetic_preview','role','owner'))::text,true)$$;
+
+select is(doctor_private.edition_mode(),'synthetic_preview','C01 default retains the explicit synthetic preview');
+select is(cardinality(doctor_private.administrative_capabilities()),12,'static historical grant domain remains unchanged');
+select ok('documents.read'=any(doctor_private.edition_capabilities()),'preview document regression remains supported');
+select ok(not has_function_privilege('anon','public.doctor_administrative_edition()','execute'),'anonymous cannot read authenticated edition context');
+select ok(not has_table_privilege('authenticated','public.doctor_edition_policy','SELECT'),'policy rows are not client-readable');
+select ok(not has_table_privilege('authenticated','public.doctor_edition_policy','UPDATE'),'client cannot select an edition');
+select ok(not has_table_privilege('service_role','public.doctor_edition_policy','UPDATE'),'a service API key is not an edition configuration command');
+select ok((select relrowsecurity and relforcerowsecurity from pg_class where oid='public.doctor_edition_policy'::regclass),'policy uses forced RLS');
+select ok((select polroles=array[(select oid from pg_roles where rolname='postgres')]from pg_policy where polname='doctor_edition_policy_owner'),'forced-RLS owner policy does not admit any API role');
+select throws_ok($$update public.doctor_edition_policy set mode='administrative_candidate'$$,'40001','DOCTOR_EDITION_POLICY_CONFLICT','policy revision is optimistic');
+select throws_ok($$update public.doctor_edition_policy set mode='administrative_live',revision=2$$,'23514',null,'no live mode can be configured');
+update public.doctor_edition_policy set mode='administrative_candidate',revision=2,change_reason='Synthetic candidate verification';
+select is((select count(*)::integer from public.doctor_edition_policy_events),2,'policy change is append-only attributed database history');
+select throws_ok($$delete from public.doctor_edition_policy_events$$,'42501','DOCTOR_EDITION_HISTORY_IMMUTABLE','configuration history cannot be erased');
+select is(cardinality(doctor_private.edition_capabilities()),10,'candidate removes only the two document capabilities');
+select is((select provolatile::text from pg_proc where oid='doctor_private.administrative_capabilities()'::regprocedure),'i','stored CHECK helper remains immutable');
+select is((select capabilities from public.memberships where id=pg_temp.id(41)),array['patients.read','documents.read','documents.write'],'historical grants are not rewritten');
+select is(doctor_private.appointment_reason('admin.patient_request'),'admin.patient_request','C03 fixed administrative reason is accepted');
+select throws_ok($$select doctor_private.appointment_reason('Synthetic free-text reason')$$,'22023','DOCTOR_APPOINTMENT_REASON_REQUIRED','candidate refuses free-text notes in appointment reasons');
+
+set local role authenticated;select pg_temp.claim(1);
+select is(public.doctor_administrative_edition()->>'data_mode','synthetic','candidate is still synthetic');
+select is(public.doctor_administrative_edition()->>'live_activation','false','candidate cannot claim live activation');
+select is(public.doctor_administrative_edition()->>'clinical_records','false','clinical records remain excluded');
+select is(public.doctor_administrative_edition()->>'prescribing','false','prescribing remains excluded');
+select is(public.doctor_administrative_edition()->>'outbound_messages','false','outgoing communications remain excluded');
+select is(public.doctor_administrative_edition()->>'patient_collection','false','patient collection remains excluded');
+select ok(doctor_private.has_access(pg_temp.id(21),'patients.read',pg_temp.id(31)),'C04 owner retains basic patient administration');
+select ok(not doctor_private.has_access(pg_temp.id(21),'documents.read',pg_temp.id(31)),'C02 owner cannot bypass the edition');
+select ok(not doctor_private.has_access(pg_temp.id(21),'documents.write',pg_temp.id(31)),'document writes stay closed');
+select ok(not doctor_private.has_access(pg_temp.id(21),'clinical.sign',pg_temp.id(31)),'forged clinical capability remains denied');
+select ok(not doctor_private.has_access(pg_temp.id(22),'patients.read',pg_temp.id(32)),'another doctor remains isolated');
+select is(public.doctor_contexts()->0->>'edition','administrative_candidate','trusted context carries edition mode');
+select is(public.doctor_contexts()->0->>'edition_revision','2','trusted context carries policy revision');
+select ok(not(public.doctor_contexts()->0->'capabilities'?'documents.read'),'context cannot advertise document access');
+select throws_ok($$select public.doctor_patient_documents(pg_temp.id(21),pg_temp.id(31),pg_temp.id(61))$$,'42501','DOCTOR_ACCESS_DENIED','direct document RPC remains denied');
+select throws_ok($$truncate public.doctor_edition_policy$$,'42501',null,'client cannot remove the edition configuration');
+select throws_ok($$update public.doctor_edition_policy set mode='synthetic_preview',revision=3$$,'42501',null,'forged user metadata cannot change the server edition');
+select ok(public.doctor_appointment_history(pg_temp.id(21),pg_temp.id(31),pg_temp.id(71))::text not like '%SYNTHETIC_HISTORICAL_FREE_TEXT%','historical free text is omitted from edition history projection');
+select ok(public.doctor_appointment_history(pg_temp.id(21),pg_temp.id(31),pg_temp.id(71))::text not like '%SYNTHETIC_UNKNOWN_NOTE%','unknown legacy payload keys are not exposed');
+select is(public.doctor_appointment_history(pg_temp.id(21),pg_temp.id(31),pg_temp.id(71))->>'total','1','history count and source attribution are retained');
+select throws_ok($$select details from public.appointment_events$$,'42501',null,'raw history cannot bypass the edition projection');
+select pg_temp.claim(3);
+select ok(doctor_private.has_access(pg_temp.id(21),'patients.read',pg_temp.id(31)),'secretary retains independently granted patient read');
+select ok(not doctor_private.has_access(pg_temp.id(21),'documents.read',pg_temp.id(31)),'historical secretary grant cannot bypass edition');
+select pg_temp.claim(4);
+select is(jsonb_array_length(public.doctor_contexts()),0,'document-only membership has no admitted administrative location');
+select pg_temp.claim(5);
+select is(jsonb_array_length(public.doctor_contexts()),0,'outsider remains without contexts');
+reset role;
+select is((select details->>'reason' from public.appointment_events where appointment_id=pg_temp.id(71)),'SYNTHETIC_HISTORICAL_FREE_TEXT','stored historical content is preserved');
+set local role service_role;
+select throws_ok($$select public.doctor_reserve_document(pg_temp.id(1),pg_temp.id(11),pg_temp.id(21),pg_temp.id(31),pg_temp.id(61),'synthetic.pdf','application/pdf',1,repeat('a',64),pg_temp.id(81))$$,'42501','DOCTOR_ACCESS_DENIED','verified service-mediated upload cannot bypass edition');
+reset role;
+select is((select count(*)::integer from doctor_private.document_upload_intents),0,'denied upload leaves no intent');
+update auth.sessions set not_after=now()-interval'1 second'where id=pg_temp.id(11);
+set local role authenticated;select pg_temp.claim(1);
+select throws_ok($$select public.doctor_administrative_edition()$$,'42501',null,'revoked/expired session cannot retain edition context');
+reset role;
+select ok(doctor_private.edition_history_details('{"from":{"location_id":"synthetic","location_name":"Synthetic A1","notes":"SYNTHETIC_NESTED_NOTE"},"notes":"SYNTHETIC_UNKNOWN_NOTE"}')::text not like '%SYNTHETIC_%NOTE%','nested unknown note payloads are also omitted');
+select ok(doctor_private.edition_history_details('{"location_name":{"notes":"SYNTHETIC_STRUCTURED_NOTE"},"from":[{"notes":"SYNTHETIC_ARRAY_NOTE"}]}')::text not like '%SYNTHETIC_%NOTE%','structured payloads cannot hide inside scalar snapshot fields');
+truncate public.doctor_edition_policy;
+set local role authenticated;select pg_temp.claim(2);
+select throws_ok($$select doctor_private.has_access(pg_temp.id(22),'patients.read',pg_temp.id(32))$$,'42501','DOCTOR_EDITION_UNAVAILABLE','missing policy never falls back to unrestricted capabilities');
+reset role;
+select * from finish();rollback;

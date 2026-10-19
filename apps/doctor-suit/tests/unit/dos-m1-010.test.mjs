@@ -8,7 +8,7 @@ const practice = '63000000-0000-0000-0000-000000000001'; const first = '64000000
 const locations = [{ id: first,name: 'Synthetic first',timezone: 'Africa/Cairo',archived: false },{ id: second,name: 'Synthetic archived',timezone: 'Europe/London',archived: true }]
 const grants = [{ locationId: first,capabilities: ['patients.read'] }]
 const member = { id: '65000000-0000-0000-0000-000000000001',email: 'synthetic-staff@example.test',status: 'active',version: 7,createdAt: '2026-10-16T00:00:00Z',grants: [] }
-const directory = { practiceId: practice,practiceName: 'Synthetic',locations,members: [member],invitations: [],memberTotal: 1,invitationTotal: 0,locationTotal: 2 }
+const directory = { practiceId: practice,practiceName: 'Synthetic',edition: 'synthetic_preview',editionRevision: 1,availableCapabilities: [...doctorAdministrativeCapabilities],locations,members: [member],invitations: [],memberTotal: 1,invitationTotal: 0,locationTotal: 2 }
 const scope = { environment: 'local',portal: 'doctor',userId: '61000000-0000-0000-0000-000000000001',sessionId: '62000000-0000-0000-0000-000000000001',practiceId: practice,locationId: first,grantsVersion: 1 }
 test('DOS-M1-010: exact per-location selections, empty removal and clinical/foreign/archived safeguards', () => {
   assert.equal(validDoctorDelegationGrants(grants,locations,true),true)
@@ -69,5 +69,5 @@ test('DOS-M1-009/010: authenticated return paths strip invitation material and n
   const { doctorReturnPath } = await import('../../app/utils/authConfiguration.ts')
   assert.equal(doctorReturnPath('/invitations/accept?code=synthetic#credential'),'/invitations/accept')
   assert.equal(doctorReturnPath('/team?role=owner'),'/team')
-  assert.equal(doctorReturnPath('https://attacker.example/invitations/accept'),'/account')
+  assert.equal(doctorReturnPath('https://attacker.example/invitations/accept'),'/workspace')
 })

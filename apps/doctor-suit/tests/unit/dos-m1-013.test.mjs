@@ -67,7 +67,7 @@ test('known authorization denial clears previously loaded private rules and cann
 
 test('registered availability route retains authenticated admission without broadening external redirects',() => {
   assert.equal(doctorReturnPath('/availability?private=synthetic#fragment'),'/availability')
-  for (const path of ['//external.test/availability','https://external.test/availability','/availability/unknown','/availability/../../external']) assert.equal(doctorReturnPath(path),'/account')
+  for (const path of ['//external.test/availability','https://external.test/availability','/availability/unknown','/availability/../../external']) assert.equal(doctorReturnPath(path),'/workspace')
 })
 
 test('stale location timezone context is refused before calling the write adapter',async () => {

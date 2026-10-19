@@ -1,3 +1,5 @@
+import type{createManualReportController}from'../utils/manualReconciliationController'
+import type{createManualPaymentController}from'../utils/manualPaymentController'
 import type { createDoctorAuditController } from '../utils/auditController'
 import type { DoctorAuditScope } from '../utils/administrativeAudit'
 import type { createDoctorAccountController } from '../utils/accountController'
@@ -12,6 +14,8 @@ import type { createDoctorPatientsController } from '../utils/patientsController
 import type { DoctorLocationContext } from '../utils/locationContext'
 declare module '#app' {
   interface NuxtApp {
+    $doctorManualReport: ReturnType<typeof createManualReportController>
+    $doctorManualPayment: ReturnType<typeof createManualPaymentController>
     $doctorAudit: ReturnType<typeof createDoctorAuditController>
     $doctorPersonalAudit: ReturnType<typeof createDoctorAuditController>
     $doctorAuditScope: () => DoctorAuditScope|null

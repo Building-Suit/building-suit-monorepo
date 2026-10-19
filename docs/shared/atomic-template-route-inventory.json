@@ -85,7 +85,11 @@
     "BsPatientDirectoryPage": "packages/ui/src/templates/BsPatientDirectoryPage.vue",
     "BsPatientProfilePage": "packages/ui/src/templates/BsPatientProfilePage.vue",
     "BsAvailabilityPage": "packages/ui/src/templates/BsAvailabilityPage.vue",
-    "BsPracticeAppointmentsPage": "packages/ui/src/templates/BsPracticeAppointmentsPage.vue"
+    "BsPracticeAppointmentsPage": "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
+    "BsSubscriptionStatusPage": "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
+    "BsPrivacyRequestsPage": "packages/ui/src/templates/BsPrivacyRequestsPage.vue",
+    "BsManualPaymentPage": "packages/ui/src/templates/BsManualPaymentPage.vue",
+    "BsPaymentReconciliationPage": "packages/ui/src/templates/BsPaymentReconciliationPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2635,10 +2639,19 @@
     {
       "source": "apps/doctor-suit/app/pages/index.vue",
       "kind": "route",
-      "destination": "packages/ui/src/templates/BsProductPreviewPage.vue",
+      "destination": "packages/ui/src/templates/BsLandingPage.vue",
       "domainAdapter": "apps/doctor-suit/app/pages/index.vue",
-      "purpose": "synthetic-public-product-preview",
-      "status": "implemented; browser acceptance pending",
+      "purpose": "canonical-administrative-product-landing",
+      "status": "implemented; local EN/AR acceptance required",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/layouts/marketing.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsMarketingLayout.vue",
+      "domainAdapter": "apps/doctor-suit/app/layouts/marketing.vue",
+      "status": "implemented; local EN/AR acceptance required",
       "verification": "not-yet-accepted",
       "dependencies": []
     },
@@ -2839,6 +2852,142 @@
       "verification": "not-yet-accepted",
       "dependencies": [],
       "purpose": "neutral-missing-route"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/subscription.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/subscription.vue",
+      "purpose": "owner-bound-synthetic-subscription-status-and-trial",
+      "status": "implemented; candidate verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/privacy.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPrivacyRequestsPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/privacy.vue",
+      "purpose": "synthetic-own-account-privacy-review-intake",
+      "status": "implemented; qualified privacy fulfillment unavailable",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/google-callback.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSignInPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSignInPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSignInPage.vue",
+      "status": "pending-validation",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/google-callback.vue",
+      "dependencies": [],
+      "verification": "Manual Google and Supabase sandbox OAuth browser tests required",
+      "purpose": "google-oauth-callback"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/payment-notices.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsManualPaymentPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/payment-notices.vue",
+      "purpose": "synthetic-owner-manual-transfer-notices-and-private-receipts",
+      "status": "implemented; candidate acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/payment-review.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsManualPaymentPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/payment-review.vue",
+      "purpose": "independently-authorized-synthetic-funds-review-and-paid-activation",
+      "status": "implemented; candidate acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/payment-reconciliation.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPaymentReconciliationPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/payment-reconciliation.vue",
+      "purpose": "read-only-synthetic-manual-payment-reconciliation",
+      "status": "implemented; candidate acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/payment-review-reconciliation.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPaymentReconciliationPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/payment-review-reconciliation.vue",
+      "purpose": "read-only-synthetic-manual-payment-reconciliation",
+      "status": "implemented; candidate acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/terms.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/terms.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/privacy.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/privacy.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/subscription.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/subscription.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/payments.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/payments.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/cancellation-refunds.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/cancellation-refunds.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/health-data.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/health-data.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -2972,6 +3121,10 @@
     "BsPatientDirectoryPage",
     "BsPatientProfilePage",
     "BsAvailabilityPage",
-    "BsPracticeAppointmentsPage"
+    "BsPracticeAppointmentsPage",
+    "BsSubscriptionStatusPage",
+    "BsPrivacyRequestsPage",
+    "BsManualPaymentPage",
+    "BsPaymentReconciliationPage"
   ]
 }

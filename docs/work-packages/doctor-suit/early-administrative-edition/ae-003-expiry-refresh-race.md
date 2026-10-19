@@ -1,0 +1,7 @@
+# DOS-AE-003 — expiry during a pending owner-directory refresh
+
+Independent review reproduced a client cleanup gap: starting an ordinary team/location refresh advanced the request generation, so a deadline armed by the previous accepted response no longer passed its callback guard. The directory was already unavailable for writes, but open editor drafts, the team invitation credential and retry material could survive expiry, including owner fallback with no active clinic.
+
+Each controller now separates the deadline generation from request generations. Only accepted replacement metadata or explicit clear changes that deadline generation. A pending, failed or discarded reload cannot cancel the existing deadline. Expiry still notifies policy listeners, clears credentials/commands/state and aborts older work before reloading authoritative history. The shared timer’s own cancellation sequence continues rejecting stale queued callbacks after replacement/clear.
+
+Four actual-Vue-reactive regression cases reproduce both team and locations with a refresh begun at second nine and still pending at second ten. All four fail on the prior implementation with the open draft retained. They pass after the fix, for both late success and late failure; policy listeners run, team credentials clear, expiry fires once, late authority is rejected and an offline expiry refresh stays closed. The existing six offer/expiry cases remain passing. SQL authorization and role grants are unchanged. Parent integration remains subject to exact-head required checks.

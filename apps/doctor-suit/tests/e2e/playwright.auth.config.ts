@@ -16,6 +16,9 @@ export default defineConfig({
       NUXT_PUBLIC_DOCTOR_AUTH_CONFIGURED: 'true', NUXT_PUBLIC_DOCTOR_AUTH_ENVIRONMENT: 'local',
       NUXT_PUBLIC_DOCTOR_AUTH_ORIGIN: 'http://127.0.0.1:4337', NUXT_PUBLIC_DOCTOR_AUTH_URL: 'http://127.0.0.1:4338',
       NUXT_PUBLIC_DOCTOR_AUTH_KEY: 'sb_publishable_synthetic_protocol_fixture',
+      NUXT_DOCTOR_AUTH_EMAIL_LOOKUP_KEY: 'sb_secret_synthetic_protocol_fixture',
+      // Owned loopback proxy simulation; each protocol browser gets an isolated caller IP.
+      VERCEL: '1',
     } },
   ],
 })

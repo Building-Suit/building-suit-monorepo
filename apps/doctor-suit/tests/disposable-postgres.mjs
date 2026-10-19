@@ -1,4 +1,6 @@
 // SQL/RLS fallback for small executors. This is not a Supabase service integration test.
+import { verifyAnnualPricingUpgrade } from './annual-pricing-upgrade.mjs'
+import{verifyDoctorIsolatedRecovery}from'./recovery-isolated.mjs'
 import { createHash, randomUUID } from 'node:crypto'
 import { mkdtemp, readFile, readdir, rm, writeFile, mkdir, chmod } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -13,6 +15,15 @@ import { verifyDocumentConcurrency } from './documents-concurrency.mjs'
 import { verifyAvailabilityConcurrency } from './availability-concurrency.mjs'
 import { verifyAppointmentConcurrency } from './appointments-concurrency.mjs'
 import { verifyAccountConcurrency } from './account-concurrency.mjs'
+import { verifyCandidateAdmissionConcurrency } from './candidate-admission-concurrency.mjs'
+import { verifyDoctorAdministrationProtocol } from './administration-protocol-postgres.mjs'
+import { verifySaasReconciliationConcurrency } from './saas-reconciliation-concurrency.mjs'
+import { verifySaasQuoteConcurrency } from './saas-quote-concurrency.mjs'
+import { verifyManualPaymentConcurrency } from './manual-payments-concurrency.mjs'
+import { verifySaasTrialConcurrency } from './saas-trial-concurrency.mjs'
+import { verifySaasQuotaConcurrency } from './saas-quota-concurrency.mjs'
+import { verifySaasReservationConcurrency } from './saas-reservation-concurrency.mjs'
+import { verifySaasWriteConcurrency } from './saas-write-concurrency.mjs'
 
 const root = fileURLToPath(new URL('../../../', import.meta.url))
 const app = `${root}apps/doctor-suit/`
@@ -60,7 +71,7 @@ try {
   for (const file of ['pgtap.control', 'pgtap--1.3.4.sql']) docker(['cp', `${directory}/${file}`, `${container}:/usr/local/share/postgresql/extension/${file}`])
   docker(['exec', container, 'chmod', '644', '/usr/local/share/postgresql/extension/pgtap.control', '/usr/local/share/postgresql/extension/pgtap--1.3.4.sql'])
   sql(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create schema extensions;
-    create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,is_anonymous boolean default false,banned_until timestamptz,raw_user_meta_data jsonb);
+    create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,is_anonymous boolean default false,banned_until timestamptz,deleted_at timestamptz,raw_user_meta_data jsonb);
     create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id),not_after timestamptz,created_at timestamptz default now());
     create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;
     create function auth.uid() returns uuid language sql stable as $$select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid$$;
@@ -77,10 +88,15 @@ try {
   // Emulate configured bucket metadata only; the actual provider fixture uses
   // the supported Storage API and checks HTTP/private bytes independently.
   sql(`insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('doctor-private-documents','doctor-private-documents',false,5242880,array['application/pdf','image/png','image/jpeg']);`)
+  sql(`insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)values('doctor-payment-evidence','doctor-payment-evidence',false,5242880,array['application/pdf','image/png','image/jpeg']);`)
   // Publication interface only. No logical replication service is run here.
   sql('create publication supabase_realtime;')
   const migrations = (await readdir(`${app}supabase/migrations`)).filter(file => file.endsWith('.sql')).sort()
-  for (const file of migrations) sql(await readFile(`${app}supabase/migrations/${file}`, 'utf8'))
+  for (const file of migrations) {
+    const migration = await readFile(`${app}supabase/migrations/${file}`, 'utf8')
+    if (file === '20261018154514_doctor_annual_discount_32.sql') verifyAnnualPricingUpgrade(sql, migration, await readFile(`${app}supabase/tests/dos-instapay-manual.sql`, 'utf8'))
+    sql(migration)
+  }
   const suites = (await readdir(`${app}supabase/tests`)).filter(file => file.endsWith('.sql')).sort()
   if (!suites.length) throw new Error('No Doctor SQL suites found')
   for (const file of suites) {
@@ -97,11 +113,34 @@ try {
   await verifyAvailabilityConcurrency(container)
   await verifyAppointmentConcurrency(container)
   await verifyAccountConcurrency(container)
+  await verifyCandidateAdmissionConcurrency(container)
+  await verifySaasTrialConcurrency(container)
+  await verifySaasQuotaConcurrency(container)
+  await verifySaasWriteConcurrency(container)
+  await verifySaasReservationConcurrency(container)
+  await verifySaasQuoteConcurrency(container)
+  await verifySaasReconciliationConcurrency(container)
+  await verifyDoctorAdministrationProtocol(container)
+  await verifyManualPaymentConcurrency(container)
+  await verifyDoctorIsolatedRecovery(container)
   if (generate.length) {
+    // Registry throttling must remain a failed check after bounded retries; it
+    // cannot waive schema generation or select an unpinned image.
+    // Official v0.98.0 release publishes this same build to GHCR, ECR and Docker Hub:
+    // https://github.com/supabase/postgres-meta/blob/v0.98.0/.github/workflows/release.yml
+    const metaImage='ghcr.io/supabase/postgres-meta:v0.98.0@sha256:cef71ba901751dcc242cc685cf13786935ea8926820fb342f23bb0fbef77de5a'
+    for(let attempt=0;attempt<3;attempt++){
+      const pull=spawnSync('docker',['pull',metaImage],{encoding:'utf8',timeout:120000,maxBuffer:1024*1024})
+      if(!pull.error&&pull.status===0)break
+      const transient=/toomanyrequests|rate exceeded|429|timed? ?out|502|503|temporary failure/i.test(String(pull.stderr))
+      if(attempt===2||!transient)throw new Error('Pinned PostgreSQL Meta image unavailable; schema generation remains unverified')
+      console.log('Pinned PostgreSQL Meta registry temporarily unavailable; retrying the same image')
+      await new Promise(resolve=>setTimeout(resolve,[5000,15000][attempt]))
+    }
     const output = docker(['run', '--rm', '--network', `container:${container}`,
       '-e', 'PG_META_DB_HOST=127.0.0.1', '-e', 'PG_META_DB_NAME=postgres', '-e', 'PG_META_DB_USER=postgres',
       '-e', 'PG_META_GENERATE_TYPES=typescript', '-e', 'PG_META_GENERATE_TYPES_INCLUDED_SCHEMAS=public',
-      '-e', 'PG_META_GENERATE_TYPES_DETECT_ONE_TO_ONE_RELATIONSHIPS=true', 'public.ecr.aws/supabase/postgres-meta:v0.98.0'])
+      '-e', 'PG_META_GENERATE_TYPES_DETECT_ONE_TO_ONE_RELATIONSHIPS=true', metaImage])
     if (!output.startsWith('export type Json') || !output.includes('doctor_onboard:')) throw new Error('Unexpected PostgreSQL Meta type output')
     await mkdir(`${app}app/types`, { recursive: true })
     await writeFile(`${app}app/types/database.types.ts`, output)

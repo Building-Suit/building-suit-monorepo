@@ -1,0 +1,17 @@
+{
+  "id": "dos-ae-003-business-write-access",
+  "task": "DOS-AE-003",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/saasStatus.ts",
+    "apps/doctor-suit/supabase/migrations/20261017163047_doctor_saas_business_write_access.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-003-write-access.sql",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/saas-write-concurrency.mjs",
+    "apps/doctor-suit/tests/unit/saas-status.test.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-003-business-write-access.md"
+  ],
+  "reason": "Require current owner-bound subscription authority before and at commit for synthetic administrative business writes, preserve both explicit over-limit policies, historical reads, personal settings and security reductions. Apply grant deltas, prevent cross-owner funding and orphan patient identities, and roll back stale writes after expiry/hold/provider revocation. Context/cache/UI and aggregate actual-provider acceptance remain subsequent work; no commercial offer, paid/live activation or original clinical dependency is enabled."
+}

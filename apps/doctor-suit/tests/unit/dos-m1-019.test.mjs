@@ -2,10 +2,11 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { doctorPageMetadata,doctorMissingPage } from '../../app/utils/previewMetadata.ts'
 import { doctorPublicPreview } from '../../app/utils/publicPreview.ts'
+import { doctorLandingContent } from '../../app/utils/landingPresentation.ts'
 const workflow = { title: 'Synthetic scope',description: 'Synthetic administrative workflow preview.' }
 for(const ar of [false,true])test(`C01 public preview metadata follows approved copy and locale ${ar ? 'AR' : 'EN'}`,() => {
-  const copy = doctorPublicPreview(ar);const result = doctorPageMetadata('/',ar,workflow)
-  assert.equal(result.publicPage,true);assert.equal(result.title,`${copy.productName} · ${copy.eyebrow}`);assert.equal(result.description,copy.description);assert.equal(result.locale,ar ? 'ar_EG' : 'en_US');assert.equal(result.robots,'noindex, nofollow');assert.equal('canonical'in result,false);assert.equal('url'in result,false)
+  const copy = doctorLandingContent(ar);const result = doctorPageMetadata('/',ar,workflow)
+  assert.equal(result.publicPage,true);assert.equal(result.title,`Doctor Suit · ${copy.heroTitle}`);assert.equal(result.description,copy.heroBody);assert.equal(result.locale,ar ? 'ar_EG' : 'en_US');assert.equal(result.robots,'noindex, nofollow');assert.equal('canonical'in result,false);assert.equal('url'in result,false)
   assert.equal(doctorPageMetadata('/preview',ar,workflow).description,workflow.description)
 })
 test('C02 private and auth metadata cannot retain public sharing content or caller material',() => {
