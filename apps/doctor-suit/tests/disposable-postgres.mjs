@@ -99,8 +99,10 @@ try {
   }
   const suites = (await readdir(`${app}supabase/tests`)).filter(file => file.endsWith('.sql')).sort()
   if (!suites.length) throw new Error('No Doctor SQL suites found')
+  // Preserve psql's file-relative includes for shared, test-only fixtures.
+  docker(['cp', `${app}supabase/tests`, `${container}:/doctor-tests`])
   for (const file of suites) {
-    const result = sql(await readFile(`${app}supabase/tests/${file}`, 'utf8'))
+    const result = docker(['exec', '-i', container, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At', '-f', `/doctor-tests/${file}`])
     const plan = result.match(/^1\.\.(\d+)$/m)
     const passed = result.match(/^ok \d+\b/gm) ?? []
     if (!plan || Number(plan[1]) < 1 || Number(plan[1]) !== passed.length || /^not ok\b|^Bail out!/m.test(result)) throw new Error(`${file}: SQL assertions failed\n${result}`)

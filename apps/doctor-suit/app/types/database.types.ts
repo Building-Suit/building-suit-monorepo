@@ -230,6 +230,292 @@ export type Database = {
           },
         ]
       }
+      clinical_encounters: {
+        Row: {
+          active_version_id: string | null
+          created_at: string
+          created_by: string
+          data_mode: string
+          id: string
+          location_id: string
+          location_name: string
+          patient_id: string
+          practice_id: string
+          responsible_doctor: string
+          status: string
+          timezone: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          active_version_id?: string | null
+          created_at?: string
+          created_by: string
+          data_mode?: string
+          id?: string
+          location_id: string
+          location_name: string
+          patient_id: string
+          practice_id: string
+          responsible_doctor: string
+          status: string
+          timezone: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          active_version_id?: string | null
+          created_at?: string
+          created_by?: string
+          data_mode?: string
+          id?: string
+          location_id?: string
+          location_name?: string
+          patient_id?: string
+          practice_id?: string
+          responsible_doctor?: string
+          status?: string
+          timezone?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_encounters_practice_id_fkey"
+            columns: ["practice_id"]
+            isOneToOne: false
+            referencedRelation: "practices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_encounters_practice_id_id_active_version_id_fkey"
+            columns: ["practice_id", "id", "active_version_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_versions"
+            referencedColumns: ["practice_id", "encounter_id", "id"]
+          },
+          {
+            foreignKeyName: "clinical_encounters_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "clinical_encounters_practice_id_patient_id_fkey"
+            columns: ["practice_id", "patient_id"]
+            isOneToOne: false
+            referencedRelation: "practice_patients"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "clinical_encounters_responsible_doctor_fkey"
+            columns: ["responsible_doctor"]
+            isOneToOne: false
+            referencedRelation: "doctor_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      clinical_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          encounter_id: string
+          happened_at: string
+          id: number
+          practice_id: string
+          version_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          encounter_id: string
+          happened_at?: string
+          id?: never
+          practice_id: string
+          version_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          encounter_id?: string
+          happened_at?: string
+          id?: never
+          practice_id?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_events_practice_id_encounter_id_version_id_fkey"
+            columns: ["practice_id", "encounter_id", "version_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_versions"
+            referencedColumns: ["practice_id", "encounter_id", "id"]
+          },
+        ]
+      }
+      clinical_note_templates: {
+        Row: {
+          data_mode: string
+          sections: Json
+          template_id: string
+          version: number
+        }
+        Insert: {
+          data_mode: string
+          sections: Json
+          template_id: string
+          version: number
+        }
+        Update: {
+          data_mode?: string
+          sections?: Json
+          template_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      clinical_release_revocations: {
+        Row: {
+          actor_user_id: string
+          happened_at: string
+          reason: string
+          release_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          happened_at?: string
+          reason: string
+          release_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          happened_at?: string
+          reason?: string
+          release_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_release_revocations_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: true
+            referencedRelation: "clinical_releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinical_releases: {
+        Row: {
+          encounter_id: string
+          expires_at: string
+          id: string
+          practice_id: string
+          recipient_patient_id: string
+          recipient_user_id: string
+          released_at: string
+          released_by: string
+          version_id: string
+        }
+        Insert: {
+          encounter_id: string
+          expires_at: string
+          id?: string
+          practice_id: string
+          recipient_patient_id: string
+          recipient_user_id: string
+          released_at?: string
+          released_by: string
+          version_id: string
+        }
+        Update: {
+          encounter_id?: string
+          expires_at?: string
+          id?: string
+          practice_id?: string
+          recipient_patient_id?: string
+          recipient_user_id?: string
+          released_at?: string
+          released_by?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_releases_practice_id_encounter_id_version_id_fkey"
+            columns: ["practice_id", "encounter_id", "version_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_versions"
+            referencedColumns: ["practice_id", "encounter_id", "id"]
+          },
+          {
+            foreignKeyName: "clinical_releases_practice_id_recipient_patient_id_fkey"
+            columns: ["practice_id", "recipient_patient_id"]
+            isOneToOne: false
+            referencedRelation: "practice_patients"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
+      clinical_versions: {
+        Row: {
+          actor_session_id: string
+          actor_user_id: string
+          encounter_id: string
+          happened_at: string
+          id: string
+          kind: string
+          practice_id: string
+          reason: string | null
+          revision: number
+          snapshot: Json
+          snapshot_sha256: string
+          source_version_id: string | null
+        }
+        Insert: {
+          actor_session_id: string
+          actor_user_id: string
+          encounter_id: string
+          happened_at?: string
+          id?: string
+          kind: string
+          practice_id: string
+          reason?: string | null
+          revision: number
+          snapshot: Json
+          snapshot_sha256: string
+          source_version_id?: string | null
+        }
+        Update: {
+          actor_session_id?: string
+          actor_user_id?: string
+          encounter_id?: string
+          happened_at?: string
+          id?: string
+          kind?: string
+          practice_id?: string
+          reason?: string | null
+          revision?: number
+          snapshot?: Json
+          snapshot_sha256?: string
+          source_version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_versions_practice_id_encounter_id_fkey"
+            columns: ["practice_id", "encounter_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_encounters"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "clinical_versions_source_version_id_fkey"
+            columns: ["source_version_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doctor_administration_audit: {
         Row: {
           authority_binding_id: string
@@ -2315,6 +2601,36 @@ export type Database = {
           p_key: string
           p_practice: string
           p_version: number
+        }
+        Returns: Json
+      }
+      doctor_clinical_command: {
+        Args: {
+          p_action: string
+          p_encounter: string
+          p_expected_version: number
+          p_input: Json
+          p_key: string
+          p_location: string
+          p_practice: string
+        }
+        Returns: Json
+      }
+      doctor_clinical_detail: {
+        Args: {
+          p_encounter: string
+          p_location: string
+          p_page?: number
+          p_practice: string
+        }
+        Returns: Json
+      }
+      doctor_clinical_workspace: {
+        Args: {
+          p_location: string
+          p_page?: number
+          p_practice: string
+          p_search?: string
         }
         Returns: Json
       }
