@@ -1,4 +1,4 @@
-import type { MarketingPricingCopy, MarketingPricingOption, MarketingPricingPlan } from '@building-suit/contracts'
+import type { ChangelogCopy, ChangelogFeed, ChangelogLocale, MarketingPricingCopy, MarketingPricingOption, MarketingPricingPlan } from '@building-suit/contracts'
 
 export type BsLandingPreview = { kind: 'dashboard'; label: string; title: string; periodLabel: string; metrics: { label: string; value: string }[] } | { kind: 'features' }
 
@@ -31,6 +31,18 @@ export interface BsLandingJourney {
   }
   chapters: Array<{ eyebrow: string; title: string; body: string }>
   trust: { label: string; heading: string; body: string }
+}
+
+/** Public changelog projection; the application owns the feed and retry command. */
+export interface BsLandingChangelog {
+  title: string
+  linkLabel: string
+  to: string
+  feed: ChangelogFeed
+  state: 'ready' | 'loading' | 'error' | 'denied'
+  copy: ChangelogCopy
+  locale: ChangelogLocale
+  suit?: string
 }
 
 export interface BsLandingPricing {

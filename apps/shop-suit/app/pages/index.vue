@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { LandingContent } from '@building-suit/contracts'
-import type { BsLandingJourney } from '@building-suit/ui/types/landingPresentation'
+import type { BsLandingJourney, BsLandingChangelog } from '@building-suit/ui/types/landingPresentation'
 import type { ShopPlanOffer } from '~/types/plans'
 
 definePageMeta({ layout: 'landing' })
@@ -14,6 +14,14 @@ const content = computed<LandingContent>(() => ({
   workflowEyebrow: locale.value === 'ar' ? 'طريقة العمل' : 'How it works', workflowTitle: locale.value === 'ar' ? 'من الإعداد إلى المتابعة اليومية' : 'From setup to daily operations',
   workflow: locale.value === 'ar' ? [ { title: 'أنشئ حسابك', body: 'أكد بريدك الإلكتروني وأكمل بيانات متجرك.' }, { title: 'أضف منتجاتك وخدماتك', body: 'نظم الكتالوج وسجل حركة المخزون.' }, { title: 'تابع العمل', body: 'راجع المصروفات والمخزون ولوحة التحكم.' } ] : [ { title: 'Create your account', body: 'Verify your email and complete your shop details.' }, { title: 'Add products and services', body: 'Organize your catalogue and record stock movements.' }, { title: 'Track operations', body: 'Review expenses, inventory and your dashboard.' } ],
   pricingEyebrow: locale.value === 'ar' ? 'الخطط' : 'Plans', pricingTitle: t('pricing.title'), pricingBody: t('pricing.description'),
+}))
+
+const { feed: releaseFeed, state: releaseState, copy: releaseCopy, refresh: refreshReleases } = usePublicChangelog()
+const landingChangelog = computed<BsLandingChangelog>(() => ({
+  title: locale.value === 'ar' ? 'ما الجديد' : 'What’s new',
+  linkLabel: locale.value === 'ar' ? 'عرض سجل التحديثات الكامل' : 'View the full changelog',
+  to: '/changelog', feed: releaseFeed.value, state: releaseState.value, copy: releaseCopy.value,
+  locale: locale.value === 'ar' ? 'ar' : 'en', suit: 'shop-suit',
 }))
 
 // Fictional sample transaction, projected from supported POS/receipt/report workflows.
@@ -126,5 +134,5 @@ const landingPricing = computed(() => ({
 function chooseInterval(value: string) { if (value === 'monthly' || value === 'annual') publicPricing.interval = value }
 </script>
 <template>
-  <BsLandingPage :content="content" :preview="{ kind: 'features' }" :journey="journey" :pricing="landingPricing" signup-path="/auth/signup" @currency="subscriptionCurrency.choose($event)" @interval="chooseInterval" @variant="publicPricing.chooseVariant" @action="publicPricing.choose" @retry="refresh()"/>
+  <BsLandingPage :content="content" :preview="{ kind: 'features' }" :journey="journey" :pricing="landingPricing" :changelog="landingChangelog" signup-path="/auth/signup" @currency="subscriptionCurrency.choose($event)" @interval="chooseInterval" @variant="publicPricing.chooseVariant" @action="publicPricing.choose" @retry="refresh()" @changelog-retry="refreshReleases()"/>
 </template>

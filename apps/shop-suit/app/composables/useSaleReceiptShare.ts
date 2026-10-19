@@ -5,6 +5,7 @@ import { projectReceipt } from '~/utils/receiptPresentation'
 
 export function useSaleReceiptShare() {
   const { t, locale } = useI18n()
+  const receiptTranslate = useReceiptTranslation()
   const { push: pushToast } = useToasts()
   const { currentId, currentLocationId } = useShop()
   const route = useRoute()
@@ -35,7 +36,7 @@ export function useSaleReceiptShare() {
     fallback = null
     const attempt = ++generation
     try {
-      const projected = projectReceipt(receipt, language, key => t(key, {}, { locale: language }))
+      const projected = projectReceipt(receipt, language, key => receiptTranslate(key, language))
       const markup = renderReceiptDocument(projected.view, projected.copy, language, reprint)
       fallback = { markup, filename: receipt.invoiceNumber }
       await copyDocumentImage(() => currentImage(markup, attempt))
@@ -58,5 +59,5 @@ export function useSaleReceiptShare() {
     finally { if (attempt === generation) sharing.value = false }
   }
 
-  return { sharing, shareError, shareReceipt, downloadReceiptImage }
+  return { sharing, shareError, shareReceipt, downloadReceiptImage, clearImage }
 }

@@ -6,7 +6,7 @@ import { useShopMutation } from './useShopMutation'
 const reads = new Set([
   'appointment_access_status', 'appointment_calendar', 'appointment_options', 'barcode_label_data', 'business_currency_settings',
   'cash_shift_dashboard', 'catalog_sales_report', 'commission_assignment_context', 'commission_history', 'customer_access', 'customer_statement',
-  'eta_settings', 'get_customer', 'get_location_sale', 'get_location_sale_receipt', 'get_purchase', 'get_sale', 'get_sale_tax_snapshot', 'inventory_access',
+  'eta_settings', 'get_customer', 'get_location_sale', 'get_location_sale_receipt', 'get_own_pos_receipt', 'list_own_pos_receipts', 'get_purchase', 'get_sale', 'get_sale_tax_snapshot', 'inventory_access',
   'list_catalog_categories', 'list_customers', 'list_expenses', 'list_inventory', 'list_inventory_history', 'list_location_sales', 'list_outstanding_invoices',
   'list_products', 'list_purchases', 'list_services_by_category', 'list_shop_locations', 'list_stock_counts', 'list_vendors', 'payment_access',
   'platform_admin_billing_read', 'platform_admin_read', 'platform_admin_session', 'platform_plan_read', 'pos_catalog_search', 'pos_catalog_search_by_category',

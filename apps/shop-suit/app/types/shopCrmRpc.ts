@@ -467,6 +467,14 @@ export type ShopRpcDatabase = {
         }
         Returns: unknown
       }
+      list_own_pos_receipts: {
+        Args: { p_shop_id: string; p_location_id: string }
+        Returns: { invoiceId: string; invoiceNumber: string; issuedAt: string; total: number; currency: string }[]
+      }
+      get_own_pos_receipt: {
+        Args: { p_shop_id: string; p_location_id: string; p_invoice_id?: string | null }
+        Returns: unknown
+      }
       get_location_sale_receipt: {
         Args: { p_shop_id: string; p_location_id: string; p_invoice_id: string }
         Returns: unknown

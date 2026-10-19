@@ -321,13 +321,15 @@
       "owner": "packages/ui",
       "components": [
         "BsPointOfSaleCart",
+        "BsPaymentMethodChoices",
+        "BsReceiptPreviewDialog",
         "BsQuantityStepper"
       ],
-      "adapterBoundary": "typed catalog/cart/customer projections, product-owned quantity limits and existing checkout commands; shared UX owns viewport, section, stepping and focus lifecycle",
+      "adapterBoundary": "Typed image catalog/cart/customer projections, payment choices and immutable receipt previews. Product owns quantity limits, scoped own-receipt queries and a newest-first index limited to ten own receipts, and atomic checkout commands; shared UX owns two-stage checkout, isolated document printing, viewport, keyboard, stepping and focus lifecycle.",
       "auditSources": [
         "apps/shop-suit/app/pages/pos.vue"
       ],
-      "migrationStatus": "bounded POS reference alignment in progress"
+      "migrationStatus": "Aligned image cards, two-step counter checkout, compact status/context and in-place recent-receipt previews; visual review deferred at user request"
     },
     {
       "family": "offline-counter-status",

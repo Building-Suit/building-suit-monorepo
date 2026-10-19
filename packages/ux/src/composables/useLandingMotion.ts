@@ -61,10 +61,12 @@ async function waitForLandingAssets(signal: AbortSignal) {
  * The optional Shop journey is a scrubbed scene with one continuous UI screen.
  * Reduced motion, narrow screens, SSR and GSAP-load failure all retain readable content.
  */
-export function useLandingMotion(root: Ref<HTMLElement | null>) {
+export function useLandingMotion(root: Ref<HTMLElement | null>, preload = false) {
   let dispose: (() => void) | undefined
   let cancelled = false
-  const isLoading = ref(false)
+  // Keep SSR and the first hydration render identical: the loader already exists.
+  const isLoading = ref(preload)
+  const loaderMounted = ref(false)
   const cleanups: Array<() => void> = []
   let startup: AbortController | undefined
   let bypassMotion = false
@@ -75,9 +77,11 @@ export function useLandingMotion(root: Ref<HTMLElement | null>) {
   }
 
   onMounted(async () => {
+    loaderMounted.value = true
     const scope = root.value
-    if (!scope) return
+    if (!scope) { isLoading.value = false; return }
     const story = scope.querySelector<HTMLElement>('[data-journey]')
+    if (!story) isLoading.value = false
     const header = scope.closest('.bs-marketing')?.querySelector('.bs-marketing-header')?.firstElementChild
     const previousHeaderHeight = scope.style.getPropertyValue('--bs-landing-header-height')
     let headerHeight = 72
@@ -105,8 +109,20 @@ export function useLandingMotion(root: Ref<HTMLElement | null>) {
     let finishLoading = () => {}
     if (story) {
       startup = new AbortController()
-      const page = scope.closest<HTMLElement>('.bs-marketing') ?? scope
-      const wasInert = page.inert
+      // The SSR loader is a sibling of main, not inside the inert content.
+      // Inert background branches up to body, preserving every previous state.
+      const background = new Set<HTMLElement>([scope])
+      let branch: HTMLElement = scope
+      while (branch.parentElement) {
+        const parent = branch.parentElement
+        for (const sibling of parent.children) {
+          if (sibling instanceof HTMLElement && sibling !== branch &&
+              !sibling.matches('[data-landing-loader]') && !sibling.querySelector('[data-landing-loader]')) background.add(sibling)
+        }
+        if (parent === document.body) break
+        branch = parent
+      }
+      const inertStates = [...background].map(element => ({ element, wasInert: element.inert }))
       const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
       const overflow = [document.documentElement, document.body].map(element => ({
         element, value: element.style.getPropertyValue('overflow'), priority: element.style.getPropertyPriority('overflow'),
@@ -125,13 +141,13 @@ export function useLandingMotion(root: Ref<HTMLElement | null>) {
         if (finished) return
         finished = true
         releaseScroll()
-        page.inert = wasInert
+        inertStates.forEach(({ element, wasInert }) => { element.inert = wasInert })
         isLoading.value = false
         if (previousFocus && previousFocus !== document.body && previousFocus.isConnected && !cancelled) previousFocus.focus({ preventScroll: true })
       }
       cleanups.push(finishLoading)
       overflow.forEach(({ element }) => element.style.setProperty('overflow', 'hidden'))
-      page.inert = true
+      inertStates.forEach(({ element }) => { element.inert = true })
       isLoading.value = true
     }
 
@@ -140,7 +156,7 @@ export function useLandingMotion(root: Ref<HTMLElement | null>) {
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       const motion = reducedMotion ? Promise.resolve(null) : Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).catch(() => null)
       if (story && startup) {
-        await nextTick() // Include the teleported loader's logo in the asset snapshot.
+        await nextTick() // Hydrate the existing loader controls before the asset snapshot.
         if (cancelled) return
         document.querySelector<HTMLElement>('[data-landing-loader]')?.focus({ preventScroll: true })
         await waitForLandingAssets(startup.signal)
@@ -153,6 +169,11 @@ export function useLandingMotion(root: Ref<HTMLElement | null>) {
       const [{ gsap }, { ScrollTrigger }] = modules
       gsap.registerPlugin(ScrollTrigger)
       const context = gsap.context(() => {
+        // The first-paint loader hides body descendants using inherited visibility.
+        // Normalize the scene behind the still-opaque loader BEFORE GSAP reads
+        // autoAlpha start values, otherwise its refresh can cache the laptop at 0.
+        if (story) gsap.set(scope, { visibility: 'visible' })
+
         const intro = gsap.utils.toArray<HTMLElement>('[data-landing-intro]')
         if (intro.length) gsap.from(intro, {
           autoAlpha: 0,
@@ -247,6 +268,7 @@ export function useLandingMotion(root: Ref<HTMLElement | null>) {
             // hero and illustrated transcript are already complete and navigable.
             story.setAttribute('data-j-enhanced', '')
             gsap.set(device, {
+              autoAlpha: 1,
               x: 0, y: 0, xPercent: desktop ? -15 : -50, yPercent: -50,
               scale: desktop ? 0.85 : 1, rotationX: desktop ? 5 : 0,
               rotationY: desktop ? -10 : 0, rotationZ: 0,
@@ -437,5 +459,5 @@ export function useLandingMotion(root: Ref<HTMLElement | null>) {
     dispose?.()
   })
 
-  return { isLoading, continueWithoutMotion }
+  return { isLoading, loaderMounted, continueWithoutMotion }
 }
