@@ -10,6 +10,7 @@ const route = useRoute()
 const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const { currentId, currentLocationId } = useShop()
 const { t, locale } = useI18n()
+const receiptTranslate = useReceiptTranslation()
 const saleId = computed(() => String(route.params.id ?? ''))
 const chosenLanguage = ref<'en' | 'ar' | null>(null)
 const paperSize = ref<ReceiptPaperSize>('thermal_80')
@@ -47,14 +48,14 @@ const { print } = useDocumentPrint()
 async function printReceipt() {
   if (receipt.value && await print()) printed.value = true
 }
-const projected = computed(() => receipt.value ? projectReceipt(receipt.value, receiptLanguage.value, key => t(key, {}, { locale: receiptLanguage.value })) : null)
+const projected = computed(() => receipt.value ? projectReceipt(receipt.value, receiptLanguage.value, key => receiptTranslate(key, receiptLanguage.value)) : null)
 const receiptView = computed<BsReceiptView | null>(() => projected.value?.view ?? null)
 const pageCopy = computed<BsReceiptPageCopy>(() => ({
   back: t('receipt.back'), print: printed.value ? t('receipt.reprint') : t('receipt.print'),
   language: t('receipt.language'), paperSize: t('receipt.paperSize'), share: t('receipt.share'), download: t('receipt.download'),
   loading: t('receipt.loading'), loadError: t('receipt.loadError'), retry: t('common.retry'), unavailable: t('receipt.unavailable'),
 }))
-const documentCopy = computed<BsReceiptDocumentCopy>(() => projected.value?.copy ?? projectReceiptCopy(undefined, key => t(key, {}, { locale: receiptLanguage.value })))
+const documentCopy = computed<BsReceiptDocumentCopy>(() => projected.value?.copy ?? projectReceiptCopy(undefined, key => receiptTranslate(key, receiptLanguage.value)))
 const languageModel = computed<string>({ get: () => receiptLanguage.value, set: value => { if (value === 'en' || value === 'ar') receiptLanguage.value = value } })
 const paperModel = computed<string>({ get: () => paperSize.value, set: value => { if (value === 'thermal_80' || value === 'a4') paperSize.value = value } })
 const paperOptions = computed(() => [{ value: 'thermal_80', label: t('receipt.thermal80') }, { value: 'a4', label: t('receipt.a4') }])

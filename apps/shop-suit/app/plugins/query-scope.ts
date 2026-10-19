@@ -1,5 +1,6 @@
 import { useMutationCache, useQueryCache } from '@pinia/colada'
 import { useShopScopeStore } from '~/stores/scope'
+import { usePosReceiptStore } from '~/stores/posReceipt'
 
 export default defineNuxtPlugin({
   name: 'shop-query-scope', dependsOn: ['Pinia Colada'],
@@ -9,6 +10,7 @@ export default defineNuxtPlugin({
     const scope = useShopScopeStore()
     const cache = useQueryCache()
     const mutations = useMutationCache()
+    const posReceipt = usePosReceiptStore()
     watch(() => user.value?.id ?? null, actor => {
       if (actor === scope.actorId) return
       scope.revision++
@@ -28,6 +30,7 @@ export default defineNuxtPlugin({
     }, { immediate: true, flush: 'sync' })
 
     watch([() => scope.revision, () => scope.shopId, () => scope.locationId, () => scope.publicAccessRevision], () => {
+      posReceipt.selectScope(JSON.stringify([scope.actorId, scope.revision, scope.shopId, scope.locationId]))
       for (const entry of cache.getEntries({ predicate: entry => {
         if (entry.key[0] !== 'shop-suit') return false
         if (entry.key[4] !== (user.value?.id ?? 'anonymous') || entry.key[5] !== scope.revision) return true

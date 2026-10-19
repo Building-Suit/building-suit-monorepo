@@ -6,7 +6,7 @@ import { useShopMutation } from './useShopMutation'
 const reads = new Set([
   'appointment_access_status', 'appointment_calendar', 'appointment_options', 'barcode_label_data', 'business_currency_settings',
   'cash_shift_dashboard', 'catalog_sales_report', 'commission_assignment_context', 'commission_history', 'customer_access', 'customer_statement',
-  'eta_settings', 'get_customer', 'get_location_sale', 'get_location_sale_receipt', 'get_purchase', 'get_sale', 'get_sale_tax_snapshot', 'inventory_access',
+  'eta_settings', 'get_customer', 'get_location_sale', 'get_location_sale_receipt', 'get_own_pos_receipt', 'list_own_pos_receipts', 'get_purchase', 'get_sale', 'get_sale_tax_snapshot', 'inventory_access',
   'list_catalog_categories', 'list_customers', 'list_expenses', 'list_inventory', 'list_inventory_history', 'list_location_sales', 'list_outstanding_invoices',
   'list_products', 'list_purchases', 'list_services_by_category', 'list_shop_locations', 'list_stock_counts', 'list_vendors', 'payment_access',
   'platform_admin_billing_read', 'platform_admin_read', 'platform_admin_session', 'platform_plan_read', 'pos_catalog_search', 'pos_catalog_search_by_category',
@@ -115,7 +115,7 @@ export function useShopClient<Database = ShopDatabase>() {
       const value = Reflect.get(target, property)
       // Supabase alone owns credentials, session refresh and auth event subscriptions.
       if (property === 'auth') return value
-      if (property === 'functions' || property === 'storage') return wrapService(value, String(property))
+      if ((property === 'functions' || property === 'storage') && value !== null && typeof value === 'object') return wrapService(value, String(property))
       if (typeof value !== 'function') return value
       if (property === 'schema') return (...args: unknown[]) => wrapClient(Reflect.apply(value, target, args))
       if (property === 'rpc') return (name: string, ...args: unknown[]) => {

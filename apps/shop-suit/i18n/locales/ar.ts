@@ -285,6 +285,7 @@ export default defineI18nLocale(async () => ({
   },
 
   receipt: {
+    myRecent: 'آخر إيصالاتي', recentHint: 'آخر 10 إيصالات مدفوعة لك في هذا الفرع، من الأحدث للأقدم.', recentEmpty: 'لا توجد إيصالات نقطة بيع مدفوعة لحسابك في هذا الفرع بعد.', open: 'فتح الإيصال', backToRecent: 'الرجوع للإيصالات',
     saleTotal: 'إجمالي البيعة',
     balance: 'الرصيد المستحق',
     tax: 'الضريبة',

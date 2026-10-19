@@ -24,6 +24,7 @@ export function removeAnalyticsCookies(doc: Document, hostname: string) {
   }
 }
 export interface PrivacyPresentation {
+  showReopen?: boolean
   ready: boolean; prompt: boolean; settings: boolean; analytics: boolean
   copy: { title: string; body: string; accept: string; reject: string; settings: string; necessary: string; analytics: string; save: string; policy: string }
   open: () => void; close: () => void; save: (analytics: boolean) => void; change: (analytics: boolean) => void

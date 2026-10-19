@@ -1,0 +1,29 @@
+{
+  "id": "shop-pos-receipt-preview-20261019",
+  "task": "SHOP-POS-RECEIPT-PREVIEW-20261019",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit",
+    "packages/ui",
+    "packages/ux"
+  ],
+  "reason": "Open saved counter receipts in a preview with language, paper-size, printing and image-sharing controls.",
+  "notes": {
+    "title": {
+      "en": "Preview your recent counter receipts",
+      "ar": "معاينة إيصالات نقطة البيع الأخيرة"
+    },
+    "summary": {
+      "en": "Open saved counter receipts in a preview with language, paper-size, printing and image-sharing controls.",
+      "ar": "افتح إيصالات نقطة البيع المحفوظة في معاينة تتضمن اللغة وحجم الورق والطباعة ومشاركة الصورة."
+    },
+    "details": {
+      "en": "Review recent receipts within your own shop, location and staff access. The counter also presents clearer payment choices and quantity editing; receipt access remains authorized by the server.",
+      "ar": "راجع الإيصالات الأخيرة ضمن صلاحيات متجرك وموقعك وموظفك، مع خيارات دفع وتحرير كميات أوضح في نقطة البيع. يظل الوصول إلى الإيصالات خاضعًا لتفويض الخادم."
+    }
+  }
+}

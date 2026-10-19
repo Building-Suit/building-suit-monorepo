@@ -1,4 +1,5 @@
 export interface BsOfflineCounterView {
+  recordsLabel?: string
   notice: string
   retry: string
   reconcile?: string

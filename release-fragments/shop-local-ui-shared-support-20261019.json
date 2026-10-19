@@ -1,0 +1,22 @@
+{
+  "id": "shop-local-ui-shared-support-20261019",
+  "task": "SHOP-LOCAL-UI-SHARED-SUPPORT-20261019",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui",
+    "packages/ux",
+    "docs/shared",
+    "apps/building-suit-docs",
+    "release-changes/items.json"
+  ],
+  "reason": "Classify shared presentation contracts, package exports, component catalogue and release-inventory maintenance for existing consumers. Customer-facing Shop landing, calendar, receipt and privacy changes have separate public fragments and current runtime probes; this support entry does not activate another operational Suit."
+}
