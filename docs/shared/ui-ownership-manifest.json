@@ -440,9 +440,10 @@
       "components": [
         "BsShopPublicEntryPage",
         "BsShopWebsitePage",
+        "BsWebsiteCatalogCard",
         "BsWebsiteInquiryInbox"
       ],
-      "adapterBoundary": "Shop owns trusted Host resolution, anonymous allowlisted reads, inquiry validation/rate limits, owner permissions and SEO. Shared complete entry template selects the existing marketing template or tenant showcase from a finite typed union. UX owns record/form interaction and BFCache refresh mechanics.",
+      "adapterBoundary": "Shop owns trusted Host resolution, anonymous allowlisted discovery, public-only basket state, server-validated basket inquiries, booking links, publication, owner permissions and SEO. Shared templates own the storefront, catalog cards, item details, basket/contact dialogs and responsive navigation. Shared UX owns optional raster media, record/overlay interaction and BFCache refresh mechanics. Basket requests require merchant confirmation and never post payments or reserve stock.",
       "task": "SS-WEB-PUBLIC-001",
       "migrationStatus": "registered host-aware root page and optional private owner inbox; no app-local presentation"
     },

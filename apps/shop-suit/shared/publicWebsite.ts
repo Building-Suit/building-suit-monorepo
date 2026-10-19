@@ -16,15 +16,26 @@ export function parsePublicWebsite(value:unknown,canonicalSlug:string):PublicWeb
  const profile:PublicWebsiteProfile={canonicalSlug,publicName:text(p.publicName,120),description:text(p.description,320),phone:text(p.phone,30),whatsapp:text(p.whatsapp,16),email:text(p.email,254),openingHours:text(p.openingHours,1000),seoTitle:text(p.seoTitle,70),seoDescription:text(p.seoDescription,170),logoDataUrl:image(p.logoDataUrl)??'',locations:p.locations.map(v=>{if(!object(v))throw Error('INVALID_PUBLIC_WEBSITE');return{publicName:text(v.publicName,120),address:text(v.address,500)}})}
  if(!profile.publicName.trim()||!profile.description.trim()||!profile.logoDataUrl||!profile.locations.length||!(profile.phone||profile.whatsapp||profile.email))throw Error('INVALID_PUBLIC_WEBSITE')
  if(profile.phone&&!/^\+?[0-9][0-9 ()-]{5,29}$/.test(profile.phone)||profile.whatsapp&&!/^\+?[0-9]{7,15}$/.test(profile.whatsapp)||profile.email&&!/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$/.test(profile.email))throw Error('INVALID_PUBLIC_WEBSITE')
- const items:PublicWebsiteCatalogItem[]=c.items.map(v=>{
+ return{profile,catalog:parsePublicWebsiteCatalog(c,canonicalSlug)}
+}
+/** Public catalog allowlist also applies to filtered responses and local public baskets. */
+export function parsePublicWebsiteCatalog(value:unknown,canonicalSlug:string):PublicWebsiteCatalog {
+ if(!object(value)||value.canonicalSlug!==canonicalSlug||!Array.isArray(value.items)||value.items.length>20||!Number.isSafeInteger(value.total)||Number(value.total)<0||!Number.isSafeInteger(value.page)||Number(value.page)<1||value.pageSize!==20)throw Error('INVALID_PUBLIC_WEBSITE')
+ const c=value
+ const items:PublicWebsiteCatalogItem[]=value.items.map(v=>{
   if(!object(v)||typeof v.kind!=='string'||!['product','service'].includes(v.kind)||!Number.isSafeInteger(v.displayOrder))throw Error('INVALID_PUBLIC_WEBSITE')
-  const base={publicId:text(v.publicId,80),kind:v.kind as 'product'|'service',name:text(v.name,160),description:text(v.description,2000),image:image(v.image),displayOrder:Number(v.displayOrder)}
+  if(v.bookable!==undefined&&typeof v.bookable!=='boolean')throw Error('INVALID_PUBLIC_WEBSITE')
+  const base={publicId:text(v.publicId,80),kind:v.kind as 'product'|'service',name:text(v.name,160),description:text(v.description,2000),image:image(v.image),displayOrder:Number(v.displayOrder),...(typeof v.bookable==='boolean'?{bookable:v.bookable}:{})}
   if(v.priceMode==='contact')return{...base,priceMode:'contact' as const}
   if(v.priceMode!=='shown'||typeof v.price!=='number'||!Number.isFinite(v.price)||v.price<0||typeof v.currency!=='string'||!/^[A-Z]{3}$/.test(v.currency))throw Error('INVALID_PUBLIC_WEBSITE')
   return{...base,priceMode:'shown' as const,price:v.price,currency:v.currency}
  })
- return{profile,catalog:{canonicalSlug,items,total:Number(c.total),page:Number(c.page),pageSize:20}}
+ const counts=object(c.counts)&&['all','product','service'].every(key=>Number.isSafeInteger((c.counts as Record<string,unknown>)[key])&&Number((c.counts as Record<string,unknown>)[key])>=0)?c.counts as {all:number;product:number;service:number}:undefined
+ if(c.counts!==undefined&&!counts||counts&&(counts.all!==counts.product+counts.service||Number(c.total)>counts.all))throw Error('INVALID_PUBLIC_WEBSITE')
+ if(c.bookingEnabled!==undefined&&typeof c.bookingEnabled!=='boolean')throw Error('INVALID_PUBLIC_WEBSITE')
+ return{canonicalSlug,items,total:Number(c.total),page:Number(c.page),pageSize:20,...(counts?{counts}:{}),...(typeof c.bookingEnabled==='boolean'?{bookingEnabled:c.bookingEnabled}:{})}
 }
+
 export function websitePageUrl(slug:string,locale:WebsiteLocale,page=1,domain:string=websiteDomain):string {
  const url=new URL(websiteUrl(slug,domain)+'/');if(locale==='en')url.searchParams.set('lang','en');if(page>1)url.searchParams.set('page',String(page));return url.href
 }

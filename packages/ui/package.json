@@ -318,6 +318,7 @@
     "./organisms/BsSidebarAccount": "./src/organisms/BsSidebarAccount.vue",
     "./organisms/BsMetricChart": "./src/organisms/BsMetricChart.vue",
     "./molecules/BsCatalogImage": "./src/molecules/BsCatalogImage.vue",
+    "./molecules/BsWebsiteCatalogCard": "./src/molecules/BsWebsiteCatalogCard.vue",
     "./molecules/BsCatalogTile": "./src/molecules/BsCatalogTile.vue",
     "./organisms/BsAppointmentCalendar": "./src/organisms/BsAppointmentCalendar.vue",
     "./molecules/BsSectionNavigation": "./src/molecules/BsSectionNavigation.vue",
