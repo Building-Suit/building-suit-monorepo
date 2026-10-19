@@ -10,7 +10,7 @@ definePageMeta({ layout: 'default', middleware: ['auth'] })
 type ColumnFormat = 'text' | 'money' | 'number' | 'date' | 'percent' | 'boolean'
 type ReportColumn = { key: string; label: string | undefined; format: ColumnFormat; primary?: boolean }
 
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const route = useRoute()
 const { locale, t } = useI18n()
 const { current, currentId, activeLocations } = useShop()
@@ -65,7 +65,7 @@ const reportOptions = computed<Array<{ value: OperationalReportKind; label: stri
 ])
 const costReports: OperationalReportKind[] = ['suppliers', 'expenses', 'inventory', 'margin']
 
-const { data: access, pending: accessPending, error: accessError, refresh: refreshAccess } = await useAsyncData(
+const accessQuery = useShopQuery(
   () => `shop-data:report-access:${currentId.value ?? 'none'}`,
   async () => {
     if (!currentId.value) return { 'reports.view': false, 'reports.cost_profit.view': false }
@@ -77,6 +77,9 @@ const { data: access, pending: accessPending, error: accessError, refresh: refre
     return data
   }, { watch: [currentId], default: () => ({ 'reports.view': false, 'reports.cost_profit.view': false }) },
 )
+const { data: access, pending: accessPending, error: accessError, refresh: refreshAccess } = accessQuery
+// Resolve server-rendered dependencies; client reads remain reactive.
+if (import.meta.server) await accessQuery.ensure()
 const canView = computed(() => access.value?.['reports.view'] === true)
 const canViewCosts = computed(() => access.value?.['reports.cost_profit.view'] === true)
 const costDenied = computed(() => costReports.includes(report.value) && !canViewCosts.value)
@@ -96,7 +99,7 @@ function queryArgs(targetPage: number, targetSize = pageSize) {
   }
 }
 
-const { data: result, pending, error, refresh } = useAsyncData(
+const { data: result, pending, error, refresh } = useShopQuery(
   () => `shop-data:operational-report:${currentId.value ?? 'none'}:${report.value}:${locationId.value}:${fromDate.value}:${toDate.value}:${page.value}`,
   async (): Promise<OperationalReportPage> => {
     if (!currentId.value || !canView.value || costDenied.value) return emptyReport()

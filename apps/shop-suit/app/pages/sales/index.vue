@@ -3,6 +3,8 @@ import type { BsSalesDirectoryCopy, BsSalesDirectoryView, BsSalesDirectoryRow, B
 import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { refreshShopQueries } = useShopInvalidation()
+
 const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
@@ -43,7 +45,7 @@ type DraftLine = { key: string; itemType: 'product' | 'service'; sourceId: strin
 type SaleDetail = { id: string; status: SaleStatus; client_id: string | null; due_date: string | null; notes: string | null; canManage: boolean; lines: Array<{ item_type: 'product' | 'service'; product_id: string | null; service_id: string | null; quantity: number }> }
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
 
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
@@ -90,7 +92,7 @@ watch([customerId, dueDate, notes, paymentMethod, paymentReference, lines], () =
 }, { deep: true })
 
 
-const { data: catalog, pending: catalogPending, error: catalogError, refresh: refreshCatalog } = useAsyncData(
+const { data: catalog, pending: catalogPending, error: catalogError, refresh: refreshCatalog } = useShopQuery(
   'shop-data:sale-catalog', async (): Promise<SaleCatalog | null> => {
     if (!currentId.value) return null
     const { data, error } = await shopRpc.rpc('sale_catalog', { p_shop_id: currentId.value })
@@ -99,14 +101,14 @@ const { data: catalog, pending: catalogPending, error: catalogError, refresh: re
   }, { watch: [currentId], default: () => null },
 )
 
-const { data: paymentAccess } = useAsyncData('shop-data:payment-access', async () => {
+const { data: paymentAccess } = useShopQuery('shop-data:payment-access', async () => {
   if (!currentId.value) return { can_receive: false }
   const { data, error } = await shopRpc.rpc('payment_access', { p_shop_id: currentId.value })
   if (error) throw error
   return data?.[0] ?? { can_receive: false }
 }, { watch: [currentId], default: () => ({ can_receive: false }) })
 
-const { data: salePage, pending, error, refresh } = useAsyncData(
+const { data: salePage, pending, error, refresh } = useShopQuery(
   'shop-data:sales', async (): Promise<SalePage> => {
     if (!currentId.value || !currentLocationId.value) return { items: [], total: 0, page: 1, pageSize, canManage: false, canIssue: false }
     const { data: accessRows, error: accessError } = await shopRpc.rpc('sale_access', { p_shop_id: currentId.value })
@@ -316,8 +318,8 @@ async function issue() {
     closeEditor()
     await Promise.all([
       refresh(), refreshCatalog(),
-      refreshNuxtData('shop-data:inventory-overview'),
-      refreshNuxtData('shop-data:recent-invoices'),
+      refreshShopQueries('shop-data:inventory-overview'),
+      refreshShopQueries('shop-data:recent-invoices'),
     ])
     pushToast({ tone: 'success', title: saleCopy(t, customerId.value ? 'sales.issuedSuccess' : 'sales.checkoutSuccess', lines.value) })
     await navigateTo(`/sales/${invoiceId}`)
@@ -358,9 +360,9 @@ async function fastPay() {
     closeEditor()
     // Refresh failures must not prevent handing off a committed payment.
     void Promise.allSettled([
-      refresh(), refreshCatalog(), refreshNuxtData('shop-data:inventory-overview'),
-      refreshNuxtData('shop-data:recent-invoices'), refreshNuxtData('shop-data:customer-statement'),
-      refreshNuxtData('shop-data:cash-shifts'),
+      refresh(), refreshCatalog(), refreshShopQueries('shop-data:inventory-overview'),
+      refreshShopQueries('shop-data:recent-invoices'), refreshShopQueries('shop-data:customer-statement'),
+      refreshShopQueries('shop-data:cash-shifts'),
     ])
     await navigateTo(`/sales/${data}/receipt`)
   }

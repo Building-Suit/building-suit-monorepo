@@ -2,6 +2,8 @@
 import type { BsCatalogImportCopy, BsCatalogImportView, BsCatalogImportChoice } from '@building-suit/ui/types/catalogImportPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { downloadCsv, encodeCsv, importTemplates, parseCsv, validateImportHeaders } from '~/utils/catalogImport'
+const { refreshShopQueries } = useShopInvalidation()
+
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 type ImportKind = keyof typeof importTemplates
@@ -15,7 +17,7 @@ const captureScope = useShopTaskScope()
 const confirmation = useConfirmation()
 const exporting = ref(false)
 let fileVersion = 0
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const { current, currentId, loading: shopLoading } = useShop()
 const { locale } = useI18n()
 const { push: pushToast } = useToasts()
@@ -55,7 +57,7 @@ const copy = computed(() => isArabic.value ? {
   fileError: 'Could not read the file. Check its headers, format, and size limits.', serverError: 'Could not validate or apply the import.', categoryError: 'Could not save the category.', confirmImport: 'Apply this import? Records will be created or updated; opening stock increases inventory quantities and value.', exportError: 'Could not export labels.', reportError: 'Could not load the report.', retry: 'Retry',
 })
 
-const { data: categories, refresh: refreshCategories } = useAsyncData(
+const { data: categories, refresh: refreshCategories } = useShopQuery(
   () => `shop-data:catalog-categories:${currentId.value ?? 'none'}`,
   async () => {
     if (!currentId.value) return []
@@ -65,7 +67,7 @@ const { data: categories, refresh: refreshCategories } = useAsyncData(
   }, { watch: [currentId], default: () => [] },
 )
 
-const { data: salesReport, pending: reportPending, error: reportError, refresh: refreshReport } = useAsyncData(
+const { data: salesReport, pending: reportPending, error: reportError, refresh: refreshReport } = useShopQuery(
   () => `shop-data:catalog-report:${currentId.value ?? 'none'}:${categoryFilter.value}:${reportFrom.value}:${reportTo.value}`,
   async () => {
     if (!currentId.value) return { items: [] as SalesRow[] }
@@ -116,7 +118,7 @@ async function runImport(dryRun: boolean) {
     if (response.error) throw response.error
     result.value = response.data as ImportResult
     if (!dryRun && result.value.valid) {
-      await refreshNuxtData()
+      await refreshShopQueries(key => key.startsWith('shop-data:'))
       if (inScope()) pushToast({ tone: 'success', title: copy.value.applied })
     }
   } catch {

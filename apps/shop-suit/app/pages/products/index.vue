@@ -21,7 +21,7 @@ type Product = {
 type ProductPage = { supportsUploads?: boolean; supportsMedia?: boolean; items: Product[]; total: number; page: number; pageSize: number }
 type Category = { id: string; name: string }
 
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const media = useCatalogMedia()
 const { locale } = useI18n()
 const { current, currentId, loading: shopLoading } = useShop()
@@ -39,7 +39,7 @@ const { visible: showForm, pending: saving, dirty: formDirty } = useRecordAction
 function removeImage() { upload.reset(); form.imageUrl = ''; form.imageObjectName = null }
 watch(showForm, visible => { if (!visible) upload.reset() })
 
-const { data: permissionAccess } = useAsyncData('shop-data:product-permissions', async () => {
+const { data: permissionAccess } = useShopQuery('shop-data:product-permissions', async () => {
   if (!currentId.value) return { 'products.manage': false }
   const { data, error } = await shopRpc.rpc('shop_permission_access', {
     p_shop_id: currentId.value, p_permission_keys: ['products.manage'],
@@ -79,14 +79,14 @@ const copy = computed(() => isArabic.value ? {
   stockLater: 'Record quantities manually in Inventory or receive them through Purchases.',
 })
 
-const { data: categories } = useAsyncData(() => `shop-data:product-categories:${currentId.value ?? 'none'}`, async () => {
+const { data: categories } = useShopQuery(() => `shop-data:product-categories:${currentId.value ?? 'none'}`, async () => {
   if (!currentId.value) return []
   const { data, error } = await shopRpc.rpc('list_catalog_categories', { p_shop_id: currentId.value })
   if (error) throw error
   return data as Category[]
 }, { watch: [currentId], default: () => [] })
 const emptyPage = (): ProductPage => ({ items: [], total: 0, page: 1, pageSize })
-const { data: productPage, pending, error, refresh } = useAsyncData(
+const { data: productPage, pending, error, refresh } = useShopQuery(
   'shop-data:products', async () => {
     if (!currentId.value) return emptyPage()
     const args = {

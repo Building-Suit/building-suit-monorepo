@@ -2,21 +2,23 @@ import type {BsWebsiteInquiryInboxView} from '@building-suit/ui/types/websiteInq
 import type {ShopRpcDatabase} from '~/types/shopCrmRpc'
 import {parseWebsiteInquiryInbox,type PrivateWebsiteInquiry,type WebsiteInquiryStatus} from '#shared/websiteInquiries'
 export function useWebsiteInquiries(canManage:Ref<boolean>) {
+ const { refreshShopQueries } = useShopInvalidation()
+
  const {currentId,currentLocationId,isOwner}=useShop(),{locale}=useI18n(),user=useSupabaseUser()
  const actor=computed(()=>user.value?.id??null),canRead=computed(()=>canManage.value&&isOwner.value)
- const environment=useRuntimeConfig().public.supabase.url,client=useSupabaseClient<ShopRpcDatabase>().schema('public'),captureScope=useShopTaskScope()
+ const environment=useRuntimeConfig().public.supabase.url,client=useShopClient<ShopRpcDatabase>().schema('public'),captureScope=useShopTaskScope()
  const filter=ref('all'),page=ref(1),status=ref('new'),selected=ref<PrivateWebsiteInquiry|null>(null)
  const action=useRecordAction(()=>status.value),{visible:open,pending,dirty,error}=action
- const {data,pending:loading,error:loadError,refresh}=useAsyncData(
+ const {data,pending:loading,error:loadError,refresh}=useShopQuery(
   ()=>`shop-data:website-inquiries:${JSON.stringify([environment,'shop-crm',actor.value,currentId.value,filter.value,page.value])}`,
   async()=>{if(!currentId.value||!canRead.value||!actor.value)return null;const isCurrent=captureScope();const response=await client.rpc('shop_website_inquiries',{p_shop_id:currentId.value,p_status:filter.value,p_page:page.value});if(response.error)throw response.error;return isCurrent()&&canRead.value?parseWebsiteInquiryInbox(response.data):null},
-  {server:false,watch:[currentId,currentLocationId,actor,canRead],default:()=>null},
+  {server:false,enabled:canRead,watch:[currentId,currentLocationId,actor,canRead],default:()=>null},
  )
  watch(filter,()=>{page.value=1})
  watch([currentId,currentLocationId,actor,canRead],()=>{open.value=false;selected.value=null;status.value='new';filter.value='all';page.value=1;error.value=''}, {flush:'sync'})
  function edit(id:string){const item=data.value?.items.find(i=>i.id===id);if(!canRead.value||!item)return;selected.value=item;status.value=item.status;action.edit()}
  async function save(){const shop=currentId.value,item=selected.value,isCurrent=captureScope();if(!shop||!item||!canRead.value||!['new','read','closed'].includes(status.value))return
-  await action.run(async()=>{const response=await client.rpc('shop_website_inquiry_status',{p_shop_id:shop,p_inquiry_id:item.id,p_status:status.value as WebsiteInquiryStatus});if(response.error)throw response.error;if(isCurrent()&&canRead.value){const prefix=`shop-data:website-inquiries:${JSON.stringify([environment,'shop-crm',actor.value,currentId.value]).slice(0,-1)},`;clearNuxtData(k=>k.startsWith(prefix));await refresh()}},()=>locale.value==='ar'?'تعذر تحديث الاستفسار. حاول مرة أخرى.':'Could not update inquiry. Please retry.')
+  await action.run(async()=>{const response=await client.rpc('shop_website_inquiry_status',{p_shop_id:shop,p_inquiry_id:item.id,p_status:status.value as WebsiteInquiryStatus});if(response.error)throw response.error;if(isCurrent()&&canRead.value){const prefix=`shop-data:website-inquiries:${JSON.stringify([environment,'shop-crm',actor.value,currentId.value]).slice(0,-1)},`;await refreshShopQueries(k=>k.startsWith(prefix))}},()=>locale.value==='ar'?'تعذر تحديث الاستفسار. حاول مرة أخرى.':'Could not update inquiry. Please retry.')
  }
  const view=computed<BsWebsiteInquiryInboxView>(()=>{const ar=locale.value==='ar',labels={new:ar?'جديد':'New',read:ar?'تمت قراءته':'Read',closed:ar?'مغلق':'Closed'}
   const row=(i:PrivateWebsiteInquiry)=>({id:i.id,name:i.name,contact:i.contact,message:i.message,statusLabel:labels[i.status],createdLabel:new Intl.DateTimeFormat(ar?'ar-EG':'en-GB',{dateStyle:'medium',timeStyle:'short'}).format(new Date(i.createdAt))})

@@ -11,7 +11,7 @@ import { checkoutFailureCode, checkoutAttempt, checkoutAttemptKey, isXPayOrderId
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
-const client = useSupabaseClient<ShopRpcDatabase>()
+const client = useShopClient<ShopRpcDatabase>()
 const rpc = client.schema('public')
 const { locale } = useI18n()
 const ui = useUiCopy()
@@ -81,7 +81,7 @@ onMounted(() => {
 })
 watch([currentId, isOwner, user], clearPrivateOffer, { flush: 'sync' })
 
-const { data: billing, pending, error, refresh } = await useAsyncData(
+const billingQuery = useShopQuery(
   'shop-data:billing',
   async (): Promise<ShopBilling | null> => {
     if (!currentId.value || !isOwner.value) return null
@@ -93,10 +93,15 @@ const { data: billing, pending, error, refresh } = await useAsyncData(
   },
   { watch: [currentId, isOwner, () => user.value?.id] },
 )
+const { data: billing, pending, error, refresh } = billingQuery
+// Resolve server-rendered dependencies; client reads remain reactive.
+if (import.meta.server) await billingQuery.ensure()
 
 // A paid subscription defaults to its recorded currency, irrespective of IP/cookie.
-if (billing.value?.subscription.accessState === 'active' && ['EGP','USD'].includes(billing.value.subscription.currency)) subscriptionCurrency.currency.value = billing.value.subscription.currency as 'EGP' | 'USD'
-const { data: currencyPlans, pending: currencyPlansPending, error: currencyPlansError, refresh: refreshCurrencyPlans } = await useAsyncData(
+watch([() => billing.value?.subscription.accessState, () => billing.value?.subscription.currency], ([state, currency]) => {
+  if (state === 'active' && (currency === 'EGP' || currency === 'USD')) subscriptionCurrency.currency.value = currency
+}, { immediate: true })
+const currencyPlansQuery = useShopQuery(
   () => `shop-data:billing-currency:${user.value?.id}:${currentId.value}:${subscriptionCurrency.currency.value}`,
   async (): Promise<BillingPlanOption[]> => {
     if (subscriptionCurrency.currency.value === 'EGP' || !currentId.value || !isOwner.value) return []
@@ -107,6 +112,8 @@ const { data: currencyPlans, pending: currencyPlansPending, error: currencyPlans
     return result.data ?? []
   }, { default: () => [] },
 )
+const { data: currencyPlans, pending: currencyPlansPending, error: currencyPlansError, refresh: refreshCurrencyPlans } = currencyPlansQuery
+if (import.meta.server) await currencyPlansQuery.ensure()
 const publicCatalogTerms = computed(() => new Set((publicPlans.value ?? [])
   .filter(plan => plan.is_purchasable && !plan.is_coming_soon)
   .map(plan => plan.catalog_terms_id)))

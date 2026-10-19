@@ -5,3 +5,9 @@ withDefaults(defineProps<{ as?: 'section' | 'aside' | 'div'; tone?: 'default' | 
 </script>
 
 <template><component :is="as" class="ls-card bs-panel" :class="[`bs-panel--${tone}`, `bs-panel--padding-${padding}`]" :aria-labelledby="labelledby"><slot /></component></template>
+
+<style scoped>
+.bs-panel { min-inline-size: 0; box-shadow: none; }
+.bs-panel--default { background: var(--bs-component-dashboard-chart-surface); }
+.bs-panel :deep(h2), .bs-panel :deep(h3) { font-weight: var(--bs-weight-semibold); }
+</style>

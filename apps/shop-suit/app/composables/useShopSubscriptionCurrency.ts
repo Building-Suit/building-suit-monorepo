@@ -5,7 +5,7 @@ export function useShopSubscriptionCurrency(beforeChange?: (next: SubscriptionCu
   const cookie = useCookie<string | null>('shop-subscription-currency', { sameSite: 'lax', path: '/', maxAge: 31536000 })
   const hint = useRequestHeaders(['x-vercel-ip-country'])['x-vercel-ip-country'] ?? null
   const initial = subscriptionCurrencyChoice({ selectedCurrency: cookie.value === 'EGP' || cookie.value === 'USD' ? cookie.value : null, countryHint: hint })
-  const currency = useState<SubscriptionCurrency>('shop:subscription-currency', () => initial.currency)
+  const currency = useShopState<SubscriptionCurrency>('shop:subscription-currency', () => initial.currency)
   const { locale } = useI18n()
   const guarded = useGuardedChoice(currency, ['EGP', 'USD'] as const, beforeChange)
   watch(currency, value => { cookie.value = value })

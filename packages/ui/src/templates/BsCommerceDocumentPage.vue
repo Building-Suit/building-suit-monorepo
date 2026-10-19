@@ -54,6 +54,10 @@ function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, valu
         <BsText v-else as="p" size="sm" tone="muted">{{ view.correction.notice }}</BsText><BsText as="p" size="sm" tone="muted">{{ view.correction.fullOnly }}</BsText>
       </BsPanel>
       <BsDocumentReturns v-if="returnsCopy && returnsView" v-model:open="returnOpen" v-model:record-open="refundRecordOpen" v-model:form="returnForm" v-model:record-form="refundRecordForm" :copy="returnsCopy" :view="returnsView" @start="emit('startReturn')" @retry="emit('retryReturns')" @preview="emit('previewReturn')" @confirm="emit('confirmReturn')" @record="emit('recordReturnRefund', $event)" @complete="emit('completeReturnRefund')" @fail="emit('failReturnRefund')" @previous="emit('previousReturns')" @next="emit('nextReturns')" />
+      <BsMetricGrid :columns="2">
+        <BsKpiCard :title="copy.total" :value="view.detail.total" icon="invoice" />
+        <BsKpiCard :title="copy.balance" :value="view.detail.balance" icon="wallet" />
+      </BsMetricGrid>
       <BsGrid :columns="2">
         <BsPanel padding="md"><BsHeading :level="2">{{ copy.party }}</BsHeading><BsStack v-if="view.party.name" gap="xs">
           <BsText as="p" emphasis="semibold"><BsLink v-if="view.party.to" :to="view.party.to">{{ view.party.name }}</BsLink><template v-else>{{ view.party.name }}</template></BsText>
@@ -65,8 +69,6 @@ function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, valu
           <BsDescriptionItem v-if="view.showNotes" :term="copy.notes">{{ view.detail.notes }}</BsDescriptionItem>
           <BsDescriptionItem v-for="item in view.amountBreakdown ?? []" :key="item.label" :term="item.label">{{ item.value }}</BsDescriptionItem>
           <BsDescriptionItem v-if="view.showDiscount" :term="copy.discount">{{ view.detail.discount }}</BsDescriptionItem>
-          <BsDescriptionItem :term="copy.total"><BsText as="span" size="lg" emphasis="semibold">{{ view.detail.total }}</BsText></BsDescriptionItem>
-          <BsDescriptionItem :term="copy.balance">{{ view.detail.balance }}</BsDescriptionItem>
           <BsDescriptionItem v-if="view.showPaid" :term="copy.paid">{{ view.detail.paid }}</BsDescriptionItem>
           <BsDescriptionItem v-if="view.showDue" :term="copy.due">{{ view.detail.due }}</BsDescriptionItem>
           <BsDescriptionItem v-if="view.detail.settlement" :term="copy.settlement">{{ view.detail.settlement }}</BsDescriptionItem>

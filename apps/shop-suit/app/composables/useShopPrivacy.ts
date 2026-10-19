@@ -2,10 +2,10 @@ import { consentKey, readPrivacyPreference, privacyPreference, removeAnalyticsCo
 import type { PrivacyPreference, PrivacyPresentation } from '@building-suit/ux'
 import { isPublicPath } from '#shared/publicSeo'
 export function useShopPrivacy(initialize = false) {
-  const preference = useState<PrivacyPreference | null>('shop-privacy', () => null)
-  const ready = useState('shop-privacy-ready', () => false)
-  const settings = useState('shop-privacy-settings', () => false)
-  const draft = useState('shop-privacy-draft', () => false)
+  const preference = useShopState<PrivacyPreference | null>('shop-privacy', () => null)
+  const ready = useShopState('shop-privacy-ready', () => false)
+  const settings = useShopState('shop-privacy-settings', () => false)
+  const draft = useShopState('shop-privacy-draft', () => false)
   const { locale } = useI18n()
   const router = useRouter()
   const user = useSupabaseUser()

@@ -10,7 +10,7 @@ type DrawerEvent = { id: string; kind: 'cash_sale' | 'cash_refund' | 'pay_in' | 
 type ShiftSummary = { id: string; registerKey: string; cashierMembershipId: string; cashierName: string; openingAmount: number; cashSales: number; cashRefunds: number; payIns: number; payOuts: number; expectedCash: number; countedCash?: number; variance?: number; openedAt: string; closedAt?: string; notes?: string | null; closingNotes?: string | null; nonCashTotal: number; nonCashByMethod: Record<string, number>; events?: DrawerEvent[] }
 type Dashboard = { canManage: boolean; canAdjust: boolean; currentMembershipId: string; active: ShiftSummary | null; items: ShiftSummary[]; total: number; page: number; pageSize: number; cashiers: Array<{ id: string; name: string }> }
 
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
 const counter = useOfflineCounter()
 const offlineView = useOfflineCounterView(counter)
@@ -55,7 +55,7 @@ const copy = computed(() => isArabic.value ? {
 })
 
 const emptyDashboard = (): Dashboard => ({ canManage: false, canAdjust: false, currentMembershipId: '', active: null, items: [], total: 0, page: 1, pageSize, cashiers: [] })
-const { data: dashboard, pending, error, refresh } = useAsyncData(
+const { data: dashboard, pending, error, refresh } = useShopQuery(
   () => `shop-data:cash-shifts:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${cashierId.value ?? 'all'}:${page.value}`,
   async (): Promise<Dashboard> => {
     if (!currentId.value || !currentLocationId.value) return emptyDashboard()

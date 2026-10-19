@@ -240,11 +240,16 @@ const invitationPreviewCopy={
     </BsContentSection>
 
     <BsContentSection :title="isArabic ? 'مقاييس لوحة التحكم' : 'Dashboard metrics'">
-      <BsDashboardMetric :metric="{ id: 'example', title: isArabic ? 'بيانات توضيحية' : 'Illustrative data', value: 'EGP 120', hint: isArabic ? 'مثال للمكتبة فقط.' : 'Catalogue example only.', changeLabel: '', tone: 'neutral', to: '', source: null }" />
+      <BsMetricGrid variant="neutral"><BsDashboardMetric v-for="appearance in (['default', 'primary', 'accent', 'compact'] as const)" :key="appearance" :appearance="appearance" :metric="{ icon: 'analytics', id: 'example', title: isArabic ? 'بيانات توضيحية' : 'Illustrative data', value: 'EGP 120', hint: isArabic ? 'مثال للمكتبة فقط.' : 'Catalogue example only.', changeLabel: '', tone: 'neutral', to: '', source: null }" /></BsMetricGrid>
+    </BsContentSection>
+
+    <BsContentSection :title="isArabic ? 'ملخص موحّد عبر الصفحات' : 'Shared page summaries'">
+      <BsMetricGrid :columns="3"><BsKpiCard v-for="index in 3" :key="index" :title="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :value="`EGP ${index * 120}`" :hint="isArabic ? 'مثال للمكتبة فقط' : 'Catalogue example only'" icon="analytics" /></BsMetricGrid>
+      <BsMetricGrid variant="compact" :columns="3"><BsKpiCard v-for="index in 3" :key="index" :title="isArabic ? 'مؤشر مساعد' : 'Supporting metric'" :value="String(index * 10)" /></BsMetricGrid>
     </BsContentSection>
 
     <BsContentSection :title="isArabic ? 'مثال رسوم مزيج المبيعات' : 'Sales mix chart example'">
-      <BsGrid :columns="2"><BsMetricChart :title="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :empty-label="isArabic ? 'لا توجد بيانات' : 'No data'" kind="donut" :items="[{ id: 'products', label: isArabic ? 'منتجات' : 'Products', hint: '', value: 30, formatted: '30' }, { id: 'services', label: isArabic ? 'خدمات' : 'Services', hint: '', value: 10, formatted: '10' }]" /><BsMetricChart :title="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :empty-label="isArabic ? 'لا توجد بيانات' : 'No data'" :items="[{ id: 'cash', label: isArabic ? 'نقدي' : 'Cash', hint: '', value: 30, formatted: '30' }, { id: 'card', label: isArabic ? 'بطاقة' : 'Card', hint: '', value: 10, formatted: '10' }]" /></BsGrid>
+      <BsGrid :columns="2"><BsMetricChart presentation="dashboard" :title="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :empty-label="isArabic ? 'لا توجد بيانات' : 'No data'" kind="donut" :items="[{ id: 'products', label: isArabic ? 'منتجات' : 'Products', hint: '', value: 30, formatted: '30' }, { id: 'services', label: isArabic ? 'خدمات' : 'Services', hint: '', value: 10, formatted: '10' }]" /><BsMetricChart presentation="dashboard" :title="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :empty-label="isArabic ? 'لا توجد بيانات' : 'No data'" :items="[{ id: 'cash', label: isArabic ? 'نقدي' : 'Cash', hint: '', value: 30, formatted: '30' }, { id: 'card', label: isArabic ? 'بطاقة' : 'Card', hint: '', value: 10, formatted: '10' }]" /></BsGrid>
     </BsContentSection>
 
     <BsContentSection :title="isArabic ? 'قوالب الصفحات' : 'Page templates'"><BsLink to="/templates/access?suit=ledger">Ledger access template</BsLink><BsLink to="/templates/access?suit=shop">Shop access template</BsLink></BsContentSection>

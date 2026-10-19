@@ -25,7 +25,7 @@ type Options = {
   customers: Array<{ id: string; name: string; phone: string | null }>
 }
 
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const route = useRoute()
 const { locale } = useI18n()
 const { current, currentId, currentLocationId, selectLocation, loading: shopLoading } = useShop()
@@ -84,7 +84,7 @@ const copy = computed(() => isArabic.value ? {
 
 const emptyOptions = (): Options => ({ canManage: false, canManageSchedule: false, locations: [], staff: [], services: [], customers: [] })
 // Calendar reads depend on the authorized location options, including during SSR.
-const { data: options, pending: optionsPending, error: optionsError, refresh: refreshOptions } = await useAsyncData(
+const optionsQuery = useShopQuery(
   'shop-data:appointment-options', async (): Promise<Options> => {
     if (!currentId.value) return emptyOptions()
     const { data, error } = await shopRpc.rpc('appointment_options', { p_shop_id: currentId.value })
@@ -92,6 +92,9 @@ const { data: options, pending: optionsPending, error: optionsError, refresh: re
     return data as Options
   }, { watch: [currentId], default: emptyOptions },
 )
+const { data: options, pending: optionsPending, error: optionsError, refresh: refreshOptions } = optionsQuery
+// Resolve server-rendered dependencies; client reads remain reactive.
+if (import.meta.server) await optionsQuery.ensure()
 
 const locationId = computed<string | null>(() => {
   const sharedLocationId = currentLocationId.value
@@ -129,7 +132,7 @@ watch(locationStaff, (members) => {
 
 const addDays = calendarAddDays
 const emptyCalendar = (): CalendarData => ({ appointments: [], workingHours: [], blocks: [] })
-const { data: calendar, pending, error, refresh } = useAsyncData(
+const { data: calendar, pending, error, refresh } = useShopQuery(
   'shop-data:appointment-calendar', async (): Promise<CalendarData> => {
     if (!currentId.value || !locationId.value) return emptyCalendar()
     return readAppointmentCalendar<CalendarData>(visibleDays.value, range.value.to, async (from, to) => {

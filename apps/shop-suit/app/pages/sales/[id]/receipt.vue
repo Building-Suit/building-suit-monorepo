@@ -7,7 +7,7 @@ import { projectReceipt, projectReceiptCopy } from '~/utils/receiptPresentation'
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
 const route = useRoute()
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const { currentId, currentLocationId } = useShop()
 const { t, locale } = useI18n()
 const saleId = computed(() => String(route.params.id ?? ''))
@@ -16,7 +16,7 @@ const paperSize = ref<ReceiptPaperSize>('thermal_80')
 const printed = ref(route.query.origin !== 'pos')
 const { sharing, shareError, shareReceipt, downloadReceiptImage } = useSaleReceiptShare()
 
-const { data: receipt, pending, error, refresh } = useAsyncData(
+const { data: receipt, pending, error, refresh } = useShopQuery(
   () => `shop-data:sale-receipt:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${saleId.value}`,
   async (): Promise<SaleReceiptSnapshot | null> => {
     if (!currentId.value || !currentLocationId.value || !saleId.value) return null

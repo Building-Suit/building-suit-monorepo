@@ -2319,7 +2319,7 @@
       ]
     },
     {
-      "source": "apps/shop-suit/app/pages/settings.vue",
+      "source": "apps/shop-suit/app/pages/settings/[[section]].vue",
       "kind": "route",
       "currentSharedTemplates": [
         "packages/ui/src/templates/BsBusinessSettingsPage.vue"
@@ -2328,8 +2328,8 @@
         "BsBusinessSettingsPage"
       ],
       "destination": "packages/ui/src/templates/BsBusinessSettingsPage.vue",
-      "status": "verified-local",
-      "domainAdapter": "apps/shop-suit/app/pages/settings.vue",
+      "status": "implemented-unverified",
+      "domainAdapter": "apps/shop-suit/app/pages/settings/[[section]].vue",
       "dependencies": [
         "@building-suit/ui/types/businessSettingsPresentation",
         "~/composables/useShop",
@@ -2339,7 +2339,7 @@
         "~/utils/businessMode",
         "~/utils/businessMode"
       ],
-      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "verification": "Section routes updated in source; checks and visual verification deferred at user request.",
       "purpose": "business-settings",
       "reconciledDependencies": [
         "~/types/shopCrmRpc",

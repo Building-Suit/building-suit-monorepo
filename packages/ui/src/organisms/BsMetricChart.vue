@@ -1,8 +1,8 @@
 <script setup lang="ts">
 const props = withDefaults(defineProps<{
   title: string; items: Array<{ id: string; label: string; hint: string; value: number; formatted: string }>
-  emptyLabel: string; kind?: 'bars' | 'donut'; action?: { label: string; to: string }
-}>(), { kind: 'bars', action: undefined })
+  emptyLabel: string; kind?: 'bars' | 'donut'; presentation?: 'default' | 'dashboard'; action?: { label: string; to: string }
+}>(), { kind: 'bars', action: undefined, presentation: 'dashboard' })
 const values = computed(() => props.items.map(item => Number.isFinite(item.value) ? item.value : 0))
 const total = computed(() => values.value.reduce((sum, value) => sum + Math.max(0, value), 0))
 const showDonut = computed(() => props.kind === 'donut' && total.value > 0 && values.value.every(value => value >= 0))
@@ -18,9 +18,14 @@ const donut = computed(() => {
 })
 </script>
 <template>
-  <BsCard as="section" padding="lg" class="bs-mix-chart" :aria-label="title">
+  <BsCard as="section" variant="chart" padding="lg" class="bs-mix-chart" :data-presentation="presentation" :aria-label="title">
     <BsInline justify="between"><BsHeading :level="2">{{ title }}</BsHeading><BsLink v-if="action" :to="action.to">{{ action.label }}</BsLink></BsInline>
-    <p v-if="!items.length" class="py-12 text-center text-sm text-fg-muted">{{ emptyLabel }}</p>
+    <div v-if="!items.length && presentation === 'dashboard'" class="bs-mix-chart__empty">
+      <div v-if="kind === 'donut'" class="bs-mix-chart__empty-ring" aria-hidden="true"><span>0</span></div>
+      <BsIcon v-else name="chart" :size="32" class="bs-mix-chart__empty-icon" />
+      <p>{{ emptyLabel }}</p>
+    </div>
+    <p v-else-if="!items.length" class="py-12 text-center text-sm text-fg-muted">{{ emptyLabel }}</p>
     <div v-else class="mt-6 grid items-center gap-6" :class="showDonut ? 'sm:grid-cols-[minmax(8rem,1fr)_2fr]' : ''">
       <div v-if="showDonut" aria-hidden="true" class="bs-mix-chart__donut" :style="{ background: donut }"><div /></div>
       <ul class="space-y-5"><li v-for="(item, index) in items" :key="item.id">
@@ -37,4 +42,12 @@ const donut = computed(() => {
 .bs-mix-chart__donut { aspect-ratio: 1; border-radius: 50%; padding: 22%; inline-size: 100%; max-inline-size: 13rem; margin-inline: auto; }
 .bs-mix-chart__donut > div { inline-size: 100%; block-size: 100%; border-radius: 50%; background: var(--bs-surface); }
 .bs-mix-chart__bar[data-negative] { background-image: repeating-linear-gradient(135deg, transparent 0 3px, var(--bs-surface) 3px 4px); }
+.bs-mix-chart[data-presentation='dashboard'] { block-size: 100%; }
+.bs-mix-chart__empty { display: grid; justify-items: center; align-content: center; gap: var(--bs-space-4); min-block-size: 220px; padding-block: var(--bs-space-5); color: var(--bs-text-muted); font-size: var(--bs-type-body-m-size); text-align: center; }
+.bs-mix-chart__empty-ring { display: grid; place-items: center; inline-size: 128px; aspect-ratio: 1; border: 14px solid var(--bs-border); border-radius: var(--bs-radius-full); }
+.bs-mix-chart__empty-ring span { font-size: var(--bs-type-h1-size); color: var(--bs-text-muted); }
+.bs-mix-chart__empty-icon { color: var(--bs-text-muted); }
+:global(.dark) .bs-mix-chart[data-presentation='dashboard'] { --bs-mix-primary: var(--bs-color-brand-premium-gold); --bs-mix-secondary: var(--bs-color-secondary-sky-steel); }
+.bs-mix-chart :deep(h2) { font-weight: var(--bs-weight-semibold); }
+.bs-mix-chart :deep(a) { font-size: var(--bs-type-caption-size); }
 </style>

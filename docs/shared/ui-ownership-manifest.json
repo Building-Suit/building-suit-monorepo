@@ -306,13 +306,15 @@
       "family": "dashboard-metrics",
       "owner": "packages/ui",
       "components": [
+        "BsKpiCard",
+        "BsMetricGrid",
         "BsDashboardMetric"
       ],
       "adapterBoundary": "formatted product-owned metric values, capabilities, financial notice and source navigation",
       "auditSources": [
         "apps/shop-suit/app/pages/dashboard.vue"
       ],
-      "migrationStatus": "shared metric molecule; bounded Penpot alignment in progress"
+      "migrationStatus": "shared summary, compact and neutral metric groups; source updated, visual review deferred at user request"
     },
     {
       "family": "pos-cart",

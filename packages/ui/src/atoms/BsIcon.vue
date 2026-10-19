@@ -2,6 +2,9 @@
 import { HugeiconsIcon } from '@hugeicons/vue'
 import {
   Image01Icon,
+  Sun03Icon,
+  Moon02Icon,
+  ComputerIcon,
   ViewIcon,
   ViewOffSlashIcon,
   LockPasswordIcon,
@@ -32,6 +35,9 @@ import {
 } from '@hugeicons/core-free-icons'
 
 const bsIcons = {
+  sun: Sun03Icon,
+  moon: Moon02Icon,
+  monitor: ComputerIcon,
   eye: ViewIcon,
   eyeOff: ViewOffSlashIcon,
   lock: LockPasswordIcon,

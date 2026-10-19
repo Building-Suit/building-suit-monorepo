@@ -6,6 +6,8 @@ import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { businessModeSupportsProducts, businessModeSupportsServices } from '~/utils/businessMode'
 import { posCustomerOptions } from '~/utils/posCustomer.js'
 import { addOrIncrementCartLine, cartTotal, nextCartQuantity, cartQuantityLimit } from '~/utils/pos'
+const { refreshShopQueries } = useShopInvalidation()
+
 const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
@@ -18,7 +20,7 @@ type PosContext = { customerQuery?: string; staff: Array<{ id: string; name: str
 type CatalogResult = { items: CatalogItem[]; total: number; page: number; pageSize: number; businessMode: 'product' | 'service' | 'mixed'; ambiguousBarcode: boolean }
 type Category = { id: string; name: string }
 
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const media = useCatalogMedia()
 const counter = useOfflineCounter()
 const offlineView = useOfflineCounterView(counter)
@@ -76,7 +78,7 @@ const { data: taxQuote, pending: taxPending, error: taxError } = useSaleTaxQuote
 const total = computed(() => Number(counter.online.value ? taxQuote.value?.total ?? cartTotal(lines.value) : cartTotal(lines.value)))
 const selectedStaff = computed(() => context.value.staff.find(member => member.id === staffId.value))
 
-const { data: categories } = useAsyncData(() => `shop-data:pos-categories:${currentId.value ?? 'none'}`, async () => {
+const { data: categories } = useShopQuery(() => `shop-data:pos-categories:${currentId.value ?? 'none'}`, async () => {
   if (!currentId.value) return []
   if (import.meta.client && !counter.online.value) return await counter.cached<Category[]>('categories') ?? []
   const { data, error } = await rpc.rpc('list_catalog_categories', { p_shop_id: currentId.value })
@@ -84,7 +86,7 @@ const { data: categories } = useAsyncData(() => `shop-data:pos-categories:${curr
   return data as Category[]
 }, { watch: [currentId], default: () => [] })
 
-const { data: catalog, pending: catalogPending, error: catalogError, refresh: refreshCatalog } = useAsyncData(
+const { data: catalog, pending: catalogPending, error: catalogError, refresh: refreshCatalog } = useShopQuery(
   () => `shop-data:pos-catalog:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${debouncedSearch.value}:${itemType.value}:${categoryFilter.value}:${catalogPage.value}`, async (): Promise<CatalogResult> => {
     if (!currentId.value || !currentLocationId.value) return { items: [], total: 0, page: 1, pageSize: 30, businessMode: 'mixed', ambiguousBarcode: false }
     if (import.meta.client && !counter.online.value) {
@@ -103,7 +105,7 @@ const { data: catalog, pending: catalogPending, error: catalogError, refresh: re
 )
 
 // Resolve the initial context before deriving appointment state in SSR and hydration.
-const { data: context, pending: contextPending, error: contextError, refresh: refreshContext } = await useAsyncData(
+const contextQuery = useShopQuery(
   () => `shop-data:pos-context:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${debouncedCustomerSearch.value}`, async (): Promise<PosContext> => {
     if (!currentId.value || !currentLocationId.value) return { staff: [], appointments: [], customers: [] }
     if (import.meta.client && !counter.online.value) {
@@ -117,6 +119,9 @@ const { data: context, pending: contextPending, error: contextError, refresh: re
     return { ...(data as PosContext), customerQuery: query }
   }, { watch: [currentId, currentLocationId, debouncedCustomerSearch], default: (): PosContext => ({ staff: [], appointments: [], customers: [] }) },
 )
+const { data: context, pending: contextPending, error: contextError, refresh: refreshContext } = contextQuery
+// Resolve server-rendered dependencies; client reads remain reactive.
+if (import.meta.server) await contextQuery.ensure()
 
 async function cacheCounterData() {
   if (!counter.ready.value || !counter.online.value || !currentId.value || !currentLocationId.value) return
@@ -296,7 +301,7 @@ async function checkout() {
     if (!inScope()) return
     if (completed.error) throw completed.error
     const completedId = completed.data
-    await Promise.all([refreshCatalog(), refreshContext(), refreshNuxtData('shop-data:sales'), refreshNuxtData('shop-data:inventory-overview'), refreshNuxtData('shop-data:recent-invoices')])
+    await Promise.all([refreshCatalog(), refreshContext(), refreshShopQueries('shop-data:sales'), refreshShopQueries('shop-data:inventory-overview'), refreshShopQueries('shop-data:recent-invoices')])
     if (!inScope()) return
     pushToast({ tone: 'success', title: t('pos.success') }); resetSale(); await navigateTo({ path: `/sales/${completedId}/receipt`, query: { origin: 'pos' } })
   } catch (error) { if (inScope()) errorMessage.value = readableError(shopCommandErrorMessage(error)) }

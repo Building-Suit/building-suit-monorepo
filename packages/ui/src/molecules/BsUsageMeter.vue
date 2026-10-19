@@ -22,3 +22,10 @@ const ratio = computed(() => usagePercentage(props.item.used, props.item.limit))
     <BsLink v-if="item.action" :to="item.action.to">{{ item.action.label }}</BsLink>
   </article>
 </template>
+
+<style scoped>
+.bs-usage-meter { padding: var(--bs-component-dashboard-metric-padding); background: var(--bs-component-dashboard-chart-surface); }
+.bs-usage-meter__value { font-size: var(--bs-type-h1-size); line-height: var(--bs-type-h1-lh); font-weight: var(--bs-weight-semibold); }
+.bs-usage-meter[data-tone='neutral'] .bs-usage-meter__track > span { background: linear-gradient(90deg, var(--bs-primary), var(--bs-accent)); }
+.bs-usage-meter :deep(h3) { font-weight: var(--bs-weight-medium); }
+</style>

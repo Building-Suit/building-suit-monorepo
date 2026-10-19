@@ -26,7 +26,7 @@ type CustomerPage = {
   permissionDenied?: boolean
 }
 
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const { t, locale } = useI18n()
 const { current, currentId, loading: shopLoading } = useShop()
 const { push: pushToast } = useToasts()
@@ -56,7 +56,7 @@ function activeFilter() {
   return statusFilter.value === 'active'
 }
 
-const { data: customerPage, pending, error, refresh } = useAsyncData(
+const { data: customerPage, pending, error, refresh } = useShopQuery(
   'shop-data:customers',
   async (): Promise<CustomerPage> => {
     if (!currentId.value) return { items: [], total: 0, page: 1, pageSize, canManage: false }

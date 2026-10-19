@@ -45,6 +45,7 @@
     "./molecules/BsI18nText": "./src/molecules/BsI18nText.vue",
     "./molecules/BsInline": "./src/molecules/BsInline.vue",
     "./molecules/BsInteractiveCard": "./src/molecules/BsInteractiveCard.vue",
+    "./molecules/BsMetricGrid": "./src/molecules/BsMetricGrid.vue",
     "./molecules/BsKpiCard": "./src/molecules/BsKpiCard.vue",
     "./molecules/BsLegalConsent": "./src/molecules/BsLegalConsent.vue",
     "./molecules/BsList": "./src/molecules/BsList.vue",

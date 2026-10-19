@@ -5,6 +5,7 @@ import {parseBookingOptions,parseBookingSlots,parseBookingManagement,bookingExpi
 import {websitePortalUrl} from '#shared/customerPortal'
 import {publicWebsiteQuery,websitePageUrl,type PublicWebsiteProfile} from '#shared/publicWebsite'
 export function usePublicBooking(){
+ const shopRequest=useShopRequest()
  const route=useRoute(),event=useRequestEvent(),config=useRuntimeConfig(),{setLocale}=useI18n()
  const domain=configuredWebsiteDomain(config.public)
  if(!domain)throw createError({statusCode:404,statusMessage:'Not Found'})
@@ -12,7 +13,7 @@ export function usePublicBooking(){
  const query=publicWebsiteQuery(new URL(route.fullPath,'https://booking.invalid').searchParams)
  if(query.page!==1)throw createError({statusCode:404,statusMessage:'Not Found'})
  const locale=query.locale,ar=locale==='ar',slug=String(import.meta.server?event?.node.req.headers.host:window.location.host).split('.')[0]!.toLowerCase()
- const brand=useState<PublicWebsiteProfile>(`booking-brand:${config.public.appEnvironment}:${domain}:${slug}:${locale}`,()=>event?.context.websitePage?.payload.profile)
+ const brand=useShopState<PublicWebsiteProfile>(`booking-brand:${config.public.appEnvironment}:${domain}:${slug}:${locale}`,()=>event?.context.websitePage?.payload.profile)
  if(!brand.value)throw createError({statusCode:404,statusMessage:'Not Found'})
  const tomorrow=()=>new Date(Date.now()+86400000).toISOString().slice(0,10)
  const form=ref<BsPublicBookingForm>({selection:'',date:tomorrow(),startsAt:'',name:'',phone:'',code:'',verifyPhone:''})
@@ -26,11 +27,11 @@ export function usePublicBooking(){
  async function refresh(){
   clear();if(document.hidden)return;const attempt=generation,controller=new AbortController();read=controller;loading.value=true
   try{
-   const data=parseBookingOptions(await $fetch('/api/website/booking/options',{method:'POST',body:{},cache:'no-store',signal:controller.signal}))
+   const data=parseBookingOptions(await shopRequest('/api/website/booking/options',{method:'POST',body:{},cache:'no-store',signal:controller.signal}))
    if(attempt!==generation||document.hidden)return
    options.value=data;expiresAt.value=data.enabled?data.expiresAt:null
    if(data.enabled&&data.authenticated){
-    const rows=parseBookingManagement(await $fetch('/api/website/booking/manage',{method:'POST',body:{page:managePage.value},cache:'no-store',signal:controller.signal}))
+    const rows=parseBookingManagement(await shopRequest('/api/website/booking/manage',{method:'POST',body:{page:managePage.value},cache:'no-store',signal:controller.signal}))
     if(attempt!==generation||document.hidden)return
     if(!rows||rows.page!==managePage.value){expire();return}
     management.value=rows;expiresAt.value=rows.expiresAt
@@ -47,7 +48,7 @@ export function usePublicBooking(){
   if(busy.value||document.hidden)return
   const c=selected();slots.value=[];form.value={...form.value,startsAt:''};if(!c)return
   const attempt=++generation;read?.abort();const controller=new AbortController();read=controller;loading.value=true;error.value=''
-  try{const data=parseBookingSlots(await $fetch('/api/website/booking/slots',{method:'POST',body:{service:c.service,location:c.location,staff:c.staff,date:form.value.date,reference:mode.value==='reschedule'?reference.value:null},cache:'no-store',signal:controller.signal}));if(attempt===generation&&!document.hidden)slots.value=data}
+  try{const data=parseBookingSlots(await shopRequest('/api/website/booking/slots',{method:'POST',body:{service:c.service,location:c.location,staff:c.staff,date:form.value.date,reference:mode.value==='reschedule'?reference.value:null},cache:'no-store',signal:controller.signal}));if(attempt===generation&&!document.hidden)slots.value=data}
   catch{if(attempt===generation)error.value=failed()}finally{if(attempt===generation)loading.value=false}
  }
  watch([()=>form.value.selection,()=>form.value.date],()=>{slots.value=[];form.value={...form.value,startsAt:''};requestMemo=undefined},{flush:'sync'})
@@ -59,7 +60,7 @@ export function usePublicBooking(){
   const payload:Record<string,unknown>={operation,reference:operation==='cancel'?cancelReference.value:operation==='reschedule'?reference.value:null,...(operation==='cancel'?{}:{service:c!.service,location:c!.location,staff:c!.staff,startsAt:form.value.startsAt}),...(operation==='create'&&scope==='guest'?{name:form.value.name,phone:form.value.phone}:{})}
   const body={...payload,requestKey:requestKey(payload)},attempt=++generation;write=new AbortController();error.value='';success.value='';accessCode.value=''
   await action.run(async()=>{
-   const result=await $fetch('/api/website/booking/command',{method:'POST',body,cache:'no-store',signal:write!.signal}) as {ok?:boolean;accessEnded?:boolean;reference?:unknown;expiresAt?:unknown;code?:unknown}
+   const result=await shopRequest('/api/website/booking/command',{method:'POST',body,cache:'no-store',signal:write!.signal}) as {ok?:boolean;accessEnded?:boolean;reference?:unknown;expiresAt?:unknown;code?:unknown}
    if(attempt!==generation||document.hidden)return
    if(result.accessEnded){expire();return}
    if(result.ok!==true||!bookingUuid(result.reference))throw Error('BOOKING_UNAVAILABLE')
@@ -72,9 +73,9 @@ export function usePublicBooking(){
  }
  async function verify(){
   if(busy.value||document.hidden)return;const payload={code:form.value.code,phone:form.value.verifyPhone};clear();write?.abort();expiresAt.value=null;form.value={...form.value,name:'',phone:'',code:'',verifyPhone:''};requestMemo=undefined;error.value='';const attempt=generation;write=new AbortController()
-  await action.run(async()=>{const r=await $fetch('/api/website/appointment-access/verify',{method:'POST',body:payload,cache:'no-store',signal:write!.signal}) as {ok?:boolean;expiresAt?:unknown};if(attempt!==generation||document.hidden)return;if(r.ok!==true)throw Error('ACCESS_UNAVAILABLE');expiresAt.value=bookingExpiry(r.expiresAt);verification.close();mode.value='manage';await refresh()},()=>attempt===generation?failed():'')
+  await action.run(async()=>{const r=await shopRequest('/api/website/appointment-access/verify',{method:'POST',body:payload,cache:'no-store',signal:write!.signal}) as {ok?:boolean;expiresAt?:unknown};if(attempt!==generation||document.hidden)return;if(r.ok!==true)throw Error('ACCESS_UNAVAILABLE');expiresAt.value=bookingExpiry(r.expiresAt);verification.close();mode.value='manage';await refresh()},()=>attempt===generation?failed():'')
  }
- async function logout(){if(busy.value)return;suspend();const attempt=generation;write=new AbortController();await action.run(async()=>{await $fetch('/api/website/appointment-access/logout',{method:'POST',body:{},cache:'no-store',signal:write!.signal});if(attempt===generation&&!document.hidden)await refresh()},()=>failed())}
+ async function logout(){if(busy.value)return;suspend();const attempt=generation;write=new AbortController();await action.run(async()=>{await shopRequest('/api/website/appointment-access/logout',{method:'POST',body:{},cache:'no-store',signal:write!.signal});if(attempt===generation&&!document.hidden)await refresh()},()=>failed())}
  function reschedule(id:string){if(busy.value)return;const row=management.value?.items.find(a=>a.reference===id&&a.canReschedule);if(!row)return;reference.value=id;mode.value='reschedule';form.value={...form.value,selection:[row.serviceRef,row.locationRef,row.staffRef].join(':'),date:tomorrow(),startsAt:''};slots.value=[];success.value='';requestMemo=undefined}
  function requestCancel(id:string){if(busy.value||!management.value?.items.some(a=>a.reference===id&&a.canCancel))return;cancelReference.value=id;cancellation.show();action.error.value=null;error.value=''}
  async function setMode(value:'create'|'manage'){if(busy.value)return;mode.value=value;reference.value=null;success.value='';accessCode.value='';slots.value=[];requestMemo=undefined;if(value==='manage')await refresh()}
@@ -89,7 +90,7 @@ export function usePublicBooking(){
   if(busy.value||document.hidden||!management.value?.items.some(item=>item.reference===reference&&(item.reminderEligible||item.reminderEnabled)))return
   const attempt=++generation;write=new AbortController();error.value=''
   await action.run(async()=>{
-   const result=await $fetch('/api/website/booking/reminder',{method:'POST',body:{reference,enabled,locale},cache:'no-store',signal:write!.signal}) as {ok?:boolean}
+   const result=await shopRequest('/api/website/booking/reminder',{method:'POST',body:{reference,enabled,locale},cache:'no-store',signal:write!.signal}) as {ok?:boolean}
    if(attempt!==generation||document.hidden)return
    if(!result.ok)throw Error('REMINDER_UNAVAILABLE')
    await refresh()

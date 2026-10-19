@@ -5,13 +5,14 @@ import {useFreshPageOnRestore} from '@building-suit/ux'
 import type {BsShopWebsiteView} from '@building-suit/ui/types/shopWebsitePresentation'
 import {emptyWebsiteInquiry,publicWebsiteQuery,websitePageUrl,type PublicWebsitePayload} from '#shared/publicWebsite'
 export function usePublicWebsite() {
+ const shopRequest=useShopRequest()
  const route=useRoute(),config=useRuntimeConfig(),event=useRequestEvent()
  const domain=configuredWebsiteDomain(config.public)
  if(!domain)throw createError({statusCode:404,statusMessage:'Not Found'})
  const query=publicWebsiteQuery(new URL(route.fullPath,'https://website.invalid').searchParams)
  const authority=import.meta.server?event?.node.req.headers.host:window.location.host
  const slug=String(authority).split('.')[0]!.toLowerCase()
- const page=useState<{payload:PublicWebsitePayload;locale:'ar'|'en';page:number;index:boolean}>(`website:${config.public.appEnvironment}:${domain}:${slug}:${query.locale}:${query.page}`,()=>event?.context.websitePage)
+ const page=useShopState<{payload:PublicWebsitePayload;locale:'ar'|'en';page:number;index:boolean}>(`website:${config.public.appEnvironment}:${domain}:${slug}:${query.locale}:${query.page}`,()=>event?.context.websitePage)
  if(!page.value)throw createError({statusCode:404,statusMessage:'Not Found'})
  const {setLocale}=useI18n()
  const form=ref(emptyWebsiteInquiry()),success=ref('')
@@ -27,7 +28,7 @@ export function usePublicWebsite() {
  })
  async function submit() {
   success.value=''
-  const saved=await action.run(async()=>{await $fetch('/api/website/inquiries',{method:'POST',body:{...form.value,locale:page.value.locale}})},cause=>{
+  const saved=await action.run(async()=>{await shopRequest('/api/website/inquiries',{method:'POST',body:{...form.value,locale:page.value.locale}})},cause=>{
    const status=(cause as {statusCode?:number}).statusCode,ar=page.value.locale==='ar'
    return status===429?(ar?'تم إرسال طلبات كثيرة. حاول لاحقاً.':'Too many inquiries. Please try later.'):(ar?'تعذر إرسال الاستفسار. راجع البيانات وحاول مرة أخرى.':'Could not send your inquiry. Check your details and retry.')
   })

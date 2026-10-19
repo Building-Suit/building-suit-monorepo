@@ -6,6 +6,8 @@ import { saleCopy } from '~/utils/saleCopy'
 import type { TaxQuote } from '~/types/tax'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { SaleReceiptSnapshot } from '~/types/receipt'
+const { refreshShopQueries } = useShopInvalidation()
+
 const { businessCurrency } = useShop()
 
 definePageMeta({
@@ -97,7 +99,7 @@ type SaleCorrectionState = {
 }
 
 const route = useRoute()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const { currentId, currentLocationId } = useShop()
 const { t, locale } = useI18n()
 const confirmation = useConfirmation()
@@ -140,7 +142,7 @@ watch([paymentAmount, paymentDate, paymentMethod, paymentReference, paymentReaso
   if (!paymentPending.value) paymentRequestId.value = null
 })
 
-const { data: sale, pending, error, refresh } = useAsyncData(
+const { data: sale, pending, error, refresh } = useShopQuery(
   () => `shop-data:sale:${currentId.value ?? 'none'}:${saleId.value}`,
   async (): Promise<SaleDetail | null> => {
     if (!currentId.value || !currentLocationId.value || !saleId.value) return null
@@ -152,7 +154,7 @@ const { data: sale, pending, error, refresh } = useAsyncData(
   }, { watch: [currentId, currentLocationId, saleId], default: () => null },
 )
 
-const { data: saleTax, pending: taxPending, error: taxError, refresh: refreshTax } = useAsyncData(
+const { data: saleTax, pending: taxPending, error: taxError, refresh: refreshTax } = useShopQuery(
  () => `shop-data:sale-tax:${currentId.value}:${currentLocationId.value}:${saleId.value}`,
  async () => {
   if (!currentId.value || !currentLocationId.value || !saleId.value) return null
@@ -178,7 +180,7 @@ async function saveOrderDiscount() {
 }
 watch([currentId, currentLocationId, saleId], () => discountAction.complete())
 
-const { data: receiptSnapshot, refresh: refreshReceipt } = useAsyncData(
+const { data: receiptSnapshot, refresh: refreshReceipt } = useShopQuery(
   () => `shop-data:sale-receipt:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${saleId.value}`,
   async (): Promise<SaleReceiptSnapshot | null> => {
     if (!currentId.value || !currentLocationId.value || !saleId.value) return null
@@ -190,7 +192,7 @@ const { data: receiptSnapshot, refresh: refreshReceipt } = useAsyncData(
   }, { watch: [currentId, currentLocationId, saleId], default: () => null },
 )
 
-const { data: correctionState, pending: correctionLoading, error: correctionLoadError, refresh: refreshCorrection } = useAsyncData(
+const { data: correctionState, pending: correctionLoading, error: correctionLoadError, refresh: refreshCorrection } = useShopQuery(
   () => `shop-data:sale-correction:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${saleId.value}`,
   async (): Promise<SaleCorrectionState | null> => {
     if (!currentId.value || !currentLocationId.value || !saleId.value) return null
@@ -251,10 +253,10 @@ async function submitCorrection() {
     correctionOpen.value = false
     await Promise.all([
       refresh(), refreshCorrection(), refreshReceipt(), refreshTax(),
-      refreshNuxtData('shop-data:sales'),
-      refreshNuxtData('shop-data:inventory-overview'),
-      refreshNuxtData('shop-data:customer-statement'),
-      refreshNuxtData('shop-data:cash-shifts'),
+      refreshShopQueries('shop-data:sales'),
+      refreshShopQueries('shop-data:inventory-overview'),
+      refreshShopQueries('shop-data:customer-statement'),
+      refreshShopQueries('shop-data:cash-shifts'),
     ])
     pushToast({ tone: 'success', title: t('saleCorrections.saved') })
   }
@@ -334,7 +336,7 @@ async function submitPayment() {
     if (result.error) throw result.error
     paymentRequestId.value = null
     paymentDialog.value = null
-    await Promise.all([refresh(), refreshReceipt(), refreshTax(), refreshNuxtData('shop-data:sales'), refreshNuxtData('shop-data:customer-statement')])
+    await Promise.all([refresh(), refreshReceipt(), refreshTax(), refreshShopQueries('shop-data:sales'), refreshShopQueries('shop-data:customer-statement')])
     pushToast({ tone: 'success', title: t('payments.saved') })
   }
   catch (paymentError) { actionError.value = readableError(shopCommandErrorMessage(paymentError)) }
@@ -359,9 +361,9 @@ async function issue() {
     issueRequestId.value = null
     await Promise.all([
       refresh(),
-      refreshNuxtData('shop-data:sales'),
-      refreshNuxtData('shop-data:inventory-overview'),
-      refreshNuxtData('shop-data:recent-invoices'), refreshTax(),
+      refreshShopQueries('shop-data:sales'),
+      refreshShopQueries('shop-data:inventory-overview'),
+      refreshShopQueries('shop-data:recent-invoices'), refreshTax(),
     ])
     pushToast({ tone: 'success', title: saleCopy(t, 'sales.issuedSuccess', sale.value?.lines ?? []) })
   }
