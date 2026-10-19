@@ -6,6 +6,8 @@ import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { businessModeSupportsProducts, businessModeSupportsServices } from '~/utils/businessMode'
 import { posCustomerOptions } from '~/utils/posCustomer.js'
 import { addOrIncrementCartLine, cartTotal, nextCartQuantity, cartQuantityLimit } from '~/utils/pos'
+const { refreshShopQueries } = useShopInvalidation()
+
 const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
@@ -18,10 +20,11 @@ type PosContext = { customerQuery?: string; staff: Array<{ id: string; name: str
 type CatalogResult = { items: CatalogItem[]; total: number; page: number; pageSize: number; businessMode: 'product' | 'service' | 'mixed'; ambiguousBarcode: boolean }
 type Category = { id: string; name: string }
 
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const media = useCatalogMedia()
 const counter = useOfflineCounter()
 const offlineView = useOfflineCounterView(counter)
+const posReceipt = usePosReceipt()
 const route = useRoute()
 const { t, locale } = useI18n()
 const { current, currentId, currentLocationId, currentLocation, currentMembership, loading: shopLoading } = useShop()
@@ -40,6 +43,7 @@ const posPage = ref<{ focusCatalog: () => void } | null>(null)
 const lines = ref<CartLine[]>([])
 const staffId = ref('')
 const appointmentId = ref('')
+const consumedAppointmentLink = ref('')
 const customerId = ref('')
 const customerName = ref('')
 const customerPhone = ref<string | null>(null)
@@ -76,7 +80,7 @@ const { data: taxQuote, pending: taxPending, error: taxError } = useSaleTaxQuote
 const total = computed(() => Number(counter.online.value ? taxQuote.value?.total ?? cartTotal(lines.value) : cartTotal(lines.value)))
 const selectedStaff = computed(() => context.value.staff.find(member => member.id === staffId.value))
 
-const { data: categories } = useAsyncData(() => `shop-data:pos-categories:${currentId.value ?? 'none'}`, async () => {
+const { data: categories } = useShopQuery(() => `shop-data:pos-categories:${currentId.value ?? 'none'}`, async () => {
   if (!currentId.value) return []
   if (import.meta.client && !counter.online.value) return await counter.cached<Category[]>('categories') ?? []
   const { data, error } = await rpc.rpc('list_catalog_categories', { p_shop_id: currentId.value })
@@ -84,7 +88,7 @@ const { data: categories } = useAsyncData(() => `shop-data:pos-categories:${curr
   return data as Category[]
 }, { watch: [currentId], default: () => [] })
 
-const { data: catalog, pending: catalogPending, error: catalogError, refresh: refreshCatalog } = useAsyncData(
+const { data: catalog, pending: catalogPending, error: catalogError, refresh: refreshCatalog } = useShopQuery(
   () => `shop-data:pos-catalog:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${debouncedSearch.value}:${itemType.value}:${categoryFilter.value}:${catalogPage.value}`, async (): Promise<CatalogResult> => {
     if (!currentId.value || !currentLocationId.value) return { items: [], total: 0, page: 1, pageSize: 30, businessMode: 'mixed', ambiguousBarcode: false }
     if (import.meta.client && !counter.online.value) {
@@ -99,11 +103,11 @@ const { data: catalog, pending: catalogPending, error: catalogError, refresh: re
     const { data, error } = await media.request('pos', args, () => rpc.rpc('pos_catalog_search_by_category', args))
     if (error) throw error
     return data as CatalogResult
-  }, { watch: [currentId, currentLocationId, debouncedSearch, itemType, categoryFilter, catalogPage], default: () => ({ items: [], total: 0, page: 1, pageSize: 30, businessMode: 'mixed', ambiguousBarcode: false }) },
+  }, { watch: [currentId, currentLocationId, debouncedSearch, itemType, categoryFilter, catalogPage], default: (): CatalogResult => ({ items: [], total: 0, page: 1, pageSize: 30, businessMode: 'mixed', ambiguousBarcode: false }) },
 )
 
 // Resolve the initial context before deriving appointment state in SSR and hydration.
-const { data: context, pending: contextPending, error: contextError, refresh: refreshContext } = await useAsyncData(
+const contextQuery = useShopQuery(
   () => `shop-data:pos-context:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${debouncedCustomerSearch.value}`, async (): Promise<PosContext> => {
     if (!currentId.value || !currentLocationId.value) return { staff: [], appointments: [], customers: [] }
     if (import.meta.client && !counter.online.value) {
@@ -117,6 +121,9 @@ const { data: context, pending: contextPending, error: contextError, refresh: re
     return { ...(data as PosContext), customerQuery: query }
   }, { watch: [currentId, currentLocationId, debouncedCustomerSearch], default: (): PosContext => ({ staff: [], appointments: [], customers: [] }) },
 )
+const { data: context, pending: contextPending, error: contextError, refresh: refreshContext } = contextQuery
+// Resolve server-rendered dependencies; client reads remain reactive.
+if (import.meta.server) await contextQuery.ensure()
 
 async function cacheCounterData() {
   if (!counter.ready.value || !counter.online.value || !currentId.value || !currentLocationId.value) return
@@ -181,7 +188,7 @@ function addItem(item: CatalogItem) {
   if (nextQuantity === null) { errorMessage.value = readableError('INSUFFICIENT_STOCK'); return }
   lockLocation(); lines.value = addOrIncrementCartLine(lines.value, item) as CartLine[]
   const added = lines.value.find(line => line.itemType === item.itemType && line.sourceId === item.id)
-  if (added) added.quantity = nextQuantity
+  if (added) { added.quantity = nextQuantity; added.imageUrl = item.imageUrl }
   errorMessage.value = ''; invalidateRequests(); scanMessage.value = t('pos.scanAdded', { name: item.name })
 }
 function setQuantity(line: CartLine, value: number) {
@@ -209,12 +216,12 @@ async function requestReset() {
   if (lines.value.length && !await confirmation.ask(t('pos.resetConfirm'))) return
   resetSale()
 }
-function resetSale() {
+function resetSale(focus = true) {
   lines.value = []; staffId.value = context.value.staff.some(member => member.id === currentMembership.value?.id) ? currentMembership.value!.id : ''
   resetCustomerSearch(); customerPhone.value = null
-  appointmentId.value = ''; customerId.value = ''; customerName.value = ''; paymentReference.value = ''; notes.value = ''
+  paymentMethod.value = 'cash'; appointmentId.value = ''; customerId.value = ''; customerName.value = ''; paymentReference.value = ''; notes.value = ''
   transactionLocationId.value = null; transactionLocationName.value = ''; invoiceId.value = null; errorMessage.value = ''; scanMessage.value = ''; invalidateRequests()
-  nextTick(() => posPage.value?.focusCatalog())
+  if (focus) nextTick(() => posPage.value?.focusCatalog())
 }
 function readableError(message?: string) {
   if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
@@ -247,11 +254,6 @@ async function checkout() {
     errorMessage.value = locationChanged.value ? t('pos.locationChanged') : t('pos.invalid'); return
   }
   const inScope = captureScope()
-  confirmingCheckout.value = true
-  let confirmed = false
-  try { confirmed = await confirmation.ask(saleCopy(t, 'pos.confirm', lines.value)) }
-  finally { if (inScope()) confirmingCheckout.value = false }
-  if (!confirmed || !inScope()) return
   checkingOut.value = true; errorMessage.value = ''
   if (!saveRequestId.value) { saveRequestId.value = crypto.randomUUID(); saveInvoiceInput.value = invoiceId.value }
   checkoutRequestId.value ??= crypto.randomUUID(); issueRequestId.value ??= crypto.randomUUID(); paymentRequestId.value ??= crypto.randomUUID()
@@ -281,8 +283,8 @@ async function checkout() {
         if (!inScope()) return
         const result = counter.records.value.find(record => record.envelope.localId === queued.envelope.localId)
         if (result?.state === 'synced' && result.result) {
-          pushToast({ tone: 'success', title: t('pos.success') }); resetSale()
-          await navigateTo({ path: `/sales/${result.result}/receipt`, query: { origin: 'pos' } }); return
+          pushToast({ tone: 'success', title: t('pos.success') }); resetSale(false)
+          await posReceipt.completed(result.result); return
         }
       }
       resetSale(); scanMessage.value = `${offlineView.value.records.find(record => record.id === queued.envelope.localId)?.status} · ${queued.envelope.localId}`
@@ -296,9 +298,9 @@ async function checkout() {
     if (!inScope()) return
     if (completed.error) throw completed.error
     const completedId = completed.data
-    await Promise.all([refreshCatalog(), refreshContext(), refreshNuxtData('shop-data:sales'), refreshNuxtData('shop-data:inventory-overview'), refreshNuxtData('shop-data:recent-invoices')])
+    await Promise.all([refreshCatalog(), refreshContext(), refreshShopQueries('shop-data:sales'), refreshShopQueries('shop-data:inventory-overview'), refreshShopQueries('shop-data:recent-invoices')])
     if (!inScope()) return
-    pushToast({ tone: 'success', title: t('pos.success') }); resetSale(); await navigateTo({ path: `/sales/${completedId}/receipt`, query: { origin: 'pos' } })
+    pushToast({ tone: 'success', title: t('pos.success') }); resetSale(false); await posReceipt.completed(completedId!)
   } catch (error) { if (inScope()) errorMessage.value = readableError(shopCommandErrorMessage(error)) }
   finally { if (inScope()) checkingOut.value = false }
 }
@@ -306,25 +308,26 @@ async function checkout() {
 function money(value: number) { return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20 }).format(value) }
 function appointmentLabel(appointment: Appointment) { return `${new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { weekday: 'short', hour: 'numeric', minute: '2-digit' }).format(new Date(appointment.startsAt))} · ${appointment.customerName} · ${appointment.service.name}` }
 
-watch(context, value => {
+watch([context, () => route.query.appointment], ([value]) => {
   if (!staffId.value && value.staff.some(member => member.id === currentMembership.value?.id)) staffId.value = currentMembership.value!.id
   const requested = typeof route.query.appointment === 'string' ? route.query.appointment : ''
-  if (requested && value.appointments.some(item => item.id === requested) && !appointmentId.value) chooseAppointment(requested)
+  if (requested && requested !== consumedAppointmentLink.value && value.appointments.some(item => item.id === requested) && !appointmentId.value) { consumedAppointmentLink.value = requested; chooseAppointment(requested) }
 }, { immediate: true })
 
 useShopRealtime('pos', () => lines.value.length > 0 || checkingOut.value || confirmingCheckout.value)
 
 const posPaymentForm = computed<BsPointOfSalePaymentForm>({ get: () => ({ method: paymentMethod.value, reference: paymentReference.value, notes: notes.value }), set: value => { if (['cash','bank_transfer','card','wallet','cheque','other'].includes(value.method)) paymentMethod.value = value.method as PaymentMethod; paymentReference.value = value.reference; notes.value = value.notes } })
 const posItemType = computed<string>({ get: () => itemType.value, set: value => { if (value === 'all' || value === 'product' || value === 'service') itemType.value = value } })
-const posCatalogItems = computed<BsPointOfSaleCatalogItem[]>(() => catalog.value.items.map(item => ({ id: item.id, key: `${item.itemType}:${item.id}`, name: item.name, disabled: item.itemType === 'product' && item.stock != null && item.stock <= 0, imageUrl: item.imageUrl, description: item.sku || t(item.itemType === 'service' ? 'sales.service' : 'sales.product'), price: money(Math.max(0, item.unitPrice - item.discount)), stock: item.stock != null ? t('pos.stock', { count: item.stock }) : '' })))
-const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map(line => ({ id: line.key, name: line.name, quantity: line.quantity, maximumQuantity: cartQuantityLimit(line), total: money((line.unitPrice - line.discount) * line.quantity) })))
-const posView = computed<BsPointOfSaleView>(() => ({ cartCount: locale.value === 'ar' ? `${lines.value.length} أصناف` : `${lines.value.length} ${lines.value.length === 1 ? 'item' : 'items'}`, available: !!current.value, loadingContext: shopLoading.value, location: transactionLocationName.value || currentLocation.value?.name || '—', staff: selectedStaff.value?.name || t('pos.selectStaff'), locationChanged: locationChanged.value, error: errorMessage.value || (taxError.value ? (locale.value === 'ar' ? 'تعذر تأكيد حساب الضريبة. اتصل بالإنترنت وحاول تاني.' : 'Unable to confirm tax calculation. Reconnect and retry.') : ''), scanMessage: scanMessage.value, checkingOut: checkingOut.value, confirming: confirmingCheckout.value, shortcutBlocked: checkingOut.value || confirmingCheckout.value || !!confirmation.current.value, catalogLoading: catalogPending.value, catalogError: catalogError.value ? t(catalogError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', catalogTotal: catalog.value.total, catalogPageSize: catalog.value.pageSize, contextLoading: contextPending.value, contextError: contextError.value ? t(contextError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', appointmentLocked: !!appointmentId.value, customerDisabled: !counter.online.value || !!appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value, customerBusy: customerBusy.value, customerDisplay: customerId.value ? [customerName.value, customerPhone.value].filter(Boolean).join(' · ') : (appointmentId.value ? customerName.value || t('pos.noCustomer') : t('pos.noCustomer')), customerEmpty: customerBusy.value ? t('pos.loading') : t('pos.customerSearch'), customerEmptyFilter: customerBusy.value ? t('pos.loading') : (customerSearch.value.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')), hasCustomer: !!customerId.value, checkoutDisabled: taxPending.value || Boolean(taxError.value) || counter.shiftClosing.value || checkingOut.value || confirmingCheckout.value || contextPending.value || !!contextError.value || locationChanged.value || !lines.value.length || !staffId.value, total: money(total.value), reviewLabel: t('pos.reviewSale', { count: lines.value.length }), payLabel: t('pos.pay', { amount: money(total.value) }) }))
+const posCatalogItems = computed<BsPointOfSaleCatalogItem[]>(() => catalog.value.items.map(item => ({ id: item.id, key: `${item.itemType}:${item.id}`, name: item.name, quantity: lines.value.find(line => line.key === `${item.itemType}:${item.id}`)?.quantity ?? 0, maximumQuantity: cartQuantityLimit(item), disabled: item.itemType === 'product' && item.stock != null && item.stock <= 0, imageUrl: item.imageUrl, description: item.sku || t(item.itemType === 'service' ? 'sales.service' : 'sales.product'), price: money(Math.max(0, item.unitPrice - item.discount)), stock: item.stock != null ? t('pos.stock', { count: item.stock }) : '' })))
+const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map(line => ({ id: line.key, imageUrl: line.imageUrl, name: line.name, quantity: line.quantity, maximumQuantity: cartQuantityLimit(line), total: money((line.unitPrice - line.discount) * line.quantity) })))
+const posView = computed<BsPointOfSaleView>(() => ({ cartCount: locale.value === 'ar' ? `${lines.value.length} أصناف` : `${lines.value.length} ${lines.value.length === 1 ? 'item' : 'items'}`, available: !!current.value, loadingContext: shopLoading.value, location: transactionLocationName.value || currentLocation.value?.name || '—', staff: selectedStaff.value?.name || t('pos.selectStaff'), locationChanged: locationChanged.value, error: errorMessage.value || (taxError.value ? (locale.value === 'ar' ? 'تعذر تأكيد حساب الضريبة. اتصل بالإنترنت وحاول تاني.' : 'Unable to confirm tax calculation. Reconnect and retry.') : ''), scanMessage: scanMessage.value, checkingOut: checkingOut.value, confirming: confirmingCheckout.value, shortcutBlocked: posReceipt.visible.value || checkingOut.value || confirmingCheckout.value || !!confirmation.current.value, catalogLoading: catalogPending.value, catalogError: catalogError.value ? t(catalogError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', catalogTotal: catalog.value.total, catalogPageSize: catalog.value.pageSize, contextLoading: contextPending.value, contextError: contextError.value ? t(contextError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', appointmentLocked: !!appointmentId.value, customerDisabled: !counter.online.value || !!appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value, customerBusy: customerBusy.value, customerDisplay: customerId.value ? [customerName.value, customerPhone.value].filter(Boolean).join(' · ') : (appointmentId.value ? customerName.value || t('pos.noCustomer') : t('pos.noCustomer')), customerEmpty: customerBusy.value ? t('pos.loading') : t('pos.customerSearch'), customerEmptyFilter: customerBusy.value ? t('pos.loading') : (customerSearch.value.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')), hasCustomer: !!customerId.value, checkoutDisabled: taxPending.value || Boolean(taxError.value) || counter.shiftClosing.value || checkingOut.value || confirmingCheckout.value || contextPending.value || !!contextError.value || locationChanged.value || !lines.value.length || !staffId.value, total: money(total.value), reviewLabel: t('pos.reviewSale', { count: lines.value.length }), payLabel: t('pos.pay', { amount: money(total.value) }) }))
 function addPosItem(key: string) { const item = catalog.value.items.find(item => `${item.itemType}:${item.id}` === key); if (item) addItem(item) }
 function removePosLine(id: string) { const index = lines.value.findIndex(line => line.key === id); if (index >= 0) removeLine(index) }
 function setPosQuantity(id: string, value: number) { const line = lines.value.find(line => line.key === id); if (line) setQuantity(line, value) }
 function setPosStaff(id: string) { staffId.value = id; lockLocation(); invalidateRequests() }
 function dismissPosFeedback() { errorMessage.value = ''; scanMessage.value = '' }
 const posCopy = computed<BsPointOfSaleCopy>(() => ({
+  reviewStep: locale.value === 'ar' ? 'مراجعة الأصناف' : 'Review items', paymentStep: locale.value === 'ar' ? 'الدفع' : 'Payment', continueToPayment: locale.value === 'ar' ? 'متابعة للدفع' : 'Continue to payment', backToCart: locale.value === 'ar' ? 'العودة للأصناف' : 'Back to items', optionalDetails: locale.value === 'ar' ? 'تفاصيل اختيارية' : 'Optional details', add: locale.value === 'ar' ? 'إضافة' : 'Add',
   decrease: locale.value === 'ar' ? 'تقليل الكمية' : 'Decrease quantity', increase: locale.value === 'ar' ? 'زيادة الكمية' : 'Increase quantity',
   imagePlaceholder: locale.value === 'ar' ? 'بدون صورة' : 'No image',
   appointment: t('pos.appointment'),
@@ -367,9 +370,9 @@ const posTypeOptions = computed(() => availableItemTypes.value.map(value => ({ v
 const posCategoryOptions = computed(() => [{ value: '', label: locale.value === 'ar' ? 'كل التصنيفات' : 'All categories' }, ...(counter.online.value ? categories.value : []).map(category => ({ value: category.id, label: category.name }))])
 const posAppointmentOptions = computed(() => [{ value: '', label: t('pos.walkIn') }, ...context.value.appointments.map(appointment => ({ value: appointment.id, label: appointmentLabel(appointment) }))])
 const posStaffOptions = computed(() => context.value.staff.map(staff => ({ value: staff.id, label: staff.name })))
-const posPaymentOptions = computed(() => ['cash','card','bank_transfer','wallet','cheque','other'].map(value => ({ value, label: t(`payments.methods.${value}`) })))
+const posPaymentOptions = computed(() => ['cash','card','bank_transfer','wallet','cheque','other'].map(value => ({ value, label: t(`payments.methods.${value}`), icon: ({ cash: 'cash', card: 'card', bank_transfer: 'bank', wallet: 'wallet', cheque: 'invoice', other: 'transactions' } as Record<string, string>)[value] })))
 </script>
 
 <template>
-  <BsPointOfSalePage ref="posPage" v-model:catalog-search="catalogSearch" v-model:category-filter="categoryFilter" v-model:item-type="posItemType" v-model:catalog-page="catalogPage" v-model:payment-form="posPaymentForm" :offline="offlineView" variant="shop" :copy="posCopy" :view="posView" :catalog-items="posCatalogItems" :cart-lines="posCartLines" :customer-options="customerOptions" :staff-id="staffId" :appointment-id="appointmentId" :customer-id="customerId" :item-type-options="posTypeOptions" :category-options="posCategoryOptions" :appointment-options="posAppointmentOptions" :staff-options="posStaffOptions" :payment-options="posPaymentOptions" @retry-offline="counter.retry($event)" @reconcile-offline="counter.reconcile($event)" @reset="requestReset" @checkout="checkout" @retry-catalog="refreshCatalog" @retry-context="refreshContext" @add="addPosItem" @remove="removePosLine" @quantity="setPosQuantity" @appointment="chooseAppointment" @staff="setPosStaff" @customer-search="customerSearch = $event" @reset-customer-search="resetCustomerSearch" @customer="setCustomer" @clear-customer="clearCustomer" @dismiss-feedback="dismissPosFeedback" @barcode="scanBarcode" />
+  <BsPointOfSalePage ref="posPage" v-model:receipt-visible="posReceipt.visible.value" :receipt-preview="posReceipt.view.value" @open-receipt="posReceipt.open" @select-receipt="posReceipt.select" @receipt-language="posReceipt.setLanguage" @receipt-paper="posReceipt.setPaper" @retry-receipt="posReceipt.refresh" @share-receipt="posReceipt.share" @download-receipt="posReceipt.download" @printed-receipt="posReceipt.printed" v-model:catalog-search="catalogSearch" v-model:category-filter="categoryFilter" v-model:item-type="posItemType" v-model:catalog-page="catalogPage" v-model:payment-form="posPaymentForm" :offline="offlineView" variant="shop" :copy="posCopy" :view="posView" :catalog-items="posCatalogItems" :cart-lines="posCartLines" :customer-options="customerOptions" :staff-id="staffId" :appointment-id="appointmentId" :customer-id="customerId" :item-type-options="posTypeOptions" :category-options="posCategoryOptions" :appointment-options="posAppointmentOptions" :staff-options="posStaffOptions" :payment-options="posPaymentOptions" @retry-offline="counter.retry($event)" @reconcile-offline="counter.reconcile($event)" @reset="requestReset" @checkout="checkout" @retry-catalog="refreshCatalog" @retry-context="refreshContext" @add="addPosItem" @remove="removePosLine" @quantity="setPosQuantity" @appointment="chooseAppointment" @staff="setPosStaff" @customer-search="customerSearch = $event" @reset-customer-search="resetCustomerSearch" @customer="setCustomer" @clear-customer="clearCustomer" @dismiss-feedback="dismissPosFeedback" @barcode="scanBarcode" />
 </template>

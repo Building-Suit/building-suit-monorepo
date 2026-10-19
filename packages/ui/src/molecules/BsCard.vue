@@ -4,7 +4,7 @@ const props = withDefaults(defineProps<{
   title?: string
   subtitle?: string
   headingLevel?: 2 | 3 | 4 | 5 | 6
-  variant?: 'default' | 'flat'
+  variant?: 'default' | 'flat' | 'chart'
   padding?: 'none' | 'sm' | 'md' | 'lg'
   span?: 1 | 2 | 3 | 4 | 5
 }>(), {
@@ -27,6 +27,7 @@ const heading = computed(() => `h${props.headingLevel}` as const)
     :data-bs-span="span"
     :class="[
       variant === 'flat' ? 'ls-card-flat' : 'ls-card',
+      { 'bs-card--chart': variant === 'chart' },
       { 'p-3': padding === 'sm', 'p-5': padding === 'md', 'p-6': padding === 'lg' },
     ]"
   >
@@ -43,3 +44,8 @@ const heading = computed(() => `h${props.headingLevel}` as const)
     <footer v-if="slots.footer" class="mt-4 border-t border-line pt-4"><slot name="footer" /></footer>
   </component>
 </template>
+
+<style scoped>
+.bs-card--chart { min-inline-size: 0; background: var(--bs-component-dashboard-chart-surface); }
+.bs-card--chart :deep(h2) { font-weight: var(--bs-weight-semibold); }
+</style>

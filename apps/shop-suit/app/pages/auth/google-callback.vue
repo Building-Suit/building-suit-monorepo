@@ -5,7 +5,7 @@ import { verifiedGoogleIdentity } from '~/utils/googleIdentity'
 definePageMeta({ layout: false })
 
 const route = useRoute()
-const supabase = useSupabaseClient()
+const supabase = useShopClient()
 const { loadShops, currentId, loadError } = useShop()
 const { locale } = useI18n()
 const failed = ref(false)

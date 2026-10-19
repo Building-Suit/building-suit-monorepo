@@ -13,9 +13,9 @@ const emit = defineEmits<{ refresh: []; openClient: [id: string] }>()
       :context="context"
       :context-label="contextLabel"
     />
-    <BsGrid :aria-label="copy.summary" :columns="4" gap="md" as="section">
+    <BsMetricGrid :aria-label="copy.summary" :columns="4" as="section">
       <BsKpiCard v-for="metric in metrics" :key="metric.id" :title="metric.label"><BsText as="span" numeric>{{ metric.value }}</BsText></BsKpiCard>
-    </BsGrid>
+    </BsMetricGrid>
     <BsCard :aria-label="copy.filters" as="section" padding="md">
       <BsStack gap="md">
         <BsGrid :columns="1" gap="md">

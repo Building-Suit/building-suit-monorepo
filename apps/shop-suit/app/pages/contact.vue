@@ -5,7 +5,7 @@ import { publicBusiness } from '~/utils/legal'
 definePageMeta({ layout: 'landing' })
 
 const { t, locale } = useI18n()
-const supabase = useSupabaseClient<SupportRpcDatabase>().schema('public')
+const supabase = useShopClient<SupportRpcDatabase>().schema('public')
 const user = useSupabaseUser()
 const form = reactive({ category: 'general', subject: '', message: '', email: '', consent: false, honeypot: '' })
 const pending = ref(false)

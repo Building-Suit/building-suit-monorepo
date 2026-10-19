@@ -1,24 +1,29 @@
 <script setup lang="ts">
 import { useMenuNavigation } from '@building-suit/ux'
 import type { NavigationLink } from '@building-suit/contracts'
+import type { BsShellAccountDetail } from '../types/workspaceShellPresentation'
 
 withDefaults(defineProps<{
+  showSettings?: boolean
   compact?: boolean
   placement?: 'below' | 'above'
   name?: string
   email?: string
   avatarUrl?: string
+  details?: BsShellAccountDetail[]
   actions?: NavigationLink[]
   accountLabel: string
   signOutLabel: string
   signOutPending?: boolean
   error?: string
 }>(), {
+  showSettings: true,
   compact: true,
   placement: 'below',
   name: '',
   email: '',
   avatarUrl: '',
+  details: () => [],
   actions: () => [],
   signOutPending: false,
   error: '',
@@ -55,6 +60,14 @@ const { open, root, panel, close, toggle, onKeydown } = useMenuNavigation(() => 
       <BsUserIdentity v-if="name || email" :name="name" :email="email" :avatar-url="avatarUrl" class="px-2 py-1" />
       <hr v-if="name || email" class="border-[var(--bs-border)]">
 
+      <dl v-if="details.length" class="bs-user-menu__details">
+        <div v-for="detail in details" :key="detail.label">
+          <dt>{{ detail.label }}</dt>
+          <dd v-for="(value, index) in detail.values" :key="index">{{ value }}</dd>
+        </div>
+      </dl>
+      <hr v-if="details.length" class="border-[var(--bs-border)]">
+
       <NuxtLink
         v-for="action in actions"
         :key="action.to"
@@ -68,8 +81,8 @@ const { open, root, panel, close, toggle, onKeydown } = useMenuNavigation(() => 
       </NuxtLink>
 
       <hr v-if="actions.length" class="border-[var(--bs-border)]">
-      <BsSettingsMenu embedded />
-      <hr class="border-[var(--bs-border)]">
+      <BsSettingsMenu v-if="showSettings" embedded />
+      <hr v-if="showSettings" class="border-[var(--bs-border)]">
       <p v-if="error" class="ls-error px-2 text-sm" role="alert">{{ error }}</p>
       <BsButton
         variant="danger"
@@ -83,3 +96,10 @@ const { open, root, panel, close, toggle, onKeydown } = useMenuNavigation(() => 
     </div>
   </div>
 </template>
+
+<style scoped>
+.bs-user-menu__details { display: grid; gap: 12px; padding: 4px 8px; }
+.bs-user-menu__details dt { margin-block-end: 4px; color: var(--bs-text-muted); font-size: .75rem; }
+.bs-user-menu__details dd { margin: 0; overflow-wrap: anywhere; font-size: .875rem; }
+.bs-user-menu__details dd + dd { margin-block-start: 4px; }
+</style>

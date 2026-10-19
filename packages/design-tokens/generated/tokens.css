@@ -131,6 +131,7 @@
   --bs-shadow-elevation1-dark: 0 1px 2px rgba(0, 0, 0, 0.28);
   --bs-shadow-elevation2-dark: 0 10px 28px rgba(0, 0, 0, 0.36);
   --bs-shadow-elevation3-dark: 0 24px 64px rgba(0, 0, 0, 0.52);
+  --bs-component-app-shell-content-maximum-width: 1680px;
   --bs-component-receipt-font-family: 'Roboto Variable', 'IBM Plex Sans Arabic', sans-serif;
   --bs-component-receipt-table-font-family: 'Roboto Condensed Variable', 'IBM Plex Sans Arabic', sans-serif;
   --bs-component-receipt-heading-font-family: 'Roboto Variable', 'IBM Plex Sans Arabic', sans-serif;
@@ -146,9 +147,12 @@
   --bs-component-point-of-sale-catalog-tile-minimum-height: 200px;
   --bs-component-dashboard-chart-bar-width: 44px;
   --bs-component-dashboard-chart-plot-maximum-width: 680px;
+  --bs-component-dashboard-chart-surface: linear-gradient(160deg, color-mix(in oklab, var(--bs-primary) 3%, var(--bs-surface)), var(--bs-surface) 65%);
   --bs-component-dashboard-metric-minimum-height: 144px;
   --bs-component-dashboard-metric-value-gap: 10px;
   --bs-component-dashboard-metric-padding: 20px;
+  --bs-component-dashboard-metric-primary-background: var(--bs-color-gradient-navy);
+  --bs-component-dashboard-metric-accent-background: linear-gradient(135deg, color-mix(in oklab, var(--bs-color-brand-premium-gold) 18%, var(--bs-surface)), var(--bs-surface));
   --bs-component-button-primary-radius: var(--bs-radius-button);
   --bs-component-button-primary-padding-x: var(--bs-spacing-5);
   --bs-component-button-primary-padding-y: var(--bs-spacing-3);

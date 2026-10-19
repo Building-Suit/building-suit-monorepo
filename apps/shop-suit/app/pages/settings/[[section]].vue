@@ -1,16 +1,26 @@
 <script setup lang="ts">
 import { readRasterImage } from '@building-suit/ux'
-import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy, BsBusinessCurrencyView } from '@building-suit/ui/types/businessSettingsPresentation'
+import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy, BsBusinessCurrencyView, BsBusinessSettingsSection } from '@building-suit/ui/types/businessSettingsPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { PlanUsageResource } from '~/types/plans'
 import type { ReceiptPaperSize } from '~/types/receipt'
 import type { BusinessMode } from '~/utils/businessMode'
 import type { ShopLocation } from '~/composables/useShop'
 import { BUSINESS_MODES } from '~/utils/businessMode'
+import { SHOP_SETTINGS_SECTIONS } from '~/utils/shopNavigation'
 
-definePageMeta({ layout: 'default', middleware: ['auth'] })
+definePageMeta({
+  layout: 'default', middleware: ['auth'], key: route => route.path,
+  validate: route => !route.params.section || SHOP_SETTINGS_SECTIONS.some(section => section === route.params.section),
+})
+const route = useRoute()
+const section = computed<BsBusinessSettingsSection>(() => SHOP_SETTINGS_SECTIONS.find(section => section === route.params.section) ?? 'shop-profile')
+if (!route.params.section) {
+  const legacySection = SHOP_SETTINGS_SECTIONS.find(section => `#${section}` === route.hash) ?? 'shop-profile'
+  await navigateTo({ path: `/settings/${legacySection}`, query: route.query }, { replace: true })
+}
 
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const confirmation = useConfirmation()
 const { locale } = useI18n()
 const { current, currentId, locations, loading, loadError: shopError, reload, loadLocations, refreshBusinessCurrency } = useShop()
@@ -35,14 +45,14 @@ const currencySelection = ref<string | null>(null)
 const currencyPending = ref(false)
 const currencyError = ref('')
 const currencySuccess = ref('')
-const { data: currencySettings, pending: currencyLoading, error: currencyLoadError, refresh: refreshCurrencySettings } = useAsyncData(
+const { data: currencySettings, pending: currencyLoading, error: currencyLoadError, refresh: refreshCurrencySettings } = useShopQuery(
   () => `shop-data:business-currency:${currentId.value ?? 'none'}`,
   async (): Promise<BusinessCurrencySettings | null> => {
     if (!currentId.value) return null
     const { data, error } = await shopRpc.rpc('business_currency_settings', { p_shop_id: currentId.value })
     if (error) throw error
     return data as BusinessCurrencySettings
-  }, { watch: [currentId], default: () => null },
+  }, { scope: 'shop', enabled: () => Boolean(currentId.value) && section.value === 'currency-settings', watch: [currentId], default: () => null },
 )
 const selectedBusinessCurrency = computed<string>({
   get: () => currencySettings.value?.locked ? currencySettings.value.currency : currencySelection.value ?? currencySettings.value?.currency ?? current.value?.business_currency ?? 'EGP',
@@ -82,22 +92,22 @@ const logoPending = ref(false)
 const receiptError = ref('')
 const receiptSuccess = ref('')
 const isArabic = computed(() => locale.value === 'ar')
-const { data: permissionAccess, pending: permissionPending, error: permissionError, refresh: refreshPermissions } = useAsyncData('shop-data:settings-permissions', async () => {
+const { data: permissionAccess, pending: permissionPending, error: permissionError, refresh: refreshPermissions } = useShopQuery('shop-data:settings-permissions', async () => {
   if (!currentId.value) return { 'settings.manage': false }
   const { data, error } = await shopRpc.rpc('shop_permission_access', {
     p_shop_id: currentId.value, p_permission_keys: ['settings.manage'],
   })
   if (error) throw error
   return data
-}, { watch: [currentId], default: () => ({ 'settings.manage': false }) })
+}, { scope: 'shop', enabled: () => Boolean(currentId.value), watch: [currentId], default: () => ({ 'settings.manage': false }) })
 const canManage = computed(() => !permissionPending.value && !permissionError.value && permissionAccess.value?.['settings.manage'] === true)
-const {form:bookingPolicyForm,open:bookingPolicyOpen,view:bookingPolicyView,edit:editBookingPolicy,save:saveBookingPolicy,refresh:refreshBookingPolicy}=useBookingPolicy(canManage)
-const { form: websiteProfileForm, optIn: websiteOwnerOptIn, open: websiteProfileOpen, view: websiteProfileView, edit: editWebsiteProfile, save: saveWebsiteProfile, logo: selectWebsiteLogo, publish: publishWebsiteProfile, unpublish: unpublishWebsiteProfile, refresh: refreshWebsiteProfile } = useWebsiteProfile(canManage)
-const { view: websiteInquiryView, filter: websiteInquiryFilter, status: websiteInquiryStatus, open: websiteInquiryOpen, edit: editWebsiteInquiry, save: saveWebsiteInquiry, refresh: refreshWebsiteInquiries, setPage: setWebsiteInquiryPage } = useWebsiteInquiries(canManage)
-const { form: websiteCatalogForm, open: websiteCatalogOpen, search: websiteCatalogSearch, view: websiteCatalogView, edit: editWebsiteCatalog, save: saveWebsiteCatalog, publish: publishWebsiteCatalog, image: selectWebsiteCatalogImage, refresh: refreshWebsiteCatalog, setPage: setWebsiteCatalogPage } = useWebsiteCatalog(canManage, refreshWebsiteProfile)
-const { slug: websiteSlug, open: websiteOpen, view: websiteAddressView, edit: editWebsiteAddress, save: saveWebsiteAddress, refresh: refreshWebsiteAddress } = useWebsiteAddress(canManage)
+const {form:bookingPolicyForm,open:bookingPolicyOpen,view:bookingPolicyView,edit:editBookingPolicy,save:saveBookingPolicy,refresh:refreshBookingPolicy}=useBookingPolicy(computed(() => canManage.value && section.value === 'public-booking-settings'))
+const { form: websiteProfileForm, optIn: websiteOwnerOptIn, open: websiteProfileOpen, view: websiteProfileView, edit: editWebsiteProfile, save: saveWebsiteProfile, logo: selectWebsiteLogo, publish: publishWebsiteProfile, unpublish: unpublishWebsiteProfile, refresh: refreshWebsiteProfile } = useWebsiteProfile(computed(() => canManage.value && section.value === 'website-profile'))
+const { view: websiteInquiryView, filter: websiteInquiryFilter, status: websiteInquiryStatus, open: websiteInquiryOpen, edit: editWebsiteInquiry, save: saveWebsiteInquiry, refresh: refreshWebsiteInquiries, setPage: setWebsiteInquiryPage } = useWebsiteInquiries(computed(() => canManage.value && section.value === 'website-inquiries'))
+const { form: websiteCatalogForm, open: websiteCatalogOpen, search: websiteCatalogSearch, view: websiteCatalogView, edit: editWebsiteCatalog, save: saveWebsiteCatalog, publish: publishWebsiteCatalog, image: selectWebsiteCatalogImage, refresh: refreshWebsiteCatalog, setPage: setWebsiteCatalogPage } = useWebsiteCatalog(computed(() => canManage.value && section.value === 'website-catalog'), refreshWebsiteProfile)
+const { slug: websiteSlug, open: websiteOpen, view: websiteAddressView, edit: editWebsiteAddress, save: saveWebsiteAddress, refresh: refreshWebsiteAddress } = useWebsiteAddress(computed(() => canManage.value && section.value === 'website-address'))
 async function retrySettings() { await Promise.all([reload(), refreshPermissions()]) }
-const { data: locationUsage, refresh: refreshLocationUsage } = useAsyncData(
+const { data: locationUsage, refresh: refreshLocationUsage } = useShopQuery(
   () => `shop-data:settings-location-usage:${currentId.value ?? 'none'}`,
   async (): Promise<PlanUsageResource | null> => {
     if (!currentId.value) return null
@@ -105,32 +115,32 @@ const { data: locationUsage, refresh: refreshLocationUsage } = useAsyncData(
     if (error) throw error
     const resources = (data as { resources?: PlanUsageResource[] } | null)?.resources ?? []
     return resources.find(resource => resource.resource === 'active_locations') ?? null
-  }, { watch: [currentId], default: () => null },
+  }, { scope: 'shop', enabled: () => Boolean(currentId.value) && section.value === 'locations', watch: [currentId], default: () => null },
 )
 const locationCapacityFull = computed(() => locationUsage.value?.atLimit === true)
 type ReceiptSettings = { documentLabel?: string | null; referenceLabel?: string | null; documentLanguage?: string; documentDirection?: string; showDescriptions?: boolean; notes?: string | null; logoDataUrl?: string | null; displayName: string; address: string | null; phone: string | null; footer: string | null; paperSize: ReceiptPaperSize; canManage: boolean }
-const { data: receiptSettings, pending: receiptLoading, error: receiptLoadError, refresh: refreshReceiptSettings } = useAsyncData(
+const { data: receiptSettings, pending: receiptLoading, error: receiptLoadError, refresh: refreshReceiptSettings } = useShopQuery(
   () => `shop-data:receipt-settings:${currentId.value ?? 'none'}`,
   async (): Promise<ReceiptSettings | null> => {
     if (!currentId.value) return null
     const { data, error } = await shopRpc.rpc('receipt_settings', { p_shop_id: currentId.value })
     if (error) throw error
     return data as ReceiptSettings
-  }, { watch: [currentId], default: () => null },
+  }, { scope: 'shop', enabled: () => Boolean(currentId.value) && section.value === 'receipt-settings', watch: [currentId], default: () => null },
 )
 
 const cashRequired = ref(false)
 const cashPending = ref(false)
 const cashError = ref('')
 const cashSuccess = ref('')
-const { data: cashPolicy, pending: cashLoading, error: cashLoadError, refresh: refreshCashPolicy } = useAsyncData(
+const { data: cashPolicy, pending: cashLoading, error: cashLoadError, refresh: refreshCashPolicy } = useShopQuery(
   () => `shop-data:cash-policy:${currentId.value ?? 'none'}`,
   async () => {
     if (!currentId.value) return null
     const { data, error } = await shopRpc.rpc('shop_cash_policy', { p_shop_id: currentId.value })
     if (error) throw error
     return data
-  }, { watch: [currentId], default: () => null },
+  }, { scope: 'shop', enabled: () => Boolean(currentId.value) && section.value === 'cash-policy', watch: [currentId], default: () => null },
 )
 watch([currentId, cashPolicy], () => {
   cashRequired.value = cashPolicy.value === true
@@ -153,7 +163,7 @@ async function saveCashPolicy() {
 const copy = computed(() => isArabic.value ? {
   title: 'إعدادات النشاط', subtitle: 'ظبط طريقة الشغل المناسبة لنشاطك.',
   profileTitle: 'ملف المتجر', profileHelp: 'هذا اسم المتجر الذي يظهر في التنقل والقوائم والسجلات المستقبلية المناسبة. لا يغيّر اسم حسابك الشخصي أو بريدك الإلكتروني أو المستندات السابقة.',
-  shopDisplayName: 'اسم المتجر', profileLocationHelp: 'عنوان الفرع الرئيسي وهاتفه بيانات فرع. عدّلهما من قسم فروع النشاط أدناه حتى لا تتكرر بيانات متعارضة.',
+  shopDisplayName: 'اسم المتجر', profileLocationHelp: 'عنوان الفرع الرئيسي وهاتفه بيانات فرع. عدّلهما من صفحة فروع النشاط حتى لا تتكرر بيانات متعارضة.',
   manageLocations: 'إدارة بيانات الفروع', saveProfile: 'حفظ ملف المتجر', savingProfile: 'بنحفظ…', profileSaved: 'اتحدّث ملف المتجر.', profileFailed: 'مقدرناش نحدّث ملف المتجر. حاول تاني.',
   profileOwnerOnly: 'محتاج صلاحية إدارة إعدادات النشاط عشان تعدّل ملف المتجر.',
   modeTitle: 'طريقة تشغيل النشاط', modeHelp: 'تتحكم هذه الإعدادات في ظهور مسارات المنتجات والمخزون والخدمات فقط. لا تغيّر خطة الاشتراك أو الحصص أو صلاحيات المستخدمين.',
@@ -176,7 +186,7 @@ const copy = computed(() => isArabic.value ? {
 } : {
   title: 'Business settings', subtitle: 'Choose the workflows that fit this business.',
   profileTitle: 'Shop profile', profileHelp: 'This Shop name appears in navigation, selectors, and appropriate future records. It does not change your personal account name or email, or rewrite past documents.',
-  shopDisplayName: 'Shop display name', profileLocationHelp: 'The main-location address and phone are location data. Edit them in Business locations below so conflicting copies are not created.',
+  shopDisplayName: 'Shop display name', profileLocationHelp: 'The main-location address and phone are location data. Edit them on the Business locations page so conflicting copies are not created.',
   manageLocations: 'Manage location details', saveProfile: 'Save Shop profile', savingProfile: 'Saving…', profileSaved: 'Shop profile updated.', profileFailed: 'Could not update the Shop profile. Try again.',
   profileOwnerOnly: 'Business-settings permission is required to edit the Shop profile.',
   modeTitle: 'Business operation mode', modeHelp: 'This setting controls product, stock, and service workflow visibility only. It does not change the subscription plan, quotas, or user permissions.',
@@ -457,6 +467,7 @@ async function selectDocumentLogo(selection: File | File[] | null) {
 </script>
 <template>
   <BsBusinessSettingsPage
+    :section="section"
     v-model:booking-policy-form="bookingPolicyForm"
     v-model:booking-policy-open="bookingPolicyOpen"
     v-model:website-inquiry-open="websiteInquiryOpen"

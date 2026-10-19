@@ -9,7 +9,7 @@ definePageMeta({ layout: 'default', middleware: ['auth'] })
 const route = useRoute()
 const sessionUser = useSupabaseUser()
 const runtime = useRuntimeConfig()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const { locale, t } = useI18n()
 const { current, currentId, currentMembership, loading: shopLoading, reload, selectShop } = useShop()
 const confirmation = useConfirmation()
@@ -73,7 +73,7 @@ const emptySnapshot = (): TeamSnapshot => ({
   permissionKeys: [], grantablePermissionKeys: [], members: [], roles: [], locations: [], invitations: [], events: [],
 })
 
-const { data: team, pending, error, refresh } = useAsyncData(
+const { data: team, pending, error, refresh } = useShopQuery(
   computed(() => `shop-data:team:${runtime.public.supabase.url}:shop-crm:${sessionUser.value?.id ?? ''}:${currentId.value ?? ''}`),
   async (): Promise<TeamSnapshot> => {
     if (!currentId.value) return emptySnapshot()

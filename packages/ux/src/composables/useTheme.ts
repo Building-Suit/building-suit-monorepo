@@ -18,6 +18,7 @@ export function useTheme() {
     if (import.meta.client) { try { localStorage.setItem(STORAGE_KEY, value) } catch { /* Private mode can deny storage. */ } }
     apply(value)
   }
+  function cycle() { set(preference.value === 'light' ? 'dark' : preference.value === 'dark' ? 'system' : 'light') }
   function restore() {
     if (!import.meta.client) return
     systemDark.value = matchMedia('(prefers-color-scheme: dark)').matches
@@ -26,5 +27,5 @@ export function useTheme() {
     preference.value = saved === 'dark' || saved === 'light' ? saved : 'system'
     apply(preference.value)
   }
-  return { preference, set, restore, isDark, toggle: () => set(isDark.value ? 'light' : 'dark'), apply }
+  return { preference, set, cycle, restore, isDark, toggle: () => set(isDark.value ? 'light' : 'dark'), apply }
 }

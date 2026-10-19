@@ -283,6 +283,7 @@ defineExpose({ exportCSV: exportCsv })
 </template>
 
 <style>
+.bs-data-table .ls-table th { text-transform: none; letter-spacing: normal; font-weight: var(--bs-weight-medium); }
 .bs-data-table__toolbar { padding: var(--bs-space-3); border-bottom: 1px solid var(--bs-border); }
 .bs-data-table__danger-action { color: var(--bs-status-error); }
 .bs-data-table__cell--start { text-align: start; }

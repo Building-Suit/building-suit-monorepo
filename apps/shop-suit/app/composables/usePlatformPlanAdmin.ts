@@ -1,9 +1,8 @@
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { PlatformPlan, PlatformPlanShop } from '~/types/platformAdmin'
-export async function usePlatformPlanAdmin(props: { mode: 'catalog' | 'shop'; shopId?: string | null; canMutate: boolean }, onChanged: () => void | Promise<void>) {
-  const nuxtApp = useNuxtApp()
+export function usePlatformPlanAdmin(props: { mode: 'catalog' | 'shop'; shopId?: string | null; canMutate: boolean }, onChanged: () => void | Promise<void>) {
   const user = useSupabaseUser()
-  const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+  const rpc = useShopClient<ShopRpcDatabase>().schema('public')
   const { locale } = useI18n()
   const confirmation = useConfirmation()
   const { push: pushToast } = useToasts()
@@ -32,16 +31,16 @@ export async function usePlatformPlanAdmin(props: { mode: 'catalog' | 'shop'; sh
     return data as T
   }
 
-  const { data: catalog, pending: catalogPending, error: catalogError, refresh: refreshCatalog } = await nuxtApp.runWithContext(() => useAsyncData(
+  const { data: catalog, pending: catalogPending, error: catalogError, refresh: refreshCatalog } = useShopQuery(
     () => `platform-admin:plans:${user.value?.id ?? 'anonymous'}:${props.mode}:catalog`,
     () => props.mode === 'catalog' ? read<{ items: PlatformPlan[] }>('catalog') : Promise.resolve(null),
     { watch: [() => props.mode] },
-  ))
-  const { data: shopPlan, pending: shopPending, error: shopError, refresh: refreshShop } = await nuxtApp.runWithContext(() => useAsyncData(
+  )
+  const { data: shopPlan, pending: shopPending, error: shopError, refresh: refreshShop } = useShopQuery(
     () => `platform-admin:plans:${user.value?.id ?? 'anonymous'}:${props.mode}:shop:${props.shopId || 'none'}`,
     () => props.mode === 'shop' && props.shopId ? read<PlatformPlanShop>('shop') : Promise.resolve(null),
     { watch: [() => props.mode, () => props.shopId] },
-  ))
+  )
 
   function isoLocal(value = new Date()) {
     const offset = value.getTimezoneOffset() * 60_000

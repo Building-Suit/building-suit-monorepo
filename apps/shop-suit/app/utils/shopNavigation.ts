@@ -31,8 +31,23 @@ export function shopNavigation(mode: BusinessMode, locale: string, t: (key: stri
       { to: '/catalog-import', label: copy.catalogSetup, icon: 'ledger' },
       ...(businessModeSupportsServices(mode) ? [{ to: '/services', label: copy.services, icon: 'invoice' }] : []),
       { to: '/expenses', label: copy.expenses, icon: 'cash' },
-      { to: '/billing', label: copy.billing, icon: 'wallet' },
-      { to: '/settings', label: copy.settings, icon: 'settings' },
     ] },
+  ]
+}
+
+export const SHOP_SETTINGS_SECTIONS = [
+  'shop-profile', 'business-mode', 'locations', 'receipt-settings', 'cash-policy',
+  'public-booking-settings', 'website-inquiries', 'website-catalog', 'website-profile',
+  'website-address', 'currency-settings',
+] as const
+
+export function shopSettingsNavigation(isArabic: boolean, includeBilling: boolean) {
+  const labels = isArabic
+    ? ['ملف المتجر', 'طريقة تشغيل النشاط', 'فروع النشاط', 'إعدادات الإيصال', 'سياسة ورديات الخزنة', 'الحجز العام', 'استفسارات الموقع', 'الكتالوج العام', 'ملف المتجر العام', 'عنوان موقع المتجر', 'عملة النشاط']
+    : ['Shop profile', 'Business operation mode', 'Business locations', 'Receipt settings', 'Cashier shift policy', 'Public booking', 'Website inquiries', 'Public catalog', 'Public shop profile', 'Shop website address', 'Business currency']
+  const icons = ['store', 'settings', 'store', 'invoice', 'wallet', 'invoice', 'mail', 'ledger', 'store', 'monitor', 'cash']
+  return [
+    ...SHOP_SETTINGS_SECTIONS.map((section, index) => ({ to: `/settings/${section}`, label: labels[index]!, icon: icons[index]! })),
+    ...(includeBilling ? [{ to: '/billing', label: shopShellCopy(isArabic).billing, icon: 'wallet' }] : []),
   ]
 }

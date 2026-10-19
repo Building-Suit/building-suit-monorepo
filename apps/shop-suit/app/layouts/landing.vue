@@ -4,14 +4,18 @@ const user = useSupabaseUser()
 const ui = useUiCopy()
 const copy = computed(() => locale.value === 'ar' ? { home: 'الرئيسية', features: 'المميزات', workflow: 'طريقة العمل', pricing: 'الأسعار', signIn: 'تسجيل الدخول', startTrial: 'إنشاء حساب', openApp: 'فتح النظام', footer: 'إدارة متجرك بوضوح' } : { home: 'Home', features: 'Features', workflow: 'How it works', pricing: 'Pricing', signIn: 'Sign in', startTrial: 'Create account', openApp: 'Open app', footer: 'Manage your shop with clarity' })
 
+const changelogLabel = computed(() => locale.value === 'ar' ? 'سجل التحديثات' : 'Changelog')
+
 const navigation = computed(() => [
   { to: '/#features', label: copy.value.features },
   { to: '/#workflow', label: copy.value.workflow },
   { to: '/#pricing', label: copy.value.pricing },
+  { to: '/#whats-new', label: changelogLabel.value },
   { to: '/about', label: t('marketing.about') },
   { to: '/contact', label: t('marketing.contact') },
 ])
 const legalLinks = computed(() => [
+  { to: '/changelog', label: changelogLabel.value },
   { to: '/about', label: t('marketing.about') },
   { to: '/contact', label: t('marketing.contact') },
   { to: '/terms', label: t('marketing.terms') },

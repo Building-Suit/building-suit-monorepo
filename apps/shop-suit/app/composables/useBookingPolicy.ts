@@ -2,13 +2,13 @@ import type {BsBookingPolicyForm,BsBookingPolicyView} from '@building-suit/ui/ty
 import type {ShopRpcDatabase} from '~/types/shopCrmRpc'
 import {emptyBookingPolicy,parseBookingSettings} from '#shared/appointmentBooking'
 export function useBookingPolicy(canManage:Ref<boolean>){
- const {currentId,currentLocationId,isOwner}=useShop(),user=useSupabaseUser(),{locale}=useI18n(),config=useRuntimeConfig(),captureScope=useShopTaskScope(),client=useSupabaseClient<ShopRpcDatabase>().schema('public')
+ const {currentId,currentLocationId,isOwner}=useShop(),user=useSupabaseUser(),{locale}=useI18n(),config=useRuntimeConfig(),captureScope=useShopTaskScope(),client=useShopClient<ShopRpcDatabase>().schema('public')
  const canEdit=computed(()=>canManage.value&&isOwner.value),form=ref<BsBookingPolicyForm>({...emptyBookingPolicy(),staff:[]}),success=ref(''),action=useRecordAction(()=>form.value)
- const {data,pending:loading,error:loadError,refresh}=useAsyncData(()=>`shop-data:booking-policy:${JSON.stringify([config.public.appEnvironment,'shop-crm',user.value?.id,currentId.value])}`,async()=>{
+ const {data,pending:loading,error:loadError,refresh}=useShopQuery(()=>`shop-data:booking-policy:${JSON.stringify([config.public.appEnvironment,'shop-crm',user.value?.id,currentId.value])}`,async()=>{
   if(!canEdit.value||!currentId.value||!user.value?.id)return null
   const current=captureScope(),response=await client.rpc('shop_booking_settings',{p_shop_id:currentId.value});if(response.error)throw response.error
   return current()?parseBookingSettings(response.data):null
- },{server:false,watch:[currentId,currentLocationId,()=>user.value?.id,canEdit],default:()=>null})
+ },{server:false,enabled:canEdit,watch:[currentId,currentLocationId,()=>user.value?.id,canEdit],default:()=>null})
  watch([currentId,currentLocationId,()=>user.value?.id,canEdit],()=>{action.visible.value=false;form.value={...emptyBookingPolicy(),staff:[]};success.value='';action.error.value=null},{flush:'sync'})
  function edit(){if(!canEdit.value||!data.value||loading.value)return;form.value={...data.value.policy,staff:structuredClone(data.value.staff)};success.value='';action.edit()}
  async function save(){const shop=currentId.value;if(!shop||!canEdit.value)return;const current=captureScope();const saved=await action.run(async()=>{

@@ -6,7 +6,7 @@ export function usePublicChangelog() {
   const { locale } = useI18n()
   const request = useRequestFetch()
   const client = createChangelogClient(signal => request('/api/changelog', { signal }))
-  const { data, status, error, refresh } = useAsyncData('public-changelog:shop-suit', () => client.list({ suit: 'shop-suit' }), { server: false })
+  const { data, status, error, refresh } = useShopQuery('public-changelog:shop-suit', () => client.list({ suit: 'shop-suit' }), { server: false, scope: 'account' })
   // A new route mount or resumed tab refreshes the trusted clock instead of restarting a stale snapshot.
   const resume = () => { if (document.visibilityState === 'visible') void refresh({ dedupe: 'defer' }) }
   onMounted(() => { void refresh({ dedupe: 'defer' }); document.addEventListener('visibilitychange', resume) })

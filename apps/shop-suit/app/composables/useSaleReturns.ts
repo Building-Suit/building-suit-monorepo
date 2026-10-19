@@ -6,7 +6,7 @@ import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 
 export function useSaleReturns(invoiceId: Ref<string>, enabled: () => boolean, changed: () => Promise<unknown>) {
-  const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+  const rpc = useShopClient<ShopRpcDatabase>().schema('public')
   const { currentId, currentLocationId } = useShop()
   const user = useSupabaseUser()
   const { t, locale } = useI18n()
@@ -25,7 +25,7 @@ export function useSaleReturns(invoiceId: Ref<string>, enabled: () => boolean, c
   const { dirty } = useRecordAction(() => form.value, open)
   const { dirty: recordDirty } = useRecordAction(() => recordForm.value, recordOpen)
   const args = () => ({ p_shop_id: currentId.value!, p_location_id: currentLocationId.value!, p_invoice_id: invoiceId.value })
-  const { data: context, pending: loading, error: loadError, refresh } = useAsyncData(
+  const { data: context, pending: loading, error: loadError, refresh } = useShopQuery(
     () => `shop-data:returns:${scope()}:${offset.value}:${enabled()}`,
     async (): Promise<SaleReturnContext | null> => {
       if (!currentId.value || !currentLocationId.value || !enabled()) return null

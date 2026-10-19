@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'auth' })
 
-const supabase = useSupabaseClient()
+const supabase = useShopClient()
 const user = useSupabaseUser()
 const { locale } = useI18n()
 const password = ref('')

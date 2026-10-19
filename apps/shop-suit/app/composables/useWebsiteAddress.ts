@@ -11,12 +11,12 @@ export function useWebsiteAddress(canManage: Ref<boolean>) {
   const domain = configuredWebsiteDomain(config.public)
   const environment = config.public.supabase.url
   const captureScope = useShopTaskScope()
-  const client = useSupabaseClient<ShopRpcDatabase>().schema('public')
+  const client = useShopClient<ShopRpcDatabase>().schema('public')
   const slug = ref('')
   const success = ref('')
   const action = useRecordAction(() => slug.value)
   const { visible: open, dirty, pending, error } = action
-  const { data, pending: loading, error: loadError, refresh } = useAsyncData(
+  const { data, pending: loading, error: loadError, refresh } = useShopQuery(
     () => `shop-data:website-address:${JSON.stringify([environment, 'shop-crm', actor.value, currentId.value])}`,
     async () => {
       if (!currentId.value || !actor.value || !canManage.value) return null
@@ -24,7 +24,7 @@ export function useWebsiteAddress(canManage: Ref<boolean>) {
       const response = await client.rpc('shop_website_address', { p_shop_id: currentId.value })
       if (response.error) throw response.error
       return isCurrent() ? response.data : null
-    }, { server: false, watch: [currentId, currentLocationId, actor, canManage], default: () => null },
+    }, { server: false, enabled: canManage, watch: [currentId, currentLocationId, actor, canManage], default: () => null },
   )
   watch([currentId, currentLocationId, actor, canManage], () => { open.value = false; slug.value = ''; success.value = ''; error.value = '' })
   function edit() {

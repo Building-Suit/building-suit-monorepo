@@ -3,7 +3,7 @@ import type {BsAppointmentAccessView} from '@building-suit/ui/types/appointmentA
 import type {ShopRpcDatabase} from '~/types/shopCrmRpc'
 import {normalizeAppointmentAccessCode,parseAppointmentAccessStatus} from '#shared/appointmentAccess'
 export function useAppointmentAccess(canManage:Ref<boolean>,find:(id:string)=>{id:string;customerName:string}|undefined) {
- const {currentId,currentLocationId}=useShop(),user=useSupabaseUser(),{locale}=useI18n(),captureScope=useShopTaskScope(),client=useSupabaseClient<ShopRpcDatabase>().schema('public')
+ const {currentId,currentLocationId}=useShop(),user=useSupabaseUser(),{locale}=useI18n(),captureScope=useShopTaskScope(),client=useShopClient<ShopRpcDatabase>().schema('public')
  const selected=ref<string|null>(null),name=ref(''),code=ref(''),loading=ref(false),enabled=ref(false),usablePhone=ref(false)
  const action=useRecordAction(()=>''),{pending,error}=action,{open}=useOverlayState()
  let generation=0

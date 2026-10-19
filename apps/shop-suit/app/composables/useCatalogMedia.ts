@@ -2,7 +2,7 @@ import { CATALOG_IMAGE_BUCKET } from '~/utils/catalogUpload'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { catalogMediaRequest, type CatalogMediaAction, type CatalogMediaPayload, type CatalogMediaResult } from '~/utils/catalogMedia'
 export function useCatalogMedia() {
-  const client = useSupabaseClient<ShopRpcDatabase>()
+  const client = useShopClient<ShopRpcDatabase>()
   const rpc = client.schema('public')
   async function request(action: CatalogMediaAction, payload: CatalogMediaPayload & { p_shop_id: string }, legacy: () => PromiseLike<CatalogMediaResult>, imageUrl: string | null = null, requiresMedia = false) {
     const result = await catalogMediaRequest(action, imageUrl, () => rpc.rpc('shop_catalog_media', { p_shop_id: payload.p_shop_id, p_action: action, p_payload: action.startsWith('save_') ? { ...payload, imageUrl } : payload }), legacy, requiresMedia)

@@ -4,8 +4,9 @@ import type { BsWebsiteInquiryInboxView } from '../types/websiteInquiriesPresent
 import type { BsWebsiteCatalogForm, BsWebsiteCatalogView } from '../types/websiteCatalogPresentation'
 import type { BsWebsiteProfileForm, BsWebsiteProfileView } from '../types/websiteProfilePresentation'
 import type { BsWebsiteAddressView } from '../types/websiteAddressPresentation'
-import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessSettingsEditor, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy, BsBusinessCurrencyView } from '../types/businessSettingsPresentation'
-defineProps<{
+import type { BsBusinessProfileForm, BsBusinessLocationForm, BsBusinessReceiptForm, BsBusinessSettingsEditor, BsBusinessLocationsView, BsBusinessCashPolicyView, BsBusinessReceiptSummary, BsBusinessSettingsCopy, BsBusinessCurrencyView, BsBusinessSettingsSection } from '../types/businessSettingsPresentation'
+const props = defineProps<{
+  section?: BsBusinessSettingsSection
   bookingPolicyView?:BsBookingPolicyView
   websiteInquiryView?: BsWebsiteInquiryInboxView
   websiteCatalogView?: BsWebsiteCatalogView
@@ -51,25 +52,41 @@ const emit = defineEmits<{
   saveCash: []; saveProfile: []; saveMode: []; saveLocation: []; saveReceipt: []; createLocation: []
   editLocation: [id: string]; archiveLocation: [id: string]; restoreLocation: [id: string]; selectLogo: [file: File | File[] | null]
 }>()
+const sectionHeading = computed(() => {
+  switch (props.section) {
+    case 'shop-profile': return { title: props.copy.profileTitle, subtitle: props.copy.profileHelp }
+    case 'business-mode': return { title: props.copy.modeTitle, subtitle: props.copy.modeHelp }
+    case 'locations': return { title: props.copy.locationsTitle, subtitle: props.copy.locationsHelp }
+    case 'receipt-settings': return { title: props.copy.receiptTitle, subtitle: props.copy.receiptHelp }
+    case 'cash-policy': return { title: props.copy.cashTitle, subtitle: props.copy.cashHelp }
+    case 'public-booking-settings': return { title: props.bookingPolicyView?.title, subtitle: props.bookingPolicyView?.help }
+    case 'website-inquiries': return { title: props.websiteInquiryView?.title, subtitle: props.websiteInquiryView?.help }
+    case 'website-catalog': return { title: props.websiteCatalogView?.title, subtitle: props.websiteCatalogView?.help }
+    case 'website-profile': return { title: props.websiteProfileView?.title, subtitle: props.websiteProfileView?.help }
+    case 'website-address': return { title: props.websiteAddressView?.title, subtitle: props.websiteAddressView?.help }
+    case 'currency-settings': return { title: props.currencyView?.title, subtitle: props.currencyView?.help }
+    default: return { title: props.copy.title, subtitle: props.copy.subtitle }
+  }
+})
+function shows(section: BsBusinessSettingsSection) { return !props.section || props.section === section }
 function updateProfile(key: keyof BsBusinessProfileForm, value: string | number) { profileForm.value = { ...profileForm.value, [key]: String(value) } }
 function updateLocation(key: keyof BsBusinessLocationForm, value: string | number) { locationForm.value = { ...locationForm.value, [key]: String(value) } }
 function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number | boolean | (string | number)[] | null) { receiptForm.value = { ...receiptForm.value, [key]: key === 'showDescriptions' ? value === true : String(value ?? '') } }
 </script>
 <template>
   <BsStack gap="lg" class="bs-business-settings-page">
-    <BsPageHeader :title="copy.title" :subtitle="copy.subtitle"><template #actions><BsText v-if="context && !loading && !shopError" size="xs" emphasis="semibold">{{ context.name }}</BsText></template></BsPageHeader>
+    <BsPageHeader :title="sectionHeading.title || copy.title" :subtitle="sectionHeading.subtitle"><template #actions><BsText v-if="context && !loading && !shopError" size="xs" emphasis="semibold">{{ context.name }}</BsText></template></BsPageHeader>
     <BsText v-if="loading" role="status" as="p">{{ copy.loading }}</BsText>
     <BsBox v-else-if="shopError" role="alert">{{ copy.failed }} <BsButton @click="emit('retry')">{{ copy.retry }}</BsButton>
     </BsBox>
     <BsText v-else-if="!context" role="status" as="p">{{ copy.empty }}</BsText>
-    <BsSectionNavigation v-if="context && !loading && !shopError" :label="copy.title" :sections="[{ id: 'shop-profile', label: copy.profileTitle }, { id: 'business-mode', label: copy.modeTitle }, { id: 'locations', label: copy.locationsTitle }, { id: 'receipt-settings', label: copy.receiptTitle }, { id: 'cash-policy', label: copy.cashTitle }, ...(bookingPolicyView ? [{id:'public-booking-settings',label:bookingPolicyView.title}] : []), ...(websiteInquiryView ? [{ id: 'website-inquiries', label: websiteInquiryView.title }] : []), ...(websiteCatalogView ? [{ id: 'website-catalog', label: websiteCatalogView.title }] : []), ...(websiteProfileView ? [{ id: 'website-profile', label: websiteProfileView.title }] : []), ...(websiteAddressView ? [{ id: 'website-address', label: websiteAddressView.title }] : []), ...(currencyView ? [{ id: 'currency-settings', label: currencyView.title }] : [])]" />
-    <BsGrid v-if="context && !loading && !shopError" :columns="2" gap="lg">
-    <BsBookingPolicySettings v-if="bookingPolicyView" v-model:form="bookingPolicyForm" v-model:open="bookingPolicyOpen" :view="bookingPolicyView" @edit="emit('editBookingPolicy')" @save="emit('saveBookingPolicy')" @retry="emit('retryBookingPolicy')" />
-    <BsWebsiteInquiryInbox v-if="websiteInquiryView" v-model:open="websiteInquiryOpen" v-model:status="websiteInquiryStatus" v-model:filter="websiteInquiryFilter" :view="websiteInquiryView" @edit="emit('editWebsiteInquiry',$event)" @save="emit('saveWebsiteInquiry')" @retry="emit('retryWebsiteInquiries')" @page="emit('websiteInquiryPage',$event)" />
-    <BsWebsiteCatalogSettings v-if="websiteCatalogView" v-model:form="websiteCatalogForm" v-model:open="websiteCatalogOpen" v-model:search="websiteCatalogSearch" :view="websiteCatalogView" @edit="emit('editWebsiteCatalog',$event)" @save="emit('saveWebsiteCatalog')" @retry="emit('retryWebsiteCatalog')" @publish="emit('publishWebsiteCatalog',$event)" @unpublish="emit('unpublishWebsiteCatalog',$event)" @page="emit('websiteCatalogPage',$event)" @select-image="emit('selectWebsiteCatalogImage',$event)" />
-    <BsWebsiteProfileSettings v-if="websiteProfileView" v-model:form="websiteProfileForm" v-model:open="websiteProfileOpen" v-model:opt-in="websiteOwnerOptIn" :view="websiteProfileView" @edit="emit('editWebsiteProfile')" @save="emit('saveWebsiteProfile')" @retry="emit('retryWebsiteProfile')" @publish="emit('publishWebsiteProfile')" @unpublish="emit('unpublishWebsiteProfile')" @select-logo="emit('selectWebsiteLogo', $event)" @remove-logo="emit('removeWebsiteLogo')" />
-    <BsWebsiteAddressSettings v-if="websiteAddressView" v-model="websiteSlug" v-model:open="websiteOpen" :view="websiteAddressView" @edit="emit('editWebsiteAddress')" @save="emit('saveWebsiteAddress')" @retry="emit('retryWebsiteAddress')" />
-    <BsPanel v-if="currencyView" id="currency-settings" aria-labelledby="business-currency-title" padding="md">
+    <BsGrid v-if="context && !loading && !shopError && (!section || !['locations', 'receipt-settings', 'cash-policy'].includes(section))" :columns="section ? 1 : 2" gap="lg">
+    <BsBookingPolicySettings v-if="bookingPolicyView && shows('public-booking-settings')" v-model:form="bookingPolicyForm" v-model:open="bookingPolicyOpen" :view="bookingPolicyView" @edit="emit('editBookingPolicy')" @save="emit('saveBookingPolicy')" @retry="emit('retryBookingPolicy')" />
+    <BsWebsiteInquiryInbox v-if="websiteInquiryView && shows('website-inquiries')" v-model:open="websiteInquiryOpen" v-model:status="websiteInquiryStatus" v-model:filter="websiteInquiryFilter" :view="websiteInquiryView" @edit="emit('editWebsiteInquiry',$event)" @save="emit('saveWebsiteInquiry')" @retry="emit('retryWebsiteInquiries')" @page="emit('websiteInquiryPage',$event)" />
+    <BsWebsiteCatalogSettings v-if="websiteCatalogView && shows('website-catalog')" v-model:form="websiteCatalogForm" v-model:open="websiteCatalogOpen" v-model:search="websiteCatalogSearch" :view="websiteCatalogView" @edit="emit('editWebsiteCatalog',$event)" @save="emit('saveWebsiteCatalog')" @retry="emit('retryWebsiteCatalog')" @publish="emit('publishWebsiteCatalog',$event)" @unpublish="emit('unpublishWebsiteCatalog',$event)" @page="emit('websiteCatalogPage',$event)" @select-image="emit('selectWebsiteCatalogImage',$event)" />
+    <BsWebsiteProfileSettings v-if="websiteProfileView && shows('website-profile')" v-model:form="websiteProfileForm" v-model:open="websiteProfileOpen" v-model:opt-in="websiteOwnerOptIn" :view="websiteProfileView" @edit="emit('editWebsiteProfile')" @save="emit('saveWebsiteProfile')" @retry="emit('retryWebsiteProfile')" @publish="emit('publishWebsiteProfile')" @unpublish="emit('unpublishWebsiteProfile')" @select-logo="emit('selectWebsiteLogo', $event)" @remove-logo="emit('removeWebsiteLogo')" />
+    <BsWebsiteAddressSettings v-if="websiteAddressView && shows('website-address')" v-model="websiteSlug" v-model:open="websiteOpen" :view="websiteAddressView" @edit="emit('editWebsiteAddress')" @save="emit('saveWebsiteAddress')" @retry="emit('retryWebsiteAddress')" />
+    <BsPanel v-if="currencyView && shows('currency-settings')" id="currency-settings" aria-labelledby="business-currency-title" padding="md">
       <BsHeading id="business-currency-title" :level="2">{{ currencyView.title }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ currencyView.help }}</BsText>
       <BsText v-if="currencyView.loading" role="status">{{ copy.loading }}</BsText>
@@ -82,7 +99,7 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
         <BsButton variant="primary" type="submit" :pending="currencyView.pending" :disabled="currencyView.locked || !canManage || businessCurrency === currencyView.code">{{ currencyView.save }}</BsButton>
       </BsForm>
     </BsPanel>
-    <BsPanel v-if="context && !loading && !shopError" id="shop-profile" aria-labelledby="shop-profile-title" padding="md">
+    <BsPanel v-if="context && !loading && !shopError && shows('shop-profile')" id="shop-profile" aria-labelledby="shop-profile-title" padding="md">
       <BsHeading id="shop-profile-title" :level="2">{{ copy.profileTitle }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ copy.profileHelp }}</BsText>
       <BsText v-if="!canManage" role="status" as="p" size="sm" tone="warning">{{ copy.profileOwnerOnly }}</BsText>
@@ -96,12 +113,12 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
           </BsField>
           <BsBox padding="md">
             <BsText as="p">{{ copy.profileLocationHelp }}</BsText>
-            <BsLink to="#locations" external>{{ copy.manageLocations }}</BsLink>
+            <BsLink to="/settings/locations">{{ copy.manageLocations }}</BsLink>
           </BsBox>
         </BsRecordActionDialog>
       </BsStack>
     </BsPanel>
-    <BsPanel v-if="context && !loading && !shopError" id="business-mode" padding="md">
+    <BsPanel v-if="context && !loading && !shopError && shows('business-mode')" id="business-mode" padding="md">
       <BsHeading :level="2">{{ copy.modeTitle }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ copy.modeHelp }}</BsText>
       <BsText v-if="!canManage" role="status" as="p" size="sm" tone="warning">{{ copy.ownerOnly }}</BsText>
@@ -116,7 +133,7 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
       </BsStack>
     </BsPanel>
     </BsGrid>
-    <BsPanel v-if="context && !loading && !shopError" id="locations" padding="md">
+    <BsPanel v-if="context && !loading && !shopError && shows('locations')" id="locations" padding="md">
       <BsHeading :level="2">{{ copy.locationsTitle }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ copy.locationsHelp }}</BsText>
       <BsText v-if="locationsView.usageLabel" as="p" size="sm" tone="muted" emphasis="semibold">{{ locationsView.usageLabel }}</BsText>
@@ -149,8 +166,8 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
         </BsField>
       </BsRecordActionDialog>
     </BsPanel>
-    <BsGrid v-if="context && !loading && !shopError" :columns="2" gap="lg">
-    <BsPanel v-if="context && !loading && !shopError" id="receipt-settings" aria-labelledby="receipt-settings-title" padding="md">
+    <BsGrid v-if="context && !loading && !shopError && (!section || section === 'receipt-settings' || section === 'cash-policy')" :columns="section ? 1 : 2" gap="lg">
+    <BsPanel v-if="context && !loading && !shopError && shows('receipt-settings')" id="receipt-settings" aria-labelledby="receipt-settings-title" padding="md">
       <BsHeading id="receipt-settings-title" :level="2">{{ copy.receiptTitle }}</BsHeading>
       <BsText as="p" size="sm" tone="muted">{{ copy.receiptHelp }}</BsText>
       <BsText v-if="receiptEditor.loading" role="status" as="p">{{ copy.loading }}</BsText>
@@ -201,7 +218,7 @@ function updateReceipt(key: keyof BsBusinessReceiptForm, value: string | number 
         </BsStack>
       </template>
     </BsPanel>
-    <BsContentSection v-if="context && !loading && !shopError" id="cash-policy" :title="copy.cashTitle" :aria-label="copy.cashTitle">
+    <BsContentSection v-if="context && !loading && !shopError && shows('cash-policy')" id="cash-policy" :title="copy.cashTitle" :aria-label="copy.cashTitle">
       <BsText id="cash-policy-help">{{ copy.cashHelp }}</BsText>
       <BsText v-if="cash.loading" role="status">{{ copy.loading }}</BsText>
       <BsText v-else-if="cash.loadError" role="alert">{{ copy.failed }} <BsButton @click="emit('retryCash')">{{ copy.retry }}</BsButton></BsText>

@@ -23,7 +23,7 @@ function field<K extends keyof BsFinancialReportFilters>(key: K, value: BsFinanc
    <template v-else>
     <BsText v-for="warning in view.warnings" :key="warning" role="alert" tone="danger">{{ warning }}</BsText>
     <BsDisclosure v-if="view.reconciliation.length"><template #summary>{{ copy.reconciliation }}</template><BsFinancialReportTable :rows="view.reconciliation" :columns="view.reconciliationColumns" :label="copy.reconciliation" :account-label="copy.account" :total-label="copy.total" :density="filters.density" @drilldown="(account, period) => emit('drilldown', account, period)"/></BsDisclosure>
-    <BsGrid v-if="!view.loading && view.metrics.length" :columns="4" gap="md"><BsKpiCard v-for="metric in view.metrics" :key="metric.id" :title="metric.label" :change-label="metric.hint" :tone="metric.tone"><BsText>{{ metric.value }}</BsText></BsKpiCard></BsGrid>
+    <BsMetricGrid v-if="!view.loading && view.metrics.length" :columns="4"><BsKpiCard v-for="metric in view.metrics" :key="metric.id" :title="metric.label" :change-label="metric.hint" :tone="metric.tone"><BsText>{{ metric.value }}</BsText></BsKpiCard></BsMetricGrid>
     <BsSectionSkeleton v-if="view.loading" variant="table" :rows="7"/>
     <BsEmptyState v-else-if="view.empty" :title="copy.empty" :description="view.emptyHint || copy.emptyHint"/>
     <template v-else>

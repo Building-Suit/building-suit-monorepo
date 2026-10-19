@@ -1,21 +1,23 @@
 import { createScopedRealtime } from '@building-suit/data-access'
-import { createShopRefreshGate, shopRealtimeFilters, type ShopRealtimeFeature } from '~/utils/shopRealtime'
+import { createShopRefreshGate, shopRealtimeFilters, shopRealtimeQueryPrefixes, type ShopRealtimeFeature } from '~/utils/shopRealtime'
 
 /** One controller per mounted operational page; request-scoped SSR never subscribes. */
 export function useShopRealtime(feature: ShopRealtimeFeature, dirty: () => boolean = () => false) {
+  const queries = useShopQueryCache()
   if (import.meta.server) return
-  const client = useSupabaseClient()
+  const client = useShopClient()
   const user = useSupabaseUser()
   const { currentId, currentLocationId } = useShop()
-  const nuxt = useNuxtApp()
   const route = useRoute()
   const environment = useRuntimeConfig().public.supabase.url
   const controller = createScopedRealtime(client)
   let disposed = false
   let generation = 0
+  const selected = (key: string) => shopRealtimeQueryPrefixes[feature].some(prefix => key.startsWith(`shop-data:${prefix}`))
   const gate = createShopRefreshGate(dirty, async () => {
-    // Refresh only mounted Shop data. Never clear or recreate an open editor.
-    await nuxt.runWithContext(() => refreshNuxtData(Object.keys(nuxt.payload.data).filter(key => key.startsWith('shop-data:'))))
+    // Defer while editing, then revalidate actual feature keys (including detail pages).
+    queries.invalidate(key => selected(key) || key.startsWith('rpc:') || key.startsWith('table:'))
+    await queries.refresh(selected)
   })
   async function bind() {
     const expected = ++generation

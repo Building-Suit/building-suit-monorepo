@@ -1,3 +1,5 @@
+export type BsBusinessSettingsSection = 'shop-profile' | 'business-mode' | 'locations' | 'receipt-settings' | 'cash-policy' | 'public-booking-settings' | 'website-inquiries' | 'website-catalog' | 'website-profile' | 'website-address' | 'currency-settings'
+
 export interface BsBusinessProfileForm { displayName: string }
 export interface BsBusinessLocationForm { name: string; code: string; address: string; phone: string }
 export interface BsBusinessReceiptForm { displayName: string; address: string; phone: string; footer: string; paperSize: string; documentLabel?: string; referenceLabel?: string; documentLanguage?: string; documentDirection?: string; showDescriptions?: boolean; notes?: string; logoDataUrl?: string }

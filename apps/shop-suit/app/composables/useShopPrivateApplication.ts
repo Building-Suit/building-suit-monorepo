@@ -1,4 +1,6 @@
 export function useShopPrivateApplication() {
+const { clearShopQueries } = useShopInvalidation()
+
 
 const user = useSupabaseUser()
 const router = useRouter()
@@ -35,7 +37,7 @@ const pageLayout = computed(() => {
 })
 
 watch(() => user.value?.id, () => {
-  clearNuxtData(key => key.startsWith('shop-data:') || key.startsWith('platform-admin:'))
+  clearShopQueries(key => key.startsWith('shop-data:') || key.startsWith('platform-admin:'))
   void loadShops({ force: true })
 }, { flush: 'sync' })
 watch(contextKey, () => {

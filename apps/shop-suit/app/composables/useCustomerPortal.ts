@@ -5,6 +5,7 @@ import type {BsCustomerPortalView} from '@building-suit/ui/types/customerPortalP
 import {parseCustomerPortal,websitePortalUrl,type CustomerPortal,type PortalBucket,type PortalStatus} from '#shared/customerPortal'
 import {publicWebsiteQuery,websitePageUrl,type PublicWebsiteProfile} from '#shared/publicWebsite'
 export function useCustomerPortal() {
+ const shopRequest=useShopRequest()
  const route=useRoute(),config=useRuntimeConfig(),event=useRequestEvent(),{setLocale}=useI18n()
  const domain=configuredWebsiteDomain(config.public)
  if(!domain)throw createError({statusCode:404,statusMessage:'Not Found'})
@@ -14,7 +15,7 @@ export function useCustomerPortal() {
  const slug=String(import.meta.server?event?.node.req.headers.host:window.location.host).split('.')[0]!.toLowerCase(),locale=query.locale,ar=locale==='ar'
  // Only published public identity is serialized. History and factors are plain,
  // component-scoped refs and never use AsyncData, Nuxt state or browser storage.
- const brand=useState<PublicWebsiteProfile>(`portal-brand:${config.public.appEnvironment}:${domain}:${slug}:${locale}`,()=>event?.context.websitePage?.payload.profile)
+ const brand=useShopState<PublicWebsiteProfile>(`portal-brand:${config.public.appEnvironment}:${domain}:${slug}:${locale}`,()=>event?.context.websitePage?.payload.profile)
  if(!brand.value)throw createError({statusCode:404,statusMessage:'Not Found'})
  const form=ref({code:'',phone:''}),history=shallowRef<CustomerPortal|null>(null),expiresAt=ref<string|null>(null),bucket=ref<PortalBucket>('upcoming'),page=ref(1),loading=ref(false),error=ref('')
  const command=useRecordAction(()=>''),busy=computed(()=>command.pending.value||loading.value)
@@ -28,7 +29,7 @@ export function useCustomerPortal() {
  async function refresh(){
   clearHistory();if(document.hidden)return;const attempt=generation,controller=new AbortController();read=controller;loading.value=true
   try{
-   const raw=await $fetch('/api/website/customer-portal',{method:'POST',body:{bucket:bucket.value,page:page.value},cache:'no-store',signal:controller.signal})
+   const raw=await shopRequest('/api/website/customer-portal',{method:'POST',body:{bucket:bucket.value,page:page.value},cache:'no-store',signal:controller.signal})
    if(attempt!==generation||document.hidden)return
    const data=parseCustomerPortal(raw)
    if(!data){const hadAccess=Boolean(expiresAt.value);clearSession();error.value=hadAccess?ended():'';return}
@@ -41,7 +42,7 @@ export function useCustomerPortal() {
   if(busy.value||document.hidden)return
   const payload={...form.value};clearSession();error.value='';const attempt=generation;write=new AbortController()
   await command.run(async()=>{
-   const result=await $fetch('/api/website/appointment-access/verify',{method:'POST',body:payload,cache:'no-store',signal:write!.signal}) as {ok?:boolean;expiresAt?:unknown}
+   const result=await shopRequest('/api/website/appointment-access/verify',{method:'POST',body:payload,cache:'no-store',signal:write!.signal}) as {ok?:boolean;expiresAt?:unknown}
    if(attempt!==generation||document.hidden)return
    const expiry=typeof result.expiresAt==='string'?Date.parse(result.expiresAt):NaN
    if(result.ok!==true||!Number.isFinite(expiry)||expiry<=Date.now()||expiry>Date.now()+600000)throw Error('ACCESS_UNAVAILABLE')
@@ -49,7 +50,7 @@ export function useCustomerPortal() {
   },()=>attempt===generation?(ar?'تعذر التحقق. راجع الرمز والهاتف وحاول مرة أخرى.':'Could not verify access. Check the code and phone and try again.'):'')
  }
  async function logout(){if(busy.value)return;clearSession();error.value='';const attempt=generation;write=new AbortController()
-  await command.run(async()=>{const result=await $fetch('/api/website/appointment-access/logout',{method:'POST',body:{},cache:'no-store',signal:write!.signal}) as {ok?:boolean};if(attempt===generation&&result.ok!==true)throw Error('ACCESS_UNAVAILABLE')},()=>attempt===generation?unavailable():'')
+  await command.run(async()=>{const result=await shopRequest('/api/website/appointment-access/logout',{method:'POST',body:{},cache:'no-store',signal:write!.signal}) as {ok?:boolean};if(attempt===generation&&result.ok!==true)throw Error('ACCESS_UNAVAILABLE')},()=>attempt===generation?unavailable():'')
  }
  usePrivateSessionLifecycle(expiresAt,busy,{clear:clearHistory,suspend,expire,refresh})
  useFreshPageOnRestore()

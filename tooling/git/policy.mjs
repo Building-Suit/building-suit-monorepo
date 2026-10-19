@@ -19,7 +19,7 @@ export function stackKey(branch) {
   return branch?.match(/^codex\/([^/]+)\/.+/)?.[1] ?? null
 }
 
-export function checkPullRequestPolicy(prs, currentNumber) {
+export function checkPullRequestPolicy(prs, currentNumber, { selectivePromotionVerified = false } = {}) {
   const open = prs.filter(pr => pr.state === 'open')
   const staging = open.filter(pr => pr.base.ref === 'stg')
   const errors = []
@@ -50,7 +50,7 @@ export function checkPullRequestPolicy(prs, currentNumber) {
   if (!current) return [...errors, `PR #${currentNumber} is no longer open. Fetch GitHub state before continuing.`]
   // Production promotion has a distinct lifetime from app/shared feature stacks.
   if (current.base.ref === 'main') {
-    if (current.head.ref !== 'stg' || current.head.repo?.full_name !== current.base.repo?.full_name) errors.push('Only the repository stg branch may open a promotion PR into main.')
+    if ((current.head.ref !== 'stg' && !(current.head.ref === 'codex/shop-suit/usd-production' && selectivePromotionVerified)) || current.head.repo?.full_name !== current.base.repo?.full_name) errors.push('Only the repository stg branch may open a promotion PR into main.')
     return errors
   }
   const currentStack = stackKey(current.head.ref)

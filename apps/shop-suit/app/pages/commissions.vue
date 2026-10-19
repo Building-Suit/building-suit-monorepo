@@ -6,7 +6,7 @@ definePageMeta({ layout: 'default', middleware: ['auth'] })
 const { currentId, businessCurrency } = useShop()
 const { locale } = useI18n()
 const route = useRoute()
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const pending = ref(false)
 const actionError = ref(false)
 const saved = ref(false)
@@ -20,7 +20,7 @@ const copy = computed<BsCommissionCopy>(() => locale.value === 'ar' ? {
 } : {
  noContext: 'Select a shop.', edit: 'Edit policy', title: 'Staff commissions', help: 'Optional and off by default. Net sales after discounts, before tax; earned only after full payment and fulfillment. No automatic payouts. 100 lines per page.', loading: 'Loading…', error: 'Unable to complete this action. Check manager access and retry.', empty: 'No commission history.', retry: 'Retry', save: 'Save new policy version', saved: 'Saved.', enabled: 'Enable shop commission', currency: 'Currency', service: 'Services', product: 'Products', rate: 'Percentage or amount per unit', percentage: 'Percentage', fixed: 'Fixed amount per unit', inherit: 'Use shop default', none: 'No commission', employees: 'Employee opt-in and overrides', reason: 'Reason for change', history: 'Commission history', employee: 'Employee', sale: 'Sale', estimate: 'Estimate', earned: 'Earned', adjustments: 'Adjustments', postExport: 'Adjustments after export/payment acknowledgment', assignments: 'Draft line attribution', appointment: 'Appointment linked to this sale', assign: 'Save attribution',
 })
-const { data, pending: loading, error, refresh } = useAsyncData(
+const { data, pending: loading, error, refresh } = useShopQuery(
  () => `shop-data:commission:${currentId.value ?? 'none'}:${invoiceId.value ?? 'all'}:${offset.value}`,
  async () => {
   if (!currentId.value) return null
