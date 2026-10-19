@@ -259,4 +259,4 @@ export { useCalendarSlotNavigation } from './composables/useCalendarSlotNavigati
 export { usePointOfSaleCheckout } from './composables/usePointOfSaleCheckout.ts'
 export { useElementPrint } from './composables/useElementPrint.ts'
 
-export { useNavigationChamber } from './composables/useNavigationChamber'
+export { useNavigationChamber } from './composables/useNavigationChamber.ts'

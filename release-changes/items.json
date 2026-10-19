@@ -1755,6 +1755,7 @@
       "packages/ui",
       "packages/ux",
       "apps/building-suit-docs",
+      "apps/super-admin-suit/tests/unit/bootstrap.test.mjs",
       "docs/shared",
       "release-changes/items.json"
     ],
