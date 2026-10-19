@@ -1649,6 +1649,7 @@
     "id": "shop-local-ui-shared-support-20261019",
     "task": "SHOP-LOCAL-UI-SHARED-SUPPORT-20261019",
     "suits": [
+      "automation-suit",
       "doctor-suit",
       "inventory-suit",
       "ledger-suit",
