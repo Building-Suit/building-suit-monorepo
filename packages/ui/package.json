@@ -165,6 +165,7 @@
     "./molecules/BsHierarchyBranch": "./src/molecules/BsHierarchyBranch.vue",
     "./atoms/BsColorSwatch": "./src/atoms/BsColorSwatch.vue",
     "./molecules/BsFlowBlock": "./src/molecules/BsFlowBlock.vue",
+    "./organisms/BsShopLandingJourney": "./src/organisms/BsShopLandingJourney.vue",
     "./organisms/BsDashboardPreview": "./src/organisms/BsDashboardPreview.vue",
     "./templates/BsAdministrationShell": "./src/templates/BsAdministrationShell.vue",
     "./molecules/BsAccessTabs": "./src/molecules/BsAccessTabs.vue",

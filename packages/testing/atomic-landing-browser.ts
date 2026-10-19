@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { expectNoPageOverflow, navigateFixture } from './browser-foundation'
-export function landingBrowserMatrix(config: { login: string; backend: number; rpc: string; catalog: object[]; signup: string; yearly: { en: string; ar: string }; initialPrice: RegExp; annualPrice: RegExp }) {
+export function landingBrowserMatrix(config: { login: string; backend: number; rpc: string; catalog: object[]; signup: string; yearly: { en: string; ar: string }; initialPrice: RegExp; annualPrice: RegExp; cinematic?: boolean }) {
   for (const locale of ['en', 'ar'] as const) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
     test(`shared landing pricing and trial navigation: ${locale}, ${theme}, ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 1000 })
@@ -21,12 +21,17 @@ export function landingBrowserMatrix(config: { login: string; backend: number; r
       await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
       await expectNoPageOverflow(page)
       await page.evaluate(() => document.fonts.ready)
-      const heroTitle = page.locator('.ls-landing-hero-title')
+      const heroTitle = page.locator(config.cinematic ? '#bs-journey-heading' : '.ls-landing-hero-title')
       await expect(heroTitle).toBeVisible()
       if (locale === 'ar') expect(await heroTitle.evaluate(element => getComputedStyle(element).letterSpacing)).toBe('normal')
+      if (config.cinematic) {
+        await expect(page.locator('[data-journey-stage]')).toBeVisible()
+        await expect(page.locator('.bs-journey__mobile-story')).toBeVisible()
+        await expect(page.locator('[data-j-receipt]')).toHaveCount(1)
+      }
       if (width >= 1024) {
         const titleBounds = await heroTitle.boundingBox()
-        const previewBounds = await page.locator('[data-landing-preview]').boundingBox()
+        const previewBounds = await page.locator(config.cinematic ? '[data-j-screen]' : '[data-landing-preview]').boundingBox()
         expect(titleBounds).not.toBeNull()
         expect(previewBounds).not.toBeNull()
         const separated = titleBounds!.x + titleBounds!.width <= previewBounds!.x || previewBounds!.x + previewBounds!.width <= titleBounds!.x
