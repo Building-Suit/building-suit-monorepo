@@ -115,7 +115,7 @@ export function useShopClient<Database = ShopDatabase>() {
       const value = Reflect.get(target, property)
       // Supabase alone owns credentials, session refresh and auth event subscriptions.
       if (property === 'auth') return value
-      if (property === 'functions' || property === 'storage') return wrapService(value, String(property))
+      if ((property === 'functions' || property === 'storage') && value !== null && typeof value === 'object') return wrapService(value, String(property))
       if (typeof value !== 'function') return value
       if (property === 'schema') return (...args: unknown[]) => wrapClient(Reflect.apply(value, target, args))
       if (property === 'rpc') return (name: string, ...args: unknown[]) => {

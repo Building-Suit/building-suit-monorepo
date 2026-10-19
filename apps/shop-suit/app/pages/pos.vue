@@ -103,7 +103,7 @@ const { data: catalog, pending: catalogPending, error: catalogError, refresh: re
     const { data, error } = await media.request('pos', args, () => rpc.rpc('pos_catalog_search_by_category', args))
     if (error) throw error
     return data as CatalogResult
-  }, { watch: [currentId, currentLocationId, debouncedSearch, itemType, categoryFilter, catalogPage], default: () => ({ items: [], total: 0, page: 1, pageSize: 30, businessMode: 'mixed', ambiguousBarcode: false }) },
+  }, { watch: [currentId, currentLocationId, debouncedSearch, itemType, categoryFilter, catalogPage], default: (): CatalogResult => ({ items: [], total: 0, page: 1, pageSize: 30, businessMode: 'mixed', ambiguousBarcode: false }) },
 )
 
 // Resolve the initial context before deriving appointment state in SSR and hydration.
