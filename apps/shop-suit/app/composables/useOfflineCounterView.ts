@@ -9,8 +9,9 @@ export function useOfflineCounterView(counter: ReturnType<typeof useOfflineCount
     const newestSequence = counter.records.value.reduce((maximum, record) => Math.max(maximum, record.sequence), 0)
     const state = ar ? { unsynced: 'غير متزامن', syncing: 'جارٍ المزامنة', failed: 'تعذر التزامن', synced: 'متزامن' } : { unsynced: 'Unsynced', syncing: 'Syncing', failed: 'Failed', synced: 'Synced' }
     return {
+      recordsLabel: ar ? 'العمليات المحلية' : 'Local transactions',
       notice: counter.recoveryError.value ? (ar ? 'لم يتم تأكيد نتيجة الخادم. العملية محفوظة؛ أعد فحصها قبل تسوية أي أموال.' : 'Server outcome could not be confirmed. The transaction is retained; check again before reconciling money.') : counter.storageError.value ? (ar ? 'التخزين المحلي غير متاح. احتفظ بهذه الصفحة مفتوحة ولا تسجل عمليات جديدة بدون اتصال.' : 'Local storage is unavailable. Keep this page open; offline recording is unavailable.')
-        : counter.online.value ? (ar ? 'الاتصال متاح. العمليات المحلية تظل معلقة حتى يؤكدها الخادم.' : 'Online. Local transactions remain pending until confirmed by the server.')
+        : counter.online.value ? ''
           : (ar ? 'بدون اتصال. أصناف الكتالوج المحفوظة والوردية المفتوحة المحفوظة متاحة. البحث عن العملاء والسجل الكامل يحتاجان اتصالًا. يتحقق الخادم من المخزون والأسعار والصلاحيات عند المزامنة.' : 'Offline. Previously viewed catalog items and the saved open shift are available. Customer search and full history require connection. The server checks stock, prices and permissions on replay.'),
       reconcile: ar ? 'فحص النتيجة وتسوية العملية' : 'Check outcome and reconcile',
       retry: ar ? 'إعادة المحاولة بنفس معرف العملية' : 'Retry with the same request IDs',

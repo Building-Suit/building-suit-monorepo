@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { LandingContent } from '@building-suit/contracts'
-import type { BsLandingJourney } from '@building-suit/ui/types/landingPresentation'
+import type { BsLandingJourney, BsLandingChangelog } from '@building-suit/ui/types/landingPresentation'
 import type { ShopPlanOffer } from '~/types/plans'
 
 definePageMeta({ layout: 'landing' })
@@ -16,6 +16,14 @@ const content = computed<LandingContent>(() => ({
   pricingEyebrow: locale.value === 'ar' ? 'الخطط' : 'Plans', pricingTitle: t('pricing.title'), pricingBody: t('pricing.description'),
 }))
 
+const { feed: releaseFeed, state: releaseState, copy: releaseCopy, refresh: refreshReleases } = usePublicChangelog()
+const landingChangelog = computed<BsLandingChangelog>(() => ({
+  title: locale.value === 'ar' ? 'ما الجديد' : 'What’s new',
+  linkLabel: locale.value === 'ar' ? 'عرض سجل التحديثات الكامل' : 'View the full changelog',
+  to: '/changelog', feed: releaseFeed.value, state: releaseState.value, copy: releaseCopy.value,
+  locale: locale.value === 'ar' ? 'ar' : 'en', suit: 'shop-suit',
+}))
+
 // Fictional sample transaction, projected from supported POS/receipt/report workflows.
 // This is marketing presentation only: it never calls a business command or a print API.
 const journey = computed<BsLandingJourney>(() => locale.value === 'ar' ? ({
@@ -23,6 +31,7 @@ const journey = computed<BsLandingJourney>(() => locale.value === 'ar' ? ({
   description: 'من أول طلب إلى آخر مراجعة لليوم. مساحة واحدة لمنتجاتك ومبيعاتك وفريقك، لتبقى قريبًا من تفاصيل متجرك.',
   primaryAction: t('auth.signupAction'), secondaryAction: 'اكتشف التفاصيل', note: t('hero.noCreditCard'),
   skip: 'انتقل إلى التفاصيل', scrollHint: 'مرّر لتتابع عملية البيع', illustrative: 'واجهة توضيحية · متجر ومعاملة تجريبيان',
+  loading: { label: 'نجهّز لك التجربة…', continue: 'المتابعة إلى الموقع' },
   navigation: { dashboard: 'لوحة التحكم', pos: 'نقطة البيع', products: 'المنتجات', sales: 'المبيعات' },
   preview: {
     title: 'نظرة على يومك', subtitle: 'الموقع الرئيسي', total: 'الإجمالي', catalog: 'الكتالوج',
@@ -59,6 +68,7 @@ const journey = computed<BsLandingJourney>(() => locale.value === 'ar' ? ({
   description: 'From the first order to the last look at your day. One workspace for your catalogue, sales and team. Every detail, closer at hand.',
   primaryAction: t('auth.signupAction'), secondaryAction: 'Explore the details', note: t('hero.noCreditCard'),
   skip: 'Skip to the details', scrollHint: 'Scroll to follow one sale', illustrative: 'Illustrative interface · Fictional shop and transaction',
+  loading: { label: 'Preparing your experience…', continue: 'Continue to site' },
   navigation: { dashboard: 'Dashboard', pos: 'Point of sale', products: 'Products', sales: 'Sales' },
   preview: {
     title: 'Your day, in view', subtitle: 'Main location', total: 'Total', catalog: 'Catalogue', customer: 'Customer',
@@ -124,5 +134,5 @@ const landingPricing = computed(() => ({
 function chooseInterval(value: string) { if (value === 'monthly' || value === 'annual') publicPricing.interval = value }
 </script>
 <template>
-  <BsLandingPage :content="content" :preview="{ kind: 'features' }" :journey="journey" :pricing="landingPricing" signup-path="/auth/signup" @currency="subscriptionCurrency.choose($event)" @interval="chooseInterval" @variant="publicPricing.chooseVariant" @action="publicPricing.choose" @retry="refresh()"/>
+  <BsLandingPage :content="content" :preview="{ kind: 'features' }" :journey="journey" :pricing="landingPricing" :changelog="landingChangelog" signup-path="/auth/signup" @currency="subscriptionCurrency.choose($event)" @interval="chooseInterval" @variant="publicPricing.chooseVariant" @action="publicPricing.choose" @retry="refresh()" @changelog-retry="refreshReleases()"/>
 </template>

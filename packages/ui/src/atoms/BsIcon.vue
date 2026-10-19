@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { HugeiconsIcon } from '@hugeicons/vue'
 import {
+  CreditCardIcon,
+  BankIcon,
   Image01Icon,
   Sun03Icon,
   Moon02Icon,
@@ -48,6 +50,8 @@ const bsIcons = {
   arrowRight: ArrowRight01Icon,
   automation: ArrowReloadHorizontalIcon,
   cash: Cash02Icon,
+  card: CreditCardIcon,
+  bank: BankIcon,
   check: CheckmarkCircle02Icon,
   checkBadge: CheckmarkBadge01Icon,
   close: Cancel01Icon,

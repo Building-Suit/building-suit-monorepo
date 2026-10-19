@@ -321,13 +321,15 @@
       "owner": "packages/ui",
       "components": [
         "BsPointOfSaleCart",
+        "BsPaymentMethodChoices",
+        "BsReceiptPreviewDialog",
         "BsQuantityStepper"
       ],
-      "adapterBoundary": "typed catalog/cart/customer projections, product-owned quantity limits and existing checkout commands; shared UX owns viewport, section, stepping and focus lifecycle",
+      "adapterBoundary": "Typed image catalog/cart/customer projections, payment choices and immutable receipt previews. Product owns quantity limits, scoped own-receipt queries and a newest-first index limited to ten own receipts, and atomic checkout commands; shared UX owns two-stage checkout, isolated document printing, viewport, keyboard, stepping and focus lifecycle.",
       "auditSources": [
         "apps/shop-suit/app/pages/pos.vue"
       ],
-      "migrationStatus": "bounded POS reference alignment in progress"
+      "migrationStatus": "Aligned image cards, two-step counter checkout, compact status/context and in-place recent-receipt previews; visual review deferred at user request"
     },
     {
       "family": "offline-counter-status",
@@ -436,9 +438,10 @@
       "owner": "packages/ui",
       "components": [
         "BsAppointmentsPage",
-        "BsAppointmentCalendar"
+        "BsAppointmentCalendar",
+        "BsMiniCalendar"
       ],
-      "adapterBoundary": "Shared appointment templates show controlled one-time credential presentation and semantic issue/rotate/revoke commands. Shop owns appointment permissions, secret lifetime, normalized phone binding and request-scoped commands. Existing shared overlay and record-action controllers remain in packages/ux.",
+      "adapterBoundary": "Shared appointment templates own the month and timed calendar workspace, compact entries, controlled date/filter inputs, detail actions and one-time credential presentation. Calendar overlap layout and keyboard navigation belong to shared UX; the Doctor agenda presentation remains available. Shop owns loaded-window filtering, appointment permissions, secret lifetime, normalized phone binding and scoped queries/commands. Existing shared overlay and record-action controllers remain in packages/ux.",
       "task": "SS-WEB-APPT-ACCESS-001",
       "migrationStatus": "optional typed access panel inside existing registered complete appointments template; no new customer portal or booking route"
     },
