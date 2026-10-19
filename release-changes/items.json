@@ -1694,5 +1694,73 @@
     "sources": [
       "shared-ci-consolidation-20261019"
     ]
+  },
+  {
+    "id": "shared-workspace-chrome-20261019",
+    "task": "SHARED-WORKSPACE-CHROME-20261019",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs",
+      "docs/shared"
+    ],
+    "reason": "Keep Shop workspace selection available in the inline page tools and retain account/settings actions while adopting one common navigation implementation across consumers.",
+    "notes": {
+      "title": {
+        "en": "Workspace controls stay within reach",
+        "ar": "أدوات مساحة العمل في متناولك"
+      },
+      "summary": {
+        "en": "Use workspace controls beside the working page, with account and settings actions grouped in the shared sidebar.",
+        "ar": "استخدم أدوات مساحة العمل بجانب الصفحة، مع تجميع إجراءات الحساب والإعدادات في القائمة الجانبية المشتركة."
+      },
+      "details": {
+        "en": "Navigation retains its collapsible rail, mobile drawer, theme and language controls. Shop catalogue filters stay specific to the shop; workspace and account actions keep their existing permissions.",
+        "ar": "يحتفظ التنقل بالشريط القابل للطي والقائمة على الهاتف وأدوات المظهر واللغة. تبقى فلاتر الكتالوج خاصة بالمتجر، وتحتفظ إجراءات مساحة العمل والحساب بصلاحياتها الحالية."
+      }
+    },
+    "sources": [
+      "shared-workspace-chrome-20261019"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsWorkspaceShell.vue",
+        "contains": "<template #header><BsContextSwitcher"
+      },
+      {
+        "path": "packages/ui/src/templates/BsWorkspaceShell.vue",
+        "contains": "<BsSidebarAccount v-if=\"account\""
+      }
+    ]
+  },
+  {
+    "id": "shared-workspace-chrome-support-20261019",
+    "task": "SHARED-WORKSPACE-CHROME-20261019",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs",
+      "docs/shared",
+      "release-changes/items.json"
+    ],
+    "reason": "Converge every shared-shell source consumer on the canonical rail, drawer, collapse and page-context presentation, including the registry-driven control plane; maintain contracts, catalogue and regression coverage. Public Shop control changes are separately classified. Other consumer release registration/baselines remain unchanged; shared source consumption does not authorize product activation or fabricated public releases.",
+    "sources": [
+      "shared-workspace-chrome-support-20261019"
+    ]
   }
 ]
