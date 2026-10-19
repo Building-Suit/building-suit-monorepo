@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BsPurchasingView, BsSupplierForm, BsPurchaseForm, BsPurchasingFilters, BsSupplierRow, BsPurchaseRow, BsPurchasingPicker } from '@building-suit/ui/types/purchasingPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
@@ -36,7 +37,7 @@ type PurchasePage = { items: Purchase[]; total: number; page: number; pageSize: 
 
 const confirmation = useConfirmation()
 const captureScope = useShopTaskScope()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
 const { current, currentId, loading: shopLoading } = useShop()
 const isArabic = computed(() => locale.value === 'ar')
@@ -142,7 +143,7 @@ const copy = computed(() => isArabic.value ? {
   settlement: 'Settlement', unpaid: 'Unpaid', partial: 'Partial', paid: 'Paid', all: 'All', from: 'From', to: 'To', previous: 'Previous', next: 'Next', details: 'Details', payable: 'Payable', contact: 'Contact',
 })
 
-const { data: access } = useAsyncData(
+const { data: access } = useShopQuery(
   () => `shop-data:supplier-access:${currentId.value ?? 'none'}`, async () => {
     if (!currentId.value) return null
     const { data, error } = await shopRpc.rpc('supplier_access', { p_shop_id: currentId.value })
@@ -153,7 +154,7 @@ const { data: access } = useAsyncData(
 const canManageSuppliers = computed(() => access.value?.can_manage_suppliers === true)
 const canManagePurchases = computed(() => access.value?.can_manage_purchases === true)
 
-const { data: purchaseData, pending, error, refresh } = useAsyncData(
+const { data: purchaseData, pending, error, refresh } = useShopQuery(
   () => `shop-data:purchases:${currentId.value ?? 'none'}:${search.value}:${vendorFilter.value}:${statusFilter.value}:${settlementFilter.value}:${fromFilter.value}:${toFilter.value}:${page.value}:${supplierSearch.value}:${showArchivedSuppliers.value}:${supplierPage.value}`, async () => {
     if (!currentId.value) return {
       vendors: [] as Vendor[], activeVendors: [] as Vendor[], products: [] as Product[], purchases: [] as Purchase[], total: 0, vendorTotal: 0,
@@ -214,7 +215,7 @@ watch(() => purchaseForm, () => {
 
 function money(value: number) {
   return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', {
-    style: 'currency', currency: 'EGP', maximumFractionDigits: 2,
+    style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20,
   }).format(value)
 }
 

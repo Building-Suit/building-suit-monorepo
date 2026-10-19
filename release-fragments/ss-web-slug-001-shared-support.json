@@ -1,0 +1,22 @@
+{
+  "id": "ss-web-slug-001-shared-support",
+  "task": "SS-WEB-SLUG-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/shop-website-slug-disposable.yml",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/shop-website-slug-001.md",
+    "packages/ui",
+    "tooling/database/test-shop-website-slug-local.mjs"
+  ],
+  "reason": "Optional shared address presentation is enabled only by Shop; other Suit consumers receive no new public flow. Catalogue, shared ownership evidence and disposable test infrastructure support that bounded capability."
+}

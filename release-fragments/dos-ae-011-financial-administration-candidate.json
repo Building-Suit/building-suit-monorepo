@@ -1,0 +1,13 @@
+{
+  "id": "dos-ae-011-financial-administration-candidate",
+  "task": "DOS-AE-011",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-011-financial-administration-candidate.md"
+  ],
+  "reason": "Bounded synthetic administrative-foundation checkpoint/acceptance and exact launch-prerequisite handoff; require final root-head receipts and parent integration without clinical/commercial approval, operational release activation, hosted mutation or Automation state changes."
+}

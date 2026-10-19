@@ -1,0 +1,14 @@
+{
+  "id": "retrospective-changelog-history",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": ["shop-suit"],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": ["apps/shop-suit/app/composables/usePublicChangelog.ts", "packages/ui", "packages/contracts"],
+  "reason": "Display verified historical milestones with explicitly retrospective version labels and status-specific empty messages without changing normal release requirements.",
+  "notes": {
+    "title": {"en": "Clearer release history", "ar": "سجل إصدارات أوضح"},
+    "summary": {"en": "Review dated production milestones with clearly identified retrospective version numbers.", "ar": "راجع مراحل النشر الفعلي المؤرخة مع توضيح أرقام الإصدارات المخصصة بأثر رجعي."},
+    "details": {"en": "Released and Coming Soon empty messages describe only the selected tab. Upcoming work continues to reflect the current production-to-staging difference.", "ar": "تصف رسائل الحالة الفارغة في تبويبي الإصدارات والتحديثات القادمة التبويب المحدد فقط. وتواصل التحديثات القادمة عرض الفرق الحالي بين الإنتاج وبيئة الاختبار."}
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "id": "shop-landing-ready-20261019",
+  "task": "SHOP-LANDING-READY-20261019",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/pages/index.vue",
+    "apps/shop-suit/app/layouts/landing.vue",
+    "packages/ui/src/templates/BsLandingPage.vue",
+    "packages/ui/src/templates/BsShopPublicEntryPage.vue",
+    "packages/ui/src/organisms/BsShopLandingJourney.vue",
+    "packages/ui/src/types/landingPresentation.ts",
+    "packages/ux/src/composables/useLandingMotion.ts"
+  ],
+  "reason": "The Shop Suit story opens with a branded loader, fills the screen and keeps its laptop visible through the closing scene.",
+  "notes": {
+    "title": {
+      "en": "A ready-to-scroll introduction",
+      "ar": "مقدمة جاهزة للتصفح"
+    },
+    "summary": {
+      "en": "The Shop Suit story opens with a branded loader, fills the screen and keeps its laptop visible through the closing scene.",
+      "ar": "تبدأ حكاية Shop Suit بمؤشر تحميل يحمل الشعار، وتملأ الشاشة مع بقاء الحاسوب ظاهرًا في المشهد الختامي."
+    },
+    "details": {
+      "en": "Wait for page assets before the illustrated transaction begins. Follow the saved sample sale forward or backward, reach the changelog from navigation, and retain the separate tenant website entry.",
+      "ar": "انتظر اكتمال أصول الصفحة قبل بدء المعاملة التوضيحية، وتابع البيع التجريبي للأمام أو الخلف، وافتح سجل التحديثات من القائمة مع الحفاظ على المدخل المستقل لموقع المتجر."
+    }
+  }
+}

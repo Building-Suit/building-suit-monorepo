@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BsInventoryAdjustmentForm, BsInventoryCountForm, BsInventoryView, BsInventoryStockRow, BsInventoryMovementRow, BsInventoryCountRow } from '@building-suit/ui/types/inventoryPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { businessCurrency } = useShop()
 
 defineOptions({ name: 'InventoryIndexPage' })
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
@@ -14,7 +15,7 @@ type Page<T> = { items: T[]; total: number }
 
 const confirmation = useConfirmation()
 const { success } = useToasts()
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const { locale } = useI18n()
 const { current, currentId, loading: shopLoading } = useShop()
 const ar = computed(() => locale.value === 'ar')
@@ -74,28 +75,31 @@ const text = computed(() => ar.value ? {
   sources: { physical_count: 'Physical count', manual_receipt: 'Manual receipt', manual_writeoff: 'Manual write-off', purchase_return: 'Purchase return', sale: 'Sale', purchase_receipt: 'Purchase receipt', adjustment: 'Correction', in: 'Stock in', out: 'Stock out' },
 })
 
-const { data: access, pending: accessPending, error: accessError, refresh: refreshAccess } = await useAsyncData('shop-data:inventory-access', async () => {
+const accessQuery = useShopQuery('shop-data:inventory-access', async () => {
   if (!currentId.value) return null
   const { data, error } = await rpc.rpc('inventory_access', { p_shop_id: currentId.value })
   if (error) throw error
   return (data?.[0] ?? null) as Access | null
 }, { watch: [currentId], default: () => null })
+const { data: access, pending: accessPending, error: accessError, refresh: refreshAccess } = accessQuery
+// Resolve server-rendered dependencies; client reads remain reactive.
+if (import.meta.server) await accessQuery.ensure()
 
-const { data: stock, pending, error, refresh } = useAsyncData('shop-data:inventory-overview', async () => {
+const { data: stock, pending, error, refresh } = useShopQuery('shop-data:inventory-overview', async () => {
   if (!currentId.value || !access.value?.can_view) return emptyStock()
   const result = await rpc.rpc('list_inventory', { p_shop_id: currentId.value, p_low_stock_only: lowOnly.value })
   if (result.error) throw result.error
   return (result.data ?? emptyStock()) as StockPayload
 }, { watch: [currentId, lowOnly, access], default: emptyStock })
 
-const { data: movements, pending: historyPending, error: historyError, refresh: refreshHistory } = useAsyncData(() => `shop-data:inventory-history:${currentId.value ?? 'none'}:${historyProductId.value}:${historyPage.value}`, async () => {
+const { data: movements, pending: historyPending, error: historyError, refresh: refreshHistory } = useShopQuery(() => `shop-data:inventory-history:${currentId.value ?? 'none'}:${historyProductId.value}:${historyPage.value}`, async () => {
   if (!currentId.value || !historyProductId.value) return emptyPage<Movement>()
   const result = await rpc.rpc('list_inventory_history', { p_shop_id: currentId.value, p_product_id: historyProductId.value, p_page: historyPage.value, p_page_size: historyPageSize })
   if (result.error) throw result.error
   return (result.data ?? emptyPage<Movement>()) as Page<Movement>
 }, { watch: [currentId, historyProductId, historyPage], default: () => emptyPage<Movement>() })
 
-const { data: counts, pending: countsPending, error: countsError, refresh: refreshCounts } = useAsyncData(() => `shop-data:stock-count-history:${currentId.value ?? 'none'}:${historyProductId.value}:${countsPage.value}`, async () => {
+const { data: counts, pending: countsPending, error: countsError, refresh: refreshCounts } = useShopQuery(() => `shop-data:stock-count-history:${currentId.value ?? 'none'}:${historyProductId.value}:${countsPage.value}`, async () => {
   if (!currentId.value || !historyProductId.value) return emptyPage<StockCount>()
   const result = await rpc.rpc('list_stock_counts', { p_shop_id: currentId.value, p_product_id: historyProductId.value, p_page: countsPage.value, p_page_size: historyPageSize })
   if (result.error) throw result.error
@@ -116,7 +120,7 @@ function emptyPage<T>(): Page<T> { return { items: [], total: 0 } }
 function localDateTime() { const now = new Date(); return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16) }
 function validNumber(value: number, minimum = 0) { const number = Number(value); return Number.isFinite(number) && number >= minimum && number <= 1000000 && Math.abs(Math.round(number * 100) - number * 100) < 0.000001 }
 function readableError(message?: string) { if (message === 'INSUFFICIENT_STOCK') return text.value.insufficient; if (message === 'STOCK_REQUEST_CONFLICT' || message === 'STOCK_COUNT_REQUEST_CONFLICT') return text.value.conflict; if (message === 'INVENTORY_NOT_IN_PLAN') return text.value.plan; return text.value.loadError }
-function money(value: number) { return new Intl.NumberFormat(ar.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(Number(value)) }
+function money(value: number) { return new Intl.NumberFormat(ar.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20 }).format(Number(value)) }
 function date(value: string) { return new Intl.DateTimeFormat(ar.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) }
 function source(value: string) { return text.value.sources[value as keyof typeof text.value.sources] ?? value }
 function openAdjustment(next: 'receive' | 'writeoff') { mode.value = next; productId.value = activeStock.value[0]?.product_id ?? ''; actionError.value = ''; adjustmentOpen.value = true }

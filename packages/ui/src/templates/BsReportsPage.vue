@@ -45,13 +45,9 @@ function updateFilter(key: keyof BsReportFilters, value: string | number | boole
     <BsText v-else-if="view.denied && !view.failed" as="p" size="sm" tone="muted">{{ copy.denied }}</BsText>
     <BsText v-else-if="view.restricted && !view.failed" as="p" size="sm" tone="muted">{{ copy.costDenied }}</BsText>
     <template v-else-if="!view.failed">
-      <BsGrid :columns="4">
-        <BsActionTile v-for="metric in view.summary" :key="metric.id" :to="metric.to">
-          <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ metric.label }}</BsText>
-          <BsText as="p" size="lg" emphasis="semibold">{{ metric.value }}</BsText>
-          <BsText as="span" size="xs" emphasis="semibold">{{ copy.open }}</BsText>
-        </BsActionTile>
-      </BsGrid>
+      <BsMetricGrid>
+        <BsKpiCard v-for="metric in view.summary" :key="metric.id" :title="metric.label" :value="metric.value" :to="metric.to" :hint="copy.open" />
+      </BsMetricGrid>
       <BsPanel id="report-results" padding="md">
         <BsBox scroll="x">
           <BsDataTable :value="view.rows" data-key="id" :columns="[...(view.columns).map(column => ({ key: column.key, header: column.label })), { key: 'column1', header: (copy.open), align: 'end' }]">

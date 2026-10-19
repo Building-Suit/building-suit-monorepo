@@ -1,0 +1,20 @@
+{
+  "id": "ci-cancellable-validation-job",
+  "task": "CI-AUTH-REGRESSION-REPAIR",
+  "suits": [
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "doctor-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/ci.yml",
+    "tooling/git/tests/ci-workflow-efficiency.test.mjs",
+    "docs/work-packages/ci-auth-regression-repair.md"
+  ],
+  "reason": "Natural supersession showed step guards alone did not release the always-gated validation job. Gate the job itself with !cancelled while retaining review/branch-policy/scope checks and prior-success step gating. Existing authoritative readiness tests reject cancelled/skipped results; no validation is removed from a non-cancelled current head."
+}

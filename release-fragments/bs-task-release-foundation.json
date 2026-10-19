@@ -1,0 +1,28 @@
+{
+  "id": "bs-task-release-foundation",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github",
+    "AGENTS.md",
+    "docs",
+    "package.json",
+    "packages/nuxt-layer",
+    "apps/super-admin-suit",
+    "tooling/releases",
+    "apps/shop-suit/app",
+    "apps/shop-suit/tests",
+    "packages/ui",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "packages/contracts"
+  ],
+  "reason": "Release infrastructure and optional shared presentation; only Shop enables a new customer-facing surface in the separate public fragment. Other Suit customer flows are unchanged."
+}

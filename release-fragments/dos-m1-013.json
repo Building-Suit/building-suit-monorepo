@@ -1,0 +1,26 @@
+{
+  "id": "dos-m1-013",
+  "task": "DOS-M1-013",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsAvailabilityPage.vue",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/doctor-suit/availability-evidence.md",
+    "docs/work-packages/doctor-suit/implementation-tracker.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Add synthetic doctor/clinic working hours, dated closures/special openings and bounded slot duration, with one authoritative timezone-aware availability/booking rule. Actual doctor-wide exclusion and current capability/session checks prevent cross-clinic overlap; rule edits retain existing appointment times and history. New shared presentation is additive and all app logic remains product-owned. Conflict overrides are denied; clinical workflows and external notifications remain gated."
+}

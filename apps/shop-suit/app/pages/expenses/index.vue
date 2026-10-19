@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BsExpenseForm, BsExpenseFilters, BsExpenseView, BsExpenseRow } from '@building-suit/ui/types/expensePresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
@@ -29,8 +30,8 @@ type Category = { id: string; name: string }
 
 const confirmation = useConfirmation()
 const captureScope = useShopTaskScope()
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
-const supabase = useSupabaseClient()
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
+const supabase = useShopClient()
 const { locale } = useI18n()
 const { success } = useToasts()
 const { current, currentId, currentLocation, currentLocationId, loading: shopLoading } = useShop()
@@ -103,7 +104,7 @@ const copy = computed(() => isArabic.value ? {
 useDebouncedChange(search, value => { debouncedSearch.value = value.trim(); page.value = 1 }, 300)
 watch([statusFilter, categoryFilter, fromDate, toDate], () => { page.value = 1 })
 
-const { data: categories } = useAsyncData(() => `shop-data:expense-categories:${currentId.value ?? 'none'}`, async () => {
+const { data: categories } = useShopQuery(() => `shop-data:expense-categories:${currentId.value ?? 'none'}`, async () => {
   if (!currentId.value) return []
   const { data, error } = await supabase.from('expense_categories').select('id,name')
     .eq('shop_id', currentId.value).eq('is_active', true).order('name').limit(500)
@@ -112,7 +113,7 @@ const { data: categories } = useAsyncData(() => `shop-data:expense-categories:${
 }, { watch: [currentId], default: () => [] })
 
 const emptyPage = (): ExpensePage => ({ items: [], total: 0, page: 1, pageSize, canManage: false })
-const { data: expensePage, pending, error, refresh } = useAsyncData(
+const { data: expensePage, pending, error, refresh } = useShopQuery(
   () => `shop-data:expenses:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${debouncedSearch.value}:${statusFilter.value}:${categoryFilter.value}:${fromDate.value}:${toDate.value}:${page.value}`,
   async (): Promise<ExpensePage> => {
     if (!currentId.value || !currentLocationId.value) return emptyPage()
@@ -129,7 +130,7 @@ const { data: expensePage, pending, error, refresh } = useAsyncData(
 const canManage = computed(() => expensePage.value.canManage)
 
 function money(value: number) {
-  return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(Number(value))
+  return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20 }).format(Number(value))
 }
 function displayDate(value: string) {
   return new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeZone: 'Africa/Cairo' }).format(new Date(value))

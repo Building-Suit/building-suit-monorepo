@@ -4,6 +4,7 @@ import type { BsDashboardCopy, BsDashboardFilters, BsDashboardSetupForm, BsDashb
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { BusinessMode } from '~/utils/businessMode'
 import { BUSINESS_MODES } from '~/utils/businessMode'
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
@@ -23,8 +24,8 @@ type OperatingReport = {
 }
 type ReportHighlights = { payable: number; lowStockCount: number; inventoryValue: number; margin: number }
 
-const supabase = useSupabaseClient()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const supabase = useShopClient()
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const route = useRoute()
 const { locale } = useI18n()
 const { current, currentId, activeLocations, currentLocationId, currentMembership, isOwner, selectLocation, reload } = useShop()
@@ -102,7 +103,7 @@ const modeOptions = computed(() => BUSINESS_MODES.map(value => ({
 })))
 const modeDisabledNotice = computed(() => route.query.modeDisabled === 'product' || route.query.modeDisabled === 'service')
 
-const { data: subscription, error: subscriptionError, refresh: refreshSubscription } = useAsyncData(
+const { data: subscription, error: subscriptionError, refresh: refreshSubscription } = useShopQuery(
   'shop-data:subscription', async () => {
     if (!currentId.value || !isOwner.value || !currentMembership.value) return null
     const { data, error } = await supabase.from('subscriptions')
@@ -113,7 +114,7 @@ const { data: subscription, error: subscriptionError, refresh: refreshSubscripti
   }, { watch: [currentId], default: () => null },
 )
 
-const { data: reportAccess, error: reportAccessError, pending: reportAccessPending, refresh: refreshReportAccess } = await useAsyncData(
+const reportAccessQuery = useShopQuery(
   'shop-data:dashboard-report-access', async () => {
     if (!currentId.value) return { 'reports.view': false, 'reports.cost_profit.view': false }
     const { data, error } = await shopRpc.rpc('shop_permission_access', {
@@ -123,6 +124,9 @@ const { data: reportAccess, error: reportAccessError, pending: reportAccessPendi
     return data
   }, { watch: [currentId], default: () => ({ 'reports.view': false, 'reports.cost_profit.view': false }) },
 )
+const { data: reportAccess, error: reportAccessError, pending: reportAccessPending, refresh: refreshReportAccess } = reportAccessQuery
+// Resolve server-rendered dependencies; client reads remain reactive.
+if (import.meta.server) await reportAccessQuery.ensure()
 const canViewReports = computed(() => reportAccess.value?.['reports.view'] === true)
 const canViewReportCosts = computed(() => reportAccess.value?.['reports.cost_profit.view'] === true)
 
@@ -133,7 +137,7 @@ watch([currentId, currentLocationId, activeLocations], () => {
   reportLocationId.value = activeLocations.value.length > 1 ? 'all' : (currentLocationId.value ?? 'all')
 }, { immediate: true, deep: true })
 
-const { data: report, pending: reportPending, error: reportError, refresh: refreshReport } = useAsyncData(
+const operatingReportQuery = useShopQuery(
   'shop-data:operating-report', async (): Promise<OperatingReport | null> => {
     if (!currentId.value || !canViewReports.value) return null
     const { data, error } = await shopRpc.rpc('shop_operating_report', {
@@ -150,7 +154,10 @@ const { data: report, pending: reportPending, error: reportError, refresh: refre
   },
 )
 
-const { data: reportHighlights, pending: highlightsPending, error: highlightsError, refresh: refreshHighlights } = useAsyncData(
+const { data: report, pending: reportPending, error: reportError, refresh: refreshReport } = operatingReportQuery
+if (import.meta.server) await operatingReportQuery.ensure()
+
+const { data: reportHighlights, pending: highlightsPending, error: highlightsError, refresh: refreshHighlights } = useShopQuery(
   'shop-data:operational-report-highlights', async (): Promise<ReportHighlights | null> => {
     if (!currentId.value || !canViewReports.value || !canViewReportCosts.value || !report.value) return null
     const location = reportLocationId.value === 'all' ? null : reportLocationId.value
@@ -169,7 +176,8 @@ const { data: reportHighlights, pending: highlightsPending, error: highlightsErr
       margin: Number((margin.data as { summary: { margin: number } }).summary.margin),
     }
   }, {
-    watch: [currentId, canViewReports, canViewReportCosts, report, reportLocationId],
+    enabled: () => Boolean(currentId.value && canViewReports.value && canViewReportCosts.value && report.value),
+    watch: [currentId, canViewReports, canViewReportCosts, () => report.value?.fromDate, () => report.value?.toDateExclusive, reportLocationId],
     default: () => null,
   },
 )
@@ -192,7 +200,7 @@ function localToday() {
 }
 
 function whole(value: number) {
-  return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { maximumFractionDigits: 2 }).format(Number(value))
+  return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { maximumFractionDigits: 20 }).format(Number(value))
 }
 
 function methodLabel(value: string) {
@@ -219,9 +227,9 @@ async function openLocationSource(locationId: string, path: string) {
   await navigateTo({ path, query: reportQuery() })
 }
 
-function money(value: number | null, currency = 'EGP') {
+function money(value: number | null, currency = businessCurrency.value) {
   return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', {
-    style: 'currency', currency, maximumFractionDigits: 2,
+    style: 'currency', currency, maximumFractionDigits: 20,
   }).format(Number(value ?? 0))
 }
 
@@ -274,7 +282,7 @@ function reportLink(kind = 'sales') {
 const dashboardView = computed<BsDashboardView>(() => {
  const value = report.value
  const source = (path: string) => value?.locationId ? { location: value.locationId, path } : null
- const metric = (id: string, title: string, value: string, hint = '', to = '', intent: { location: string; path: string } | null = null): BsDashboardMetric => ({ id, title, value, hint, to, source: intent, changeLabel: '', tone: 'neutral' })
+ const metric = (id: string, title: string, value: string, hint = '', to = '', intent: { location: string; path: string } | null = null): BsDashboardMetric => ({ id, title, value, hint, to, source: intent, icon: ({ sales: 'analytics', collections: 'wallet', orders: 'invoice', customers: 'team', expenses: 'cash', balance: 'chart', payable: 'wallet', stock: 'ledger', inventory: 'store', margin: 'analytics' } as Record<string, string>)[id], changeLabel: '', tone: 'neutral' })
  const row = (id: string, name: string, cells: Record<string, string>, to = '', intent: { location: string; path: string } | null = null): BsDashboardRow => ({ id, name, cells, to, source: intent, status: '' })
  const table = (title: string, empty: string, rows: BsDashboardRow[], columns: BsDashboardTable['columns']): BsDashboardTable => ({ title, empty, rows, columns, loading: false, error: '', to: '', action: false })
  return {

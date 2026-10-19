@@ -1,0 +1,16 @@
+{
+  "id": "dos-ae-003-expiry-refresh-race",
+  "task": "DOS-AE-003",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/locationsController.ts",
+    "apps/doctor-suit/app/utils/teamController.ts",
+    "apps/doctor-suit/tests/unit/saas-write-offers.test.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-003-expiry-refresh-race.md"
+  ],
+  "reason": "Fix independently reproduced expiry cleanup loss when an owner team/location refresh crosses the accepted deadline. Separate deadline/request generations; clear drafts, credentials and retry state, reject late responses and preserve fail-closed history. No database or role authority change."
+}

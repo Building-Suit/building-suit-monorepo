@@ -6,6 +6,14 @@ The explicitly requested temporary branch `integration/shop-suit-release` is cla
 
 Each stack may have one open root PR into `stg`, including drafts. Different stack keys may have independent roots into `stg` at the same time. Additional work in an active stack starts from that stack's newest committed leaf and targets the open same-stack parent branch. Cross-stack parent links and multiple roots for the same stack are invalid. `main` receives release PRs only from `stg`.
 
+## Owner-authorized combined batch — 2026-10-15
+
+The owner explicitly superseded separate-root integration and waiting for prior Vercel/Supabase recovery for this single finished batch. [The batch record](../work-packages/staging-finished-batch.md) pins PR318 at `df4d2c864b262a2929591d0620505b374b422e72` and PR316 at `cfc13e82debc5039f4225b0d0c9ff85af4a9c9c4` (including #317, #319 and #320).
+
+Reuse PR318 / `codex/shared/task-release-publication` as the single integration root. Incorporate PR316’s pinned head with a merge commit, preserving both ancestry chains and all release fragments. Once the published combined branch contains both exact heads, close PR316 as superseded without deleting its branch. This creates no cross-stack PR parent and requires no branch-policy exception or check bypass. All normal root/branch validation and GitHub security/CI gates still apply to the exact combined head; source-head green checks do not substitute for combined checks.
+
+After those checks pass, the parent performs **one history-preserving PR merge into `stg`**, with a final exact-head/base check. Do not merge the source roots separately, push `stg` directly, wait for provider recovery, or manually deploy. No changes to `main`, hosted databases, credentials, provider settings or branch protections are authorized here. The usual provider-state hold and multiple-merge spacing procedure below is superseded only for this single authorized merge. Product release publication must still wait for its real deployment-readiness gates; a Git merge is not a shipped-release or provider-activation claim. Future tasks retain the normal stack workflow unless explicitly instructed otherwise.
+
 ## Before starting or resuming any work
 
 Run `pnpm agent:preflight` from the chosen worktree (or `node tooling/git/preflight.mjs` before dependencies are installed). Re-run immediately before pushing, creating/retargeting a PR, integrating a stack or merging. If the command is absent in an older checkout, use the commands below and read the current rules from `origin/stg` before editing.

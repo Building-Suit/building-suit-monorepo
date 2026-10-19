@@ -1,0 +1,95 @@
+name: Disposable Shop website launch qualification
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/shop-website-launch-disposable.yml'
+      - 'apps/shop-suit/**'
+      - 'packages/ui/**'
+      - 'packages/ux/**'
+      - 'tooling/database/test-shop-website-launch-local.mjs'
+permissions:
+  contents: read
+concurrency:
+  group: shop-website-launch-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  website-launch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Maintained changelog feed fixtures replay preserved release history.
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Prepare maintained disposable legacy upgrade baseline
+        env:
+          ACCOUNT_PROVISION_DISPOSABLE: '1'
+        run: node tooling/database/account-provisioning-disposable.mjs --prepare-baseline
+      - name: Start disposable Shop backend
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          export SUPABASE_HOME="$RUNNER_TEMP/shop-website-launch-supabase"
+          if ! pnpm exec supabase --workdir apps/shop-suit start --exclude studio,realtime,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/shop-website-launch-start.log" 2>&1; then
+            python - <<'PY'
+          import os,re
+          from pathlib import Path
+          for line in Path(os.environ['RUNNER_TEMP']+'/shop-website-launch-start.log').read_text().splitlines():
+              if re.search(r'^(ERROR:|error:|Error:|Applying migration|At statement|failed to|unexpected)',line):
+                  line=re.sub(r'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+','[redacted]',line)
+                  line=re.sub(r'(postgres(?:ql)?://)\S+',r'\1[redacted]',line)
+                  print(line[:1000])
+          PY
+            exit 1
+          fi
+      - name: Full maintained Shop regression and public website SQL matrix
+        env:
+          LAUNCH_FULL_SHOP_DB: '1'
+          SUPABASE_HOME: ${{ runner.temp }}/shop-website-launch-supabase
+        run: node tooling/database/test-shop-website-launch-local.mjs
+      - name: Stop owned disposable backend after SQL qualification
+        env:
+          SUPABASE_HOME: ${{ runner.temp }}/shop-website-launch-supabase
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          pnpm exec supabase --workdir apps/shop-suit stop --no-backup
+      - name: Remove temporary upgrade fixture after regression
+        run: |
+          git restore -- apps/shop-suit/supabase/config.toml
+          rm apps/shop-suit/supabase/migrations/20260929185959_disposable_legacy_catalog.sql
+      - run: pnpm docs:generate
+      - run: pnpm --filter @building-suit/shop-suit typecheck
+      - run: pnpm --filter @building-suit/shop-suit lint
+      - run: git diff --check
+      - run: pnpm --filter @building-suit/shop-suit build
+        env:
+          SUPABASE_URL: http://127.0.0.1:60321
+          SUPABASE_KEY: local-development-publishable-key
+      - run: node --test apps/shop-suit/tests/integration/website-host-built.test.mjs apps/shop-suit/tests/integration/website-public-built.test.mjs apps/shop-suit/tests/integration/appointment-access-built.test.mjs apps/shop-suit/tests/integration/customer-portal-built.test.mjs apps/shop-suit/tests/integration/public-booking-built.test.mjs apps/shop-suit/tests/integration/ss-web-launch-001-built.test.mjs
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/appointment-access.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/appointment-actions.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-web-public-001-obligation-2.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-web-customer-portal-001-obligation-4.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-appt-002.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-appt-002-settings.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/website-address.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/website-profile.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-web-public-001-obligation-1.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/public-changelog.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/ss-web-launch-001.config.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: website-launch-browser-results
+          path: test-results
+      - name: Clean up owned disposable backend after failure
+        if: failure() || cancelled()
+        env:
+          SUPABASE_HOME: ${{ runner.temp }}/shop-website-launch-supabase
+        run: pnpm exec supabase --workdir apps/shop-suit stop --no-backup

@@ -1,0 +1,27 @@
+{
+  "id": "ss-web-address-copy-001",
+  "task": "SS-WEB-ADDRESS-COPY-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit"
+  ],
+  "reason": "Corrects obsolete address help and success copy without changing reservation, publication opt-in/readiness or shared presentation behavior.",
+  "notes": {
+    "title": {
+      "en": "Clarify website address reservation",
+      "ar": "توضيح حجز عنوان الموقع"
+    },
+    "summary": {
+      "en": "Address settings now point to Public shop profile for publication status.",
+      "ar": "تشير إعدادات العنوان الآن إلى الملف العام للمتجر لمعرفة حالة النشر."
+    },
+    "details": {
+      "en": "Saving an address no longer incorrectly says an already public website is unpublished. Address reservation wording is neutral in English and Arabic; publication remains controlled by Public shop profile.",
+      "ar": "لم يعد حفظ العنوان يعرض رسالة خاطئة بأن الموقع المنشور غير منشور. أصبحت صياغة حجز العنوان محايدة بالعربية والإنجليزية، وتظل إدارة النشر في الملف العام للمتجر."
+    }
+  }
+}

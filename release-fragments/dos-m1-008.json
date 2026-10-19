@@ -1,0 +1,33 @@
+{
+  "id": "dos-m1-008",
+  "task": "DOS-M1-008",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsLocationManagementPage.vue",
+    "packages/ui/src/templates/BsWorkspaceShell.vue",
+    "packages/ux/src/composables/useRecordAction.ts",
+    "packages/ux/src/index.ts",
+    "packages/ux/tests/export.test.mjs",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/realtime-adoption.json",
+    "docs/shared/realtime-adoption.md",
+    "docs/work-packages/doctor-suit/locations-evidence.md",
+    "release-changes/items.json",
+    "packages/ui/src/organisms/BsSettingsMenu.vue",
+    "packages/testing/e2e/settings-menu-focus.spec.ts"
+  ],
+  "reason": "Add synthetic doctor-owned working-location CRUD, retained archive rows, scoped secretary projections and explicit context selection with stale-read/draft/dialog invalidation. The shared location template and shell controls are opt-in. Shared record actions gain an explicit reset operation; existing consumers retain their default behavior. Doctor remains an internal preview without clinical authority or operational registration. Patient/appointment integration acceptance remains deferred to its real schema features. Internal consumers also retain provenance for the shared pre-hydration settings guard; its visible Shop behavior is separately classified as a public patch."
+}

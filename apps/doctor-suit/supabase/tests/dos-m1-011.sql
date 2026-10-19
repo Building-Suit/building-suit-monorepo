@@ -1,0 +1,135 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path=public,extensions;
+select no_plan();
+insert into auth.users(id,email,email_confirmed_at,is_anonymous)select ('71000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'synthetic-patient-admin-'||n||'@example.test',now(),false from generate_series(1,6)n;
+insert into auth.sessions(id,user_id,not_after)select ('72000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,('71000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,now()+interval '1 hour' from generate_series(1,6)n;
+insert into public.doctor_profiles(user_id,display_name)values('71000000-0000-0000-0000-000000000001','Synthetic patient doctor A'),('71000000-0000-0000-0000-000000000003','Synthetic patient doctor B');
+insert into public.practices(id,owner_user_id,name)values('73000000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000001','Synthetic patient practice A'),('73000000-0000-0000-0000-000000000002','71000000-0000-0000-0000-000000000003','Synthetic patient practice B');
+insert into public.locations(id,practice_id,name,timezone)values
+ ('74000000-0000-0000-0000-000000000001','73000000-0000-0000-0000-000000000001','Patient A1','Africa/Cairo'),
+ ('74000000-0000-0000-0000-000000000002','73000000-0000-0000-0000-000000000001','Patient A2','Europe/London'),
+ ('74000000-0000-0000-0000-000000000003','73000000-0000-0000-0000-000000000002','Patient B1','Etc/UTC');
+insert into public.memberships(id,practice_id,user_id,capabilities)values
+ ('75000000-0000-0000-0000-000000000001','73000000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000002',array['patients.read','patients.write']),
+ ('75000000-0000-0000-0000-000000000002','73000000-0000-0000-0000-000000000002','71000000-0000-0000-0000-000000000002',array['patients.read','patients.write']),
+ ('75000000-0000-0000-0000-000000000003','73000000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000004',array['patients.read']),
+ ('75000000-0000-0000-0000-000000000004','73000000-0000-0000-0000-000000000001','71000000-0000-0000-0000-000000000005',array['patients.write']);
+insert into public.membership_locations(practice_id,membership_id,location_id,capabilities)values
+ ('73000000-0000-0000-0000-000000000001','75000000-0000-0000-0000-000000000001','74000000-0000-0000-0000-000000000001',array['patients.read','patients.write']),
+ ('73000000-0000-0000-0000-000000000001','75000000-0000-0000-0000-000000000001','74000000-0000-0000-0000-000000000002',array['patients.read']),
+ ('73000000-0000-0000-0000-000000000002','75000000-0000-0000-0000-000000000002','74000000-0000-0000-0000-000000000003',array['patients.read','patients.write']),
+ ('73000000-0000-0000-0000-000000000001','75000000-0000-0000-0000-000000000003','74000000-0000-0000-0000-000000000001',array['patients.read']),
+ ('73000000-0000-0000-0000-000000000001','75000000-0000-0000-0000-000000000004','74000000-0000-0000-0000-000000000001',array['patients.write']);
+create function pg_temp.claim(n integer)returns text language sql as $$select set_config('request.jwt.claims',jsonb_build_object('sub','71000000-0000-0000-0000-'||lpad(n::text,12,'0'),'session_id','72000000-0000-0000-0000-'||lpad(n::text,12,'0'),'role','authenticated','user_metadata',jsonb_build_object('role','owner'))::text,true)$$;
+create function pg_temp.practice(n integer default 1)returns uuid language sql immutable as $$select ('73000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid$$;
+create function pg_temp.location(n integer default 1)returns uuid language sql immutable as $$select ('74000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid$$;
+create function pg_temp.intent(n integer)returns uuid language sql immutable as $$select ('76000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid$$;
+create function pg_temp.form(name text default 'Synthetic household',phone text default '+1 202 555 0100')returns jsonb language sql immutable as $$select jsonb_build_object('name',name,'phone',phone,'email','','date_of_birth',null)$$;
+create function pg_temp.patient()returns uuid language sql as $$select (current_setting('test.patient')::jsonb->>'patient_id')::uuid$$;
+set local role authenticated;
+select pg_temp.claim(1);
+select is((public.doctor_patients(pg_temp.practice(),pg_temp.location())->>'total')::integer,0,'DOS-M1-011-C01: scoped empty directory is explicit');
+select is((public.doctor_patient_duplicate_review(pg_temp.practice(),pg_temp.location(),pg_temp.form())->>'total')::integer,0,'new practice has no duplicate candidate');
+select set_config('test.patient',public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form(),pg_temp.intent(1))::text,true);
+select is((public.doctor_patients(pg_temp.practice(),pg_temp.location())->>'total')::integer,1,'DOS-M1-011-C03: owner creates a patient without any secretary');
+select is(public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form(),pg_temp.intent(1)),current_setting('test.patient')::jsonb,'DOS-M1-011-C03: lost-response retry returns the original relationship');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form('Changed'),pg_temp.intent(1))$$,'22023','DOCTOR_IDEMPOTENCY_CONFLICT','a key cannot be reused for changed form data');
+select is(public.doctor_patient(pg_temp.practice(),pg_temp.location(),pg_temp.patient())->'patient'->>'provenance','entered_unverified','recorded name/contact does not imply identity verification');
+select is((public.doctor_patient_duplicate_review(pg_temp.practice(),pg_temp.location(),pg_temp.form())->>'total')::integer,1,'DOS-M1-011-C02: matching name/contact produces an explicit duplicate warning');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form(),pg_temp.intent(2))$$,'40001','DOCTOR_PATIENT_DUPLICATE_REVIEW','matching household data cannot bypass current duplicate review');
+select set_config('test.review',public.doctor_patient_duplicate_review(pg_temp.practice(),pg_temp.location(),pg_temp.form())->>'review_key',true);
+select lives_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form(),pg_temp.intent(2),null,null,current_setting('test.review'))$$,'DOS-M1-011-C02: reviewed shared contact creates a separate patient');
+reset role;
+select is((select count(*) from public.practice_patients),2::bigint,'shared household retains two relationships');
+select is((select count(distinct patient_identity_id) from public.practice_patients),2::bigint,'shared name/phone retains two opaque identities');
+select is((select count(*) from auth.users),6::bigint,'no patient Auth account is created from recorded contact');
+select is((select count(*) from public.audit_events where event_type='patient.created'),2::bigint,'accepted create intents have one audit each; retries do not append another');
+select is((select count(*) from public.patient_administrative_activity),2::bigint,'accepted creates have one actual referencing activity each');
+set local role authenticated;
+select pg_temp.claim(1);
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form(),pg_temp.intent(3),null,null,current_setting('test.review'))$$,'40001','DOCTOR_PATIENT_DUPLICATE_REVIEW','a newly added duplicate invalidates previously reviewed evidence');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form('Different name'),pg_temp.intent(3),null,null,current_setting('test.review'))$$,'40001','DOCTOR_PATIENT_DUPLICATE_REVIEW','changed form cannot reuse a review of shared contact');
+select is((public.doctor_patient_duplicate_review(pg_temp.practice(),pg_temp.location(),pg_temp.form('Household sibling','١٢٠٢٥٥٥٠١٠٠'))->>'total')::integer,2,'Arabic phone digits compare only for scoped duplicate review');
+select is(jsonb_array_length(public.doctor_patients(pg_temp.practice(),pg_temp.location(),0,1)->'rows'),1,'DOS-M1-011-C01: first page obeys server page size');
+select is(jsonb_array_length(public.doctor_patients(pg_temp.practice(),pg_temp.location(),1,1)->'rows'),1,'DOS-M1-011-C01: second page is available');
+select isnt(public.doctor_patients(pg_temp.practice(),pg_temp.location(),0,1)->'rows'->0->>'id',public.doctor_patients(pg_temp.practice(),pg_temp.location(),1,1)->'rows'->0->>'id','stable ordering does not repeat an ID across pages');
+select is((public.doctor_patients(pg_temp.practice(),pg_temp.location(),0,25,'555 0100')->>'total')::integer,2,'DOS-M1-011-C01: normalized phone search stays within practice');
+select is((public.doctor_patients(pg_temp.practice(),pg_temp.location(),0,25,'%')->>'total')::integer,0,'search text is literal rather than SQL wildcard authority');
+select throws_ok($$select public.doctor_patients(pg_temp.practice(),pg_temp.location(),-1)$$,'22023','DOCTOR_PATIENT_QUERY_INVALID','negative pages are invalid');
+select throws_ok($$select public.doctor_patients(pg_temp.practice(),pg_temp.location(),0,101)$$,'22023','DOCTOR_PATIENT_QUERY_INVALID','unbounded page size is invalid');
+select throws_ok($$select public.doctor_patients(pg_temp.practice(),pg_temp.location(),0,25,repeat('x',161))$$,'22023','DOCTOR_PATIENT_QUERY_INVALID','unbounded search is invalid');
+select throws_ok($$select public.doctor_patients(pg_temp.practice(),pg_temp.location(),0,25,'','removed')$$,'22023','DOCTOR_PATIENT_QUERY_INVALID','unknown status cannot alter query scope');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form(''),pg_temp.intent(4))$$,'22023','DOCTOR_PATIENT_INVALID','empty display name is rejected');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form(repeat('x',161)),pg_temp.intent(4))$$,'22023','DOCTOR_PATIENT_INVALID','oversized display name is rejected');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form()||'{"patient_identity_id":"77000000-0000-0000-0000-000000000001"}',pg_temp.intent(4))$$,'22023','DOCTOR_PATIENT_INVALID','overposted opaque identity cannot link or merge records');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form()||'{"verified":true}',pg_temp.intent(4))$$,'22023','DOCTOR_PATIENT_INVALID','overposted verification cannot create an identity claim');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form()||'{"date_of_birth":"2025-02-30"}',pg_temp.intent(4))$$,'22023','DOCTOR_PATIENT_INVALID','impossible date is rejected');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form()||'{"date_of_birth":"2999-01-01"}',pg_temp.intent(4))$$,'22023','DOCTOR_PATIENT_INVALID','future date is rejected in the selected location timezone');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form()||'{"email":"bad"}',pg_temp.intent(4))$$,'22023','DOCTOR_PATIENT_INVALID','invalid optional email is rejected');
+select set_config('test.correction',public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form('Synthetic correction','')||'{"date_of_birth":"2000-02-29"}',pg_temp.intent(5),pg_temp.patient(),1)::text,true);
+select is((public.doctor_patient(pg_temp.practice(),pg_temp.location(),pg_temp.patient())->'patient'->>'version')::integer,2,'DOS-M1-011-C03: correction increments the record version');
+select is(public.doctor_patient(pg_temp.practice(),pg_temp.location(),pg_temp.patient())->'patient'->>'date_of_birth','2000-02-29','a valid recorded leap-day birth date is retained without verification');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form('Losing editor',''),pg_temp.intent(6),pg_temp.patient(),1)$$,'40001','DOCTOR_PATIENT_CONFLICT','DOS-M1-011-C03: another editor cannot overwrite a newer identity correction');
+select is(public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form('Synthetic correction','')||'{"date_of_birth":"2000-02-29"}',pg_temp.intent(5),pg_temp.patient(),1),current_setting('test.correction')::jsonb,'correction retry returns its accepted version');
+select pg_temp.claim(3);
+select is((public.doctor_patients(pg_temp.practice(2),pg_temp.location(3))->>'total')::integer,0,'DOS-M1-011-C01: doctor B cannot discover A household data');
+select throws_ok($$select public.doctor_patient(pg_temp.practice(2),pg_temp.location(3),pg_temp.patient())$$,'42501','DOCTOR_ACCESS_DENIED','DOS-M1-009-C02: foreign patient ID cannot reveal a chart');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(2),pg_temp.location(3),pg_temp.form('Foreign overwrite',''),pg_temp.intent(7),pg_temp.patient(),2)$$,'42501','DOCTOR_ACCESS_DENIED','forged relationship cannot be moved across doctors');
+select throws_ok($$select public.doctor_patients(pg_temp.practice(),pg_temp.location())$$,'42501','DOCTOR_ACCESS_DENIED','doctor ownership does not grant discovery of another practice');
+select is((public.doctor_patient_duplicate_review(pg_temp.practice(2),pg_temp.location(3),pg_temp.form())->>'total')::integer,0,'duplicate review never searches other practices');
+select lives_ok($$select public.doctor_write_patient(pg_temp.practice(2),pg_temp.location(3),pg_temp.form(),pg_temp.intent(8))$$,'same household data in B creates an independent identity without cross-doctor warning');
+select pg_temp.claim(2);
+select is((public.doctor_patients(pg_temp.practice(),pg_temp.location())->>'total')::integer,2,'DOS-M1-009-C01: shared secretary sees only A in A context');
+select is((public.doctor_patients(pg_temp.practice(2),pg_temp.location(3))->>'total')::integer,1,'DOS-M1-009-C01: same secretary independently sees B in B context');
+select is((public.doctor_patients(pg_temp.practice(),pg_temp.location(2))->>'total')::integer,2,'patient relationship belongs to the doctor practice rather than its creation clinic');
+select is((public.doctor_patients(pg_temp.practice(),pg_temp.location(2))->>'can_write')::boolean,false,'A2 read permission does not inherit A1 write');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(2),pg_temp.form('No write',''),pg_temp.intent(9))$$,'42501','DOCTOR_ACCESS_DENIED','DOS-M1-010-C02: direct patient command checks exact current location write');
+select throws_ok($$select public.doctor_patients(pg_temp.practice(),pg_temp.location(3))$$,'42501','DOCTOR_ACCESS_DENIED','foreign location cannot be substituted for the selected practice');
+select throws_ok($$select public.doctor_patients(pg_temp.practice(),null)$$,'42501','DOCTOR_ACCESS_DENIED','practice-wide patient reads require an actual authorized working location');
+select pg_temp.claim(4);
+select is((public.doctor_patients(pg_temp.practice(),pg_temp.location())->>'can_write')::boolean,false,'DOS-M1-010-C02: read-only secretary receives a read-only directory');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form('Denied',''),pg_temp.intent(10))$$,'42501','DOCTOR_ACCESS_DENIED','read-only secretary cannot bypass hidden create UI');
+select throws_ok($$select public.doctor_archive_patient(pg_temp.practice(),pg_temp.location(),pg_temp.patient(),2,pg_temp.intent(10))$$,'42501','DOCTOR_ACCESS_DENIED','read-only secretary cannot archive');
+select throws_ok($$select public.doctor_patient_duplicate_review(pg_temp.practice(),pg_temp.location(),pg_temp.form())$$,'42501','DOCTOR_ACCESS_DENIED','read-only secretary cannot invoke write-side duplicate evidence');
+select pg_temp.claim(5);
+select throws_ok($$select public.doctor_patients(pg_temp.practice(),pg_temp.location())$$,'42501','DOCTOR_ACCESS_DENIED','write alone does not implicitly grant missing patient read');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form('Denied',''),pg_temp.intent(11))$$,'42501','DOCTOR_ACCESS_DENIED','writes require explicit read and write capability');
+select pg_temp.claim(6);
+select throws_ok($$select public.doctor_patients(pg_temp.practice(),pg_temp.location())$$,'42501','DOCTOR_ACCESS_DENIED','uninvited confirmed user with forged owner metadata remains denied');
+select pg_temp.claim(1);
+select lives_ok($$select public.doctor_archive_patient(pg_temp.practice(),pg_temp.location(),pg_temp.patient(),2,pg_temp.intent(12))$$,'DOS-M1-011-C04: archive succeeds while actual activity references the record');
+select lives_ok($$select public.doctor_archive_patient(pg_temp.practice(),pg_temp.location(),pg_temp.patient(),2,pg_temp.intent(12))$$,'archive exact retry is idempotent');
+select is((public.doctor_patients(pg_temp.practice(),pg_temp.location())->>'total')::integer,1,'active directory excludes archived record');
+select is((public.doctor_patients(pg_temp.practice(),pg_temp.location(),0,25,'','archived')->>'total')::integer,1,'archived record remains separately discoverable within authorized practice');
+select is((public.doctor_patient(pg_temp.practice(),pg_temp.location(),pg_temp.patient())->>'activity_total')::integer,3,'DOS-M1-011-C04: create/correction/archive history is retained');
+select is(public.doctor_patient(pg_temp.practice(),pg_temp.location(),pg_temp.patient())->'activity'->0->>'event_type','patient.archived','profile preserves event order and current archive status');
+select throws_ok($$select public.doctor_write_patient(pg_temp.practice(),pg_temp.location(),pg_temp.form('Resurrection',''),pg_temp.intent(13),pg_temp.patient(),3)$$,'22023','DOCTOR_PATIENT_ARCHIVED','correction cannot silently reactivate archived record');
+select throws_ok($$select from public.patient_identities$$,'42501',null,'opaque identity table cannot be used for direct cross-doctor discovery');
+select throws_ok($$select from public.practice_patients$$,'42501',null,'direct patient SELECT cannot bypass scoped query');
+select throws_ok($$update public.practice_patients set display_name='Overwrite'$$,'42501',null,'direct patient update is denied');
+select throws_ok($$delete from public.practice_patients$$,'42501',null,'DOS-M1-011-C04: direct bulk hard-delete is denied');
+select throws_ok($$delete from public.patient_administrative_activity$$,'42501',null,'referencing administrative history cannot be deleted by client');
+reset role;
+update public.memberships set status='revoked' where id='75000000-0000-0000-0000-000000000001';
+set local role authenticated;
+select pg_temp.claim(2);
+select throws_ok($$select public.doctor_patients(pg_temp.practice(),pg_temp.location())$$,'42501','DOCTOR_ACCESS_DENIED','DOS-M1-009-C03: same-session next patient query observes A revocation');
+select is((public.doctor_patients(pg_temp.practice(2),pg_temp.location(3))->>'total')::integer,1,'DOS-M1-009-C03: revoking A leaves independent B access intact');
+reset role;
+update public.locations set archived_at=now() where id='74000000-0000-0000-0000-000000000001';
+set local role authenticated;
+select pg_temp.claim(1);
+select throws_ok($$select public.doctor_patients(pg_temp.practice(),pg_temp.location())$$,'42501','DOCTOR_ACCESS_DENIED','DOS-M1-008-C02: archived clinic cannot be an operational patient context');
+select is((public.doctor_patients(pg_temp.practice(),pg_temp.location(2),0,25,'','all')->>'total')::integer,2,'DOS-M1-008-C01: another authorized clinic retains doctor practice patients');
+select is((public.doctor_patient(pg_temp.practice(),pg_temp.location(2),pg_temp.patient())->'activity'->0->>'location_name'),'Patient A1','historical attribution survives clinic archive');
+set local role anon;
+select throws_ok($$select public.doctor_patients(pg_temp.practice(),pg_temp.location(2))$$,'42501',null,'anonymous patient queries are denied');
+reset role;
+select is((select count(*) from public.patient_identities),3::bigint,'archive preserves all opaque identities across practices');
+select is((select count(*) from public.practice_patients),3::bigint,'archive preserves all three doctor-patient relationships');
+select is((select count(*) from public.patient_administrative_activity where patient_id=pg_temp.patient()),3::bigint,'actual referencing activity is preserved without cascade deletion');
+select is((select actor_user_id::text from public.audit_events where entity_id=pg_temp.patient() order by id desc limit 1),'71000000-0000-0000-0000-000000000001','patient archive audit is attributed to the verified owner');
+select is((select details->>'location_id' from public.audit_events where entity_id=pg_temp.patient() order by id desc limit 1),'74000000-0000-0000-0000-000000000001','patient audit preserves the actual working clinic');
+select * from finish();
+rollback;

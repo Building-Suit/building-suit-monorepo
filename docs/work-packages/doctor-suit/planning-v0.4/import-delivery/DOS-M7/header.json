@@ -1,0 +1,624 @@
+{
+  "format": "reviewed-import-proposal-v1",
+  "milestone_id": "DOS-M7",
+  "packet_file": "DOS-M7.json",
+  "packet_sha256": "4913c43cddaaeaf6f54d96bf4cc9c174f750dc7f83c8ea01928c17fe0f453893",
+  "target": {
+    "repository": "Building-Suit/building-suit-monorepo",
+    "automation_project_ref": "padtxclxwwqvvuiebhte",
+    "project_slug": "building-suit",
+    "project_id": "f71b3b2b-d56b-4f7e-94f5-0b8c379a1088",
+    "suit_slug": "doctor-suit",
+    "workstream_slug": "doctor-suit",
+    "application_path": "apps/doctor-suit",
+    "registration_status": "missing-per-parent-readonly-observation; parent must supply reviewed registration"
+  },
+  "safe_to_apply": false,
+  "task_create_function": "control.create_task_with_publication_contract(text,text,text,integer,integer,text,text,text,text,text,jsonb,jsonb,text,jsonb)",
+  "task_ids": [
+    "DOS-M7-001",
+    "DOS-M7-002",
+    "DOS-M7-003",
+    "DOS-M7-004",
+    "DOS-M7-005",
+    "DOS-M7-006",
+    "DOS-M7-007",
+    "DOS-M7-008",
+    "DOS-M7-009",
+    "DOS-M7-010"
+  ],
+  "requirements": [
+    {
+      "requirement_id": "DOS-M7-R001",
+      "title": "Milestone boundary and invariant",
+      "summary": "Production safety, compliance and launch acceptance. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.",
+      "status": "proposed",
+      "provenance": "Supplied roadmap v0.2 plus current delegated scope."
+    },
+    {
+      "requirement_id": "DOS-M7-F001",
+      "title": "Controller/processor and legal-policy review",
+      "summary": "Obtain current Egypt-specific professional legal/healthcare review of data responsibilities, consent and obligations. Acceptance: Obtain current qualified Egypt legal/healthcare review identifying controller/processor roles, purposes, consent basis, professional obligations and any applicable registration requirements. Record reviewer identity, date, exact product/data-flow scope, authoritative references and unresolved questions; generated prose is not legal approval. Produce approved policy requirements and owner actions for privacy, minors/caregivers, access and complaints without claiming certification. Prepare evidence for DOS-M7-GATE-LEGAL. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M7-001 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M7-F002",
+      "title": "Hosting, data-flow and transfer approval",
+      "summary": "Approve providers, regions, data transfers and subprocessors before provisioning or real-patient processing. Acceptance: Inventory proposed providers, regions, data categories, subprocessors and international transfers, with verified contracts and accountable approval. Map browser/mobile/backend/storage/notifications/logging/backups and any support access; minimize payloads and separate product environments. Approve or reject the exact hosting design before provisioning or live data; no provider purchase, region assertion or production mapping is fabricated. Prepare evidence for DOS-M7-GATE-HOSTING. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M7-002 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M7-F003",
+      "title": "Clinical governance and real-patient entry gate",
+      "summary": "Document accountable clinical review, prescribing limits, emergency disclaimers and permitted pilot use. Acceptance: Identify accountable clinical governance, permitted prescribing/delegation scope, change review and emergency/escalation wording for this product. Define a separately authorized pilot population, consent, supervision, stop criteria and incident response; real-patient entry requires explicit owner and qualified reviewer authorization. Keep synthetic-only default and clinical functionality restrictions until evidence is accepted; no automatic diagnosis/prescribing or clinical efficacy claim. Prepare evidence for DOS-M7-GATE-REAL-DATA. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M7-003 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M7-F004",
+      "title": "Retention, access and privacy-rights operations",
+      "summary": "Implement approved record retention, access/correction/export/erasure handling with legal-hold conflicts resolved. Acceptance: Implement approved retention/access/correction/export/erasure request workflows with identity verification, scope, case history and accountable decisions. Resolve legal holds, immutable signed records and financial retention conflicts through policy; do not guess retention durations or bulk hard-delete charts. Prove scoped execution and audit of approved outcomes on synthetic data with human review of refused/partial requests.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M7-004 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M7-F005",
+      "title": "Security assessment and remediation",
+      "summary": "Independently assess tenancy, auth, storage, audit, mobile caches and abuse protections with tracked findings. Acceptance: Obtain independent security assessment of tenant/doctor/location boundaries, Auth/recovery, Storage/Realtime, privileged routines, APIs, audit and supported mobile caches. Track findings with reproducible synthetic evidence, severity, owner, remediation and exact-candidate retest; no self-issued security certification. No unresolved critical/high launch-blocking findings may be waived by a developer; accepted residual risks require the accountable reviewer.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M7-005 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M7-F006",
+      "title": "Backup, restore and disaster recovery proof",
+      "summary": "Demonstrate approved recovery objectives with scoped restore tests and protection against data loss. Acceptance: Approve recovery point/time objectives and backup custody before testing; document encrypted backup scope, retention and restore permissions. Restore a disposable synthetic backup into an isolated target and reconcile records, signed versions, documents, audit and financial entries. Record measured recovery duration and data-loss window against approved objectives, with failure recovery and no overwrite of hosted business data.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M7-006 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M7-F007",
+      "title": "Observability, incident and breach response",
+      "summary": "Prepare monitored failures, notification health and tested incident escalation without exposing patient payloads. Acceptance: Define redacted operational signals for authorization failures, outbox/reminder delivery, payment reconciliation, storage and recovery without patient payload logging. Prepare incident ownership, escalation, communication approval, evidence preservation and legally reviewed breach response obligations. Exercise synthetic incident detection/triage/containment/recovery and record alert delivery evidence without sending external incident messages.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M7-007 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M7-F008",
+      "title": "Performance and operational readiness",
+      "summary": "Verify representative load, user support, service limits, provider costs and production configuration. Acceptance: Define representative synthetic workloads and approved latency/error/resource acceptance thresholds before load testing; do not invent production capacity claims. Measure the exact candidate and document service quotas, provider cost evidence, support ownership and runbooks. Identify unsupported devices/surfaces, operational limits and rollback dependencies; no provider upgrade or production load test is implied.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M7-008 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M7-F009",
+      "title": "Supervised pilot and clinical/user acceptance",
+      "summary": "Run a separately authorized limited pilot, track consent and defects, and obtain independent domain approval. Acceptance: Prepare a limited supervised pilot protocol with approved population/consent, responsible clinician, support, monitoring, stop criteria and defect process. A real pilot may run only under separate explicit authorization satisfying M7 legal/hosting/real-data/security/recovery prerequisites; this task currently prepares the packet and stays blocked for live execution. Record independent clinical/user acceptance and adverse-event/defect review tied to the exact candidate, retaining unresolved issues rather than fabricating participants or results.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M7-009 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    },
+    {
+      "requirement_id": "DOS-M7-F010",
+      "title": "Production go/no-go and release evidence",
+      "summary": "Complete exact candidate evidence and owner authorization; publication, merge and deployment remain separate actions. Acceptance: Assemble exact candidate/release scope, complete requirement evidence, independent approvals, unresolved risks, rollback/recovery and owner go/no-go record. Web-only release requires M1/M2/M3/M6/M7; doctor mobile additionally requires M4 and patient mobile additionally requires M5. Unselected/unfinished surfaces cannot be advertised as released. Keep merge, hosted migration, deployment and production activation as separate authorized actions; this task produces a reviewed release decision packet, not deployment. Prepare evidence for DOS-M7-GATE-RELEASE. Stop before any provider/native/live-data dependent implementation until the accountable reviewer approves the relevant decision; producing this packet does not grant approval.",
+      "status": "proposed",
+      "provenance": "Detailed decomposition of DOS-M7-010 from supplied roadmap; ordinary design choices, evidence-gated domain decisions."
+    }
+  ],
+  "decisions": [
+    {
+      "decision_id": "DOS-M7-GATE-START",
+      "title": "DOS-M7 parent-controlled start gate",
+      "status": "open",
+      "decision_text": "Remain OPEN until all nine milestones are safely stored and parent verifies dependency acceptance, exact live runtime/registration/commands/paths and authorizes this milestone. Import does not grant execution.",
+      "source": "Current delegated instruction."
+    },
+    {
+      "decision_id": "DOS-M7-GATE-LEGAL",
+      "title": "Qualified legal/controller/processor and privacy obligations",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M7-001 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M7-001",
+      "producer_task_id": "DOS-M7-001"
+    },
+    {
+      "decision_id": "DOS-M7-GATE-HOSTING",
+      "title": "Verified provider/region/data transfer approval",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M7-002 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M7-002",
+      "producer_task_id": "DOS-M7-002"
+    },
+    {
+      "decision_id": "DOS-M7-GATE-REAL-DATA",
+      "title": "Explicit clinical governance and real-patient pilot authorization",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M7-003 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M7-003",
+      "producer_task_id": "DOS-M7-003"
+    },
+    {
+      "decision_id": "DOS-M7-GATE-RELEASE",
+      "title": "Exact candidate production go/no-go authorization",
+      "status": "open",
+      "decision_text": "Evidence from DOS-M7-010 must identify the accountable reviewer, approved scope/version and constraints. Missing evidence stays OPEN. A worker cannot approve this on behalf of a reviewer.",
+      "source": "DOS-M7-010",
+      "producer_task_id": "DOS-M7-010"
+    }
+  ],
+  "task_requirements": [
+    {
+      "task_id": "DOS-M7-001",
+      "requirement_id": "DOS-M7-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-001",
+      "requirement_id": "DOS-M7-F001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-002",
+      "requirement_id": "DOS-M7-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-002",
+      "requirement_id": "DOS-M7-F002",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-003",
+      "requirement_id": "DOS-M7-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-003",
+      "requirement_id": "DOS-M7-F003",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-004",
+      "requirement_id": "DOS-M7-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-004",
+      "requirement_id": "DOS-M7-F004",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-005",
+      "requirement_id": "DOS-M7-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-005",
+      "requirement_id": "DOS-M7-F005",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-006",
+      "requirement_id": "DOS-M7-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-006",
+      "requirement_id": "DOS-M7-F006",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-007",
+      "requirement_id": "DOS-M7-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-007",
+      "requirement_id": "DOS-M7-F007",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-008",
+      "requirement_id": "DOS-M7-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-008",
+      "requirement_id": "DOS-M7-F008",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-009",
+      "requirement_id": "DOS-M7-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-009",
+      "requirement_id": "DOS-M7-F009",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "requirement_id": "DOS-M7-R001",
+      "suit_slug": "doctor-suit"
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "requirement_id": "DOS-M7-F010",
+      "suit_slug": "doctor-suit"
+    }
+  ],
+  "task_dependencies": [
+    {
+      "task_id": "DOS-M7-001",
+      "depends_on_task_id": "DOS-M1-020",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-001",
+      "depends_on_task_id": "DOS-M2-014",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-001",
+      "depends_on_task_id": "DOS-M3-010",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-001",
+      "depends_on_task_id": "DOS-M6-010",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-002",
+      "depends_on_task_id": "DOS-M7-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-003",
+      "depends_on_task_id": "DOS-M7-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-004",
+      "depends_on_task_id": "DOS-M7-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-005",
+      "depends_on_task_id": "DOS-M7-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-006",
+      "depends_on_task_id": "DOS-M7-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-007",
+      "depends_on_task_id": "DOS-M7-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-008",
+      "depends_on_task_id": "DOS-M7-007",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-009",
+      "depends_on_task_id": "DOS-M7-008",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "depends_on_task_id": "DOS-M7-001",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "depends_on_task_id": "DOS-M7-002",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "depends_on_task_id": "DOS-M7-003",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "depends_on_task_id": "DOS-M7-004",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "depends_on_task_id": "DOS-M7-005",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "depends_on_task_id": "DOS-M7-006",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "depends_on_task_id": "DOS-M7-007",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "depends_on_task_id": "DOS-M7-008",
+      "dependency_type": "hard"
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "depends_on_task_id": "DOS-M7-009",
+      "dependency_type": "hard"
+    }
+  ],
+  "task_decisions": [
+    {
+      "task_id": "DOS-M7-001",
+      "decision_id": "DOS-M7-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-002",
+      "decision_id": "DOS-M7-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-002",
+      "decision_id": "DOS-M7-GATE-LEGAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-003",
+      "decision_id": "DOS-M7-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-003",
+      "decision_id": "DOS-M7-GATE-LEGAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-003",
+      "decision_id": "DOS-M7-GATE-HOSTING",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-004",
+      "decision_id": "DOS-M7-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-004",
+      "decision_id": "DOS-M7-GATE-LEGAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-004",
+      "decision_id": "DOS-M7-GATE-HOSTING",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-004",
+      "decision_id": "DOS-M7-GATE-REAL-DATA",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-005",
+      "decision_id": "DOS-M7-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-005",
+      "decision_id": "DOS-M7-GATE-LEGAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-005",
+      "decision_id": "DOS-M7-GATE-HOSTING",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-005",
+      "decision_id": "DOS-M7-GATE-REAL-DATA",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-006",
+      "decision_id": "DOS-M7-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-006",
+      "decision_id": "DOS-M7-GATE-LEGAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-006",
+      "decision_id": "DOS-M7-GATE-HOSTING",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-006",
+      "decision_id": "DOS-M7-GATE-REAL-DATA",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-007",
+      "decision_id": "DOS-M7-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-007",
+      "decision_id": "DOS-M7-GATE-LEGAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-007",
+      "decision_id": "DOS-M7-GATE-HOSTING",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-007",
+      "decision_id": "DOS-M7-GATE-REAL-DATA",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-008",
+      "decision_id": "DOS-M7-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-008",
+      "decision_id": "DOS-M7-GATE-LEGAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-008",
+      "decision_id": "DOS-M7-GATE-HOSTING",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-008",
+      "decision_id": "DOS-M7-GATE-REAL-DATA",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-009",
+      "decision_id": "DOS-M7-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-009",
+      "decision_id": "DOS-M7-GATE-LEGAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-009",
+      "decision_id": "DOS-M7-GATE-HOSTING",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-009",
+      "decision_id": "DOS-M7-GATE-REAL-DATA",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "decision_id": "DOS-M7-GATE-START",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "decision_id": "DOS-M7-GATE-LEGAL",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "decision_id": "DOS-M7-GATE-HOSTING",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "decision_id": "DOS-M7-GATE-REAL-DATA",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "decision_id": "DOS-M1-D005",
+      "suit_slug": "doctor-suit",
+      "blocking": true
+    },
+    {
+      "task_id": "DOS-M7-001",
+      "decision_id": "DOS-M7-GATE-LEGAL",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    },
+    {
+      "task_id": "DOS-M7-002",
+      "decision_id": "DOS-M7-GATE-HOSTING",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    },
+    {
+      "task_id": "DOS-M7-003",
+      "decision_id": "DOS-M7-GATE-REAL-DATA",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    },
+    {
+      "task_id": "DOS-M7-010",
+      "decision_id": "DOS-M7-GATE-RELEASE",
+      "suit_slug": "doctor-suit",
+      "blocking": false
+    }
+  ],
+  "transaction_contract": [
+    "Verify exact Automation target, live function/schema/trigger fingerprints, immutable project ID, route, model, retry policy, command registrations and publication scopes before writes.",
+    "Acquire parent-reviewed transaction serialization lock and reread every scoped ID; existing equal payload is a no-op only after full canonical comparison; any differing state/history aborts. Never overwrite existing tasks, decisions, execution or requirement history.",
+    "Create or verify the real OPEN milestone start decision before any task; create every task through supported function and link every task to that decision with blocking=true in the SAME transaction.",
+    "Create all requirement, decision and dependency links and refresh contracts after final metadata. Do not commit partial task/link batches.",
+    "Assert exact payload counts, complete links, zero ready Doctor tasks using live ready-task predicate, zero claims/runs/executions, no publication authority, and all start decisions still OPEN immediately before commit.",
+    "Dry-run rollback and review returned evidence first. Parent controls any commit; never remove a guard from the original draft SQL.",
+    "After commit read back canonical packets and zero-ready evidence. Keep all nine start gates open until parent confirms all nine safely saved; release each milestone separately in dependency order."
+  ],
+  "pending_inputs": [
+    "Parent live schema/consumer and trigger contract",
+    "Reviewed Doctor suit/workstream/app mapping (function requires active project/workstream)",
+    "Verified high-capability deep model and retry policy IDs",
+    "Approved command registration and protected publication paths",
+    "Exact no-ready-task SQL predicate and transaction/rollback proof"
+  ],
+  "live_read_hold": {
+    "action": "refresh live schema/function/trigger fingerprints",
+    "status": "explicitly-cancelled-not-retried",
+    "required_next_authorization": "renewed permission from parent/user before any live refresh or import",
+    "no_hosted_actions_performed": true
+  },
+  "readback_assertions": [
+    "All nine milestone start decisions remain open, including milestones not selected for implementation.",
+    "For every task, canonical_task_contract in stored metadata is deeply equal to the reviewed canonical task and canonical_task_sha256 matches.",
+    "Round-trip all supported top-level function arguments plus requirement/dependency/decision links; retain produced/informational decisions as blocking=false.",
+    "Compare shared project allowed_publication_paths to its locked pre-import value and require exact equality; no scope widening is part of registration.",
+    "Use the reviewed live ready-task predicate and require zero ready Doctor tasks before commit and after readback; no partial task batch may commit."
+  ]
+}

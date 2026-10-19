@@ -1,0 +1,94 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { doctorAppointmentTransitions,doctorAppointmentBoard,doctorAppointmentHistory,validDoctorAppointmentCommand,doctorAppointmentStates } from '../../app/utils/appointments.ts'
+import { createDoctorAppointmentsController,doctorAppointmentsState } from '../../app/utils/appointmentsController.ts'
+const id = n => `a1000000-0000-0000-0000-${String(n).padStart(12,'0')}`
+const query = { date: '2026-10-20',page: 0,queuePage: 0 }
+const row = () => ({ id: id(9),practice_id: id(1),location_id: id(2),patient_id: id(8),patient_name: 'Synthetic patient',starts_at: '2026-10-20T09:00:00Z',ends_at: '2026-10-20T09:20:00Z',timezone: 'Etc/UTC',location_name: 'Synthetic clinic',state: 'booked',version: 1,checked_in_at: null,started_at: null,completed_at: null })
+const rawBoard = () => ({ practice_id: id(1),location_id: id(2),date: query.date,timezone: 'Etc/UTC',location_version: 1,items: [row()],queue: [],page: 0,total: 1,queue_page: 0,queue_total: 0,revision: 1,can_write: true,can_queue: true,can_read_patients: true,external_notifications: 'disabled' })
+const book = () => ({ kind: 'book',patientId: id(8),destinationId: id(2),date: query.date,minute: 540,scheduleVersion: 1,locationVersion: 1 })
+function deferred() { let resolve,reject;const promise = new Promise((a,b) => { resolve = a;reject = b });return { promise,resolve,reject } }
+function fixture() {
+  let scope = { environment: 'local',portal: 'doctor',userId: id(3),sessionId: id(4),practiceId: id(1),locationId: id(2),grantsVersion: 1,locationVersion: 1,timezone: 'Etc/UTC',capabilities: ['appointments.read','appointments.write','patients.read','queue.manage'] }
+  const state = doctorAppointmentsState();const calls = [];let serial = 0
+  const repository = { board: async () => doctorAppointmentBoard(rawBoard(),id(1),id(2),query),command: async (...args) => { calls.push(args);return { appointmentId: id(9),version: 2 } },history: async () => null,offers: async () => null,patients: async () => ({ rows: [],total: 0,canWrite: false }) }
+  const controller = createDoctorAppointmentsController(repository,state,() => scope,() => id(100+(++serial)))
+  return { repository,state,calls,controller,scope: () => scope,setScope(value) { scope = value } }
+}
+test('DOS-M1-014-C01: explicit lifecycle has six allowed edges and no terminal exits',() => {
+  const allowed = { booked: ['checked_in','cancelled','no_show'],checked_in: ['in_progress','cancelled'],in_progress: ['completed'],completed: [],cancelled: [],no_show: [] }
+  for(const state of doctorAppointmentStates)assert.deepEqual(doctorAppointmentTransitions(state),allowed[state])
+})
+test('strict appointment boards reject foreign scope, unsafe lifecycle and duplicate identities',() => {
+  assert.equal(doctorAppointmentBoard(rawBoard(),id(1),id(2),query).items.length,1)
+  for(const change of [{ practice_id: id(6) },{ location_id: id(7) },{ external_notifications: 'delivered' },{ items: [row(),row()],total: 2 },{ items: [{ ...row(),state: 'in_progress' }] },{ queue: [row()],queue_total: 1 }])assert.throws(() => doctorAppointmentBoard({ ...rawBoard(),...change },id(1),id(2),query))
+})
+test('appointment-only read must not include patient name',() => { assert.throws(() => doctorAppointmentBoard({ ...rawBoard(),can_read_patients: false },id(1),id(2),query));assert.equal(doctorAppointmentBoard({ ...rawBoard(),can_read_patients: false,items: [{ ...row(),patient_name: null }] },id(1),id(2),query).items[0].patientName,null) })
+test('commands reject unexpected states, missing reasons, foreign clocks and unknown operations',() => {
+  assert.equal(validDoctorAppointmentCommand(book()),true)
+  for(const change of [{ kind: 'deliver' },{ minute: 1440 },{ date: '2026-02-30' },{ locationVersion: 0 }])assert.equal(validDoctorAppointmentCommand({ ...book(),...change }),false)
+  assert.equal(validDoctorAppointmentCommand({ kind: 'transition',appointmentId: id(9),version: 1,state: 'cancelled',reason: '' }),false)
+  assert.equal(validDoctorAppointmentCommand({ kind: 'transition',appointmentId: id(9),version: 1,state: 'booked',reason: '' }),false)
+  assert.equal(validDoctorAppointmentCommand({ kind: 'transition',appointmentId: id(9),version: 1,state: 'cancelled',reason: 'Synthetic cancellation' }),true)
+})
+test('DOS-M1-014-C02: uncertain command retries one key and refuses simultaneous submit',async () => {
+  const f = fixture();f.repository.command = async (...args) => { f.calls.push(args);throw new Error('lost synthetic response') }
+  assert.equal(await f.controller.command(book()),false);assert.equal(await f.controller.command(book()),false);assert.equal(f.calls[0][3],f.calls[1][3]);assert.deepEqual(f.calls[0][2],f.calls[1][2])
+  const waiting = deferred();f.repository.command = async (...args) => { f.calls.push(args);return waiting.promise };const save = f.controller.command(book());assert.equal(await f.controller.command(book()),false);waiting.resolve({ appointmentId: id(9),version: 2 });assert.equal(await save,true)
+})
+test('scope and SID loss abort pending commands and invalidate late replies',async () => {
+  const f = fixture();const pending = deferred();let signal;f.repository.command = async (...args) => { signal = args[4];return pending.promise };const save = f.controller.command(book());f.controller.clear();assert.equal(signal.aborted,true);f.setScope({ ...f.scope(),sessionId: id(5) });pending.resolve({ appointmentId: id(9),version: 2 });assert.equal(await save,false);assert.equal(f.state.board,null);assert.equal(f.state.pending,false)
+})
+test('known denial clears data and rejects a previously in-flight private result',async () => {
+  const f = fixture();await f.controller.load(query);const pending = deferred();f.repository.history = async () => pending.promise;const history = f.controller.history(id(9));f.repository.command = async () => { throw { code: '42501' } };assert.equal(await f.controller.command(book()),false);assert.equal(f.state.board,null);assert.equal(f.state.actionError,'denied');pending.resolve({ appointmentId: id(9),events: [] });assert.equal(await history,false);assert.equal(f.state.history,null)
+})
+test('read refresh queued during command reconciles once after settlement',async () => {
+  const f = fixture();const pending = deferred();f.repository.command = async () => pending.promise;let reads = 0;f.repository.board = async () => { reads++;return doctorAppointmentBoard(rawBoard(),id(1),id(2),query) };const save = f.controller.command(book());assert.equal(await f.controller.load(query),false);pending.resolve({ appointmentId: id(9),version: 2 });await save;await Promise.resolve();assert.equal(reads,1);assert.equal(f.state.board.items.length,1)
+})
+test('DOS-M1-014-C03: disconnect discards stale board, history and offered slots',async () => { const f = fixture();await f.controller.load(query);f.state.history = { events: [] };f.state.offers = { slots: [] };f.controller.disconnected();assert.equal(f.state.live,'reconnecting');assert.equal(f.state.board,null);assert.equal(f.state.history,null);assert.equal(f.state.offers,null);await f.controller.load(query);assert.equal(f.state.board.items.length,1) })
+test('stale location context cannot commit a board from another timezone revision',async () => { const f = fixture();f.setScope({ ...f.scope(),locationVersion: 2,timezone: 'Africa/Cairo' });assert.equal(await f.controller.load(query),false);assert.equal(f.state.board,null);assert.equal(f.state.error,'conflict') })
+test('DOS-M1-014-C04: no delivery command or misleading notification result exists',() => { assert.equal(validDoctorAppointmentCommand({ ...book(),kind: 'sms' }),false);assert.throws(() => doctorAppointmentBoard({ ...rawBoard(),external_notifications: 'sent' },id(1),id(2),query)) })
+test('reschedule history rejects unbounded or malformed snapshots',() => {
+ const raw = { practice_id: id(1),location_id: id(2),appointment_id: id(9),version: 2,page: 0,total: 1,events: [{ id: '1',type: 'appointment.rescheduled',version: 2,at: '2026-10-17T00:00:00Z',actor_user_id: id(3),location_id: id(2),details: { reason: 'Synthetic move',from: { location_id: id(2),location_name: 'Original',timezone: 'Etc/UTC',starts_at: row().starts_at,ends_at: row().ends_at },to: { location_id: id(2),location_name: 'New',timezone: 'Etc/UTC',starts_at: row().starts_at,ends_at: row().ends_at } } }] }
+ assert.equal(doctorAppointmentHistory(raw,id(1),id(2),id(9),0).events[0].from.locationName,'Original');assert.throws(() => doctorAppointmentHistory({ ...raw,location_id: id(7) },id(1),id(2),id(9),0));raw.events[0].details.to.timezone = 'Invalid/Zone';assert.throws(() => doctorAppointmentHistory(raw,id(1),id(2),id(9),0))
+})
+
+test('revision-only live binding ignores delete events and disposes obsolete callbacks',async () => {
+  const { createDoctorAppointmentsRealtime } = await import('../../app/utils/appointmentsRealtime.ts')
+  const bindings = [];let refreshes = 0;let removed = 0;let systemReady
+  const channel = { on(type,filter,callback) { if(type==='system')systemReady = callback;else bindings.push({ filter,callback });return channel },subscribe(callback) { callback('SUBSCRIBED');systemReady({ extension: 'postgres_changes',status: 'ok' });return channel } }
+  let capturedOptions
+  const client = { channel: (_name,options) => { capturedOptions = options;return channel },removeChannel: async () => { removed++;return 'ok' } }
+  const f = fixture();const live = createDoctorAppointmentsRealtime(client,() => {})
+  await live.update(f.scope(),async () => { refreshes++ });await new Promise(resolve => setTimeout(resolve,300));assert.equal(refreshes,1);assert.deepEqual(capturedOptions,{ config: { postgres_changes_options: { wait: true } } })
+  for(const binding of bindings)if(['DELETE','*'].includes(binding.filter.event))binding.callback()
+  await new Promise(resolve => setTimeout(resolve,300));assert.equal(refreshes,1,'delete events must not enter a row-authorized revision channel')
+  await live.update(null,async () => {});for(const binding of bindings)binding.callback();await new Promise(resolve => setTimeout(resolve,300));assert.equal(refreshes,1);assert.equal(removed,1);await live.dispose()
+})
+
+test('failure-only Realtime diagnostics reject arbitrary output, extra fields and short secrets',async () => {
+  const { doctorRealtimeProbeSummary,createDoctorRealtimeWireProbe } = await import('../realtime-provider-probe.mjs')
+  const valid = { published: true,publishes_insert: true,publishes_update: true,primary_key: true,replication_select: false,authenticated_select: true,service_select: false,service_insert: false,service_update: false,wal_slot_active: false,revision_rows: 1,subscriptions: 3,sid_claims: 3,authenticated_claims: 3,visible_claims: 1,wal_slots: 1 }
+  assert.equal(doctorRealtimeProbeSummary(JSON.stringify(valid)).available,true)
+  const secret = 'tiny-secret'
+  for(const output of [secret,JSON.stringify(secret),JSON.stringify({ ...valid,detail: secret }),JSON.stringify({ ...valid,subscriptions: secret }),JSON.stringify({ ...valid,subscriptions: 1234 }),JSON.stringify({ ...valid,published: secret }),`${JSON.stringify(valid)}\n${secret}`]) {
+    const result = doctorRealtimeProbeSummary(output);assert.deepEqual(result,{ available: false });assert.equal(JSON.stringify(result).includes(secret),false)
+  }
+  const wire = createDoctorRealtimeWireProbe();wire.logger('receive',`opaque-topic postgres_changes ${secret}`,{ headers: { Authorization: secret } });wire.logger('receive','opaque-topic system', { status: 'error',message: secret })
+  wire.logger('receive','opaque-topic phx_reply',{ status: 'ok',response: { postgres_changes: [{ id: 0 },{ id: 7 },{ id: 'opaque-wire-binding' }] } });wire.logger('receive','opaque-topic postgres_changes',{ ids: [7],data: { type: 'UPDATE',record: { arbitrary: secret } } });
+  assert.deepEqual(wire.summary(),{ change_frames: 2,insert_frames: 0,update_frames: 1,unrecognized_change_frames: 1,change_matching_ids: 1,join_bindings: 3,join_numeric_ids: 2,join_string_ids: 1,join_zero_ids: 1,system_ok: 0,system_error: 1,client_error: 0 });assert.equal(JSON.stringify(wire.summary()).includes(secret),false)
+})
+
+test('Doctor live status and reconciliation wait for the provider activation acknowledgement',async () => {
+  const { createDoctorAppointmentsRealtime } = await import('../../app/utils/appointmentsRealtime.ts')
+  let admitted;let systemReady;let refreshes = 0;let options
+  const channel = { on(type,_filter,callback) { if(type==='system')systemReady = callback;return channel },subscribe(callback) { admitted = callback;return channel } }
+  const client = { channel(_name,value) { options = value;return channel },removeChannel: async () => 'ok' }
+  const f = fixture();const live = createDoctorAppointmentsRealtime(client,() => {})
+  await live.update(f.scope(),async () => { refreshes++ })
+  assert.deepEqual(options,{ config: { postgres_changes_options: { wait: true } } })
+  await new Promise(resolve => setTimeout(resolve,300));assert.equal(live.connected,false);assert.equal(refreshes,0)
+  admitted('SUBSCRIBED');await new Promise(resolve => setTimeout(resolve,300));assert.equal(live.connected,false);assert.equal(refreshes,0)
+  systemReady({ extension: 'postgres_changes',status: 'ok' });await new Promise(resolve => setTimeout(resolve,300));assert.equal(live.connected,true);assert.equal(refreshes,1)
+  await live.dispose()
+})

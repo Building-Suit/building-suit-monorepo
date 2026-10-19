@@ -7,7 +7,7 @@ export function steppedQuantity(value: number, direction: -1 | 1, step: number, 
   return boundedQuantity(Number((value + direction * step).toPrecision(12)), minimum, maximum)
 }
 
-/** Restore an incomplete controlled numeric input on blur; clearing never removes a record. */
+/** Restore an incomplete controlled numeric input on blur; manual zero/clearing never removes a record. Decrement buttons retain explicit zero intent. */
 export function restoreQuantityInput(event: Event, value: number) {
-  if (typeof HTMLInputElement !== 'undefined' && event.target instanceof HTMLInputElement && event.target.value === '') event.target.value = String(value)
+  if (typeof HTMLInputElement !== 'undefined' && event.target instanceof HTMLInputElement && (event.target.value === '' || !Number.isFinite(Number(event.target.value)) || Number(event.target.value) <= 0)) event.target.value = String(value)
 }

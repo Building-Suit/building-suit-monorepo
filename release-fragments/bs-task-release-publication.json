@@ -1,0 +1,30 @@
+{
+  "id": "bs-task-release-publication",
+  "task": "BS-CHANGELOG-VERSION-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app",
+    "apps/shop-suit/tests",
+    "packages/ui",
+    "packages/nuxt-layer"
+  ],
+  "reason": "Shop exposes reviewed deployed release notes on its public landing page and full changelog; other consumers are classified internally in the foundation fragment.",
+  "notes": {
+    "title": {
+      "en": "Automatic release notes",
+      "ar": "ملاحظات الإصدار التلقائية"
+    },
+    "summary": {
+      "en": "Reviewed updates can appear in the changelog after deployment succeeds.",
+      "ar": "يمكن عرض التحديثات المراجعة في سجل التغييرات بعد نجاح النشر."
+    },
+    "details": {
+      "en": "Release notes support English and Arabic. Shop’s landing page shows deployed updates and links to the full changelog. Each product keeps its version and content when staging releases are promoted.",
+      "ar": "تدعم ملاحظات الإصدار اللغتين الإنجليزية والعربية. تعرض الصفحة الرئيسية للمتجر التحديثات المنشورة وترتبط بسجل التحديثات الكامل. يحتفظ كل منتج بإصداره ومحتواه عند ترقية إصدارات بيئة الاختبار."
+    }
+  }
+}

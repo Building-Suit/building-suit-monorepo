@@ -2,6 +2,9 @@
 import type { BsCommerceDocumentCopy, BsCommerceDocumentForm, BsCommerceCorrectionForm, BsCommerceDocumentView } from '@building-suit/ui/types/commerceDocumentPresentation'
 
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { refreshShopQueries } = useShopInvalidation()
+
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
@@ -21,10 +24,9 @@ type PurchaseDetail = {
 }
 
 const route = useRoute()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const confirmation = useConfirmation()
 const captureScope = useShopTaskScope()
-const nuxtApp = useNuxtApp()
 const { locale } = useI18n()
 const { currentId } = useShop()
 const purchaseId = computed(() => String(route.params.id ?? ''))
@@ -82,7 +84,7 @@ const copy = computed(() => isArabic.value ? {
   cash: 'Cash', bank_transfer: 'Bank transfer', card: 'Card', wallet: 'Wallet', cheque: 'Cheque', other: 'Other',
 })
 
-const { data: purchase, pending, error, refresh } = useAsyncData(
+const { data: purchase, pending, error, refresh } = useShopQuery(
   () => `shop-data:purchase:${currentId.value ?? 'none'}:${purchaseId.value}`,
   async (): Promise<PurchaseDetail | null> => {
     if (!currentId.value || !purchaseId.value) return null
@@ -94,7 +96,7 @@ const { data: purchase, pending, error, refresh } = useAsyncData(
 
 watch([paymentForm, creditForm, returnForm, reversalForm], () => { if (!pendingAction.value) requestId.value = null }, { deep: true })
 
-function money(value: number) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(Number(value)) }
+function money(value: number) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20 }).format(Number(value)) }
 function displayDate(value: string) { return new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) }
 function eventLabel(event: PaymentEvent) { return event.eventType === 'payment' ? copy.value.payment : copy.value.reversal }
 function methodLabel(method: PaymentMethod) { return copy.value[method] }
@@ -112,7 +114,7 @@ function effectiveAt(date: string) { return new Date(`${date}T12:00:00`).toISOSt
 async function finish(message: string) {
   paymentOpen.value = creditOpen.value = returnOpen.value = reversalOpen.value = false
   requestId.value = null
-  await Promise.all([refresh(), refreshNuxtData(Object.keys(nuxtApp.payload.data).filter(key => key.startsWith('shop-data:purchases:')))])
+  await Promise.all([refresh(), refreshShopQueries(key => key.startsWith('shop-data:purchases:'))])
   success.value = message
 }
 

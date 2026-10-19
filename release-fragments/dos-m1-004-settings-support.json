@@ -1,0 +1,21 @@
+{
+  "task": "DOS-M1-004",
+  "paths": [
+    "packages/ux/src/composables/useFloatingMenu.ts",
+    "packages/ui/src/organisms/BsSettingsMenu.vue",
+    "packages/ux/tests/floating-menu.test.mjs",
+    "packages/testing/playwright.settings-focus.config.ts",
+    "packages/testing/e2e/settings-menu-focus.spec.ts"
+  ],
+  "id": "dos-m1-004-settings-support",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "reason": "Track the same shared settings interaction fix for internal consumers without activating operational products or inventing production baselines."
+}

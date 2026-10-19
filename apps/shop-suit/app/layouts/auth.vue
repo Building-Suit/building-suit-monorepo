@@ -3,5 +3,15 @@ const { t, locale } = useI18n()
 const route = useRoute()
 </script>
 <template>
-  <BsProductAuthFrame :wide="route.path === '/auth/signup'" :product="{ name: 'Shop Suit', presentation: 'flat', assetPrefix: '/brand/shop-suit', homeLabel: locale === 'ar' ? 'الرئيسية' : 'Home', title: `${t('hero.title')} ${t('hero.subtitle')}`, description: t('hero.description') }"><slot /></BsProductAuthFrame>
+  <BsProductAuthFrame
+    :wide="route.path === '/auth/signup'"
+    :product="{
+      name: 'Shop Suit',
+      presentation: 'glass',
+      assetPrefix: '/brand/shop-suit',
+      homeLabel: locale === 'ar' ? 'الرئيسية' : 'Home',
+      title: `${t('hero.title')} ${t('hero.subtitle')}`,
+      description: t('hero.description'),
+    }"
+  ><slot /></BsProductAuthFrame>
 </template>

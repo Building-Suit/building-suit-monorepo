@@ -1,0 +1,70 @@
+name: Reconcile upcoming releases and freeze production
+on:
+  workflow_run:
+    workflows: [Verify workspace]
+    types: [completed]
+    branches: [stg, main]
+  schedule:
+    - cron: '37 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  deployments: read
+  actions: read
+  checks: read
+  statuses: read
+jobs:
+  reconcile:
+    # Never subscribe to deployment_status: these environment jobs emit it themselves.
+    # Protected pushes publish in ci.yml only after verify succeeds. Fallback
+    # wake-ups must match their actual workflow ref before environment admission.
+    if: >-
+      github.repository == 'Building-Suit/building-suit-monorepo' &&
+      (github.ref == 'refs/heads/stg' || github.ref == 'refs/heads/main') &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'workflow_run' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == github.ref_name &&
+        github.event.workflow_run.head_repository.full_name == github.repository))
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(github.ref == 'refs/heads/stg' && '{"include":[{"environment":"staging","branch":"stg"}]}' || '{"include":[{"environment":"production","branch":"main"}]}') }}
+    environment: ${{ matrix.environment }}
+    concurrency:
+      group: release-catalog-${{ matrix.environment }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+          fetch-depth: 0
+      - name: Check publisher adoption on the checked-out protected branch
+        id: publisher
+        shell: bash
+        run: |
+          if git cat-file -e HEAD:tooling/releases/publisher.mjs 2>/dev/null; then
+            echo 'adopted=true' >> "$GITHUB_OUTPUT"
+          elif test -n "$(git log -1 --format=%H -- tooling/releases/publisher.mjs)"; then
+            echo '::error::This branch previously adopted the release publisher, but its entrypoint is missing.'
+            exit 1
+          else
+            echo 'adopted=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::This protected branch has not adopted the release publisher; no publication was attempted.'
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.publisher.outputs.adopted == 'true'
+        with:
+          node-version-file: .node-version
+      - name: Refresh net candidate or freeze exact production release after deployment readiness
+        if: steps.publisher.outputs.adopted == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ENVIRONMENT: ${{ matrix.environment }}
+          RELEASE_CATALOG_URL: ${{ vars.RELEASE_CATALOG_URL }}
+          RELEASE_CATALOG_TOKEN: ${{ secrets.RELEASE_CATALOG_TOKEN }}
+          RELEASE_STAGING_URL: ${{ vars.RELEASE_STAGING_URL }}
+          RELEASE_STAGING_TOKEN: ${{ secrets.RELEASE_STAGING_TOKEN }}
+          RELEASE_REQUIRED_CONTEXTS: ${{ vars.RELEASE_REQUIRED_CONTEXTS }}
+        run: node tooling/releases/publisher.mjs

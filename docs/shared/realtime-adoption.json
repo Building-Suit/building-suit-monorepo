@@ -141,6 +141,23 @@
       "unblock": [
         "Revisit after the owning Super Admin workstream publishes its operational readers and authorizes an isolated browser event transport."
       ]
+    },
+    {
+      "suit": "doctor-suit",
+      "status": "not-needed",
+      "workflows": [
+        "synthetic account lifecycle, practice/location/team administration and grant-context revalidation"
+      ],
+      "reason": "Private administrative data reads use explicit request refresh. Protected context uses foreground/visible-page polling; no live queue or Realtime subscription is implemented.",
+      "evidence": [
+        {
+          "path": "apps/doctor-suit/README.md",
+          "anchor": "Private administrative data reads use explicit request refresh"
+        }
+      ],
+      "unblock": [
+        "Reassess when administrative appointment/queue readers exist. Verify Doctor table eligibility, RLS, grant revocation and scoped session/practice/location reconnect before claiming live updates."
+      ]
     }
   ]
 }

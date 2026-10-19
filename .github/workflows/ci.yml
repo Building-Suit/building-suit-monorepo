@@ -4,9 +4,10 @@ on:
     # Edited includes retargets. Revalidate the destination, even when the head SHA is unchanged.
     types: [opened, synchronize, reopened, edited]
   push:
-    branches: [main]
+    branches: [stg, main]
 concurrency:
-  group: verify-${{ github.ref }}
+  # Title/body edits cannot change code and must not cancel its active checks.
+  group: verify-${{ github.ref }}-${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata' || 'code' }}
   cancel-in-progress: true
 permissions:
   contents: read
@@ -27,25 +28,62 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: node tooling/git/check-pr.mjs "$PR_NUMBER"
   review:
+    # A skipped metadata run must never overwrite a required code-check result.
+    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-review' || 'review' }}
+    # Keep retarget, synchronize, reopen and protected-push validation complete.
+    # Metadata-only edits still run branch-policy, but reuse existing code work.
+    if: >-
+      github.event_name != 'pull_request' || github.event.action != 'edited' ||
+      github.event.changes.base != null ||
+      (github.event.changes.title == null && github.event.changes.body == null)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 345 && github.event.pull_request.head.sha || github.sha }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Fetch protected branch history for release classification
+        if: github.event_name == 'pull_request'
+        env:
+          FETCH_BASE_REF: ${{ github.base_ref }}
+        run: git fetch origin "$FETCH_BASE_REF" --no-tags
+      - name: Validate task release fragments
+        if: github.event_name == 'pull_request'
+        env:
+          RELEASE_BASE_SHA: origin/${{ github.base_ref }}
+          RELEASE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node tooling/releases/check.mjs
       - run: pnpm check
       # Control-plane node tests render the health UI with Playwright.
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test
+      - name: Retain receipt reference comparisons
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: receipt-reference-comparisons
+          path: test-results/receipt
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Verify disposable release catalog transactions and authorization
+        run: node tooling/releases/catalog-disposable.mjs
+      - name: Verify actual catalog adapter over disposable PostgREST and full SAS schema
+        env:
+          RELEASE_POSTGREST_DISPOSABLE: '1'
+        run: node tooling/releases/catalog-postgrest-disposable.mjs
   verify:
+    name: ${{ github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-verify' || 'verify' }}
     needs: [review, branch-policy]
     # Stacked feature PRs get review checks and relevant local tests. Build the combined batch once.
     if: >-
-      always() && needs.review.result == 'success' &&
+      !cancelled() && needs.review.result == 'success' &&
       (github.event_name == 'push' ||
        (needs.branch-policy.result == 'success' &&
         (github.base_ref == 'stg' || github.base_ref == 'main')))
@@ -56,6 +94,83 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        if: ${{ success() && !cancelled() }}
+        with:
+          # Disposable public-feed regressions also replay the preserved bootstrap fragment range.
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 345 && github.event.pull_request.head.sha || github.sha }}
+      - uses: pnpm/action-setup@v4
+        if: ${{ success() && !cancelled() }}
+      - uses: actions/setup-node@v4
+        if: ${{ success() && !cancelled() }}
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: ${{ success() && !cancelled() }}
+      - run: pnpm run setup
+        if: ${{ success() && !cancelled() }}
+      - run: pnpm typecheck --concurrency=2
+        if: ${{ success() && !cancelled() }}
+      - run: pnpm lint
+        if: ${{ success() && !cancelled() }}
+      - run: pnpm build --concurrency=2
+        if: ${{ success() && !cancelled() }}
+        env:
+          SUPABASE_URL: http://127.0.0.1:60321
+          SUPABASE_KEY: local-development-publishable-key
+      - run: pnpm test:built-assets
+        if: ${{ success() && !cancelled() }}
+      - run: pnpm exec playwright install --with-deps chromium
+        if: ${{ success() && !cancelled() }}
+      - name: Resolve permitted M1 aggregate browser scope
+        if: ${{ success() && !cancelled() }}
+        id: doctor-m1-scope
+        run: node apps/doctor-suit/tests/m1-aggregate-evidence.mjs scope
+      - name: Verify permitted Doctor M1 aggregate browsers
+        if: ${{ success() && !cancelled() && (steps.doctor-m1-scope.outputs.active == 'true') }}
+        env:
+          DOCTOR_WORKSPACE_REPORT: ${{ runner.temp }}/doctor-m1-workspace-raw.json
+        run: pnpm exec playwright test -c packages/testing/playwright.doctor-workspace.config.ts
+      - name: Capture Doctor M1 aggregate browser evidence
+        if: always() && steps.doctor-m1-scope.outputs.active == 'true'
+        env:
+          M1_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node apps/doctor-suit/tests/m1-aggregate-evidence.mjs workspace "${{ runner.temp }}/doctor-m1-workspace" "${{ runner.temp }}/doctor-m1-workspace-raw.json"
+      - name: Retain sanitized Doctor M1 workspace summary
+        if: always() && steps.doctor-m1-scope.outputs.active == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-m1-workspace-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/doctor-m1-workspace/workspace-summary.json
+          if-no-files-found: error
+      - name: Verify shared Shop regressions for Doctor M1
+        if: ${{ success() && !cancelled() && (steps.doctor-m1-scope.outputs.active == 'true') }}
+        run: pnpm test:e2e:shared-regressions
+      - run: pnpm test:e2e
+        if: ${{ success() && !cancelled() && (steps.doctor-m1-scope.outputs.active != 'true') }}
+      - name: Verify deployed-only Shop landing changelog discovery
+        if: ${{ success() && !cancelled() }}
+        run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/public-changelog.config.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-results
+          path: test-results
+          retention-days: 7
+      # A cancelled run must never satisfy verify, even if cancelled before checkout.
+      - name: Reject cancelled validation as readiness evidence
+        if: cancelled()
+        run: exit 1
+  doctor-m1-shop-backend:
+    if: github.event_name == 'pull_request' && github.event.pull_request.number == 345
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -63,18 +178,104 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run setup
-      - run: pnpm typecheck
-      - run: pnpm lint
-      - run: pnpm build
+      - name: Build Shop and Ledger for actual isolated Auth acceptance
         env:
-          SUPABASE_URL: http://127.0.0.1:60321
+          SUPABASE_URL: http://127.0.0.1:61321
           SUPABASE_KEY: local-development-publishable-key
-      - run: pnpm test:built-assets
+        run: |
+          pnpm --filter @building-suit/shop-suit build
+          pnpm --filter @building-suit/ledger-suit build
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
-      - uses: actions/upload-artifact@v4
-        if: failure()
+      - name: Verify actual Shop signup, persistence and independent Ledger session
+        env:
+          DOCTOR_SHOP_BACKEND_DISPOSABLE: '1'
+          M1_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          DOCTOR_SHOP_BACKEND_EVIDENCE: ${{ runner.temp }}/doctor-m1-shop-backend
+        run: node apps/doctor-suit/tests/shop-backend-actual-provider.mjs
+      - name: Retain sanitized actual consumer receipt
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: browser-results
-          path: test-results
-          retention-days: 7
+          name: doctor-m1-shop-backend-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/doctor-m1-shop-backend/shop-backend-summary.json
+          if-no-files-found: error
+  doctor-m1-evidence:
+    needs: [review, branch-policy, verify, doctor-m1-shop-backend]
+    if: always() && github.event_name == 'pull_request' && github.event.pull_request.number == 345
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Fetch completed aggregate browser summary
+        if: needs.verify.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: doctor-m1-workspace-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/doctor-m1-evidence
+      - name: Fetch actual Shop/Ledger backend receipt
+        if: needs.doctor-m1-shop-backend.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: doctor-m1-shop-backend-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/doctor-m1-evidence
+      - name: Independently reconcile exact-candidate command and artifact evidence
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          M1_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          M1_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: node apps/doctor-suit/tests/m1-aggregate-evidence.mjs evaluate "${{ runner.temp }}/doctor-m1-evidence"
+      - name: Retain Doctor M1 exact-candidate evaluation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-m1-exact-candidate-${{ github.event.pull_request.head.sha }}
+          path: |
+            ${{ runner.temp }}/doctor-m1-evidence/m1-aggregate-evidence.json
+            ${{ runner.temp }}/doctor-m1-evidence/artifact-manifest.json
+            ${{ runner.temp }}/doctor-m1-evidence/workspace-summary.json
+            ${{ runner.temp }}/doctor-m1-evidence/shop-backend-summary.json
+          if-no-files-found: error
+          retention-days: 14
+  publish-releases:
+    needs: [verify]
+    if: always() && github.event_name == 'push' && needs.verify.result == 'success'
+    permissions:
+      contents: read
+      deployments: read
+      actions: read
+      checks: read
+      statuses: read
+    environment: ${{ github.ref_name == 'stg' && 'staging' || 'production' }}
+    concurrency:
+      group: release-catalog-${{ github.ref_name == 'stg' && 'staging' || 'production' }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Reconcile after full validation and wait for provider readiness
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ENVIRONMENT: ${{ github.ref_name == 'stg' && 'staging' || 'production' }}
+          RELEASE_CATALOG_URL: ${{ vars.RELEASE_CATALOG_URL }}
+          RELEASE_CATALOG_TOKEN: ${{ secrets.RELEASE_CATALOG_TOKEN }}
+          RELEASE_STAGING_URL: ${{ vars.RELEASE_STAGING_URL }}
+          RELEASE_STAGING_TOKEN: ${{ secrets.RELEASE_STAGING_TOKEN }}
+          RELEASE_REQUIRED_CONTEXTS: ${{ vars.RELEASE_REQUIRED_CONTEXTS }}
+          RELEASE_WAIT_FOR_DEPLOYMENT: '1'
+        run: node tooling/releases/publisher.mjs

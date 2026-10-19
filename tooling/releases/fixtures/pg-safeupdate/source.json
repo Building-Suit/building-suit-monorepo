@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/eradman/pg-safeupdate",
+  "commit": "37dbc9c4acf5e2504adf2b218e9c6b41751022f3",
+  "version": "1.7",
+  "sha256": {
+    "safeupdate.c": "1351fc18b9a1e2dcc72185d349c178244458b5d9eb30007609c3d599b38aeb38",
+    "Makefile": "57bbc5da65a593e74b18e2333cc62adbe63864fcdfef8d9feea2aa53f2a3f9b0",
+    "LICENSE": "0bf2ef60c813bf0bb01f02b9b9a11b090cd8c90f0fbc627a3ddb0dcb3955ce1b"
+  }
+}

@@ -56,7 +56,7 @@ const executionColumns = computed(() => [
           </BsDescriptionList>
         </BsInline>
       </BsCard>
-      <BsGrid columns="auto" min-item-width="sm" as="section"><BsKpiCard v-for="metric in dashboard.metrics" :key="metric.id" :title="metric.label" :tone="metric.tone"><BsText as="span" size="lg" emphasis="bold" :tone="metric.textTone">{{ metric.value }}</BsText></BsKpiCard></BsGrid>
+      <BsMetricGrid :columns="4" as="section"><BsKpiCard v-for="metric in dashboard.metrics" :key="metric.id" :title="metric.label" :tone="metric.tone"><BsText as="span" size="lg" emphasis="bold" :tone="metric.textTone">{{ metric.value }}</BsText></BsKpiCard></BsMetricGrid>
       <BsStack gap="sm" as="section">
         <BsInline justify="between">
           <BsStack gap="sm">

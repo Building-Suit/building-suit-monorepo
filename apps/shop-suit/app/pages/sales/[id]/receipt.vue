@@ -2,21 +2,22 @@
 import type { BsReceiptView, BsReceiptDocumentCopy, BsReceiptPageCopy } from '@building-suit/ui/types/receiptPresentation'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { ReceiptPaperSize, SaleReceiptSnapshot } from '~/types/receipt'
-import { formatReceiptDate, formatReceiptMoney } from '~/utils/receipt'
+import { projectReceipt, projectReceiptCopy } from '~/utils/receiptPresentation'
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
 const route = useRoute()
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const { currentId, currentLocationId } = useShop()
 const { t, locale } = useI18n()
+const receiptTranslate = useReceiptTranslation()
 const saleId = computed(() => String(route.params.id ?? ''))
-const receiptLanguage = ref<'en' | 'ar'>(locale.value === 'ar' ? 'ar' : 'en')
+const chosenLanguage = ref<'en' | 'ar' | null>(null)
 const paperSize = ref<ReceiptPaperSize>('thermal_80')
 const printed = ref(route.query.origin !== 'pos')
-const { sharing, shareError, shareReceipt } = useSaleReceiptShare()
+const { sharing, shareError, shareReceipt, downloadReceiptImage } = useSaleReceiptShare()
 
-const { data: receipt, pending, error, refresh } = useAsyncData(
+const { data: receipt, pending, error, refresh } = useShopQuery(
   () => `shop-data:sale-receipt:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${saleId.value}`,
   async (): Promise<SaleReceiptSnapshot | null> => {
     if (!currentId.value || !currentLocationId.value || !saleId.value) return null
@@ -31,67 +32,34 @@ const { data: receipt, pending, error, refresh } = useAsyncData(
   { watch: [currentId, currentLocationId, saleId], default: () => null },
 )
 
+const receiptLanguage = computed<'en' | 'ar'>({
+  get: () => chosenLanguage.value ?? receipt.value?.presentation?.language ?? (locale.value === 'ar' ? 'ar' : 'en'),
+  set: value => { chosenLanguage.value = value },
+})
+watch([currentId, currentLocationId, saleId], () => { chosenLanguage.value = null })
+
 watch(receipt, (value) => {
-  if (value) paperSize.value = value.paperSize
+  if (value) {
+    paperSize.value = value.paperSize
+  }
 }, { immediate: true })
 
-function copy(key: string, params?: Record<string, unknown>) {
-  return t(`receipt.${key}`, params ?? {}, { locale: receiptLanguage.value })
-}
-function paymentLabel(method: SaleReceiptSnapshot['payments'][number]['method']) {
-  return t(`payments.methods.${method}`, {}, { locale: receiptLanguage.value })
-}
-function money(value: number) {
-  return receipt.value ? formatReceiptMoney(value, receipt.value.currency, receiptLanguage.value) : ''
-}
-function date(value: string) { return formatReceiptDate(value, receiptLanguage.value) }
 const { print } = useDocumentPrint()
 async function printReceipt() {
   if (receipt.value && await print()) printed.value = true
 }
-const receiptView = computed<BsReceiptView | null>(() => {
-  const value = receipt.value
-  if (!value) return null
-  return {
-    issuer: value.business.name, issuerDetails: [value.business.address, value.business.phone].filter((item): item is string => Boolean(item)),
-    invoice: value.invoiceNumber, issued: date(value.issuedAt), location: value.location,
-    staff: value.staffName || '—', customer: value.customer.name || copy('walkIn'),
-    lines: value.lines.map(line => ({ id: line.id, label: line.name, description: line.sku || undefined, quantity: String(Number(line.quantity)), unitPrice: money(line.unitPrice), total: money(line.total) })),
-    totals: [ { id: 'subtotal', label: copy('subtotal'), value: money(value.subtotal) },
-      ...(value.discount ? [{ id: 'discount', label: copy('discount'), value: '− ' + money(value.discount) }] : []),
-      { id: 'total', label: copy('total'), value: money(value.total), emphasis: true } ],
-    payments: value.payments.map(payment => ({ id: payment.id, summary: `${paymentLabel(payment.method)} · ${money(payment.amount)}`, reference: payment.reference })),
-    footer: value.footer,
-  }
-})
+const projected = computed(() => receipt.value ? projectReceipt(receipt.value, receiptLanguage.value, key => receiptTranslate(key, receiptLanguage.value)) : null)
+const receiptView = computed<BsReceiptView | null>(() => projected.value?.view ?? null)
 const pageCopy = computed<BsReceiptPageCopy>(() => ({
   back: t('receipt.back'), print: printed.value ? t('receipt.reprint') : t('receipt.print'),
-  language: t('receipt.language'), paperSize: t('receipt.paperSize'), share: t('receipt.share'),
+  language: t('receipt.language'), paperSize: t('receipt.paperSize'), share: t('receipt.share'), download: t('receipt.download'),
   loading: t('receipt.loading'), loadError: t('receipt.loadError'), retry: t('common.retry'), unavailable: t('receipt.unavailable'),
 }))
-const documentCopy = computed<BsReceiptDocumentCopy>(() => ({
-  title: copy('title'),
-  reprintLabel: copy('reprintLabel'),
-  invoice: copy('invoice'),
-  date: copy('date'),
-  location: copy('location'),
-  address: copy('address'),
-  phone: copy('phone'),
-  staff: copy('staff'),
-  customer: copy('customer'),
-  items: copy('items'),
-  item: copy('item'),
-  quantity: copy('quantity'),
-  unitPrice: copy('unitPrice'),
-  lineTotal: copy('lineTotal'),
-  total: copy('total'),
-  payment: copy('payment'),
-  compliance: copy('compliance'),
-}))
+const documentCopy = computed<BsReceiptDocumentCopy>(() => projected.value?.copy ?? projectReceiptCopy(undefined, key => receiptTranslate(key, receiptLanguage.value)))
 const languageModel = computed<string>({ get: () => receiptLanguage.value, set: value => { if (value === 'en' || value === 'ar') receiptLanguage.value = value } })
 const paperModel = computed<string>({ get: () => paperSize.value, set: value => { if (value === 'thermal_80' || value === 'a4') paperSize.value = value } })
 const paperOptions = computed(() => [{ value: 'thermal_80', label: t('receipt.thermal80') }, { value: 'a4', label: t('receipt.a4') }])
 </script>
 <template>
-  <BsReceiptPage v-model:language="languageModel" v-model:paper-size="paperModel" :receipt="receiptView" :copy="pageCopy" :document-copy="documentCopy" :back-to="`/sales/${saleId}`" :language-options="[{ value: 'en', label: 'English' }, { value: 'ar', label: 'العربية' }]" :paper-options="paperOptions" :printed="printed" :sharing="sharing" :share-error="shareError" :loading="pending" :error="Boolean(error)" @print="printReceipt" @share="receipt && shareReceipt(receipt)" @retry="refresh()"/>
+  <BsReceiptPage v-model:language="languageModel" v-model:paper-size="paperModel" :receipt="receiptView" :copy="pageCopy" :document-copy="documentCopy" :back-to="`/sales/${saleId}`" :language-options="[{ value: 'en', label: 'English' }, { value: 'ar', label: 'العربية' }]" :paper-options="paperOptions" :printed="printed" :sharing="sharing" :share-error="shareError" :loading="pending" :error="Boolean(error)" @print="printReceipt" @share="receipt && shareReceipt(receipt, receiptLanguage, printed)" @download="downloadReceiptImage" @retry="refresh()"/>
 </template>

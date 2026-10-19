@@ -8,8 +8,9 @@ Use these workflows to navigate, maintain and extend the repository. Select only
 2. Run `pnpm agent:preflight` and inspect all worktrees, dirty files, commits, fetched upstreams, open PRs and recent/manual GitHub merges. Read [the branch workflow](shared/git-workflow.md) and reconcile stale/retired branches before editing. Preserve unrelated edits and active worktrees.
 3. Find the owning app/package/schema using the navigation map, exports and dependency graph.
 4. Identify affected consumers, environment assumptions and acceptance criteria. Search existing implementations before adding abstractions.
-5. Use documented root scripts and workspace filters; verify actual script names.
-6. Reuse the open feature branch for adjustments. For new work, derive its key from `codex/<stack>/<feature>`, identify that stack's newest active leaf, record its committed SHA and create the child worktree from that SHA. Target its PR at the same-stack parent branch; use fresh `origin/stg` only when that stack has no active parent. Reconcile merged/closed parents first. Dirty parent edits stay in that worktree until its owner commits a checkpoint and the child incorporates it. Implement the requested scope, run relevant checks and update documentation. Use a short task record when a handoff is useful; small fixes do not require a new planning document.
+5. Append task release fragments with affected registered Suits, path coverage, classification/disposition and curated EN/AR public copy. Run `pnpm release:check` against the actual PR parent; see [automatic publication](shared/release-publication-runbook.md). Truly internal changes still require explicit internal classification.
+6. Use documented root scripts and workspace filters; verify actual script names.
+7. Reuse the open feature branch for adjustments. For new work, derive its key from `codex/<stack>/<feature>`, identify that stack's newest active leaf, record its committed SHA and create the child worktree from that SHA. Target its PR at the same-stack parent branch; use fresh `origin/stg` only when that stack has no active parent. Reconcile merged/closed parents first. Dirty parent edits stay in that worktree until its owner commits a checkpoint and the child incorporates it. Implement the requested scope, run relevant checks and update documentation. Use a short task record when a handoff is useful; small fixes do not require a new planning document.
 
 ## 2. Add or change a product feature
 
@@ -90,6 +91,11 @@ For final zero-native acceptance, run `node tooling/checks/suit-template-boundar
 7. Verify the new app and affected existing consumers. Scaffolding alone does not authorize paid resources or publication.
 
 ## 9. Release a change
+
+For the explicitly owner-authorized [2026-10-15 combined batch](work-packages/staging-finished-batch.md), combine the finished pinned heads in PR318, retain their source history/fragments, supersede the incorporated source PR and run all applicable combined GitHub CI/security checks. The parent then performs exactly one merge into `stg`. The prior separate-root and provider-recovery hold does not gate this batch’s Git merge; do not manually deploy or wait for Vercel/Supabase recovery. Runtime publication/deployment-success gates remain intact and `main` is excluded.
+
+
+Task fragments retain private review provenance; the agent maintains curated EN/AR net-change inventory with current-code probes. Each stg merge refreshes one upcoming release per relevant Suit from the actual current main-to-stg tree diff, including pre-anchor work, reverts, overlap, cherry-picks, removals and divergence. Staging never consumes released versions. Highest remaining impact determines one target from the actual production baseline; no user picks versions/types or rewrites notes. An authorized stg-to-main promotion freezes the exact ready candidate only after production readiness, then starts the next candidate. Existing legacy history/anchor remain intact; do not invent per-merge releases or activate products to satisfy internal bookkeeping. Use the [runbook](shared/release-publication-runbook.md) for evidence, transactional recovery, guards and still-pending external setup. This is code guidance, not merge/deployment/credential authorization.
 
 1. Run the preflight again, check live PR/base/head state and the [app-stack integration procedure](shared/git-workflow.md#integrate-and-release-app-stacks). Incorporate only reviewed, ready features and inspect affected apps/packages/database objects, including shared and root changes.
 2. Run required CI checks; verify the artifact/commit, environment variables, project refs and callbacks.

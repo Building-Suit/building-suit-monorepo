@@ -1,0 +1,15 @@
+{
+  "id": "shop-shared-suite-rendered-contracts",
+  "task": "CI-AUTH-REGRESSION-REPAIR",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/tests/e2e/post-unification-regressions.spec.ts",
+    "apps/shop-suit/tests/e2e/ss-launch-solo-variants-001-2.spec.ts",
+    "docs/work-packages/ci-auth-regression-repair.md"
+  ],
+  "reason": "Compare dashboard surface controls with their owning toolbar and canonical surface token, retaining card geometry, gradient, contrast and responsive checks. Enter pricing through hydrated documents rather than awaiting a private Vue router promise across layout replacement; cover actual EN/AR public-to-workspace NuxtLink navigation without a document reload or duplicate page trees. No runtime design, pricing, permissions or test matrix is removed."
+}

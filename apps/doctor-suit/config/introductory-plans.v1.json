@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "decisionDate": "2026-10-18",
+  "currency": "EGP",
+  "currencyExponent": 2,
+  "annualCalendarMonths": 12,
+  "annualMonthlyPayments": 10,
+  "selfServiceSetupFeeMinor": 0,
+  "plans": [
+    {
+      "key": "starter",
+      "nameEn": "Starter",
+      "nameAr": "البداية",
+      "monthlyMinor": 29900,
+      "yearlyMinor": 299000,
+      "clinicLimit": 1,
+      "totalNamedUsers": 5,
+      "staffLimitExcludingOwner": 4
+    },
+    {
+      "key": "clinic",
+      "nameEn": "Clinic",
+      "nameAr": "العيادة",
+      "monthlyMinor": 59900,
+      "yearlyMinor": 599000,
+      "clinicLimit": 3,
+      "totalNamedUsers": 10,
+      "staffLimitExcludingOwner": 9
+    },
+    {
+      "key": "group",
+      "nameEn": "Group",
+      "nameAr": "المجموعة",
+      "monthlyMinor": 99900,
+      "yearlyMinor": 999000,
+      "clinicLimit": 5,
+      "totalNamedUsers": 25,
+      "staffLimitExcludingOwner": 24
+    }
+  ],
+  "decisionStatus": "owner_authorized_launch_prices",
+  "published": true,
+  "futureFeaturePolicy": "standard_features_as_released_within_plan_capacity_no_feature_addon_charges"
+}

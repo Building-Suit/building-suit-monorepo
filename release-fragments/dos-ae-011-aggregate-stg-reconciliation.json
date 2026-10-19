@@ -1,0 +1,35 @@
+{
+  "id": "dos-ae-011-aggregate-stg-reconciliation",
+  "task": "DOS-AE-011",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/account-actual-provider.mjs",
+    "apps/doctor-suit/tests/e2e/booking-focus.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/booking-readiness.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-ae-002.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-ae-003-subscription.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-ae-003-write-offers.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-ae-007-privacy.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-006.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-007.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-008.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-009.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-011.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-012.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-013.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-014.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-015.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-016.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-017.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-018.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-019.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts",
+    "apps/doctor-suit/tests/helpers/password-step.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-011-aggregate-stg-reconciliation.md"
+  ],
+  "reason": "History-preserving aggregate reconciliation with current stg and root dependency-graph fix; adapt Doctor test journeys to the canonical shared email-first stage. Preserve Shop-owned auth changes and record their failing aggregate regressions without duplicating the assigned Shop repair. No passing aggregate, deployment, live readiness or domain approval is claimed."
+}

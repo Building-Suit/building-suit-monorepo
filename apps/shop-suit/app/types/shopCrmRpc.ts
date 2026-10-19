@@ -6,6 +6,58 @@ export type ShopRpcDatabase = {
     Functions: {
       shop_subscription_currency_catalog: { Args: { p_currency: 'EGP' | 'USD' }; Returns: import('./plans').PublicPlan[] }
       shop_billing_currency_plans: { Args: { p_shop_id: string; p_currency: 'EGP' | 'USD' }; Returns: import('./billing').BillingPlanOption[] }
+      shop_booking_settings:{Args:{p_shop_id:string};Returns:unknown}
+      shop_booking_settings_save:{Args:{p_shop_id:string;p_policy:import('../../shared/appointmentBooking').BookingPolicy;p_staff:{membershipId:string;publicName:string}[]};Returns:undefined}
+      appointment_customer_portal: {Args:{p_slug:string;p_token:string;p_bucket?:string;p_page?:number};Returns:import('../../shared/customerPortal').CustomerPortal|{authenticated:false}}
+      appointment_access_status: {Args:{p_shop_id:string;p_appointment_id:string};Returns:import('../../shared/appointmentAccess').AppointmentAccessStatus}
+      appointment_access_issue: {Args:{p_shop_id:string;p_appointment_id:string};Returns:{code:string}}
+      appointment_access_revoke: {Args:{p_shop_id:string;p_appointment_id:string};Returns:undefined}
+      shop_website_showcase: {Args:{p_slug:string;p_page?:number};Returns:import('../../shared/publicWebsite').PublicWebsitePayload|null}
+      shop_website_inquiry_submit: {Args:{p_slug:string;p_name:string;p_contact:string;p_message:string;p_locale:string;p_honeypot?:string};Returns:{ok:boolean}}
+      shop_website_inquiries: {Args:{p_shop_id:string;p_status?:string;p_page?:number};Returns:import('../../shared/websiteInquiries').WebsiteInquiryInbox}
+      shop_website_inquiry_status: {Args:{p_shop_id:string;p_inquiry_id:string;p_status:string};Returns:undefined}
+      shop_website_catalog: { Args: {p_shop_id:string;p_search?:string;p_page?:number}; Returns: import('../../shared/websiteCatalog').WebsiteCatalogSettings }
+      shop_website_catalog_save: { Args: {p_shop_id:string;p_kind:import('../../shared/websiteCatalog').WebsiteCatalogKind;p_item_id:string;p_entry:import('../../shared/websiteCatalog').WebsiteCatalogEntry};Returns:undefined }
+      shop_website_catalog_publish: { Args: {p_shop_id:string;p_kind:import('../../shared/websiteCatalog').WebsiteCatalogKind;p_item_id:string;p_published:boolean};Returns:undefined }
+      shop_website_public_catalog: { Args: {p_slug:string;p_page?:number};Returns: import('../../shared/websiteCatalog').PublicWebsiteCatalog|null }
+      shop_website_profile: { Args: { p_shop_id: string }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_profile_save: { Args: { p_shop_id: string; p_profile: import('../../shared/websiteProfile').WebsiteProfileDraft }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_logo_replace: { Args: { p_shop_id: string; p_data_url: string | null }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_profile_publish: { Args: { p_shop_id: string; p_owner_opt_in: boolean }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_profile_unpublish: { Args: { p_shop_id: string }; Returns: import('../../shared/websiteProfile').WebsiteProfileSettings }
+      shop_website_public_profile: { Args: { p_slug: string }; Returns: unknown }
+      shop_website_address: { Args: { p_shop_id: string }; Returns: import('../../shared/websiteAddress').WebsiteAddress | null }
+      shop_website_address_save: { Args: { p_shop_id: string; p_slug: string }; Returns: import('../../shared/websiteAddress').WebsiteAddress }
+      shop_website_host_resolve: { Args: { p_slug: string }; Returns: { canonicalSlug: string; isAlias: boolean } | null }
+      queue_eta_invoice: {Args:{p_request_id:string;p_shop_id:string;p_invoice_id:string;p_receiver:{type:'B';id:string;name:string;address:{country:string;governate:string;regionCity:string;street:string;buildingNumber:string}};p_reason:string};Returns:string}
+      eta_original_document_reference: {Args:{p_shop_id:string;p_invoice_id:string};Returns:unknown}
+      eta_settings: {Args:{p_shop_id:string;p_offset?:number};Returns:unknown}
+      save_eta_configuration: {Args:{p_request_id:string;p_shop_id:string;p_configuration:unknown;p_reason:string};Returns:string}
+      queue_eta_receipt: {Args:{p_request_id:string;p_shop_id:string;p_invoice_id:string;p_buyer:{type:string;id?:string;name?:string};p_payment_method:string};Returns:string}
+      preview_sale_return: { Args: {p_shop_id: string; p_location_id: string; p_invoice_id: string; p_lines: import('./saleReturns').SaleReturnLineInput[]}; Returns: unknown }
+      create_sale_return: { Args: {p_request_id: string; p_shop_id: string; p_location_id: string; p_invoice_id: string; p_lines: import('./saleReturns').SaleReturnLineInput[]; p_reason: string; p_expected_plan: import('./saleReturns').SaleReturnPlan}; Returns: string }
+      sale_return_context: { Args: {p_shop_id: string; p_location_id: string; p_invoice_id: string; p_offset?: number}; Returns: unknown }
+      get_sale_return: { Args: {p_shop_id: string; p_location_id: string; p_return_id: string}; Returns: unknown }
+      record_sale_return_refund: { Args: {p_request_id: string; p_shop_id: string; p_location_id: string; p_refund_id: string; p_operation: 'external_record' | 'cash_handover' | 'failed'; p_reference: string; p_reason: string}; Returns: string }
+      complete_service: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_line_id: string | null; p_quantity: number; p_appointment_id?: string | null; p_materials?: Array<{productId: string; unit: string; quantity: number}> | null; p_reason?: string }; Returns: string }
+      service_fulfillment_context: { Args: {p_shop_id: string; p_location_id: string; p_invoice_id?: string | null; p_offset?: number}; Returns: unknown }
+      service_recipe_context: { Args: {p_shop_id: string; p_offset?: number}; Returns: unknown }
+      define_service_material_unit: { Args: {p_shop_id: string; p_product_id: string; p_unit: string}; Returns: undefined }
+      save_service_recipe: { Args: {p_request_id: string; p_shop_id: string; p_service_id: string; p_effective_at: string | null; p_materials: Array<{productId: string; unit: string; quantity: number}>; p_reason: string}; Returns: string }
+      correct_service_material: { Args: {p_request_id: string; p_shop_id: string; p_consumption_id: string; p_quantity: number; p_reason: string}; Returns: string }
+      reconcile_service_completion: { Args: {p_shop_id: string; p_args: Record<string, unknown>; p_resolution_request_id: string; p_reason: string}; Returns: {state: 'synced'; invoiceId: string} | {state: 'cancelled'; resolutionRequestId: string} }
+
+      quote_sale_tax: { Args: { p_shop_id: string; p_location_id: string; p_lines: { item_type: string; source_id: string; quantity: number }[] }; Returns: unknown }
+      save_tax_policy: { Args: { p_request_id: string; p_shop_id: string; p_effective_at: string; p_policy: import('./tax').TaxPolicy; p_reason: string }; Returns: string }
+      tax_settings: { Args: { p_shop_id: string }; Returns: unknown }
+      get_sale_tax_snapshot: { Args: { p_shop_id: string; p_invoice_id: string }; Returns: unknown }
+      set_sale_order_discount: { Args: { p_shop_id: string; p_invoice_id: string; p_discount: number }; Returns: undefined }
+
+      save_commission_policy: { Args: { p_request_id: string; p_shop_id: string; p_policy: import('./commission').CommissionPolicy; p_reason: string }; Returns: string }
+      commission_history: { Args: { p_shop_id: string; p_invoice_id?: string | null; p_offset?: number }; Returns: unknown }
+      assign_sale_commission: { Args: { p_shop_id: string; p_line_id: string; p_membership_id: string | null; p_appointment_id?: string | null }; Returns: undefined }
+      commission_assignment_context: { Args: { p_shop_id: string; p_invoice_id: string }; Returns: unknown }
+      record_commission_adjustment: { Args: { p_shop_id: string; p_snapshot_id: string; p_request_id: string; p_kind: 'correction' | 'exported'; p_amount: number; p_reason: string }; Returns: undefined }
       shop_billing_change_preview: { Args:{p_shop_id:string;p_catalog_terms_id:string|null;p_private_offer?:Record<string,string|number>|null};Returns:unknown }
       shop_billing_change_schedule: { Args:{p_request_id:string;p_shop_id:string;p_catalog_terms_id:string|null;p_private_offer?:Record<string,string|number>|null};Returns:unknown }
       shop_billing_change_read: { Args:{p_shop_id:string};Returns:unknown }
@@ -397,6 +449,9 @@ export type ShopRpcDatabase = {
         }
         Returns: string
       }
+      save_document_settings: { Args: { p_shop_id: string; p_settings: Record<string, unknown> }; Returns: unknown }
+      business_currency_settings: { Args: { p_shop_id: string }; Returns: unknown }
+      save_business_currency: { Args: { p_shop_id: string; p_currency: string }; Returns: unknown }
       receipt_settings: {
         Args: { p_shop_id: string }
         Returns: unknown
@@ -410,6 +465,14 @@ export type ShopRpcDatabase = {
           p_footer: string | null
           p_paper_size: 'thermal_80' | 'a4'
         }
+        Returns: unknown
+      }
+      list_own_pos_receipts: {
+        Args: { p_shop_id: string; p_location_id: string }
+        Returns: { invoiceId: string; invoiceNumber: string; issuedAt: string; total: number; currency: string }[]
+      }
+      get_own_pos_receipt: {
+        Args: { p_shop_id: string; p_location_id: string; p_invoice_id?: string | null }
         Returns: unknown
       }
       get_location_sale_receipt: {
@@ -598,6 +661,28 @@ export type ShopRpcDatabase = {
           p_customer_id: string | null
           p_notes: string | null
           p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+        }
+        Returns: string
+      }
+      replay_offline_cash_command: {
+        Args: { p_kind: 'movement' | 'close'; p_shop_id: string; p_args: Record<string, unknown> }
+        Returns: string
+      }
+      reconcile_offline_cash_command: {
+        Args: { p_kind: 'movement' | 'close'; p_shop_id: string; p_args: Record<string, unknown>; p_resolution_request_id: string; p_reason: string }
+        Returns: { state: 'synced'; resultId: string } | { state: 'cancelled'; resolutionRequestId: string }
+      }
+      reconcile_offline_pos_sale: {
+        Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_original_args: Record<string, unknown>; p_resolution_request_id: string; p_reason: string }
+        Returns: { state: 'synced'; invoiceId: string } | { state: 'cancelled'; resolutionRequestId: string }
+      }
+      replay_offline_pos_sale: {
+        Args: {
+          p_request_id: string; p_save_request_id: string; p_issue_request_id: string; p_payment_request_id: string
+          p_appointment_request_id: string | null; p_shop_id: string; p_location_id: string; p_shift_id: string
+          p_staff_membership_id: string; p_appointment_id: string | null; p_customer_id: string | null; p_notes: string | null
+          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+          p_amount: number; p_paid_at: string; p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'; p_reference: string | null
         }
         Returns: string
       }

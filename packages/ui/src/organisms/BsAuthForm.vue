@@ -73,7 +73,7 @@ defineSlots<{
 .bs-auth-form__body { display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr); gap: var(--bs-space-5); }
 .bs-auth-form__actions { margin-top: var(--bs-space-6); }
 .bs-auth-form__footer { margin-top: var(--bs-space-5); color: var(--bs-text-muted); font-size: var(--bs-type-body-m-size); text-align: center; }
-@media (min-width: 640px) { .bs-auth-form { padding: var(--bs-space-8); } }
+@media (min-width: 640px) { .bs-auth-form { padding: var(--bs-space-6); } }
 @media (max-width: 1023px) { .bs-auth-form { box-shadow: var(--bs-elevation-2); } }
 :lang(ar) .bs-auth-form__eyebrow, [dir='rtl'] .bs-auth-form__eyebrow { letter-spacing: normal; }
 </style>

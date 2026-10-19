@@ -13,11 +13,13 @@ interface LegalDocument {
 }
 
 defineProps<{
+  privacySettingsLabel?: string
   presentation?: 'default' | 'flat'
   document: LegalDocument
   eyebrow: string
   lastUpdatedLabel: string
 }>()
+defineEmits<{ privacySettings: [] }>()
 </script>
 
 <template>
@@ -27,6 +29,7 @@ defineProps<{
         <p class="bs-public-legal-page__identity text-xs font-bold text-brand-gold-highlight">{{ eyebrow }}</p>
         <h1 class="mt-3 text-3xl font-black tracking-[-.04em] sm:text-4xl">{{ document.title }}</h1>
         <p class="mt-4 max-w-3xl text-sm leading-7 text-fg-muted sm:text-base">{{ document.intro }}</p>
+        <BsButton v-if="privacySettingsLabel" class="mt-4" variant="secondary" @click="$emit('privacySettings')">{{ privacySettingsLabel }}</BsButton>
         <p class="mt-4 text-xs text-fg-muted">{{ lastUpdatedLabel }} {{ document.updated }}</p>
       </div>
       <div class="bs-public-legal-page__body space-y-9 px-6 py-8 sm:px-10 sm:py-10">

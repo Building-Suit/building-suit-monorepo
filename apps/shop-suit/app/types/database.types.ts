@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       accounting_periods: {
@@ -75,6 +50,336 @@ export type Database = {
           },
           {
             foreignKeyName: "accounting_periods_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_access_credentials: {
+        Row: {
+          appointment_id: string
+          code_hash: string
+          customer_id: string | null
+          id: string
+          issuance_origin: string
+          issued_at: string
+          issued_by_profile_id: string | null
+          phone_hash: string
+          revoked_at: string | null
+          shop_id: string
+        }
+        Insert: {
+          appointment_id: string
+          code_hash: string
+          customer_id?: string | null
+          id?: string
+          issuance_origin?: string
+          issued_at?: string
+          issued_by_profile_id?: string | null
+          phone_hash: string
+          revoked_at?: string | null
+          shop_id: string
+        }
+        Update: {
+          appointment_id?: string
+          code_hash?: string
+          customer_id?: string | null
+          id?: string
+          issuance_origin?: string
+          issued_at?: string
+          issued_by_profile_id?: string | null
+          phone_hash?: string
+          revoked_at?: string | null
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_access_credentials_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_access_credentials_customer_id_shop_id_fkey"
+            columns: ["customer_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "client_balances"
+            referencedColumns: ["client_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_access_credentials_customer_id_shop_id_fkey"
+            columns: ["customer_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_access_credentials_issued_by_profile_id_fkey"
+            columns: ["issued_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_access_credentials_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_access_events: {
+        Row: {
+          action: string
+          actor_profile_id: string | null
+          appointment_id: string | null
+          credential_id: string | null
+          id: string
+          occurred_at: string
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_profile_id?: string | null
+          appointment_id?: string | null
+          credential_id?: string | null
+          id?: string
+          occurred_at?: string
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_profile_id?: string | null
+          appointment_id?: string | null
+          credential_id?: string | null
+          id?: string
+          occurred_at?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_access_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_access_events_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_access_events_credential_id_shop_id_fkey"
+            columns: ["credential_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_access_credentials"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_access_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_access_rate_windows: {
+        Row: {
+          attempts: number
+          scope_key: string
+          window_started_at: string
+        }
+        Insert: {
+          attempts: number
+          scope_key: string
+          window_started_at: string
+        }
+        Update: {
+          attempts?: number
+          scope_key?: string
+          window_started_at?: string
+        }
+        Relationships: []
+      }
+      appointment_access_sessions: {
+        Row: {
+          created_at: string
+          credential_id: string
+          expires_at: string
+          id: string
+          revoked_at: string | null
+          shop_id: string
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          credential_id: string
+          expires_at: string
+          id?: string
+          revoked_at?: string | null
+          shop_id: string
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          credential_id?: string
+          expires_at?: string
+          id?: string
+          revoked_at?: string | null
+          shop_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_access_sessions_credential_id_shop_id_fkey"
+            columns: ["credential_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_access_credentials"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_access_sessions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_booking_commands: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          credential_id: string | null
+          guest: boolean
+          key_hash: string
+          operation: string
+          payload_hash: string
+          shop_id: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          credential_id?: string | null
+          guest?: boolean
+          key_hash: string
+          operation: string
+          payload_hash: string
+          shop_id: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          credential_id?: string | null
+          guest?: boolean
+          key_hash?: string
+          operation?: string
+          payload_hash?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_booking_commands_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_booking_commands_credential_id_shop_id_fkey"
+            columns: ["credential_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_access_credentials"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_booking_commands_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_booking_events: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          appointment_id: string | null
+          credential_id: string | null
+          id: string
+          occurred_at: string
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          appointment_id?: string | null
+          credential_id?: string | null
+          id?: string
+          occurred_at?: string
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          appointment_id?: string | null
+          credential_id?: string | null
+          id?: string
+          occurred_at?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_booking_events_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_booking_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_booking_references: {
+        Row: {
+          appointment_id: string
+          reference: string
+          shop_id: string
+        }
+        Insert: {
+          appointment_id: string
+          reference?: string
+          shop_id: string
+        }
+        Update: {
+          appointment_id?: string
+          reference?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_booking_references_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_booking_references_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
@@ -134,10 +439,260 @@ export type Database = {
           },
         ]
       }
+      appointment_email_budget: {
+        Row: {
+          bucket: string
+          next_claim_at: string
+          used: number
+        }
+        Insert: {
+          bucket: string
+          next_claim_at?: string
+          used?: number
+        }
+        Update: {
+          bucket?: string
+          next_claim_at?: string
+          used?: number
+        }
+        Relationships: []
+      }
+      appointment_email_consents: {
+        Row: {
+          appointment_id: string
+          client_id: string
+          credential_id: string
+          email: string
+          enabled: boolean
+          locale: string
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          client_id: string
+          credential_id: string
+          email: string
+          enabled?: boolean
+          locale: string
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          client_id?: string
+          credential_id?: string
+          email?: string
+          enabled?: boolean
+          locale?: string
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_email_consents_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_email_consents_client_id_shop_id_fkey"
+            columns: ["client_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "client_balances"
+            referencedColumns: ["client_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_email_consents_client_id_shop_id_fkey"
+            columns: ["client_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_email_consents_credential_id_shop_id_fkey"
+            columns: ["credential_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_access_credentials"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_email_consents_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_email_events: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          appointment_id: string | null
+          created_at: string
+          credential_id: string | null
+          id: string
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          appointment_id?: string | null
+          created_at?: string
+          credential_id?: string | null
+          id?: string
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          appointment_id?: string | null
+          created_at?: string
+          credential_id?: string | null
+          id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_email_events_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_email_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_email_outbox: {
+        Row: {
+          appointment_id: string
+          appointment_starts_at: string
+          attempts: number
+          created_at: string
+          dispatch_token: string | null
+          due_at: string
+          first_attempt_at: string | null
+          id: string
+          last_error: string | null
+          lease_token: string | null
+          lease_until: string | null
+          next_attempt_at: string
+          payload: Json | null
+          provider_email_id: string | null
+          sent_at: string | null
+          shop_id: string
+          state: string
+        }
+        Insert: {
+          appointment_id: string
+          appointment_starts_at: string
+          attempts?: number
+          created_at?: string
+          dispatch_token?: string | null
+          due_at: string
+          first_attempt_at?: string | null
+          id?: string
+          last_error?: string | null
+          lease_token?: string | null
+          lease_until?: string | null
+          next_attempt_at?: string
+          payload?: Json | null
+          provider_email_id?: string | null
+          sent_at?: string | null
+          shop_id: string
+          state?: string
+        }
+        Update: {
+          appointment_id?: string
+          appointment_starts_at?: string
+          attempts?: number
+          created_at?: string
+          dispatch_token?: string | null
+          due_at?: string
+          first_attempt_at?: string | null
+          id?: string
+          last_error?: string | null
+          lease_token?: string | null
+          lease_until?: string | null
+          next_attempt_at?: string
+          payload?: Json | null
+          provider_email_id?: string | null
+          sent_at?: string | null
+          shop_id?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_email_outbox_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_email_outbox_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_email_schedule_events: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          project_ref: string
+        }
+        Insert: {
+          created_at?: string
+          enabled: boolean
+          id?: string
+          project_ref: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          project_ref?: string
+        }
+        Relationships: []
+      }
+      appointment_email_schedule_settings: {
+        Row: {
+          enabled: boolean
+          project_ref: string | null
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          project_ref?: string | null
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          project_ref?: string | null
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       appointment_events: {
         Row: {
           action: string
-          actor_profile_id: string
+          actor_kind: string
+          actor_profile_id: string | null
           after_state: Json
           appointment_id: string
           before_state: Json | null
@@ -148,7 +703,8 @@ export type Database = {
         }
         Insert: {
           action: string
-          actor_profile_id: string
+          actor_kind?: string
+          actor_profile_id?: string | null
           after_state: Json
           appointment_id: string
           before_state?: Json | null
@@ -159,7 +715,8 @@ export type Database = {
         }
         Update: {
           action?: string
-          actor_profile_id?: string
+          actor_kind?: string
+          actor_profile_id?: string | null
           after_state?: Json
           appointment_id?: string
           before_state?: Json | null
@@ -185,6 +742,51 @@ export type Database = {
           },
           {
             foreignKeyName: "appointment_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_reminder_intents: {
+        Row: {
+          appointment_id: string
+          appointment_starts_at: string
+          created_at: string
+          id: string
+          scheduled_for: string
+          shop_id: string
+          state: string
+        }
+        Insert: {
+          appointment_id: string
+          appointment_starts_at: string
+          created_at?: string
+          id?: string
+          scheduled_for: string
+          shop_id: string
+          state?: string
+        }
+        Update: {
+          appointment_id?: string
+          appointment_starts_at?: string
+          created_at?: string
+          id?: string
+          scheduled_for?: string
+          shop_id?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_reminder_intents_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "appointment_reminder_intents_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
@@ -369,12 +971,13 @@ export type Database = {
       appointments: {
         Row: {
           assigned_membership_id: string | null
+          booking_origin: string
           cancellation_reason: string | null
           cancelled_at: string | null
           client_id: string | null
           completed_at: string | null
           created_at: string
-          created_by_profile_id: string
+          created_by_profile_id: string | null
           customer_name_snapshot: string | null
           customer_phone_snapshot: string | null
           ends_at: string
@@ -394,12 +997,13 @@ export type Database = {
         }
         Insert: {
           assigned_membership_id?: string | null
+          booking_origin?: string
           cancellation_reason?: string | null
           cancelled_at?: string | null
           client_id?: string | null
           completed_at?: string | null
           created_at?: string
-          created_by_profile_id: string
+          created_by_profile_id?: string | null
           customer_name_snapshot?: string | null
           customer_phone_snapshot?: string | null
           ends_at: string
@@ -419,12 +1023,13 @@ export type Database = {
         }
         Update: {
           assigned_membership_id?: string | null
+          booking_origin?: string
           cancellation_reason?: string | null
           cancelled_at?: string | null
           client_id?: string | null
           completed_at?: string | null
           created_at?: string
-          created_by_profile_id?: string
+          created_by_profile_id?: string | null
           customer_name_snapshot?: string | null
           customer_phone_snapshot?: string | null
           ends_at?: string
@@ -861,6 +1466,327 @@ export type Database = {
           },
         ]
       }
+      commission_events: {
+        Row: {
+          actor_profile_id: string | null
+          amount: number
+          created_at: string
+          cumulative_fraction: number
+          event_key: string
+          id: string
+          kind: string
+          reason: string
+          snapshot_id: string
+        }
+        Insert: {
+          actor_profile_id?: string | null
+          amount: number
+          created_at?: string
+          cumulative_fraction?: number
+          event_key: string
+          id?: string
+          kind: string
+          reason: string
+          snapshot_id: string
+        }
+        Update: {
+          actor_profile_id?: string | null
+          amount?: number
+          created_at?: string
+          cumulative_fraction?: number
+          event_key?: string
+          id?: string
+          kind?: string
+          reason?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_events_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "commission_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_line_assignments: {
+        Row: {
+          actor_profile_id: string
+          appointment_id: string | null
+          created_at: string
+          line_id: string
+          membership_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          appointment_id?: string | null
+          created_at?: string
+          line_id: string
+          membership_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          appointment_id?: string | null
+          created_at?: string
+          line_id?: string
+          membership_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_line_assignments_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_line_assignments_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_line_assignments_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_line_assignments_line_id_fkey"
+            columns: ["line_id"]
+            isOneToOne: true
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_line_assignments_line_id_shop_id_fkey"
+            columns: ["line_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_line_assignments_membership_id_shop_id_fkey"
+            columns: ["membership_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_memberships"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_line_assignments_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_policy_versions: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          id: string
+          policy: Json
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          policy: Json
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          policy?: Json
+          reason?: string
+          request_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_policy_versions_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_policy_versions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_snapshots: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          currency: string
+          employee_name: string | null
+          employee_profile_id: string
+          id: string
+          invoice_id: string
+          item_type: string
+          line_id: string
+          membership_id: string
+          net_line_amount: number
+          original_commission: number
+          policy_version: string
+          policy_version_id: string
+          quantity: number
+          rate: number
+          rate_type: string
+          shop_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          currency: string
+          employee_name?: string | null
+          employee_profile_id: string
+          id?: string
+          invoice_id: string
+          item_type: string
+          line_id: string
+          membership_id: string
+          net_line_amount: number
+          original_commission: number
+          policy_version?: string
+          policy_version_id: string
+          quantity: number
+          rate: number
+          rate_type: string
+          shop_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          currency?: string
+          employee_name?: string | null
+          employee_profile_id?: string
+          id?: string
+          invoice_id?: string
+          item_type?: string
+          line_id?: string
+          membership_id?: string
+          net_line_amount?: number
+          original_commission?: number
+          policy_version?: string
+          policy_version_id?: string
+          quantity?: number
+          rate?: number
+          rate_type?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_snapshots_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_employee_profile_id_fkey"
+            columns: ["employee_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_invoice_id_shop_id_fkey"
+            columns: ["invoice_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_balances"
+            referencedColumns: ["invoice_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_invoice_id_shop_id_fkey"
+            columns: ["invoice_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_gross_margin"
+            referencedColumns: ["invoice_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_invoice_id_shop_id_fkey"
+            columns: ["invoice_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_line_id_fkey"
+            columns: ["line_id"]
+            isOneToOne: true
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_line_id_shop_id_invoice_id_fkey"
+            columns: ["line_id", "shop_id", "invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id", "shop_id", "invoice_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_membership_id_shop_id_fkey"
+            columns: ["membership_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_memberships"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_policy_version_id_fkey"
+            columns: ["policy_version_id"]
+            isOneToOne: false
+            referencedRelation: "commission_policy_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_policy_version_id_shop_id_fkey"
+            columns: ["policy_version_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "commission_policy_versions"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "commission_snapshots_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_payment_adjustments: {
         Row: {
           adjustment_group_id: string
@@ -1118,6 +2044,264 @@ export type Database = {
           },
         ]
       }
+      eta_audit_events: {
+        Row: {
+          created_at: string
+          error_code: string | null
+          from_state: string | null
+          id: number
+          outbox_id: string
+          to_state: string
+        }
+        Insert: {
+          created_at?: string
+          error_code?: string | null
+          from_state?: string | null
+          id?: never
+          outbox_id: string
+          to_state: string
+        }
+        Update: {
+          created_at?: string
+          error_code?: string | null
+          from_state?: string | null
+          id?: never
+          outbox_id?: string
+          to_state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eta_audit_events_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "eta_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eta_outbox: {
+        Row: {
+          adapter_version: string
+          attempts: number
+          channel: string
+          created_at: string
+          created_by_profile_id: string | null
+          device_serial: string | null
+          document_uuid: string | null
+          error_code: string | null
+          id: string
+          invoice_id: string
+          lease_id: string | null
+          lease_until: string | null
+          location_id: string
+          next_attempt_at: string
+          payload: string | null
+          payload_hash: string | null
+          profile_version_id: string
+          request_id: string
+          shop_id: string
+          signing_certificate_fingerprint: string | null
+          source: Json
+          state: string
+          submission_uuid: string | null
+          updated_at: string
+        }
+        Insert: {
+          adapter_version?: string
+          attempts?: number
+          channel?: string
+          created_at?: string
+          created_by_profile_id?: string | null
+          device_serial?: string | null
+          document_uuid?: string | null
+          error_code?: string | null
+          id?: string
+          invoice_id: string
+          lease_id?: string | null
+          lease_until?: string | null
+          location_id: string
+          next_attempt_at?: string
+          payload?: string | null
+          payload_hash?: string | null
+          profile_version_id: string
+          request_id: string
+          shop_id: string
+          signing_certificate_fingerprint?: string | null
+          source: Json
+          state?: string
+          submission_uuid?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adapter_version?: string
+          attempts?: number
+          channel?: string
+          created_at?: string
+          created_by_profile_id?: string | null
+          device_serial?: string | null
+          document_uuid?: string | null
+          error_code?: string | null
+          id?: string
+          invoice_id?: string
+          lease_id?: string | null
+          lease_until?: string | null
+          location_id?: string
+          next_attempt_at?: string
+          payload?: string | null
+          payload_hash?: string | null
+          profile_version_id?: string
+          request_id?: string
+          shop_id?: string
+          signing_certificate_fingerprint?: string | null
+          source?: Json
+          state?: string
+          submission_uuid?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eta_outbox_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eta_outbox_invoice_id_shop_id_location_id_fkey"
+            columns: ["invoice_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+          {
+            foreignKeyName: "eta_outbox_profile_version_id_shop_id_fkey"
+            columns: ["profile_version_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "eta_profile_versions"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "eta_outbox_shop_id_device_serial_fkey"
+            columns: ["shop_id", "device_serial"]
+            isOneToOne: false
+            referencedRelation: "eta_pos_chains"
+            referencedColumns: ["shop_id", "device_serial"]
+          },
+        ]
+      }
+      eta_pos_chains: {
+        Row: {
+          device_serial: string
+          last_uuid: string
+          shop_id: string
+        }
+        Insert: {
+          device_serial: string
+          last_uuid?: string
+          shop_id: string
+        }
+        Update: {
+          device_serial?: string
+          last_uuid?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eta_pos_chains_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eta_profile_versions: {
+        Row: {
+          actor_profile_id: string
+          configuration: Json
+          created_at: string
+          id: string
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          configuration: Json
+          created_at?: string
+          id?: string
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          configuration?: Json
+          created_at?: string
+          id?: string
+          reason?: string
+          request_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eta_profile_versions_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eta_profile_versions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eta_sale_sources: {
+        Row: {
+          created_at: string
+          invoice_id: string
+          location_id: string
+          profile_version_id: string
+          shop_id: string
+          source: Json
+        }
+        Insert: {
+          created_at?: string
+          invoice_id: string
+          location_id: string
+          profile_version_id: string
+          shop_id: string
+          source: Json
+        }
+        Update: {
+          created_at?: string
+          invoice_id?: string
+          location_id?: string
+          profile_version_id?: string
+          shop_id?: string
+          source?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eta_sale_sources_invoice_id_shop_id_location_id_fkey"
+            columns: ["invoice_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+          {
+            foreignKeyName: "eta_sale_sources_profile_version_id_shop_id_fkey"
+            columns: ["profile_version_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "eta_profile_versions"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
       expense_categories: {
         Row: {
           created_at: string
@@ -1245,6 +2429,7 @@ export type Database = {
           corrects_expense_id: string | null
           created_at: string
           created_by_profile_id: string
+          currency: string
           expense_date: string
           id: string
           location_id: string
@@ -1267,6 +2452,7 @@ export type Database = {
           corrects_expense_id?: string | null
           created_at?: string
           created_by_profile_id: string
+          currency?: string
           expense_date?: string
           id?: string
           location_id: string
@@ -1289,6 +2475,7 @@ export type Database = {
           corrects_expense_id?: string | null
           created_at?: string
           created_by_profile_id?: string
+          currency?: string
           expense_date?: string
           id?: string
           location_id?: string
@@ -1870,6 +3057,7 @@ export type Database = {
           notes: string | null
           shop_id: string
           status: Database["public"]["Enums"]["invoice_status"]
+          tax_order_discount: number
           total_amount: number
           updated_at: string
         }
@@ -1893,6 +3081,7 @@ export type Database = {
           notes?: string | null
           shop_id: string
           status?: Database["public"]["Enums"]["invoice_status"]
+          tax_order_discount?: number
           total_amount?: number
           updated_at?: string
         }
@@ -1916,6 +3105,7 @@ export type Database = {
           notes?: string | null
           shop_id?: string
           status?: Database["public"]["Enums"]["invoice_status"]
+          tax_order_discount?: number
           total_amount?: number
           updated_at?: string
         }
@@ -2043,6 +3233,7 @@ export type Database = {
           client_id: string | null
           created_at: string
           created_by_profile_id: string
+          currency: string
           customer_kind:
             | Database["public"]["Enums"]["customer_payment_kind"]
             | null
@@ -2056,6 +3247,7 @@ export type Database = {
           payment_direction: Database["public"]["Enums"]["payment_direction"]
           reference: string | null
           sale_correction_id: string | null
+          sale_return_refund_id: string | null
           shop_id: string
           status: Database["public"]["Enums"]["payment_status"]
           supplier_kind:
@@ -2069,6 +3261,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           created_by_profile_id: string
+          currency?: string
           customer_kind?:
             | Database["public"]["Enums"]["customer_payment_kind"]
             | null
@@ -2082,6 +3275,7 @@ export type Database = {
           payment_direction: Database["public"]["Enums"]["payment_direction"]
           reference?: string | null
           sale_correction_id?: string | null
+          sale_return_refund_id?: string | null
           shop_id: string
           status?: Database["public"]["Enums"]["payment_status"]
           supplier_kind?:
@@ -2095,6 +3289,7 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           created_by_profile_id?: string
+          currency?: string
           customer_kind?:
             | Database["public"]["Enums"]["customer_payment_kind"]
             | null
@@ -2108,6 +3303,7 @@ export type Database = {
           payment_direction?: Database["public"]["Enums"]["payment_direction"]
           reference?: string | null
           sale_correction_id?: string | null
+          sale_return_refund_id?: string | null
           shop_id?: string
           status?: Database["public"]["Enums"]["payment_status"]
           supplier_kind?:
@@ -2193,6 +3389,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sale_corrections"
             referencedColumns: ["id", "shop_id", "location_id"]
+          },
+          {
+            foreignKeyName: "payments_sale_return_refund_id_fkey"
+            columns: ["sale_return_refund_id"]
+            isOneToOne: true
+            referencedRelation: "sale_return_refunds"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "payments_shop_id_fkey"
@@ -3505,6 +4708,569 @@ export type Database = {
           },
         ]
       }
+      sale_return_lines: {
+        Row: {
+          disposition: string
+          line_id: string
+          net: number
+          original_snapshot: Json
+          quantity: number
+          return_id: string
+          shop_id: string
+          tax: number
+          total: number
+        }
+        Insert: {
+          disposition: string
+          line_id: string
+          net: number
+          original_snapshot: Json
+          quantity: number
+          return_id: string
+          shop_id: string
+          tax: number
+          total: number
+        }
+        Update: {
+          disposition?: string
+          line_id?: string
+          net?: number
+          original_snapshot?: Json
+          quantity?: number
+          return_id?: string
+          shop_id?: string
+          tax?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_return_lines_line_id_shop_id_fkey"
+            columns: ["line_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "sale_return_lines_return_id_shop_id_fkey"
+            columns: ["return_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "sale_returns"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      sale_return_refund_events: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          id: string
+          operation: string
+          payment_id: string | null
+          reason: string
+          reference: string
+          refund_id: string
+          request_id: string
+          shop_id: string
+          state: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          operation: string
+          payment_id?: string | null
+          reason: string
+          reference: string
+          refund_id: string
+          request_id: string
+          shop_id: string
+          state: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          operation?: string
+          payment_id?: string | null
+          reason?: string
+          reference?: string
+          refund_id?: string
+          request_id?: string
+          shop_id?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_return_refund_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_return_refund_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: true
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_return_refund_events_refund_id_fkey"
+            columns: ["refund_id"]
+            isOneToOne: false
+            referencedRelation: "sale_return_refunds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_return_refund_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_return_refunds: {
+        Row: {
+          allocation_id: string
+          amount: number
+          created_at: string
+          id: string
+          method: Database["public"]["Enums"]["payment_method"]
+          payment_id: string
+          return_id: string
+          shop_id: string
+        }
+        Insert: {
+          allocation_id: string
+          amount: number
+          created_at?: string
+          id?: string
+          method: Database["public"]["Enums"]["payment_method"]
+          payment_id: string
+          return_id: string
+          shop_id: string
+        }
+        Update: {
+          allocation_id?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          payment_id?: string
+          return_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_return_refunds_allocation_id_shop_id_payment_id_fkey"
+            columns: ["allocation_id", "shop_id", "payment_id"]
+            isOneToOne: false
+            referencedRelation: "customer_payment_allocations"
+            referencedColumns: ["id", "shop_id", "payment_id"]
+          },
+          {
+            foreignKeyName: "sale_return_refunds_return_id_shop_id_fkey"
+            columns: ["return_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "sale_returns"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      sale_return_sources: {
+        Row: {
+          created_at: string
+          invoice_id: string
+          location_id: string
+          shop_id: string
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          invoice_id: string
+          location_id: string
+          shop_id: string
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          invoice_id?: string
+          location_id?: string
+          shop_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_return_sources_invoice_id_shop_id_location_id_fkey"
+            columns: ["invoice_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+        ]
+      }
+      sale_return_stock: {
+        Row: {
+          disposition: string
+          line_id: string
+          movement_id: string
+          quantity: number
+          restoration_movement_id: string | null
+          return_id: string
+        }
+        Insert: {
+          disposition: string
+          line_id: string
+          movement_id: string
+          quantity: number
+          restoration_movement_id?: string | null
+          return_id: string
+        }
+        Update: {
+          disposition?: string
+          line_id?: string
+          movement_id?: string
+          quantity?: number
+          restoration_movement_id?: string | null
+          return_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_return_stock_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_return_stock_restoration_movement_id_fkey"
+            columns: ["restoration_movement_id"]
+            isOneToOne: true
+            referencedRelation: "inventory_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_return_stock_return_id_line_id_fkey"
+            columns: ["return_id", "line_id"]
+            isOneToOne: false
+            referencedRelation: "sale_return_lines"
+            referencedColumns: ["return_id", "line_id"]
+          },
+        ]
+      }
+      sale_returns: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          currency: string
+          debt_reduction: number
+          due_after: number
+          due_before: number
+          id: string
+          invoice_id: string
+          location_id: string
+          net: number
+          original_document: Json
+          payload: Json
+          reason: string
+          refund_due: number
+          request_id: string
+          shop_id: string
+          tax: number
+          total: number
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          currency: string
+          debt_reduction: number
+          due_after: number
+          due_before: number
+          id?: string
+          invoice_id: string
+          location_id: string
+          net: number
+          original_document: Json
+          payload: Json
+          reason: string
+          refund_due: number
+          request_id: string
+          shop_id: string
+          tax: number
+          total: number
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          currency?: string
+          debt_reduction?: number
+          due_after?: number
+          due_before?: number
+          id?: string
+          invoice_id?: string
+          location_id?: string
+          net?: number
+          original_document?: Json
+          payload?: Json
+          reason?: string
+          refund_due?: number
+          request_id?: string
+          shop_id?: string
+          tax?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_returns_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_returns_invoice_id_shop_id_location_id_fkey"
+            columns: ["invoice_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+        ]
+      }
+      sale_tax_snapshots: {
+        Row: {
+          created_at: string
+          invoice_id: string
+          location_id: string
+          policy_version_id: string | null
+          shop_id: string
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          invoice_id: string
+          location_id: string
+          policy_version_id?: string | null
+          shop_id: string
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          invoice_id?: string
+          location_id?: string
+          policy_version_id?: string | null
+          shop_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_tax_snapshots_invoice_id_shop_id_location_id_fkey"
+            columns: ["invoice_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+          {
+            foreignKeyName: "sale_tax_snapshots_policy_version_id_shop_id_fkey"
+            columns: ["policy_version_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "tax_policy_versions"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      service_completion_cancellations: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          payload: Json
+          reason: string
+          request_id: string
+          resolution_request_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          payload: Json
+          reason: string
+          request_id: string
+          resolution_request_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          payload?: Json
+          reason?: string
+          request_id?: string
+          resolution_request_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_completion_cancellations_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_completion_cancellations_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_fulfillment_sale_links: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          fulfillment_id: string
+          line_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          fulfillment_id: string
+          line_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          fulfillment_id?: string
+          line_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_fulfillment_sale_links_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_fulfillment_sale_links_fulfillment_id_shop_id_fkey"
+            columns: ["fulfillment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "service_fulfillments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_fulfillment_sale_links_line_id_shop_id_fkey"
+            columns: ["line_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      service_fulfillments: {
+        Row: {
+          actor_profile_id: string
+          appointment_id: string | null
+          completed_at: string
+          id: string
+          line_id: string | null
+          location_id: string
+          materials: Json
+          payload: Json
+          quantity: number
+          reason: string
+          recipe_version_id: string | null
+          request_id: string
+          service_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          appointment_id?: string | null
+          completed_at?: string
+          id?: string
+          line_id?: string | null
+          location_id: string
+          materials: Json
+          payload: Json
+          quantity: number
+          reason: string
+          recipe_version_id?: string | null
+          request_id: string
+          service_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          appointment_id?: string | null
+          completed_at?: string
+          id?: string
+          line_id?: string | null
+          location_id?: string
+          materials?: Json
+          payload?: Json
+          quantity?: number
+          reason?: string
+          recipe_version_id?: string | null
+          request_id?: string
+          service_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_fulfillments_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_fulfillments_appointment_id_shop_id_fkey"
+            columns: ["appointment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_fulfillments_line_id_shop_id_fkey"
+            columns: ["line_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_fulfillments_location_id_shop_id_fkey"
+            columns: ["location_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_locations"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_fulfillments_recipe_version_id_shop_id_fkey"
+            columns: ["recipe_version_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "service_recipe_versions"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_fulfillments_service_id_shop_id_fkey"
+            columns: ["service_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_fulfillments_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_location_availability: {
         Row: {
           created_at: string
@@ -3534,6 +5300,246 @@ export type Database = {
           },
           {
             foreignKeyName: "service_location_availability_service_id_shop_id_fkey"
+            columns: ["service_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      service_material_consumptions: {
+        Row: {
+          batch_id: string
+          fulfillment_id: string
+          id: string
+          movement_id: string
+          product_id: string
+          quantity: number
+          shop_id: string
+          unit: string
+          unit_cost: number
+        }
+        Insert: {
+          batch_id: string
+          fulfillment_id: string
+          id?: string
+          movement_id: string
+          product_id: string
+          quantity: number
+          shop_id: string
+          unit: string
+          unit_cost: number
+        }
+        Update: {
+          batch_id?: string
+          fulfillment_id?: string
+          id?: string
+          movement_id?: string
+          product_id?: string
+          quantity?: number
+          shop_id?: string
+          unit?: string
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_material_consumptions_batch_id_shop_id_product_id_fkey"
+            columns: ["batch_id", "shop_id", "product_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_batches"
+            referencedColumns: ["id", "shop_id", "product_id"]
+          },
+          {
+            foreignKeyName: "service_material_consumptions_batch_id_shop_id_product_id_fkey"
+            columns: ["batch_id", "shop_id", "product_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_stock_batches"
+            referencedColumns: ["batch_id", "shop_id", "product_id"]
+          },
+          {
+            foreignKeyName: "service_material_consumptions_fulfillment_id_shop_id_fkey"
+            columns: ["fulfillment_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "service_fulfillments"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_material_consumptions_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: true
+            referencedRelation: "inventory_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_material_consumptions_product_id_shop_id_unit_fkey"
+            columns: ["product_id", "shop_id", "unit"]
+            isOneToOne: false
+            referencedRelation: "service_material_units"
+            referencedColumns: ["product_id", "shop_id", "unit"]
+          },
+        ]
+      }
+      service_material_corrections: {
+        Row: {
+          actor_profile_id: string
+          consumption_id: string
+          created_at: string
+          id: string
+          movement_id: string
+          quantity: number
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          consumption_id: string
+          created_at?: string
+          id?: string
+          movement_id: string
+          quantity: number
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          consumption_id?: string
+          created_at?: string
+          id?: string
+          movement_id?: string
+          quantity?: number
+          reason?: string
+          request_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_material_corrections_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_material_corrections_consumption_id_fkey"
+            columns: ["consumption_id"]
+            isOneToOne: false
+            referencedRelation: "service_material_consumptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_material_corrections_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_movements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_material_units: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          dimension: string | null
+          product_id: string
+          shop_id: string
+          unit: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          dimension?: string | null
+          product_id: string
+          shop_id: string
+          unit: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          dimension?: string | null
+          product_id?: string
+          shop_id?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_material_units_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_material_units_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "low_stock_products"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_material_units_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "service_material_units_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      service_recipe_versions: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          effective_at: string
+          id: string
+          materials: Json
+          reason: string
+          request_id: string
+          requested_effective_at: string | null
+          service_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          effective_at: string
+          id?: string
+          materials: Json
+          reason: string
+          request_id: string
+          requested_effective_at?: string | null
+          service_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          effective_at?: string
+          id?: string
+          materials?: Json
+          reason?: string
+          request_id?: string
+          requested_effective_at?: string | null
+          service_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_recipe_versions_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_recipe_versions_service_id_shop_id_fkey"
             columns: ["service_id", "shop_id"]
             isOneToOne: false
             referencedRelation: "services"
@@ -4168,6 +6174,95 @@ export type Database = {
           },
         ]
       }
+      shop_booking_policies: {
+        Row: {
+          allow_cancel: boolean
+          allow_reschedule: boolean
+          change_notice_minutes: number
+          enabled: boolean
+          horizon_days: number
+          lead_minutes: number
+          reminder_channel: string | null
+          reminder_lead_minutes: number
+          reminders_enabled: boolean
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          allow_cancel?: boolean
+          allow_reschedule?: boolean
+          change_notice_minutes?: number
+          enabled?: boolean
+          horizon_days?: number
+          lead_minutes?: number
+          reminder_channel?: string | null
+          reminder_lead_minutes?: number
+          reminders_enabled?: boolean
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          allow_cancel?: boolean
+          allow_reschedule?: boolean
+          change_notice_minutes?: number
+          enabled?: boolean
+          horizon_days?: number
+          lead_minutes?: number
+          reminder_channel?: string | null
+          reminder_lead_minutes?: number
+          reminders_enabled?: boolean
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_booking_policies_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_booking_staff: {
+        Row: {
+          membership_id: string
+          public_id: string
+          public_name: string
+          published: boolean
+          shop_id: string
+        }
+        Insert: {
+          membership_id: string
+          public_id?: string
+          public_name: string
+          published?: boolean
+          shop_id: string
+        }
+        Update: {
+          membership_id?: string
+          public_id?: string
+          public_name?: string
+          published?: boolean
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_booking_staff_membership_id_shop_id_fkey"
+            columns: ["membership_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_memberships"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_booking_staff_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_business_mode_changes: {
         Row: {
           changed_at: string
@@ -4245,6 +6340,48 @@ export type Database = {
           },
           {
             foreignKeyName: "shop_cash_policy_changes_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_currency_changes: {
+        Row: {
+          changed_at: string
+          changed_by_profile_id: string
+          id: string
+          new_currency: string
+          previous_currency: string
+          shop_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by_profile_id: string
+          id?: string
+          new_currency: string
+          previous_currency: string
+          shop_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by_profile_id?: string
+          id?: string
+          new_currency?: string
+          previous_currency?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_currency_changes_changed_by_profile_id_fkey"
+            columns: ["changed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_currency_changes_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
@@ -4927,10 +7064,17 @@ export type Database = {
           address: string | null
           created_at: string
           display_name: string | null
+          document_direction: string
+          document_label: string | null
+          document_language: string
           footer: string | null
+          logo_data_url: string | null
+          notes: string | null
           paper_size: string
           phone: string | null
+          reference_label: string | null
           shop_id: string
+          show_descriptions: boolean
           updated_at: string
           updated_by_profile_id: string
         }
@@ -4938,10 +7082,17 @@ export type Database = {
           address?: string | null
           created_at?: string
           display_name?: string | null
+          document_direction?: string
+          document_label?: string | null
+          document_language?: string
           footer?: string | null
+          logo_data_url?: string | null
+          notes?: string | null
           paper_size?: string
           phone?: string | null
+          reference_label?: string | null
           shop_id: string
+          show_descriptions?: boolean
           updated_at?: string
           updated_by_profile_id: string
         }
@@ -4949,10 +7100,17 @@ export type Database = {
           address?: string | null
           created_at?: string
           display_name?: string | null
+          document_direction?: string
+          document_label?: string | null
+          document_language?: string
           footer?: string | null
+          logo_data_url?: string | null
+          notes?: string | null
           paper_size?: string
           phone?: string | null
+          reference_label?: string | null
           shop_id?: string
+          show_descriptions?: boolean
           updated_at?: string
           updated_by_profile_id?: string
         }
@@ -5414,6 +7572,370 @@ export type Database = {
           },
         ]
       }
+      shop_website_catalog_entries: {
+        Row: {
+          description: string
+          display_order: number
+          id: string
+          image_data_url: string | null
+          product_id: string | null
+          public_name: string
+          published: boolean
+          service_id: string | null
+          shop_id: string
+          show_price: boolean
+          updated_at: string
+        }
+        Insert: {
+          description?: string
+          display_order?: number
+          id?: string
+          image_data_url?: string | null
+          product_id?: string | null
+          public_name: string
+          published?: boolean
+          service_id?: string | null
+          shop_id: string
+          show_price?: boolean
+          updated_at?: string
+        }
+        Update: {
+          description?: string
+          display_order?: number
+          id?: string
+          image_data_url?: string | null
+          product_id?: string | null
+          public_name?: string
+          published?: boolean
+          service_id?: string | null
+          shop_id?: string
+          show_price?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_catalog_entries_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_product_shop_fk"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "low_stock_products"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_product_shop_fk"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_product_shop_fk"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_service_shop_fk"
+            columns: ["service_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      shop_website_catalog_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          entry_id: string
+          id: string
+          occurred_at: string
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          entry_id: string
+          id?: string
+          occurred_at?: string
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          entry_id?: string
+          id?: string
+          occurred_at?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_catalog_event_shop_fk"
+            columns: ["entry_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_website_catalog_entries"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_catalog_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_website_inquiries: {
+        Row: {
+          contact_key: string
+          created_at: string
+          id: string
+          locale: string
+          message: string
+          sender_contact: string
+          sender_name: string
+          shop_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          contact_key: string
+          created_at?: string
+          id?: string
+          locale: string
+          message: string
+          sender_contact: string
+          sender_name: string
+          shop_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          contact_key?: string
+          created_at?: string
+          id?: string
+          locale?: string
+          message?: string
+          sender_contact?: string
+          sender_name?: string
+          shop_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_inquiries_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_website_inquiry_events: {
+        Row: {
+          actor_user_id: string
+          id: string
+          inquiry_id: string
+          new_status: string
+          occurred_at: string
+          previous_status: string
+          shop_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          id?: string
+          inquiry_id: string
+          new_status: string
+          occurred_at?: string
+          previous_status: string
+          shop_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          id?: string
+          inquiry_id?: string
+          new_status?: string
+          occurred_at?: string
+          previous_status?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_inquiry_events_inquiry_id_shop_id_fkey"
+            columns: ["inquiry_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_website_inquiries"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "shop_website_inquiry_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_website_logos: {
+        Row: {
+          data_url: string
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          data_url: string
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          data_url?: string
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_logos_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shop_websites"
+            referencedColumns: ["shop_id"]
+          },
+        ]
+      }
+      shop_website_profile_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          id: string
+          occurred_at: string
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          id?: string
+          occurred_at?: string
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          id?: string
+          occurred_at?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_profile_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_website_profiles: {
+        Row: {
+          draft: Json
+          owner_opted_in_at: string | null
+          published: Json | null
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          draft?: Json
+          owner_opted_in_at?: string | null
+          published?: Json | null
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          draft?: Json
+          owner_opted_in_at?: string | null
+          published?: Json | null
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_profiles_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shop_websites"
+            referencedColumns: ["shop_id"]
+          },
+        ]
+      }
+      shop_website_slug_claims: {
+        Row: {
+          claimed_at: string
+          shop_id: string
+          slug: string
+        }
+        Insert: {
+          claimed_at?: string
+          shop_id: string
+          slug: string
+        }
+        Update: {
+          claimed_at?: string
+          shop_id?: string
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_website_slug_claims_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_websites: {
+        Row: {
+          publication_state: string
+          shop_id: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          publication_state?: string
+          shop_id: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          publication_state?: string
+          shop_id?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_websites_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_websites_slug_shop_id_fkey"
+            columns: ["slug", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_website_slug_claims"
+            referencedColumns: ["slug", "shop_id"]
+          },
+        ]
+      }
       shop_xpay_inbox: {
         Row: {
           event_id: string
@@ -5770,8 +8292,12 @@ export type Database = {
       }
       shops: {
         Row: {
+          business_currency: string
           business_mode: Database["public"]["Enums"]["business_mode"]
           created_at: string
+          currency_lock_record_id: string | null
+          currency_lock_source: string | null
+          currency_locked_at: string | null
           id: string
           name: string
           portal_id: string
@@ -5780,8 +8306,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          business_currency?: string
           business_mode?: Database["public"]["Enums"]["business_mode"]
           created_at?: string
+          currency_lock_record_id?: string | null
+          currency_lock_source?: string | null
+          currency_locked_at?: string | null
           id?: string
           name: string
           portal_id: string
@@ -5790,8 +8320,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          business_currency?: string
           business_mode?: Database["public"]["Enums"]["business_mode"]
           created_at?: string
+          currency_lock_record_id?: string | null
+          currency_lock_source?: string | null
+          currency_locked_at?: string | null
           id?: string
           name?: string
           portal_id?: string
@@ -6761,6 +9295,54 @@ export type Database = {
           },
         ]
       }
+      tax_policy_versions: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          effective_at: string
+          id: string
+          policy: Json
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          effective_at: string
+          id?: string
+          policy: Json
+          reason: string
+          request_id: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          effective_at?: string
+          id?: string
+          policy?: Json
+          reason?: string
+          request_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_policy_versions_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_policy_versions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_invoice_items: {
         Row: {
           created_at: string
@@ -6838,6 +9420,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by_profile_id: string
+          currency: string
           id: string
           invoice_number: string | null
           issued_at: string | null
@@ -6855,6 +9438,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by_profile_id: string
+          currency?: string
           id?: string
           invoice_number?: string | null
           issued_at?: string | null
@@ -6872,6 +9456,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by_profile_id?: string
+          currency?: string
           id?: string
           invoice_number?: string | null
           issued_at?: string | null
@@ -7923,6 +10508,74 @@ export type Database = {
         }
         Returns: string
       }
+      appointment_access_issue: {
+        Args: { p_appointment_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      appointment_access_revoke: {
+        Args: { p_appointment_id: string; p_shop_id: string }
+        Returns: undefined
+      }
+      appointment_access_session_revoke: {
+        Args: { p_slug: string; p_token: string }
+        Returns: Json
+      }
+      appointment_access_session_rotate: {
+        Args: { p_slug: string; p_token: string }
+        Returns: Json
+      }
+      appointment_access_session_validate: {
+        Args: { p_slug: string; p_token: string }
+        Returns: Json
+      }
+      appointment_access_status: {
+        Args: { p_appointment_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      appointment_access_verify: {
+        Args: { p_code: string; p_phone: string; p_slug: string }
+        Returns: Json
+      }
+      appointment_booking_command: {
+        Args: {
+          p_location?: string
+          p_name?: string
+          p_operation: string
+          p_phone?: string
+          p_reference?: string
+          p_request_key: string
+          p_service?: string
+          p_slug: string
+          p_staff?: string
+          p_starts_at?: string
+          p_token: string
+        }
+        Returns: Json
+      }
+      appointment_booking_manage: {
+        Args: { p_page?: number; p_slug: string; p_token: string }
+        Returns: Json
+      }
+      appointment_booking_manage_before_email: {
+        Args: { p_page?: number; p_slug: string; p_token: string }
+        Returns: Json
+      }
+      appointment_booking_options: {
+        Args: { p_slug: string; p_token?: string }
+        Returns: Json
+      }
+      appointment_booking_slots: {
+        Args: {
+          p_date: string
+          p_location: string
+          p_reference?: string
+          p_service: string
+          p_slug: string
+          p_staff: string
+          p_token?: string
+        }
+        Returns: Json
+      }
       appointment_calendar: {
         Args: {
           p_from: string
@@ -7933,7 +10586,26 @@ export type Database = {
         }
         Returns: Json
       }
+      appointment_customer_portal: {
+        Args: {
+          p_bucket?: string
+          p_page?: number
+          p_slug: string
+          p_token: string
+        }
+        Returns: Json
+      }
       appointment_options: { Args: { p_shop_id: string }; Returns: Json }
+      appointment_reminder_preference: {
+        Args: {
+          p_enabled: boolean
+          p_locale: string
+          p_reference: string
+          p_slug: string
+          p_token: string
+        }
+        Returns: Json
+      }
       archive_customer: {
         Args: { p_customer_id: string; p_shop_id: string }
         Returns: undefined
@@ -7966,6 +10638,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      assign_sale_commission: {
+        Args: {
+          p_appointment_id?: string
+          p_line_id: string
+          p_membership_id: string
+          p_shop_id: string
+        }
+        Returns: undefined
+      }
       barcode_label_data: {
         Args: {
           p_category_id?: string
@@ -7976,6 +10657,7 @@ export type Database = {
         }
         Returns: Json
       }
+      business_currency_settings: { Args: { p_shop_id: string }; Returns: Json }
       cash_shift_dashboard: {
         Args: {
           p_cashier_membership_id?: string
@@ -8046,6 +10728,10 @@ export type Database = {
         }
         Returns: string
       }
+      claim_appointment_email: {
+        Args: { p_allowlist: string[]; p_mode?: string }
+        Returns: Json
+      }
       claim_support_notification: { Args: never; Returns: Json }
       close_cash_shift: {
         Args: {
@@ -8057,6 +10743,27 @@ export type Database = {
         }
         Returns: string
       }
+      commission_assignment_context: {
+        Args: { p_invoice_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      commission_history: {
+        Args: { p_invoice_id?: string; p_offset?: number; p_shop_id: string }
+        Returns: Json
+      }
+      complete_service: {
+        Args: {
+          p_appointment_id?: string
+          p_line_id: string
+          p_location_id: string
+          p_materials?: Json
+          p_quantity: number
+          p_reason?: string
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
       correct_location_sale: {
         Args: {
           p_effective_at: string
@@ -8064,6 +10771,16 @@ export type Database = {
           p_location_id: string
           p_reason: string
           p_reference?: string
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
+      correct_service_material: {
+        Args: {
+          p_consumption_id: string
+          p_quantity: number
+          p_reason: string
           p_request_id: string
           p_shop_id: string
         }
@@ -8100,6 +10817,18 @@ export type Database = {
             }
             Returns: string
           }
+      create_sale_return: {
+        Args: {
+          p_expected_plan: Json
+          p_invoice_id: string
+          p_lines: Json
+          p_location_id: string
+          p_reason: string
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
       create_supplier_purchase: {
         Args: {
           p_invoice_number: string
@@ -8151,6 +10880,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      define_service_material_unit: {
+        Args: { p_product_id: string; p_shop_id: string; p_unit: string }
+        Returns: undefined
+      }
+      eta_original_document_reference: {
+        Args: { p_invoice_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      eta_settings: {
+        Args: { p_offset?: number; p_shop_id: string }
+        Returns: Json
+      }
       fast_pay_location_sale: {
         Args: {
           p_amount: number
@@ -8167,6 +10908,15 @@ export type Database = {
           p_shop_id: string
         }
         Returns: string
+      }
+      finish_appointment_email: {
+        Args: {
+          p_id: string
+          p_lease_token: string
+          p_provider_id?: string
+          p_status: string
+        }
+        Returns: boolean
       }
       finish_support_notification: {
         Args: {
@@ -8207,6 +10957,14 @@ export type Database = {
         Returns: Json
       }
       get_sale: {
+        Args: { p_invoice_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      get_sale_return: {
+        Args: { p_location_id: string; p_return_id: string; p_shop_id: string }
+        Returns: Json
+      }
+      get_sale_tax_snapshot: {
         Args: { p_invoice_id: string; p_shop_id: string }
         Returns: Json
       }
@@ -8561,11 +11319,84 @@ export type Database = {
         Args: { _actor_profile_id: string; _vendor_invoice_id: string }
         Returns: undefined
       }
+      prepare_appointment_email: {
+        Args: {
+          p_allowlist: string[]
+          p_id: string
+          p_lease_token: string
+          p_mode?: string
+          p_payload: Json
+        }
+        Returns: Json
+      }
       prepare_support_notification: {
         Args: { p_id: string; p_lease_token: string; p_payload: Json }
         Returns: Json
       }
+      preview_sale_return: {
+        Args: {
+          p_invoice_id: string
+          p_lines: Json
+          p_location_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      queue_eta_invoice: {
+        Args: {
+          p_invoice_id: string
+          p_reason: string
+          p_receiver: Json
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
+      queue_eta_receipt: {
+        Args: {
+          p_buyer: Json
+          p_invoice_id: string
+          p_payment_method: string
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
+      quote_sale_tax: {
+        Args: { p_lines: Json; p_location_id: string; p_shop_id: string }
+        Returns: Json
+      }
       receipt_settings: { Args: { p_shop_id: string }; Returns: Json }
+      reconcile_offline_cash_command: {
+        Args: {
+          p_args: Json
+          p_kind: string
+          p_reason: string
+          p_resolution_request_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      reconcile_offline_pos_sale: {
+        Args: {
+          p_location_id: string
+          p_original_args: Json
+          p_reason: string
+          p_request_id: string
+          p_resolution_request_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      reconcile_service_completion: {
+        Args: {
+          p_args: Json
+          p_reason: string
+          p_resolution_request_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       record_cash_movement: {
         Args: {
           p_amount: number
@@ -8577,6 +11408,17 @@ export type Database = {
           p_shop_id: string
         }
         Returns: string
+      }
+      record_commission_adjustment: {
+        Args: {
+          p_amount: number
+          p_kind: string
+          p_reason: string
+          p_request_id: string
+          p_shop_id: string
+          p_snapshot_id: string
+        }
+        Returns: undefined
       }
       record_customer_receipt: {
         Args: {
@@ -8615,6 +11457,18 @@ export type Database = {
           p_reference: string
           p_request_id: string
           p_returned_at: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
+      record_sale_return_refund: {
+        Args: {
+          p_location_id: string
+          p_operation: string
+          p_reason: string
+          p_reference: string
+          p_refund_id: string
+          p_request_id: string
           p_shop_id: string
         }
         Returns: string
@@ -8702,6 +11556,32 @@ export type Database = {
         }
         Returns: string
       }
+      replay_offline_cash_command: {
+        Args: { p_args: Json; p_kind: string; p_shop_id: string }
+        Returns: string
+      }
+      replay_offline_pos_sale: {
+        Args: {
+          p_amount: number
+          p_appointment_id: string
+          p_appointment_request_id: string
+          p_customer_id: string
+          p_issue_request_id: string
+          p_lines: Json
+          p_location_id: string
+          p_method: Database["public"]["Enums"]["payment_method"]
+          p_notes: string
+          p_paid_at: string
+          p_payment_request_id: string
+          p_reference: string
+          p_request_id: string
+          p_save_request_id: string
+          p_shift_id: string
+          p_shop_id: string
+          p_staff_membership_id: string
+        }
+        Returns: string
+      }
       reserve_shop_billing_payment_evidence: {
         Args: {
           p_mime_type: string
@@ -8765,6 +11645,15 @@ export type Database = {
         Args: { p_invoice_id: string; p_location_id: string; p_shop_id: string }
         Returns: Json
       }
+      sale_return_context: {
+        Args: {
+          p_invoice_id: string
+          p_location_id: string
+          p_offset?: number
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       save_appointment: {
         Args: {
           p_appointment_id: string
@@ -8782,8 +11671,21 @@ export type Database = {
         }
         Returns: string
       }
+      save_business_currency: {
+        Args: { p_currency: string; p_shop_id: string }
+        Returns: Json
+      }
       save_catalog_category: {
         Args: { p_category_id: string; p_name: string; p_shop_id: string }
+        Returns: string
+      }
+      save_commission_policy: {
+        Args: {
+          p_policy: Json
+          p_reason: string
+          p_request_id: string
+          p_shop_id: string
+        }
         Returns: string
       }
       save_customer: {
@@ -8794,6 +11696,19 @@ export type Database = {
           p_name: string
           p_notes: string
           p_phone: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
+      save_document_settings: {
+        Args: { p_settings: Json; p_shop_id: string }
+        Returns: Json
+      }
+      save_eta_configuration: {
+        Args: {
+          p_configuration: Json
+          p_reason: string
+          p_request_id: string
           p_shop_id: string
         }
         Returns: string
@@ -8927,6 +11842,17 @@ export type Database = {
             }
             Returns: string
           }
+      save_service_recipe: {
+        Args: {
+          p_effective_at: string
+          p_materials: Json
+          p_reason: string
+          p_request_id: string
+          p_service_id: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
       save_service_with_category: {
         Args: {
           p_base_sale_price: number
@@ -9005,6 +11931,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      save_tax_policy: {
+        Args: {
+          p_effective_at: string
+          p_policy: Json
+          p_reason: string
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: string
+      }
       save_vendor: {
         Args: {
           p_address: string
@@ -9018,6 +11954,19 @@ export type Database = {
           p_vendor_id: string
         }
         Returns: string
+      }
+      service_fulfillment_context: {
+        Args: {
+          p_invoice_id?: string
+          p_location_id: string
+          p_offset?: number
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      service_recipe_context: {
+        Args: { p_offset?: number; p_shop_id: string }
+        Returns: Json
       }
       service_scheduling_options: { Args: { p_shop_id: string }; Returns: Json }
       set_catalog_item_category: {
@@ -9033,6 +11982,10 @@ export type Database = {
         Args: { p_product_id: string; p_shop_id: string; p_threshold: number }
         Returns: undefined
       }
+      set_sale_order_discount: {
+        Args: { p_discount: number; p_invoice_id: string; p_shop_id: string }
+        Returns: undefined
+      }
       set_shop_business_mode: {
         Args: {
           p_business_mode: Database["public"]["Enums"]["business_mode"]
@@ -9045,6 +11998,11 @@ export type Database = {
         Returns: boolean
       }
       shop_admin_provisioned_owner_claim: { Args: never; Returns: Json }
+      shop_appointment_email_schedule: {
+        Args: { p_enabled: boolean; p_project_ref: string }
+        Returns: Json
+      }
+      shop_auth_email_exists: { Args: { p_email: string }; Returns: boolean }
       shop_billing_change_cancel: {
         Args: { p_change_id: string; p_shop_id: string }
         Returns: Json
@@ -9076,10 +12034,81 @@ export type Database = {
         Returns: Json
       }
       shop_billing_read: { Args: { p_shop_id: string }; Returns: Json }
+      shop_booking_settings: { Args: { p_shop_id: string }; Returns: Json }
+      shop_booking_settings_save: {
+        Args: { p_policy: Json; p_shop_id: string; p_staff: Json }
+        Returns: undefined
+      }
+      shop_booking_settings_save_before_email: {
+        Args: { p_policy: Json; p_shop_id: string; p_staff: Json }
+        Returns: undefined
+      }
       shop_cash_policy: { Args: { p_shop_id: string }; Returns: boolean }
       shop_catalog_media: {
         Args: { p_action: string; p_payload: Json; p_shop_id: string }
         Returns: Json
+      }
+      shop_eta_claim: { Args: never; Returns: Json }
+      shop_eta_invoice_acknowledge: {
+        Args: {
+          p_document_uuid: string
+          p_id: string
+          p_lease_id: string
+          p_submission_uuid: string
+        }
+        Returns: undefined
+      }
+      shop_eta_invoice_claim: { Args: never; Returns: Json }
+      shop_eta_invoice_link_recovery: {
+        Args: {
+          p_document_uuid: string
+          p_id: string
+          p_submission_uuid: string
+        }
+        Returns: undefined
+      }
+      shop_eta_invoice_prepare: {
+        Args: {
+          p_certificate_fingerprint: string
+          p_id: string
+          p_lease_id: string
+          p_payload: string
+        }
+        Returns: undefined
+      }
+      shop_eta_invoice_recovery_context: {
+        Args: { p_id: string }
+        Returns: Json
+      }
+      shop_eta_link_recovery: {
+        Args: {
+          p_document_uuid: string
+          p_id: string
+          p_submission_uuid: string
+        }
+        Returns: undefined
+      }
+      shop_eta_prepare: {
+        Args: {
+          p_document_uuid: string
+          p_id: string
+          p_lease_id: string
+          p_payload: string
+          p_previous_uuid: string
+        }
+        Returns: undefined
+      }
+      shop_eta_recovery_context: { Args: { p_id: string }; Returns: Json }
+      shop_eta_transition: {
+        Args: {
+          p_error_code?: string
+          p_id: string
+          p_lease_id: string
+          p_retry_seconds?: number
+          p_state: string
+          p_submission_uuid?: string
+        }
+        Returns: undefined
       }
       shop_has_active_subscription: {
         Args: { _shop_id: string }
@@ -9211,6 +12240,79 @@ export type Database = {
         Returns: Json
       }
       shop_team_read: { Args: { p_shop_id: string }; Returns: Json }
+      shop_website_address: { Args: { p_shop_id: string }; Returns: Json }
+      shop_website_address_save: {
+        Args: { p_shop_id: string; p_slug: string }
+        Returns: Json
+      }
+      shop_website_catalog: {
+        Args: { p_page?: number; p_search?: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_catalog_publish: {
+        Args: {
+          p_item_id: string
+          p_kind: string
+          p_published: boolean
+          p_shop_id: string
+        }
+        Returns: undefined
+      }
+      shop_website_catalog_save: {
+        Args: {
+          p_entry: Json
+          p_item_id: string
+          p_kind: string
+          p_shop_id: string
+        }
+        Returns: undefined
+      }
+      shop_website_host_resolve: { Args: { p_slug: string }; Returns: Json }
+      shop_website_inquiries: {
+        Args: { p_page?: number; p_shop_id: string; p_status?: string }
+        Returns: Json
+      }
+      shop_website_inquiry_status: {
+        Args: { p_inquiry_id: string; p_shop_id: string; p_status: string }
+        Returns: undefined
+      }
+      shop_website_inquiry_submit: {
+        Args: {
+          p_contact: string
+          p_honeypot?: string
+          p_locale: string
+          p_message: string
+          p_name: string
+          p_slug: string
+        }
+        Returns: Json
+      }
+      shop_website_logo_replace: {
+        Args: { p_data_url: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_profile: { Args: { p_shop_id: string }; Returns: Json }
+      shop_website_profile_publish: {
+        Args: { p_owner_opt_in: boolean; p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_profile_save: {
+        Args: { p_profile: Json; p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_profile_unpublish: {
+        Args: { p_shop_id: string }
+        Returns: Json
+      }
+      shop_website_public_catalog: {
+        Args: { p_page?: number; p_slug: string }
+        Returns: Json
+      }
+      shop_website_public_profile: { Args: { p_slug: string }; Returns: Json }
+      shop_website_showcase: {
+        Args: { p_page?: number; p_slug: string }
+        Returns: Json
+      }
       shop_xpay_apply_session: {
         Args: { p_event_id?: string; p_session: Json }
         Returns: Json
@@ -9347,6 +12449,7 @@ export type Database = {
           can_view: boolean
         }[]
       }
+      tax_settings: { Args: { p_shop_id: string }; Returns: Json }
       transfer_shop_ownership: {
         Args: {
           p_reason: string
@@ -9547,9 +12650,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       appointment_block_kind: ["break", "time_off"],

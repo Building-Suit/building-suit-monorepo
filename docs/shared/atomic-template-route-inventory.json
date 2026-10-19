@@ -67,7 +67,29 @@
     "BsFinancialAccountsPage": "packages/ui/src/templates/BsFinancialAccountsPage.vue",
     "BsAccountActivationPage": "packages/ui/src/templates/BsAccountActivationPage.vue",
     "BsAccountProvisioningPage": "packages/ui/src/templates/BsAccountProvisioningPage.vue",
-    "BsOwnerInvitationPage": "packages/ui/src/templates/BsOwnerInvitationPage.vue"
+    "BsOwnerInvitationPage": "packages/ui/src/templates/BsOwnerInvitationPage.vue",
+    "BsOfflineCounterStatus": "packages/ui/src/templates/BsOfflineCounterStatus.vue",
+    "BsCommissionPolicyPage": "packages/ui/src/templates/BsCommissionPolicyPage.vue",
+    "BsShopTaxSettingsPage": "packages/ui/src/templates/BsShopTaxSettingsPage.vue",
+    "BsChangelogPage": "packages/ui/src/templates/BsChangelogPage.vue",
+    "BsEtaSettingsPage": "packages/ui/src/templates/BsEtaSettingsPage.vue",
+    "BsShopPublicEntryPage": "packages/ui/src/templates/BsShopPublicEntryPage.vue",
+    "BsShopWebsitePage": "packages/ui/src/templates/BsShopWebsitePage.vue",
+    "BsShopCustomerPortalPage": "packages/ui/src/templates/BsShopCustomerPortalPage.vue",
+    "BsPublicAppointmentBookingPage": "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue",
+    "BsProductPreviewPage": "packages/ui/src/templates/BsProductPreviewPage.vue",
+    "BsRouteStatusPage": "packages/ui/src/templates/BsRouteStatusPage.vue",
+    "BsAccountSessionPage": "packages/ui/src/templates/BsAccountSessionPage.vue",
+    "BsPracticeOverviewPage": "packages/ui/src/templates/BsPracticeOverviewPage.vue",
+    "BsLocationManagementPage": "packages/ui/src/templates/BsLocationManagementPage.vue",
+    "BsPatientDirectoryPage": "packages/ui/src/templates/BsPatientDirectoryPage.vue",
+    "BsPatientProfilePage": "packages/ui/src/templates/BsPatientProfilePage.vue",
+    "BsAvailabilityPage": "packages/ui/src/templates/BsAvailabilityPage.vue",
+    "BsPracticeAppointmentsPage": "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
+    "BsSubscriptionStatusPage": "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
+    "BsPrivacyRequestsPage": "packages/ui/src/templates/BsPrivacyRequestsPage.vue",
+    "BsManualPaymentPage": "packages/ui/src/templates/BsManualPaymentPage.vue",
+    "BsPaymentReconciliationPage": "packages/ui/src/templates/BsPaymentReconciliationPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -75,11 +97,11 @@
     "routes": 74
   },
   "currentInventory": {
-    "suitVueFiles": 90,
+    "suitVueFiles": 94,
     "localComponents": 0,
-    "routes": 76,
-    "layouts": 9,
-    "roots": 5
+    "routes": 78,
+    "layouts": 10,
+    "roots": 6
   },
   "acceptance": "verified-local: all 76 routes, strict zero-debt architecture, cross-Suit parity and regressions; publication pending provider suppression verification",
   "entries": [
@@ -1605,7 +1627,8 @@
       "domainAdapter": "apps/shop-suit/app/pages/appointments/index.vue",
       "dependencies": [
         "@building-suit/ui/types/appointmentsPresentation",
-        "~/types/shopCrmRpc"
+        "~/types/shopCrmRpc",
+        "@building-suit/ui/types/appointmentAccessPresentation"
       ],
       "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
       "purpose": "appointments",
@@ -1927,20 +1950,19 @@
       "source": "apps/shop-suit/app/pages/index.vue",
       "kind": "route",
       "currentSharedTemplates": [
-        "packages/ui/src/templates/BsLandingPage.vue"
+        "packages/ui/src/templates/BsShopPublicEntryPage.vue"
       ],
       "renderedBsComponents": [
-        "BsLandingPage"
+        "BsShopPublicEntryPage"
       ],
-      "destination": "packages/ui/src/templates/BsLandingPage.vue",
+      "destination": "packages/ui/src/templates/BsShopPublicEntryPage.vue",
       "status": "verified-local",
       "domainAdapter": "apps/shop-suit/app/pages/index.vue",
       "dependencies": [
-        "@building-suit/contracts",
-        "~/types/plans"
+        "@building-suit/ui/types/shopWebsitePresentation"
       ],
-      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
-      "purpose": "product-landing"
+      "verification": "SS-WEB-PUBLIC-001: exact task browser/API and marketing parity coverage",
+      "purpose": "host-aware-shop-public-entry"
     },
     {
       "source": "apps/shop-suit/app/pages/inventory/index.vue",
@@ -2297,7 +2319,7 @@
       ]
     },
     {
-      "source": "apps/shop-suit/app/pages/settings.vue",
+      "source": "apps/shop-suit/app/pages/settings/[[section]].vue",
       "kind": "route",
       "currentSharedTemplates": [
         "packages/ui/src/templates/BsBusinessSettingsPage.vue"
@@ -2306,8 +2328,8 @@
         "BsBusinessSettingsPage"
       ],
       "destination": "packages/ui/src/templates/BsBusinessSettingsPage.vue",
-      "status": "verified-local",
-      "domainAdapter": "apps/shop-suit/app/pages/settings.vue",
+      "status": "implemented-unverified",
+      "domainAdapter": "apps/shop-suit/app/pages/settings/[[section]].vue",
       "dependencies": [
         "@building-suit/ui/types/businessSettingsPresentation",
         "~/composables/useShop",
@@ -2317,7 +2339,7 @@
         "~/utils/businessMode",
         "~/utils/businessMode"
       ],
-      "verification": "atomic-template-unification-acceptance.md: passing browser route coverage, template/shell parity and consumer regressions",
+      "verification": "Section routes updated in source; checks and visual verification deferred at user request.",
       "purpose": "business-settings",
       "reconciledDependencies": [
         "~/types/shopCrmRpc",
@@ -2469,6 +2491,443 @@
       "dependencies": [],
       "verification": "super-admin-account-provisioning.md: focused browser and authorization gates",
       "purpose": "provisioned-owner-claim"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/commissions.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCommissionPolicyPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsCommissionPolicyPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCommissionPolicyPage.vue",
+      "status": "implemented",
+      "domainAdapter": "apps/shop-suit/app/pages/commissions.vue",
+      "dependencies": [
+        "@building-suit/ui/types/commissionPresentation",
+        "~/types/commission",
+        "~/types/shopCrmRpc"
+      ],
+      "purpose": "commission-policy-and-history"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/taxes.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsShopTaxSettingsPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsShopTaxSettingsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsShopTaxSettingsPage.vue",
+      "status": "implemented",
+      "domainAdapter": "apps/shop-suit/app/pages/taxes.vue",
+      "dependencies": [
+        "@building-suit/ui/types/shopTaxPresentation",
+        "~/types/tax",
+        "~/types/shopCrmRpc"
+      ],
+      "purpose": "versioned-tax-settings"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/service-materials.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsServiceFulfillmentPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsServiceFulfillmentPage"
+      ],
+      "destination": "packages/ui/src/templates/BsServiceFulfillmentPage.vue",
+      "status": "implemented",
+      "domainAdapter": "apps/shop-suit/app/pages/service-materials.vue",
+      "dependencies": [
+        "@building-suit/ui/types/serviceFulfillmentPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "purpose": "service-recipes-and-explicit-fulfillment"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/changelog.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsChangelogPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsChangelogPage"
+      ],
+      "destination": "packages/ui/src/templates/BsChangelogPage.vue",
+      "status": "shared-owner-available",
+      "domainAdapter": "apps/shop-suit/app/pages/changelog.vue",
+      "dependencies": [],
+      "verification": "BS-CHANGELOG-VERSION-001 release landing browser acceptance",
+      "purpose": "public-changelog"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/eta.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsEtaSettingsPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsEtaSettingsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsEtaSettingsPage.vue",
+      "status": "implemented",
+      "domainAdapter": "apps/shop-suit/app/pages/eta.vue",
+      "dependencies": [
+        "@building-suit/ui/types/etaPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "purpose": "eta-merchant-setup-and-submission"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/my-appointments.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsShopCustomerPortalPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsShopCustomerPortalPage"
+      ],
+      "destination": "packages/ui/src/templates/BsShopCustomerPortalPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/my-appointments.vue",
+      "dependencies": [
+        "@building-suit/ui/types/customerPortalPresentation"
+      ],
+      "verification": "SS-WEB-CUSTOMER-PORTAL-001: scoped SQL/API and EN/AR responsive portal regressions",
+      "purpose": "shop-customer-appointment-portal"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/book.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPublicAppointmentBookingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPublicAppointmentBookingPage.vue",
+      "status": "verified-local",
+      "domainAdapter": "apps/shop-suit/app/pages/book.vue",
+      "dependencies": [
+        "@building-suit/ui/types/appointmentBookingPresentation"
+      ],
+      "verification": "SS-APPT-002: scoped booking, transactional availability and EN/AR responsive browser regressions",
+      "purpose": "shop-public-appointment-booking"
+    },
+    {
+      "source": "apps/doctor-suit/app/app.vue",
+      "kind": "root",
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "domainAdapter": "apps/doctor-suit/app/app.vue",
+      "status": "generated; product acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/layouts/default.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "domainAdapter": "apps/doctor-suit/app/layouts/default.vue",
+      "status": "generated; product acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/index.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsLandingPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/index.vue",
+      "purpose": "canonical-administrative-product-landing",
+      "status": "implemented; local EN/AR acceptance required",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/layouts/marketing.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsMarketingLayout.vue",
+      "domainAdapter": "apps/doctor-suit/app/layouts/marketing.vue",
+      "status": "implemented; local EN/AR acceptance required",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/preview.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsStarterWorkflowPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/preview.vue",
+      "purpose": "synthetic-preview-scope",
+      "status": "implemented; browser acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/sign-in.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsSignInPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/sign-in.vue",
+      "status": "implemented; synthetic authentication browser verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "sign-in"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/sign-up.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsSignupPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/sign-up.vue",
+      "status": "implemented; synthetic authentication browser verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "signup"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/verify.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsEmailVerificationPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/verify.vue",
+      "status": "implemented; synthetic authentication browser verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "email-verification"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/recover.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPasswordRecoveryPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/recover.vue",
+      "status": "implemented; synthetic authentication browser verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "password-recovery"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/account.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsAccountSessionPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/account.vue",
+      "status": "implemented; synthetic authentication browser verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "verified-account-session"
+    },
+    {
+      "source": "apps/doctor-suit/app/layouts/auth.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsProductAuthFrame.vue",
+      "domainAdapter": "apps/doctor-suit/app/layouts/auth.vue",
+      "status": "implemented; synthetic authentication browser verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/onboarding.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsSignupPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/onboarding.vue",
+      "status": "implemented; synthetic owner-setup verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "signup"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/workspace.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPracticeOverviewPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/workspace.vue",
+      "status": "implemented; synthetic owner-setup verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "practice-overview"
+    },
+    {
+      "source": "apps/doctor-suit/app/layouts/practice.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "domainAdapter": "apps/doctor-suit/app/layouts/practice.vue",
+      "status": "implemented; synthetic owner-setup verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/locations.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsLocationManagementPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/locations.vue",
+      "purpose": "location-management",
+      "status": "implemented; synthetic location/context verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/team.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsAccessManagementPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/team.vue",
+      "purpose": "access-management",
+      "status": "implemented; synthetic delegation verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/invitations/accept.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsInvitationAcceptancePage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/invitations/accept.vue",
+      "purpose": "invitation-acceptance",
+      "status": "implemented; synthetic delegation verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/patients/index.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPatientDirectoryPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/patients/index.vue",
+      "purpose": "patient-directory",
+      "status": "implemented; synthetic patient verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/patients/[id].vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPatientProfilePage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/patients/[id].vue",
+      "purpose": "administrative-patient-profile-private-documents",
+      "status": "implemented; synthetic private document verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/availability.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsAvailabilityPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/availability.vue",
+      "purpose": "doctor-working-hours-and-availability",
+      "status": "implemented; synthetic schedule verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/appointments.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/appointments.vue",
+      "purpose": "doctor-appointments-and-scoped-live-queue",
+      "status": "implemented; synthetic appointment verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/audit.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsAuditHistoryPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/audit.vue",
+      "status": "implemented; synthetic audit verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "permission-scoped-administrative-audit"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/account-activity.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsAuditHistoryPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/account-activity.vue",
+      "status": "implemented; synthetic audit verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "personal-account-audit"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/[...slug].vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsRouteStatusPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/[...slug].vue",
+      "status": "implemented; synthetic metadata and missing-route verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "neutral-missing-route"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/subscription.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/subscription.vue",
+      "purpose": "owner-bound-synthetic-subscription-status-and-trial",
+      "status": "implemented; candidate verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/privacy.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPrivacyRequestsPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/privacy.vue",
+      "purpose": "synthetic-own-account-privacy-review-intake",
+      "status": "implemented; qualified privacy fulfillment unavailable",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/shop-suit/app/pages/auth/google-callback.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSignInPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSignInPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSignInPage.vue",
+      "status": "pending-validation",
+      "domainAdapter": "apps/shop-suit/app/pages/auth/google-callback.vue",
+      "dependencies": [],
+      "verification": "Manual Google and Supabase sandbox OAuth browser tests required",
+      "purpose": "google-oauth-callback"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/payment-notices.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsManualPaymentPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/payment-notices.vue",
+      "purpose": "synthetic-owner-manual-transfer-notices-and-private-receipts",
+      "status": "implemented; candidate acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/payment-review.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsManualPaymentPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/payment-review.vue",
+      "purpose": "independently-authorized-synthetic-funds-review-and-paid-activation",
+      "status": "implemented; candidate acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/payment-reconciliation.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPaymentReconciliationPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/payment-reconciliation.vue",
+      "purpose": "read-only-synthetic-manual-payment-reconciliation",
+      "status": "implemented; candidate acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/payment-review-reconciliation.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPaymentReconciliationPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/payment-review-reconciliation.vue",
+      "purpose": "read-only-synthetic-manual-payment-reconciliation",
+      "status": "implemented; candidate acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -2584,6 +3043,28 @@
     "BsFinancialAccountsPage",
     "BsAccountActivationPage",
     "BsAccountProvisioningPage",
-    "BsOwnerInvitationPage"
+    "BsOwnerInvitationPage",
+    "BsCommissionPolicyPage",
+    "BsShopTaxSettingsPage",
+    "BsServiceFulfillmentPage",
+    "BsChangelogPage",
+    "BsEtaSettingsPage",
+    "BsShopPublicEntryPage",
+    "BsShopWebsitePage",
+    "BsShopCustomerPortalPage",
+    "BsPublicAppointmentBookingPage",
+    "BsProductPreviewPage",
+    "BsRouteStatusPage",
+    "BsAccountSessionPage",
+    "BsPracticeOverviewPage",
+    "BsLocationManagementPage",
+    "BsPatientDirectoryPage",
+    "BsPatientProfilePage",
+    "BsAvailabilityPage",
+    "BsPracticeAppointmentsPage",
+    "BsSubscriptionStatusPage",
+    "BsPrivacyRequestsPage",
+    "BsManualPaymentPage",
+    "BsPaymentReconciliationPage"
   ]
 }

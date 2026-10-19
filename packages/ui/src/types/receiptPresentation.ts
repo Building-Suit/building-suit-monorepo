@@ -1,4 +1,7 @@
 export interface BsReceiptView {
+  logoDataUrl?: string | null
+  notes?: string | null
+  direction?: 'ltr' | 'rtl'
   issuer: string
   issuerDetails: string[]
   invoice: string
@@ -28,6 +31,10 @@ export interface BsReceiptDocumentCopy {
   lineTotal: string
   total: string
   payment: string
+  reference: string
+  thankYou: string
+  greeting: string
+  issuedVia: string
   compliance: string
 }
 export interface BsReceiptPageCopy {
@@ -36,8 +43,26 @@ export interface BsReceiptPageCopy {
   language: string
   paperSize: string
   share: string
+  download: string
   loading: string
   loadError: string
   retry: string
   unavailable: string
+}
+
+export interface BsReceiptPreview {
+  recent?: { active: boolean; title: string; hint: string; empty: string; loading: boolean; error: boolean; openLabel: string; backLabel: string; items: { id: string; number: string; issued: string; total: string }[] }
+  paperSize: 'thermal_80' | 'a4'
+  paperOptions: { value: string; label: string }[]
+  receipt: BsReceiptView | null
+  documentCopy: BsReceiptDocumentCopy
+  copy: BsReceiptPageCopy
+  language: string
+  languageOptions: { value: string; label: string }[]
+  printed: boolean
+  loading: boolean
+  error: boolean
+  sharing: boolean
+  shareError: string
+  lastLabel: string
 }

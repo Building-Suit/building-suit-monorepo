@@ -12,3 +12,5 @@ export interface BsShellJournalCreation { flow: BsJournalCreationFlow; view: BsJ
 export interface BsShellOperationalCreation { view: BsOperationalCreationView; copy: BsOperationalCreationCopy; options: BsOperationalCreationOptions }
 export interface BsShellInvitation { state: BsAccessEditorState; copy: BsAccessIdentityCopy; roles: { value: string; label: string }[]; usage?: BsUsageItem }
 export type BsShellWorkspaceCreation = BsWorkspaceCreationView
+
+export interface BsShellAccountDetail { label: string; values: string[] }

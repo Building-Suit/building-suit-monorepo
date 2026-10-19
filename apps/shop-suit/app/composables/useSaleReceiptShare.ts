@@ -1,25 +1,63 @@
+import { renderReceiptDocument } from '@building-suit/ui/utils/receiptDocument'
+import { copyDocumentImage, renderDocumentImage, downloadDocumentImage } from '@building-suit/ux'
 import type { SaleReceiptSnapshot } from '~/types/receipt'
-import { buildReceiptShareText } from '~/utils/receipt'
+import { projectReceipt } from '~/utils/receiptPresentation'
 
 export function useSaleReceiptShare() {
   const { t, locale } = useI18n()
+  const receiptTranslate = useReceiptTranslation()
   const { push: pushToast } = useToasts()
-  const { sharing, share } = useBrowserShare()
+  const { currentId, currentLocationId } = useShop()
+  const route = useRoute()
+  const sharing = ref(false)
   const shareError = ref('')
+  let fallback: { markup: string; filename: string } | null = null
+  let generation = 0
 
-  async function shareReceipt(receipt: SaleReceiptSnapshot) {
-    if (sharing.value || !import.meta.client) return
+  function clearImage() {
+    generation += 1
+    fallback = null
     shareError.value = ''
-    const text = buildReceiptShareText(receipt, {
-      invoice: t('receipt.invoice'), date: t('receipt.date'), location: t('receipt.location'),
-      staff: t('receipt.staff'), customer: t('receipt.customer'), items: t('receipt.items'),
-      payment: t('receipt.payment'), total: t('receipt.total'), quantity: t('receipt.quantity'),
-      compliance: t('receipt.compliance'), walkIn: t('receipt.walkIn'),
-    }, locale.value, method => t(`payments.methods.${method}`))
-    const result = await share({ title: `${receipt.business.name} · ${receipt.invoiceNumber}`, text })
-    if (result === 'copied') pushToast({ tone: 'success', title: t('receipt.copied') })
-    if (result === 'error') shareError.value = t('receipt.shareError')
+    sharing.value = false
+  }
+  watch([currentId, currentLocationId, () => String(route.params.id ?? '')], clearImage)
+  onScopeDispose(clearImage)
+
+  async function currentImage(markup: string, attempt: number) {
+    const image = await renderDocumentImage(markup)
+    if (attempt !== generation) throw new Error('STALE_DOCUMENT')
+    return image
   }
 
-  return { sharing, shareError, shareReceipt }
+  async function shareReceipt(receipt: SaleReceiptSnapshot, language = receipt.presentation?.language ?? locale.value, reprint = false) {
+    if (sharing.value || !import.meta.client) return
+    sharing.value = true
+    shareError.value = ''
+    fallback = null
+    const attempt = ++generation
+    try {
+      const projected = projectReceipt(receipt, language, key => receiptTranslate(key, language))
+      const markup = renderReceiptDocument(projected.view, projected.copy, language, reprint)
+      fallback = { markup, filename: receipt.invoiceNumber }
+      await copyDocumentImage(() => currentImage(markup, attempt))
+      if (attempt === generation) pushToast({ tone: 'success', title: t('receipt.copied') })
+    }
+    catch { if (attempt === generation) shareError.value = t('receipt.shareError') }
+    finally { if (attempt === generation) sharing.value = false }
+  }
+
+  async function downloadReceiptImage() {
+    if (!fallback || sharing.value) return
+    const value = fallback
+    const attempt = ++generation
+    sharing.value = true
+    try {
+      await downloadDocumentImage(() => currentImage(value.markup, attempt), value.filename)
+      if (attempt === generation) shareError.value = ''
+    }
+    catch { if (attempt === generation) shareError.value = t('receipt.imageError') }
+    finally { if (attempt === generation) sharing.value = false }
+  }
+
+  return { sharing, shareError, shareReceipt, downloadReceiptImage, clearImage }
 }

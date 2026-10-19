@@ -26,16 +26,10 @@ const emit = defineEmits<{ retryAccess: []; retry: []; retryHistory: []; saveAdj
       <BsStateSurface v-else-if="!view.canView" state="denied" :title="text.denied" />
       <template v-else>
         <BsText v-if="view.planNotice" as="p" size="sm" tone="warning">{{ text.plan }}</BsText>
-        <BsGrid v-if="!view.loading && !view.error" :columns="2">
-          <BsPanel padding="md">
-            <BsText as="p" size="sm" tone="muted">{{ text.totalValue }}</BsText>
-            <BsText as="p" size="lg" emphasis="semibold">{{ view.valuation }}</BsText>
-          </BsPanel>
-          <BsPanel padding="md">
-            <BsText as="p" size="sm" tone="muted">{{ text.lowCount }}</BsText>
-            <BsText as="p" size="lg" emphasis="semibold">{{ view.lowCount }}</BsText>
-          </BsPanel>
-        </BsGrid>
+        <BsMetricGrid v-if="!view.loading && !view.error" :columns="2">
+          <BsKpiCard :title="text.totalValue" :value="view.valuation" icon="store" />
+          <BsKpiCard :title="text.lowCount" :value="view.lowCount" icon="ledger" />
+        </BsMetricGrid>
         <BsInline justify="between">
           <BsInline>
             <BsButton variant="chip" :aria-pressed="!lowOnly" @click="lowOnly = false">{{ text.all }}</BsButton>

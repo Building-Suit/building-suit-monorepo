@@ -3,6 +3,9 @@ import type { BsCustomerIdentityForm } from '@building-suit/ui/types/customerDir
 import type { BsCustomerProfileView, BsCustomerReceivablesView, BsCustomerStatementView, BsCustomerProfileCopy, BsCustomerReceiptForm } from '@building-suit/ui/types/customerProfilePresentation'
 import { receiptAllocations as validateReceiptAllocations } from '~/utils/receiptAllocations'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { refreshShopQueries } = useShopInvalidation()
+
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
@@ -26,8 +29,7 @@ type OutstandingPage = { items: OutstandingInvoice[]; total: number }
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
 
 const route = useRoute()
-const nuxtApp = useNuxtApp()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const confirmation = useConfirmation()
 const { push: pushToast } = useToasts()
 const { t, locale } = useI18n()
@@ -57,7 +59,7 @@ watch([receiptDate, receiptMethod, receiptReference, receiptNotes, receiptAlloca
 }, { deep: true })
 const { visible: showForm, pending: saving, dirty: formDirty, complete } = useRecordAction(() => form)
 
-const { data: paymentAccess } = useAsyncData(
+const { data: paymentAccess } = useShopQuery(
   () => `shop-data:customer-payment-access:${currentId.value ?? 'none'}`,
   async () => {
     if (!currentId.value) return { can_receive: false }
@@ -67,7 +69,7 @@ const { data: paymentAccess } = useAsyncData(
   }, { watch: [currentId], default: () => ({ can_receive: false }) },
 )
 
-const { data: customer, pending, error, refresh } = useAsyncData(
+const { data: customer, pending, error, refresh } = useShopQuery(
   () => `shop-data:customer:${currentId.value ?? 'none'}:${customerId.value}`,
   async (): Promise<CustomerDetail | null> => {
     if (!currentId.value || !customerId.value) return null
@@ -81,7 +83,7 @@ const { data: customer, pending, error, refresh } = useAsyncData(
   { watch: [currentId, customerId], default: () => null },
 )
 
-const { data: statement, pending: statementPending, error: statementError, refresh: refreshStatement } = useAsyncData(
+const { data: statement, pending: statementPending, error: statementError, refresh: refreshStatement } = useShopQuery(
   () => `shop-data:customer-statement:${currentId.value ?? 'none'}:${customerId.value}:${statementPageNumber.value}`,
   async (): Promise<StatementPage> => {
     if (!currentId.value || !customerId.value) return { items: [], total: 0, page: 1, pageSize: statementPageSize, outstanding: 0 }
@@ -91,7 +93,7 @@ const { data: statement, pending: statementPending, error: statementError, refre
   }, { watch: [currentId, customerId, statementPageNumber], default: () => ({ items: [], total: 0, page: 1, pageSize: statementPageSize, outstanding: 0 }) },
 )
 
-const { data: outstanding, pending: outstandingPending, error: outstandingError, refresh: refreshOutstanding } = useAsyncData(
+const { data: outstanding, pending: outstandingPending, error: outstandingError, refresh: refreshOutstanding } = useShopQuery(
   () => `shop-data:customer-outstanding:${currentId.value ?? 'none'}:${customerId.value}:${outstandingPage.value}`,
   async (): Promise<OutstandingPage> => {
     if (!currentId.value || !customerId.value) return { items: [], total: 0 }
@@ -101,7 +103,7 @@ const { data: outstanding, pending: outstandingPending, error: outstandingError,
   }, { watch: [currentId, customerId, outstandingPage], default: () => ({ items: [], total: 0 }) },
 )
 
-const { data: overdue, pending: overduePending, error: overdueError, refresh: refreshOverdue } = useAsyncData(
+const { data: overdue, pending: overduePending, error: overdueError, refresh: refreshOverdue } = useShopQuery(
   () => `shop-data:customer-overdue:${currentId.value ?? 'none'}:${customerId.value}`,
   async (): Promise<OutstandingPage> => {
     if (!currentId.value || !customerId.value) return { items: [], total: 0 }
@@ -156,7 +158,7 @@ async function saveReceipt() {
     if (error) throw error
     receiptOpen.value = false
     receiptRequestId.value = null
-    await Promise.all([refreshOutstanding(), refreshOverdue(), refreshStatement(), refreshNuxtData(Object.keys(nuxtApp.payload.data).filter(key => key.startsWith(`shop-data:customer-outstanding:${currentId.value}:${customerId.value}:`) || key.startsWith(`shop-data:customer-statement:${currentId.value}:${customerId.value}:`) || key === 'shop-data:sales'))])
+    await Promise.all([refreshOutstanding(), refreshOverdue(), refreshStatement(), refreshShopQueries(key => key.startsWith(`shop-data:customer-outstanding:${currentId.value}:${customerId.value}:`) || key.startsWith(`shop-data:customer-statement:${currentId.value}:${customerId.value}:`) || key === 'shop-data:sales')])
     pushToast({ tone: 'success', title: t('payments.saved') })
   }
   catch (error) {
@@ -249,7 +251,7 @@ function formatDate(value: string | null) {
   return new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 function money(value: number) {
-  return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(value)
+  return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20 }).format(value)
 }
 const overdueCount = computed(() => overdue.value.total)
 

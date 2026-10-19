@@ -1,0 +1,21 @@
+# Public Shop showcase and private inquiries
+
+SS-WEB-PUBLIC-001 consumes the existing explicit PROFILE opt-in and selective CATALOG publication. This migration does not publish existing shops. The registered complete `BsShopPublicEntryPage` selects the existing marketing template on the exact private origin or `BsShopWebsitePage` on a validated tenant authority. Shop supplies typed public projections; UI owns presentation; UX owns restored-page revalidation.
+
+Only trusted HTTP Host resolves a tenant. Forwarded host, tenant headers, client shop IDs and cookies never select a public shop. Anonymous server RPC requests use the existing public key, never an incoming user JWT. Wildcard hosts cannot render private/auth/API routes. Existing aliases redirect to their fixed HTTPS canonical root; language/pagination on the public root retain their canonical query. Public views allowlist identity, independently configured contacts, visible active locations, opening hours and selectively published catalog fields. No booking, cart, checkout, payment, reservation, order or account controls are introduced.
+
+All tenant responses are `private, no-store`, vary on authority/language, and suppress cookies. Unknown, unavailable, suspended, archived, unready and unpublished sites return plain 404/noindex. Reads recheck opt-in and live readiness; there is no shared tenant page cache. Back-forward cache restoration reloads the current authority to revalidate publication. Static Nuxt runtime assets are narrowly matched and available only for a currently public host.
+
+Arabic is the default; English uses `?lang=en`. Phone/tablet/desktop and both themes use canonical design tokens. Canonical, language alternates, description, OpenGraph and escaped LocalBusiness metadata use only the public snapshot. Production publishes index/follow and tenant robots/sitemap; other environments remain noindex with disallowed robots and an empty sitemap.
+
+## Inquiries
+
+`POST /api/website/inquiries` requires same-origin JSON and resolves the destination from Host. Name (120 characters), reply phone/email (254), message (2000), locale (ar/en) and a bounded honeypot are the only accepted fields. JSON is bounded to 12000 bytes even for streamed requests. Phone digits are bounded to 7–15. Unknown fields, including shop IDs/slugs, are rejected. Honeypot submissions return generic success without storage.
+
+An additional bounded per-process socket-IP/shop quota allows five attempts per ten minutes. The authoritative database caps remain effective for callers bypassing HTTP: one normalized contact per shop per ten minutes and forty inquiries per shop per hour. Writes lock the resolved shop, recheck publication, and serialize quota decisions. They return only generic success. Unpublishing immediately refuses further inquiries while preserving the private inbox.
+
+Inquiry and audit tables have RLS and no direct grants to anonymous, authenticated or service roles. Only an active shop owner may call the paginated/filterable inbox or status RPC. Status writes lock/recheck owner scope, match both inquiry and shop, preserve submitted content and append an actor/status audit event. There is no mail, notification or third-party delivery. Owners manually handle replies using the supplied contact. Inquiry messages always render as escaped plain text. Tenant/account/location changes clear the selected inquiry and its dialog; cached lists include backend/environment, portal, actor, shop, filter and page.
+
+## Verification
+
+`tooling/database/test-shop-website-public-local.mjs` uses only the allowlisted disposable Docker database and rolls back synthetic two-shop fixtures, including publication. It covers actual public projections, canonical aliases, validation, honeypot, database quotas, private grants, owner isolation, audit and immediate unpublish. Built-server tests exercise Host boundaries, two distinct public payloads, private-header stripping, SEO, contact filtering, inquiry destination and post-unpublish failures. The two `ss-web-public-001-obligation-*` browser configs verify the owner inbox and twelve responsive EN/AR/light/dark public combinations. GitHub runs the forward migration and SQL suite in a fresh disposable Supabase provider stack. Hosted migrations remain CI-owned.

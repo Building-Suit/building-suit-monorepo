@@ -7,6 +7,9 @@ on:
       - 'tooling/database/tests/account-provisioning-disposable.test.mjs'
       - 'apps/super-admin-suit/**'
       - 'apps/shop-suit/supabase/**'
+      - 'tooling/database/test-shop-settings-local.mjs'
+      - 'tooling/database/test-shop-currency-concurrency.mjs'
+      - 'tooling/database/schema-contract-evidence.mjs'
       - 'apps/shop-suit/app/utils/owner-invitation.ts'
       - 'apps/shop-suit/app/pages/auth/owner-invitation.vue'
 permissions:
@@ -44,11 +47,23 @@ jobs:
             node tooling/database/account-provisioning-disposable.mjs --startup-errors "$RUNNER_TEMP/accounts-sas-start.log"
             exit 1
           fi
+      - name: Verify Shop settings and issued snapshots in the disposable database
+        run: node tooling/database/test-shop-settings-local.mjs
       - name: Generate schema contracts from disposable databases
         run: |
+          # Match SAS disposable validation: the same pinned publisher image is
+          # available on Docker Hub when the shared public ECR quota is exhausted.
+          if ! docker image inspect public.ecr.aws/supabase/postgres-meta:v0.98.0 > /dev/null 2>&1; then
+            if ! docker pull public.ecr.aws/supabase/postgres-meta:v0.98.0 > /dev/null 2>&1; then
+              docker pull docker.io/supabase/postgres-meta:v0.98.0
+              docker tag docker.io/supabase/postgres-meta:v0.98.0 public.ecr.aws/supabase/postgres-meta:v0.98.0
+            fi
+          fi
           mkdir -p "$RUNNER_TEMP/account-schema-contracts/shop" "$RUNNER_TEMP/account-schema-contracts/sas"
           pnpm exec supabase --workdir apps/shop-suit gen types typescript --local > "$RUNNER_TEMP/account-schema-contracts/shop/database.types.ts"
           pnpm exec supabase --workdir apps/super-admin-suit gen types typescript --local > "$RUNNER_TEMP/account-schema-contracts/sas/database.types.ts"
+      - name: Record generated Shop schema delta and digests
+        run: node tooling/database/schema-contract-evidence.mjs apps/shop-suit/app/types/database.types.ts "$RUNNER_TEMP/account-schema-contracts/shop/database.types.ts"
       - uses: actions/upload-artifact@v4
         with:
           name: account-schema-contracts

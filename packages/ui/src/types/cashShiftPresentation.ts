@@ -5,6 +5,7 @@ export interface BsCashShiftAmountForm { amount: number; notes: string }
 export interface BsCashShiftMovementForm { kind: string; amount: number; reason: string; reference: string }
 export interface BsCashShiftEditor { dirty: boolean; pending: boolean }
 export interface BsCashShiftCopy {
+  historyOffline?: string
   title: string
   subtitle: string
   branch: string

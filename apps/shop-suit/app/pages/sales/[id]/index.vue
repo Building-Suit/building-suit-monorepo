@@ -3,8 +3,12 @@ import type { BsCommerceDocumentCopy, BsCommerceDocumentForm, BsCommerceCorrecti
 
 import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 import { saleCopy } from '~/utils/saleCopy'
+import type { TaxQuote } from '~/types/tax'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { SaleReceiptSnapshot } from '~/types/receipt'
+const { refreshShopQueries } = useShopInvalidation()
+
+const { businessCurrency } = useShop()
 
 definePageMeta({
   layout: 'default',
@@ -49,6 +53,7 @@ type PaymentEvent = {
   remainingEffective: number
 }
 type SaleDetail = {
+  currency?: string
   id: string
   invoice_number: string | null
   status: 'draft' | 'issued'
@@ -94,12 +99,12 @@ type SaleCorrectionState = {
 }
 
 const route = useRoute()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const { currentId, currentLocationId } = useShop()
 const { t, locale } = useI18n()
 const confirmation = useConfirmation()
 const { push: pushToast } = useToasts()
-const { sharing: sharingReceipt, shareError, shareReceipt } = useSaleReceiptShare()
+const { sharing: sharingReceipt, shareError, shareReceipt, downloadReceiptImage } = useSaleReceiptShare()
 const saleId = computed(() => String(route.params.id ?? ''))
 const issuing = ref(false)
 const actionError = ref('')
@@ -137,7 +142,7 @@ watch([paymentAmount, paymentDate, paymentMethod, paymentReference, paymentReaso
   if (!paymentPending.value) paymentRequestId.value = null
 })
 
-const { data: sale, pending, error, refresh } = useAsyncData(
+const { data: sale, pending, error, refresh } = useShopQuery(
   () => `shop-data:sale:${currentId.value ?? 'none'}:${saleId.value}`,
   async (): Promise<SaleDetail | null> => {
     if (!currentId.value || !currentLocationId.value || !saleId.value) return null
@@ -149,7 +154,33 @@ const { data: sale, pending, error, refresh } = useAsyncData(
   }, { watch: [currentId, currentLocationId, saleId], default: () => null },
 )
 
-const { data: receiptSnapshot, refresh: refreshReceipt } = useAsyncData(
+const { data: saleTax, pending: taxPending, error: taxError, refresh: refreshTax } = useShopQuery(
+ () => `shop-data:sale-tax:${currentId.value}:${currentLocationId.value}:${saleId.value}`,
+ async () => {
+  if (!currentId.value || !currentLocationId.value || !saleId.value) return null
+  const result = await shopRpc.rpc('get_sale_tax_snapshot', { p_shop_id: currentId.value, p_invoice_id: saleId.value })
+  if (result.error) throw result.error
+  return result.data as (TaxQuote & { orderDiscount?: number }) | null
+ }, { watch: [currentId, currentLocationId, saleId], default: () => null },
+)
+const orderDiscount = ref(0)
+const discountAction = useRecordAction(() => orderDiscount.value)
+const { visible: discountOpen, dirty: discountDirty } = discountAction
+const discountPending = ref(false)
+function editOrderDiscount() { orderDiscount.value = Number(saleTax.value?.orderDiscount ?? 0); discountAction.edit() }
+async function saveOrderDiscount() {
+ if (!currentId.value || !saleId.value || discountPending.value) return
+ discountPending.value = true
+ try {
+  const result = await shopRpc.rpc('set_sale_order_discount', { p_shop_id: currentId.value, p_invoice_id: saleId.value, p_discount: orderDiscount.value })
+  if (result.error) throw result.error
+  await refreshTax(); discountAction.complete()
+ } catch { actionError.value = locale.value === 'ar' ? 'تعذر حفظ الخصم.' : 'Unable to save order discount.' }
+ finally { discountPending.value = false }
+}
+watch([currentId, currentLocationId, saleId], () => discountAction.complete())
+
+const { data: receiptSnapshot, refresh: refreshReceipt } = useShopQuery(
   () => `shop-data:sale-receipt:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${saleId.value}`,
   async (): Promise<SaleReceiptSnapshot | null> => {
     if (!currentId.value || !currentLocationId.value || !saleId.value) return null
@@ -161,7 +192,7 @@ const { data: receiptSnapshot, refresh: refreshReceipt } = useAsyncData(
   }, { watch: [currentId, currentLocationId, saleId], default: () => null },
 )
 
-const { data: correctionState, pending: correctionLoading, error: correctionLoadError, refresh: refreshCorrection } = useAsyncData(
+const { data: correctionState, pending: correctionLoading, error: correctionLoadError, refresh: refreshCorrection } = useShopQuery(
   () => `shop-data:sale-correction:${currentId.value ?? 'none'}:${currentLocationId.value ?? 'none'}:${saleId.value}`,
   async (): Promise<SaleCorrectionState | null> => {
     if (!currentId.value || !currentLocationId.value || !saleId.value) return null
@@ -221,11 +252,11 @@ async function submitCorrection() {
     correctionRequestId.value = null
     correctionOpen.value = false
     await Promise.all([
-      refresh(), refreshCorrection(), refreshReceipt(),
-      refreshNuxtData('shop-data:sales'),
-      refreshNuxtData('shop-data:inventory-overview'),
-      refreshNuxtData('shop-data:customer-statement'),
-      refreshNuxtData('shop-data:cash-shifts'),
+      refresh(), refreshCorrection(), refreshReceipt(), refreshTax(),
+      refreshShopQueries('shop-data:sales'),
+      refreshShopQueries('shop-data:inventory-overview'),
+      refreshShopQueries('shop-data:customer-statement'),
+      refreshShopQueries('shop-data:cash-shifts'),
     ])
     pushToast({ tone: 'success', title: t('saleCorrections.saved') })
   }
@@ -305,7 +336,7 @@ async function submitPayment() {
     if (result.error) throw result.error
     paymentRequestId.value = null
     paymentDialog.value = null
-    await Promise.all([refresh(), refreshReceipt(), refreshNuxtData('shop-data:sales'), refreshNuxtData('shop-data:customer-statement')])
+    await Promise.all([refresh(), refreshReceipt(), refreshTax(), refreshShopQueries('shop-data:sales'), refreshShopQueries('shop-data:customer-statement')])
     pushToast({ tone: 'success', title: t('payments.saved') })
   }
   catch (paymentError) { actionError.value = readableError(shopCommandErrorMessage(paymentError)) }
@@ -313,7 +344,7 @@ async function submitPayment() {
 }
 
 async function issue() {
-  if (!currentId.value || !currentLocationId.value || !sale.value || sale.value.status !== 'draft' || !sale.value.canIssue || issuing.value) return
+  if (!currentId.value || !currentLocationId.value || !sale.value || sale.value.status !== 'draft' || !sale.value.canIssue || taxPending.value || Boolean(taxError.value) || issuing.value) return
   if (!sale.value.client_id) { actionError.value = t('sales.customerRequired'); return }
   if (!await confirmation.ask(saleCopy(t, 'sales.issueConfirm', sale.value?.lines ?? []))) return
   issuing.value = true
@@ -330,9 +361,9 @@ async function issue() {
     issueRequestId.value = null
     await Promise.all([
       refresh(),
-      refreshNuxtData('shop-data:sales'),
-      refreshNuxtData('shop-data:inventory-overview'),
-      refreshNuxtData('shop-data:recent-invoices'),
+      refreshShopQueries('shop-data:sales'),
+      refreshShopQueries('shop-data:inventory-overview'),
+      refreshShopQueries('shop-data:recent-invoices'), refreshTax(),
     ])
     pushToast({ tone: 'success', title: saleCopy(t, 'sales.issuedSuccess', sale.value?.lines ?? []) })
   }
@@ -341,7 +372,7 @@ async function issue() {
 }
 
 function money(value: number) {
-  return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(value)
+  return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: sale.value?.status === 'draft' ? businessCurrency.value : sale.value?.currency || businessCurrency.value, maximumFractionDigits: 20 }).format(value)
 }
 function formatDate(value: string | null) {
   if (!value) return '—'
@@ -353,8 +384,9 @@ useShopRealtime('sales', () => paymentDirty.value || correctionDirty.value)
 const commerceMethods = computed(() => (['cash', 'bank_transfer', 'card', 'wallet', 'cheque', 'other'] as PaymentMethod[]).map(value => ({ value, label: t(`payments.methods.${value}`) })))
 const commerceForm = computed<BsCommerceDocumentForm>({ get: () => ({ amount: paymentAmount.value, date: paymentDate.value, method: paymentMethod.value, reference: paymentReference.value, notes: '', reason: paymentReason.value, quantities: {} }), set: value => { paymentAmount.value = value.amount; paymentDate.value = value.date; if (commerceMethods.value.some(method => method.value === value.method)) paymentMethod.value = value.method as PaymentMethod; paymentReference.value = value.reference; paymentReason.value = value.reason } })
 const commerceCorrectionForm = computed<BsCommerceCorrectionForm>({ get: () => ({ date: correctionDate.value, reference: correctionReference.value, reason: correctionReason.value }), set: value => { correctionDate.value = value.date; correctionReference.value = value.reference; correctionReason.value = value.reason } })
+const { returnOpen, refundRecordOpen, returnForm, refundRecordForm, returnsCopy, returnsView, startReturn, previewReturn, confirmReturn, recordReturnRefund, completeReturnRefund, failReturnRefund, retryReturns, previousReturns, nextReturns, context: returnContext } = useSaleReturns(saleId, () => sale.value?.status === 'issued', async () => { await Promise.all([refresh(), refreshCorrection(), refreshTax()]) })
 const commerceCopy = computed<BsCommerceDocumentCopy>(() => ({
-  back: t('sales.back'), loading: t('common.loading'), loadError: t('sales.loadError'), retry: t('sales.retry'), notFound: t('sales.notFound'), party: t('sales.customerSnapshot'), date: t('sales.issuedAt'), created: t('sales.createdAt'), notes: t('sales.notes'), total: t('sales.total'), balance: t('payments.outstanding'), discount: t('sales.discount'), paid: t('payments.paid'), due: t('sales.dueDate'), settlement: t('payments.title'), lines: t('sales.lines'), item: t('sales.item'), quantity: t('sales.quantity'), price: t('sales.unitPrice'), available: '', payments: t('payments.history'), credits: '', inventory: t('sales.inventoryTrace'), empty: t('payments.empty'), noInventory: t('sales.noInventoryEffect'), noParty: t('sales.noCustomer'), details: t('sales.details'), batch: t('sales.batch'), open: t('sales.open'), recordPayment: t('payments.recordReceipt'), recordCredit: '', recordReturn: '', reverse: t('payments.reverse'), refund: t('payments.refund'), issue: t('sales.issue'), issuing: t('sales.issuing'), edit: t('sales.editDraft'), reprint: t('receipt.reprint'), share: t('receipt.share'), amount: t('payments.amount'), method: t('payments.method'), reference: t('payments.reference'), reason: t('payments.reason'), save: t('payments.save'), cancel: t('sales.cancel'), correction: t('saleCorrections.title'), correctionLoading: t('saleCorrections.loading'), correctionError: t('saleCorrections.loadError'), refunded: t('saleCorrections.refunded'), restored: t('saleCorrections.restored'), correct: t('saleCorrections.action'), correctionDialog: t('saleCorrections.dialogTitle'), correctionSubmit: t('saleCorrections.submit'),
+  back: t('sales.back'), loading: t('common.loading'), loadError: t('sales.loadError'), retry: t('sales.retry'), notFound: t('sales.notFound'), party: t('sales.customerSnapshot'), date: t('sales.issuedAt'), created: t('sales.createdAt'), notes: t('sales.notes'), total: t('sales.total'), balance: t('payments.outstanding'), discount: t('sales.discount'), paid: t('payments.paid'), due: t('sales.dueDate'), settlement: t('payments.title'), lines: t('sales.lines'), item: t('sales.item'), quantity: t('sales.quantity'), price: t('sales.unitPrice'), available: '', payments: t('payments.history'), credits: '', inventory: t('sales.inventoryTrace'), empty: t('payments.empty'), noInventory: t('sales.noInventoryEffect'), noParty: t('sales.noCustomer'), details: t('sales.details'), batch: t('sales.batch'), open: t('sales.open'), recordPayment: t('payments.recordReceipt'), recordCredit: '', recordReturn: '', reverse: t('payments.reverse'), refund: t('payments.refund'), issue: t('sales.issue'), issuing: t('sales.issuing'), edit: t('sales.editDraft'), reprint: t('receipt.reprint'), share: t('receipt.share'), downloadReceipt: t('receipt.download'), amount: t('payments.amount'), method: t('payments.method'), reference: t('payments.reference'), reason: t('payments.reason'), save: t('payments.save'), cancel: t('sales.cancel'), correction: t('saleCorrections.title'), correctionLoading: t('saleCorrections.loading'), correctionError: t('saleCorrections.loadError'), refunded: t('saleCorrections.refunded'), restored: t('saleCorrections.restored'), correct: t('saleCorrections.action'), correctionDialog: t('saleCorrections.dialogTitle'), correctionSubmit: t('saleCorrections.submit'),
 }))
 const commerceView = computed<BsCommerceDocumentView>(() => {
   const value = sale.value
@@ -362,15 +394,19 @@ const commerceView = computed<BsCommerceDocumentView>(() => {
   const issued = value?.status === 'issued'
   const draft = value?.status === 'draft'
   return {
-    loading: pending.value, error: Boolean(error.value), found: Boolean(value), title: value?.invoice_number || t('sales.draftNumber'), subtitle: t('sales.details'), status: value ? t(`sales.${value.status}`) : '', actionError: [actionError.value, shareError.value].filter(Boolean).join(' · '), success: '', notice: [issued ? t('sales.immutable') : t('sales.paymentBoundary'), issued && !value?.client_id ? t('payments.customerlessPaid') : ''].filter(Boolean).join(' '),
+    loading: pending.value, error: Boolean(error.value), found: Boolean(value), title: value?.invoice_number || t('sales.draftNumber'), subtitle: t('sales.details'), status: value ? t(`sales.${value.status}`) : '', receiptImageError: Boolean(shareError.value), actionError: [actionError.value, shareError.value].filter(Boolean).join(' · '), success: '', notice: [issued ? t('sales.immutable') : t('sales.paymentBoundary'), issued && !value?.client_id ? t('payments.customerlessPaid') : ''].filter(Boolean).join(' '),
     party: { name: value?.client_name_snapshot || '', to: value?.client_id ? `/customers/${value.client_id}` : '', phone: value?.client_phone_snapshot || '—', email: value?.client_email_snapshot || '—', address: value?.client_address_snapshot || '—' },
-    detail: { date: formatDate(value?.issued_at || null), created: formatDate(value?.created_at || null), notes: value?.notes || '—', total: money(Number(value?.total_amount || 0)), balance: money(Number(value?.outstanding || 0)), discount: money(Number(value?.discount_amount || 0)), paid: money(Number(correction ? correction.refundAmount : value?.amountPaid || 0)), due: value?.due_date || '—', settlement: issued ? [correction ? t('payments.settlement.corrected') : t(`payments.settlement.${value?.settlementState}`), value?.overdue && !correction ? t('payments.overdue') : ''].filter(Boolean).join(' · ') : '' },
+    amountBreakdown: saleTax.value?.calculationEnabled ? [{ label: locale.value === 'ar' ? 'قبل الضريبة' : 'Before tax', value: money(saleTax.value.net) }, { label: locale.value === 'ar' ? 'الضريبة' : 'Tax', value: money(saleTax.value.tax) }] : [],
+    orderDiscount: { label: locale.value === 'ar' ? 'خصم على الطلب' : 'Order discount', canEdit: Boolean(draft && value?.canManage), pending: discountPending.value, dirty: discountDirty.value },
+    detail: { date: formatDate(value?.issued_at || null), created: formatDate(value?.created_at || null), notes: value?.notes || '—', total: money(Number(draft && saleTax.value ? saleTax.value.total : value?.total_amount || 0)), balance: money(Number(value?.outstanding || 0)), discount: money(Number(value?.discount_amount || 0)), paid: money(Number(correction ? correction.refundAmount : value?.amountPaid || 0)), due: value?.due_date || '—', settlement: issued ? [correction ? t('payments.settlement.corrected') : returnContext.value?.totalCount ? t('returns.settlement') : t(`payments.settlement.${value?.settlementState}`), value?.overdue && !correction ? t('payments.overdue') : ''].filter(Boolean).join(' · ') : '' },
     showCreated: true, showDiscount: true, showNotes: true, showPaid: Boolean(issued), showDue: Boolean(issued), showAvailable: false, showPayments: Boolean(issued), showCredits: false, inventoryTable: false,
-    canPayment: Boolean(issued && value?.client_id && value.outstanding > 0 && value.canReceivePayment), canCredit: false, canReturn: false, canIssue: Boolean(draft && value?.canIssue), issuing: issuing.value, editTo: draft && value?.canManage ? `/sales?edit=${value.id}` : '', receiptTo: !draft && receiptSnapshot.value && value ? `/sales/${value.id}/receipt` : '', canShare: Boolean(!draft && receiptSnapshot.value), sharing: sharingReceipt.value,
-    lines: (value?.lines || []).map(line => ({ id: line.id, name: line.item_name, description: [t(`sales.${line.item_type}`), line.product_sku_snapshot].filter(Boolean).join(' · '), quantity: String(Number(line.quantity)), price: money(Number(line.unit_price)), total: money(Number(line.total_amount)), discount: money(Number(line.discount_amount)), available: '', returnMaximum: 0 })),
-    events: (value?.payments || []).map(event => ({ id: event.id, title: `${t(`payments.events.${event.eventType}`)} · ${money(Number(event.amount))}`, description: [formatDate(event.eventAt), event.method ? t(`payments.methods.${event.method}`) : '', event.reference].filter(Boolean).join(' · '), reason: event.reason || '', canReverse: Boolean(event.eventType === 'receipt' && value?.client_id && !correction && event.remainingEffective > 0 && value.canReversePayment), canRefund: Boolean(event.eventType === 'receipt' && value?.client_id && !correction && event.remainingEffective > 0 && value.canRefundPayment) })), credits: [],
+    serviceAction: value?.status === 'issued' ? { label: locale.value === 'ar' ? 'تنفيذ الخدمات' : 'Service fulfillment', to: `/service-materials?sale=${value.id}` } : undefined,
+    relatedAction: value ? { label: locale.value === 'ar' ? 'العمولات' : 'Commissions', to: `/commissions?sale=${value.id}` } : undefined,
+    canPayment: Boolean(issued && value?.client_id && value.outstanding > 0 && value.canReceivePayment), canCredit: false, canReturn: false, canIssue: Boolean(draft && value?.canIssue && !taxPending.value && !taxError.value), issuing: issuing.value, editTo: draft && value?.canManage ? `/sales?edit=${value.id}` : '', receiptTo: !draft && receiptSnapshot.value && value ? `/sales/${value.id}/receipt` : '', canShare: Boolean(!draft && receiptSnapshot.value), sharing: sharingReceipt.value,
+    lines: (value?.lines || []).map(line => ({ id: line.id, name: line.item_name, description: [t(`sales.${line.item_type}`), line.product_sku_snapshot].filter(Boolean).join(' · '), quantity: String(Number(line.quantity)), price: money(Number(line.unit_price)), total: money(Number(saleTax.value?.lines.find(item => item.id === line.id)?.total ?? line.total_amount)), discount: money(Number(line.discount_amount)), available: '', returnMaximum: 0 })),
+    events: (value?.payments || []).map(event => ({ id: event.id, title: `${t(`payments.events.${event.eventType}`)} · ${money(Number(event.amount))}`, description: [formatDate(event.eventAt), event.method ? t(`payments.methods.${event.method}`) : '', event.reference].filter(Boolean).join(' · '), reason: event.reason || '', canReverse: Boolean(event.eventType === 'receipt' && value?.client_id && !correction && !returnContext.value?.totalCount && event.remainingEffective > 0 && value.canReversePayment), canRefund: Boolean(returnContext.value?.supported === false && event.eventType === 'receipt' && value?.client_id && !correction && !returnContext.value?.totalCount && event.remainingEffective > 0 && value.canRefundPayment) })), credits: [],
     movements: (value?.lines || []).filter(line => line.item_type === 'product').flatMap(line => (value?.movements || []).filter(movement => movement.invoiceItemId === line.id).map(movement => ({ id: movement.id, date: '', name: line.item_name, quantity: String(Math.abs(Number(movement.quantityChange))), cost: '', batch: movement.batchId, to: `/inventory?product=${movement.productId}` }))),
-    correction: { visible: Boolean(issued), loading: correctionLoading.value, error: Boolean(correctionLoadError.value), canCorrect: Boolean(issued && correctionState.value?.canCorrect), title: correction ? t(`saleCorrections.kinds.${correction.kind}`) : '', description: correction ? [formatDate(correction.effectiveAt), correction.reference].filter(Boolean).join(' · ') : '', reason: correction?.reason || '', refunded: correction ? money(Number(correction.refundAmount)) : '', restored: correction ? String(Number(correction.restoredQuantity)) : '', notice: correctionState.value ? t(correctionState.value.canCorrect ? 'saleCorrections.available' : 'saleCorrections.readOnly') : '', fullOnly: t('saleCorrections.fullOnly') },
+    correction: { visible: Boolean(issued && (correction || returnContext.value?.supported === false)), loading: correctionLoading.value, error: Boolean(correctionLoadError.value), canCorrect: Boolean(issued && returnContext.value?.supported === false && !returnContext.value?.totalCount && correctionState.value?.canCorrect), title: correction ? t(`saleCorrections.kinds.${correction.kind}`) : '', description: correction ? [formatDate(correction.effectiveAt), correction.reference].filter(Boolean).join(' · ') : '', reason: correction?.reason || '', refunded: correction ? money(Number(correction.refundAmount)) : '', restored: correction ? String(Number(correction.restoredQuantity)) : '', notice: returnContext.value?.supported ? t('returns.policy') : correctionState.value ? t('saleCorrections.readOnly') : '', fullOnly: returnContext.value?.supported ? '' : t('saleCorrections.fullOnly') },
     dialog: { title: paymentDialog.value ? t(`payments.${paymentDialog.value}Title`) : '', dirty: paymentDirty.value, pending: paymentPending.value, maximum: undefined, showAmount: true, showMethod: paymentDialog.value !== 'reversal', showReference: paymentDialog.value !== 'reversal', showNotes: false, showReason: paymentDialog.value !== 'receipt', showQuantities: false, total: '' },
     correctionDialog: { dirty: correctionDirty.value, pending: correctionPending.value, warning: saleCopy(t, 'saleCorrections.warning', value?.lines || []) },
   }
@@ -381,5 +417,45 @@ function shareCommerceReceipt() { if (receiptSnapshot.value) return shareReceipt
 </script>
 
 <template>
-  <BsCommerceDocumentPage v-model:form="commerceForm" v-model:correction-form="commerceCorrectionForm" v-model:dialog-open="paymentDialogOpen" v-model:correction-open="correctionOpen" :copy="commerceCopy" :view="commerceView" back-to="/sales" inventory-to="" :methods="commerceMethods" :constraints="{ referenceLength: 200, notesLength: 2000, reasonMinimum: 2, reasonMaximum: 1000, amountMinimum: 0.01, amountStep: 0.01, quantityStep: 0.001 }" @retry="refresh()" @issue="issue" @share="shareCommerceReceipt" @payment="openReceipt" @reverse="reverseCommerceEvent" @refund="refundCommerceEvent" @correct="openCorrection" @retry-correction="refreshCorrection()" @submit="submitPayment" @submit-correction="submitCorrection"/>
+  <BsCommerceDocumentPage
+    v-model:return-open="returnOpen"
+    v-model:refund-record-open="refundRecordOpen"
+    v-model:return-form="returnForm"
+    v-model:refund-record-form="refundRecordForm"
+    v-model:discount-open="discountOpen"
+    v-model:order-discount="orderDiscount"
+    v-model:form="commerceForm"
+    v-model:correction-form="commerceCorrectionForm"
+    v-model:dialog-open="paymentDialogOpen"
+    v-model:correction-open="correctionOpen"
+    :returns-copy="sale?.status === 'issued' ? returnsCopy : undefined"
+    :returns-view="returnsView"
+    :copy="commerceCopy"
+    :view="commerceView"
+    back-to="/sales"
+    inventory-to=""
+    :methods="commerceMethods"
+    :constraints="{ referenceLength: 200, notesLength: 2000, reasonMinimum: 2, reasonMaximum: 1000, amountMinimum: 0.01, amountStep: 0.01, quantityStep: 0.001 }"
+    @start-return="startReturn"
+    @retry-returns="retryReturns()"
+    @preview-return="previewReturn"
+    @confirm-return="confirmReturn"
+    @record-return-refund="recordReturnRefund"
+    @complete-return-refund="completeReturnRefund"
+    @fail-return-refund="failReturnRefund"
+    @previous-returns="previousReturns"
+    @next-returns="nextReturns"
+    @edit-order-discount="editOrderDiscount"
+    @save-order-discount="saveOrderDiscount"
+    @retry="refresh(); refreshTax()"
+    @issue="issue"
+    @share="shareCommerceReceipt" @download-receipt="downloadReceiptImage"
+    @payment="openReceipt"
+    @reverse="reverseCommerceEvent"
+    @refund="refundCommerceEvent"
+    @correct="openCorrection"
+    @retry-correction="refreshCorrection()"
+    @submit="submitPayment"
+    @submit-correction="submitCorrection"
+  />
 </template>

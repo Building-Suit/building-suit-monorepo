@@ -1,0 +1,38 @@
+# DOS-M1-016 — synthetic personal account settings
+
+Stack: child of [PR360](https://github.com/Building-Suit/building-suit-monorepo/pull/360), published parent `125a5def646d97747f7540d2205da2d522438889`. Planning remains byte-for-byte PR345 `4ca7110f`. This work neither imports nor activates Automation.
+
+## Behavior and safeguards
+
+Personal name, optional **unverified** personal contact phone, and an account-local in-app confirmation preference belong to `account_profiles`, keyed only by the current product/environment Auth user. They do not change the professional doctor profile, practice ownership, clinic selection, memberships or permissions. The contact is neither a login identifier nor a delivery destination. The preference defaults off, controls confirmed account-update feedback only, and does not enroll in marketing, email, SMS or a paid service. Subscription and export controls are truthfully unavailable.
+
+The forward CLI migration adds explicit self-only authenticated reads, a restrictive future-policy guard, denied direct mutations, private helpers with empty search paths, and atomic CAS/idempotent commands. Per-account locks do not block unrelated accounts. Commands recheck the current provider UID/SID after lock acquisition; retries bind their original material and issuing session. Audit records contain actor UID/SID, version, contact-change flag and time, with no contact/name payload. Private receipts are not an audit-view API.
+
+The synthetic implementation's configurable contact policy defaults to a **15-minute sign-in window**, measured from the actual provider session's creation time rather than JWT issue/refresh time. Missing timestamps/policy fail closed. Updating or clearing contact requires that window; an unchanged contact permits non-sensitive personal/preference edits with a current session. Expired contact writes return a distinct reauthentication result without data/audit/receipt writes. The controlled dialog prompts sign-out and a fresh sign-in, clears sensitive drafts on session loss, and requires the user to re-enter the contact change. Provider sign-out failure retains the existing truthful local-lock feedback.
+
+`BsAccountSessionPage` owns the optional typed summary and canonical record-action dialog. Existing consumers keep their defaults. Apps own form validation, settings commands, identity and policy adapters; shared UX owns modal pending/dirty/reset behavior. Private state is scoped by environment/UID/SID and independent of clinic selection. Known denial clears settings; abort/generation checks discard obsolete responses. Both generated database type copies come from the migrated disposable database through pinned PostgreSQL Meta.
+
+## Verification
+
+- Nine task unit tests pass: independent account identity, confirmation preference, reauthentication state, uncertain-reply retry identity, changed intent, stale CAS, malformed DTOs, denial cleanup and obsolete read suppression.
+- **35 task SQL assertions / 607 cumulative** pass. They prove self-only reads/direct-write denials, independent professional/personal edits, unchanged secretary grants and B preferences, fresh/expired/revoked sessions, sensitive receipt replay, unchanged contact, audit attribution and no denied-command side effects.
+- **Five new real PostgreSQL concurrency scenarios / 39 cumulative** pass: same-intent duplicate, stale editor, freshness policy changed after lock wait, provider SID revoked after lock wait, and independent accounts. Minimal provider schemas in this runner are scaffolding, not actual Auth acceptance.
+- The two focused English desktop/dark and Arabic mobile/light browser cases pass, including default-off preference, persistent personal settings, unsupported controls, expired contact denial and recovery through a new SID. These are controlled HTTP protocol tests, not actual provider acceptance.
+- Root units: **1,804 pass / 23 optional infrastructure skips**. Strict boundaries: **102 complete route templates**, zero local components, 80 historical migrations unchanged. Root lint passes after replacing a control-character regex with explicit character checks; ten inherited warnings remain.
+- Full type/build/browser/shared-consumer and exact candidate publication results are recorded below when complete. Pending checks are not acceptance.
+
+## Actual provider acceptance
+
+The owned GitHub runner additionally builds Doctor and installs Chromium. The new browser harness talks only to its own local app/GoTrue/Mailpit/PostgREST. It checks actual signup/confirmation PKCE and scrubbed URLs; a temporary stricter **application-owned** 20-second policy proves expired contact denial without modifying GoTrue-managed data; fresh password sign-in creates a new SID and admits the re-entered change; a frozen signed-out SID is denied. Real recovery mail yields a one-use code: a browser lacking its verifier is denied, the initiating browser can replace its password, the old password is rejected, and code reuse is denied. Independent B remains unaffected.
+
+No credentials, cookies, tokens, mail URLs/bodies, provider outputs, Playwright call logs or screenshots/traces are published. Harness failures emit only a fixed stage and the existing whitelisted diagnostic categories. Its isolated processes and the disposable stack are cleaned up. **New actual-provider checks are UNRUN until the exact-head GitHub job passes.** Inherited actual provider acceptance at PR360 is separate evidence and does not prove these new paths.
+
+Provider session semantics and same-browser recovery were checked against [Supabase sessions](https://supabase.com/docs/guides/auth/sessions) and [password recovery](https://supabase.com/docs/guides/auth/passwords). The 15-minute application setting is a reviewable synthetic implementation choice, not clinical/legal policy approval. Hosted connections, production deployment, real patients, clinical signing, payments, external communication delivery, bulk export/erasure and retention policy remain gated and user-managed.
+
+## Published candidate and redirect follow-up
+
+[PR361](https://github.com/Building-Suit/building-suit-monorepo/pull/361) published `ca1442e4d007930cb53cae2c532339fbe00a511f`. All seven typechecks/builds, forty authenticated journeys, forty public journeys, **48 shared auth/access/signup/public adapter cases and 12 shared settings-focus cases** pass locally. Exact-parent release and `agent:pr-check 361` pass. Root/lint/boundary results above refer to this implementation.
+
+**Actual provider acceptance passes at `ca1442e4`, run39009686102/job117329338899.** The owned real-browser harness confirms signup PKCE, scrubbed callbacks, expired sensitive contact denial, new-SID password reauthentication, frozen SID denial, same-browser recovery, wrong-browser and reused-code denials, and password replacement. Existing actual Storage/Functions/private bytes and scoped Realtime acceptance also pass. This closes the broader actual Auth recovery/PKCE gap left in DOS-M1-006; hosted connections remain unrun and user-managed.
+
+The separate protocol job at this head caught an Arabic reauthentication navigation race: the account's generic signed-out watcher competed with the explicit return-to-account navigation, leaving `/sign-in` without its requested return query. The follow-up keeps one navigation owner while explicit reauthentication is active. It retains the strict URL assertion and does not change authorization or test timeouts. Six repeated EN/AR contact-expiration/re-sign-in journeys pass, with focused Doctor typecheck/lint/build. The follow-up exact-head CI must pass before this PR is ready; the previous real-provider receipt does not by itself attest a later head.

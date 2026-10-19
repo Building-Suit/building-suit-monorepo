@@ -1,0 +1,28 @@
+{
+  "id": "dos-m1-008-settings-hydration",
+  "task": "DOS-M1-008",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/organisms/BsSettingsMenu.vue",
+    "packages/testing/e2e/settings-menu-focus.spec.ts"
+  ],
+  "reason": "Prevent the shared settings trigger from accepting an interaction before its client handlers have hydrated.",
+  "notes": {
+    "title": {
+      "en": "Use settings from the keyboard",
+      "ar": "استخدام الإعدادات بلوحة المفاتيح"
+    },
+    "summary": {
+      "en": "Open language and theme settings reliably after the page is ready.",
+      "ar": "افتح إعدادات اللغة والمظهر بثبات بعد جاهزية الصفحة."
+    },
+    "details": {
+      "en": "The settings control waits for its client handlers before becoming available, so the first keyboard activation opens the menu.",
+      "ar": "ينتظر زر الإعدادات جاهزية معالجاته قبل إتاحته، ليفتح أول تنشيط بلوحة المفاتيح القائمة."
+    }
+  }
+}

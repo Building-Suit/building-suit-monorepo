@@ -1,0 +1,644 @@
+{
+  "function": "control.create_task_with_publication_contract",
+  "review_only": true,
+  "bindings_required": [
+    "p_workstream_slug",
+    "p_model_profile",
+    "p_retry_policy_id"
+  ],
+  "arguments": {
+    "p_project_slug": "building-suit",
+    "p_workstream_slug": null,
+    "p_task_id": "DOS-M5-014",
+    "p_sequence": 5140,
+    "p_priority": 100,
+    "p_title": "Reminder safety and patient pilot acceptance",
+    "p_description": "Test real-device timing/permissions/snooze/amendment scenarios with clinical review; never promise guaranteed alarms.\n\nRequirements\n- DOS-M5-R001: Patient app, treatment timeline and medication reminders. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M5-F014: Test real-device timing/permissions/snooze/amendment scenarios with clinical review; never promise guaranteed alarms. Acceptance: Validate deterministic schedule vectors and real-device permission, background, snooze, travel, stop/amend and multi-device scenarios against the exact candidate. Obtain independent clinical and patient-usability review; simulated data acceptance does not authorize real patients. Any supervised patient pilot requires separate M7 real-data authorization and consent; document alarm limitations and never promise guaranteed reminders. Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.\n\nDependencies: DOS-M2-007, DOS-M2-008, DOS-M2-012, DOS-M5-001, DOS-M5-002, DOS-M5-003, DOS-M5-004, DOS-M5-005, DOS-M5-006, DOS-M5-007, DOS-M5-008, DOS-M5-009, DOS-M5-010, DOS-M5-011, DOS-M5-012, DOS-M5-013\nBlocking decisions: DOS-M5-GATE-START, DOS-M5-GATE-IDENTITY, DOS-M5-GATE-PLATFORM, DOS-M5-GATE-REMINDERS\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/i18n/\n- apps/doctor-suit/mobile/patient/\n- apps/doctor-suit/server/\n- apps/doctor-suit/supabase/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/package.json\n- packages/contracts/src/\n- packages/contracts/tests/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/src/utils/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-changes/items.json\n- release-fragments/dos-m5-014.json\n\nAcceptance\n1. Validate deterministic schedule vectors and real-device permission, background, snooze, travel, stop/amend and multi-device scenarios against the exact candidate.\n2. Obtain independent clinical and patient-usability review; simulated data acceptance does not authorize real patients.\n3. Any supervised patient pilot requires separate M7 real-data authorization and consent; document alarm limitations and never promise guaranteed reminders.\n4. Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.\n\nVerification scenarios\n- Trace every reminder to the signed source version and every patient action to an unchanged regimen.\n- Missing real-device or clinical evidence and failed obsolete-event cancellation block patient-app acceptance.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m5-014.md\n- apps/doctor-suit/tests/unit/dos-m5-014.test.mjs\n- apps/doctor-suit/supabase/tests/dos-m5-014.sql\n- docs/work-packages/doctor-suit/implementation/dos-m5-014-device-evidence.json\n- release-fragments/dos-m5-014.json\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Execute task-specific state, protocol and failure assertions\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m5-014.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m5-014-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression for affected consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify database authorization, replay and write integrity with disposable fixtures\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m5-014.sql\"\n    ],\n    \"commands\": [\n      \"dos-m5-014-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Exact-candidate device and chosen-platform build/test evidence; Node protocol tests alone cannot satisfy mobile acceptance\",\n    \"blocker\": \"approved_platform_command_mapping_and_device_receipts_required\",\n    \"phase\": \"pre_publication\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run milestone candidate pnpm typecheck\",\n    \"command\": \"pnpm typecheck\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run milestone candidate pnpm lint\",\n    \"command\": \"pnpm lint\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run milestone candidate pnpm build\",\n    \"command\": \"pnpm build\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Independent exact-candidate affected shared-consumer acceptance evidence\",\n    \"blocker\": \"shared_consumer_regression_receipts_required\",\n    \"phase\": \"pre_publication\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence\",\n    \"commands\": [\n      \"doctor-release-check\"\n    ],\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"release_check_receipt_must_match_candidate_head_and_reviewed_classification\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Only the named domain approvals and actual device/release receipts required by criterion coverage; routine checks require no human acknowledgement.\",\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"criterion_domain_or_device_evidence_required\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.\",\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"independent_automated_verifier_receipt_required\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.\n- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.\n- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.\n\nCriterion-specific coverage\n[\n  {\n    \"case_id\": \"DOS-M5-014-C01\",\n    \"criterion_ids\": [\n      1\n    ],\n    \"assertion\": \"Validate deterministic schedule vectors and real-device permission, background, snooze, travel, stop/amend and multi-device scenarios against the exact candidate.\",\n    \"procedure\": \"Execute approved clock vectors and actual permission/background/snooze/travel matrix.\",\n    \"test_case_name\": \"DOS-M5-014-C01\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m5-014.test.mjs\"\n    ],\n    \"command_refs\": [\n      \"dos-m5-014-unit\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"approved-platform-device-receipt\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Include actual approved-platform build/device evidence; a unit test cannot replace it.\"\n  },\n  {\n    \"case_id\": \"DOS-M5-014-C02\",\n    \"criterion_ids\": [\n      2\n    ],\n    \"assertion\": \"Obtain independent clinical and patient-usability review; simulated data acceptance does not authorize real patients.\",\n    \"procedure\": \"Obtain independent clinical and patient-usability review without live enrollment.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [],\n    \"command_refs\": [],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"accountable-human-review\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": true,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. The genuine domain approval requires accountable reviewer identity, scope/date, exact candidate and supporting references.\"\n  },\n  {\n    \"case_id\": \"DOS-M5-014-C03\",\n    \"criterion_ids\": [\n      3\n    ],\n    \"assertion\": \"Any supervised patient pilot requires separate M7 real-data authorization and consent; document alarm limitations and never promise guaranteed reminders.\",\n    \"procedure\": \"Verify enrollment remains disabled without separate M7 authorization and alarm limitations exclude guaranteed reminders; do not grant real-data approval.\",\n    \"test_case_name\": \"DOS-M5-014-C03\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m5-014.test.mjs\"\n    ],\n    \"command_refs\": [\n      \"dos-m5-014-unit\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"independent-exact-candidate-automated-verifier\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": true,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\",\n      \"automated_receipt_fields\": [\n        \"independent verifier execution ID\",\n        \"exact candidate SHA and base SHA\",\n        \"case ID and evaluated input artifact hashes\",\n        \"existing authorization/decision references where relevant\",\n        \"executed command argv, exit codes and immutable logs or reproducible document-comparison assertions\",\n        \"per-assertion result with failed, skipped, unavailable and unrun obligations distinguished\"\n      ],\n      \"missing_evidence_behavior\": \"Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification.\"\n  },\n  {\n    \"case_id\": \"DOS-M5-014-C04\",\n    \"criterion_ids\": [\n      4\n    ],\n    \"assertion\": \"Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.\",\n    \"procedure\": \"Compare platform/renderer/path/test registration to the approved decision and exact build/device receipt; block native implementation when absent.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [],\n    \"command_refs\": [],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"independent-exact-candidate-automated-verifier\",\n      \"approved-platform-device-receipt\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": true,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\",\n      \"automated_receipt_fields\": [\n        \"independent verifier execution ID\",\n        \"exact candidate SHA and base SHA\",\n        \"case ID and evaluated input artifact hashes\",\n        \"existing authorization/decision references where relevant\",\n        \"executed command argv, exit codes and immutable logs or reproducible document-comparison assertions\",\n        \"per-assertion result with failed, skipped, unavailable and unrun obligations distinguished\"\n      ],\n      \"missing_evidence_behavior\": \"Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification. Include actual approved-platform build/device evidence; a unit test cannot replace it.\"\n  },\n  {\n    \"case_id\": \"DOS-M5-014-RELEASE\",\n    \"criterion_ids\": [],\n    \"assertion\": \"Task-scoped release provenance and, when applicable, public inventory are complete.\",\n    \"procedure\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [\n      \"release-fragments/dos-m5-014.json\"\n    ],\n    \"command_refs\": [\n      \"doctor-release-check\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"exact-candidate-release-review\"\n    ],\n    \"acceptance_rule\": \"Preserve unrelated inventory and all accepted fragments; do not activate an operational product.\"\n  }\n]\n\nRelease ownership\n{\n  \"fragment_path\": \"release-fragments/dos-m5-014.json\",\n  \"accepted_fragments\": \"append-only; never rewrite accepted provenance\",\n  \"inventory_path\": \"release-changes/items.json\",\n  \"inventory_write_scope\": \"Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.\",\n  \"registration_rule\": \"Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.\",\n  \"receipt_rule\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\"\n}\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m5-014.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states.",
+    "p_task_type": "review",
+    "p_risk_level": "critical",
+    "p_model_profile": null,
+    "p_acceptance_criteria": [
+      "Validate deterministic schedule vectors and real-device permission, background, snooze, travel, stop/amend and multi-device scenarios against the exact candidate.",
+      "Obtain independent clinical and patient-usability review; simulated data acceptance does not authorize real patients.",
+      "Any supervised patient pilot requires separate M7 real-data authorization and consent; document alarm limitations and never promise guaranteed reminders.",
+      "Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation."
+    ],
+    "p_verification_plan": [
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Check diff hygiene",
+        "command": "git diff --check"
+      },
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Check pinned workspace architecture and boundaries",
+        "command": "pnpm check"
+      },
+      {
+        "version": 2,
+        "kind": "planned_test",
+        "description": "Execute task-specific state, protocol and failure assertions",
+        "expected_outputs": [
+          "apps/doctor-suit/tests/unit/dos-m5-014.test.mjs"
+        ],
+        "commands": [
+          "dos-m5-014-unit"
+        ]
+      },
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Run full repository unit regression for affected consumers",
+        "command": "pnpm test"
+      },
+      {
+        "version": 2,
+        "kind": "planned_test",
+        "description": "Verify database authorization, replay and write integrity with disposable fixtures",
+        "expected_outputs": [
+          "apps/doctor-suit/supabase/tests/dos-m5-014.sql"
+        ],
+        "commands": [
+          "dos-m5-014-data"
+        ],
+        "requires": [
+          "database",
+          "rls-authorization"
+        ]
+      },
+      {
+        "version": 2,
+        "kind": "external_gate",
+        "description": "Exact-candidate device and chosen-platform build/test evidence; Node protocol tests alone cannot satisfy mobile acceptance",
+        "blocker": "approved_platform_command_mapping_and_device_receipts_required",
+        "phase": "pre_publication"
+      },
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Run milestone candidate pnpm typecheck",
+        "command": "pnpm typecheck"
+      },
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Run milestone candidate pnpm lint",
+        "command": "pnpm lint"
+      },
+      {
+        "version": 2,
+        "kind": "command",
+        "description": "Run milestone candidate pnpm build",
+        "command": "pnpm build"
+      },
+      {
+        "version": 2,
+        "kind": "external_gate",
+        "description": "Independent exact-candidate affected shared-consumer acceptance evidence",
+        "blocker": "shared_consumer_regression_receipts_required",
+        "phase": "pre_publication"
+      },
+      {
+        "version": 2,
+        "kind": "external_gate",
+        "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+        "commands": [
+          "doctor-release-check"
+        ],
+        "phase": "pre_publication",
+        "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+      },
+      {
+        "version": 2,
+        "kind": "external_gate",
+        "description": "Only the named domain approvals and actual device/release receipts required by criterion coverage; routine checks require no human acknowledgement.",
+        "phase": "pre_publication",
+        "blocker": "criterion_domain_or_device_evidence_required"
+      },
+      {
+        "version": 2,
+        "kind": "external_gate",
+        "description": "Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.",
+        "phase": "pre_publication",
+        "blocker": "independent_automated_verifier_receipt_required"
+      }
+    ],
+    "p_retry_policy_id": null,
+    "p_metadata": {
+      "artifact_revision": "doctor-suit-planning-v0.4-review-3",
+      "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+      "milestone_id": "DOS-M5",
+      "allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/i18n/",
+        "apps/doctor-suit/mobile/patient/",
+        "apps/doctor-suit/server/",
+        "apps/doctor-suit/supabase/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/package.json",
+        "packages/contracts/src/",
+        "packages/contracts/tests/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/src/utils/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-changes/items.json",
+        "release-fragments/dos-m5-014.json"
+      ],
+      "source_allowed_paths": [
+        "apps/building-suit-docs/app/pages/components.vue",
+        "apps/doctor-suit/app/",
+        "apps/doctor-suit/i18n/",
+        "apps/doctor-suit/mobile/patient/",
+        "apps/doctor-suit/server/",
+        "apps/doctor-suit/supabase/",
+        "apps/doctor-suit/tests/",
+        "docs/shared/atomic-template-route-inventory.json",
+        "docs/shared/ui-ownership-manifest.json",
+        "docs/work-packages/doctor-suit/",
+        "packages/contracts/package.json",
+        "packages/contracts/src/",
+        "packages/contracts/tests/",
+        "packages/ui/package.json",
+        "packages/ui/src/organisms/",
+        "packages/ui/src/templates/",
+        "packages/ui/src/utils/",
+        "packages/ui/tests/",
+        "packages/ux/src/",
+        "packages/ux/tests/",
+        "release-changes/items.json",
+        "release-fragments/dos-m5-014.json"
+      ],
+      "clinical_live_data_allowed": false,
+      "verification_mode": "milestone",
+      "scope_approval": "planning-authorized-execution-gated",
+      "publication_policy": {
+        "merge_authorized": false,
+        "deployment_authorized": false,
+        "hosted_database_changes_authorized": false,
+        "review_required_before_integration": true
+      },
+      "canonical_task_contract": {
+        "task_id": "DOS-M5-014",
+        "milestone_id": "DOS-M5",
+        "sequence": 5140,
+        "priority": 100,
+        "title": "Reminder safety and patient pilot acceptance",
+        "objective": "Test real-device timing/permissions/snooze/amendment scenarios with clinical review; never promise guaranteed alarms.",
+        "task_type": "review",
+        "risk_level": "critical",
+        "acceptance_criteria": [
+          "Validate deterministic schedule vectors and real-device permission, background, snooze, travel, stop/amend and multi-device scenarios against the exact candidate.",
+          "Obtain independent clinical and patient-usability review; simulated data acceptance does not authorize real patients.",
+          "Any supervised patient pilot requires separate M7 real-data authorization and consent; document alarm limitations and never promise guaranteed reminders.",
+          "Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation."
+        ],
+        "verification_scenarios": [
+          "Trace every reminder to the signed source version and every patient action to an unchanged regimen.",
+          "Missing real-device or clinical evidence and failed obsolete-event cancellation block patient-app acceptance."
+        ],
+        "verification_plan": [
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Check diff hygiene",
+            "command": "git diff --check"
+          },
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Check pinned workspace architecture and boundaries",
+            "command": "pnpm check"
+          },
+          {
+            "version": 2,
+            "kind": "planned_test",
+            "description": "Execute task-specific state, protocol and failure assertions",
+            "expected_outputs": [
+              "apps/doctor-suit/tests/unit/dos-m5-014.test.mjs"
+            ],
+            "commands": [
+              "dos-m5-014-unit"
+            ]
+          },
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Run full repository unit regression for affected consumers",
+            "command": "pnpm test"
+          },
+          {
+            "version": 2,
+            "kind": "planned_test",
+            "description": "Verify database authorization, replay and write integrity with disposable fixtures",
+            "expected_outputs": [
+              "apps/doctor-suit/supabase/tests/dos-m5-014.sql"
+            ],
+            "commands": [
+              "dos-m5-014-data"
+            ],
+            "requires": [
+              "database",
+              "rls-authorization"
+            ]
+          },
+          {
+            "version": 2,
+            "kind": "external_gate",
+            "description": "Exact-candidate device and chosen-platform build/test evidence; Node protocol tests alone cannot satisfy mobile acceptance",
+            "blocker": "approved_platform_command_mapping_and_device_receipts_required",
+            "phase": "pre_publication"
+          },
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Run milestone candidate pnpm typecheck",
+            "command": "pnpm typecheck"
+          },
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Run milestone candidate pnpm lint",
+            "command": "pnpm lint"
+          },
+          {
+            "version": 2,
+            "kind": "command",
+            "description": "Run milestone candidate pnpm build",
+            "command": "pnpm build"
+          },
+          {
+            "version": 2,
+            "kind": "external_gate",
+            "description": "Independent exact-candidate affected shared-consumer acceptance evidence",
+            "blocker": "shared_consumer_regression_receipts_required",
+            "phase": "pre_publication"
+          },
+          {
+            "version": 2,
+            "kind": "external_gate",
+            "description": "Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence",
+            "commands": [
+              "doctor-release-check"
+            ],
+            "phase": "pre_publication",
+            "blocker": "release_check_receipt_must_match_candidate_head_and_reviewed_classification"
+          },
+          {
+            "version": 2,
+            "kind": "external_gate",
+            "description": "Only the named domain approvals and actual device/release receipts required by criterion coverage; routine checks require no human acknowledgement.",
+            "phase": "pre_publication",
+            "blocker": "criterion_domain_or_device_evidence_required"
+          },
+          {
+            "version": 2,
+            "kind": "external_gate",
+            "description": "Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.",
+            "phase": "pre_publication",
+            "blocker": "independent_automated_verifier_receipt_required"
+          }
+        ],
+        "allowed_paths": [
+          "apps/building-suit-docs/app/pages/components.vue",
+          "apps/doctor-suit/app/",
+          "apps/doctor-suit/i18n/",
+          "apps/doctor-suit/mobile/patient/",
+          "apps/doctor-suit/server/",
+          "apps/doctor-suit/supabase/",
+          "apps/doctor-suit/tests/",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "docs/work-packages/doctor-suit/",
+          "packages/contracts/package.json",
+          "packages/contracts/src/",
+          "packages/contracts/tests/",
+          "packages/ui/package.json",
+          "packages/ui/src/organisms/",
+          "packages/ui/src/templates/",
+          "packages/ui/src/utils/",
+          "packages/ui/tests/",
+          "packages/ux/src/",
+          "packages/ux/tests/",
+          "release-changes/items.json",
+          "release-fragments/dos-m5-014.json"
+        ],
+        "expected_outputs": [
+          "docs/work-packages/doctor-suit/implementation/dos-m5-014.md",
+          "apps/doctor-suit/tests/unit/dos-m5-014.test.mjs",
+          "apps/doctor-suit/supabase/tests/dos-m5-014.sql",
+          "docs/work-packages/doctor-suit/implementation/dos-m5-014-device-evidence.json",
+          "release-fragments/dos-m5-014.json"
+        ],
+        "linked_requirement_ids": [
+          "DOS-M5-R001",
+          "DOS-M5-F014"
+        ],
+        "task_dependencies": [
+          "DOS-M2-007",
+          "DOS-M2-008",
+          "DOS-M2-012",
+          "DOS-M5-001",
+          "DOS-M5-002",
+          "DOS-M5-003",
+          "DOS-M5-004",
+          "DOS-M5-005",
+          "DOS-M5-006",
+          "DOS-M5-007",
+          "DOS-M5-008",
+          "DOS-M5-009",
+          "DOS-M5-010",
+          "DOS-M5-011",
+          "DOS-M5-012",
+          "DOS-M5-013"
+        ],
+        "blocking_decision_ids": [
+          "DOS-M5-GATE-START",
+          "DOS-M5-GATE-IDENTITY",
+          "DOS-M5-GATE-PLATFORM",
+          "DOS-M5-GATE-REMINDERS"
+        ],
+        "produces_decision_ids": [],
+        "specific_evidence": [
+          "Create docs/work-packages/doctor-suit/implementation/dos-m5-014.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+          "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+        ],
+        "status": "planned",
+        "engine_stage": "pending",
+        "model_profile": "deep",
+        "model_profile_strategy": "require_verified_high_capability_deep_route",
+        "retry_policy_id": null,
+        "release_contract": {
+          "fragment_path": "release-fragments/dos-m5-014.json",
+          "accepted_fragments": "append-only; never rewrite accepted provenance",
+          "inventory_path": "release-changes/items.json",
+          "inventory_write_scope": "Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.",
+          "registration_rule": "Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.",
+          "receipt_rule": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results."
+        },
+        "evidence_requirements": [
+          "Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.",
+          "Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.",
+          "Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.",
+          "Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.",
+          "Create docs/work-packages/doctor-suit/implementation/dos-m5-014.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.",
+          "Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+        ],
+        "source_reading": [
+          "AGENTS.md",
+          "README.md",
+          "docs/agent-workflows.md",
+          "docs/shared/git-workflow.md",
+          "packages/ui/AGENTS.md",
+          "docs/shared/design-system.md",
+          "docs/shared/interactions.md",
+          "docs/shared/data-table.md",
+          "docs/architecture/identity.md",
+          "docs/shared/database.md",
+          "docs/shared/future-suit-administration.md",
+          "docs/shared/atomic-template-route-inventory.json",
+          "docs/shared/ui-ownership-manifest.json",
+          "tooling/control-plane/runner/task-prompt.mjs",
+          "tooling/control-plane/runner/verification-mode.mjs"
+        ],
+        "verification_cases": [
+          {
+            "case_id": "DOS-M5-014-C01",
+            "criterion_ids": [
+              1
+            ],
+            "assertion": "Validate deterministic schedule vectors and real-device permission, background, snooze, travel, stop/amend and multi-device scenarios against the exact candidate.",
+            "procedure": "Execute approved clock vectors and actual permission/background/snooze/travel matrix.",
+            "test_case_name": "DOS-M5-014-C01",
+            "required_outputs": [
+              "apps/doctor-suit/tests/unit/dos-m5-014.test.mjs"
+            ],
+            "command_refs": [
+              "dos-m5-014-unit"
+            ],
+            "external_evidence_required": true,
+            "evidence_types": [
+              "approved-platform-device-receipt"
+            ],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Include actual approved-platform build/device evidence; a unit test cannot replace it."
+          },
+          {
+            "case_id": "DOS-M5-014-C02",
+            "criterion_ids": [
+              2
+            ],
+            "assertion": "Obtain independent clinical and patient-usability review; simulated data acceptance does not authorize real patients.",
+            "procedure": "Obtain independent clinical and patient-usability review without live enrollment.",
+            "test_case_name": null,
+            "required_outputs": [],
+            "command_refs": [],
+            "external_evidence_required": true,
+            "evidence_types": [
+              "accountable-human-review"
+            ],
+            "evidence_policy": {
+              "human_approval_required": true,
+              "independent_automated_verification_required": false,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. The genuine domain approval requires accountable reviewer identity, scope/date, exact candidate and supporting references."
+          },
+          {
+            "case_id": "DOS-M5-014-C03",
+            "criterion_ids": [
+              3
+            ],
+            "assertion": "Any supervised patient pilot requires separate M7 real-data authorization and consent; document alarm limitations and never promise guaranteed reminders.",
+            "procedure": "Verify enrollment remains disabled without separate M7 authorization and alarm limitations exclude guaranteed reminders; do not grant real-data approval.",
+            "test_case_name": "DOS-M5-014-C03",
+            "required_outputs": [
+              "apps/doctor-suit/tests/unit/dos-m5-014.test.mjs"
+            ],
+            "command_refs": [
+              "dos-m5-014-unit"
+            ],
+            "external_evidence_required": true,
+            "evidence_types": [
+              "independent-exact-candidate-automated-verifier"
+            ],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": true,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.",
+              "automated_receipt_fields": [
+                "independent verifier execution ID",
+                "exact candidate SHA and base SHA",
+                "case ID and evaluated input artifact hashes",
+                "existing authorization/decision references where relevant",
+                "executed command argv, exit codes and immutable logs or reproducible document-comparison assertions",
+                "per-assertion result with failed, skipped, unavailable and unrun obligations distinguished"
+              ],
+              "missing_evidence_behavior": "Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification."
+          },
+          {
+            "case_id": "DOS-M5-014-C04",
+            "criterion_ids": [
+              4
+            ],
+            "assertion": "Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.",
+            "procedure": "Compare platform/renderer/path/test registration to the approved decision and exact build/device receipt; block native implementation when absent.",
+            "test_case_name": null,
+            "required_outputs": [],
+            "command_refs": [],
+            "external_evidence_required": true,
+            "evidence_types": [
+              "independent-exact-candidate-automated-verifier",
+              "approved-platform-device-receipt"
+            ],
+            "evidence_policy": {
+              "human_approval_required": false,
+              "independent_automated_verification_required": true,
+              "authority_rule": "Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.",
+              "automated_receipt_fields": [
+                "independent verifier execution ID",
+                "exact candidate SHA and base SHA",
+                "case ID and evaluated input artifact hashes",
+                "existing authorization/decision references where relevant",
+                "executed command argv, exit codes and immutable logs or reproducible document-comparison assertions",
+                "per-assertion result with failed, skipped, unavailable and unrun obligations distinguished"
+              ],
+              "missing_evidence_behavior": "Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read."
+            },
+            "acceptance_rule": "Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification. Include actual approved-platform build/device evidence; a unit test cannot replace it."
+          },
+          {
+            "case_id": "DOS-M5-014-RELEASE",
+            "criterion_ids": [],
+            "assertion": "Task-scoped release provenance and, when applicable, public inventory are complete.",
+            "procedure": "Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.",
+            "test_case_name": null,
+            "required_outputs": [
+              "release-fragments/dos-m5-014.json"
+            ],
+            "command_refs": [
+              "doctor-release-check"
+            ],
+            "external_evidence_required": true,
+            "evidence_types": [
+              "exact-candidate-release-review"
+            ],
+            "acceptance_rule": "Preserve unrelated inventory and all accepted fragments; do not activate an operational product."
+          }
+        ],
+        "acceptance_mapping": [
+          {
+            "criterion": 1,
+            "text": "Validate deterministic schedule vectors and real-device permission, background, snooze, travel, stop/amend and multi-device scenarios against the exact candidate.",
+            "verification_case_ids": [
+              "DOS-M5-014-C01"
+            ]
+          },
+          {
+            "criterion": 2,
+            "text": "Obtain independent clinical and patient-usability review; simulated data acceptance does not authorize real patients.",
+            "verification_case_ids": [
+              "DOS-M5-014-C02"
+            ]
+          },
+          {
+            "criterion": 3,
+            "text": "Any supervised patient pilot requires separate M7 real-data authorization and consent; document alarm limitations and never promise guaranteed reminders.",
+            "verification_case_ids": [
+              "DOS-M5-014-C03"
+            ]
+          },
+          {
+            "criterion": 4,
+            "text": "Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.",
+            "verification_case_ids": [
+              "DOS-M5-014-C04"
+            ]
+          }
+        ],
+        "metadata": {
+          "artifact_revision": "doctor-suit-planning-v0.4-review-3",
+          "source_revision": "1d0108f85fb8d468f8ad6380c9c6bf60a435ca4d",
+          "milestone_id": "DOS-M5",
+          "allowed_paths": [
+            "apps/building-suit-docs/app/pages/components.vue",
+            "apps/doctor-suit/app/",
+            "apps/doctor-suit/i18n/",
+            "apps/doctor-suit/mobile/patient/",
+            "apps/doctor-suit/server/",
+            "apps/doctor-suit/supabase/",
+            "apps/doctor-suit/tests/",
+            "docs/shared/atomic-template-route-inventory.json",
+            "docs/shared/ui-ownership-manifest.json",
+            "docs/work-packages/doctor-suit/",
+            "packages/contracts/package.json",
+            "packages/contracts/src/",
+            "packages/contracts/tests/",
+            "packages/ui/package.json",
+            "packages/ui/src/organisms/",
+            "packages/ui/src/templates/",
+            "packages/ui/src/utils/",
+            "packages/ui/tests/",
+            "packages/ux/src/",
+            "packages/ux/tests/",
+            "release-changes/items.json",
+            "release-fragments/dos-m5-014.json"
+          ],
+          "source_allowed_paths": [
+            "apps/building-suit-docs/app/pages/components.vue",
+            "apps/doctor-suit/app/",
+            "apps/doctor-suit/i18n/",
+            "apps/doctor-suit/mobile/patient/",
+            "apps/doctor-suit/server/",
+            "apps/doctor-suit/supabase/",
+            "apps/doctor-suit/tests/",
+            "docs/shared/atomic-template-route-inventory.json",
+            "docs/shared/ui-ownership-manifest.json",
+            "docs/work-packages/doctor-suit/",
+            "packages/contracts/package.json",
+            "packages/contracts/src/",
+            "packages/contracts/tests/",
+            "packages/ui/package.json",
+            "packages/ui/src/organisms/",
+            "packages/ui/src/templates/",
+            "packages/ui/src/utils/",
+            "packages/ui/tests/",
+            "packages/ux/src/",
+            "packages/ux/tests/",
+            "release-changes/items.json",
+            "release-fragments/dos-m5-014.json"
+          ],
+          "clinical_live_data_allowed": false,
+          "verification_mode": "milestone",
+          "scope_approval": "planning-authorized-execution-gated",
+          "publication_policy": {
+            "merge_authorized": false,
+            "deployment_authorized": false,
+            "hosted_database_changes_authorized": false,
+            "review_required_before_integration": true
+          }
+        },
+        "description": "Test real-device timing/permissions/snooze/amendment scenarios with clinical review; never promise guaranteed alarms.\n\nRequirements\n- DOS-M5-R001: Patient app, treatment timeline and medication reminders. Synthetic-only implementation; retain doctor ownership, independent secretary grants and separate patient identity/relationship/encounter; no clinical/legal/provider/commercial authority inferred.\n- DOS-M5-F014: Test real-device timing/permissions/snooze/amendment scenarios with clinical review; never promise guaranteed alarms. Acceptance: Validate deterministic schedule vectors and real-device permission, background, snooze, travel, stop/amend and multi-device scenarios against the exact candidate. Obtain independent clinical and patient-usability review; simulated data acceptance does not authorize real patients. Any supervised patient pilot requires separate M7 real-data authorization and consent; document alarm limitations and never promise guaranteed reminders. Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.\n\nDependencies: DOS-M2-007, DOS-M2-008, DOS-M2-012, DOS-M5-001, DOS-M5-002, DOS-M5-003, DOS-M5-004, DOS-M5-005, DOS-M5-006, DOS-M5-007, DOS-M5-008, DOS-M5-009, DOS-M5-010, DOS-M5-011, DOS-M5-012, DOS-M5-013\nBlocking decisions: DOS-M5-GATE-START, DOS-M5-GATE-IDENTITY, DOS-M5-GATE-PLATFORM, DOS-M5-GATE-REMINDERS\n\nAllowed paths\n- apps/building-suit-docs/app/pages/components.vue\n- apps/doctor-suit/app/\n- apps/doctor-suit/i18n/\n- apps/doctor-suit/mobile/patient/\n- apps/doctor-suit/server/\n- apps/doctor-suit/supabase/\n- apps/doctor-suit/tests/\n- docs/shared/atomic-template-route-inventory.json\n- docs/shared/ui-ownership-manifest.json\n- docs/work-packages/doctor-suit/\n- packages/contracts/package.json\n- packages/contracts/src/\n- packages/contracts/tests/\n- packages/ui/package.json\n- packages/ui/src/organisms/\n- packages/ui/src/templates/\n- packages/ui/src/utils/\n- packages/ui/tests/\n- packages/ux/src/\n- packages/ux/tests/\n- release-changes/items.json\n- release-fragments/dos-m5-014.json\n\nAcceptance\n1. Validate deterministic schedule vectors and real-device permission, background, snooze, travel, stop/amend and multi-device scenarios against the exact candidate.\n2. Obtain independent clinical and patient-usability review; simulated data acceptance does not authorize real patients.\n3. Any supervised patient pilot requires separate M7 real-data authorization and consent; document alarm limitations and never promise guaranteed reminders.\n4. Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.\n\nVerification scenarios\n- Trace every reminder to the signed source version and every patient action to an unchanged regimen.\n- Missing real-device or clinical evidence and failed obsolete-event cancellation block patient-app acceptance.\n\nExpected outputs\n- docs/work-packages/doctor-suit/implementation/dos-m5-014.md\n- apps/doctor-suit/tests/unit/dos-m5-014.test.mjs\n- apps/doctor-suit/supabase/tests/dos-m5-014.sql\n- docs/work-packages/doctor-suit/implementation/dos-m5-014-device-evidence.json\n- release-fragments/dos-m5-014.json\n\nExecutable verification obligations\n[\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check diff hygiene\",\n    \"command\": \"git diff --check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Check pinned workspace architecture and boundaries\",\n    \"command\": \"pnpm check\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Execute task-specific state, protocol and failure assertions\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m5-014.test.mjs\"\n    ],\n    \"commands\": [\n      \"dos-m5-014-unit\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run full repository unit regression for affected consumers\",\n    \"command\": \"pnpm test\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"planned_test\",\n    \"description\": \"Verify database authorization, replay and write integrity with disposable fixtures\",\n    \"expected_outputs\": [\n      \"apps/doctor-suit/supabase/tests/dos-m5-014.sql\"\n    ],\n    \"commands\": [\n      \"dos-m5-014-data\"\n    ],\n    \"requires\": [\n      \"database\",\n      \"rls-authorization\"\n    ]\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Exact-candidate device and chosen-platform build/test evidence; Node protocol tests alone cannot satisfy mobile acceptance\",\n    \"blocker\": \"approved_platform_command_mapping_and_device_receipts_required\",\n    \"phase\": \"pre_publication\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run milestone candidate pnpm typecheck\",\n    \"command\": \"pnpm typecheck\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run milestone candidate pnpm lint\",\n    \"command\": \"pnpm lint\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"command\",\n    \"description\": \"Run milestone candidate pnpm build\",\n    \"command\": \"pnpm build\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Independent exact-candidate affected shared-consumer acceptance evidence\",\n    \"blocker\": \"shared_consumer_regression_receipts_required\",\n    \"phase\": \"pre_publication\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Exact-candidate release provenance, net-change inventory and affected-consumer classification evidence\",\n    \"commands\": [\n      \"doctor-release-check\"\n    ],\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"release_check_receipt_must_match_candidate_head_and_reviewed_classification\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Only the named domain approvals and actual device/release receipts required by criterion coverage; routine checks require no human acknowledgement.\",\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"criterion_domain_or_device_evidence_required\"\n  },\n  {\n    \"version\": 2,\n    \"kind\": \"external_gate\",\n    \"description\": \"Machine-produced independent exact-candidate verification receipt for the named coverage cases; automatically evaluate existing evidence and command results. No human acknowledgement or new approval is required.\",\n    \"phase\": \"pre_publication\",\n    \"blocker\": \"independent_automated_verifier_receipt_required\"\n  }\n]\n\nExecution boundaries\n- Synthetic identities and patient records only. No real patient data, credentials, hosted product migrations, provider purchases, deployments, merges or main promotion are authorized.\n- Doctor owns the practice across locations. Secretary memberships and grants remain independent per doctor and location. Patient identity, doctor relationship and encounter are separate; phone/email equality never merges identities or shares charts.\n- Use the pinned Nuxt/Vue/pnpm monorepo and root lockfile. Every web route renders one registered complete packages/ui template; shared interactions belong in packages/ux; app adapters own queries and domain logic. Never import other apps or add Suit-local Vue composition/CSS.\n- Read current root and scoped AGENTS plus git preflight before implementation. Work only in assigned worktree and allowed paths. Preserve history and unrelated edits. Worker leaves verification/publication to control plane; no worker commits or pushes.\n- No automatic diagnosis, prescribing, dose advice, medication substitution, clinical efficacy claims or guaranteed notifications. Evidence-dependent clinical, legal, provider, commercial and mobile choices remain explicit gates.\n- No task execution until parent confirms all nine milestones safely stored and the relevant real blocking start decision is explicitly resolved. Saving/importing plans does not authorize execution or release.\n- The user has authorized eventual implementation of M1, M2 and M3 after all nine plans are safely saved. This is not authorization to bypass genuine clinical/provider gates, retry the cancelled live-schema refresh, use real patients or activate live clinical care.\n- M1–M3 completion means checked implementation in GitHub with exact-candidate verification evidence. The user handles Vercel and hosted Supabase connections; those connections or deployments are not completion requirements for the authorized synthetic implementation. Genuine domain approvals still gate dependent capabilities.\n- Routine authority/document/scope/disabled-operation/status checks use independent automated exact-candidate verification, with no additional human acknowledgement. Existing approvals may be checked but not invented or replaced by automation.\n\nCriterion-specific coverage\n[\n  {\n    \"case_id\": \"DOS-M5-014-C01\",\n    \"criterion_ids\": [\n      1\n    ],\n    \"assertion\": \"Validate deterministic schedule vectors and real-device permission, background, snooze, travel, stop/amend and multi-device scenarios against the exact candidate.\",\n    \"procedure\": \"Execute approved clock vectors and actual permission/background/snooze/travel matrix.\",\n    \"test_case_name\": \"DOS-M5-014-C01\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m5-014.test.mjs\"\n    ],\n    \"command_refs\": [\n      \"dos-m5-014-unit\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"approved-platform-device-receipt\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Include actual approved-platform build/device evidence; a unit test cannot replace it.\"\n  },\n  {\n    \"case_id\": \"DOS-M5-014-C02\",\n    \"criterion_ids\": [\n      2\n    ],\n    \"assertion\": \"Obtain independent clinical and patient-usability review; simulated data acceptance does not authorize real patients.\",\n    \"procedure\": \"Obtain independent clinical and patient-usability review without live enrollment.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [],\n    \"command_refs\": [],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"accountable-human-review\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": true,\n      \"independent_automated_verification_required\": false,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. The genuine domain approval requires accountable reviewer identity, scope/date, exact candidate and supporting references.\"\n  },\n  {\n    \"case_id\": \"DOS-M5-014-C03\",\n    \"criterion_ids\": [\n      3\n    ],\n    \"assertion\": \"Any supervised patient pilot requires separate M7 real-data authorization and consent; document alarm limitations and never promise guaranteed reminders.\",\n    \"procedure\": \"Verify enrollment remains disabled without separate M7 authorization and alarm limitations exclude guaranteed reminders; do not grant real-data approval.\",\n    \"test_case_name\": \"DOS-M5-014-C03\",\n    \"required_outputs\": [\n      \"apps/doctor-suit/tests/unit/dos-m5-014.test.mjs\"\n    ],\n    \"command_refs\": [\n      \"dos-m5-014-unit\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"independent-exact-candidate-automated-verifier\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": true,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\",\n      \"automated_receipt_fields\": [\n        \"independent verifier execution ID\",\n        \"exact candidate SHA and base SHA\",\n        \"case ID and evaluated input artifact hashes\",\n        \"existing authorization/decision references where relevant\",\n        \"executed command argv, exit codes and immutable logs or reproducible document-comparison assertions\",\n        \"per-assertion result with failed, skipped, unavailable and unrun obligations distinguished\"\n      ],\n      \"missing_evidence_behavior\": \"Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification.\"\n  },\n  {\n    \"case_id\": \"DOS-M5-014-C04\",\n    \"criterion_ids\": [\n      4\n    ],\n    \"assertion\": \"Use only the explicitly approved platform/renderer and registered build/device test commands. The reserved mobile path grants no framework choice; re-review the packet and registration after the platform decision, before native implementation.\",\n    \"procedure\": \"Compare platform/renderer/path/test registration to the approved decision and exact build/device receipt; block native implementation when absent.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [],\n    \"command_refs\": [],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"independent-exact-candidate-automated-verifier\",\n      \"approved-platform-device-receipt\"\n    ],\n    \"evidence_policy\": {\n      \"human_approval_required\": false,\n      \"independent_automated_verification_required\": true,\n      \"authority_rule\": \"Verification may validate existing authority and reject missing evidence; it cannot grant, replace or resolve a domain approval.\",\n      \"automated_receipt_fields\": [\n        \"independent verifier execution ID\",\n        \"exact candidate SHA and base SHA\",\n        \"case ID and evaluated input artifact hashes\",\n        \"existing authorization/decision references where relevant\",\n        \"executed command argv, exit codes and immutable logs or reproducible document-comparison assertions\",\n        \"per-assertion result with failed, skipped, unavailable and unrun obligations distinguished\"\n      ],\n      \"missing_evidence_behavior\": \"Fail or report unavailable verification; never ask for a human acknowledgement as a substitute, invent a decision or perform a held live read.\"\n    },\n    \"acceptance_rule\": \"Execute the stated assertions against actual behavior or the exact reviewed documents/receipts. No empty/skipped/source-grep-only/fabricated-pass substitute. Independent automation must produce the specified exact-candidate receipt; human sign-off is not required for this verification. Include actual approved-platform build/device evidence; a unit test cannot replace it.\"\n  },\n  {\n    \"case_id\": \"DOS-M5-014-RELEASE\",\n    \"criterion_ids\": [],\n    \"assertion\": \"Task-scoped release provenance and, when applicable, public inventory are complete.\",\n    \"procedure\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\",\n    \"test_case_name\": null,\n    \"required_outputs\": [\n      \"release-fragments/dos-m5-014.json\"\n    ],\n    \"command_refs\": [\n      \"doctor-release-check\"\n    ],\n    \"external_evidence_required\": true,\n    \"evidence_types\": [\n      \"exact-candidate-release-review\"\n    ],\n    \"acceptance_rule\": \"Preserve unrelated inventory and all accepted fragments; do not activate an operational product.\"\n  }\n]\n\nRelease ownership\n{\n  \"fragment_path\": \"release-fragments/dos-m5-014.json\",\n  \"accepted_fragments\": \"append-only; never rewrite accepted provenance\",\n  \"inventory_path\": \"release-changes/items.json\",\n  \"inventory_write_scope\": \"Only append or refine entries documenting this task's surviving public behavior, with this task fragment in sources and distinctive current-code probes. Existing related items may gain this source/probe only; preserve unrelated IDs, copy, probes, sources and all accepted history. Resolve affected consumers through the actual dependency graph.\",\n  \"registration_rule\": \"Only already-verified active operational Suits with explicit baselines may receive public inventory. Do not activate Doctor or invent a baseline. Keep Doctor-only synthetic preview provenance internal until separate release registration; do not hide visible changes to existing consumers as internal.\",\n  \"receipt_rule\": \"Run pnpm release:check against the exact candidate HEAD and verified task/base/main refs after the control plane creates the candidate. A run on the pre-change HEAD is not acceptance. Preserve gate/evidence separately from product test results.\"\n}\n\nEvidence handback\n- Task ID, exact base/head SHA, parent PR and changed paths; immutable test log/artifact references tied to the candidate.\n- Exact command argv, environment/tool versions, start/end time and exit code; distinguish passed, failed and unrun checks. Missing tests or skipped suites never count as acceptance.\n- Synthetic fixture identities, positive and negative assertions, permissions and data-integrity results; redact tokens and private payloads.\n- Independent verifier results, unresolved decision IDs and reviewed scope; implemented, verified, published, merged and deployed are separate states.\n- Create docs/work-packages/doctor-suit/implementation/dos-m5-014.md with the task decisions, API/state contract, scenarios and evidence references; text alone is not a passing product test.\n- Retain the supplied roadmap objective and stable ID; record new decisions without replacing historical execution states."
+      },
+      "canonical_task_sha256": "89f5d4c6f7eb02147352a528a83dea6f155fb7911f68bf88f80a2d52a2485da2",
+      "canonical_task_schema": "review-only-task-contract-v1",
+      "source_packet_sha256": "9ccbfda60b26fb24b8e97c2422f70fc29abda34f94c2de2f07560d48ff31d454"
+    }
+  },
+  "binding_rule": "Fill required runtime values only from renewed, reviewed live evidence. Do not create a model/retry policy, fall back to a cheaper route or widen project scopes. Preserve the canonical object byte-for-byte under metadata; record resolved runtime values separately."
+}

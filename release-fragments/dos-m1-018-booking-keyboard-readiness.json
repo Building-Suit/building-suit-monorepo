@@ -1,0 +1,14 @@
+{
+  "id": "dos-m1-018-booking-keyboard-readiness",
+  "task": "DOS-M1-018",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/e2e/bookingKeyboard.ts",
+    "apps/doctor-suit/tests/e2e/booking-readiness.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-018.auth.fixture.ts",
+    "docs/work-packages/doctor-suit/implementation/booking-keyboard-readiness.md"
+  ],
+  "reason": "Make the synthetic Doctor keyboard harness wait for enabled controls and completed clinic/patient/slot picker closure before the next Tab/Enter sequence. Preserve every existing booking, dirty/pending, exact-one-write and tenant assertion. Cover both patient/offer response orders and deferred Select close with actual held fixture responses. No product runtime, UI, authorization, schema, hosted connection, clinical approval or operational activation change."
+}

@@ -1,0 +1,23 @@
+{
+  "id": "shop-auth-ci-harness-support",
+  "task": "SS-AUTH-GOOGLE-RECOVERY",
+  "suits": [
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "doctor-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/tests",
+    "packages/ui",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "release-changes/items.json",
+    "packages/testing",
+    "docs/shared/design-system.md"
+  ],
+  "reason": "Exercise the actual sequential login and supply Nuxt autoimports to the isolated signup-session harness. Optional name-lock presentation preserves defaults for other consumers."
+}

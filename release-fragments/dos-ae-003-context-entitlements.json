@@ -1,0 +1,23 @@
+{
+  "id": "dos-ae-003-context-entitlements",
+  "task": "DOS-AE-003",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/plugins/doctor-auth.ts",
+    "apps/doctor-suit/app/utils/contextController.ts",
+    "apps/doctor-suit/app/utils/contextScope.ts",
+    "apps/doctor-suit/app/utils/entitlement.ts",
+    "apps/doctor-suit/app/utils/locationContext.ts",
+    "apps/doctor-suit/supabase/migrations/20261017164235_doctor_saas_context_entitlements.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-003-context.sql",
+    "apps/doctor-suit/tests/fixtures/delegation-provider.mjs",
+    "apps/doctor-suit/tests/unit/administrative-edition.test.mjs",
+    "apps/doctor-suit/tests/unit/entitlement-context.test.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-003-context-entitlements.md"
+  ],
+  "reason": "Project minimal owner-bound subscription state into authorized context/cache identities and remove local authority at server-observed expiry with monotonic browser timers. Preserve grants/history, drafts on unchanged observation refresh, and fail closed on candidate metadata or network failure. Billing UI/read-model binding and actual candidate provider acceptance follow separately; no paid/live offer or operator approval."
+}

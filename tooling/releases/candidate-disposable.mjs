@@ -1,0 +1,227 @@
+import assert from 'node:assert/strict'
+import { buildCandidate } from './candidate.mjs'
+import {readFileSync,writeFileSync} from 'node:fs'
+import {parseChangelogFeed,isChangelogNew} from '../../packages/contracts/src/changelog.ts'
+export async function testCandidates({sql,databaseSql,parallelDatabaseSql,outputPath}) {
+  const migration=name=>readFileSync(new URL(`../../apps/super-admin-suit/supabase/migrations/${name}.sql`,import.meta.url),'utf8')
+  const jwt=`set request.jwt.claims='{"role":"service_role"}';`
+  const json=x=>`'${JSON.stringify(x).replaceAll("'","''")}'::jsonb`
+  const parse=x=>JSON.parse(x.split('\n').at(-1))
+  const setup=(name,kind,beforeModel,beforePreview)=>{
+    sql(`create database ${name};`)
+    const q=s=>databaseSql(name,s)
+    q(`create schema extensions;create extension pgcrypto with schema extensions;create schema super_admin_private;
+      create table public.admin_environments(id uuid primary key,stable_key text,environment_kind text,status text);
+      create table public.suit_registry(id uuid primary key,stable_key text unique,display_name jsonb,status text);
+      insert into public.admin_environments values('a0bb00a1-747c-4cda-8521-9927d0b53065','sas-staging','${kind}','active');
+      insert into public.suit_registry values('7924a9af-a970-4360-a0d0-76df4e18dbfc','shop-suit','{"en":"Shop","ar":"المتجر"}','active');`)
+    q(migration('20261015030053_task_release_catalog'))
+    q(migration('20261015212440_first_official_release_bootstrap'))
+    if(kind==='production') q(`insert into public.release_catalog_configuration values(true,'a0bb00a1-747c-4cda-8521-9927d0b53065','Building-Suit/building-suit-monorepo','${'a'.repeat(40)}','${'a'.repeat(40)}');`)
+    if(beforeModel) beforeModel(q)
+    q(migration('20261015215030_upcoming_release_candidates'))
+    for(const file of ['20261016112949_release_cardinality_location','20261016122230_release_refresh_statement_evidence','20261016144255_qualified_release_baseline_pin']) q(migration(file))
+    if(beforePreview) beforePreview(q)
+    q(migration('20261016173321_durable_release_preview'))
+    q(migration('20261016175503_retrospective_shop_history'))
+    q(migration('20261016210711_release_internal_doctor_consumer'))
+    return q
+  }
+  // Opt-in local diagnosis: replay current repository data, not a hosted catalog.
+  if (process.env.RELEASE_TEST_GIT_CANDIDATE === '1') {
+    // Exercise the real Git-derived candidate as well as synthetic policy fixtures.
+    const actual=setup('candidate_repository','staging')
+    const actualSnapshot={...buildCandidate('origin/main','HEAD'),baseVersions:{'shop-suit':'0.0.0'}}
+    const actualRelease=JSON.parse(actual(`${jwt}select public.release_candidate_refresh(${json(actualSnapshot)});`).split('\n').at(-1))
+    assert.equal(actualRelease.manifest.versions['shop-suit'],'0.1.0')
+    assert.equal(actualRelease.manifest.entries.length,actualSnapshot.changes.filter(row=>row.disposition==='public').length)
+    assert.equal(actual(`${jwt}select public.release_candidate_state();`).includes(actualRelease.key),true)
+  }
+  const stage=setup('candidate_stage','staging'),prod=setup('candidate_prod','production')
+  const copy={en:'Review upcoming work',ar:'مراجعة العمل القادم'}
+  const change={id:'candidate-capability',task:'BS-TEST-001',suits:['shop-suit'],classification:'minor',disposition:'public',paths:['apps/shop-suit'],reason:'Customer capability',notes:{title:copy,summary:copy,details:copy}}
+  const snapshot=(n,changes=[change],baseVersions={'shop-suit':'0.0.0'})=>({schemaVersion:2,stagingRef:'refs/heads/stg',productionRef:'refs/heads/main',repository:'Building-Suit/building-suit-monorepo',mainSha:'a'.repeat(40),mainTree:'b'.repeat(40),stagingSha:String(n).repeat(40),stagingTree:String(n+1).repeat(40),baseVersions,changes,provenance:{branchCommits:[{sha:'private-merge-audit-marker'}],fragmentDigests:[{id:'private-fragment-audit-marker'}]}})
+  const refresh=s=>parse(stage(`${jwt}select public.release_candidate_refresh(${json(s)});`))
+  const ready=r=>stage(`${jwt}select public.release_candidate_ready('${r.key}','${r.digest}');`)
+  const state=q=>parse(q(`${jwt}select public.release_candidate_state();`))
+  const feed=q=>parseChangelogFeed(parse(q('set role anon;select public.release_public_feed();')))
+  assert.throws(()=>feed(stage),/CANDIDATE_RECONCILIATION_REQUIRED/,'Missing first reconciliation is unavailable, not loaded-empty success')
+  const first=snapshot(1)
+  assert.throws(()=>refresh({...first,stagingRef:'refs/heads/main'}),/WRONG_REFERENCE/)
+  assert.throws(()=>prod(`${jwt}select public.release_candidate_refresh(${json(first)});`),/WRONG_ENVIRONMENT/)
+  assert.throws(()=>stage('set role service_role;select public.release_candidate_state();'),/SERVER_REQUIRED/)
+
+  const retry=await Promise.all([0,1].map(()=>parallelDatabaseSql('candidate_stage',`${jwt}select public.release_candidate_refresh(${json(first)});`)))
+  assert.deepEqual(parse(retry[0]),parse(retry[1]))
+  const one=refresh(first)
+  assert.equal(state(stage).productionSha,first.mainSha,'First trusted refresh pins the unversioned main baseline without a release')
+  assert.throws(()=>refresh({...snapshot(3),mainSha:'c'.repeat(40),mainTree:'d'.repeat(40)}),/PRODUCTION_BASELINE_ACK_REQUIRED/,'Unacknowledged first production advancement cannot silently change the release baseline')
+  assert.equal(one.manifest.versions['shop-suit'],'0.1.0')
+  assert.equal(state(stage).baseVersions['shop-suit'],'0.0.0','Preview never consumes a version')
+  assert.throws(()=>feed(stage),/STAGING_CANDIDATE_NOT_READY/,'Failed/unready deployment stays explicitly unavailable')
+  ready(one)
+  const upcoming=feed(stage)
+  assert.equal(upcoming.entries[0].status,'coming-soon')
+  assert.equal(upcoming.entries[0].targetVersion,'0.1.0')
+  assert.equal(upcoming.entries[0].version,undefined)
+  assert.equal(isChangelogNew(upcoming.entries[0],upcoming.serverNow),false)
+  assert.throws(()=>refresh({...first,changes:[{...change,notes:{...change.notes,title:{en:'changed copy',ar:'نص مختلف'}}}]}),/DIGEST_CONFLICT/)
+  const two=refresh(snapshot(2,[change,{...change,id:'candidate-fix',classification:'patch'}]))
+  assert.equal(two.manifest.versions['shop-suit'],'0.1.0','Repeated PR updates stay within the same net release')
+  assert.deepEqual(feed(stage).entries,upcoming.entries,'Pending refresh keeps the last verified preview available')
+  assert.throws(()=>ready({...two,digest:'0'.repeat(64)}),/DIGEST_CONFLICT/)
+  assert.deepEqual(feed(stage).entries,upcoming.entries,'Failed ready cannot swap the preview')
+  assert.throws(()=>ready(one),/STALE_CANDIDATE/,'Superseded readiness cannot republish an old candidate')
+  ready(two)
+  const twoReady=state(stage).revisions.find(r=>r.key===two.key).readyAt
+  ready(two)
+  assert.equal(state(stage).revisions.find(r=>r.key===two.key).readyAt,twoReady,'Readiness retries preserve publication time')
+  assert.equal(feed(stage).entries.length,2)
+  assert.equal(new Set(feed(stage).entries.map(e=>e.targetVersion)).size,1)
+  assert.equal(state(stage).baseVersions['shop-suit'],'0.0.0')
+  const beforeFailure=stage('select count(*) from public.release_candidate_revisions;')
+  assert.throws(()=>refresh(snapshot(3,[{...change,suits:['ledger-suit']} ])),/UNREGISTERED_SUIT/)
+  assert.throws(()=>refresh(snapshot(3,[{...change,notes:{title:{en:'no Arabic'},summary:copy,details:copy}}])),/INVALID_COPY/)
+  assert.equal(stage('select count(*) from public.release_candidate_revisions;'),beforeFailure)
+  const zero=refresh({...snapshot(3,[]),mainSha:'f'.repeat(40)});
+  assert.equal(feed(stage).entries.length,2,'Even a net-zero refresh must pass readiness before retiring a preview');ready(zero)
+  assert.deepEqual(zero.manifest.versions,{})
+  assert.deepEqual(feed(stage).entries,[],'Net zero/reverts remove the upcoming public release, retaining every revision')
+  const final=refresh(snapshot(4,[change,{...change,id:'candidate-fix',classification:'patch'}]));
+  assert.deepEqual(feed(stage).entries,[],'An unready later revision cannot resurrect the last nonempty preview after a ready net-zero revision')
+  ready(final)
+  const exported=state(stage).revisions.find(r=>r.key===final.key)
+  const promote=r=>parse(prod(`${jwt}select public.release_candidate_promote(${json(r)},'${'9'.repeat(40)}','${first.mainSha}','${final.manifest.stagingTree}');`))
+  assert.throws(()=>promote({...exported,readyAt:null}),/UNREADY_OR_WRONG_PROMOTION_PROVENANCE/)
+  assert.throws(()=>promote({...exported,digest:'0'.repeat(64)}),/DIGEST_CONFLICT/)
+  assert.equal(prod('select count(*) from public.release_candidate_promotions;'),'0')
+  const badEntries={...exported.manifest,entries:[{...exported.manifest.entries[0],title:{en:'Forged projection',ar:'إسقاط مزور'}}]}
+  const badDigest=prod(`select super_admin_private.release_digest(${json(badEntries)});`)
+  assert.throws(()=>promote({...exported,manifest:badEntries,digest:badDigest}),/INVALID_GENERATED_ENTRIES/)
+  assert.equal(prod('select count(*) from public.release_candidate_versions;'),'0','A failed freeze also rolls back first-production baseline adoption')
+  const receipt=promote(exported)
+  assert.deepEqual(promote(exported),receipt)
+  assert.equal(feed(prod).entries.length,2,'Exactly one production release, with multiple readable items')
+  assert.deepEqual([...new Set(feed(prod).entries.map(e=>e.version))],['0.1.0'])
+  assert.equal(new Set(feed(prod).entries.map(e=>e.publishedAt)).size,1)
+  assert.equal(prod('select count(*) from public.release_manifests;'),'0','No invented per-merge history')
+  assert.throws(()=>stage(`${jwt}select public.release_candidate_acknowledge(${json({...receipt,digest:'0'.repeat(64)})});`),/MISSING_EXACT_CANDIDATE_RECEIPT/)
+  assert.equal(state(stage).baseVersions['shop-suit'],'0.0.0','Production committed while a failed acknowledgment leaves staging recoverable')
+  stage(`${jwt}select public.release_candidate_acknowledge(${json(receipt)});`)
+  stage(`${jwt}select public.release_candidate_acknowledge(${json(receipt)});`)
+  assert.equal(state(stage).baseVersions['shop-suit'],'0.1.0')
+  assert.deepEqual(feed(stage).entries,feed(prod).entries,'Staging receives the exact frozen production receipt')
+  const next=refresh({...snapshot(6,[{...change,classification:'patch'}],{'shop-suit':'0.1.0'}),mainSha:'9'.repeat(40),mainTree:final.manifest.stagingTree})
+  assert.equal(next.manifest.versions['shop-suit'],'0.1.1','Fresh candidate starts from actual released production version')
+  assert.deepEqual(feed(stage).entries,feed(prod).entries,'After acknowledgment an unready successor cannot revive an old preview');
+  ready(next)
+  const nextFeed=feed(stage).entries
+  stage(`${jwt}select public.release_candidate_acknowledge(${json(receipt)});`)
+  assert.deepEqual(feed(stage).entries,nextFeed,'An acknowledgment retry must not clear a subsequently verified preview')
+  assert.equal(feed(stage).entries.filter(e=>e.status==='coming-soon').length,1)
+  assert.equal(feed(prod).entries.length,2)
+  const published=feed(prod).entries[0].publishedAt
+  assert.equal(isChangelogNew(feed(prod).entries[0],new Date(Date.parse(published)+48*60*60*1000).toISOString()),false)
+  assert.throws(()=>prod(`update public.release_candidate_promotions set first_published_at=clock_timestamp();`),/IMMUTABLE_CANDIDATE_HISTORY/)
+  assert.throws(()=>stage(`${jwt}select public.release_stage_accept('{}');`),/PER_MERGE_RELEASES_RETIRED/)
+  assert.throws(()=>stage("update public.release_version_heads set version='9.9.9';"),/PER_MERGE_RELEASES_RETIRED/)
+  assert.throws(()=>stage(`insert into public.release_manifests(source_sha) values('${'f'.repeat(40)}');`),/PER_MERGE_RELEASES_RETIRED/,'Table guards also stop a cached old writer after model adoption')
+  for(const role of ['anon','authenticated']) {
+    assert.throws(()=>stage(`set role ${role};select public.release_candidate_refresh(${json(first)});`),/permission denied/)
+    assert.throws(()=>stage(`set role ${role};select * from public.release_candidate_revisions;`),/permission denied/)
+    assert.throws(()=>stage(`set role ${role};select * from public.release_candidate_preview;`),/permission denied/)
+    assert.throws(()=>stage(`set role ${role};select public.release_candidate_ready('${next.key}','${next.digest}');`),/permission denied/)
+  }
+  for(const field of ['baseVersions','mainSha','stagingSha','digest','task','paths','BS-TEST','provenance','branchCommits','fragmentDigests','private-merge-audit-marker','private-fragment-audit-marker']) assert.ok(!JSON.stringify(feed(stage)).includes(field))
+  assert.throws(()=>ready(one),/STALE_CANDIDATE/,'Acknowledgment makes old readiness stale');
+  assert.deepEqual(refresh(first),{...one,readyAt:state(stage).revisions.find(r=>r.key===one.key).readyAt},'An old identical revision retry after promotion returns its retained outcome without resurrecting it')
+  if(outputPath) writeFileSync(outputPath,JSON.stringify(feed(stage))+'\n')
+  assert.equal(stage('select version from public.release_version_heads;'),'0.0.0','Original v1 baseline/history remain unchanged')
+  const initialRace=setup('candidate_initial_race','staging')
+  const raced=await Promise.allSettled([first,{...first,mainSha:'c'.repeat(40),mainTree:'d'.repeat(40)}].map(row=>parallelDatabaseSql('candidate_initial_race',`${jwt}select public.release_candidate_refresh(${json(row)});`)))
+  assert.equal(raced.filter(row=>row.status==='fulfilled').length,1,'Only one first-main tree can win atomic initial pinning')
+  assert.equal(raced.filter(row=>row.status==='rejected').length,1)
+  assert.match(raced.find(row=>row.status==='rejected').reason.message,/PRODUCTION_BASELINE_ACK_REQUIRED/)
+  assert.equal(initialRace('select count(*) from public.release_candidate_revisions;'),'1')
+  assert.equal(state(initialRace).baseVersions['shop-suit'],'0.0.0')
+  // Upgrade persisted state with a verified preview and a newer unready candidate.
+  let adoptedReady,adoptedPending
+  const adoption=setup('candidate_preview_adoption','staging',null,q=>{
+    adoptedReady=parse(q(`${jwt}select public.release_candidate_refresh(${json(first)});`))
+    q(`${jwt}select public.release_candidate_ready('${adoptedReady.key}','${adoptedReady.digest}');`)
+    adoptedPending=parse(q(`${jwt}select public.release_candidate_refresh(${json(snapshot(2,[change,{...change,id:'candidate-fix'}]))});`))
+  })
+  assert.equal(feed(adoption).entries.length,1,'Upgrade adopts the last verified preview, not unready pending work')
+  assert.equal(adoption('select revision_key from public.release_candidate_pointer;'),adoptedPending.key)
+  adoption(`${jwt}select public.release_candidate_ready('${adoptedPending.key}','${adoptedPending.digest}');`)
+  assert.equal(feed(adoption).entries.length,2)
+  const adoptedZero=setup('candidate_preview_zero','staging',null,q=>{
+    const initial=parse(q(`${jwt}select public.release_candidate_refresh(${json(first)});`))
+    q(`${jwt}select public.release_candidate_ready('${initial.key}','${initial.digest}');`)
+    const cleared=parse(q(`${jwt}select public.release_candidate_refresh(${json(snapshot(2,[]))});`))
+    q(`${jwt}select public.release_candidate_ready('${cleared.key}','${cleared.digest}');`)
+    q(`${jwt}select public.release_candidate_refresh(${json(snapshot(3))});`)
+  })
+  assert.deepEqual(feed(adoptedZero).entries,[],'Upgrade preserves a ready net-zero preview rather than resurrecting earlier notes')
+  const retired=setup('candidate_preview_retired','staging',null,q=>{
+    const accepted=parse(q(`${jwt}select public.release_candidate_refresh(${json(first)});`))
+    q(`${jwt}select public.release_candidate_ready('${accepted.key}','${accepted.digest}');`)
+    q(`${jwt}select public.release_candidate_acknowledge(${json({...accepted,deploymentSha:'9'.repeat(40),publishedAt:'2026-10-16T00:00:00Z'})});`)
+  })
+  assert.ok(feed(retired).entries.every(row=>row.status==='released'),'Upgrade never searches behind an acknowledged retirement boundary')
+  const historyPlan=JSON.parse(readFileSync(new URL('./retrospective-shop.json',import.meta.url),'utf8'))
+  const historic=setup('candidate_history_stage','staging'), historicProd=setup('candidate_history_prod','production')
+  const latestHistory=historyPlan.releases.at(-1)
+  const historicSnapshot={...first,mainSha:historyPlan.baselineSha,mainTree:latestHistory.sourceTree}
+  const historyRefresh=row=>parse(historic(`${jwt}select public.release_candidate_refresh(${json(row)});`))
+  const reserved=historyRefresh(historicSnapshot)
+  historic(`${jwt}select public.release_candidate_ready('${reserved.key}','${reserved.digest}');`)
+  const beforeImport=state(historic)
+  const importHistory=q=>parse(q(`${jwt}select public.release_history_import(${json(historyPlan)});`))
+  const imported=importHistory(historic)
+  assert.deepEqual(importHistory(historic),imported,'History import preserves first import time and digest on retries')
+  assert.deepEqual(state(historic).revisions,beforeImport.revisions,'Retrospective correction never rewrites prior candidate reservations or their target versions')
+  assert.equal(state(historic).baseVersions['shop-suit'],'0.4.0')
+  assert.equal(feed(historic).entries.filter(row=>row.status==='released').length,4)
+  for(const row of feed(historic).entries.filter(row=>row.status==='released')) {
+    assert.equal(row.versionOrigin,'retrospective');assert.equal(isChangelogNew(row,feed(historic).serverNow),false)
+    assert.equal(row.releasedAt,historyPlan.releases.find(item=>item.version===row.version).releasedAt)
+  }
+  const corrected=historyRefresh({...historicSnapshot,baseVersions:{'shop-suit':'0.4.0'}})
+  assert.equal(corrected.manifest.versions['shop-suit'],'0.5.0','Only actual current net changes contribute to the next version after correcting the production baseline')
+  historic(`${jwt}select public.release_candidate_ready('${corrected.key}','${corrected.digest}');`)
+  importHistory(historicProd)
+  const correctedReady=state(historic).revisions.find(row=>row.key===corrected.key)
+  const actualReceipt=parse(historicProd(`${jwt}select public.release_candidate_promote(${json(correctedReady)},'${'9'.repeat(40)}','${historyPlan.baselineSha}','${corrected.manifest.stagingTree}');`))
+  historic(`${jwt}select public.release_candidate_acknowledge(${json(actualReceipt)});`)
+  importHistory(historic);importHistory(historicProd)
+  assert.equal(state(historic).baseVersions['shop-suit'],'0.5.0','Repeated imports never reset a subsequently released version')
+  assert.equal(feed(historic).entries.length,5,'Four historical milestones plus one real current release; no double credit')
+  assert.deepEqual(feed(historic).entries,feed(historicProd).entries.map(row=>row.versionOrigin==='retrospective'?{...row,publishedAt:feed(historic).entries.find(x=>x.id===row.id).publishedAt}:row))
+  assert.throws(()=>historic(`${jwt}select public.release_history_import(${json({...historyPlan,baselineVersion:'9.0.0'})});`),/HISTORY_IMPORT_REVIEW_REQUIRED/)
+  for(const role of ['anon','authenticated']) {
+    assert.throws(()=>historic(`set role ${role};select public.release_history_import(${json(historyPlan)});`),/permission denied/)
+    assert.throws(()=>historic(`set role ${role};select * from public.release_retrospective_imports;`),/permission denied/)
+  }
+  assert.throws(()=>historic('update public.release_retrospective_imports set imported_at=clock_timestamp();'),/IMMUTABLE_RELEASE_HISTORY/)
+  let priorLegacy
+  const legacy=setup('candidate_existing_legacy','staging',q=>{
+    const oldRequest={repository:'Building-Suit/building-suit-monorepo',ref:'refs/heads/stg',parentSha:'4b4c3ca5ffed96e7d61f6eb5a60d04a52862aa0c',sourceSha:'e'.repeat(40),fragments:[change]}
+    const accepted=parse(q(`${jwt}select public.release_stage_accept(${json(oldRequest)});`))
+    q(`${jwt}select public.release_publish('staging','refs/heads/stg','${'e'.repeat(40)}',${json([accepted])});`)
+    priorLegacy=q(`${jwt}select public.release_catalog_state();`)
+  })
+  assert.equal(legacy(`${jwt}select public.release_catalog_state();`),priorLegacy,'Model migration preserves every old immutable manifest, cursor, copy and publication time')
+  assert.equal(legacy('select count(*) from public.release_candidate_versions;'),'0','Published legacy history is not guessed as a zero baseline')
+  assert.throws(()=>legacy(`${jwt}select public.release_candidate_refresh(${json(first)});`),/VERIFIED_PRODUCTION_BASELINE_REQUIRED/)
+  assert.throws(()=>feed(legacy),/LEGACY_RELEASE_HISTORY_REVIEW_REQUIRED/,'Unknown old staging publication cannot masquerade as verified production history or empty success')
+  const publishedMajor=setup('candidate_unknown_published_baseline','staging',q=>{
+    const request={repository:'Building-Suit/building-suit-monorepo',ref:'refs/heads/stg',parentSha:'4b4c3ca5ffed96e7d61f6eb5a60d04a52862aa0c',sourceSha:'e'.repeat(40),fragments:[{...change,classification:'major'}]}
+    const accepted=parse(q(`${jwt}select public.release_stage_accept(${json(request)});`))
+    q(`${jwt}select public.release_publish('staging','refs/heads/stg','${'e'.repeat(40)}',${json([accepted])});`)
+  })
+  assert.throws(()=>importHistory(publishedMajor),/HISTORICAL_BASELINE_REVIEW_REQUIRED/,'Published legacy history without an acknowledged model-two head cannot be silently reset to the retrospective baseline')
+  assert.equal(publishedMajor('select count(*) from public.release_retrospective_imports;'),'0')
+  assert.equal(publishedMajor('select count(*) from public.release_candidate_versions;'),'0')
+  console.log('Upcoming candidate PostgreSQL passed: repeated updates, net-zero, one production freeze, retry/ack recovery, immutable history, next candidate, authorization and public boundaries')
+}

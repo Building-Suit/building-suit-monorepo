@@ -69,6 +69,10 @@ export async function pilotFixture(page: Page, locale: string, role = 'owner', o
   const start = new Date(); start.setHours(10, 0, 0, 0)
   const appointment = (locationId: string, name = 'Booked customer') => ({ id: `appointment-${locationId}`, locationId, staffMembershipId: staff.membershipId, serviceId: service.id, customerId: null, identityKind: 'walk_in', customerName: name, status: 'arrived', startsAt: start.toISOString(), endsAt: new Date(start.getTime() + 1800000).toISOString(), serviceName: service.name, staffName: staff.name, saleId: null, history: [] })
   const appointments = locations.map(location => appointment(location.id))
+  // Keep account lookup synthetic while exercising both real login stages.
+  await fixtureRoute(page, '**/api/auth/email-step', route => route.fulfill({
+    json: { canContinue: route.request().postDataJSON()?.email === user.email },
+  }))
   await fixtureRoute(page, /^http:\/\/127\.0\.0\.1:(?:61321|46421)\//, async route => {
     const url = new URL(route.request().url())
     if (url.pathname.includes('/auth/v1/')) {
@@ -113,6 +117,8 @@ export async function pilotFixture(page: Page, locale: string, role = 'owner', o
       case 'pos_catalog_search':
       case 'pos_catalog_search_by_category': data = { items: [service], total: 1, page: 1, pageSize: 30, businessMode: 'service', ambiguousBarcode: false }; break
       case 'pos_checkout_context': data = { staff: [{ id: staff.membershipId, name: staff.name }], customers: [], appointments: appointments.filter(item => item.locationId === args.p_location_id).map(item => ({ ...item, staffId: staff.membershipId, service })) }; break
+      case 'quote_sale_tax': data = { calculationEnabled: false, tax: 0, net: 100 * (args.p_lines as { quantity: number }[]).reduce((sum, line) => sum + Number(line.quantity), 0), total: 100 * (args.p_lines as { quantity: number }[]).reduce((sum, line) => sum + Number(line.quantity), 0), lines: [] }; break
+      case 'get_sale_tax_snapshot': data = null; break
       case 'save_pos_sale_draft': data = 'sale-1'; break
       case 'checkout_pos_sale': data = 'sale-1'; break
       case 'get_location_sale_receipt': data = {
@@ -160,10 +166,12 @@ export async function pilotFixture(page: Page, locale: string, role = 'owner', o
     { timeout: 30_000 },
   )
   await expect(emailInput).toBeVisible()
-  await expect(passwordInput).toBeVisible()
-  await expect(submitButton).toBeEnabled()
-
+  await expect(passwordInput).toHaveCount(0)
   await emailInput.fill(user.email)
+  await page.getByRole('button', { name: locale === 'ar' ? 'التالي' : 'Continue', exact: true }).click()
+  await expect(passwordInput).toBeVisible()
+  await expect(submitButton).toHaveCount(1)
+  await expect(submitButton).toBeEnabled()
   await passwordInput.fill('fixture-password')
   await submitButton.click()
   await expect(page).toHaveURL(/dashboard/, { timeout: 20_000 })

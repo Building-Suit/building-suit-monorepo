@@ -1,0 +1,42 @@
+{
+  "id": "dos-ae-003-owner-subscription-ui",
+  "task": "DOS-AE-003",
+  "suits": [
+    "doctor-suit",
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/doctor-suit/app/layouts/practice.vue",
+    "apps/doctor-suit/app/pages/account.vue",
+    "apps/doctor-suit/app/pages/onboarding.vue",
+    "apps/doctor-suit/app/pages/subscription.vue",
+    "apps/doctor-suit/app/pages/workspace.vue",
+    "apps/doctor-suit/app/plugins/doctor-auth.ts",
+    "apps/doctor-suit/app/utils/accountPresentation.ts",
+    "apps/doctor-suit/app/utils/authConfiguration.ts",
+    "apps/doctor-suit/app/utils/contextController.ts",
+    "apps/doctor-suit/app/utils/practiceSetup.ts",
+    "apps/doctor-suit/app/utils/saasController.ts",
+    "apps/doctor-suit/app/utils/saasStatus.ts",
+    "apps/doctor-suit/app/utils/subscriptionPresentation.ts",
+    "apps/doctor-suit/supabase/migrations/20261017230802_doctor_subscription_owner_presentation.sql",
+    "apps/doctor-suit/supabase/tests/dos-ae-003-subscription-presentation.sql",
+    "apps/doctor-suit/tests/e2e/dos-ae-003-subscription.auth.fixture.ts",
+    "apps/doctor-suit/tests/fixtures/delegation-provider.mjs",
+    "apps/doctor-suit/tests/fixtures/subscription-provider.mjs",
+    "apps/doctor-suit/tests/unit/subscription-controller.test.mjs",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-003-owner-subscription-ui.md",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsSubscriptionStatusPage.vue"
+  ],
+  "reason": "Provide shared owner subscription/status/terms/trial UI with server-observed expiry, exact versioned acceptance, stable retry and no fabricated offer/payment/legal defaults. Preserve usage, historical periods, role/clinical boundaries and legacy preview onboarding. Genuine operator/commercial/legal gates and actual candidate-provider acceptance remain pending; no paid/live activation or hosted operation."
+}

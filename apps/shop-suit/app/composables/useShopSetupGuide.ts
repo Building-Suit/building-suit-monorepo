@@ -22,8 +22,8 @@ const copy = computed(() => locale.value === 'ar' ? {
   billing: 'Trial and billing', billingHelp: 'Check the trial end date, access status, and subscription renewal instructions.',
 })
 const steps = computed(() => [
-  { id: '/settings', title: copy.value.business, description: copy.value.businessHelp, action: { label: copy.value.business, to: '/settings' } },
-  { id: '/settings#locations', title: copy.value.locations, description: copy.value.locationsHelp, action: { label: copy.value.locations, to: '/settings#locations' } },
+  { id: '/settings/business-mode', title: copy.value.business, description: copy.value.businessHelp, action: { label: copy.value.business, to: '/settings/business-mode' } },
+  { id: '/settings/locations', title: copy.value.locations, description: copy.value.locationsHelp, action: { label: copy.value.locations, to: '/settings/locations' } },
   { id: '/team', title: copy.value.team, description: copy.value.teamHelp, action: { label: copy.value.team, to: '/team' } },
   { id: '/services', title: copy.value.services, description: copy.value.servicesHelp, action: { label: copy.value.services, to: '/services' } },
   { id: '/appointments', title: copy.value.hours, description: copy.value.hoursHelp, action: { label: copy.value.hours, to: '/appointments' } },

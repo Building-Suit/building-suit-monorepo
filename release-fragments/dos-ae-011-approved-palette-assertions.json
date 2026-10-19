@@ -1,0 +1,12 @@
+{
+  "id": "dos-ae-011-approved-palette-assertions",
+  "task": "DOS-AE-011",
+  "suits": ["doctor-suit", "shop-suit", "ledger-suit", "inventory-suit", "super-admin-suit", "automation-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/testing/e2e/palette.spec.ts",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-011-aggregate-stg-reconciliation.md"
+  ],
+  "reason": "Preserve approved palette coverage after glass auth adoption. Compare exact rendered sRGB and opacity independently of equivalent CSS serialization, check the existing glass input mix and gold-arrow gradients, and retain ordinary navy/gold hover/pressed palette checks on real product landing actions and catalogue controls. Negative controls detect changed color and alpha. No UI, token, brand or product behavior changes."
+}

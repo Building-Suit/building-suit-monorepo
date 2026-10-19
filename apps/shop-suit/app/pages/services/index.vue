@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { validCatalogImage } from '~/utils/catalogMedia'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
@@ -30,7 +31,7 @@ type SchedulingOptions = {
 
 const confirmation = useConfirmation()
 const { push: pushToast } = useToasts()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const media = useCatalogMedia()
 const { locale } = useI18n()
 const { current, currentId, loading: shopLoading } = useShop()
@@ -88,7 +89,7 @@ const copy = computed(() => isArabic.value ? {
   archiveConfirm: 'Archive this service? Historical sales will remain unchanged.',
 })
 
-const { data: permissionAccess } = await useAsyncData('shop-data:service-permissions', async () => {
+const permissionAccessQuery = useShopQuery('shop-data:service-permissions', async () => {
   if (!currentId.value) return { 'services.manage': false }
   const { data, error } = await shopRpc.rpc('shop_permission_access', {
     p_shop_id: currentId.value, p_permission_keys: ['services.manage'],
@@ -96,8 +97,11 @@ const { data: permissionAccess } = await useAsyncData('shop-data:service-permiss
   if (error) throw error
   return data
 }, { watch: [currentId], default: () => ({ 'services.manage': false }) })
+const { data: permissionAccess } = permissionAccessQuery
+// Resolve server-rendered dependencies; client reads remain reactive.
+if (import.meta.server) await permissionAccessQuery.ensure()
 const canManage = computed(() => permissionAccess.value?.['services.manage'] === true)
-const { data: categories } = useAsyncData(() => `shop-data:service-categories:${currentId.value ?? 'none'}`, async () => {
+const { data: categories } = useShopQuery(() => `shop-data:service-categories:${currentId.value ?? 'none'}`, async () => {
   if (!currentId.value) return []
   const { data, error } = await shopRpc.rpc('list_catalog_categories', { p_shop_id: currentId.value })
   if (error) throw error
@@ -106,7 +110,7 @@ const { data: categories } = useAsyncData(() => `shop-data:service-categories:${
 
 const emptyPage = (): ServicePage => ({ items: [], total: 0, page: 1, pageSize })
 const emptyOptions = (): SchedulingOptions => ({ locations: [], staff: [] })
-const { data: servicesPage, pending, error, refresh } = useAsyncData(
+const { data: servicesPage, pending, error, refresh } = useShopQuery(
   'shop-data:services', async (): Promise<ServicePage> => {
     if (!currentId.value) return emptyPage()
     const args = {
@@ -119,7 +123,7 @@ const { data: servicesPage, pending, error, refresh } = useAsyncData(
     return data as ServicePage
   }, { watch: [currentId, search, categoryFilter, page], default: emptyPage },
 )
-const { data: schedulingOptions, pending: schedulingOptionsPending, error: schedulingOptionsError } = useAsyncData(
+const { data: schedulingOptions, pending: schedulingOptionsPending, error: schedulingOptionsError } = useShopQuery(
   'shop-data:service-scheduling-options', async (): Promise<SchedulingOptions> => {
     if (!currentId.value || !canManage.value) return emptyOptions()
     const { data, error: optionsError } = await shopRpc.rpc('service_scheduling_options', { p_shop_id: currentId.value })
@@ -140,7 +144,7 @@ function netPrice(service: Service) {
   return Math.max(0, service.defaultDiscountType === 'percent' ? price * (1 - discount / 100) : price - discount)
 }
 function money(value: number) {
-  return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(value)
+  return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20 }).format(value)
 }
 function resetForm() {
   upload.reset()

@@ -1,0 +1,1 @@
+-- Synthetic fixtures are opt-in in tests/fixtures.sql, never seeded into hosted environments.

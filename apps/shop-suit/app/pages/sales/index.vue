@@ -3,11 +3,15 @@ import type { BsSalesDirectoryCopy, BsSalesDirectoryView, BsSalesDirectoryRow, B
 import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+const { refreshShopQueries } = useShopInvalidation()
+
+const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
 type SaleStatus = 'draft' | 'issued'
 type SaleRow = {
+  currency?: string
   id: string
   invoice_number: string | null
   status: SaleStatus
@@ -41,7 +45,7 @@ type DraftLine = { key: string; itemType: 'product' | 'service'; sourceId: strin
 type SaleDetail = { id: string; status: SaleStatus; client_id: string | null; due_date: string | null; notes: string | null; canManage: boolean; lines: Array<{ item_type: 'product' | 'service'; product_id: string | null; service_id: string | null; quantity: number }> }
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
 
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
@@ -88,7 +92,7 @@ watch([customerId, dueDate, notes, paymentMethod, paymentReference, lines], () =
 }, { deep: true })
 
 
-const { data: catalog, pending: catalogPending, error: catalogError, refresh: refreshCatalog } = useAsyncData(
+const { data: catalog, pending: catalogPending, error: catalogError, refresh: refreshCatalog } = useShopQuery(
   'shop-data:sale-catalog', async (): Promise<SaleCatalog | null> => {
     if (!currentId.value) return null
     const { data, error } = await shopRpc.rpc('sale_catalog', { p_shop_id: currentId.value })
@@ -97,14 +101,14 @@ const { data: catalog, pending: catalogPending, error: catalogError, refresh: re
   }, { watch: [currentId], default: () => null },
 )
 
-const { data: paymentAccess } = useAsyncData('shop-data:payment-access', async () => {
+const { data: paymentAccess } = useShopQuery('shop-data:payment-access', async () => {
   if (!currentId.value) return { can_receive: false }
   const { data, error } = await shopRpc.rpc('payment_access', { p_shop_id: currentId.value })
   if (error) throw error
   return data?.[0] ?? { can_receive: false }
 }, { watch: [currentId], default: () => ({ can_receive: false }) })
 
-const { data: salePage, pending, error, refresh } = useAsyncData(
+const { data: salePage, pending, error, refresh } = useShopQuery(
   'shop-data:sales', async (): Promise<SalePage> => {
     if (!currentId.value || !currentLocationId.value) return { items: [], total: 0, page: 1, pageSize, canManage: false, canIssue: false }
     const { data: accessRows, error: accessError } = await shopRpc.rpc('sale_access', { p_shop_id: currentId.value })
@@ -166,7 +170,9 @@ function lineAmounts(line: DraftLine) {
   return { price, discount, total: Math.max(0, Math.round((price * quantity - discount) * 100) / 100) }
 }
 
-const previewTotal = computed(() => lines.value.reduce((sum, line) => sum + lineAmounts(line).total, 0))
+const taxLines = computed(() => lines.value.map(line => ({ item_type: line.itemType, source_id: line.sourceId, quantity: Number(line.quantity) })))
+const { data: taxQuote, pending: taxPending, error: taxError } = useSaleTaxQuote(currentId, currentLocationId, taxLines)
+const previewTotal = computed(() => Number(taxQuote.value?.total ?? lines.value.reduce((sum, line) => sum + lineAmounts(line).total, 0)))
 
 function resetEditor() {
   fastPayAttempt.value = null
@@ -312,8 +318,8 @@ async function issue() {
     closeEditor()
     await Promise.all([
       refresh(), refreshCatalog(),
-      refreshNuxtData('shop-data:inventory-overview'),
-      refreshNuxtData('shop-data:recent-invoices'),
+      refreshShopQueries('shop-data:inventory-overview'),
+      refreshShopQueries('shop-data:recent-invoices'),
     ])
     pushToast({ tone: 'success', title: saleCopy(t, customerId.value ? 'sales.issuedSuccess' : 'sales.checkoutSuccess', lines.value) })
     await navigateTo(`/sales/${invoiceId}`)
@@ -323,6 +329,7 @@ async function issue() {
 }
 
 async function fastPay() {
+  if (taxPending.value || taxError.value || !taxQuote.value) return
   if (!currentId.value || !currentLocationId.value || saving.value || issuing.value
     || !salePage.value?.canManage || !salePage.value.canIssue || !paymentAccess.value.can_receive) return
   if (!validDraft() || previewTotal.value <= 0) { editorError.value = t('sales.invalid'); return }
@@ -353,9 +360,9 @@ async function fastPay() {
     closeEditor()
     // Refresh failures must not prevent handing off a committed payment.
     void Promise.allSettled([
-      refresh(), refreshCatalog(), refreshNuxtData('shop-data:inventory-overview'),
-      refreshNuxtData('shop-data:recent-invoices'), refreshNuxtData('shop-data:customer-statement'),
-      refreshNuxtData('shop-data:cash-shifts'),
+      refresh(), refreshCatalog(), refreshShopQueries('shop-data:inventory-overview'),
+      refreshShopQueries('shop-data:recent-invoices'), refreshShopQueries('shop-data:customer-statement'),
+      refreshShopQueries('shop-data:cash-shifts'),
     ])
     await navigateTo(`/sales/${data}/receipt`)
   }
@@ -363,8 +370,8 @@ async function fastPay() {
   finally { issuing.value = false }
 }
 
-function money(value: number) {
-  return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 2 }).format(value)
+function money(value: number, currency = businessCurrency.value) {
+  return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-EG' : 'en-EG', { style: 'currency', currency, maximumFractionDigits: 20 }).format(value)
 }
 function formatDate(value: string | null) {
   if (!value) return '—'
@@ -379,9 +386,9 @@ const salesForm = computed<BsSalesDraftForm>({
   set: value => { customerId.value = value.customerId; dueDate.value = value.dueDate; notes.value = value.notes; paymentReference.value = value.paymentReference; if (['cash','bank_transfer','card','wallet','cheque','other'].includes(value.paymentMethod)) paymentMethod.value = value.paymentMethod as PaymentMethod; lines.value = value.lines.map(line => ({ ...line, itemType: line.itemType === 'product' ? 'product' : 'service' })) },
 })
 const salesStatus = computed<string>({ get: () => statusFilter.value, set: value => { if (value === 'all' || value === 'draft' || value === 'issued') statusFilter.value = value } })
-const salesRows = computed<BsSalesDirectoryRow[]>(() => (salePage.value?.items ?? []).map(sale => ({ id: sale.id, number: sale.invoice_number || t('sales.draftNumber'), lineCount: `${sale.line_count} ${t('sales.lines')}`, customer: sale.client_name_snapshot || '—', status: t(`sales.${sale.status}`), statusTone: sale.status === 'issued' ? 'success' : 'neutral', total: money(Number(sale.total_amount)), date: formatDate(sale.issued_at || sale.created_at), editable: sale.status === 'draft' && !!salePage.value?.canManage, href: `/sales/${sale.id}` })))
+const salesRows = computed<BsSalesDirectoryRow[]>(() => (salePage.value?.items ?? []).map(sale => ({ id: sale.id, number: sale.invoice_number || t('sales.draftNumber'), lineCount: `${sale.line_count} ${t('sales.lines')}`, customer: sale.client_name_snapshot || '—', status: t(`sales.${sale.status}`), statusTone: sale.status === 'issued' ? 'success' : 'neutral', total: money(Number(sale.total_amount), sale.status === 'draft' ? businessCurrency.value : sale.currency || businessCurrency.value), date: formatDate(sale.issued_at || sale.created_at), editable: sale.status === 'draft' && !!salePage.value?.canManage, href: `/sales/${sale.id}` })))
 const salesLines = computed<BsSalesLineView[]>(() => lines.value.map(line => ({ key: line.key, options: lineCatalog(line).map(item => ({ value: item.id, label: itemLabel(item) })), total: money(lineAmounts(line).total), discount: lineAmounts(line).discount ? money(lineAmounts(line).discount) : '' })))
-const salesView = computed<BsSalesDirectoryView>(() => ({ available: !!current.value, loadingContext: shopLoading.value, denied: !!salePage.value?.permissionDenied, canManage: !!salePage.value?.canManage, canIssue: !!salePage.value?.canIssue, canFastPay: !!salePage.value?.canManage && !!salePage.value.canIssue && paymentAccess.value.can_receive, loading: pending.value, error: error.value ? t('sales.loadError') : '', total: salePage.value?.total ?? 0, pageSize, catalogLoading: catalogPending.value, catalogError: !!catalogError.value, editing: !!editingId.value, saving: saving.value, issuing: issuing.value, errorMessage: editorError.value, dirty: editorDirty.value, locked: !!fastPayAttempt.value, previewTotal: money(previewTotal.value) }))
+const salesView = computed<BsSalesDirectoryView>(() => ({ available: !!current.value, loadingContext: shopLoading.value, denied: !!salePage.value?.permissionDenied, canManage: !!salePage.value?.canManage, canIssue: !!salePage.value?.canIssue, canFastPay: !!salePage.value?.canManage && !!salePage.value.canIssue && paymentAccess.value.can_receive && !taxPending.value && !taxError.value, loading: pending.value, error: error.value ? t('sales.loadError') : '', total: salePage.value?.total ?? 0, pageSize, catalogLoading: catalogPending.value, catalogError: !!catalogError.value, editing: !!editingId.value, saving: saving.value, issuing: issuing.value, errorMessage: editorError.value || (taxError.value ? (locale.value === 'ar' ? 'تعذر تأكيد حساب الضريبة. حاول تاني.' : 'Unable to confirm tax calculation. Retry.') : ''), dirty: editorDirty.value, locked: !!fastPayAttempt.value, previewTotal: money(previewTotal.value) }))
 function updateLineType(index: number, value: string) { const line = lines.value[index]; if (!line || (value !== 'product' && value !== 'service') || !availableLineTypes.value.includes(value)) return; line.itemType = value; changeLineType(line) }
 const salesCopy = computed<BsSalesDirectoryCopy>(() => ({
   addLine: t('sales.addLine'),

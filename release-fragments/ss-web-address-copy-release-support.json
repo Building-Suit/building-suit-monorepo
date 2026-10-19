@@ -1,0 +1,18 @@
+{
+  "id": "ss-web-address-copy-release-support",
+  "task": "SS-WEB-ADDRESS-COPY-001",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "release-changes/items.json"
+  ],
+  "reason": "Curates the required bilingual release inventory entry for the Shop-only address copy correction; other Suit behavior and release machinery are unchanged."
+}

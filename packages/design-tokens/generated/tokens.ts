@@ -476,6 +476,43 @@ export const tokens = {
     }
   },
   "component": {
+    "appShell": {
+      "contentMaximumWidth": {
+        "value": "1680px"
+      }
+    },
+    "receipt": {
+      "fontFamily": {
+        "value": "'Roboto Variable', 'IBM Plex Sans Arabic', sans-serif"
+      },
+      "tableFontFamily": {
+        "value": "'Roboto Condensed Variable', 'IBM Plex Sans Arabic', sans-serif"
+      },
+      "headingFontFamily": {
+        "value": "'Roboto Variable', 'IBM Plex Sans Arabic', sans-serif"
+      },
+      "ink": {
+        "value": "#000"
+      },
+      "paper": {
+        "value": "#fff"
+      },
+      "band": {
+        "value": "#e9e9e9"
+      },
+      "paymentBand": {
+        "value": "#f0f0f0"
+      },
+      "separator": {
+        "value": "#777"
+      },
+      "rowSeparator": {
+        "value": "#aaa"
+      },
+      "footerSeparator": {
+        "value": "#999"
+      }
+    },
     "pricingCard": {
       "width": {
         "value": "352px"
@@ -495,6 +532,9 @@ export const tokens = {
       },
       "plotMaximumWidth": {
         "value": "680px"
+      },
+      "surface": {
+        "value": "linear-gradient(160deg, color-mix(in oklab, var(--bs-primary) 3%, var(--bs-surface)), var(--bs-surface) 65%)"
       }
     },
     "dashboardMetric": {
@@ -506,6 +546,12 @@ export const tokens = {
       },
       "padding": {
         "value": "20px"
+      },
+      "primaryBackground": {
+        "value": "{color.gradient.navy}"
+      },
+      "accentBackground": {
+        "value": "linear-gradient(135deg, color-mix(in oklab, {color.brand.premiumGold} 18%, var(--bs-surface)), var(--bs-surface))"
       }
     },
     "buttonPrimary": {

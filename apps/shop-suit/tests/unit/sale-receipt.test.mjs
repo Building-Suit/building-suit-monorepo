@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
-import { buildReceiptShareText } from '../../app/utils/receipt.ts'
+import { buildReceiptShareText, formatReceiptMoney } from '../../app/utils/receipt.ts'
 
 const sharedPrintStyles = await readFile(new URL('../../../../packages/ui/src/styles/base.css', import.meta.url), 'utf8')
 const migration = await readFile(new URL('../../supabase/migrations/20260928233000_immutable_sale_receipts.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_sale_receipts.sql', import.meta.url), 'utf8')
+const presentation = await readFile(new URL('../../app/utils/receiptPresentation.ts', import.meta.url), 'utf8')
 const receiptPage = await readFile(new URL('../../app/pages/sales/[id]/receipt.vue', import.meta.url), 'utf8')
 const receiptTemplate = await readFile(new URL('../../../../packages/ui/src/templates/BsReceiptPage.vue', import.meta.url), 'utf8')
 const printController = await readFile(new URL('../../../../packages/ux/src/composables/useDocumentPrint.ts', import.meta.url), 'utf8')
@@ -44,6 +45,32 @@ const arabicCopy = {
   quantity: 'الكمية', compliance: 'إثبات بيع فقط — ليس فاتورة ضريبية مصرية أو إيصالًا إلكترونيًا معتمدًا من مصلحة الضرائب.',
   walkIn: 'عميل مباشر',
 }
+
+test('issued currency amounts retain their precision without conversion in English and Arabic', () => {
+  for (const [currency, amount, english, arabic] of [
+    ['EGP', 70, '70.00', '٧٠٫٠٠'],
+    ['KWD', 1.234, '1.234', '١٫٢٣٤'],
+    ['BHD', 5.678, '5.678', '٥٫٦٧٨'],
+    ['JPY', 123.45, '123.45', '١٢٣٫٤٥'],
+    ['EGP', 1.2345, '1.2345', '١٫٢٣٤٥'],
+  ]) {
+    assert.ok(formatReceiptMoney(amount, currency, 'en').includes(english))
+    assert.ok(formatReceiptMoney(amount, currency, 'ar').includes(arabic))
+  }
+})
+
+test('sharing uses the issued currency for line, payment and total amounts without mutating the snapshot', () => {
+  const issued = structuredClone(receipt)
+  issued.currency = 'KWD'
+  issued.lines[0].total = 1.234
+  issued.payments[0].amount = 1.234
+  issued.total = 1.234
+  const before = structuredClone(issued)
+  const text = buildReceiptShareText(issued, englishCopy, 'en', () => 'Cash')
+  assert.equal(text.match(/KWD\u00a01\.234/g)?.length, 3)
+  assert.ok(!text.includes('EGP'))
+  assert.deepEqual(issued, before)
+})
 
 test('English share receipt matches the complete proof-of-sale snapshot', () => {
   assert.equal(buildReceiptShareText(receipt, englishCopy, 'en', () => 'Cash'), [
@@ -94,8 +121,8 @@ test('receipt storage is immutable, tenant-scoped, and captures only fully-paid 
     'SALE_RECEIPT_IMMUTABLE',
     'get_location_sale_receipt',
     'shop_private\\.assert_location_access',
-    "copy\\('compliance'\\)",
-  ]) assert.match(`${migration}\n${receiptPage}`, new RegExp(evidence))
+    "label\\('compliance'\\)",
+  ]) assert.match(`${migration}\n${receiptPage}\n${presentation}`, new RegExp(evidence))
   for (const evidence of [
     'settings or location change rewrote issued receipt snapshot',
     'settings changed after issue rewrote the finalized document',
@@ -107,14 +134,27 @@ test('receipt storage is immutable, tenant-scoped, and captures only fully-paid 
 test('thermal/A4 print and share actions are connected from POS completion and sale detail', () => {
   assert.match(sharedPrintStyles, /@page bs-receipt \{ size: 80mm auto/)
   assert.match(sharedPrintStyles, /@page bs-a4 \{ size: A4/)
-  assert.match(receiptTemplate, /dir="language === 'ar' \? 'rtl' : 'ltr'"/)
+  assert.match(receiptTemplate, /receipt\.direction \|\| \(language === 'ar' \? 'rtl' : 'ltr'\)/)
   assert.match(printController, /window\.print\(\)/)
   assert.match(receiptPage, /<BsReceiptPage\b/)
   assert.match(receiptPage, /shareReceipt/)
-  assert.match(receiptPage, /reprintLabel/)
+  assert.match(presentation, /reprintLabel/)
   assert.match(posPage, /sales\/\$\{completedId\}\/receipt/)
   assert.match(salePage, /receipt\.reprint/)
   assert.match(salePage, /receipt\.share/)
-  assert.match(settingsPage, /save_receipt_settings/)
+  assert.match(settingsPage, /save_document_settings/)
   assert.match(settingsPage, /future receipt presentation/)
+})
+
+test('new presentation snapshots drive share label, notes and description visibility while legacy documents retain their behavior', () => {
+  const issued = structuredClone(receipt)
+  issued.lines[0].description = 'Description captured at issue'
+  issued.presentation = { documentLabel: 'Original proof of sale', language: 'en', direction: 'ltr', showDescriptions: false, notes: 'Original note', logoDataUrl: null }
+  let text = buildReceiptShareText(issued, englishCopy, 'en', () => 'Cash')
+  assert.ok(text.includes('Original proof of sale'))
+  assert.ok(text.includes('Original note'))
+  assert.ok(!text.includes('Description captured at issue'))
+  issued.presentation.showDescriptions = true
+  text = buildReceiptShareText(issued, englishCopy, 'en', () => 'Cash')
+  assert.ok(text.includes('Description captured at issue'))
 })

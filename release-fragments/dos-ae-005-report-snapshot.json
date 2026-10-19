@@ -1,0 +1,16 @@
+{
+  "id": "dos-ae-005-report-snapshot",
+  "task": "DOS-AE-005",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/supabase/migrations/20261018025154_doctor_saas_report_snapshot.sql",
+    "apps/doctor-suit/tests/saas-report-snapshot.mjs",
+    "apps/doctor-suit/tests/saas-reconciliation-concurrency.mjs",
+    "docs/work-packages/doctor-suit/early-administrative-edition/ae-005-reconciliation.md"
+  ],
+  "reason": "Keep full-population totals, currency groups and page rows in one materialized statement snapshot during concurrent held-intent preparation. Deterministic preserved-code negative control reproduces strict-adapter denial; fixed-code control preserves coherence without changing immutable history or payment authority."
+}

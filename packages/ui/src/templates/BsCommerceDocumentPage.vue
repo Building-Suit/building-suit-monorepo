@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import type { BsCommerceDocumentCopy, BsCommerceDocumentForm, BsCommerceCorrectionForm, BsCommerceDocumentView } from '../types/commerceDocumentPresentation'
-defineProps<{ copy: BsCommerceDocumentCopy; view: BsCommerceDocumentView; backTo: string; inventoryTo: string; methods: { value: string; label: string }[]; constraints: { referenceLength: number; notesLength: number; reasonMinimum: number; reasonMaximum: number; amountMinimum: number; amountStep: number; quantityStep: number } }>()
+import type { BsReturnForm, BsRefundRecordForm, BsDocumentReturnsCopy, BsDocumentReturnsView } from '../types/documentReturns'
+defineProps<{ returnsCopy?: BsDocumentReturnsCopy; returnsView?: BsDocumentReturnsView; copy: BsCommerceDocumentCopy; view: BsCommerceDocumentView; backTo: string; inventoryTo: string; methods: { value: string; label: string }[]; constraints: { referenceLength: number; notesLength: number; reasonMinimum: number; reasonMaximum: number; amountMinimum: number; amountStep: number; quantityStep: number } }>()
+const returnOpen = defineModel<boolean>('returnOpen', { default: false })
+const refundRecordOpen = defineModel<boolean>('refundRecordOpen', { default: false })
+const returnForm = defineModel<BsReturnForm>('returnForm', { default: () => ({ quantities: {}, dispositions: {}, reason: '' }) })
+const refundRecordForm = defineModel<BsRefundRecordForm>('refundRecordForm', { default: () => ({ reference: '', reason: '' }) })
 const form = defineModel<BsCommerceDocumentForm>('form', { required: true })
 const correctionForm = defineModel<BsCommerceCorrectionForm>('correctionForm', { required: true })
 const dialogOpen = defineModel<boolean>('dialogOpen', { required: true })
 const correctionOpen = defineModel<boolean>('correctionOpen', { required: true })
-const emit = defineEmits<{ retry: []; issue: []; share: []; payment: []; credit: []; return: []; reverse: [id: string]; refund: [id: string]; correct: []; retryCorrection: []; submit: []; submitCorrection: [] }>()
+const discountOpen = defineModel<boolean>('discountOpen', { default: false })
+const orderDiscount = defineModel<number>('orderDiscount', { default: 0 })
+const emit = defineEmits<{ startReturn: []; retryReturns: []; previewReturn: []; confirmReturn: []; recordReturnRefund: [id: string]; completeReturnRefund: []; failReturnRefund: []; previousReturns: []; nextReturns: []; editOrderDiscount: []; saveOrderDiscount: []; retry: []; issue: []; share: []; downloadReceipt: []; payment: []; credit: []; return: []; reverse: [id: string]; refund: [id: string]; correct: []; retryCorrection: []; submit: []; submitCorrection: [] }>()
 function updateForm<K extends keyof BsCommerceDocumentForm>(key: K, value: BsCommerceDocumentForm[K]) { form.value = { ...form.value, [key]: value } }
 function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, value: BsCommerceCorrectionForm[K]) { correctionForm.value = { ...correctionForm.value, [key]: value } }
 </script>
@@ -18,6 +25,9 @@ function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, valu
     <template v-else>
       <BsPageHeader :title="view.title" :subtitle="view.subtitle">
         <template #actions><BsInline>
+          <BsLink v-if="view.serviceAction" :to="view.serviceAction.to">{{ view.serviceAction.label }}</BsLink>
+          <BsLink v-if="view.relatedAction" :to="view.relatedAction.to">{{ view.relatedAction.label }}</BsLink>
+          <BsButton v-if="view.orderDiscount?.canEdit" @click="emit('editOrderDiscount')">{{ view.orderDiscount.label }}</BsButton>
           <BsLink v-if="view.editTo" :to="view.editTo">{{ copy.edit }}</BsLink>
           <BsButton v-if="view.canIssue" :disabled="view.issuing" @click="emit('issue')">{{ view.issuing ? copy.issuing : copy.issue }}</BsButton>
           <BsButton v-if="view.correction.canCorrect" severity="danger" :disabled="view.correctionDialog.pending" @click="emit('correct')">{{ copy.correct }}</BsButton>
@@ -31,6 +41,7 @@ function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, valu
       <BsText v-if="view.status" as="p" size="sm">{{ view.status }}</BsText>
       <BsText v-if="view.success" role="status" as="p" size="sm">{{ view.success }}</BsText>
       <BsText v-if="view.actionError && !dialogOpen && !correctionOpen" role="alert" as="p" size="sm" tone="danger">{{ view.actionError }}</BsText>
+      <BsButton v-if="view.receiptImageError && copy.downloadReceipt" :pending="view.sharing" @click="emit('downloadReceipt')">{{ copy.downloadReceipt }}</BsButton>
       <BsText v-if="view.notice" as="p" size="sm">{{ view.notice }}</BsText>
       <BsPanel v-if="view.correction.visible" padding="md">
         <BsHeading :level="2">{{ copy.correction }}</BsHeading>
@@ -42,6 +53,11 @@ function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, valu
         </BsBox>
         <BsText v-else as="p" size="sm" tone="muted">{{ view.correction.notice }}</BsText><BsText as="p" size="sm" tone="muted">{{ view.correction.fullOnly }}</BsText>
       </BsPanel>
+      <BsDocumentReturns v-if="returnsCopy && returnsView" v-model:open="returnOpen" v-model:record-open="refundRecordOpen" v-model:form="returnForm" v-model:record-form="refundRecordForm" :copy="returnsCopy" :view="returnsView" @start="emit('startReturn')" @retry="emit('retryReturns')" @preview="emit('previewReturn')" @confirm="emit('confirmReturn')" @record="emit('recordReturnRefund', $event)" @complete="emit('completeReturnRefund')" @fail="emit('failReturnRefund')" @previous="emit('previousReturns')" @next="emit('nextReturns')" />
+      <BsMetricGrid :columns="2">
+        <BsKpiCard :title="copy.total" :value="view.detail.total" icon="invoice" />
+        <BsKpiCard :title="copy.balance" :value="view.detail.balance" icon="wallet" />
+      </BsMetricGrid>
       <BsGrid :columns="2">
         <BsPanel padding="md"><BsHeading :level="2">{{ copy.party }}</BsHeading><BsStack v-if="view.party.name" gap="xs">
           <BsText as="p" emphasis="semibold"><BsLink v-if="view.party.to" :to="view.party.to">{{ view.party.name }}</BsLink><template v-else>{{ view.party.name }}</template></BsText>
@@ -51,9 +67,8 @@ function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, valu
           <BsDescriptionItem v-if="view.showCreated" :term="copy.created">{{ view.detail.created }}</BsDescriptionItem>
           <BsDescriptionItem :term="copy.date">{{ view.detail.date }}</BsDescriptionItem>
           <BsDescriptionItem v-if="view.showNotes" :term="copy.notes">{{ view.detail.notes }}</BsDescriptionItem>
+          <BsDescriptionItem v-for="item in view.amountBreakdown ?? []" :key="item.label" :term="item.label">{{ item.value }}</BsDescriptionItem>
           <BsDescriptionItem v-if="view.showDiscount" :term="copy.discount">{{ view.detail.discount }}</BsDescriptionItem>
-          <BsDescriptionItem :term="copy.total"><BsText as="span" size="lg" emphasis="semibold">{{ view.detail.total }}</BsText></BsDescriptionItem>
-          <BsDescriptionItem :term="copy.balance">{{ view.detail.balance }}</BsDescriptionItem>
           <BsDescriptionItem v-if="view.showPaid" :term="copy.paid">{{ view.detail.paid }}</BsDescriptionItem>
           <BsDescriptionItem v-if="view.showDue" :term="copy.due">{{ view.detail.due }}</BsDescriptionItem>
           <BsDescriptionItem v-if="view.detail.settlement" :term="copy.settlement">{{ view.detail.settlement }}</BsDescriptionItem>
@@ -79,6 +94,9 @@ function updateCorrection<K extends keyof BsCommerceCorrectionForm>(key: K, valu
         <BsGrid v-for="movement in view.inventoryTable ? [] : view.movements" :key="movement.id" :columns="4"><BsText as="p" emphasis="semibold">{{ movement.name }}</BsText><BsText as="p">{{ copy.quantity }}: {{ movement.quantity }}</BsText><BsText as="p">{{ copy.batch }}: {{ movement.batch }}</BsText><BsLink :to="movement.to">{{ copy.open }}</BsLink></BsGrid>
       </BsPanel>
     </template>
+    <BsRecordActionDialog v-if="view.orderDiscount" v-model:visible="discountOpen" :title="view.orderDiscount.label" :dirty="view.orderDiscount.dirty" :pending="view.orderDiscount.pending" :error="view.actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('saveOrderDiscount')">
+      <BsField :label="view.orderDiscount.label"><BsInput v-model="orderDiscount" type="number" min="0" step="0.01" required :aria-label="view.orderDiscount.label" /></BsField>
+    </BsRecordActionDialog>
     <BsRecordActionDialog v-model:visible="dialogOpen" :title="view.dialog.title" :dirty="view.dialog.dirty" :pending="view.dialog.pending" :error="view.actionError" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('submit')">
       <BsField v-if="view.dialog.showAmount" v-slot="field" :label="copy.amount"><BsInput :id="field.id" :model-value="form.amount" :aria-describedby="field.describedby" type="number" :min="constraints.amountMinimum" :max="view.dialog.maximum" :step="constraints.amountStep" required @update:model-value="updateForm('amount', Number($event))"/></BsField>
       <BsGrid v-for="line in view.dialog.showQuantities ? view.lines : []" :key="line.id" :columns="1"><BsBox><BsText as="p" emphasis="semibold">{{ line.name }}</BsText><BsText as="p" size="xs" tone="muted">{{ copy.available }}: {{ line.available }} · {{ copy.price }}: {{ line.price }}</BsText></BsBox><BsField v-slot="field" :label="copy.quantity"><BsInput :id="field.id" :model-value="form.quantities[line.id]" :aria-describedby="field.describedby" type="number" :min="0" :max="line.returnMaximum" :step="constraints.quantityStep" @update:model-value="updateForm('quantities', { ...form.quantities, [line.id]: Number($event) })"/></BsField></BsGrid>

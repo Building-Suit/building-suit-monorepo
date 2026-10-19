@@ -1,0 +1,13 @@
+{
+  "id": "dos-ae-011-provider-reauth-diagnostics",
+  "task": "DOS-AE-011",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/account-actual-provider.mjs"
+  ],
+  "reason": "Split actual-provider reauthentication diagnostics into static freshness-expiry, refused-write/version, email-first navigation, cleared draft, new SID, persisted contact and frozen-SID denial stages. Preserve every assertion, timeout, policy window and command; log no identity, credential, patient payload or raw provider response."
+}
