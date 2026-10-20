@@ -2,7 +2,12 @@
   "id": "dos-m3-001",
   "task": "DOS-M3-001",
   "suits": [
-    "doctor-suit"
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
   ],
   "classification": "internal",
   "disposition": "internal",
@@ -43,5 +48,5 @@
     "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
     "packages/ui/src/utils/consultationPresentation.ts"
   ],
-  "reason": "Synthetic consultation configuration and scheduling in unactivated Doctor. New shared template has only this synthetic consumer; optional appointment choices preserve existing defaults. No operational registration, approved consultation catalogue, clinical use or capacity override is activated."
+  "reason": "Synthetic consultation configuration and scheduling in unactivated Doctor. The affected-consumer graph includes every Suit through shared UI exports; the new template has only this synthetic consumer, and optional appointment choices preserve defaults. No existing operational product behavior changes. No operational registration, approved clinical catalogue, live care or capacity override is activated."
 }
