@@ -36,7 +36,8 @@
     "docs/work-packages/doctor-suit/implementation/dos-m3-008.md",
     "packages/ui/package.json",
     "packages/ui/src/templates/BsFulfillmentTrackingPage.vue",
-    "packages/ui/src/utils/fulfillmentPresentation.ts"
+    "packages/ui/src/utils/fulfillmentPresentation.ts",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-008-verification.json"
   ],
   "reason": "Synthetic Doctor operational fulfillment, exact issued sources and unreviewed document linkage. Only Doctor consumes the new shared template; all six Suits classified through the UI dependency graph. No operational registration, clinical approval, provider adapter or external delivery."
 }
