@@ -6,6 +6,8 @@ update public.membership_locations set capabilities=array['worklists.read','pati
 create function pg_temp.task_input(assignee integer default 3,patient boolean default true)returns jsonb language sql as $$select jsonb_build_object('kind','appointment_follow_up','patient_id',case when patient then pg_temp.patient()end,'assignee_user_id',pg_temp.id(assignee),'due_day',(clock_timestamp()at time zone'Etc/UTC')::date+1,'due_minute',540,'location_version',1)$$;
 create function pg_temp.task(n integer,ver integer,action text,k integer,input jsonb default'{}')returns jsonb language sql as $$select public.doctor_worklist_command(pg_temp.practice(),pg_temp.location(),pg_temp.id(n),ver,action,input,pg_temp.id(k))$$;
 set local role authenticated;select pg_temp.claim(1);
+select pg_temp.command('create',jsonb_build_object('patient_id',pg_temp.patient(),'snapshot',pg_temp.snapshot()),1900);
+select ok(pg_temp.detail()::text like'%Synthetic entered note%','private synthetic note exists before administrative projection test');
 select is(pg_temp.task(900,0,'create',920,pg_temp.task_input())->>'state','assigned','C01: explicit patient follow-up assigned');
 select is(pg_temp.task(900,0,'create',920,pg_temp.task_input())->>'version','1','exact creation receipt returns one task');
 select throws_ok($$select pg_temp.task(900,0,'create',920,pg_temp.task_input()||'{"kind":"general_administration"}')$$,'22023','DOCTOR_IDEMPOTENCY_CONFLICT','creation receipt cannot change material');
@@ -18,6 +20,7 @@ select is(public.doctor_worklist(pg_temp.practice(),pg_temp.location(),0,'all',f
 select pg_temp.claim(2);
 select throws_ok($$select public.doctor_worklist(pg_temp.practice(),pg_temp.location(),0,'all',false,false)$$,'42501','DOCTOR_ACCESS_DENIED','foreign owner denied directory');
 select pg_temp.claim(3);
+select ok(public.doctor_worklist(pg_temp.practice(),pg_temp.location(),0,'all',false,false)::text not like'%Synthetic entered note%','administrative projection excludes a persisted private clinical note');
 select is(public.doctor_worklist(pg_temp.practice(),pg_temp.location(),0,'all',false,false)->>'total','1','worklist reader needs no appointments grant');
 select throws_ok($$select pg_temp.task(901,0,'create',921,pg_temp.task_input())$$,'42501','DOCTOR_ACCESS_DENIED','reader cannot assign tasks');
 select is(pg_temp.task(900,1,'start',922)->>'state','in_progress','assignee starts administrative work');
