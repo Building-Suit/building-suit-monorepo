@@ -1,0 +1,14 @@
+{
+  "id": "dos-m3-006",
+  "task": "DOS-M3-006",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-006.md"
+  ],
+  "reason": "Doctor-only synthetic outbox; no operational release registration or external delivery."
+}
