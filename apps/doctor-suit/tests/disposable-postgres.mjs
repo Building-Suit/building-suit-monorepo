@@ -3,6 +3,7 @@ import{verifyConsultationConcurrency}from './consultations-concurrency.mjs'
 import {verifyClinicalConcurrency} from './clinical-concurrency.mjs'
 // SQL/RLS fallback for small executors. This is not a Supabase service integration test.
 import { verifyAnnualPricingUpgrade } from './annual-pricing-upgrade.mjs'
+import{verifyReceptionConcurrency}from'./reception-concurrency.mjs'
 import{verifyDoctorIsolatedRecovery}from'./recovery-isolated.mjs'
 import { createHash, randomUUID } from 'node:crypto'
 import { mkdtemp, readFile, readdir, rm, writeFile, mkdir, chmod } from 'node:fs/promises'
@@ -111,6 +112,7 @@ try {
     if (!plan || Number(plan[1]) < 1 || Number(plan[1]) !== passed.length || /^not ok\b|^Bail out!/m.test(result)) throw new Error(`${file}: SQL assertions failed\n${result}`)
     console.log(`${file}: ${passed.length} SQL assertions passed`)
   }
+  await verifyReceptionConcurrency(container)
   await verifyWaitlistConcurrency(container)
   await verifyConsultationConcurrency(container)
   await verifyClinicalConcurrency(container)

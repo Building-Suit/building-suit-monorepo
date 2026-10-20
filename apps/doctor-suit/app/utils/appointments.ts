@@ -1,6 +1,6 @@
 import {consultationType,type ConsultationType}from './consultations.ts'
 import { doctorUuid } from './locationContext.ts'
-import { doctorScheduleDate } from './availability.ts'
+import { doctorAvailabilityToday,doctorScheduleDate } from './availability.ts'
 export const doctorAppointmentStates = ['booked','checked_in','in_progress','completed','cancelled','no_show'] as const
 export type DoctorAppointmentState = typeof doctorAppointmentStates[number]
 export interface DoctorAppointment { id: string;consultation?:ConsultationType|null; practiceId: string; locationId: string; patientId: string; patientName: string | null; startsAt: string; endsAt: string; timezone: string; locationName: string; state: DoctorAppointmentState; version: number; checkedInAt: string | null; startedAt: string | null; completedAt: string | null }
@@ -10,7 +10,11 @@ export interface DoctorAppointmentEvent { id: string; type: string; version: num
 export interface DoctorAppointmentHistory { appointmentId: string; version: number; page: number; total: number; events: DoctorAppointmentEvent[] }
 export interface DoctorAppointmentQuery { date: string; page: number; queuePage: number }
 export interface DoctorOfferSelection {typeId?:string;typeVersion?:number;appointmentId?:string}
+export const doctorReceptionActions=['late_check_in','reverse_no_show','queue_exit','move_to_end'] as const
+export type DoctorReceptionAction=typeof doctorReceptionActions[number]
 export type DoctorAppointmentCommand =
+  | { kind:'reception';appointmentId:string;version:number;action:DoctorReceptionAction;reason:string }
+  | { kind:'walk_in';typeId?:string;typeVersion?:number;patientId:string;destinationId:string;date:string;minute:number;scheduleVersion:number;locationVersion:number;reason:string }
   | { kind: 'book'; typeId?:string;typeVersion?:number;patientId: string; destinationId: string; date: string; minute: number; scheduleVersion: number; locationVersion: number }
   | { kind: 'reschedule'; appointmentId: string; version: number; destinationId: string; date: string; minute: number; scheduleVersion: number; locationVersion: number; reason: string }
   | { kind: 'transition'; appointmentId: string; version: number; state: Exclude<DoctorAppointmentState,'booked'>; reason: string }
@@ -27,10 +31,11 @@ export function doctorAppointmentTransitions(state: DoctorAppointmentState): Exc
   return state==='booked' ? ['checked_in','cancelled','no_show'] : state==='checked_in' ? ['in_progress','cancelled'] : state==='in_progress' ? ['completed'] : []
 }
 export function validDoctorAppointmentCommand(value: DoctorAppointmentCommand) {
-  if(!['book','reschedule','transition'].includes(value.kind))return false
+  if(!['book','reschedule','transition','reception','walk_in'].includes(value.kind))return false
+  if(value.kind==='reception')return doctorUuid(value.appointmentId)&&count(value.version,1)&&doctorReceptionActions.includes(value.action)&&doctorAppointmentReason(value.reason)
   if(value.kind==='transition')return doctorUuid(value.appointmentId) && count(value.version,1) && ['checked_in','in_progress','completed','cancelled','no_show'].includes(value.state) && (['cancelled','no_show'].includes(value.state) ? doctorAppointmentReason(value.reason) : value.reason==='')
   return doctorUuid(value.destinationId) && doctorScheduleDate(value.date) && count(value.minute) && value.minute<1440 && count(value.scheduleVersion,1) && count(value.locationVersion,1)
-    && (value.kind==='book' ? doctorUuid(value.patientId) && (value.typeId===undefined&&value.typeVersion===undefined || doctorUuid(value.typeId)&&count(value.typeVersion,1)) : doctorUuid(value.appointmentId) && count(value.version,1) && doctorAppointmentReason(value.reason))
+    && (value.kind==='book'||value.kind==='walk_in' ? (value.kind!=='walk_in'||doctorAppointmentReason(value.reason))&&doctorUuid(value.patientId) && (value.typeId===undefined&&value.typeVersion===undefined || doctorUuid(value.typeId)&&count(value.typeVersion,1)) : doctorUuid(value.appointmentId) && count(value.version,1) && doctorAppointmentReason(value.reason))
 }
 export function doctorAppointment(value: unknown,practiceId: string,locationId: string): DoctorAppointment {
   if(!object(value) || !doctorUuid(value.id) || value.practice_id!==practiceId || value.location_id!==locationId || !doctorUuid(value.patient_id)
@@ -57,7 +62,7 @@ function snapshot(value: unknown): DoctorAppointmentSnapshot {
 export function doctorAppointmentHistory(value: unknown,practiceId: string,locationId: string,appointmentId: string,page: number): DoctorAppointmentHistory {
   if(!object(value) || value.practice_id!==practiceId || value.location_id!==locationId || value.appointment_id!==appointmentId || !count(value.version,1) || value.page!==page || !count(value.total) || !Array.isArray(value.events) || value.events.length>20 || value.events.length>value.total)invalid()
   const events = value.events.map(item => {
-    if(!object(item) || typeof item.id!=='string' || !/^[1-9]\d*$/.test(item.id) || !['appointment.booked','appointment.rescheduled',...doctorAppointmentStates.map(state => `appointment.${state}`)].includes(String(item.type)) || !count(item.version,1) || !timestamp(item.at) || !doctorUuid(item.actor_user_id) || !doctorUuid(item.location_id) || !object(item.details))invalid()
+    if(!object(item) || typeof item.id!=='string' || !/^[1-9]\d*$/.test(item.id) || !['appointment.booked','appointment.rescheduled',...doctorAppointmentStates.map(state => `appointment.${state}`),...doctorReceptionActions.map(action=>`appointment.reception.${action}`),'appointment.reception.walk_in'].includes(String(item.type)) || !count(item.version,1) || !timestamp(item.at) || !doctorUuid(item.actor_user_id) || !doctorUuid(item.location_id) || !object(item.details))invalid()
     const details = item.details; const move = item.type==='appointment.rescheduled'; const transition = !['appointment.booked','appointment.rescheduled'].includes(String(item.type))
     if((details.reason!==null && details.reason!==undefined && !text(details.reason)) || (transition && (!doctorAppointmentState(details.from) || !doctorAppointmentState(details.to))))invalid()
     return { id: item.id,type: String(item.type),version: item.version,at: item.at,actorUserId: item.actor_user_id,locationId: item.location_id,reason: typeof details.reason==='string' ? details.reason : null,from: move ? snapshot(details.from) : null,to: move ? snapshot(details.to) : null,previousState: transition ? details.from as DoctorAppointmentState : null,nextState: transition ? details.to as DoctorAppointmentState : null }
@@ -66,3 +71,10 @@ export function doctorAppointmentHistory(value: unknown,practiceId: string,locat
   return { appointmentId,version: value.version,page,total: value.total,events }
 }
 export function doctorAppointmentResult(value: unknown) { if(!object(value) || !doctorUuid(value.appointment_id) || !count(value.version,1) || (value.state!==undefined && !doctorAppointmentState(value.state)))invalid(); return { appointmentId: value.appointment_id,version: value.version } }
+
+export function doctorReceptionTransitions(item:DoctorAppointment,now=new Date()):DoctorReceptionAction[]{
+ if(item.state==='no_show')return['reverse_no_show']
+ if(item.state==='checked_in')return['queue_exit','move_to_end']
+ if(item.state==='booked'&&Date.parse(item.startsAt)<=now.getTime()&&doctorAvailabilityToday(item.timezone,new Date(item.startsAt))===doctorAvailabilityToday(item.timezone,now))return['late_check_in']
+ return[]
+}
