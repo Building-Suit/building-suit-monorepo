@@ -720,6 +720,15 @@
       "adapterBoundary": "Shop owns Team/Multi eligibility, private draft and explicit owner publishing, public disclosure, tenant-scoped offers and atomic server price matching. Shared UI owns the layout/media editors, bundle worklist and public/POS offer strip. Shared UX owns bounded raster processing and record/dialog lifecycle. Receipt snapshots retain matched offer names.",
       "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
       "migrationStatus": "implemented-source; browser/database tests deferred at user instruction"
+    },
+    {
+      "family": "administrative-follow-up-worklist",
+      "owner": "packages/ui",
+      "components": [
+        "BsFollowUpWorklistPage"
+      ],
+      "adapterBoundary": "Typed finite task, assignment and history views with controlled forms and semantic commands. Doctor owns scope, current grants, due clocks and atomic transitions. No clinical data or delivery authority.",
+      "migrationStatus": "implemented; acceptance in progress"
     }
   ]
 }

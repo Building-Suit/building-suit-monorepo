@@ -2,7 +2,7 @@ import type { DoctorContextScope } from './contextScope'
 import type { DoctorIdentity } from './authController'
 import { doctorEditionMode } from './administrativeEdition.ts'
 import { doctorEntitlement } from './entitlement.ts'
-export const doctorAdministrativeCapabilities = ['dashboard.read', 'locations.read', 'locations.manage', 'patients.read', 'patients.write', 'documents.read', 'documents.write', 'availability.manage', 'appointments.read', 'appointments.write', 'queue.manage', 'audit.read'] as const
+export const doctorAdministrativeCapabilities = ['dashboard.read', 'locations.read', 'locations.manage', 'patients.read', 'patients.write', 'documents.read', 'documents.write', 'availability.manage', 'appointments.read', 'appointments.write', 'queue.manage', 'audit.read', 'worklists.read', 'worklists.manage'] as const
 export type DoctorAdministrativeCapability = typeof doctorAdministrativeCapabilities[number]
 export interface DoctorLocationContext extends DoctorContextScope {
   locationId: string
@@ -25,7 +25,7 @@ export function doctorLocationContext(value: unknown, actor: DoctorIdentity, env
     || value.capabilities.some(item => !doctorAdministrativeCapabilities.includes(item as DoctorAdministrativeCapability))) invalid()
   const edition = value.edition !== undefined || value.edition_revision !== undefined
   if (edition && (!doctorEditionMode(value.edition) || !Number.isSafeInteger(value.edition_revision) || Number(value.edition_revision) < 1)) invalid()
-  if (value.edition==='administrative_candidate' && value.capabilities.some(capability => ['documents.read','documents.write'].includes(String(capability)))) invalid()
+  if (value.edition==='administrative_candidate' && value.capabilities.some(capability => ['documents.read','documents.write','worklists.read','worklists.manage'].includes(String(capability)))) invalid()
   let entitlement
   try { entitlement=doctorEntitlement(value.entitlement,value.edition as DoctorContextScope['edition']) } catch { invalid() }
   return { environment, userId: actor.userId, sessionId: actor.sessionId, practiceId: value.practice_id, locationId: value.location_id,

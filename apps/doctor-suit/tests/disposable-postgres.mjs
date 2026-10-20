@@ -1,3 +1,4 @@
+import{verifyWorklistConcurrency}from'./worklists-concurrency.mjs'
 import{verifyWaitlistConcurrency}from './waitlist-concurrency.mjs'
 import{verifyConsultationConcurrency}from './consultations-concurrency.mjs'
 import {verifyClinicalConcurrency} from './clinical-concurrency.mjs'
@@ -112,6 +113,7 @@ try {
     if (!plan || Number(plan[1]) < 1 || Number(plan[1]) !== passed.length || /^not ok\b|^Bail out!/m.test(result)) throw new Error(`${file}: SQL assertions failed\n${result}`)
     console.log(`${file}: ${passed.length} SQL assertions passed`)
   }
+  await verifyWorklistConcurrency(container)
   await verifyReceptionConcurrency(container)
   await verifyWaitlistConcurrency(container)
   await verifyConsultationConcurrency(container)

@@ -33,6 +33,154 @@ export type Database = {
         }
         Relationships: []
       }
+      administrative_task_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          happened_at: string
+          id: number
+          location_id: string
+          next_assignee: string
+          practice_id: string
+          previous_assignee: string | null
+          previous_state: string | null
+          reason: string
+          record_version: number
+          state: string
+          task_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          happened_at?: string
+          id?: never
+          location_id: string
+          next_assignee: string
+          practice_id: string
+          previous_assignee?: string | null
+          previous_state?: string | null
+          reason: string
+          record_version: number
+          state: string
+          task_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          happened_at?: string
+          id?: never
+          location_id?: string
+          next_assignee?: string
+          practice_id?: string
+          previous_assignee?: string | null
+          previous_state?: string | null
+          reason?: string
+          record_version?: number
+          state?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "administrative_task_events_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "administrative_task_events_practice_id_task_id_fkey"
+            columns: ["practice_id", "task_id"]
+            isOneToOne: false
+            referencedRelation: "administrative_tasks"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
+      administrative_tasks: {
+        Row: {
+          assignee_user_id: string
+          captured_location_version: number
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string
+          due_at: string
+          id: string
+          kind: string
+          location_id: string
+          location_name: string
+          patient_id: string | null
+          practice_id: string
+          state: string
+          timezone: string
+          updated_at: string
+          updated_by: string
+          version: number
+        }
+        Insert: {
+          assignee_user_id: string
+          captured_location_version: number
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by: string
+          due_at: string
+          id: string
+          kind: string
+          location_id: string
+          location_name: string
+          patient_id?: string | null
+          practice_id: string
+          state: string
+          timezone: string
+          updated_at?: string
+          updated_by: string
+          version?: number
+        }
+        Update: {
+          assignee_user_id?: string
+          captured_location_version?: number
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string
+          due_at?: string
+          id?: string
+          kind?: string
+          location_id?: string
+          location_name?: string
+          patient_id?: string | null
+          practice_id?: string
+          state?: string
+          timezone?: string
+          updated_at?: string
+          updated_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "administrative_tasks_practice_id_fkey"
+            columns: ["practice_id"]
+            isOneToOne: false
+            referencedRelation: "practices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "administrative_tasks_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "administrative_tasks_practice_id_patient_id_fkey"
+            columns: ["practice_id", "patient_id"]
+            isOneToOne: false
+            referencedRelation: "practice_patients"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
       appointment_events: {
         Row: {
           actor_user_id: string
@@ -3394,6 +3542,42 @@ export type Database = {
           p_page?: number
           p_practice: string
         }
+        Returns: Json
+      }
+      doctor_worklist: {
+        Args: {
+          p_location: string
+          p_mine: boolean
+          p_overdue: boolean
+          p_page: number
+          p_practice: string
+          p_state: string
+        }
+        Returns: Json
+      }
+      doctor_worklist_command: {
+        Args: {
+          p_action: string
+          p_expected_version: number
+          p_input: Json
+          p_key: string
+          p_location: string
+          p_practice: string
+          p_task: string
+        }
+        Returns: Json
+      }
+      doctor_worklist_history: {
+        Args: {
+          p_location: string
+          p_page: number
+          p_practice: string
+          p_task: string
+        }
+        Returns: Json
+      }
+      doctor_worklist_options: {
+        Args: { p_location: string; p_practice: string }
         Returns: Json
       }
       doctor_write_consultation_type: {
