@@ -7,7 +7,7 @@ const hydrated = ref(false)
 onMounted(() => { hydrated.value = true })
 const ar = computed(() => locale.value === 'ar')
 const notice = computed(() => ({ title: ar.value ? 'وصول إلى نسخة اصطناعية محددة' : 'Specific synthetic version access', description: ar.value ? 'تُعرض فقط النسخة التي أُتيحت لهذا الحساب صراحةً. لا تمنح الإتاحة عضوية في الممارسة.' : 'Only the version explicitly released to this account is shown. Access does not grant practice membership.' }))
-const account = computed(() => ({ label: ar.value ? 'الحساب' : 'Account', signOut: ar.value ? 'تسجيل الخروج' : 'Sign out', pending: !hydrated.value || auth.state.pending }))
+const account = computed(() => hydrated.value ? ({ label: ar.value ? 'الحساب' : 'Account', signOut: ar.value ? 'تسجيل الخروج' : 'Sign out', pending: auth.state.pending }) : undefined)
 const labels = computed(() => ({ open: ui('open'), close: ui('close'), navigation: ui('navigation'), dashboard: 'Doctor Suit' }))
 async function signOut() { await auth.signOut(); await navigateTo('/sign-in') }
 </script>

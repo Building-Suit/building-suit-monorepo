@@ -58,9 +58,29 @@ export async function verifyDoctorClinicalProvider({root,api,origin,publicKey,se
  setStage('actual clinical verified complete export')
  const exportArgs={...scope(owner),p_encounter:encounterId,p_key:randomUUID()};const exported=await rpc(owner.client,'doctor_clinical_export',exportArgs);const manifest=JSON.parse(await verifyClinicalExport(exported));expect(manifest.versions.length===(await detail()).versions_total&&manifest.storage_bytes_included===false,'Actual export omitted revisions or claimed Storage bytes')
  await verifyDoctorClinicalBrowser({root,api,origin,publicKey,serviceKey,owner,other,recipient,staff,encounterId,releaseId,document,pdf,expect,setStage})
- setStage('actual clinical supersession revocation and fresh export authority')
- await command('amend',{reason:'Synthetic correction preserves prior source'});expect((await detail()).versions.some(v=>v.id===final.id&&v.version_status==='superseded'),'Actual amendment rewrote or lost finalized original')
- await denied(recipient.client,'doctor_clinical_released',{p_release:releaseId},'Actual superseded source remained released');expect([401,403].includes((await deliver(recipient)).status),'Actual superseded source bytes remained available')
+ // The recipient browser proves global sign-out. Reauthenticate before testing
+ // domain supersession so an already-revoked SID cannot satisfy that denial.
+ setStage('actual clinical fresh recipient session after browser sign-out')
+ const renewed=await recipient.client.auth.signInWithPassword(recipient.credentials)
+ expect(!renewed.error&&renewed.data.session&&renewed.data.user?.id===recipient.user.id,'Actual recipient reauthentication failed')
+ recipient.session=renewed.data.session
+ const renewedContext=await rpc(recipient.client,'doctor_session_context')
+ expect(renewedContext.user_id===recipient.user.id&&renewedContext.session_id,'Actual renewed recipient identity differs')
+ recipient.sessionId=renewedContext.session_id
+ expect((await rpc(recipient.client,'doctor_clinical_released',{p_release:releaseId})).release_id===releaseId,'Actual recipient access did not survive a fresh legitimate session')
+ setStage('actual clinical amendment preserves final source and suspends delivery')
+ await command('amend',{reason:'Synthetic correction preserves prior source'})
+ const amended=await detail()
+ expect(amended.encounter.status==='amended'&&amended.versions.some(v=>v.id===final.id&&v.snapshot_sha256===final.snapshot_sha256),'Actual amendment rewrote or lost finalized original')
+ await denied(recipient.client,'doctor_clinical_released',{p_release:releaseId},'Actual amendment kept prior release available')
+ expect([401,403].includes((await deliver(recipient)).status),'Actual amendment kept prior bytes available')
+ setStage('actual clinical reviewed correction supersedes original source')
+ const correction=amended.versions[0]
+ await command('finalize',{reviewed_version_id:correction.id,reviewed_sha256:correction.snapshot_sha256})
+ expect((await detail()).versions.some(v=>v.id===final.id&&v.version_status==='superseded'&&v.snapshot_sha256===final.snapshot_sha256),'Actual correction lost immutable superseded original')
+ await denied(recipient.client,'doctor_clinical_released',{p_release:releaseId},'Actual superseded source remained released')
+ expect([401,403].includes((await deliver(recipient)).status),'Actual superseded source bytes remained available')
+ setStage('actual clinical fresh export authority and independent context')
  sql(`update doctor_private.clinical_fixture_grants set revoked_at=clock_timestamp() where practice_id='${uuid(owner.scope.practiceId)}' and user_id='${uuid(owner.user.id)}';`)
  await denied(owner.client,'doctor_clinical_export',exportArgs,'Actual revoked fixture reused export receipt')
  expect((await rpc(other.client,'doctor_clinical_workspace',scope(other))).available===true,'Independent actual Doctor context was changed by A revocation')

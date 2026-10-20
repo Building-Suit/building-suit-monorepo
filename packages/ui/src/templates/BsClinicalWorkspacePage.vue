@@ -18,7 +18,7 @@ const emit=defineEmits<{
  upload:[];saveUpload:[];download:[documentId:string,versionId:string];documentsPage:[page:number]
 }>()
 const queryAdapter=computed<BsDataTableQueryAdapter>(()=>{const scope=props.view.scopeKey;return{search:value=>emit('search',scope,value),page:value=>emit('page',scope,value.page)}})
-const columns=computed(()=>[{key:'patient',field:'patient',header:props.copy.patient},{key:'status',field:'status',header:props.copy.status},{key:'date',field:'date',header:props.copy.date},{key:'open',header:props.copy.open}])
+const columns=computed(()=>[{key:'patient',field:'patient',header:props.copy.patient},{key:'status',field:'status',header:props.copy.status},{key:'date',field:'date',header:props.copy.date},{key:'open',header:props.copy.open,width:'content' as const}])
 const historyColumns=computed(()=>[{key:'revision',field:'revision',header:props.copy.revision},{key:'status',field:'status',header:props.copy.status},{key:'actor',field:'actor',header:props.copy.actor},{key:'date',field:'date',header:props.copy.date},{key:'reason',field:'reason',header:props.copy.reason},{key:'open',header:props.copy.open},{key:'print',header:props.copy.print}])
 const intakeColumns=computed(()=>['kind','knowledge','source','text','value','unit'].map(key=>({key,field:key,header:props.copy[key as keyof BsClinicalCopy]})))
 const prescriptionColumns=computed(()=>['name','identity','strength','form','amount','route','schedule','instructions'].map(key=>({key,field:key,header:key==='schedule'?props.copy.segments:props.copy[key as keyof BsClinicalCopy]})))
@@ -38,7 +38,7 @@ const orderOptions=computed(()=>fields.value.orders.map((item,index)=>({value:it
   <template v-else>
    <BsDataTable :value="view.rows" :columns="columns" row-key="id" :label="copy.title" :lazy="true" :loading="view.loading" :paginator="true" :page-size="20" :first="view.page*20" :total-records="view.total" :searchable="true" :search-label="copy.search" :query-adapter="queryAdapter">
     <template #empty><BsStateSurface state="empty" :title="copy.empty" /></template>
-    <template #cell-open="{row:data}"><BsButton variant="text" :disabled="view.pending" @click="emit('select',data.id)">{{ copy.open }}: {{ data.patient }}</BsButton></template>
+    <template #cell-open="{row:data}"><BsButton variant="text" :disabled="view.pending" :aria-label="`${copy.open}: ${data.patient}`" @click="emit('select',data.id)">{{ copy.open }}</BsButton></template>
    </BsDataTable>
    <BsStack v-if="view.detail" gap="md">
     <BsSectionHeader :title="view.detail.patient" :description="`${view.detail.status} · ${copy.revision} ${view.detail.version} · ${view.detail.location}`" />
@@ -75,7 +75,7 @@ const orderOptions=computed(()=>fields.value.orders.map((item,index)=>({value:it
   <BsRecordActionDialog v-model:visible="editorOpen" :title="view.editor.title" :dirty="view.editor.dirty" :pending="view.editor.pending" :error="view.editor.error" :submit-label="copy.save" :cancel-label="copy.cancel" :submit-disabled="view.editor.disabled" size="lg" :pinned-actions="true" @submit="emit('save')">
    <BsAlert tone="warning" :description="copy.syntheticIdentity" />
    <BsField v-if="view.editor.creating" v-slot="field" :label="copy.patient" :required="true"><BsSelect v-model="fields.patientId" :input-id="field.id" :label="copy.patient" :options="view.patients" option-label="label" option-value="value" :aria-describedby="field.describedby" :disabled="view.editor.pending" /></BsField>
-   <BsTabs v-model="tab" :tabs="tabs" :label="copy.edit" />
+   <BsBox scroll="x"><BsTabs v-model="tab" class="w-max min-w-full max-w-none" :tabs="tabs" :label="copy.edit" /></BsBox>
    <BsStack v-if="tab==='note'" gap="md">
     <BsText>{{ copy.template }}</BsText>
     <BsField v-slot="field" :label="copy.note"><BsTextarea :id="field.id" v-model="fields.note" :aria-describedby="field.describedby" :maxlength="10000" :disabled="view.editor.pending" :rows="8" /></BsField>
@@ -83,14 +83,16 @@ const orderOptions=computed(()=>fields.value.orders.map((item,index)=>({value:it
    </BsStack>
    <BsStack v-else-if="tab==='intake'" gap="md">
     <BsButton :disabled="view.editor.pending" @click="emit('add','intake')">{{ copy.add }}: {{ copy.intake }}</BsButton>
-    <BsFormSection v-for="(item,index) in fields.intake" :key="item.id" :title="`${copy.intake} ${index+1}`" :columns="2" :disabled="view.editor.pending">
+    <BsFormSection v-for="(item,index) in fields.intake" :key="item.id" :title="`${copy.intake} ${index+1}`" :columns="1" :disabled="view.editor.pending">
+     <BsGrid :columns="2" align="start">
      <BsField v-slot="field" :label="copy.kind"><BsSelect v-model="item.kind" :input-id="field.id" :label="copy.kind" :options="choices.intakeKinds" option-label="label" option-value="value" /></BsField>
      <BsField v-slot="field" :label="copy.knowledge"><BsSelect v-model="item.knowledge" :input-id="field.id" :label="copy.knowledge" :options="choices.knowledge" option-label="label" option-value="value" /></BsField>
      <BsField v-slot="field" :label="copy.source"><BsSelect v-model="item.source" :input-id="field.id" :label="copy.source" :options="choices.sources" option-label="label" option-value="value" /></BsField>
      <BsField v-slot="field" :label="copy.text"><BsTextarea :id="field.id" v-model="item.text" :maxlength="4000" /></BsField>
      <BsField v-slot="field" :label="copy.value"><BsInput :id="field.id" v-model="item.value" :maxlength="120" /></BsField><BsField v-slot="field" :label="copy.unit"><BsInput :id="field.id" v-model="item.unit" :maxlength="80" /></BsField>
      <BsButton variant="text" @click="emit('remove','intake',index)">{{ copy.remove }}</BsButton>
-    </BsFormSection>
+         </BsGrid>
+</BsFormSection>
    </BsStack>
    <BsStack v-else-if="tab==='prescriptions'" gap="md">
     <BsButton :disabled="view.editor.pending" @click="emit('add','prescription')">{{ copy.add }}: {{ copy.prescriptions }}</BsButton>
@@ -106,30 +108,36 @@ const orderOptions=computed(()=>fields.value.orders.map((item,index)=>({value:it
      </BsGrid>
      <BsField v-slot="field" :label="copy.instructions"><BsTextarea :id="field.id" v-model="item.instructions" :maxlength="4000" /></BsField>
      <BsButton variant="text" @click="emit('add','segment',index)">{{ copy.add }}: {{ copy.segments }}</BsButton>
-     <BsFormSection v-for="(segment,segmentIndex) in item.segments" :key="segmentIndex" :title="`${copy.segments} ${segmentIndex+1}`" :columns="2">
+     <BsFormSection v-for="(segment,segmentIndex) in item.segments" :key="segmentIndex" :title="`${copy.segments} ${segmentIndex+1}`" :columns="1">
+     <BsGrid :columns="2" align="start">
       <BsField v-slot="field" :label="copy.kind"><BsSelect v-model="segment.kind" :input-id="field.id" :label="copy.kind" :options="choices.segmentKinds" option-label="label" option-value="value" /></BsField>
       <BsField v-slot="field" :label="copy.startDate"><BsInput :id="field.id" v-model="segment.start" type="date" /></BsField><BsField v-slot="field" :label="copy.endDate"><BsInput :id="field.id" v-model="segment.end" type="date" /></BsField>
       <BsField v-slot="field" :label="copy.timezone"><BsInput :id="field.id" v-model="segment.timezone" :maxlength="120" /></BsField>
       <BsField v-slot="field" :label="copy.interval"><BsInput :id="field.id" v-model="segment.interval" inputmode="numeric" /></BsField><BsField v-slot="field" :label="copy.weekdays"><BsInput :id="field.id" v-model="segment.weekdays" /></BsField><BsField v-slot="field" :label="copy.times"><BsInput :id="field.id" v-model="segment.times" /></BsField>
       <BsField v-slot="field" :label="copy.instructions"><BsTextarea :id="field.id" v-model="segment.instructions" :maxlength="1000" /></BsField><BsButton variant="text" @click="emit('remove','segment',index,segmentIndex)">{{ copy.remove }}</BsButton>
-     </BsFormSection>
+          </BsGrid>
+</BsFormSection>
      <BsButton variant="text" @click="emit('remove','prescription',index)">{{ copy.remove }}</BsButton>
     </BsFormSection>
    </BsStack>
    <BsStack v-else-if="tab==='orders'" gap="md">
     <BsButton :disabled="view.editor.pending" @click="emit('add','order')">{{ copy.add }}: {{ copy.orders }}</BsButton>
-    <BsFormSection v-for="(item,index) in fields.orders" :key="item.id" :title="`${copy.orders} ${index+1}`" :columns="2" :disabled="view.editor.pending">
+    <BsFormSection v-for="(item,index) in fields.orders" :key="item.id" :title="`${copy.orders} ${index+1}`" :columns="1" :disabled="view.editor.pending">
+     <BsGrid :columns="2" align="start">
      <BsField v-slot="field" :label="copy.kind"><BsSelect v-model="item.kind" :input-id="field.id" :label="copy.kind" :options="choices.orderKinds" option-label="label" option-value="value" /></BsField><BsField v-slot="field" :label="copy.status"><BsSelect v-model="item.state" :input-id="field.id" :label="copy.status" :options="choices.orderStates" option-label="label" option-value="value" /></BsField>
      <BsField v-slot="field" :label="copy.request"><BsTextarea :id="field.id" v-model="item.request" :maxlength="4000" /></BsField><BsField v-slot="field" :label="copy.due"><BsInput :id="field.id" v-model="item.due" placeholder="YYYY-MM-DDTHH:mm:ssZ" /></BsField><BsField v-slot="field" :label="copy.reason"><BsTextarea :id="field.id" v-model="item.reason" :maxlength="500" /></BsField><BsButton variant="text" @click="emit('remove','order',index)">{{ copy.remove }}</BsButton>
-    </BsFormSection>
+         </BsGrid>
+</BsFormSection>
    </BsStack>
    <BsStack v-else-if="tab==='results'" gap="md">
     <BsButton :disabled="view.editor.pending" @click="emit('add','result')">{{ copy.add }}: {{ copy.results }}</BsButton>
-    <BsFormSection v-for="(item,index) in fields.results" :key="item.id" :title="`${copy.results} ${index+1}`" :columns="2" :disabled="view.editor.pending">
+    <BsFormSection v-for="(item,index) in fields.results" :key="item.id" :title="`${copy.results} ${index+1}`" :columns="1" :disabled="view.editor.pending">
+     <BsGrid :columns="2" align="start">
      <BsField v-slot="field" :label="copy.order"><BsSelect v-model="item.orderId" :input-id="field.id" :label="copy.order" :options="orderOptions" option-label="label" option-value="value" /></BsField>
      <BsField v-slot="field" :label="copy.document"><BsSelect v-model="item.documentVersionId" :input-id="field.id" :label="copy.document" :options="view.documents" option-label="label" option-value="value" /></BsField>
      <BsField v-slot="field" :label="copy.status"><BsSelect v-model="item.stage" :input-id="field.id" :label="copy.status" :options="choices.resultStages" option-label="label" option-value="value" /></BsField><BsField v-slot="field" :label="copy.annotation"><BsTextarea :id="field.id" v-model="item.annotation" :maxlength="4000" /></BsField><BsButton variant="text" @click="emit('remove','result',index)">{{ copy.remove }}</BsButton>
-    </BsFormSection>
+         </BsGrid>
+</BsFormSection>
    </BsStack>
   </BsRecordActionDialog>
   <BsRecordActionDialog v-model:visible="confirmationOpen" :title="view.confirmation.title" :pending="view.confirmation.pending" :error="view.confirmation.error" :submit-label="copy.confirm" :cancel-label="copy.cancel" @submit="emit('confirm')">

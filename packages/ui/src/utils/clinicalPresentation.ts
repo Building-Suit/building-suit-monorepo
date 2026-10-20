@@ -33,3 +33,6 @@ export interface BsReleasedClinicalView {
  results:{id:string;order:string;annotation:string}[]
  documents:{id:string;name:string}[]
 }
+
+/** Keep explicit ISO date ranges in their entered order inside RTL prose. */
+export function clinicalDateRange(start: string, end: string): string { return `\u2066${start} – ${end}\u2069` }
