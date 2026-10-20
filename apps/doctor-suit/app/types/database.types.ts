@@ -2422,6 +2422,175 @@ export type Database = {
         }
         Relationships: []
       }
+      operational_fulfillment_documents: {
+        Row: {
+          document_id: string
+          document_version_id: string
+          fulfillment_id: string
+          practice_id: string
+          received_at: string
+          recorded_at: string
+          recorded_by: string
+          review_state: string
+          source_at: string
+          source_ref: string
+        }
+        Insert: {
+          document_id: string
+          document_version_id: string
+          fulfillment_id: string
+          practice_id: string
+          received_at: string
+          recorded_at?: string
+          recorded_by: string
+          review_state?: string
+          source_at: string
+          source_ref: string
+        }
+        Update: {
+          document_id?: string
+          document_version_id?: string
+          fulfillment_id?: string
+          practice_id?: string
+          received_at?: string
+          recorded_at?: string
+          recorded_by?: string
+          review_state?: string
+          source_at?: string
+          source_ref?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_fulfillment_docum_practice_id_document_id_docu_fkey"
+            columns: ["practice_id", "document_id", "document_version_id"]
+            isOneToOne: false
+            referencedRelation: "patient_document_versions"
+            referencedColumns: ["practice_id", "document_id", "id"]
+          },
+          {
+            foreignKeyName: "operational_fulfillment_documen_practice_id_fulfillment_id_fkey"
+            columns: ["practice_id", "fulfillment_id"]
+            isOneToOne: false
+            referencedRelation: "operational_fulfillments"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
+      operational_fulfillment_events: {
+        Row: {
+          actor_user_id: string
+          fulfillment_id: string
+          happened_at: string
+          practice_id: string
+          source_ref: string
+          state: string
+          version: number
+        }
+        Insert: {
+          actor_user_id: string
+          fulfillment_id: string
+          happened_at?: string
+          practice_id: string
+          source_ref: string
+          state: string
+          version: number
+        }
+        Update: {
+          actor_user_id?: string
+          fulfillment_id?: string
+          happened_at?: string
+          practice_id?: string
+          source_ref?: string
+          state?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_fulfillment_events_practice_id_fulfillment_id_fkey"
+            columns: ["practice_id", "fulfillment_id"]
+            isOneToOne: false
+            referencedRelation: "operational_fulfillments"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
+      operational_fulfillments: {
+        Row: {
+          created_at: string
+          created_by: string
+          encounter_id: string
+          id: string
+          kind: string
+          location_id: string
+          order_id: string
+          patient_id: string
+          practice_id: string
+          source_version_id: string
+          state: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          encounter_id: string
+          id: string
+          kind: string
+          location_id: string
+          order_id: string
+          patient_id: string
+          practice_id: string
+          source_version_id: string
+          state?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          encounter_id?: string
+          id?: string
+          kind?: string
+          location_id?: string
+          order_id?: string
+          patient_id?: string
+          practice_id?: string
+          source_version_id?: string
+          state?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_fulfillments_practice_id_encounter_id_source_v_fkey"
+            columns: ["practice_id", "encounter_id", "source_version_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_versions"
+            referencedColumns: ["practice_id", "encounter_id", "id"]
+          },
+          {
+            foreignKeyName: "operational_fulfillments_practice_id_fkey"
+            columns: ["practice_id"]
+            isOneToOne: false
+            referencedRelation: "practices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operational_fulfillments_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "operational_fulfillments_practice_id_patient_id_fkey"
+            columns: ["practice_id", "patient_id"]
+            isOneToOne: false
+            referencedRelation: "practice_patients"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
       patient_administrative_activity: {
         Row: {
           actor_user_id: string
@@ -3676,6 +3845,28 @@ export type Database = {
       }
       doctor_finalize_payment_evidence: {
         Args: { p_actor: string; p_intent: string; p_session: string }
+        Returns: Json
+      }
+      doctor_fulfillment_command: {
+        Args: {
+          p_action: string
+          p_id: string
+          p_input: Json
+          p_key: string
+          p_location: string
+          p_patient: string
+          p_practice: string
+          p_version: number
+        }
+        Returns: Json
+      }
+      doctor_fulfillments: {
+        Args: {
+          p_location: string
+          p_page: number
+          p_patient: string
+          p_practice: string
+        }
         Returns: Json
       }
       doctor_invitation_details: {
