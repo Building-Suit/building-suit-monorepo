@@ -13,8 +13,10 @@ Each task receives its own feature branch, committed parent SHA, verification re
 | Task | Review | Engineering state |
 |---|---|---|
 | DOS-M3-001 | [PR425](https://github.com/Building-Suit/building-suit-monorepo/pull/425), parent422 | Published draft; synthetic engineering verified.393 Doctor unit tests,33 task SQL assertions,4 scheduling transaction scenarios and actual browser/visual acceptance passed. Full repository and qualified/provider acceptance remain separate. |
-| DOS-M3-002 | Published PR426; incorporated in consolidated PR401 | Synthetic engineering verified:402 Doctor units,34 SQL assertions,7 waitlist transaction scenarios,71-table restore and both actual M3 browser journeys passed. Draft publication prepared; no external messages. |
-| DOS-M3-003 | Branch codex/doctor-suit/m3-003-reception, parent401 | Synthetic engineering verified:409 Doctor units,28 task SQL assertions,8 reception races,71-table restore and all3 actual M3 browser journeys pass. Draft publication prepared; inherited full-provider/Shop CI and professional gates remain separate. |
+| DOS-M3-002 | Published PR426; incorporated in consolidated PR401 | Synthetic engineering verified:402 Doctor units,34 SQL assertions,7 waitlist transaction scenarios,71-table restore and both actual M3 browser journeys passed. Published draft, incorporated in PR401; no external messages. |
+| DOS-M3-003 | [PR427](https://github.com/Building-Suit/building-suit-monorepo/pull/427), parent401 | Synthetic engineering verified:409 Doctor units,28 task SQL assertions,8 reception races,71-table restore and all3 actual M3 browser journeys pass. Published draft; inherited full-provider/Shop CI and professional gates remain separate. |
+
+| DOS-M3-004 | Branch codex/doctor-suit/m3-004-worklists, parent427 | Implementation and acceptance in progress; no operational activation. |
 
 M3-001's published head is f89f04a3ece57f902b35fc69c8cbb53987818d15. The runtime-tested candidate and diagnostic hashes remain in its verification record. M3-002 starts from that exact committed/published tip; its parent had no pending edits to copy.
 

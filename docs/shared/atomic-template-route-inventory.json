@@ -95,7 +95,8 @@
     "BsConsultationTypesPage": "packages/ui/src/templates/BsConsultationTypesPage.vue",
     "BsWaitlistPage": "packages/ui/src/templates/BsWaitlistPage.vue",
     "BsStorefrontBuilderPage": "packages/ui/src/templates/BsStorefrontBuilderPage.vue",
-    "BsCatalogOffersPage": "packages/ui/src/templates/BsCatalogOffersPage.vue"
+    "BsCatalogOffersPage": "packages/ui/src/templates/BsCatalogOffersPage.vue",
+    "BsFollowUpWorklistPage": "packages/ui/src/templates/BsFollowUpWorklistPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -3082,6 +3083,16 @@
       ],
       "verification": "Static validation pending; browser/database tests unrun at user instruction.",
       "purpose": "shop-catalog-offers"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/worklists.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsFollowUpWorklistPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/worklists.vue",
+      "purpose": "synthetic-administrative-assignment-worklist",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -3225,6 +3236,7 @@
     "BsConsultationTypesPage",
     "BsWaitlistPage",
     "BsStorefrontBuilderPage",
-    "BsCatalogOffersPage"
+    "BsCatalogOffersPage",
+    "BsFollowUpWorklistPage"
   ]
 }

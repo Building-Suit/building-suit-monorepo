@@ -395,7 +395,9 @@
     "./types/storefrontBuilderPresentation": "./src/types/storefrontBuilderPresentation.ts",
     "./templates/BsStorefrontBuilderPage": "./src/templates/BsStorefrontBuilderPage.vue",
     "./templates/BsCatalogOffersPage": "./src/templates/BsCatalogOffersPage.vue",
-    "./molecules/BsOfferStrip": "./src/molecules/BsOfferStrip.vue"
+    "./molecules/BsOfferStrip": "./src/molecules/BsOfferStrip.vue",
+    "./templates/BsFollowUpWorklistPage": "./src/templates/BsFollowUpWorklistPage.vue",
+    "./utils/worklistPresentation": "./src/utils/worklistPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",
