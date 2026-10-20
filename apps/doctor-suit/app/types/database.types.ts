@@ -2256,6 +2256,139 @@ export type Database = {
           },
         ]
       }
+      message_outbox: {
+        Row: {
+          attempts: number
+          available_at: string
+          blocker: string | null
+          claim_token: string | null
+          consent_id: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          intent: Json
+          lease_until: string | null
+          location_id: string
+          parameters: Json
+          patient_id: string
+          practice_id: string
+          recipient_kind: string
+          state: string
+          template: string
+          version: number
+        }
+        Insert: {
+          attempts?: number
+          available_at?: string
+          blocker?: string | null
+          claim_token?: string | null
+          consent_id: string
+          created_at?: string
+          created_by: string
+          expires_at: string
+          id: string
+          intent: Json
+          lease_until?: string | null
+          location_id: string
+          parameters?: Json
+          patient_id: string
+          practice_id: string
+          recipient_kind: string
+          state?: string
+          template: string
+          version?: number
+        }
+        Update: {
+          attempts?: number
+          available_at?: string
+          blocker?: string | null
+          claim_token?: string | null
+          consent_id?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          intent?: Json
+          lease_until?: string | null
+          location_id?: string
+          parameters?: Json
+          patient_id?: string
+          practice_id?: string
+          recipient_kind?: string
+          state?: string
+          template?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_outbox_practice_id_consent_id_fkey"
+            columns: ["practice_id", "consent_id"]
+            isOneToOne: false
+            referencedRelation: "patient_contact_consents"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "message_outbox_practice_id_fkey"
+            columns: ["practice_id"]
+            isOneToOne: false
+            referencedRelation: "practices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_outbox_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "message_outbox_practice_id_patient_id_fkey"
+            columns: ["practice_id", "patient_id"]
+            isOneToOne: false
+            referencedRelation: "practice_patients"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
+      message_outbox_events: {
+        Row: {
+          actor_user_id: string
+          blocker: string | null
+          happened_at: string
+          message_id: string
+          practice_id: string
+          state: string
+          version: number
+        }
+        Insert: {
+          actor_user_id: string
+          blocker?: string | null
+          happened_at?: string
+          message_id: string
+          practice_id: string
+          state: string
+          version: number
+        }
+        Update: {
+          actor_user_id?: string
+          blocker?: string | null
+          happened_at?: string
+          message_id?: string
+          practice_id?: string
+          state?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_outbox_events_practice_id_message_id_fkey"
+            columns: ["practice_id", "message_id"]
+            isOneToOne: false
+            referencedRelation: "message_outbox"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
       onboarding_drafts: {
         Row: {
           command_key: string
@@ -3598,6 +3731,28 @@ export type Database = {
         Returns: Json
       }
       doctor_operations_status: { Args: never; Returns: Json }
+      doctor_outbox: {
+        Args: {
+          p_location: string
+          p_page: number
+          p_patient: string
+          p_practice: string
+        }
+        Returns: Json
+      }
+      doctor_outbox_command: {
+        Args: {
+          p_action: string
+          p_input: Json
+          p_key: string
+          p_location: string
+          p_message: string
+          p_patient: string
+          p_practice: string
+          p_version: number
+        }
+        Returns: Json
+      }
       doctor_patient: {
         Args: { p_location: string; p_patient: string; p_practice: string }
         Returns: Json

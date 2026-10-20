@@ -399,7 +399,9 @@
     "./templates/BsFollowUpWorklistPage": "./src/templates/BsFollowUpWorklistPage.vue",
     "./utils/worklistPresentation": "./src/utils/worklistPresentation.ts",
     "./templates/BsPatientContactPreferencesPage": "./src/templates/BsPatientContactPreferencesPage.vue",
-    "./utils/contactPreferencesPresentation": "./src/utils/contactPreferencesPresentation.ts"
+    "./utils/contactPreferencesPresentation": "./src/utils/contactPreferencesPresentation.ts",
+    "./utils/messageOutboxPresentation": "./src/utils/messageOutboxPresentation.ts",
+    "./templates/BsMessageOutboxPage": "./src/templates/BsMessageOutboxPage.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

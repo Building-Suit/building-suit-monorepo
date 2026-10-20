@@ -1,3 +1,4 @@
+import{verifyOutboxConcurrency}from'./outbox-concurrency.mjs'
 import{verifyContactConcurrency}from'./contacts-concurrency.mjs'
 import{verifyWorklistConcurrency}from'./worklists-concurrency.mjs'
 import{verifyWaitlistConcurrency}from './waitlist-concurrency.mjs'
@@ -33,7 +34,9 @@ import { verifySaasWriteConcurrency } from './saas-write-concurrency.mjs'
 
 const root = fileURLToPath(new URL('../../../', import.meta.url))
 const app = `${root}apps/doctor-suit/`
-const generate = process.argv.slice(2)
+const argv=process.argv.slice(2)
+const focused=argv[0]==='--suite'&&argv.length===2&&/^dos-m3-00[6-9]\.sql$|^dos-m3-010\.sql$/.test(argv[1])?argv[1]:null
+const generate = focused?[]:argv
 if (generate.length && (generate.length !== 1 || generate[0] !== '--types')) throw new Error('Only --types is supported')
 validateLocalDoctorTarget(JSON.parse(await readFile(`${root}docs/architecture/environments.json`, 'utf8')), await readFile(`${app}supabase/config.toml`, 'utf8'), process.env)
 const container = `doctor-sql-${randomUUID()}`
@@ -103,7 +106,7 @@ try {
     if (file === '20261018154514_doctor_annual_discount_32.sql') verifyAnnualPricingUpgrade(sql, migration, await readFile(`${app}supabase/tests/dos-instapay-manual.sql`, 'utf8'))
     sql(migration)
   }
-  const suites = (await readdir(`${app}supabase/tests`)).filter(file => file.endsWith('.sql')).sort()
+  const suites = (await readdir(`${app}supabase/tests`)).filter(file => file.endsWith('.sql')&&(!focused||file===focused)).sort()
   if (!suites.length) throw new Error('No Doctor SQL suites found')
   // Preserve psql's file-relative includes for shared, test-only fixtures.
   docker(['cp', `${app}supabase/tests`, `${container}:/doctor-tests`])
@@ -114,6 +117,8 @@ try {
     if (!plan || Number(plan[1]) < 1 || Number(plan[1]) !== passed.length || /^not ok\b|^Bail out!/m.test(result)) throw new Error(`${file}: SQL assertions failed\n${result}`)
     console.log(`${file}: ${passed.length} SQL assertions passed`)
   }
+  if(!focused){
+  await verifyOutboxConcurrency(container)
   await verifyContactConcurrency(container)
   await verifyWorklistConcurrency(container)
   await verifyReceptionConcurrency(container)
@@ -137,6 +142,7 @@ try {
   await verifyDoctorAdministrationProtocol(container)
   await verifyManualPaymentConcurrency(container)
   await verifyDoctorIsolatedRecovery(container)
+  }
   if (generate.length) {
     // Registry throttling must remain a failed check after bounded retries; it
     // cannot waive schema generation or select an unpinned image.
@@ -162,6 +168,7 @@ try {
     await writeFile(`${app}supabase/functions/_shared/database.types.ts`, output)
     console.log('Generated public schema types from the migrated disposable database using CLI-pinned PostgreSQL Meta v0.98.0')
   }
+  console.log(focused?'FOCUSED diagnostic only; inherited suites/races/recovery not executed.':'Full SQL regression completed.');
   console.log('SQL/RLS verification only. Minimal Auth/Storage interfaces only; actual Supabase Auth, Storage and Realtime service integration: UNRUN in this SQL runner.')
 } finally {
   spawnSync('docker', ['rm', '-f', '-v', container], { stdio: 'ignore' })

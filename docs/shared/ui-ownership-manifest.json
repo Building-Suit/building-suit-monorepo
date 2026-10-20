@@ -738,6 +738,15 @@
       ],
       "adapterBoundary": "Typed patient/contact/consent/guardian projections and controlled finite editors. Doctor owns current patient scope, owner review, literal clocks, consent/guardian versions and revocation. No Auth identity binding, legal approval, clinical access or external messaging.",
       "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "synthetic-message-status",
+      "owner": "packages/ui",
+      "components": [
+        "BsMessageOutboxPage"
+      ],
+      "adapterBoundary": "Typed redacted outbox status. Doctor owns authority and consent. No external transport.",
+      "migrationStatus": "implemented; acceptance in progress"
     }
   ]
 }
