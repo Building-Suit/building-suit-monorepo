@@ -756,6 +756,15 @@
       ],
       "adapterBoundary": "Typed operational request/document status and controlled forms. Doctor owns exact issued sources, authority and timestamps. No clinical review or partner integration.",
       "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "synthetic-import-preview",
+      "owner": "packages/ui",
+      "components": [
+        "BsSyntheticImportPreviewPage"
+      ],
+      "adapterBoundary": "Typed preview batches/counts/errors and controlled synthetic source form. Doctor owns mapping, provenance, cursor/idempotency, custody gate and canonical-write denial.",
+      "migrationStatus": "implemented; acceptance in progress"
     }
   ]
 }
