@@ -1,0 +1,14 @@
+{
+  "id": "dos-m3-010",
+  "task": "DOS-M3-010",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-010.md"
+  ],
+  "reason": "Scoped synthetic operational reports and acceptance evidence; no clinical/legal/provider approval or operational registration."
+}
