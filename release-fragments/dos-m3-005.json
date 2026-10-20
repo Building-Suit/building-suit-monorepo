@@ -31,6 +31,7 @@
     "apps/doctor-suit/tests/contacts-concurrency.mjs",
     "apps/doctor-suit/tests/disposable-postgres.mjs",
     "apps/doctor-suit/tests/e2e/dos-m3-001.spec.ts",
+    "apps/doctor-suit/tests/e2e/dos-m3-003.spec.ts",
     "apps/doctor-suit/tests/e2e/dos-m3-005.spec.ts",
     "apps/doctor-suit/tests/operations-actual-provider.mjs",
     "apps/doctor-suit/tests/unit/dos-m3-005.test.mjs",
