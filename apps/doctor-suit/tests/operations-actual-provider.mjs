@@ -2,7 +2,7 @@
 import {spawn,spawnSync}from'node:child_process'
 import {once}from'node:events'
 import {randomUUID,createHash}from'node:crypto'
-import {readFile,mkdtemp,writeFile,rm,access}from'node:fs/promises'
+import {readFile,mkdtemp,writeFile,rm,access,mkdir}from'node:fs/promises'
 import {tmpdir}from'node:os'
 import path from'node:path'
 import{fileURLToPath}from'node:url'
@@ -47,5 +47,6 @@ finally{
  if(server?.pid){try{process.kill(-server.pid,'SIGTERM')}catch{/* Run-owned resources may be absent or starting. */}if(server.exitCode===null)await Promise.race([once(server,'exit'),pause(2000)]);try{process.kill(-server.pid,'SIGKILL')}catch{/* Run-owned resources may be absent or starting. */}server.unref()}
  if(owned)try{await cli(['stop','--no-backup'],120000)}catch{process.exitCode=1;console.error('Owned Doctor cleanup failed; preserve resources for inspection')}
  await rm(scratch,{recursive:true,force:true})
- const finalHead=git(['rev-parse','HEAD']),finalDirty=git(['status','--porcelain']);await writeFile('/tmp/doctor-m3-provider-receipt.json',JSON.stringify({executionId,startedAt,finishedAt:new Date().toISOString(),sourceHead,baseSha,baseVerified,finalHead,sourceClean:initialDirty===''&&finalDirty==='',candidateVerified:initialDirty===''&&finalDirty===''&&sourceHead===finalHead&&baseVerified&&(process.exitCode??0)===0&&browserResult?.exitCode===0,nodeVersion:process.version,commandArgv:[process.execPath,...process.argv.slice(1)],exitCode:process.exitCode??0,stage,browserResult,ownedLocalProject:project,hostedOperations:false,professionalApproval:false,providerApproval:false},null,2)+'\n',{mode:0o600})
+ await mkdir(path.join(root,'test-results/doctor-m3-actual'),{recursive:true});
+ const finalHead=git(['rev-parse','HEAD']),finalDirty=git(['status','--porcelain']);await writeFile(path.join(root,'test-results/doctor-m3-actual/provider-receipt.json'),JSON.stringify({executionId,startedAt,finishedAt:new Date().toISOString(),sourceHead,baseSha,baseVerified,finalHead,sourceClean:initialDirty===''&&finalDirty==='',candidateVerified:initialDirty===''&&finalDirty===''&&sourceHead===finalHead&&baseVerified&&(process.exitCode??0)===0&&browserResult?.exitCode===0,nodeVersion:process.version,commandArgv:[process.execPath,...process.argv.slice(1)],exitCode:process.exitCode??0,stage,browserResult,ownedLocalProject:project,hostedOperations:false,professionalApproval:false,providerApproval:false},null,2)+'\n',{mode:0o600})
 }
