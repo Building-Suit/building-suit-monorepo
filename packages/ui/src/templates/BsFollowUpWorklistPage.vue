@@ -6,7 +6,7 @@ const props=defineProps<{copy:BsWorklistCopy;view:BsWorklistView}>()
 const fields=defineModel<BsWorklistFields>('fields',{required:true}),actionFields=defineModel<BsWorklistActionFields>('actionFields',{required:true}),filter=defineModel<string>('filter',{required:true}),mine=defineModel<boolean>('mine',{required:true}),overdue=defineModel<boolean>('overdue',{required:true})
 const editorOpen=defineModel<boolean>('editorOpen',{required:true}),confirmationOpen=defineModel<boolean>('confirmationOpen',{required:true}),historyOpen=defineModel<boolean>('historyOpen',{required:true})
 const emit=defineEmits<{retry:[];create:[];save:[];action:[id:string,action:BsWorklistAction];confirm:[];patients:[search:string];options:[];filter:[];page:[value:number];historyPage:[value:number]}>()
-const columns=computed(()=>[{key:'kind',header:props.copy.kind,width:'content' as const},{key:'assignee',field:'assignee',header:props.copy.assignee,width:'content' as const},{key:'due',header:props.copy.due,width:'content' as const},{key:'state',field:'state',header:props.copy.state,width:'content' as const},{key:'actions',header:props.copy.action,width:'content' as const}])
+const columns=computed(()=>[{key:'kind',header:props.copy.kind,width:'md' as const},{key:'assignee',field:'assignee',header:props.copy.assignee,width:'md' as const},{key:'due',header:props.copy.due,width:'md' as const},{key:'state',field:'state',header:props.copy.state,width:'sm' as const},{key:'actions',header:props.copy.action,width:'sm' as const}])
 const adapter=computed<BsDataTableQueryAdapter>(()=>({page:value=>emit('page',value.page)}))
 const historyColumns=computed(()=>[{key:'action',field:'action',header:props.copy.action},{key:'actor',field:'actor',header:props.copy.actor},{key:'at',field:'at',header:props.copy.day},{key:'version',field:'version',header:props.copy.version},{key:'previousAssignee',field:'previousAssignee',header:props.copy.previousAssignee},{key:'assignee',field:'assignee',header:props.copy.nextAssignee},{key:'reason',field:'reason',header:props.copy.reason}])
 </script>
@@ -26,8 +26,9 @@ const historyColumns=computed(()=>[{key:'action',field:'action',header:props.cop
    </BsFilterBar>
    <BsDataTable :value="view.rows" :columns="columns" row-key="id" :label="copy.title" :scroll-label="copy.title" :capabilities="{insert:view.canCreate}" :action-labels="{insert:copy.create}" :row-action-pending="view.pending" lazy paginator :first="view.page*20" :page-size="20" :total-records="view.total" :query-adapter="adapter" @create="emit('create')">
     <template #cell-kind="{row}"><BsStack gap="sm"><BsText as="span" emphasis="medium">{{row.kind}}</BsText><BsText v-if="row.patient" as="span" size="sm">{{row.patient}}</BsText><BsText v-if="row.blocked" as="span" size="sm" tone="muted">{{copy.blocked}}</BsText></BsStack></template>
+    <template #cell-assignee="{row}"><BsText as="bdi" dir="ltr" size="sm">{{row.assignee}}</BsText></template>
     <template #cell-due="{row}"><BsStack gap="sm"><BsText as="bdi" dir="ltr">{{row.due}}</BsText><BsText v-if="row.overdue" as="span" size="sm">{{copy.overdue}}</BsText></BsStack></template>
-    <template #cell-actions="{row}"><BsInline wrap><BsButton v-for="action in row.actions" :key="action.value" size="sm" text :aria-label="action.label+': '+row.kind" :disabled="view.pending" @click="emit('action',row.id,action.value)">{{action.label}}</BsButton></BsInline></template>
+    <template #cell-actions="{row}"><BsStack gap="sm"><BsButton v-for="action in row.actions" :key="action.value" size="sm" text :aria-label="action.label+': '+row.kind" :disabled="view.pending" @click="emit('action',row.id,action.value)">{{action.label}}</BsButton></BsStack></template>
     <template #empty><BsStateSurface state="empty" :title="copy.empty"/></template>
    </BsDataTable>
   </template>
