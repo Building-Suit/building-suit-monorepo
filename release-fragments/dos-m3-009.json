@@ -36,7 +36,8 @@
     "docs/work-packages/doctor-suit/implementation/dos-m3-009.md",
     "packages/ui/package.json",
     "packages/ui/src/templates/BsSyntheticImportPreviewPage.vue",
-    "packages/ui/src/utils/syntheticImportPresentation.ts"
+    "packages/ui/src/utils/syntheticImportPresentation.ts",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-009-verification.json"
   ],
   "reason": "Doctor-only persisted synthetic migration preview, canonical JSONB source digest, resumable staging and explicit validation/review counts. Only Doctor consumes the new shared template; all six Suits classified through the UI graph. No canonical apply, real custody approval or operational registration."
 }
