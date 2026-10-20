@@ -1,0 +1,179 @@
+{
+  "task": "DOS-M3-006",
+  "base_sha": "c1e96dc99edd317da01e2715984a3549036fc8e3",
+  "parent_pr": 429,
+  "verified_runtime_source_sha": "4fe3da2621a1cdc69c861c9bed49d682453b3f66",
+  "checks": [
+    {
+      "check": "doctor-units",
+      "argv": [
+        "node",
+        "--test",
+        "apps/doctor-suit/tests/unit/*.test.mjs"
+      ],
+      "exit_code": 0,
+      "log_sha256": "88fd7305b702c7460752898675e9ad0a76cf8a72479bfa1c1d4cef3b45bd3412",
+      "timing": "not instrumented for this diagnostic; do not infer exact-candidate clean execution",
+      "runtime_source": "4fe3da2621a1cdc69c861c9bed49d682453b3f66"
+    },
+    {
+      "check": "full-repository",
+      "argv": [
+        "pnpm",
+        "test"
+      ],
+      "exit_code": 1,
+      "log_sha256": "51a0bc06d285aba9a9aff2f92ba5255663e1ed9c391d603fa2b89ecb612d9b85",
+      "timing": "not instrumented for this diagnostic; do not infer exact-candidate clean execution",
+      "runtime_source": "4fe3da2621a1cdc69c861c9bed49d682453b3f66"
+    },
+    {
+      "check": "full-sql-and-types",
+      "argv": [
+        "node",
+        "apps/doctor-suit/tests/disposable-postgres.mjs",
+        "--types"
+      ],
+      "exit_code": 0,
+      "log_sha256": "ba1dd7147a26c66f42dcaf8b1ff8ec3e7492a6ecf0d898e45170912a665ddb11",
+      "timing": "not instrumented for this diagnostic; do not infer exact-candidate clean execution",
+      "runtime_source": "4fe3da2621a1cdc69c861c9bed49d682453b3f66"
+    },
+    {
+      "check": "focused-retry-diagnostic",
+      "argv": [
+        "node",
+        "apps/doctor-suit/tests/disposable-postgres.mjs",
+        "--suite",
+        "dos-m3-006.sql"
+      ],
+      "exit_code": 0,
+      "log_sha256": "cd99a9e80910bb178d6bda395fb567bab571e25042e5f9be77ff480f9150633b",
+      "timing": "not instrumented for this diagnostic; do not infer exact-candidate clean execution",
+      "runtime_source": "4fe3da2621a1cdc69c861c9bed49d682453b3f66"
+    },
+    {
+      "check": "boundaries",
+      "argv": [
+        "pnpm",
+        "check"
+      ],
+      "exit_code": 0,
+      "log_sha256": "1775990a1ff1cb0877567fe90c73b8dc4d79219f9a70b75f1d7e85b524203168",
+      "timing": "not instrumented for this diagnostic; do not infer exact-candidate clean execution",
+      "runtime_source": "4fe3da2621a1cdc69c861c9bed49d682453b3f66"
+    },
+    {
+      "check": "build",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "build"
+      ],
+      "exit_code": 0,
+      "log_sha256": "e56f6afb9fe32921524161d540675e2d28737d06eb8c6e49e62c8b9891dd8ea2",
+      "timing": "not instrumented for this diagnostic; do not infer exact-candidate clean execution",
+      "runtime_source": "4fe3da2621a1cdc69c861c9bed49d682453b3f66"
+    },
+    {
+      "check": "app-lint",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "lint"
+      ],
+      "exit_code": 0,
+      "log_sha256": "9c3c80f505471b01b57c3ca4dc87dfb5a867eb936fd0c02e5e65b8b48cd9dd2f",
+      "timing": "not instrumented for this diagnostic; do not infer exact-candidate clean execution",
+      "runtime_source": "4fe3da2621a1cdc69c861c9bed49d682453b3f66"
+    },
+    {
+      "check": "ui-lint",
+      "argv": [
+        "pnpm",
+        "exec",
+        "eslint",
+        "packages/ui/src/templates/BsMessageOutboxPage.vue",
+        "packages/ui/src/utils/messageOutboxPresentation.ts"
+      ],
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "timing": "not instrumented for this diagnostic; do not infer exact-candidate clean execution",
+      "runtime_source": "4fe3da2621a1cdc69c861c9bed49d682453b3f66"
+    },
+    {
+      "check": "release",
+      "argv": [
+        "pnpm",
+        "release:check"
+      ],
+      "exit_code": 0,
+      "log_sha256": "a5c8ba0b0a8b74417bab7934cd37e838598f898561666c6c3d6c0a7f0e38a669",
+      "timing": "not instrumented for this diagnostic; do not infer exact-candidate clean execution",
+      "runtime_source": "4fe3da2621a1cdc69c861c9bed49d682453b3f66"
+    }
+  ],
+  "exact_pinned_typecheck": {
+    "task": "DOS-M3-006",
+    "check": "types",
+    "argv": [
+      "pnpm",
+      "--filter",
+      "@building-suit/doctor-suit",
+      "typecheck"
+    ],
+    "source_head": "4fe3da2621a1cdc69c861c9bed49d682453b3f66",
+    "started_at": "2026-10-20T17:54:58.880972+00:00",
+    "finished_at": "2026-10-20T17:55:42.968243+00:00",
+    "exit_code": 0,
+    "log_sha256": "f3039840d32063151b82dc9f3d61fa78dad4e94a117ded34951b91e83a3d5dcf",
+    "node": "26.8.1",
+    "pnpm": "10.33.0"
+  },
+  "actual_service_attempt": {
+    "executionId": "d33e6eda-27a3-4d62-b0e2-e913f20c41d8",
+    "startedAt": "2026-10-20T17:51:01.349Z",
+    "finishedAt": "2026-10-20T17:56:15.140Z",
+    "sourceHead": "4fe3da2621a1cdc69c861c9bed49d682453b3f66",
+    "baseSha": "c1e96dc99edd317da01e2715984a3549036fc8e3",
+    "baseVerified": true,
+    "finalHead": "4fe3da2621a1cdc69c861c9bed49d682453b3f66",
+    "sourceClean": true,
+    "candidateVerified": false,
+    "nodeVersion": "v26.8.1",
+    "commandArgv": [
+      "/home/agent/.cache/pnpm/dlx/cccfd02b2925bb5606bc10846568681b34c44d2b4084c797970066ca279b03cb/1a15a6f7d4d-12b51/node_modules/.pnpm/node@26.8.1/node_modules/node/bin/node",
+      "/workspace/doctor-m3-006/apps/doctor-suit/tests/operations-actual-provider.mjs"
+    ],
+    "exitCode": 1,
+    "stage": "start owned services",
+    "browserResult": null,
+    "ownedLocalProject": "building-suit-doctor",
+    "hostedOperations": false,
+    "professionalApproval": false,
+    "providerApproval": false
+  },
+  "repository_results": {
+    "tests": 2143,
+    "passed": 2066,
+    "failed": 54,
+    "skipped": 23,
+    "inherited_shop_failures": 54,
+    "full_ci": false
+  },
+  "sql": {
+    "full_task_assertions": 34,
+    "stronger_focused_assertions": 36,
+    "transaction_scenarios": 6,
+    "recovery_table_fingerprints": 80
+  },
+  "limitations": [
+    "Full local Supabase service browser run stopped during owned service image pull after concurrent SQL reported no disk space. No browser assertion executed; no hosted operation. Owned downloaded service images removed; SQL diagnostics resumed after capacity recovery.",
+    "Initial unconfigured repository run:2143 tests,2062 passed,58 failed,23 skipped; four extra missing-Chromium environment failures resolved with browser install and repository-pinned Node26.8.1/pnpm10.33.0.",
+    "Initial typechecks ran before type generation and correctly failed missing doctor_outbox RPC. Final pinned typecheck passed.",
+    "Build and initial SQL were run with Node24.19.0; Doctor units, configured repository regression and final typecheck use pinned26.8.1.",
+    "Clinical/legal/provider approvals and inherited full-provider Realtime remain open."
+  ]
+}
