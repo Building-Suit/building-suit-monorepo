@@ -1,0 +1,22 @@
+{
+  "id": "shop-inline-settings-support-20261020",
+  "task": "SHOP-INLINE-SETTINGS-20261020",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui",
+    "packages/ux",
+    "apps/building-suit-docs",
+    "docs/shared/ui-ownership-manifest.json",
+    "release-changes/items.json"
+  ],
+  "reason": "Maintain shared inline-settings presentation, scoped draft and navigation controllers, explicit exports, catalogue examples and release provenance. The existing Shop settings template is the only operational consumer changed by this task; Website editors and other product activation remain unchanged."
+}

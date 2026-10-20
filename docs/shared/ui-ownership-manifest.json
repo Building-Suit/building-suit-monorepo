@@ -363,6 +363,17 @@
       "migrationStatus": "implemented; verification recorded in product task evidence"
     },
     {
+      "family": "inline-business-settings",
+      "owner": "packages/ui",
+      "components": [
+        "BsBusinessSettingsPage",
+        "BsSettingsForm"
+      ],
+      "adapterBoundary": "Typed on-page business settings drafts, translated copy, permission/quota projections and existing authorized commands. UX owns scoped dirty snapshots, refresh-safe drafts and unsaved-navigation protection. Website and public-booking editors retain their existing presentation.",
+      "task": "SHOP-INLINE-SETTINGS-20261020",
+      "migrationStatus": "implemented-source; automated and rendered verification unrun at owner instruction"
+    },
+    {
       "family": "shop-tax-settings",
       "owner": "packages/ui",
       "components": [

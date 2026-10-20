@@ -1,0 +1,28 @@
+{
+  "id": "shop-inline-settings-20261020",
+  "task": "SHOP-INLINE-SETTINGS-20261020",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/pages/settings/[[section]].vue",
+    "packages/ui/src/templates/BsBusinessSettingsPage.vue"
+  ],
+  "reason": "Show existing non-Website business settings forms directly on their dedicated pages with consistent save, cancellation and unsaved-draft protection.",
+  "notes": {
+    "title": {
+      "en": "Edit business settings directly on the page",
+      "ar": "تعديل إعدادات النشاط مباشرة في الصفحة"
+    },
+    "summary": {
+      "en": "Update shop details, business mode, locations and receipt settings without opening an editor dialog.",
+      "ar": "عدّل بيانات المتجر وطريقة التشغيل والفروع وإعدادات الإيصال دون فتح نافذة تحرير."
+    },
+    "details": {
+      "en": "Profile, location and receipt editors appear inline. Cashier policy and business currency use the same Save and Cancel actions. Unsaved drafts are retained during background refreshes, and navigation prompts before discarding changes. Existing permissions, quotas and saving commands are preserved.",
+      "ar": "تظهر نماذج ملف المتجر والفروع والإيصالات داخل الصفحة. تستخدم سياسة ورديات الخزنة وعملة النشاط إجراءات الحفظ والإلغاء نفسها. تبقى المسودات غير المحفوظة أثناء تحديث البيانات في الخلفية، ويطلب التنقل تأكيد تجاهل التغييرات. تظل الصلاحيات والحصص وأوامر الحفظ الحالية محفوظة."
+    }
+  }
+}

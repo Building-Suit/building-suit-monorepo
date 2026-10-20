@@ -6,6 +6,7 @@ export function csvCell(value: unknown): string {
 
 export type BsDataTableRowAction = 'edit' | 'delete' | 'archive' | 'void'
 export { useRecordAction } from './composables/useRecordAction.ts'
+export { useInlineForm, useUnsavedFormGuard } from './composables/useInlineForm.ts'
 export type BsDataTableAlign = 'start' | 'center' | 'end'
 export type BsDataTableWidth = 'selection' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'content'
 export type BsDataTableSticky = 'start' | 'end'
