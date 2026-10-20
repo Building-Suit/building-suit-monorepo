@@ -1,0 +1,82 @@
+{
+  "scope": "DOS-M3-006 through DOS-M3-010",
+  "runtime_candidate": "d3b7bee01d1c25e2a49e0b63d53912b38f2fed09",
+  "milestone_acceptance": "OPEN",
+  "synthetic_dependency_amendment": "m3-continuation.md",
+  "tasks": [
+    {
+      "task": "DOS-M3-006",
+      "pr": 430,
+      "url": "https://github.com/Building-Suit/building-suit-monorepo/pull/430",
+      "branch": "codex/doctor-suit/m3-006-neutral-outbox",
+      "runtime_or_parent_head": "3b1dc7573c9d0d4e9ef37e94e5cb2c7456d7d6f9",
+      "worktree": "/workspace/doctor-m3-006",
+      "state": "implemented; SQL/unit verified; actual-service browser unavailable"
+    },
+    {
+      "task": "DOS-M3-007",
+      "pr": 431,
+      "url": "https://github.com/Building-Suit/building-suit-monorepo/pull/431",
+      "branch": "codex/doctor-suit/m3-007-provider-evidence",
+      "runtime_or_parent_head": "d4975f0d73523da68b67c841a982e4a80701e32e",
+      "worktree": "/workspace/doctor-m3-007",
+      "state": "evidence/disabled behavior verified; provider implementation blocked"
+    },
+    {
+      "task": "DOS-M3-008",
+      "pr": 432,
+      "url": "https://github.com/Building-Suit/building-suit-monorepo/pull/432",
+      "branch": "codex/doctor-suit/m3-008-fulfillment",
+      "runtime_or_parent_head": "aacc4d92ffa42c8233d43657c4e6eb03553f178b",
+      "worktree": "/workspace/doctor-m3-008",
+      "state": "implemented; exact issued-source amendment guard verified"
+    },
+    {
+      "task": "DOS-M3-009",
+      "pr": 433,
+      "url": "https://github.com/Building-Suit/building-suit-monorepo/pull/433",
+      "branch": "codex/doctor-suit/m3-009-import-preview",
+      "runtime_or_parent_head": "5cd44035ad01430d186f805b9e776653cccfc9f0",
+      "worktree": "/workspace/doctor-m3-009",
+      "state": "synthetic staging preview verified; real custody/import unavailable"
+    },
+    {
+      "task": "DOS-M3-010",
+      "pr": 434,
+      "url": "https://github.com/Building-Suit/building-suit-monorepo/pull/434",
+      "branch": "codex/doctor-suit/m3-010-operational-reports",
+      "runtime_or_parent_head": "d3b7bee01d1c25e2a49e0b63d53912b38f2fed09",
+      "worktree": "/workspace/doctor-m3-010",
+      "state": "implemented; scoped report SQL/unit/type/build verified"
+    }
+  ],
+  "verified": {
+    "doctor_units": 453,
+    "task_sql_assertions": 121,
+    "new_real_transaction_scenarios": 18,
+    "encrypted_restore_table_fingerprints": 86,
+    "Doctor_typecheck": true,
+    "Doctor_build": true,
+    "Doctor_lint": true,
+    "strict_route_count": 130,
+    "task_parent_release_checks": true
+  },
+  "repository_baseline": {
+    "tests": 2165,
+    "passed": 2088,
+    "failed_shop": 54,
+    "skipped": 23,
+    "full_ci_pass": false
+  },
+  "open_gates": [
+    "M3-007 provider implementation is blocked; twelve packet evidence items remain null. No real provider/sandbox acceptance is claimed.",
+    "Actual local Supabase browser startup was stopped during run-owned image extraction after concurrent SQL reported no disk space. All new actual-service browser/visual journeys remain UNRUN; the failed receipt is committed under M3-006.",
+    "Full-provider Realtime, qualified clinical/legal/minor approval, custody and real import remain unavailable.",
+    "Report pages are fresh request snapshots, not a frozen export; concurrent writes between page requests can alter later pages.",
+    "The full repository run still fails54 inherited Shop tests;23 tests are skipped. Root401 has failing required CI and is not merged.",
+    "No hosted migration, actual external message, Automation mutation, operational release registration, staging merge, deployment or main promotion was performed."
+  ],
+  "provider_evidence_packet": "dos-m3-007-provider-evidence.json",
+  "exact_candidate_commands": "dos-m3-010-verification.json",
+  "merge_or_deployment_performed": false
+}

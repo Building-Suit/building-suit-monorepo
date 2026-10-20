@@ -25,7 +25,10 @@
     "apps/doctor-suit/tests/reports-concurrency.mjs",
     "apps/doctor-suit/tests/unit/dos-m3-010.test.mjs",
     "docs/shared/atomic-template-route-inventory.json",
-    "docs/work-packages/doctor-suit/implementation/dos-m3-010.md"
+    "docs/work-packages/doctor-suit/implementation/dos-m3-010-verification.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-010.md",
+    "docs/work-packages/doctor-suit/implementation/m3-006-010-acceptance.json",
+    "docs/work-packages/doctor-suit/implementation/m3-continuation.md"
   ],
   "reason": "Doctor-only scoped synthetic operational reports using the existing shared report template, exact source populations, role-specific availability and current-state windows. Acceptance evidence retains provider/clinical/browser/CI gates; no operational registration or external delivery."
 }
