@@ -53,6 +53,20 @@
       "finished_at": "2026-10-20T18:13:21.424279+00:00",
       "exit_code": 0,
       "log_sha256": "cfbc25c6c2e633795c86a9c9f89e0ca0ec765ba18010285c213837b349976050"
+    },
+    {
+      "check": "exact-issued-request-amendment-guard",
+      "argv": [
+        "node",
+        "apps/doctor-suit/tests/disposable-postgres.mjs",
+        "--suite",
+        "dos-m3-008.sql"
+      ],
+      "source_head": "869fa71f19b623aee17651f1ccd0ae981204622a",
+      "started_at": "2026-10-20T18:33:20.950864+00:00",
+      "finished_at": "2026-10-20T18:33:36.232186+00:00",
+      "exit_code": 0,
+      "log_sha256": "614f520601fd63900a86634952bf3bb5fbf0fe24bc9f6acec49f53681ba227ba"
     }
   ],
   "base_sha": "d4975f0d73523da68b67c841a982e4a80701e32e",
@@ -66,7 +80,7 @@
   },
   "sql": {
     "full_task_assertions": 19,
-    "focused_task_assertions": 24,
+    "focused_task_assertions": 28,
     "transaction_scenarios": 4,
     "recovery_tables": 83
   },
