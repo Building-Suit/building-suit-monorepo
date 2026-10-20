@@ -2625,6 +2625,16 @@ export type Database = {
         }
         Returns: Json
       }
+      doctor_clinical_release_delivery: {
+        Args: {
+          p_actor: string
+          p_key?: string
+          p_release: string
+          p_session: string
+          p_version: string
+        }
+        Returns: Json
+      }
       doctor_clinical_released: { Args: { p_release: string }; Returns: Json }
       doctor_clinical_workspace: {
         Args: {
