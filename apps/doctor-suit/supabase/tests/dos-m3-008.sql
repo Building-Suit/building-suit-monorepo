@@ -42,4 +42,16 @@ select throws_ok($$select * from public.operational_fulfillments$$,'42501',null,
 reset role;
 select is((select count(*)::integer from public.operational_fulfillment_events where fulfillment_id=pg_temp.id(8600)),3,'duplicate reception preserves one event per version');
 select is((select count(*)::integer from public.operational_fulfillment_documents where fulfillment_id=pg_temp.id(8600)),1,'exact document link is unique');
+set local role authenticated;select pg_temp.claim(1);
+select pg_temp.put('second_order',jsonb_build_object('id',pg_temp.id(8520),'kind','lab','request','Synthetic original issued request','due_at',null,'state','requested','reason',''));
+select pg_temp.command('create',jsonb_build_object('patient_id',pg_temp.patient(),'snapshot',jsonb_set(pg_temp.snapshot(),'{orders}',jsonb_build_array(pg_temp.v('second_order')))),8800);select pg_temp.command('start','{}',8801);select pg_temp.command('finalize','{}',8802);
+select pg_temp.put('second_source',pg_temp.detail()->'versions'->0);
+select public.doctor_fulfillment_command(pg_temp.practice(),pg_temp.location(),pg_temp.patient(),pg_temp.id(8820),0,'create',jsonb_build_object('encounter_id',pg_temp.v('encounter')->>'encounter_id','source_version_id',pg_temp.v('second_source')->>'id','order_id',pg_temp.id(8520),'source_ref','Synthetic exact issued source'),pg_temp.id(8810));
+select pg_temp.command('amend','{"reason":"Synthetic request correction"}',8803);
+select pg_temp.command('save',jsonb_build_object('snapshot',jsonb_set(pg_temp.snapshot(),'{orders}',jsonb_build_array(pg_temp.v('second_order')||'{"request":"Synthetic changed request with same ID"}'))),8804);select pg_temp.command('finalize','{}',8805);
+select throws_ok($$select pg_temp.fc('arrange',8820,1,8811,'{"source_ref":"Synthetic stale request arrangement"}')$$,'42501','DOCTOR_FULFILLMENT_REQUEST_DENIED','changed request content with reused ID cannot silently repurpose old fulfillment');
+select throws_ok($$select pg_temp.fc('receive',8820,1,8812,pg_temp.v('receive_input'))$$,'42501','DOCTOR_FULFILLMENT_REQUEST_DENIED','old source receipt cannot attach to a newly changed clinical request');
+select is(pg_temp.fc('cancel',8820,1,8813,'{"source_ref":"Synthetic stale source retired"}')->>'state','cancelled','explicit operational reduction remains possible after clinical amendment');
+reset role;
+select is((select source_version_id::text from public.operational_fulfillments where id=pg_temp.id(8820)),pg_temp.v('second_source')->>'id','captured issued source remains unchanged after amendment');
 select * from finish();rollback;
