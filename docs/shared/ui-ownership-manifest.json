@@ -747,6 +747,15 @@
       ],
       "adapterBoundary": "Typed redacted outbox status. Doctor owns authority and consent. No external transport.",
       "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "synthetic-operational-fulfillment",
+      "owner": "packages/ui",
+      "components": [
+        "BsFulfillmentTrackingPage"
+      ],
+      "adapterBoundary": "Typed operational request/document status and controlled forms. Doctor owns exact issued sources, authority and timestamps. No clinical review or partner integration.",
+      "migrationStatus": "implemented; acceptance in progress"
     }
   ]
 }

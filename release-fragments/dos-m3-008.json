@@ -2,13 +2,41 @@
   "id": "dos-m3-008",
   "task": "DOS-M3-008",
   "suits": [
-    "doctor-suit"
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
   ],
   "classification": "internal",
   "disposition": "internal",
   "paths": [
-    "apps/doctor-suit/",
-    "docs/work-packages/doctor-suit/implementation/dos-m3-008.md"
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/doctor-suit/app/composables/useDoctorFulfillmentPage.ts",
+    "apps/doctor-suit/app/layouts/practice.vue",
+    "apps/doctor-suit/app/pages/fulfillment.vue",
+    "apps/doctor-suit/app/plugins/doctor-auth.ts",
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/app/types/doctorAuth.d.ts",
+    "apps/doctor-suit/app/utils/authConfiguration.ts",
+    "apps/doctor-suit/app/utils/operationalFulfillment.ts",
+    "apps/doctor-suit/app/utils/operationalFulfillmentRepository.ts",
+    "apps/doctor-suit/app/utils/workspaceNavigation.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261020175859_operational_fulfillment.sql",
+    "apps/doctor-suit/supabase/tests/dos-m3-008.sql",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m3-008.spec.ts",
+    "apps/doctor-suit/tests/fulfillment-concurrency.mjs",
+    "apps/doctor-suit/tests/operations-reception-fixture.mjs",
+    "apps/doctor-suit/tests/unit/dos-m3-008.test.mjs",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-008.md",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsFulfillmentTrackingPage.vue",
+    "packages/ui/src/utils/fulfillmentPresentation.ts"
   ],
-  "reason": "Synthetic administrative lab/imaging/referral tracking; no clinical interpretation, provider integration or operational release registration."
+  "reason": "Synthetic Doctor operational fulfillment, exact issued sources and unreviewed document linkage. Only Doctor consumes the new shared template; all six Suits classified through the UI dependency graph. No operational registration, clinical approval, provider adapter or external delivery."
 }

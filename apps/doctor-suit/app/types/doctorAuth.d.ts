@@ -1,3 +1,4 @@
+import type{createFulfillmentController}from'../utils/operationalFulfillment'
 import type{createMessageOutboxReader}from'../utils/messageOutbox'
 import type{createContactPreferencesController}from'../utils/contactPreferencesController'
 import type{createWorklistsController}from'../utils/worklistsController'
@@ -21,6 +22,7 @@ import type { DoctorLocationContext } from '../utils/locationContext'
 import type { createClinicalController } from '../utils/clinicalController'
 declare module '#app' {
   interface NuxtApp {
+    $doctorFulfillment:ReturnType<typeof createFulfillmentController>
     $doctorOutbox: ReturnType<typeof createMessageOutboxReader>
     $doctorContactPreferences:ReturnType<typeof createContactPreferencesController>
     $doctorWorklists:ReturnType<typeof createWorklistsController>

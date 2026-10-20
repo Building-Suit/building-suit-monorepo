@@ -401,7 +401,9 @@
     "./templates/BsPatientContactPreferencesPage": "./src/templates/BsPatientContactPreferencesPage.vue",
     "./utils/contactPreferencesPresentation": "./src/utils/contactPreferencesPresentation.ts",
     "./utils/messageOutboxPresentation": "./src/utils/messageOutboxPresentation.ts",
-    "./templates/BsMessageOutboxPage": "./src/templates/BsMessageOutboxPage.vue"
+    "./templates/BsMessageOutboxPage": "./src/templates/BsMessageOutboxPage.vue",
+    "./templates/BsFulfillmentTrackingPage": "./src/templates/BsFulfillmentTrackingPage.vue",
+    "./utils/fulfillmentPresentation": "./src/utils/fulfillmentPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

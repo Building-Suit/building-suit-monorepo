@@ -1,3 +1,5 @@
+import{createFulfillmentController,fulfillmentState}from'../utils/operationalFulfillment'
+import{fulfillmentRepository}from'../utils/operationalFulfillmentRepository'
 import{createMessageOutboxReader,messageOutboxState}from'../utils/messageOutbox'
 import{createContactPreferencesController,contactPreferencesState}from'../utils/contactPreferencesController'
 import{contactPreferencesRepository}from'../utils/contactPreferencesRepository'
@@ -118,6 +120,8 @@ export default defineNuxtPlugin((nuxtApp) => {
     const selected = context.state.current
     return selected?.locationId && selected.capabilities.includes('patients.read') ? selected : null
   }
+  const fulfillment=createFulfillmentController(client?fulfillmentRepository(client):null,reactive(fulfillmentState()),patientsScope)
+  context.registerClear(fulfillment.clear)
   const outbox=createMessageOutboxReader(client?async(practice,location,patient,page,signal)=>{const{data,error}=await client.rpc('doctor_outbox',{p_practice:practice,p_location:location,p_patient:patient,p_page:page}).abortSignal(signal);if(error)throw error;return data}:null,reactive(messageOutboxState()),patientsScope)
   context.registerClear(outbox.clear)
   const contactPreferences=createContactPreferencesController(client?contactPreferencesRepository(client):null,reactive(contactPreferencesState()),()=>{const selected=patientsScope();return selected?.edition==='synthetic_preview'?selected:null})
@@ -157,5 +161,5 @@ export default defineNuxtPlugin((nuxtApp) => {
     })
     nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh();void context.clear(); void appointmentsLive.dispose() })
   }
-  return { provide: { doctorOutbox:outbox, doctorContactPreferences:contactPreferences,doctorWorklists:worklists,doctorWaitlist:waitlist,doctorConsultations:consultations,doctorClinicalRelease:clinicalRelease,doctorClinical:clinical,doctorManualReport:manualReport,doctorManualPayment:manualPayment,doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
+  return { provide: { doctorFulfillment:fulfillment, doctorOutbox:outbox, doctorContactPreferences:contactPreferences,doctorWorklists:worklists,doctorWaitlist:waitlist,doctorConsultations:consultations,doctorClinicalRelease:clinicalRelease,doctorClinical:clinical,doctorManualReport:manualReport,doctorManualPayment:manualPayment,doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
 })

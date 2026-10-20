@@ -98,7 +98,8 @@
     "BsCatalogOffersPage": "packages/ui/src/templates/BsCatalogOffersPage.vue",
     "BsFollowUpWorklistPage": "packages/ui/src/templates/BsFollowUpWorklistPage.vue",
     "BsPatientContactPreferencesPage": "packages/ui/src/templates/BsPatientContactPreferencesPage.vue",
-    "BsMessageOutboxPage": "packages/ui/src/templates/BsMessageOutboxPage.vue"
+    "BsMessageOutboxPage": "packages/ui/src/templates/BsMessageOutboxPage.vue",
+    "BsFulfillmentTrackingPage": "packages/ui/src/templates/BsFulfillmentTrackingPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -3115,6 +3116,16 @@
       "status": "implemented; acceptance in progress",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/fulfillment.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsFulfillmentTrackingPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/fulfillment.vue",
+      "purpose": "synthetic-operational-fulfillment",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -3261,6 +3272,7 @@
     "BsCatalogOffersPage",
     "BsFollowUpWorklistPage",
     "BsPatientContactPreferencesPage",
-    "BsMessageOutboxPage"
+    "BsMessageOutboxPage",
+    "BsFulfillmentTrackingPage"
   ]
 }
