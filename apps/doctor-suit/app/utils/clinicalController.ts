@@ -45,5 +45,14 @@ export function createClinicalController(repository:ReturnType<typeof clinicalRe
   catch(error){if(accepts(capture.generation,capture.key))state.error=clinicalFailure(error);return null}
   finally{if(accepts(capture.generation,capture.key))state.pending=false}
  }
- return {state,clear,discard,load,detail,command}
+ async function exportRecord():Promise<string|null>{
+  if(state.pending)return null
+  const capture=request(),record=state.detail?.encounter
+  if(!capture||!record){state.error='denied';return null}state.pending=true;state.error=null
+  const fingerprint=JSON.stringify([capture.key,record.id,record.version,'export']);if(intent?.fingerprint!==fingerprint)intent={fingerprint,key:key()}
+  try{const value=await repository!.export(capture.scope.practiceId,capture.scope.locationId!,record.id,intent.key,capture.signal);if(!accepts(capture.generation,capture.key))return null;intent=null;return value}
+  catch(error){if(accepts(capture.generation,capture.key))state.error=clinicalFailure(error);return null}
+  finally{if(accepts(capture.generation,capture.key))state.pending=false}
+ }
+ return {state,clear,discard,load,detail,command,exportRecord}
 }

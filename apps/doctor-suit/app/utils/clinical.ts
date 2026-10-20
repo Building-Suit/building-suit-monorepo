@@ -95,17 +95,33 @@ export function clinicalReleased(value:unknown,release:string):ClinicalReleased 
  if(snapshot.results.some(result=>!documents.some((document:unknown)=>clinicalObject(document)&&document.id===result.document_version_id)))return unavailable()
  return value as unknown as ClinicalReleased
 }
-export async function verifyClinicalExport(value:unknown,digest=(bytes:Uint8Array)=>crypto.subtle.digest('SHA-256',bytes as BufferSource)):Promise<string> {
+export async function verifyClinicalExport(value:unknown,digest=(bytes:Uint8Array)=>crypto.subtle.digest('SHA-256',bytes as BufferSource),expected?:{practiceId:string;locationId:string;encounterId:string}):Promise<string> {
  if(!shape(value,['canonical_manifest','sha256'])||typeof value.canonical_manifest!=='string'||new TextEncoder().encode(value.canonical_manifest).length>8388608||typeof value.sha256!=='string'||!(/^[0-9a-f]{64}$/).test(value.sha256))return unavailable()
  const hash=async(text:string)=>[...new Uint8Array(await digest(new TextEncoder().encode(text)))].map(byte=>byte.toString(16).padStart(2,'0')).join('')
  if(await hash(value.canonical_manifest)!==value.sha256)return unavailable()
  let manifest:unknown;try{manifest=JSON.parse(value.canonical_manifest)}catch{return unavailable()}
- if(!safeEnvelope(manifest)||manifest.format!=='doctor-clinical-export-v1'||!Array.isArray(manifest.versions)||manifest.versions.length!==manifest.versions_total||!Array.isArray(manifest.document_provenance)||manifest.document_provenance.length!==manifest.documents_total||!Array.isArray(manifest.events)||manifest.events.length!==manifest.events_total||manifest.storage_bytes_included!==false||manifest.retention_policy!=='unapproved_no_erasure')return unavailable()
- let revision=0;const ids=new Set<string>()
+ if(!shape(manifest,['format','data_mode','encounter','versions','document_provenance','events','versions_total','documents_total','events_total','storage_bytes_included','retention_policy','clinical_approval','live_prescribing','exported_at','events_through_id'])||!safeEnvelope(manifest)||manifest.format!=='doctor-clinical-export-v1'||!instant(manifest.exported_at)||!Number.isSafeInteger(manifest.events_through_id)||Number(manifest.events_through_id)<0||!Array.isArray(manifest.versions)||manifest.versions.length<1||manifest.versions.length>500||manifest.versions.length!==manifest.versions_total||!Array.isArray(manifest.document_provenance)||manifest.document_provenance.length!==manifest.documents_total||!Array.isArray(manifest.events)||manifest.events.length>5000||manifest.events.length!==manifest.events_total||manifest.storage_bytes_included!==false||manifest.retention_policy!=='unapproved_no_erasure')return unavailable()
+ const encounter=manifest.encounter
+ if(!shape(encounter,['id','practice_id','patient_id','location_id','responsible_doctor','location_name','timezone','status','version','active_version_id','created_by','created_at','updated_at','data_mode'])||![encounter.id,encounter.practice_id,encounter.patient_id,encounter.location_id,encounter.responsible_doctor,encounter.created_by].every(clinicalUuid)||!statuses.includes(String(encounter.status))||!text(encounter.location_name,160)||!timezone(encounter.timezone)||!instant(encounter.created_at)||!instant(encounter.updated_at)||encounter.data_mode!=='synthetic'||(encounter.active_version_id!==null&&!clinicalUuid(encounter.active_version_id)))return unavailable()
+ if(expected&&(encounter.id!==expected.encounterId||encounter.practice_id!==expected.practiceId||encounter.location_id!==expected.locationId))return unavailable()
+ let revision=0;const ids=new Set<string>(),referencedDocuments=new Set<string>()
  for(const version of manifest.versions){
-  if(!clinicalObject(version)||!clinicalUuid(version.id)||ids.has(version.id)||version.revision!==++revision||typeof version.canonical_snapshot!=='string'||typeof version.sha256!=='string'||await hash(version.canonical_snapshot)!==version.sha256||((revision===1)?version.source_version_id!==null:version.source_version_id!==manifest.versions[revision-2].id))return unavailable()
+  if(!shape(version,['id','revision','kind','source_version_id','canonical_snapshot','sha256','reason','actor_user_id','happened_at'])||!clinicalUuid(version.id)||ids.has(version.id)||version.revision!==++revision||!statuses.includes(String(version.kind))||!clinicalUuid(version.actor_user_id)||!instant(version.happened_at)||(version.reason!==null&&!text(version.reason,500))||typeof version.canonical_snapshot!=='string'||typeof version.sha256!=='string'||await hash(version.canonical_snapshot)!==version.sha256||((revision===1)?version.source_version_id!==null:version.source_version_id!==manifest.versions[revision-2].id))return unavailable()
   let snapshot:unknown;try{snapshot=JSON.parse(version.canonical_snapshot)}catch{return unavailable()};if(!validClinicalSnapshot(snapshot))return unavailable();ids.add(version.id)
+  for(const result of snapshot.results)if(result.document_version_id)referencedDocuments.add(result.document_version_id)
  }
- if(!clinicalObject(manifest.encounter)||manifest.encounter.version!==revision||!manifest.events.every(event=>clinicalObject(event)&&ids.has(String(event.version_id))))return unavailable()
+ if(encounter.version!==revision||(encounter.active_version_id!==null&&!ids.has(String(encounter.active_version_id))))return unavailable()
+ const documents=new Set<string>()
+ for(const document of manifest.document_provenance){
+  if(!shape(document,['id','document_id','revision','filename','mime_type','byte_size','sha256','uploaded_by','uploaded_at','location_id','location_name','timezone'])||![document.id,document.document_id,document.uploaded_by,document.location_id].every(clinicalUuid)||documents.has(String(document.id))||!referencedDocuments.has(String(document.id))||!Number.isSafeInteger(document.revision)||Number(document.revision)<1||!text(document.filename,160)||!text(document.location_name,160)||!instant(document.uploaded_at)||!timezone(document.timezone)||!['application/pdf','image/png','image/jpeg'].includes(String(document.mime_type))||!Number.isSafeInteger(document.byte_size)||Number(document.byte_size)<1||Number(document.byte_size)>5242880||typeof document.sha256!=='string'||!(/^[0-9a-f]{64}$/).test(document.sha256))return unavailable()
+  documents.add(String(document.id))
+ }
+ if(documents.size!==referencedDocuments.size)return unavailable()
+ let lastEvent=0
+ for(const event of manifest.events){
+  if(!shape(event,['id','version_id','action','actor_user_id','happened_at'])||!Number.isSafeInteger(event.id)||Number(event.id)<=lastEvent||!ids.has(String(event.version_id))||!clinicalUuid(event.actor_user_id)||!['create','save','start','finalize','amend','withdraw','release','revoke_release','export','download'].includes(String(event.action))||!instant(event.happened_at)||Date.parse(event.happened_at)>Date.parse(manifest.exported_at))return unavailable()
+  lastEvent=Number(event.id)
+ }
+ if(manifest.events_through_id!==lastEvent)return unavailable()
  return value.canonical_manifest
 }
