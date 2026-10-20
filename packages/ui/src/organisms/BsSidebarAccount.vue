@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import type { NavigationLink } from '@building-suit/contracts'
+import type { BsShellAccountDetail } from '../types/workspaceShellPresentation'
 withDefaults(defineProps<{
-  collapsed?: boolean; name?: string; email?: string; actions?: NavigationLink[]
+  avatarUrl?: string; details?: BsShellAccountDetail[]; rail?: boolean; collapsed?: boolean; name?: string; email?: string; actions?: NavigationLink[]
   accountLabel: string; signOutLabel: string; signOutPending?: boolean; error?: string
   plan?: { name: string; status: string; detail: string; actionLabel: string; to: string } | null
-}>(), { collapsed: false, name: '', email: '', actions: () => [], signOutPending: false, error: '', plan: null })
+}>(), { avatarUrl: '', details: () => [], rail: false, collapsed: false, name: '', email: '', actions: () => [], signOutPending: false, error: '', plan: null })
 defineEmits<{ signOut: [] }>()
 </script>
 <template>
-  <div class="space-y-3 border-t border-line pt-3">
-    <BsPlanSummary v-if="plan" v-bind="plan" :collapsed="collapsed" />
+  <div class="bs-sidebar-account__frame space-y-3 border-t border-line pt-3">
+    <BsPlanSummary v-if="plan && !rail" v-bind="plan" :collapsed="collapsed" />
     <div class="bs-sidebar-account" :class="{ 'bs-sidebar-account--collapsed': collapsed }">
-      <BsUserMenu :name="name" :email="email" :actions="actions" :account-label="accountLabel" :sign-out-label="signOutLabel" :sign-out-pending="signOutPending" :error="error" placement="above" :compact="false" @sign-out="$emit('signOut')" />
+      <BsUserMenu :name="name" :email="email" :avatar-url="avatarUrl" :details="details" :actions="rail ? [] : actions" :show-settings="!rail" :account-label="accountLabel" :sign-out-label="signOutLabel" :sign-out-pending="signOutPending" :error="error" placement="above" :compact="rail" @sign-out="$emit('signOut')" />
     </div>
   </div>
 </template>

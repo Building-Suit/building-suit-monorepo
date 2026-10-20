@@ -1,8 +1,5 @@
-import { ref } from 'vue';
-
-const isMenuOpen = ref(false);
-
 export const useNavigation = () => {
+  const isMenuOpen = useShopState('shop:navigation-open', () => false);
   const toggleMenu = () => {
     isMenuOpen.value = !isMenuOpen.value;
   };

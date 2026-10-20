@@ -4,7 +4,7 @@ withDefaults(defineProps<{ items: BsUsageItem[]; columns?: 2 | 3 | 4; compact?: 
 </script>
 
 <template>
-  <BsGrid :columns="columns" gap="md">
+  <BsMetricGrid :columns="columns" variant="neutral">
     <BsUsageMeter v-for="item in items" :key="item.id" :item="item" :compact="compact" />
-  </BsGrid>
+  </BsMetricGrid>
 </template>

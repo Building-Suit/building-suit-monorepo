@@ -1,3 +1,4 @@
+import {verifyDoctorClinicalProvider} from './clinical-actual-provider.mjs'
 import{verifyDoctorManualPaymentProvider}from'./manual-payments-actual-provider.mjs'
 import{verifyDoctorAdministrativeCandidateProvider}from'./administrative-candidate-actual-provider.mjs'
 // Actual disposable Supabase Auth/Storage/Functions acceptance. No hosted target.
@@ -102,7 +103,7 @@ try {
   expect(status.API_URL===api && status.ANON_KEY && status.SERVICE_ROLE_KEY,'Actual local target/status mismatch')
   // Never print captured CLI output, status keys, mail bodies, auth tokens or passwords.
   await writeFile(path.join(scratch,'function.env'),`DOCTOR_LOCAL_PROVIDER=1\nDOCTOR_WEB_ORIGIN=${origin}\n`,{ mode: 0o600 })
-  functions = spawn('pnpm',['exec','supabase','--workdir',app,'functions','serve','--env-file',path.join(scratch,'function.env')],{ cwd: root,env: environment,detached: true,stdio: ['ignore','pipe','pipe'] })
+  functions = spawn(path.join(root,'node_modules/.bin/supabase'),['--workdir',app,'functions','serve','--env-file',path.join(scratch,'function.env')],{ cwd: root,env: environment,detached: true,stdio: ['ignore','pipe','pipe'] })
   functions.stdout.on('data',data => { functionsOutput=(functionsOutput+data).slice(-20000) }); functions.stderr.on('data',data => { functionsOutput=(functionsOutput+data).slice(-20000) })
   stage = 'configured private Storage bucket'; const storageAdmin = createClient(api,status.SERVICE_ROLE_KEY,options)
   const existingBucket = await storageAdmin.storage.getBucket(bucket)
@@ -111,7 +112,6 @@ try {
   console.log('Actual Auth: captured local confirmation email, unconfirmed denial, verified session and two independent owner practices passed')
   await verifyDoctorAccountProvider({ root,api,key: status.ANON_KEY,serviceKey:status.SERVICE_ROLE_KEY,project,expect,setStage: value => { stage = value } })
   expect((await rpc(b.client,'doctor_account_settings')).in_app_confirmations===false,'Independent account preference changed')
-  stage = 'actual appointment lifecycle and scoped Realtime';appointmentAcceptance = await verifyDoctorAppointmentProvider({ api,key: status.ANON_KEY,a,b,rpc,expect,probe: realtimeProbe,advanceRevision,independentWire: realtimeWire,setStage: value => { stage = value } })
   const pdf = new TextEncoder().encode('%PDF-1.7\nSynthetic administrative attachment\n%%EOF\n')
   async function endpoint(actor,operation,data = {},bytes) {
     return fetch(`${api}/functions/v1/doctor-documents?op=${operation}`,{ method: 'POST',headers: { apikey: status.ANON_KEY,authorization: `Bearer ${actor.session.access_token}`,origin,'content-type': 'application/pdf','x-doctor-document': encodeURIComponent(JSON.stringify({ ...actor.scope,key: randomUUID(),...data })) },body: bytes,signal: AbortSignal.timeout(30000) })
@@ -132,8 +132,11 @@ try {
     }
   }
   stage = 'actual function startup'; let ready = false
-  for (let attempt=0;attempt<60;attempt++) { const response = await endpoint(a,'status').catch(() => null); if (response?.status===200) { ready = true; break } await wait(500) }
+  for (let attempt=0;attempt<60;attempt++) { expect(functions.exitCode===null,'Owned Edge Function runner exited; captured logs withheld'); const response = await endpoint(a,'status').catch(() => null); if (response?.status===200) { ready = true; break } await wait(500) }
   expect(ready,'Actual authenticated Edge Function failed readiness; captured logs withheld')
+  // Independent clinical checks run before Realtime; inherited checks still remain mandatory.
+  await verifyDoctorClinicalProvider({root,api,origin,publicKey:status.ANON_KEY,serviceKey:status.SERVICE_ROLE_KEY,bootstrap,confirmedActor,rpc,sql:ownedCandidateSql,endpoint,pdf,expect,setStage:value=>{stage=value}})
+  stage = 'actual appointment lifecycle and scoped Realtime';appointmentAcceptance = await verifyDoctorAppointmentProvider({ api,key: status.ANON_KEY,a,b,rpc,expect,probe: realtimeProbe,advanceRevision,independentWire: realtimeWire,setStage: value => { stage = value } })
   stage = 'private upload and stable retry'; const key = randomUUID(); const result = await endpoint(a,'upload',{ key,filename: 'synthetic.pdf' },pdf); expect(result.status===200,'Real private upload failed'); const outcome = await result.json()
   const retry = await endpoint(a,'upload',{ key,filename: 'synthetic.pdf' },pdf); expect(retry.status===200 && JSON.stringify(await retry.json())===JSON.stringify(outcome),'Real upload retry changed identity')
   const directory = await rpc(a.client,'doctor_patient_documents',{ p_practice: a.scope.practiceId,p_location: a.scope.locationId,p_patient: a.scope.patientId }); expect(directory.total===1,'Actual upload must publish exactly one logical document')

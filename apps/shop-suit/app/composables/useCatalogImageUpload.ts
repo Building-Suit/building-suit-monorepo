@@ -1,7 +1,7 @@
 import { useFileUpload } from '@building-suit/ux'
 import { CATALOG_IMAGE_BUCKET, catalogObjectName, validateCatalogUpload } from '~/utils/catalogUpload'
 export function useCatalogImageUpload(shopId: Ref<string | null>, kind: 'products' | 'services', complete: (objectName: string) => void) {
-  const client = useSupabaseClient()
+  const client = useShopClient()
   const upload = useFileUpload({
     validate: async (file) => {
       await validateCatalogUpload(file)

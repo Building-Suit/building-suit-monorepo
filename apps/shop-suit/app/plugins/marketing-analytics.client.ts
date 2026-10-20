@@ -8,7 +8,7 @@ export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
   const router = useRouter()
   const user = useSupabaseUser()
-  const preference = useState<PrivacyPreference | null>('shop-privacy', () => null)
+  const preference = useShopState<PrivacyPreference | null>('shop-privacy', () => null)
   let transport: ReturnType<typeof createBasicAnalytics> | undefined
   const seen = new Set<string>()
   const configured = canIndex(config.public.appEnvironment, location.origin) && /^G-[A-Z0-9]+$/.test(config.public.gaMeasurementId)

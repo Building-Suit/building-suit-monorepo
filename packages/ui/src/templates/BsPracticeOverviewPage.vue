@@ -40,7 +40,7 @@ const columns = computed(() => props.activity ? [{ key: 'patient',field: 'patien
           <BsStateSurface v-else-if="!activitySections?.length" state="empty" :title="activity.empty" />
           <BsPanel v-for="section in activityLoading || activityError ? [] : activitySections" :key="section.scope" padding="md"><BsStack gap="md">
             <BsHeading :level="3">{{ section.title }}</BsHeading><BsText as="p">{{ section.window }}</BsText>
-            <BsGrid :columns="2"><BsKpiCard :title="activity.today" role="group" :aria-label="activity.today">{{ section.total }}</BsKpiCard><BsKpiCard :title="activity.queue" role="group" :aria-label="activity.queue">{{ section.queueTotal }}</BsKpiCard></BsGrid>
+            <BsMetricGrid :columns="2"><BsKpiCard :title="activity.today" role="group" :aria-label="activity.today">{{ section.total }}</BsKpiCard><BsKpiCard :title="activity.queue" role="group" :aria-label="activity.queue">{{ section.queueTotal }}</BsKpiCard></BsMetricGrid>
             <BsHeading :level="4">{{ activity.appointments }}</BsHeading>
             <BsDataTable :value="section.items" :columns="columns" row-key="id" :label="`${section.title} · ${activity.appointments}`"><template #cell-source="{ row }"><BsButton size="sm" :disabled="activityPending" @click="emit('source',section.scope,row.id)">{{ activity.source }}</BsButton></template><template #empty><BsStateSurface state="empty" :title="activity.noRows" /></template></BsDataTable>
             <BsPagination :page="section.page+1" :total="section.total" :label="`${section.title} · ${activity.pages}`" :previous-label="activity.previous" :next-label="activity.next" @update:page="emit('page',section.scope,$event-1,false)" />

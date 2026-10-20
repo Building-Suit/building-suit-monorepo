@@ -6,7 +6,7 @@ import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 const { currentId } = useShop()
 const { locale } = useI18n()
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const form = ref<BsShopTaxForm>({ enabled: false, effectiveAt: '', reason: '', default: { treatment: 'non_taxable', rate: '0', priceMode: 'exclusive', subtype: 'V004' }, items: [] })
 const action = useRecordAction(() => form.value)
 const { visible: editor, dirty } = action
@@ -18,7 +18,7 @@ const copy = computed<BsShopTaxCopy>(() => locale.value === 'ar' ? {
 } : {
  title: 'Tax calculation settings', help: 'Optional calculation. Disabled is not a legal exemption. Choose the appropriate classification and rate for each product or service. New versions apply to future issuance only. This is separate from ETA connectivity and is not a compliance claim.', edit: 'New settings version', enabled: 'Enable tax calculation', effectiveAt: 'Effective from', reason: 'Reason for change', save: 'Save version', cancel: 'Cancel', treatment: 'Treatment', rate: 'Rate %', priceMode: 'Price mode', subtype: 'Classification code V001–V010', vat: 'VAT', zero_rated: 'Zero rated', exempt: 'Exempt', non_taxable: 'Non-taxable', inclusive: 'Tax inclusive', exclusive: 'Tax exclusive', defaults: 'Business default', overrides: 'Product and service classifications', override: 'Override business default', loading: 'Loading…', error: 'Unable to save. Check the tax classification, rate and manager permissions, then retry.', retry: 'Retry', saved: 'Settings version saved.', noContext: 'Select a shop.', history: 'Latest 100 versions', empty: 'Calculation is disabled; no saved configuration.'
 })
-const { data, pending: loading, error, refresh } = useAsyncData(() => `shop-data:tax:${currentId.value ?? 'none'}`, async () => {
+const { data, pending: loading, error, refresh } = useShopQuery(() => `shop-data:tax:${currentId.value ?? 'none'}`, async () => {
  if (!currentId.value) return null
  const result = await rpc.rpc('tax_settings', { p_shop_id: currentId.value })
  if (result.error) throw result.error

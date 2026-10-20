@@ -11,7 +11,7 @@ export function useOfflineCounter() {
   const recoveryError = ref('')
   const config = useRuntimeConfig()
   const { currentId, currentLocationId } = useShop()
-  const supabase = useSupabaseClient<ShopRpcDatabase>()
+  const supabase = useShopClient<ShopRpcDatabase>()
   const rpc = supabase.schema('public')
   const records = ref<OfflineRecord[]>([])
   const storageError = ref('')

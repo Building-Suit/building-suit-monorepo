@@ -2,8 +2,10 @@ export default defineNuxtPlugin({
   name: 'shop-session-loss',
   enforce: 'post',
   setup(nuxtApp) {
+    const { clearShopQueries } = useShopInvalidation()
+
     if (isTenantWebsiteRequest()) return
-    const client = useSupabaseClient()
+    const client = useShopClient()
     const user = useSupabaseUser()
     const shop = useShop()
     const route = useRoute()
@@ -16,7 +18,7 @@ export default defineNuxtPlugin({
       if (event !== 'SIGNED_OUT') return
       nuxtApp.runWithContext(() => {
         shop.resetSession()
-        clearNuxtData(key => key.startsWith('shop-data:') || key.startsWith('platform-admin:'))
+        clearShopQueries(key => key.startsWith('shop-data:') || key.startsWith('platform-admin:'))
         user.value = null
         while (confirmation.current.value) confirmation.answer(false)
         toasts.value = []

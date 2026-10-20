@@ -1,7 +1,8 @@
 <script setup lang="ts">
+const shopRequest = useShopRequest()
 definePageMeta({ layout: false })
 
-const supabase = useSupabaseClient()
+const supabase = useShopClient()
 const nuxtApp = useNuxtApp()
 const user = useSupabaseUser()
 const route = useRoute()
@@ -85,7 +86,7 @@ async function validateEmailStep(value: string) {
   emailStepPending.value = true
   try {
     const [result] = await Promise.all([
-      $fetch<{ canContinue: boolean }>('/api/auth/email-step', {
+      shopRequest<{ canContinue: boolean }>('/api/auth/email-step', {
         method: 'POST',
         body: { email: normalized },
       }),

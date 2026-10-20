@@ -285,6 +285,7 @@ export default defineI18nLocale(async () => ({
   },
 
   receipt: {
+    myRecent: 'My last receipts', recentHint: 'Your latest 10 paid POS receipts at this branch, newest first.', recentEmpty: 'No paid POS receipts yet for your account at this branch.', open: 'Open receipt', backToRecent: 'Back to receipts',
     saleTotal: 'Sale total',
     balance: 'Balance due',
     tax: 'Tax',

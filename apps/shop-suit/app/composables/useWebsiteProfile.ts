@@ -12,7 +12,7 @@ export function useWebsiteProfile(canManage: Ref<boolean>) {
   const config = useRuntimeConfig()
   const domain = configuredWebsiteDomain(config.public)
   const environment = config.public.supabase.url
-  const client = useSupabaseClient<ShopRpcDatabase>().schema('public')
+  const client = useShopClient<ShopRpcDatabase>().schema('public')
   const captureScope = useShopTaskScope()
   const form = ref(emptyWebsiteProfile())
   const optIn = ref(false)
@@ -20,7 +20,7 @@ export function useWebsiteProfile(canManage: Ref<boolean>) {
   const logoPending = ref(false)
   const action = useRecordAction(() => form.value)
   const { visible: open, pending, dirty, error } = action
-  const { data, pending: loading, error: loadError, refresh } = useAsyncData(
+  const { data, pending: loading, error: loadError, refresh } = useShopQuery(
     () => `shop-data:website-profile:${JSON.stringify([environment, 'shop-crm', actor.value, currentId.value])}`,
     async () => {
       if (!currentId.value || !actor.value || !canManage.value) return null
@@ -28,7 +28,7 @@ export function useWebsiteProfile(canManage: Ref<boolean>) {
       const response = await client.rpc('shop_website_profile', { p_shop_id: currentId.value })
       if (response.error) throw response.error
       return isCurrent() ? parseWebsiteProfileSettings(response.data) : null
-    }, { server: false, watch: [currentId, currentLocationId, actor, canManage], default: () => null },
+    }, { server: false, enabled: canManage, watch: [currentId, currentLocationId, actor, canManage], default: () => null },
   )
   watch([currentId, currentLocationId, actor, canManage], () => { open.value = false; form.value = emptyWebsiteProfile(); optIn.value = false; success.value = ''; error.value = '' }, { flush: 'sync' })
   watch(isOwner, () => { optIn.value = false })

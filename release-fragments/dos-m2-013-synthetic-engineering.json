@@ -1,0 +1,23 @@
+{
+  "id": "dos-m2-013-synthetic-engineering",
+  "task": "DOS-M2-013",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/app/utils/clinical.ts",
+    "apps/doctor-suit/app/utils/clinicalController.ts",
+    "apps/doctor-suit/app/utils/clinicalPresentation.ts",
+    "apps/doctor-suit/app/utils/clinicalRepository.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261020003704_clinical_m2_013.sql",
+    "apps/doctor-suit/supabase/tests/dos-m2-013.sql",
+    "apps/doctor-suit/tests/clinical-fixtures.mjs",
+    "apps/doctor-suit/tests/unit/dos-m2-013.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m2-013.md"
+  ],
+  "reason": "Implement verified record exports for the unactivated synthetic Doctor workspace. Shared new typed contracts/templates have no existing operational product consumers. Preserve explicit fixture authority, qualified review and live-use boundaries; no hosted activation or professional approval."
+}

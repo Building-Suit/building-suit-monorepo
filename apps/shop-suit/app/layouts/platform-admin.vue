@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const supabase = useSupabaseClient()
+const supabase = useShopClient()
 const nuxtApp = useNuxtApp()
 const { locale } = useI18n()
 const user = useSupabaseUser()

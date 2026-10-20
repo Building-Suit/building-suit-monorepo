@@ -11,7 +11,7 @@ const { locale } = useI18n()
 const route = useRoute()
 const sessionUser = useSupabaseUser()
 const runtimeConfig = useRuntimeConfig()
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const counter = useOfflineCounter()
 const offline = useOfflineCounterView(counter)
 const captureScope = useShopTaskScope()
@@ -31,7 +31,7 @@ const copy = computed<BsServiceWorkCopy>(() => locale.value === 'ar' ? {
 } : {
  title: 'Service fulfillment & materials', help: 'Recipes are optional. Completion is independent of payment. Quantities use 0.01 stock units with no conversions. Service refunds never automatically restore consumed materials.', back: 'Back', loading: 'Loading…', error: 'Could not load. Check shop and location permissions.', retry: 'Retry', noContext: 'Select a shop and location.', empty: 'No history.', configure: 'New recipe version', complete: 'Record fulfillment', unit: 'Stock unit', defineUnit: 'Define unit for an unused stock product', product: 'Material', service: 'Service', quantity: 'Quantity', reason: 'Reason', effectiveAt: 'Effective from', immediate: 'Leave blank for immediate effect. An empty recipe disables future consumption.', override: 'Record actual usage instead of recipe (manager)', add: 'Add material', remove: 'Remove', save: 'Save', queued: 'Request retained locally; fulfillment is unconfirmed until synced. Check the request status below.', saved: 'Saved.', history: 'Fulfillment & recipe history', detail: 'Materials and FIFO allocations', date: 'Effective or completion time', correction: 'Audited correction',
 })
-const { data, pending: loading, error, refresh } = useAsyncData(() => `shop-data:shop-crm:${runtimeConfig.public.supabase.url}:${sessionUser.value?.id}:service-materials:${currentId.value}:${currentLocationId.value}:${saleId.value}:${offset.value}`, async () => {
+const { data, pending: loading, error, refresh } = useShopQuery(() => `shop-data:shop-crm:${runtimeConfig.public.supabase.url}:${sessionUser.value?.id}:service-materials:${currentId.value}:${currentLocationId.value}:${saleId.value}:${offset.value}`, async () => {
  if (!currentId.value || !currentLocationId.value) return null
  const key = 'service-fulfillment'
  if (!counter.online.value && saleId.value) {

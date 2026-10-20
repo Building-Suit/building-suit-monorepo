@@ -49,7 +49,7 @@ jobs:
           retention-days: 7
   doctor-browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -65,11 +65,29 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - name: Verify synthetic Doctor preview in both locales, themes and viewport sizes
         run: pnpm exec playwright test -c apps/doctor-suit/tests/e2e/playwright.config.ts
+      - name: Verify account protocol journeys without external mail or credential artifacts
+        # The HTTP fixture does not prove actual Supabase Auth service acceptance.
+        run: pnpm exec playwright test -c apps/doctor-suit/tests/e2e/playwright.auth.config.ts
+      - name: Verify delegation under slower CPU and RPC timing
+        env:
+          DOCTOR_PROTOCOL_STRESS: 'true'
+        run: pnpm exec playwright test -c apps/doctor-suit/tests/e2e/playwright.auth.config.ts --grep 'two doctors' --repeat-each=2
+
+      - name: Check portable private document function
+        run: pnpm exec tsc -p apps/doctor-suit/tests/tsconfig.edge.json
+      - name: Verify actual disposable Doctor Auth, Storage and Functions
+        # Synthetic local users/files only. Runner owns its project lifecycle.
+        # Captured service keys, emails and byte bodies are never published.
+        run: node apps/doctor-suit/tests/disposable-provider.mjs
+      - name: Verify canonical Doctor asset drop-in with a fresh production build
+        run: node apps/doctor-suit/tests/brand-build-fixture.mjs
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: doctor-synthetic-browser-results
-          path: test-results/doctor
+          path: |
+            test-results/doctor
+            test-results/doctor-m2-actual
           if-no-files-found: ignore
   shared-settings-browser:
     runs-on: ubuntu-latest
@@ -101,50 +119,3 @@ jobs:
           name: shared-settings-focus-results
           path: test-results/settings-focus
           if-no-files-found: ignore
-
-  doctor-auth-protocol:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Build with provider configuration absent
-        run: pnpm --filter @building-suit/doctor-suit build
-      - run: pnpm exec playwright install --with-deps chromium
-      - name: Verify account protocol journeys without external mail or credential artifacts
-        # The HTTP fixture does not prove actual Supabase Auth service acceptance.
-        run: pnpm exec playwright test -c apps/doctor-suit/tests/e2e/playwright.auth.config.ts
-      - name: Verify delegation under slower CPU and RPC timing
-        env:
-          DOCTOR_PROTOCOL_STRESS: 'true'
-        run: pnpm exec playwright test -c apps/doctor-suit/tests/e2e/playwright.auth.config.ts --grep 'two doctors' --repeat-each=2
-
-  doctor-actual-provider:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Build Doctor for actual local Auth browser acceptance
-        run: pnpm --filter @building-suit/doctor-suit build
-      - run: pnpm exec playwright install --with-deps chromium
-      - name: Check portable private document function
-        run: pnpm exec tsc -p apps/doctor-suit/tests/tsconfig.edge.json
-      - name: Verify actual disposable Doctor Auth, Storage and Functions
-        # Synthetic local users/files only. Runner owns its project lifecycle.
-        # Captured service keys, emails and byte bodies are never published.
-        run: node apps/doctor-suit/tests/disposable-provider.mjs

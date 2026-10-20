@@ -14,6 +14,13 @@ export const shopRealtimeTables = {
   pos: ['products', 'services', 'clients', 'appointments', 'cash_sessions'],
 } as const
 export type ShopRealtimeFeature = keyof typeof shopRealtimeTables
+/** Projection names differ from table/feature names, especially singular detail routes. */
+export const shopRealtimeQueryPrefixes: Record<ShopRealtimeFeature, readonly string[]> = {
+  appointments: ['appointment-'], sales: ['sales', 'sale:', 'sale-', 'returns:', 'tax-quote:'],
+  'cash-shifts': ['cash-shifts'], team: ['team'], customers: ['customers', 'customer:', 'customer-'],
+  billing: ['billing', 'sidebar-subscription', 'subscription'], products: ['products', 'product-'],
+  services: ['services', 'service-'], inventory: ['inventory-', 'stock-count-history:'], pos: ['pos-', 'tax-quote:'],
+}
 export function shopRealtimeFilters(feature: ShopRealtimeFeature, shopId: string, locationId: string | null): RealtimeFilter[] {
   if (!/^[a-zA-Z0-9-]+$/.test(shopId) || locationId !== null && !/^[a-zA-Z0-9-]+$/.test(locationId)) throw new Error('Invalid Shop realtime context')
   const keys = [`${shopId}:all:${feature}`, ...(locationId ? [`${shopId}:${locationId}:${feature}`] : [])]
@@ -24,10 +31,22 @@ export function shopRealtimeFilters(feature: ShopRealtimeFeature, shopId: string
 export function createShopRefreshGate(isDirty: () => boolean, refresh: () => Promise<void>) {
   let stale = false
   let disposed = false
+  let running: Promise<void> | undefined
+  function flush(): Promise<void> {
+    if (disposed || !stale || isDirty()) return Promise.resolve()
+    if (running) return running
+    running = (async () => {
+      do {
+        stale = false
+        try { await refresh() } catch (error) { stale = true; throw error }
+      } while (!disposed && stale && !isDirty())
+    })().finally(() => { running = undefined })
+    return running
+  }
   return {
     get stale() { return stale },
-    async invalidate() { if (disposed) return; stale = true; await this.flush() },
-    async flush() { if (disposed || !stale || isDirty()) return; stale = false; try { await refresh() } catch (error) { stale = true; throw error } },
+    async invalidate() { if (disposed) return; stale = true; await flush() },
+    flush,
     dispose() { disposed = true; stale = false },
   }
 }

@@ -31,7 +31,11 @@
     "@building-suit/contracts": "workspace:*",
     "@building-suit/data-access": "workspace:*",
     "@building-suit/ui": "workspace:*",
-    "@building-suit/ux": "workspace:*"
+    "@building-suit/ux": "workspace:*",
+    "@pinia/colada": "1.4.8",
+    "@pinia/colada-nuxt": "1.2.0",
+    "@pinia/nuxt": "1.0.3",
+    "pinia": "4.1.0"
   },
   "devDependencies": {
     "typescript": "5.9.3",

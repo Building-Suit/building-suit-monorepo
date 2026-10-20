@@ -1,6 +1,50 @@
-import type { MarketingPricingCopy, MarketingPricingOption, MarketingPricingPlan } from '@building-suit/contracts'
+import type { ChangelogCopy, ChangelogFeed, ChangelogLocale, MarketingPricingCopy, MarketingPricingOption, MarketingPricingPlan } from '@building-suit/contracts'
 
 export type BsLandingPreview = { kind: 'dashboard'; label: string; title: string; periodLabel: string; metrics: { label: string; value: string }[] } | { kind: 'features' }
+
+/** All cinematic copy is supplied by Shop; shared UI never invents business capabilities. */
+export interface BsLandingJourney {
+  eyebrow: string
+  title: string
+  description: string
+  primaryAction: string
+  secondaryAction: string
+  note: string
+  skip: string
+  scrollHint: string
+  illustrative: string
+  loading: { label: string; continue: string }
+  navigation: { dashboard: string; pos: string; products: string; sales: string }
+  preview: {
+    title: string; subtitle: string; total: string; catalog: string; customer: string
+    walkIn: string; item: string; quantity: string; amount: string; zero: string
+    confirm: string; payment: string; paid: string; receipt: string; receiptNumber: string
+    print: string; register: string; shop: string; location: string; staff: string
+    staffName: string; search: string; all: string; inStock: string; cart: string
+    empty: string; added: string; paymentLabel: string; cash: string; card: string
+    bank: string; checkout: string; cancel: string; confirmationTitle: string
+    confirmationBody: string; subtotal: string; date: string; dateValue: string
+    share: string; printNote: string; thankYou: string; order: string; orderRequest: string
+    stockLabel: string; stockBefore: string; stockAfter: string; salesCount: string
+    collections: string; today: string; recorded: string
+    products: Array<{ name: string; price: string; sku: string; stock: string; artwork: 'cup' | 'bottle' | 'bowl' | 'service' }>
+  }
+  chapters: Array<{ eyebrow: string; title: string; body: string }>
+  trust: { label: string; heading: string; body: string }
+}
+
+/** Public changelog projection; the application owns the feed and retry command. */
+export interface BsLandingChangelog {
+  title: string
+  linkLabel: string
+  to: string
+  feed: ChangelogFeed
+  state: 'ready' | 'loading' | 'error' | 'denied'
+  copy: ChangelogCopy
+  locale: ChangelogLocale
+  suit?: string
+}
+
 export interface BsLandingPricing {
   variant?: 'default' | 'shop'
   plans: MarketingPricingPlan[]
@@ -17,15 +61,4 @@ export interface BsLandingPricing {
   sectionTestId?: string
   noticeTestId?: string
   notice?: string
-}
-
-export interface BsLandingChangelog {
-  title: string
-  linkLabel: string
-  to: string
-  feed: import('@building-suit/contracts').ChangelogFeed
-  locale: import('@building-suit/contracts').ChangelogLocale
-  copy: import('@building-suit/contracts').ChangelogCopy
-  suit: string
-  state: 'ready' | 'loading' | 'error' | 'denied'
 }

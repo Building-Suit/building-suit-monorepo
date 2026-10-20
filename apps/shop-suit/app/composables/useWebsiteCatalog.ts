@@ -4,6 +4,8 @@ import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { emptyWebsiteCatalogEntry, parseWebsiteCatalogSettings, type WebsiteCatalogItem } from '#shared/websiteCatalog'
 
 export function useWebsiteCatalog(canManage:Ref<boolean>,refreshProfile:()=>Promise<unknown>) {
+  const { refreshShopQueries } = useShopInvalidation()
+
   const {currentId,currentLocationId,isOwner,businessCurrency}=useShop()
   const {locale}=useI18n()
   const user=useSupabaseUser()
@@ -11,12 +13,12 @@ export function useWebsiteCatalog(canManage:Ref<boolean>,refreshProfile:()=>Prom
   const canEdit=computed(()=>canManage.value&&isOwner.value)
   const environment=useRuntimeConfig().public.supabase.url
   const captureScope=useShopTaskScope()
-  const client=useSupabaseClient<ShopRpcDatabase>().schema('public')
+  const client=useShopClient<ShopRpcDatabase>().schema('public')
   const form=ref(emptyWebsiteCatalogEntry()),selected=ref<WebsiteCatalogItem|null>(null)
   const search=ref(''),page=ref(1),success=ref(''),imagePending=ref(false)
   const action=useRecordAction(()=>form.value)
   const {visible:open,pending,dirty,error}=action
-  const {data,pending:loading,error:loadError,refresh}=useAsyncData(
+  const {data,pending:loading,error:loadError,refresh}=useShopQuery(
     ()=>`shop-data:website-catalog:${JSON.stringify([environment,'shop-crm',actor.value,currentId.value,search.value,page.value])}`,
     async()=>{
       if(!currentId.value||!actor.value||!canEdit.value)return null
@@ -24,7 +26,7 @@ export function useWebsiteCatalog(canManage:Ref<boolean>,refreshProfile:()=>Prom
       const response=await client.rpc('shop_website_catalog',{p_shop_id:currentId.value,p_search:search.value,p_page:page.value})
       if(response.error)throw response.error
       return isCurrent()?parseWebsiteCatalogSettings(response.data):null
-    },{server:false,watch:[currentId,currentLocationId,actor,canEdit],default:()=>null},
+    },{server:false,enabled:canEdit,watch:[currentId,currentLocationId,actor,canEdit],default:()=>null},
   )
   watch(search,()=>{page.value=1})
   watch([currentId,currentLocationId,actor,canEdit],()=>{open.value=false;form.value=emptyWebsiteCatalogEntry();selected.value=null;search.value='';page.value=1;success.value='';error.value=''}, {flush:'sync'})
@@ -42,8 +44,7 @@ export function useWebsiteCatalog(canManage:Ref<boolean>,refreshProfile:()=>Prom
     // Invalidate every cached search/page for this exact actor + Shop, then
     // refresh PROFILE's published-item readiness in the same scoped lifecycle.
     const prefix=`shop-data:website-catalog:${JSON.stringify([environment,'shop-crm',actor.value,currentId.value]).slice(0,-1)},`
-    clearNuxtData(key=>key.startsWith(prefix))
-    await Promise.all([refresh(),refreshProfile()])
+    await Promise.all([refreshShopQueries(key=>key.startsWith(prefix)),refreshProfile()])
   }
   async function save() {
     const item=selected.value,shop=currentId.value,isCurrent=captureScope()

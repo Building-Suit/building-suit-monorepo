@@ -1,0 +1,28 @@
+{
+  "id": "shared-product-logo-fallback",
+  "task": "DOS-AE-010",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/atoms/BsProductLogo.vue",
+    "packages/brand/src/productAssets.ts"
+  ],
+  "reason": "The existing shared product logo uses an available sibling variant after an image fails and retains its accessible monogram when both fail. Late image errors cannot affect a replacement product or collapsed mark.",
+  "notes": {
+    "title": {
+      "en": "Keep product logos visible",
+      "ar": "استمرار ظهور شعار المنتج"
+    },
+    "summary": {
+      "en": "Use the available logo variant when an image cannot load.",
+      "ar": "استخدم نسخة الشعار المتاحة عند تعذر تحميل صورة."
+    },
+    "details": {
+      "en": "If both variants are unavailable, the familiar product initial remains visible. Accessible names and responsive logo sizes stay consistent.",
+      "ar": "إذا تعذر تحميل النسختين يبقى الحرف المميز للمنتج ظاهراً، مع الحفاظ على الاسم المقروء وأحجام الشعار المتجاوبة."
+    }
+  }
+}

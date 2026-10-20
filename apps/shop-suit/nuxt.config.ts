@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 
 export default defineNuxtConfig({
   extends: ['@building-suit/nuxt-layer'],
-  modules: ['@nuxtjs/supabase'],
+  modules: ['@nuxtjs/supabase', '@pinia/nuxt', '@pinia/colada-nuxt'],
   app: {
     head: {
       link: [

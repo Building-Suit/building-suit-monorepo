@@ -1,0 +1,4 @@
+export interface BsConsultationFields {name:string;duration:string;before:string;after:string;locations:string[];active:boolean}
+export interface BsConsultationRow {id:string;name:string;duration:string;buffers:string;locations:string;status:string;version:string}
+export interface BsConsultationCopy {title:string;notice:string;name:string;duration:string;before:string;after:string;locations:string;active:string;status:string;version:string;buffers:string;create:string;edit:string;save:string;cancel:string;retry:string;empty:string;capacity:string}
+export interface BsConsultationView {loading:boolean;pending:boolean;error:string|null;denied:string|null;canManage:boolean;rows:BsConsultationRow[];locations:{value:string;label:string}[];editor:{title:string;dirty:boolean;pending:boolean;error:string|null;disabled:boolean}}

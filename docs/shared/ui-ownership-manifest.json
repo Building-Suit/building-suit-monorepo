@@ -12,6 +12,19 @@
   "components": [],
   "workflowFamilies": [
     {
+      "family": "workspace-chrome",
+      "owner": "packages/ui",
+      "components": [
+        "BsAppShell",
+        "BsWorkspaceShell",
+        "BsSideMenu",
+        "BsSidebarAccount"
+      ],
+      "adapterBoundary": "Product-supplied navigation, scopes, account, trial, notification and registry projections; shared rail/collapse/drawer defaults with no standalone top header. Shop variant controls catalogue filtering only.",
+      "task": "SHARED-WORKSPACE-CHROME-20261019",
+      "migrationStatus": "implemented-source: rendered and local check verification unrun at owner instruction"
+    },
+    {
       "family": "money",
       "owner": "packages/ui",
       "components": [
@@ -270,9 +283,9 @@
       "components": [
         "BsAdministrationShell"
       ],
-      "adapterBoundary": "App-supplied registry, context navigation, selection, translated labels and intent handlers; no product queries or authorization",
+      "adapterBoundary": "App-supplied registry, context navigation, selection, translated labels and intent handlers; canonical BsAppShell frame and drawer; no product queries or authorization",
       "task": "BS-SA-SHELL-001",
-      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
+      "migrationStatus": "implemented-source: canonical frame convergence; rendered/local verification unrun at owner instruction"
     },
     {
       "family": "changelog",
@@ -306,26 +319,30 @@
       "family": "dashboard-metrics",
       "owner": "packages/ui",
       "components": [
+        "BsKpiCard",
+        "BsMetricGrid",
         "BsDashboardMetric"
       ],
       "adapterBoundary": "formatted product-owned metric values, capabilities, financial notice and source navigation",
       "auditSources": [
         "apps/shop-suit/app/pages/dashboard.vue"
       ],
-      "migrationStatus": "shared metric molecule; bounded Penpot alignment in progress"
+      "migrationStatus": "shared summary, compact and neutral metric groups; source updated, visual review deferred at user request"
     },
     {
       "family": "pos-cart",
       "owner": "packages/ui",
       "components": [
         "BsPointOfSaleCart",
+        "BsPaymentMethodChoices",
+        "BsReceiptPreviewDialog",
         "BsQuantityStepper"
       ],
-      "adapterBoundary": "typed catalog/cart/customer projections, product-owned quantity limits and existing checkout commands; shared UX owns viewport, section, stepping and focus lifecycle",
+      "adapterBoundary": "Typed image catalog/cart/customer projections, payment choices and immutable receipt previews. Product owns quantity limits, scoped own-receipt queries and a newest-first index limited to ten own receipts, and atomic checkout commands; shared UX owns two-stage checkout, isolated document printing, viewport, keyboard, stepping and focus lifecycle.",
       "auditSources": [
         "apps/shop-suit/app/pages/pos.vue"
       ],
-      "migrationStatus": "bounded POS reference alignment in progress"
+      "migrationStatus": "Aligned image cards, two-step counter checkout, compact status/context and in-place recent-receipt previews; visual review deferred at user request"
     },
     {
       "family": "offline-counter-status",
@@ -423,9 +440,10 @@
       "components": [
         "BsShopPublicEntryPage",
         "BsShopWebsitePage",
+        "BsWebsiteCatalogCard",
         "BsWebsiteInquiryInbox"
       ],
-      "adapterBoundary": "Shop owns trusted Host resolution, anonymous allowlisted reads, inquiry validation/rate limits, owner permissions and SEO. Shared complete entry template selects the existing marketing template or tenant showcase from a finite typed union. UX owns record/form interaction and BFCache refresh mechanics.",
+      "adapterBoundary": "Shop owns trusted Host resolution, anonymous allowlisted discovery, public-only basket state, server-validated basket inquiries, booking links, publication, owner permissions and SEO. Shared templates own the storefront, catalog cards, item details, basket/contact dialogs and responsive navigation. Shared UX owns optional raster media, record/overlay interaction and BFCache refresh mechanics. Basket requests require merchant confirmation and never post payments or reserve stock.",
       "task": "SS-WEB-PUBLIC-001",
       "migrationStatus": "registered host-aware root page and optional private owner inbox; no app-local presentation"
     },
@@ -434,9 +452,10 @@
       "owner": "packages/ui",
       "components": [
         "BsAppointmentsPage",
-        "BsAppointmentCalendar"
+        "BsAppointmentCalendar",
+        "BsMiniCalendar"
       ],
-      "adapterBoundary": "Shared appointment templates show controlled one-time credential presentation and semantic issue/rotate/revoke commands. Shop owns appointment permissions, secret lifetime, normalized phone binding and request-scoped commands. Existing shared overlay and record-action controllers remain in packages/ux.",
+      "adapterBoundary": "Shared appointment templates own the month and timed calendar workspace, compact entries, controlled date/filter inputs, detail actions and one-time credential presentation. Calendar overlap layout and keyboard navigation belong to shared UX; the Doctor agenda presentation remains available. Shop owns loaded-window filtering, appointment permissions, secret lifetime, normalized phone binding and scoped queries/commands. Existing shared overlay and record-action controllers remain in packages/ux.",
       "task": "SS-WEB-APPT-ACCESS-001",
       "migrationStatus": "optional typed access panel inside existing registered complete appointments template; no new customer portal or booking route"
     },
@@ -649,6 +668,35 @@
       ],
       "task": "DOS-AE-005",
       "migrationStatus": "synthetic acceptance pending; live payment disabled"
+    },
+    {
+      "family": "synthetic-clinical-workspace",
+      "owner": "packages/ui",
+      "components": [
+        "BsClinicalWorkspacePage",
+        "BsReleasedClinicalPage"
+      ],
+      "adapterBoundary": "Typed controlled entered-data fields and version/release/document projections; Doctor owns all queries, clinical fixture authority, validation, immutable operations and transport. No medical defaults or professional approval.",
+      "task": "DOS-M2",
+      "migrationStatus": "implemented-source; verification in progress; no clinical approval"
+    },
+    {
+      "family": "consultation-type-settings",
+      "owner": "packages/ui",
+      "components": [
+        "BsConsultationTypesPage"
+      ],
+      "adapterBoundary": "Typed configuration, controlled fields and semantic commands. Doctor owns consultation history, capacity, scope, scheduling and authorization.",
+      "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "waitlist-request-worklist",
+      "owner": "packages/ui",
+      "components": [
+        "BsWaitlistPage"
+      ],
+      "adapterBoundary": "Typed request/offer/history views and controlled record forms. Doctor owns request permission, atomic holds, acceptance, expiry and capability scopes. No provider dispatch or patient priority is inferred.",
+      "migrationStatus": "implemented; acceptance in progress"
     }
   ]
 }

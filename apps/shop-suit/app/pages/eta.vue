@@ -5,7 +5,7 @@ definePageMeta({ layout: 'default', middleware: ['auth'] })
 const { currentId } = useShop()
 const user = useSupabaseUser()
 const { locale } = useI18n()
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const blank = (): BsEtaForm => ({ profile:{legalName:'',rin:'',activityCode:''},branches:[],items:[],reason:'' })
 const form = ref<BsEtaForm>(blank())
 const mode=ref<'ereceipt'|'einvoice'>('ereceipt')
@@ -17,7 +17,7 @@ const action = useRecordAction(()=>form.value)
 const { visible:editor, dirty } = action
 interface Configuration {profile:BsEtaForm['profile'];branches:Omit<BsEtaForm['branches'][number],'name'|'configured'>[];items:Omit<BsEtaForm['items'][number],'name'|'configured'>[]}
 interface Settings {sales:{id:string;label:string}[];configuration:Configuration|null;locations:{id:string;name:string}[];items:{id:string;name:string;sourceType:string}[];documents:{channel?:'ereceipt'|'einvoice';id:string;invoice_id:string;invoice_number:string;state:string;document_uuid:string|null;submission_uuid:string|null;error_code:string|null}[]}
-const {data,pending:loading,error,refresh}=useAsyncData(
+const {data,pending:loading,error,refresh}=useShopQuery(
  ()=>`shop-data:eta:${user.value?.id ?? 'none'}:${currentId.value ?? 'none'}:${offset.value}`,
  async ():Promise<Settings|null>=>{
   if (!currentId.value) return null

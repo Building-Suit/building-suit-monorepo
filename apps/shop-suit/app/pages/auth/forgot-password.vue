@@ -1,7 +1,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'auth' })
 
-const supabase = useSupabaseClient()
+const supabase = useShopClient()
 const { t, locale } = useI18n()
 const email = ref('')
 const pending = ref(false)

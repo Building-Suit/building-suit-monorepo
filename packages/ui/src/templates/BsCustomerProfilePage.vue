@@ -64,14 +64,13 @@ function updateAllocation(id: string, value: string | number) { receiptForm.valu
           </BsDescriptionList>
         </BsPanel>
       </BsGrid>
+      <BsMetricGrid v-if="outstanding.balance" :columns="1"><BsKpiCard :title="copy.customers_receivables" :value="outstanding.balance" :hint="outstanding.overdue" icon="wallet" /></BsMetricGrid>
       <BsPanel padding="md">
         <BsInline justify="between">
           <BsBox>
             <BsHeading :level="2">{{ copy.customers_receivables }}</BsHeading>
-            <BsText v-if="outstanding.overdue" as="p" size="sm" tone="muted">{{ outstanding.overdue }}</BsText>
           </BsBox>
           <BsInline>
-            <BsText v-if="outstanding.balance" as="p" size="lg" emphasis="semibold">{{ outstanding.balance }}</BsText>
             <BsButton v-if="customer.canReceive" type="button" @click="emit('receive')">{{ copy.payments_recordReceipt }}</BsButton>
           </BsInline>
         </BsInline>

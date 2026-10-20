@@ -7,8 +7,8 @@ import type { BusinessMode } from '~/utils/businessMode'
 import { BUSINESS_MODES } from '~/utils/businessMode'
 import { classifyOtpFailure, createPendingOnboardingDraft, normalizeSignupEmail, signupNeedsRecovery, PENDING_ONBOARDING_STORAGE_KEY, restorePendingOnboarding } from '~/utils/pendingOnboarding'
 definePageMeta({ layout: 'auth' })
-const supabase = useSupabaseClient()
-const shopRpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const supabase = useShopClient()
+const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
 const { locale, t } = useI18n()
 const { step, advance, back, reset: resetWizard } = useSignupWizard(2)
 const verification = useVerificationTimer()

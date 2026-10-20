@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { useOptionalImage } from '@building-suit/ux'
-const props = defineProps<{ localPreview?: boolean; src?: string | null; name: string; placeholder: string }>()
+const props = defineProps<{ loading?: 'eager' | 'lazy'; inlineRaster?: boolean; localPreview?: boolean; src?: string | null; name: string; placeholder: string }>()
 const element = ref<HTMLImageElement | null>(null)
-const { image, broken, failed } = useOptionalImage(() => props.src, () => element.value, () => props.localPreview === true)
+const { image, broken, failed } = useOptionalImage(() => props.src, () => element.value, () => props.localPreview === true, () => props.inlineRaster === true)
 </script>
 <template>
   <div class="bs-catalog-image">
-    <img v-if="image && !broken" ref="element" :src="image" :alt="name" loading="lazy" decoding="async" referrerpolicy="no-referrer" @error="failed">
+    <img v-if="image && !broken" ref="element" :src="image" :alt="name" :loading="loading || 'lazy'" decoding="async" referrerpolicy="no-referrer" @error="failed">
     <div v-else role="img" :aria-label="placeholder" class="bs-catalog-image__placeholder"><BsIcon name="image" :size="28" /><span class="sr-only">{{ placeholder }}</span></div>
   </div>
 </template>

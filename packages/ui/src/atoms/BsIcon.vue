@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { HugeiconsIcon } from '@hugeicons/vue'
 import {
+  Calendar03Icon,
+  Call02Icon,
+  ShoppingBasket01Icon,
+  CreditCardIcon,
+  BankIcon,
   Image01Icon,
+  Sun03Icon,
+  Moon02Icon,
+  ComputerIcon,
   ViewIcon,
   ViewOffSlashIcon,
   LockPasswordIcon,
@@ -32,6 +40,9 @@ import {
 } from '@hugeicons/core-free-icons'
 
 const bsIcons = {
+  sun: Sun03Icon,
+  moon: Moon02Icon,
+  monitor: ComputerIcon,
   eye: ViewIcon,
   eyeOff: ViewOffSlashIcon,
   lock: LockPasswordIcon,
@@ -42,6 +53,11 @@ const bsIcons = {
   arrowRight: ArrowRight01Icon,
   automation: ArrowReloadHorizontalIcon,
   cash: Cash02Icon,
+  calendar: Calendar03Icon,
+  phone: Call02Icon,
+  basket: ShoppingBasket01Icon,
+  card: CreditCardIcon,
+  bank: BankIcon,
   check: CheckmarkCircle02Icon,
   checkBadge: CheckmarkBadge01Icon,
   close: Cancel01Icon,

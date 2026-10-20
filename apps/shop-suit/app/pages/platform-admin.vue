@@ -9,7 +9,7 @@ definePageMeta({ layout: 'platform-admin', middleware: ['auth'] })
 type ActionKey = 'suspend_shop' | 'reactivate_shop' | 'extend_trial' | 'end_trial'
   | 'correct_billing_metadata' | 'add_support_note'
 
-const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+const rpc = useShopClient<ShopRpcDatabase>().schema('public')
 const user = useSupabaseUser()
 const userId = computed(() => user.value?.id ?? null)
 const { locale } = useI18n()
@@ -58,7 +58,7 @@ async function callRead<T>(resource: 'dashboard' | 'shops' | 'shop' | 'audit', o
   return data as T
 }
 
-const { data: session, pending: sessionPending, refresh: refreshSession } = await useAsyncData(
+const sessionQuery = useShopQuery(
   'platform-admin:session',
   async (): Promise<PlatformAdminSession | null> => {
     const requestedUserId = userId.value
@@ -74,10 +74,12 @@ const { data: session, pending: sessionPending, refresh: refreshSession } = awai
   },
   { watch: [userId] },
 )
+const { data: session, pending: sessionPending, refresh: refreshSession } = sessionQuery
+// Resolve server-rendered dependencies; client reads remain reactive.
+if (import.meta.server) await sessionQuery.ensure()
 
 watch(userId, () => {
   searchInteraction.cancel()
-  session.value = null
   selectedShopId.value = null
   actionOpen.value = false
   billingReviewOpen.value = false
@@ -90,13 +92,15 @@ watch(userId, () => {
   configurationError.value = ''
 }, { flush: 'sync' })
 
-const { data: dashboard, pending: dashboardPending, error: dashboardError, refresh: refreshDashboard } = await useAsyncData(
+const dashboardQuery = useShopQuery(
   'platform-admin:dashboard',
   async (): Promise<PlatformDashboard | null> => session.value ? await callRead<PlatformDashboard>('dashboard') : null,
   { watch: [session] },
 )
+const { data: dashboard, pending: dashboardPending, error: dashboardError, refresh: refreshDashboard } = dashboardQuery
+if (import.meta.server) await dashboardQuery.ensure()
 
-const { data: shops, pending: shopsPending, error: shopsError, refresh: refreshShops } = await useAsyncData(
+const shopsQuery = useShopQuery(
   'platform-admin:shops',
   async (): Promise<PlatformPage<PlatformShopRow> | null> => session.value ? await callRead<PlatformPage<PlatformShopRow>>('shops', {
     p_search: debouncedSearch.value || null,
@@ -106,16 +110,20 @@ const { data: shops, pending: shopsPending, error: shopsError, refresh: refreshS
   }) : null,
   { watch: [session, debouncedSearch, status, page] },
 )
+const { data: shops, pending: shopsPending, error: shopsError, refresh: refreshShops } = shopsQuery
+if (import.meta.server) await shopsQuery.ensure()
 
-const { data: detail, pending: detailPending, error: detailError, refresh: refreshDetail } = await useAsyncData(
+const detailQuery = useShopQuery(
   'platform-admin:shop-detail',
   async (): Promise<PlatformShopDetail | null> => session.value && selectedShopId.value
     ? await callRead<PlatformShopDetail>('shop', { p_shop_id: selectedShopId.value })
     : null,
   { watch: [session, selectedShopId] },
 )
+const { data: detail, pending: detailPending, error: detailError, refresh: refreshDetail } = detailQuery
+if (import.meta.server) await detailQuery.ensure()
 
-const { data: audit, pending: auditPending, error: auditError, refresh: refreshAudit } = await useAsyncData(
+const auditQuery = useShopQuery(
   'platform-admin:audit',
   async (): Promise<PlatformPage<PlatformAdminEvent> | null> => session.value ? await callRead<PlatformPage<PlatformAdminEvent>>('audit', {
     p_page: auditPage.value,
@@ -123,8 +131,10 @@ const { data: audit, pending: auditPending, error: auditError, refresh: refreshA
   }) : null,
   { watch: [session, auditPage] },
 )
+const { data: audit, pending: auditPending, error: auditError, refresh: refreshAudit } = auditQuery
+if (import.meta.server) await auditQuery.ensure()
 
-const { data: billingQueue, pending: billingQueuePending, error: billingQueueError, refresh: refreshBillingQueue } = await useAsyncData(
+const billingQueueQuery = useShopQuery(
   'platform-admin:billing-queue',
   async (): Promise<PlatformPage<PlatformBillingQueueItem> | null> => {
     if (!session.value) return null
@@ -137,8 +147,10 @@ const { data: billingQueue, pending: billingQueuePending, error: billingQueueErr
   },
   { watch: [session, billingStatus, billingPage] },
 )
+const { data: billingQueue, pending: billingQueuePending, error: billingQueueError, refresh: refreshBillingQueue } = billingQueueQuery
+if (import.meta.server) await billingQueueQuery.ensure()
 
-const { data: storedBillingConfiguration, error: billingConfigurationLoadError, refresh: refreshBillingConfiguration } = await useAsyncData(
+const storedBillingConfigurationQuery = useShopQuery(
   'platform-admin:billing-configuration',
   async (): Promise<PlatformBillingConfiguration | null> => {
     if (!session.value) return null
@@ -148,8 +160,10 @@ const { data: storedBillingConfiguration, error: billingConfigurationLoadError, 
   },
   { watch: [session] },
 )
+const { data: storedBillingConfiguration, error: billingConfigurationLoadError, refresh: refreshBillingConfiguration } = storedBillingConfigurationQuery
+if (import.meta.server) await storedBillingConfigurationQuery.ensure()
 
-const { data: billingSummary, refresh: refreshBillingSummary } = await useAsyncData(
+const billingSummaryQuery = useShopQuery(
   'platform-admin:billing-summary',
   async (): Promise<{ open: number, submitted: number, underReview: number, approved: number, rejected: number } | null> => {
     if (!session.value) return null
@@ -159,8 +173,10 @@ const { data: billingSummary, refresh: refreshBillingSummary } = await useAsyncD
   },
   { watch: [session] },
 )
+const { data: billingSummary, refresh: refreshBillingSummary } = billingSummaryQuery
+if (import.meta.server) await billingSummaryQuery.ensure()
 
-const { data: billingAudit, pending: billingAuditPending, error: billingAuditError, refresh: refreshBillingAudit } = await useAsyncData(
+const billingAuditQuery = useShopQuery(
   'platform-admin:billing-audit',
   async (): Promise<PlatformPage<PlatformAdminEvent> | null> => {
     if (!session.value) return null
@@ -170,6 +186,8 @@ const { data: billingAudit, pending: billingAuditPending, error: billingAuditErr
   },
   { watch: [session, billingAuditPage] },
 )
+const { data: billingAudit, pending: billingAuditPending, error: billingAuditError, refresh: refreshBillingAudit } = billingAuditQuery
+if (import.meta.server) await billingAuditQuery.ensure()
 
 watch(storedBillingConfiguration, value => {
   if (!value) return
@@ -419,8 +437,8 @@ const ar = {
   actions: { suspend_shop: 'إيقاف وصول المتجر', reactivate_shop: 'إعادة تفعيل وصول المتجر', extend_trial: 'تمديد التجربة', end_trial: 'إنهاء التجربة', correct_billing_metadata: 'تصحيح بيانات الفوترة', add_support_note: 'إضافة ملاحظة دعم' },
   destructiveConfirm: { suspend_shop: 'إيقاف هذا المتجر؟ سيتوقف وصول المستأجر مع الحفاظ على كل السجل.', end_trial: 'إنهاء التجربة الآن؟ سيصبح المتجر للقراءة فقط.' },
 }
-const catalogControls = reactive(await usePlatformPlanAdmin(reactive({ mode: 'catalog' as const, get canMutate() { return Boolean(session.value?.canMutate) } }), refreshPlanConsumers))
-const shopControls = reactive(await usePlatformPlanAdmin(reactive({ mode: 'shop' as const, get shopId() { return selectedShopId.value }, get canMutate() { return Boolean(session.value?.canMutate) } }), refreshPlanConsumers))
+const catalogControls = reactive(usePlatformPlanAdmin(reactive({ mode: 'catalog' as const, get canMutate() { return Boolean(session.value?.canMutate) } }), refreshPlanConsumers))
+const shopControls = reactive(usePlatformPlanAdmin(reactive({ mode: 'shop' as const, get shopId() { return selectedShopId.value }, get canMutate() { return Boolean(session.value?.canMutate) } }), refreshPlanConsumers))
 
 const configurationAction = useRecordAction(() => billingConfiguration)
 const { visible: configurationActionOpen, dirty: configurationActionDirty } = configurationAction

@@ -16,7 +16,7 @@ usePrivacyConsentFocus(() => props.model, reopen)
         <BsButton @click="model.open">{{ model.copy.settings }}</BsButton>
       </div>
     </section>
-    <div ref="reopen" class="bs-privacy-reopen"><BsButton @click="model.open">{{ model.copy.settings }}</BsButton></div>
+    <div v-if="model.showReopen !== false" ref="reopen" class="bs-privacy-reopen"><BsButton @click="model.open">{{ model.copy.settings }}</BsButton></div>
     <BsDialog :visible="model.settings" :title="model.copy.title" size="sm" @update:visible="model.close">
       <div class="grid gap-4">
         <p>{{ model.copy.necessary }}</p>

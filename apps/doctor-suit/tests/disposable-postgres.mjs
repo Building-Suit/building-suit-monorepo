@@ -1,4 +1,8 @@
+import{verifyWaitlistConcurrency}from './waitlist-concurrency.mjs'
+import{verifyConsultationConcurrency}from './consultations-concurrency.mjs'
+import {verifyClinicalConcurrency} from './clinical-concurrency.mjs'
 // SQL/RLS fallback for small executors. This is not a Supabase service integration test.
+import { verifyAnnualPricingUpgrade } from './annual-pricing-upgrade.mjs'
 import{verifyDoctorIsolatedRecovery}from'./recovery-isolated.mjs'
 import { createHash, randomUUID } from 'node:crypto'
 import { mkdtemp, readFile, readdir, rm, writeFile, mkdir, chmod } from 'node:fs/promises'
@@ -91,16 +95,25 @@ try {
   // Publication interface only. No logical replication service is run here.
   sql('create publication supabase_realtime;')
   const migrations = (await readdir(`${app}supabase/migrations`)).filter(file => file.endsWith('.sql')).sort()
-  for (const file of migrations) sql(await readFile(`${app}supabase/migrations/${file}`, 'utf8'))
+  for (const file of migrations) {
+    const migration = await readFile(`${app}supabase/migrations/${file}`, 'utf8')
+    if (file === '20261018154514_doctor_annual_discount_32.sql') verifyAnnualPricingUpgrade(sql, migration, await readFile(`${app}supabase/tests/dos-instapay-manual.sql`, 'utf8'))
+    sql(migration)
+  }
   const suites = (await readdir(`${app}supabase/tests`)).filter(file => file.endsWith('.sql')).sort()
   if (!suites.length) throw new Error('No Doctor SQL suites found')
+  // Preserve psql's file-relative includes for shared, test-only fixtures.
+  docker(['cp', `${app}supabase/tests`, `${container}:/doctor-tests`])
   for (const file of suites) {
-    const result = sql(await readFile(`${app}supabase/tests/${file}`, 'utf8'))
+    const result = docker(['exec', '-i', container, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At', '-f', `/doctor-tests/${file}`])
     const plan = result.match(/^1\.\.(\d+)$/m)
     const passed = result.match(/^ok \d+\b/gm) ?? []
     if (!plan || Number(plan[1]) < 1 || Number(plan[1]) !== passed.length || /^not ok\b|^Bail out!/m.test(result)) throw new Error(`${file}: SQL assertions failed\n${result}`)
     console.log(`${file}: ${passed.length} SQL assertions passed`)
   }
+  await verifyWaitlistConcurrency(container)
+  await verifyConsultationConcurrency(container)
+  await verifyClinicalConcurrency(container)
   await verifyOnboardingConcurrency(container)
   await verifyInvitationConcurrency(container)
   await verifyPatientConcurrency(container)

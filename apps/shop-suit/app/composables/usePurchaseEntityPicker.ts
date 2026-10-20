@@ -2,7 +2,7 @@ import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 type Choice = { id: string; name: string }
 /** Product-owned lazy RPC adapter; the shared picker owns presentation. */
 export function usePurchaseEntityPicker(kind: 'product' | 'supplier') {
-  const rpc = useSupabaseClient<ShopRpcDatabase>().schema('public')
+  const rpc = useShopClient<ShopRpcDatabase>().schema('public')
   const { currentId } = useShop()
   const user = useSupabaseUser()
   const { locale } = useI18n()

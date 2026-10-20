@@ -54,9 +54,7 @@ function updateMovement(key: keyof BsCashShiftMovementForm, value: string | numb
           </BsInline>
           <BsText v-if="!active" as="p" size="sm" tone="muted">{{ copy.noActive }}</BsText>
           <template v-else>
-            <BsDescriptionList>
-              <BsDescriptionItem v-for="metric in active.metrics" :key="metric.label" :term="metric.label"><BsText as="span" size="lg" emphasis="semibold">{{ metric.value }}</BsText></BsDescriptionItem>
-            </BsDescriptionList>
+            <BsMetricGrid variant="compact"><BsKpiCard v-for="metric in active.metrics" :key="metric.label" :title="metric.label" :value="metric.value" /></BsMetricGrid>
             <BsText v-if="historyAvailable === false" as="p" size="sm" tone="muted">{{ copy.historyOffline }}</BsText>
             <BsBox v-else scroll="x">
               <BsHeading :level="3">{{ copy.eventHistory }}</BsHeading>
