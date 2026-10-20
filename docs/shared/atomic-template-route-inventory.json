@@ -3010,6 +3010,16 @@
       "status": "implemented; verification in progress; no clinical approval",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/layouts/clinical-recipient.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "domainAdapter": "apps/doctor-suit/app/layouts/clinical-recipient.vue",
+      "purpose": "authenticated-recipient-access-without-practice-membership",
+      "status": "implemented; synthetic recipient verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [

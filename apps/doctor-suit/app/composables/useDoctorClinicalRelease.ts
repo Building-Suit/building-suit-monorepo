@@ -21,7 +21,7 @@ export function useDoctorClinicalRelease(){
    prescriptions:value?.prescriptions.map(item=>({id:item.id,name:item.medicine.label,identity:item.medicine.identity,strength:item.medicine.strength,form:item.medicine.form,amount:`${item.dose.amount} ${item.dose.unit}`,route:item.dose.route,segments:item.segments.map(s=>[choices.segmentKinds.find(choice=>choice.value===s.kind)?.label,`${s.start_date} – ${s.end_date}`,s.timezone,s.interval_minutes===null?'':`${c.interval}: ${s.interval_minutes}`,s.weekdays.join(','),s.times.join(','),s.instructions].filter(Boolean).join(' · ')).join('\n'),instructions:item.instructions}))??[],
    results:value?.results.map(item=>({id:item.id,order:value.orders.find(order=>order.id===item.order_id)?.request??'',annotation:item.annotation}))??[],documents:value?.documents.map(item=>({id:item.id,name:item.filename}))??[]}
  })
- async function download(versionId:string){const expected=scope.value,result=await service.download(versionId);if(result&&scope.value===expected)downloadBlob(result.filename,result.blob)}
+ async function download(versionId:string){const expected=scope.value,result=await service.download(versionId);if(result&&scope.value===expected)downloadBlob(result.filename,result.blob,{mount:true,cleanupDelayMs:1000})}
  async function print(){
   const expected=scope.value,c=copy.value;printSession?.close();printSession=openPrintSession(renderPendingPrintDocument(c.print,ar.value?'rtl':'ltr',c.notice));const session=printSession;if(!session)return
   if(!await service.load(id.value)||scope.value!==expected||!service.state.release){session.close();return}

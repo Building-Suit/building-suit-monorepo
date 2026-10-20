@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({layout:'default',middleware:'doctor-auth',pageTransition:false})
+definePageMeta({layout:'clinical-recipient',middleware:'doctor-auth',pageTransition:false})
 const {copy,view,reload,download,print}=useDoctorClinicalRelease()
 useHead({meta:[{name:'robots',content:'noindex,nofollow'},{name:'referrer',content:'no-referrer'}]})
 await reload()

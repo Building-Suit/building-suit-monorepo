@@ -16,6 +16,7 @@
     "apps/building-suit-docs/app/pages/components.vue",
     "apps/doctor-suit/app/composables/useDoctorClinicalRelease.ts",
     "apps/doctor-suit/app/composables/useDoctorClinicalWorkspace.ts",
+    "apps/doctor-suit/app/layouts/clinical-recipient.vue",
     "apps/doctor-suit/app/layouts/practice.vue",
     "apps/doctor-suit/app/pages/clinical-releases/[id].vue",
     "apps/doctor-suit/app/pages/clinical.vue",
