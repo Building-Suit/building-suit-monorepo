@@ -1,0 +1,14 @@
+{
+  "id": "dos-m3-008",
+  "task": "DOS-M3-008",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-008.md"
+  ],
+  "reason": "Synthetic administrative lab/imaging/referral tracking; no clinical interpretation, provider integration or operational release registration."
+}
