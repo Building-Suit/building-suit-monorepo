@@ -1763,5 +1763,76 @@
     "sources": [
       "shared-workspace-chrome-support-20261019"
     ]
+  },
+  {
+    "id": "shop-storefront-builder-offers-20261020",
+    "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux"
+    ],
+    "reason": "Add owner-published customer storefront composition for Team/Multi and fixed-price catalogue bundles with authoritative POS matching and immutable receipt names.",
+    "notes": {
+      "title": {
+        "en": "Custom storefronts and bundle offers",
+        "ar": "تصميم موقع المتجر وعروض الباقات"
+      },
+      "summary": {
+        "en": "Team and Multi shops can publish a banner, gallery and team; bundle offers appear on the storefront and apply automatically at the counter.",
+        "ar": "يمكن لمتاجر Team وMulti نشر بانر ومعرض صور وفريق، وتظهر الباقات على الموقع وتطبق تلقائيًا في نقطة البيع."
+      },
+      "details": {
+        "en": "Keep layout drafts separate from published content, show bundle savings, select complete bundles in POS and retain their names on saved receipts. Public basket requests still require merchant confirmation.",
+        "ar": "احتفظ بمسودات التصميم منفصلة عن المحتوى المنشور، واعرض توفير الباقات وأضفها كاملة في نقطة البيع مع حفظ أسمائها في الإيصالات. تظل طلبات سلة الموقع بحاجة إلى تأكيد المتجر."
+      }
+    },
+    "sources": [
+      "shop-storefront-builder-offers-20261020"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/website-builder.vue",
+        "contains": "<BsStorefrontBuilderPage"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261020114919_storefront_builder_bundle_offers.sql",
+        "contains": "create function public.quote_pos_sale"
+      },
+      {
+        "path": "packages/ui/src/templates/BsShopWebsitePage.vue",
+        "contains": "bs-shop-website__search-section--floating"
+      }
+    ]
+  },
+  {
+    "id": "shop-storefront-builder-offers-support-20261020",
+    "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
+    "suits": [
+      "shop-suit",
+      "ledger-suit",
+      "inventory-suit",
+      "doctor-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs",
+      "docs/shared",
+      "release-changes/items.json"
+    ],
+    "reason": "Maintain shared presentation exports, bounded image interaction, route ownership and synthetic catalogue documentation. Shared source consumption does not activate other products or create additional public release claims.",
+    "sources": [
+      "shop-storefront-builder-offers-support-20261020"
+    ]
   }
 ]

@@ -668,6 +668,18 @@
       ],
       "task": "DOS-AE-005",
       "migrationStatus": "synthetic acceptance pending; live payment disabled"
+    },
+    {
+      "family": "shop-storefront-builder-offers",
+      "owner": "packages/ui",
+      "components": [
+        "BsStorefrontBuilderPage",
+        "BsCatalogOffersPage",
+        "BsOfferStrip"
+      ],
+      "adapterBoundary": "Shop owns Team/Multi eligibility, private draft and explicit owner publishing, public disclosure, tenant-scoped offers and atomic server price matching. Shared UI owns the layout/media editors, bundle worklist and public/POS offer strip. Shared UX owns bounded raster processing and record/dialog lifecycle. Receipt snapshots retain matched offer names.",
+      "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
+      "migrationStatus": "implemented-source; browser/database tests deferred at user instruction"
     }
   ]
 }

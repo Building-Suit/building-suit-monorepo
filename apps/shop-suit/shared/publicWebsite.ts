@@ -1,8 +1,9 @@
+import { parsePublicStorefront, type PublicStorefront } from './storefrontBuilder.ts'
 import { validWebsiteSlug,websiteUrl,websiteDomain } from './websiteAddress.ts'
 import type { PublicWebsiteCatalog,PublicWebsiteCatalogItem } from './websiteCatalog'
 export type WebsiteLocale='ar'|'en'
 export type PublicWebsiteProfile={canonicalSlug:string;publicName:string;description:string;phone:string;whatsapp:string;email:string;openingHours:string;seoTitle:string;seoDescription:string;logoDataUrl:string;locations:Array<{publicName:string;address:string}>}
-export type PublicWebsitePayload={profile:PublicWebsiteProfile;catalog:PublicWebsiteCatalog}
+export type PublicWebsitePayload={profile:PublicWebsiteProfile;catalog:PublicWebsiteCatalog;storefront?:PublicStorefront}
 export type WebsiteInquiryForm={name:string;contact:string;message:string;company:string}
 export const emptyWebsiteInquiry=():WebsiteInquiryForm=>({name:'',contact:'',message:'',company:''})
 const object=(v:unknown):v is Record<string,unknown>=>Boolean(v&&typeof v==='object'&&!Array.isArray(v))
@@ -16,7 +17,7 @@ export function parsePublicWebsite(value:unknown,canonicalSlug:string):PublicWeb
  const profile:PublicWebsiteProfile={canonicalSlug,publicName:text(p.publicName,120),description:text(p.description,320),phone:text(p.phone,30),whatsapp:text(p.whatsapp,16),email:text(p.email,254),openingHours:text(p.openingHours,1000),seoTitle:text(p.seoTitle,70),seoDescription:text(p.seoDescription,170),logoDataUrl:image(p.logoDataUrl)??'',locations:p.locations.map(v=>{if(!object(v))throw Error('INVALID_PUBLIC_WEBSITE');return{publicName:text(v.publicName,120),address:text(v.address,500)}})}
  if(!profile.publicName.trim()||!profile.description.trim()||!profile.logoDataUrl||!profile.locations.length||!(profile.phone||profile.whatsapp||profile.email))throw Error('INVALID_PUBLIC_WEBSITE')
  if(profile.phone&&!/^\+?[0-9][0-9 ()-]{5,29}$/.test(profile.phone)||profile.whatsapp&&!/^\+?[0-9]{7,15}$/.test(profile.whatsapp)||profile.email&&!/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$/.test(profile.email))throw Error('INVALID_PUBLIC_WEBSITE')
- return{profile,catalog:parsePublicWebsiteCatalog(c,canonicalSlug)}
+ return{profile,catalog:parsePublicWebsiteCatalog(c,canonicalSlug),...(value.storefront===undefined?{}:{storefront:parsePublicStorefront(value.storefront)})}
 }
 /** Public catalog allowlist also applies to filtered responses and local public baskets. */
 export function parsePublicWebsiteCatalog(value:unknown,canonicalSlug:string):PublicWebsiteCatalog {

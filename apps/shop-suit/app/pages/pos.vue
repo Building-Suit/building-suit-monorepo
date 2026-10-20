@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { estimateOfferDiscount, type CatalogOffer } from '#shared/catalogOffers'
+import type { BsOfferCardView } from '@building-suit/ui/types/storefrontBuilderPresentation'
 import type { BsPointOfSaleCopy, BsPointOfSaleView, BsPointOfSaleCatalogItem, BsPointOfSaleCartLine, BsPointOfSalePaymentForm } from '@building-suit/ui/types/pointOfSalePresentation'
 import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 import { saleCopy } from '~/utils/saleCopy'
@@ -76,9 +78,44 @@ watch(categoryFilter, () => { catalogPage.value = 1 })
 
 const locationChanged = computed(() => Boolean(transactionLocationId.value && currentLocationId.value !== transactionLocationId.value))
 const taxLines = computed(() => lines.value.map(line => ({ item_type: line.itemType, source_id: line.sourceId, quantity: Number(line.quantity) })))
-const { data: taxQuote, pending: taxPending, error: taxError } = useSaleTaxQuote(currentId, currentLocationId, taxLines, counter)
-const total = computed(() => Number(counter.online.value ? taxQuote.value?.total ?? cartTotal(lines.value) : cartTotal(lines.value)))
+const { data: taxQuote, pending: taxPending, error: taxError, refresh: refreshPosQuote } = useSaleTaxQuote(currentId, currentLocationId, taxLines, counter, true)
+const total = computed(() => Number(counter.online.value ? taxQuote.value?.total ?? cartTotal(lines.value) : Math.max(0, Math.round((cartTotal(lines.value)-offlineOffers.value.discount)*100)/100)))
 const selectedStaff = computed(() => context.value.staff.find(member => member.id === staffId.value))
+
+const offerQuery = useShopQuery(() => `shop-data:pos-offers:${currentId.value}:${currentLocationId.value}:${counter.online.value}`, async (): Promise<CatalogOffer[]> => {
+ if (!currentId.value || !currentLocationId.value) return []
+ if (!counter.online.value) return await counter.cached<CatalogOffer[]>('pos-catalog-offers') ?? []
+ const valid = captureScope()
+ const result = await rpc.rpc('pos_catalog_offers', { p_shop_id: currentId.value, p_location_id: currentLocationId.value })
+ if (result.error) throw result.error
+ if (!valid()) return []
+ const offers = result.data ?? []
+ if (counter.ready.value) await counter.cache('pos-catalog-offers', offers)
+ return offers
+}, { scope: 'location', server: false, enabled: () => !!currentId.value && !!currentLocationId.value, watch: [counter.ready], default: () => [] })
+const offlineOffers = computed(() => estimateOfferDiscount(offerQuery.data.value, lines.value))
+const appliedOffers = computed(() => counter.online.value ? taxQuote.value?.offers ?? [] : offlineOffers.value.offers)
+const offerCards = computed<BsOfferCardView[]>(() => offerQuery.data.value.filter(o => o.oldPrice !== null && o.price < o.oldPrice).map(offer => ({
+ id: offer.id, name: offer.name, description: offer.description, price: money(offer.price), oldPrice: money(offer.oldPrice!), saving: `${locale.value === 'ar' ? 'وفّر' : 'Save'} ${money(offer.oldPrice! - offer.price)}`, items: offer.lines.map(l => `${l.quantity} × ${l.name}`).join(' · '), images: [],
+ disabled: checkingOut.value || confirmingCheckout.value || locationChanged.value || offerQuery.isLoading.value || offer.lines.some(l => l.kind === 'product' && l.stock != null && l.stock < (lines.value.find(v => v.itemType === l.kind && v.sourceId === l.sourceId)?.quantity ?? 0) + l.quantity),
+})))
+function selectOffer(id: string) {
+ if (checkingOut.value || confirmingCheckout.value || locationChanged.value || offerQuery.isLoading.value || offerQuery.error.value) return
+ const offer = offerQuery.data.value.find(o => o.id === id)
+ if (!offer || !offer.active || offer.ends_at && Date.parse(offer.ends_at) <= Date.now() || offer.starts_at && Date.parse(offer.starts_at) > Date.now()) return
+ const additions: CartLine[] = []
+ for (const line of offer.lines) {
+  const existing = lines.value.find(v => v.itemType === line.kind && v.sourceId === line.sourceId)
+  const item: CatalogItem = { id: line.sourceId, itemType: line.kind, name: line.name, sku: null, barcode: null, unitPrice: line.unitPrice, discount: line.discount, stock: line.stock ?? null }
+  if (!line.available || (existing?.quantity ?? 0) + line.quantity > cartQuantityLimit(item)) { errorMessage.value = readableError('INSUFFICIENT_STOCK'); return }
+  additions.push({ ...item, key: `${line.kind}:${line.sourceId}`, sourceId: line.sourceId, quantity: line.quantity })
+ }
+ lockLocation()
+ const next = lines.value.map(line => ({ ...line }))
+ for (const addition of additions) { const line = next.find(l => l.key === addition.key); if (line) line.quantity = Math.round((line.quantity + addition.quantity) * 1000) / 1000; else next.push(addition) }
+ if (next.length > 100) { errorMessage.value = t('pos.invalid'); return }
+ lines.value = next; errorMessage.value = ''; invalidateRequests(); scanMessage.value = offer.name
+}
 
 const { data: categories } = useShopQuery(() => `shop-data:pos-categories:${currentId.value ?? 'none'}`, async () => {
   if (!currentId.value) return []
@@ -227,6 +264,7 @@ function readableError(message?: string) {
   if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
   if (message?.includes('INSUFFICIENT_STOCK') || message?.includes('CROSS_LOCATION_STOCK')) return saleCopy(t, 'pos.insufficientStock', lines.value)
   if (message?.includes('SHOP_PERMISSION_DENIED')) return t('pos.permissionDenied')
+  if (message?.includes('POS_CHECKOUT_REQUIRES_FULL_PAYMENT') || message?.includes('TAX_QUOTE_CHANGED')) return locale.value === 'ar' ? 'تغير السعر أو العرض. راجع الإجمالي المحدّث قبل الدفع.' : 'A price or offer changed. Review the refreshed total before paying.'
   if (message?.includes('FULL_PAYMENT') || message?.includes('OVERPAYMENT')) return t('sales.fullPaymentRequired')
   return t('pos.checkoutError')
 }
@@ -301,7 +339,13 @@ async function checkout() {
     await Promise.all([refreshCatalog(), refreshContext(), refreshShopQueries('shop-data:sales'), refreshShopQueries('shop-data:inventory-overview'), refreshShopQueries('shop-data:recent-invoices')])
     if (!inScope()) return
     pushToast({ tone: 'success', title: t('pos.success') }); resetSale(false); await posReceipt.completed(completedId!)
-  } catch (error) { if (inScope()) errorMessage.value = readableError(shopCommandErrorMessage(error)) }
+  } catch (error) {
+    if (inScope()) {
+      const message = shopCommandErrorMessage(error)
+      if (message?.includes('POS_CHECKOUT_REQUIRES_FULL_PAYMENT') || message?.includes('TAX_QUOTE_CHANGED')) { invalidateRequests(); await refreshPosQuote() }
+      if (inScope()) errorMessage.value = readableError(message)
+    }
+  }
   finally { if (inScope()) checkingOut.value = false }
 }
 
@@ -374,5 +418,61 @@ const posPaymentOptions = computed(() => ['cash','card','bank_transfer','wallet'
 </script>
 
 <template>
-  <BsPointOfSalePage ref="posPage" v-model:receipt-visible="posReceipt.visible.value" :receipt-preview="posReceipt.view.value" @open-receipt="posReceipt.open" @select-receipt="posReceipt.select" @receipt-language="posReceipt.setLanguage" @receipt-paper="posReceipt.setPaper" @retry-receipt="posReceipt.refresh" @share-receipt="posReceipt.share" @download-receipt="posReceipt.download" @printed-receipt="posReceipt.printed" v-model:catalog-search="catalogSearch" v-model:category-filter="categoryFilter" v-model:item-type="posItemType" v-model:catalog-page="catalogPage" v-model:payment-form="posPaymentForm" :offline="offlineView" variant="shop" :copy="posCopy" :view="posView" :catalog-items="posCatalogItems" :cart-lines="posCartLines" :customer-options="customerOptions" :staff-id="staffId" :appointment-id="appointmentId" :customer-id="customerId" :item-type-options="posTypeOptions" :category-options="posCategoryOptions" :appointment-options="posAppointmentOptions" :staff-options="posStaffOptions" :payment-options="posPaymentOptions" @retry-offline="counter.retry($event)" @reconcile-offline="counter.reconcile($event)" @reset="requestReset" @checkout="checkout" @retry-catalog="refreshCatalog" @retry-context="refreshContext" @add="addPosItem" @remove="removePosLine" @quantity="setPosQuantity" @appointment="chooseAppointment" @staff="setPosStaff" @customer-search="customerSearch = $event" @reset-customer-search="resetCustomerSearch" @customer="setCustomer" @clear-customer="clearCustomer" @dismiss-feedback="dismissPosFeedback" @barcode="scanBarcode" />
+  <BsPointOfSalePage
+    ref="posPage"
+    v-model:receipt-visible="posReceipt.visible.value"
+    v-model:catalog-search="catalogSearch"
+    v-model:category-filter="categoryFilter"
+    v-model:item-type="posItemType"
+    v-model:catalog-page="catalogPage"
+    v-model:payment-form="posPaymentForm"
+    :receipt-preview="posReceipt.view.value"
+    :offers="offerCards"
+    :offers-title="locale === 'ar' ? 'العروض والباقات' : 'Promos & offers'"
+    :offer-select-label="locale === 'ar' ? 'إضافة الباقة' : 'Add bundle'"
+    :offers-error="offerQuery.error.value ? (locale === 'ar' ? 'تعذر تحميل العروض. أعد المحاولة.' : 'Could not load offers. Retry.') : ''"
+    :offer-summary="appliedOffers.map(o => `${o.name} × ${o.quantity} (−${money(o.saving)})`).join(' · ')"
+    :offline="offlineView"
+    variant="shop"
+    :copy="posCopy"
+    :view="posView"
+    :catalog-items="posCatalogItems"
+    :cart-lines="posCartLines"
+    :customer-options="customerOptions"
+    :staff-id="staffId"
+    :appointment-id="appointmentId"
+    :customer-id="customerId"
+    :item-type-options="posTypeOptions"
+    :category-options="posCategoryOptions"
+    :appointment-options="posAppointmentOptions"
+    :staff-options="posStaffOptions"
+    :payment-options="posPaymentOptions"
+    @open-receipt="posReceipt.open"
+    @select-receipt="posReceipt.select"
+    @receipt-language="posReceipt.setLanguage"
+    @receipt-paper="posReceipt.setPaper"
+    @retry-receipt="posReceipt.refresh"
+    @share-receipt="posReceipt.share"
+    @download-receipt="posReceipt.download"
+    @printed-receipt="posReceipt.printed"
+    @select-offer="selectOffer"
+    @retry-offers="offerQuery.refresh()"
+    @retry-offline="counter.retry($event)"
+    @reconcile-offline="counter.reconcile($event)"
+    @reset="requestReset"
+    @checkout="checkout"
+    @retry-catalog="refreshCatalog"
+    @retry-context="refreshContext"
+    @add="addPosItem"
+    @remove="removePosLine"
+    @quantity="setPosQuantity"
+    @appointment="chooseAppointment"
+    @staff="setPosStaff"
+    @customer-search="customerSearch = $event"
+    @reset-customer-search="resetCustomerSearch"
+    @customer="setCustomer"
+    @clear-customer="clearCustomer"
+    @dismiss-feedback="dismissPosFeedback"
+    @barcode="scanBarcode"
+  />
 </template>
