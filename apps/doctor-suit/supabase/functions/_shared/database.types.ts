@@ -2625,6 +2625,7 @@ export type Database = {
         }
         Returns: Json
       }
+      doctor_clinical_released: { Args: { p_release: string }; Returns: Json }
       doctor_clinical_workspace: {
         Args: {
           p_location: string
