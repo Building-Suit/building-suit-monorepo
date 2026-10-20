@@ -220,6 +220,7 @@
     "./types/customerProfilePresentation": "./src/types/customerProfilePresentation.ts",
     "./organisms/BsCustomerIdentityFields": "./src/organisms/BsCustomerIdentityFields.vue",
     "./templates/BsBusinessSettingsPage": "./src/templates/BsBusinessSettingsPage.vue",
+    "./organisms/BsSettingsForm": "./src/organisms/BsSettingsForm.vue",
     "./types/businessSettingsPresentation": "./src/types/businessSettingsPresentation.ts",
     "./templates/BsCashShiftsPage": "./src/templates/BsCashShiftsPage.vue",
     "./types/cashShiftPresentation": "./src/types/cashShiftPresentation.ts",
