@@ -29,6 +29,7 @@
     "apps/doctor-suit/supabase/migrations/20261020132545_practice_waitlist_reservations.sql",
     "apps/doctor-suit/supabase/tests/dos-m3-002.sql",
     "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m3-001.spec.ts",
     "apps/doctor-suit/tests/e2e/dos-m3-002.spec.ts",
     "apps/doctor-suit/tests/e2e/operations-actual-fixture.ts",
     "apps/doctor-suit/tests/operations-actual-provider.mjs",
