@@ -17,7 +17,7 @@ const documentColumns=computed(()=>[{key:'name',field:'name',header:props.copy.f
    <BsDescriptionList :columns="2"><BsDescriptionItem v-for="item in view.metadata" :key="item.label" :term="item.label">{{ item.value }}</BsDescriptionItem></BsDescriptionList>
    <BsHeading :level="2">{{ copy.prescriptions }}</BsHeading><BsDataTable :value="view.prescriptions" :columns="prescriptionColumns" row-key="id" :label="copy.prescriptions" />
    <BsHeading :level="2">{{ copy.results }}</BsHeading><BsDataTable :value="view.results" :columns="resultColumns" row-key="id" :label="copy.results" />
-   <BsHeading :level="2">{{ copy.document }}</BsHeading><BsDataTable :value="view.documents" :columns="documentColumns" row-key="id" :label="copy.document"><template #cell-download="{data}"><BsButton variant="text" :disabled="view.pending" @click="emit('download',data.id)">{{ copy.download }}: {{ data.name }}</BsButton></template></BsDataTable>
+   <BsHeading :level="2">{{ copy.document }}</BsHeading><BsDataTable :value="view.documents" :columns="documentColumns" row-key="id" :label="copy.document"><template #cell-download="{row:data}"><BsButton variant="text" :disabled="view.pending" @click="emit('download',data.id)">{{ copy.download }}: {{ data.name }}</BsButton></template></BsDataTable>
   </template>
  </BsStack>
 </template>
