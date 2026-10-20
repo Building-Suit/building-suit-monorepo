@@ -37,6 +37,7 @@
     "apps/doctor-suit/tests/waitlist-concurrency.mjs",
     "docs/shared/atomic-template-route-inventory.json",
     "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-002-verification.json",
     "docs/work-packages/doctor-suit/implementation/dos-m3-002.md",
     "docs/work-packages/doctor-suit/implementation/m3-continuation.md",
     "packages/ui/package.json",
