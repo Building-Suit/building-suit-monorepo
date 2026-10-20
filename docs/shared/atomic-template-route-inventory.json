@@ -99,7 +99,8 @@
     "BsFollowUpWorklistPage": "packages/ui/src/templates/BsFollowUpWorklistPage.vue",
     "BsPatientContactPreferencesPage": "packages/ui/src/templates/BsPatientContactPreferencesPage.vue",
     "BsMessageOutboxPage": "packages/ui/src/templates/BsMessageOutboxPage.vue",
-    "BsFulfillmentTrackingPage": "packages/ui/src/templates/BsFulfillmentTrackingPage.vue"
+    "BsFulfillmentTrackingPage": "packages/ui/src/templates/BsFulfillmentTrackingPage.vue",
+    "BsSyntheticImportPreviewPage": "packages/ui/src/templates/BsSyntheticImportPreviewPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -3126,6 +3127,16 @@
       "status": "implemented; acceptance in progress",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/import-preview.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsSyntheticImportPreviewPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/import-preview.vue",
+      "purpose": "synthetic-import-preview",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -3273,6 +3284,7 @@
     "BsFollowUpWorklistPage",
     "BsPatientContactPreferencesPage",
     "BsMessageOutboxPage",
-    "BsFulfillmentTrackingPage"
+    "BsFulfillmentTrackingPage",
+    "BsSyntheticImportPreviewPage"
   ]
 }

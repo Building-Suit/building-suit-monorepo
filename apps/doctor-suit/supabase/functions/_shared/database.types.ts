@@ -3301,6 +3301,151 @@ export type Database = {
           },
         ]
       }
+      synthetic_import_batches: {
+        Row: {
+          created_at: string
+          created_by: string
+          cursor: number
+          expected_rows: number
+          id: string
+          location_id: string
+          mapping_version: string
+          practice_id: string
+          source_ref: string
+          source_rows: Json
+          source_sha256: string
+          state: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          cursor?: number
+          expected_rows: number
+          id: string
+          location_id: string
+          mapping_version: string
+          practice_id: string
+          source_ref: string
+          source_rows: Json
+          source_sha256: string
+          state?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          cursor?: number
+          expected_rows?: number
+          id?: string
+          location_id?: string
+          mapping_version?: string
+          practice_id?: string
+          source_ref?: string
+          source_rows?: Json
+          source_sha256?: string
+          state?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "synthetic_import_batches_practice_id_fkey"
+            columns: ["practice_id"]
+            isOneToOne: false
+            referencedRelation: "practices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "synthetic_import_batches_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
+      synthetic_import_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          batch_id: string
+          cursor: number
+          happened_at: string
+          practice_id: string
+          state: string
+          version: number
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          batch_id: string
+          cursor: number
+          happened_at?: string
+          practice_id: string
+          state: string
+          version: number
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          batch_id?: string
+          cursor?: number
+          happened_at?: string
+          practice_id?: string
+          state?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "synthetic_import_events_practice_id_batch_id_fkey"
+            columns: ["practice_id", "batch_id"]
+            isOneToOne: false
+            referencedRelation: "synthetic_import_batches"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
+      synthetic_import_rows: {
+        Row: {
+          batch_id: string
+          errors: string[]
+          kind: string
+          ordinal: number
+          practice_id: string
+          preview_target: Json | null
+          source_id: string
+          state: string
+        }
+        Insert: {
+          batch_id: string
+          errors: string[]
+          kind: string
+          ordinal: number
+          practice_id: string
+          preview_target?: Json | null
+          source_id: string
+          state: string
+        }
+        Update: {
+          batch_id?: string
+          errors?: string[]
+          kind?: string
+          ordinal?: number
+          practice_id?: string
+          preview_target?: Json | null
+          source_id?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "synthetic_import_rows_practice_id_batch_id_fkey"
+            columns: ["practice_id", "batch_id"]
+            isOneToOne: false
+            referencedRelation: "synthetic_import_batches"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
       waitlist_entries: {
         Row: {
           contact_permission: boolean
@@ -3865,6 +4010,27 @@ export type Database = {
           p_location: string
           p_page: number
           p_patient: string
+          p_practice: string
+        }
+        Returns: Json
+      }
+      doctor_import_command: {
+        Args: {
+          p_action: string
+          p_batch: string
+          p_input: Json
+          p_key: string
+          p_location: string
+          p_practice: string
+          p_version: number
+        }
+        Returns: Json
+      }
+      doctor_import_preview: {
+        Args: {
+          p_batch: string
+          p_location: string
+          p_page: number
           p_practice: string
         }
         Returns: Json

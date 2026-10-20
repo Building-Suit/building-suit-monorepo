@@ -403,7 +403,9 @@
     "./utils/messageOutboxPresentation": "./src/utils/messageOutboxPresentation.ts",
     "./templates/BsMessageOutboxPage": "./src/templates/BsMessageOutboxPage.vue",
     "./templates/BsFulfillmentTrackingPage": "./src/templates/BsFulfillmentTrackingPage.vue",
-    "./utils/fulfillmentPresentation": "./src/utils/fulfillmentPresentation.ts"
+    "./utils/fulfillmentPresentation": "./src/utils/fulfillmentPresentation.ts",
+    "./templates/BsSyntheticImportPreviewPage": "./src/templates/BsSyntheticImportPreviewPage.vue",
+    "./utils/syntheticImportPresentation": "./src/utils/syntheticImportPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

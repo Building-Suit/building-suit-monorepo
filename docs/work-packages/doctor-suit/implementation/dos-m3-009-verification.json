@@ -1,0 +1,117 @@
+{
+  "task": "DOS-M3-009",
+  "checks": [
+    {
+      "check": "units",
+      "argv": [
+        "node",
+        "--test",
+        "apps/doctor-suit/tests/unit/dos-m3-009.test.mjs"
+      ],
+      "source_head": "e2b0b7fda5929d6cc8166baa0e3dffaaa4d125e2",
+      "started_at": "2026-10-20T18:24:03.206927+00:00",
+      "finished_at": "2026-10-20T18:24:03.356650+00:00",
+      "exit_code": 0,
+      "log_sha256": "bd7b30dccdbb7ccd79a124ee4eec2ca187121780fc45ad949436ef42e2350eda"
+    },
+    {
+      "check": "types",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "typecheck"
+      ],
+      "source_head": "e2b0b7fda5929d6cc8166baa0e3dffaaa4d125e2",
+      "started_at": "2026-10-20T18:24:03.356713+00:00",
+      "finished_at": "2026-10-20T18:24:35.278144+00:00",
+      "exit_code": 0,
+      "log_sha256": "76e251fb2b23ec4cf17600add73cda4355016891b2f5adb0e20a0292af4be3a9"
+    },
+    {
+      "check": "release",
+      "argv": [
+        "pnpm",
+        "release:check"
+      ],
+      "source_head": "e2b0b7fda5929d6cc8166baa0e3dffaaa4d125e2",
+      "started_at": "2026-10-20T18:24:35.278371+00:00",
+      "finished_at": "2026-10-20T18:24:39.377119+00:00",
+      "exit_code": 0,
+      "log_sha256": "609a0cd2242140bb4d238798675ae33d4ee7c290dbdf9a709e6da4f171ca92df"
+    }
+  ],
+  "base_sha": "936f736d53d81a2568531d07e67116d23523438f",
+  "parent_pr": 432,
+  "repository_results": {
+    "tests": 2158,
+    "passed": 2081,
+    "failed": 54,
+    "skipped": 23,
+    "inherited_shop_failures": 54
+  },
+  "sql": {
+    "task_assertions": 24,
+    "transaction_scenarios": 5,
+    "recovery_tables": 86
+  },
+  "doctor_units": 446,
+  "browser": "UNRUN due inherited owned service startup/capacity blocker; actual-service journey included",
+  "limitations": [
+    "No custody approval or real import. Preview-only staging; no canonical apply action.",
+    "Per-command source times/heads and digests captured for final units/types/release; earlier broad diagnostics were not instrumented clean-candidate runs.",
+    "Initial SQL diagnostic caught an ambiguous PL/pgSQL errors variable; renamed explicitly and actual reconciliation passed.",
+    "First compiler diagnostic ran before generated RPC types were available. Final actual generated types and instrumented compiler pass.",
+    "Actual local service browser/visual and full-provider Realtime remain unaccepted."
+  ],
+  "diagnostics": [
+    {
+      "check": "full-sql-and-types",
+      "exit_code": 0,
+      "log_sha256": "19905ba6acab379a38af8777b7b4c214a74de37e7c0dac113d554dd3174bd15a",
+      "timing": "Not instrumented for this broad diagnostic; distinguish from final exact command receipts."
+    },
+    {
+      "check": "focused-final-bounds",
+      "exit_code": 0,
+      "log_sha256": "55cc76ec6a309f10c2ca82d81b2d27c11ec7d1ea190090148a2bf73592e6cdda",
+      "timing": "Not instrumented for this broad diagnostic; distinguish from final exact command receipts."
+    },
+    {
+      "check": "full-repository",
+      "exit_code": 1,
+      "log_sha256": "993347a7d5bdaf5db0c9c0578ccc3f4016573cd17b31f217fee83881aaf27705",
+      "timing": "Not instrumented for this broad diagnostic; distinguish from final exact command receipts."
+    },
+    {
+      "check": "doctor-units",
+      "exit_code": 0,
+      "log_sha256": "fcc0766c977481bb3b3f8056bbfd8f4ba0b738c29ca037f0694fb5ff0b38622c",
+      "timing": "Not instrumented for this broad diagnostic; distinguish from final exact command receipts."
+    },
+    {
+      "check": "build",
+      "exit_code": 0,
+      "log_sha256": "c00b394a25bd230843a991b46a3bfec7bb5d748d321dca0eb4dfe464b59181d1",
+      "timing": "Not instrumented for this broad diagnostic; distinguish from final exact command receipts."
+    },
+    {
+      "check": "architecture",
+      "exit_code": 0,
+      "log_sha256": "4cb43c9e52fdd4d12884a684c5ed06fecb4fd8e394eff76653484e2c9217b9b5",
+      "timing": "Not instrumented for this broad diagnostic; distinguish from final exact command receipts."
+    },
+    {
+      "check": "app-lint",
+      "exit_code": 0,
+      "log_sha256": "4b18ce99bd67fa78078d2667416ebdf32681a708c63bee58f6d89f71f5d711d6",
+      "timing": "Not instrumented for this broad diagnostic; distinguish from final exact command receipts."
+    },
+    {
+      "check": "ui-lint",
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "timing": "Not instrumented for this broad diagnostic; distinguish from final exact command receipts."
+    }
+  ]
+}
