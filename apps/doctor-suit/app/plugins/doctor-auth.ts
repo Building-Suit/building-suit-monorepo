@@ -1,3 +1,5 @@
+import{createOperationalReportReader,operationalReportState}from'../utils/operationalReports'
+import{operationalReportsRepository}from'../utils/operationalReportsRepository'
 import{createImportController,importState}from'../utils/syntheticImport'
 import{syntheticImportRepository}from'../utils/syntheticImportRepository'
 import{createFulfillmentController,fulfillmentState}from'../utils/operationalFulfillment'
@@ -122,6 +124,8 @@ export default defineNuxtPlugin((nuxtApp) => {
     const selected = context.state.current
     return selected?.locationId && selected.capabilities.includes('patients.read') ? selected : null
   }
+  const operationalReports=createOperationalReportReader(client?operationalReportsRepository(client):null,reactive(operationalReportState()),()=>{const s=context.state.current;return s?.locationId&&s.capabilities.some(c=>['appointments.read','worklists.read','patients.read'].includes(c))?s:null})
+  context.registerClear(operationalReports.clear)
   const importPreview=createImportController(client?syntheticImportRepository(client):null,reactive(importState()),patientsScope)
   context.registerClear(importPreview.clear)
   const fulfillment=createFulfillmentController(client?fulfillmentRepository(client):null,reactive(fulfillmentState()),patientsScope)
@@ -165,5 +169,5 @@ export default defineNuxtPlugin((nuxtApp) => {
     })
     nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh();void context.clear(); void appointmentsLive.dispose() })
   }
-  return { provide: { doctorImportPreview:importPreview, doctorFulfillment:fulfillment, doctorOutbox:outbox, doctorContactPreferences:contactPreferences,doctorWorklists:worklists,doctorWaitlist:waitlist,doctorConsultations:consultations,doctorClinicalRelease:clinicalRelease,doctorClinical:clinical,doctorManualReport:manualReport,doctorManualPayment:manualPayment,doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
+  return { provide: { doctorOperationalReports:operationalReports, doctorImportPreview:importPreview, doctorFulfillment:fulfillment, doctorOutbox:outbox, doctorContactPreferences:contactPreferences,doctorWorklists:worklists,doctorWaitlist:waitlist,doctorConsultations:consultations,doctorClinicalRelease:clinicalRelease,doctorClinical:clinical,doctorManualReport:manualReport,doctorManualPayment:manualPayment,doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
 })

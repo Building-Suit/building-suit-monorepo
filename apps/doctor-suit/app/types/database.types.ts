@@ -4087,6 +4087,17 @@ export type Database = {
         }
         Returns: Json
       }
+      doctor_operational_report: {
+        Args: {
+          p_from: string
+          p_kind: string
+          p_location: string
+          p_page: number
+          p_practice: string
+          p_to: string
+        }
+        Returns: Json
+      }
       doctor_operations_status: { Args: never; Returns: Json }
       doctor_outbox: {
         Args: {

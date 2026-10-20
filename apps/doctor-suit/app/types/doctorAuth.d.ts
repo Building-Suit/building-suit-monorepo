@@ -1,3 +1,4 @@
+import type{createOperationalReportReader}from'../utils/operationalReports'
 import type{createImportController}from'../utils/syntheticImport'
 import type{createFulfillmentController}from'../utils/operationalFulfillment'
 import type{createMessageOutboxReader}from'../utils/messageOutbox'
@@ -23,6 +24,7 @@ import type { DoctorLocationContext } from '../utils/locationContext'
 import type { createClinicalController } from '../utils/clinicalController'
 declare module '#app' {
   interface NuxtApp {
+    $doctorOperationalReports:ReturnType<typeof createOperationalReportReader>
     $doctorImportPreview:ReturnType<typeof createImportController>
     $doctorFulfillment:ReturnType<typeof createFulfillmentController>
     $doctorOutbox: ReturnType<typeof createMessageOutboxReader>

@@ -2,7 +2,7 @@ import type { NavigationGroup,NavigationLink } from '@building-suit/contracts'
 export interface DoctorNavigationAccess {
   capabilities: readonly string[]; portal?: 'doctor'|'secretary'; ownsPractice: boolean; hasCurrent: boolean; hasOptions: boolean; choosing: boolean
 }
-export interface DoctorNavigationLabels { workspace:string; patients:string; appointments:string; availability:string; audit:string; locations:string; practice:string; team:string; account:string;clinical?:string;appointmentTypes?:string;waitlist?:string;worklists?:string;importPreview?:string;fulfillment?:string;messages?:string;contactPreferences?:string }
+export interface DoctorNavigationLabels { workspace:string; patients:string; appointments:string; availability:string; audit:string; locations:string; practice:string; team:string; account:string;clinical?:string;appointmentTypes?:string;waitlist?:string;worklists?:string;operationalReports?:string;importPreview?:string;fulfillment?:string;messages?:string;contactPreferences?:string }
 /** Presentation routes reflect existing role grants; this grants no authority. */
 export function doctorWorkspaceNavigation(access:DoctorNavigationAccess,copy:DoctorNavigationLabels):{groups:NavigationGroup[];mobileLinks:NavigationLink[]} {
   const can=(...caps:string[])=>caps.some(cap=>access.capabilities.includes(cap))
@@ -10,6 +10,7 @@ export function doctorWorkspaceNavigation(access:DoctorNavigationAccess,copy:Doc
   const work:NavigationLink[]=[{to:'/workspace',label:copy.workspace,icon:'dashboard'},
     ...(can('appointments.read')?[{to:'/appointments',label:copy.appointments,icon:'invoice'}]:[]),
     ...(can('patients.read')?[{to:'/patients',label:copy.patients,icon:'user'}]:[]),
+    ...((can('patients.read')||can('appointments.read')||can('worklists.read'))&&copy.operationalReports?[{to:'/operational-reports',label:copy.operationalReports,icon:'reports'}]:[]),
     ...(can('patients.read')&&copy.importPreview?[{to:'/import-preview',label:copy.importPreview,icon:'reports'}]:[]),
     ...(can('patients.read')&&copy.fulfillment?[{to:'/fulfillment',label:copy.fulfillment,icon:'reports'}]:[]),
     ...(can('patients.read')&&copy.messages?[{to:'/messages',label:copy.messages,icon:'reports'}]:[]),
