@@ -679,6 +679,15 @@
       "adapterBoundary": "Typed controlled entered-data fields and version/release/document projections; Doctor owns all queries, clinical fixture authority, validation, immutable operations and transport. No medical defaults or professional approval.",
       "task": "DOS-M2",
       "migrationStatus": "implemented-source; verification in progress; no clinical approval"
+    },
+    {
+      "family": "consultation-type-settings",
+      "owner": "packages/ui",
+      "components": [
+        "BsConsultationTypesPage"
+      ],
+      "adapterBoundary": "Typed configuration, controlled fields and semantic commands. Doctor owns consultation history, capacity, scope, scheduling and authorization.",
+      "migrationStatus": "implemented; acceptance in progress"
     }
   ]
 }

@@ -386,7 +386,9 @@
     "./types/paymentReconciliationPresentation": "./src/types/paymentReconciliationPresentation.ts",
     "./templates/BsClinicalWorkspacePage": "./src/templates/BsClinicalWorkspacePage.vue",
     "./utils/clinicalPresentation": "./src/utils/clinicalPresentation.ts",
-    "./templates/BsReleasedClinicalPage": "./src/templates/BsReleasedClinicalPage.vue"
+    "./templates/BsReleasedClinicalPage": "./src/templates/BsReleasedClinicalPage.vue",
+    "./templates/BsConsultationTypesPage": "./src/templates/BsConsultationTypesPage.vue",
+    "./utils/consultationPresentation": "./src/utils/consultationPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

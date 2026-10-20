@@ -1,15 +1,17 @@
+import {consultationType,type ConsultationType}from './consultations.ts'
 import { doctorUuid } from './locationContext.ts'
 import { doctorScheduleDate } from './availability.ts'
 export const doctorAppointmentStates = ['booked','checked_in','in_progress','completed','cancelled','no_show'] as const
 export type DoctorAppointmentState = typeof doctorAppointmentStates[number]
-export interface DoctorAppointment { id: string; practiceId: string; locationId: string; patientId: string; patientName: string | null; startsAt: string; endsAt: string; timezone: string; locationName: string; state: DoctorAppointmentState; version: number; checkedInAt: string | null; startedAt: string | null; completedAt: string | null }
+export interface DoctorAppointment { id: string;consultation?:ConsultationType|null; practiceId: string; locationId: string; patientId: string; patientName: string | null; startsAt: string; endsAt: string; timezone: string; locationName: string; state: DoctorAppointmentState; version: number; checkedInAt: string | null; startedAt: string | null; completedAt: string | null }
 export interface DoctorAppointmentBoard { practiceId: string; locationId: string; date: string; timezone: string; locationVersion: number; items: DoctorAppointment[]; queue: DoctorAppointment[]; page: number; total: number; queuePage: number; queueTotal: number; revision: number; canWrite: boolean; canQueue: boolean; canReadPatients: boolean; externalNotifications: 'disabled' }
 export interface DoctorAppointmentSnapshot { locationId: string; locationName: string; timezone: string; startsAt: string; endsAt: string }
 export interface DoctorAppointmentEvent { id: string; type: string; version: number; at: string; actorUserId: string; locationId: string; reason: string | null; from: DoctorAppointmentSnapshot | null; to: DoctorAppointmentSnapshot | null; previousState: DoctorAppointmentState | null; nextState: DoctorAppointmentState | null }
 export interface DoctorAppointmentHistory { appointmentId: string; version: number; page: number; total: number; events: DoctorAppointmentEvent[] }
 export interface DoctorAppointmentQuery { date: string; page: number; queuePage: number }
+export interface DoctorOfferSelection {typeId?:string;typeVersion?:number;appointmentId?:string}
 export type DoctorAppointmentCommand =
-  | { kind: 'book'; patientId: string; destinationId: string; date: string; minute: number; scheduleVersion: number; locationVersion: number }
+  | { kind: 'book'; typeId?:string;typeVersion?:number;patientId: string; destinationId: string; date: string; minute: number; scheduleVersion: number; locationVersion: number }
   | { kind: 'reschedule'; appointmentId: string; version: number; destinationId: string; date: string; minute: number; scheduleVersion: number; locationVersion: number; reason: string }
   | { kind: 'transition'; appointmentId: string; version: number; state: Exclude<DoctorAppointmentState,'booked'>; reason: string }
 const object = (value: unknown): value is Record<string,unknown> => Boolean(value && typeof value==='object' && !Array.isArray(value))
@@ -28,7 +30,7 @@ export function validDoctorAppointmentCommand(value: DoctorAppointmentCommand) {
   if(!['book','reschedule','transition'].includes(value.kind))return false
   if(value.kind==='transition')return doctorUuid(value.appointmentId) && count(value.version,1) && ['checked_in','in_progress','completed','cancelled','no_show'].includes(value.state) && (['cancelled','no_show'].includes(value.state) ? doctorAppointmentReason(value.reason) : value.reason==='')
   return doctorUuid(value.destinationId) && doctorScheduleDate(value.date) && count(value.minute) && value.minute<1440 && count(value.scheduleVersion,1) && count(value.locationVersion,1)
-    && (value.kind==='book' ? doctorUuid(value.patientId) : doctorUuid(value.appointmentId) && count(value.version,1) && doctorAppointmentReason(value.reason))
+    && (value.kind==='book' ? doctorUuid(value.patientId) && (value.typeId===undefined&&value.typeVersion===undefined || doctorUuid(value.typeId)&&count(value.typeVersion,1)) : doctorUuid(value.appointmentId) && count(value.version,1) && doctorAppointmentReason(value.reason))
 }
 export function doctorAppointment(value: unknown,practiceId: string,locationId: string): DoctorAppointment {
   if(!object(value) || !doctorUuid(value.id) || value.practice_id!==practiceId || value.location_id!==locationId || !doctorUuid(value.patient_id)
@@ -36,7 +38,7 @@ export function doctorAppointment(value: unknown,practiceId: string,locationId: 
     || !zone(value.timezone) || !text(value.location_name,120) || !doctorAppointmentState(value.state) || !count(value.version,1)
     || !nullableTime(value.checked_in_at) || !nullableTime(value.started_at) || !nullableTime(value.completed_at)
     || (['checked_in','in_progress','completed'].includes(value.state) && !value.checked_in_at) || (['in_progress','completed'].includes(value.state) && !value.started_at) || (value.state==='completed' && !value.completed_at))invalid()
-  return { id: value.id,practiceId,locationId,patientId: value.patient_id,patientName: value.patient_name,startsAt: value.starts_at,endsAt: value.ends_at,timezone: value.timezone,locationName: value.location_name,state: value.state,version: value.version,checkedInAt: value.checked_in_at,startedAt: value.started_at,completedAt: value.completed_at }
+  return { id: value.id,consultation:value.consultation_snapshot==null?null:consultationType(value.consultation_snapshot,practiceId),practiceId,locationId,patientId: value.patient_id,patientName: value.patient_name,startsAt: value.starts_at,endsAt: value.ends_at,timezone: value.timezone,locationName: value.location_name,state: value.state,version: value.version,checkedInAt: value.checked_in_at,startedAt: value.started_at,completedAt: value.completed_at }
 }
 export function doctorAppointmentBoard(value: unknown,practiceId: string,locationId: string,query: DoctorAppointmentQuery): DoctorAppointmentBoard {
   if(!object(value) || value.practice_id!==practiceId || value.location_id!==locationId || value.date!==query.date || value.page!==query.page || value.queue_page!==query.queuePage

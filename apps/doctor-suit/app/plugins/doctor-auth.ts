@@ -1,3 +1,5 @@
+import {createConsultationsController,consultationsState} from '../utils/consultationsController'
+import {consultationsRepository} from '../utils/consultationsRepository'
 import {clinicalReleaseRepository} from '../utils/clinicalReleaseRepository'
 import {createClinicalReleaseController,clinicalReleaseState} from '../utils/clinicalReleaseController'
 import{doctorManualReportRepository}from'../utils/manualReconciliationRepository'
@@ -110,6 +112,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     return selected?.locationId && selected.capabilities.includes('patients.read') ? selected : null
   }
   const patients = createDoctorPatientsController(client ? doctorPatientsRepository(client) : null, reactive(doctorPatientsState()), patientsScope)
+  const consultations=createConsultationsController(client?consultationsRepository(client):null,reactive(consultationsState()),patientsScope)
   const clinical=createClinicalController(client?clinicalRepository(client):null,reactive(clinicalState()),patientsScope)
   context.registerClear(clinical.clear)
   const clinicalRelease=createClinicalReleaseController(client?clinicalReleaseRepository(client,provider.url,provider.key):null,reactive(clinicalReleaseState()),()=>state.identity,provider.environment)
@@ -132,7 +135,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     clear: () => { manualReport.clear();manualPayment.clear();privacy.clear();subscription.clear();account.clear(); personalAudit.clear(); void context.clear() },
     locked: () => locked.value === '1', lock: () => { registrationHandoff.value = null; if (import.meta.client) { try { window.sessionStorage.removeItem(`doctor-suit.${settings.environment}.registration.v1`) } catch { /* Storage may be denied. */ } }; locked.value = '1'; context.forgetPreference() }, unlock: () => { locked.value = null },
   })
-  context.registerClear(() => { manualReport.clear();manualPayment.clear();audit.clear(); practice.clear(); locations.clear(); patients.clear(); patientProfile.clear(); availability.clear(); appointments.clear(); dashboard.clear(); void appointmentsLive.update(null,async () => {}); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
+  context.registerClear(() => { consultations.clear();manualReport.clear();manualPayment.clear();audit.clear(); practice.clear(); locations.clear(); patients.clear(); patientProfile.clear(); availability.clear(); appointments.clear(); dashboard.clear(); void appointmentsLive.update(null,async () => {}); team.clear(); invitation.clear(); nuxtApp.runWithContext(() => clearNuxtData(key => key.startsWith('doctor-suit') || key.startsWith('["doctor-suit"'))) })
   if (import.meta.client && client) {
     const { data } = client.auth.onAuthStateChange(event => {
       // Never await SDK calls while its internal auth lock holds this callback.
@@ -140,5 +143,5 @@ export default defineNuxtPlugin((nuxtApp) => {
     })
     nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh();void context.clear(); void appointmentsLive.dispose() })
   }
-  return { provide: { doctorClinicalRelease:clinicalRelease,doctorClinical:clinical,doctorManualReport:manualReport,doctorManualPayment:manualPayment,doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
+  return { provide: { doctorConsultations:consultations,doctorClinicalRelease:clinicalRelease,doctorClinical:clinical,doctorManualReport:manualReport,doctorManualPayment:manualPayment,doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
 })

@@ -1,7 +1,7 @@
 import { doctorScopeKey } from './contextScope.ts'
 import { doctorUuid,type DoctorLocationContext } from './locationContext.ts'
 import { doctorScheduleDate,type DoctorAvailability } from './availability.ts'
-import { validDoctorAppointmentCommand,type DoctorAppointmentBoard,type DoctorAppointmentHistory,type DoctorAppointmentQuery,type DoctorAppointmentCommand } from './appointments.ts'
+import { validDoctorAppointmentCommand,type DoctorAppointmentBoard,type DoctorAppointmentHistory,type DoctorAppointmentQuery,type DoctorAppointmentCommand,type DoctorOfferSelection } from './appointments.ts'
 import { doctorPatientFailure,type DoctorPatientError } from './patientsController.ts'
 import type { DoctorPatientDirectory } from './patients'
 import type { doctorAppointmentsRepository } from './appointmentsRepository'
@@ -15,7 +15,7 @@ export function createDoctorAppointmentsController(repository: ReturnType<typeof
   function clear() { generation++;abort.abort();abort = new AbortController();uncertain = null;latestQuery = null;refreshQueued = false;Object.assign(state,doctorAppointmentsState()) }
   function discard() { uncertain = null;state.actionError = null;state.offers = null;state.offersError = null;state.patients = null;state.patientsError = null }
   function failure(error: unknown) { const result = doctorPatientFailure(error);if(result==='denied')clear();return result }
-  function disconnected() { state.live = 'reconnecting';state.board = null;state.history = null;state.offers = null;revisions.offers++ }
+  function disconnected() { state.live = 'reconnecting';state.board = null;state.history = null;state.offers = null;revisions.offers++;state.offersLoading=false;state.offersError='network' }
   async function load(query: DoctorAppointmentQuery) {
     if(state.pending) { latestQuery = { ...query };refreshQueued = true;return false }
     const selected = scope();const expected = capture();const revision = ++revisions.board;latestQuery = { ...query };state.loading = true;state.error = null
@@ -31,10 +31,10 @@ export function createDoctorAppointmentsController(repository: ReturnType<typeof
     catch(error) { if(accepts(expected) && revision===revisions.history)state.historyError = failure(error);return false }
     finally { if(accepts(expected) && revision===revisions.history)state.historyLoading = false }
   }
-  async function offers(locationId: string,date: string) {
+  async function offers(locationId: string,date: string,selection?:DoctorOfferSelection) {
     const selected = scope();const expected = capture();const revision = ++revisions.offers;state.offers = null;state.offersLoading = true;state.offersError = null
     if(!repository || !selected || !doctorUuid(locationId) || !doctorScheduleDate(date)) { state.offersLoading = false;state.offersError = 'invalid';return false }
-    try { const result = await repository.offers(selected.practiceId,locationId,date,signal());if(!accepts(expected) || revision!==revisions.offers)return false;state.offers = result;return true }
+    try { const result = await repository.offers(selected.practiceId,locationId,date,signal(),selection);if(!accepts(expected) || revision!==revisions.offers)return false;state.offers = result;return true }
     catch(error) { if(accepts(expected) && revision===revisions.offers)state.offersError = failure(error);return false }
     finally { if(accepts(expected) && revision===revisions.offers)state.offersLoading = false }
   }

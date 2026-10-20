@@ -113,7 +113,10 @@ export type Database = {
       appointments: {
         Row: {
           checked_in_at: string | null
+          commitment_end: string
+          commitment_start: string
           completed_at: string | null
+          consultation_snapshot: Json | null
           created_at: string
           created_by: string
           doctor_user_id: string
@@ -132,7 +135,10 @@ export type Database = {
         }
         Insert: {
           checked_in_at?: string | null
+          commitment_end: string
+          commitment_start: string
           completed_at?: string | null
+          consultation_snapshot?: Json | null
           created_at?: string
           created_by: string
           doctor_user_id: string
@@ -151,7 +157,10 @@ export type Database = {
         }
         Update: {
           checked_in_at?: string | null
+          commitment_end?: string
+          commitment_start?: string
           completed_at?: string | null
+          consultation_snapshot?: Json | null
           created_at?: string
           created_by?: string
           doctor_user_id?: string
@@ -512,6 +521,59 @@ export type Database = {
             columns: ["source_version_id"]
             isOneToOne: false
             referencedRelation: "clinical_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultation_types: {
+        Row: {
+          active: boolean
+          actor_user_id: string
+          buffer_after: number
+          buffer_before: number
+          capacity: number
+          duration_minutes: number
+          happened_at: string
+          id: string
+          location_ids: string[]
+          name: string
+          practice_id: string
+          version: number
+        }
+        Insert: {
+          active: boolean
+          actor_user_id: string
+          buffer_after: number
+          buffer_before: number
+          capacity?: number
+          duration_minutes: number
+          happened_at?: string
+          id?: string
+          location_ids: string[]
+          name: string
+          practice_id: string
+          version: number
+        }
+        Update: {
+          active?: boolean
+          actor_user_id?: string
+          buffer_after?: number
+          buffer_before?: number
+          capacity?: number
+          duration_minutes?: number
+          happened_at?: string
+          id?: string
+          location_ids?: string[]
+          name?: string
+          practice_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultation_types_practice_id_fkey"
+            columns: ["practice_id"]
+            isOneToOne: false
+            referencedRelation: "practices"
             referencedColumns: ["id"]
           },
         ]
@@ -2595,6 +2657,21 @@ export type Database = {
         }
         Returns: Json
       }
+      doctor_book_consultation: {
+        Args: {
+          p_day: string
+          p_key: string
+          p_location: string
+          p_location_version: number
+          p_minute: number
+          p_patient: string
+          p_practice: string
+          p_schedule_version: number
+          p_type: string
+          p_type_version: number
+        }
+        Returns: Json
+      }
       doctor_cancel_secretary_invitation: {
         Args: {
           p_invitation: string
@@ -2656,6 +2733,21 @@ export type Database = {
       }
       doctor_complete_onboarding: {
         Args: { p_draft_version: number; p_key: string }
+        Returns: Json
+      }
+      doctor_consultation_availability: {
+        Args: {
+          p_appointment?: string
+          p_day: string
+          p_location: string
+          p_practice: string
+          p_type: string
+          p_version: number
+        }
+        Returns: Json
+      }
+      doctor_consultation_types: {
+        Args: { p_location: string; p_practice: string }
         Returns: Json
       }
       doctor_contexts: { Args: never; Returns: Json }
@@ -3002,6 +3094,17 @@ export type Database = {
           p_key: string
           p_practice: string
           p_practice_name: string
+        }
+        Returns: Json
+      }
+      doctor_write_consultation_type: {
+        Args: {
+          p_expected_version: number
+          p_input: Json
+          p_key: string
+          p_location: string
+          p_practice: string
+          p_type: string
         }
         Returns: Json
       }
