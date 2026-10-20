@@ -67,6 +67,19 @@ export function clinicalDetail(value:unknown,practice:string,location:string,enc
  for(const version of value.versions)if(!clinicalObject(version)||!clinicalUuid(version.id)||!Number.isSafeInteger(version.revision)||!statuses.includes(String(version.kind))||!validClinicalSnapshot(version.snapshot)||typeof version.canonical_snapshot!=='string'||!text(version.snapshot_sha256,64)||!(/^[0-9a-f]{64}$/).test(version.snapshot_sha256)||version.synthetic_attestation!==true||version.professional_signature!==false||!['active','superseded','withdrawn','draft'].includes(String(version.version_status))||!clinicalUuid(version.actor_user_id)||!instant(version.happened_at))return unavailable()
  return value as unknown as ClinicalDetail
 }
+/** Verify the exact server canonical bytes before a revision can be reviewed or printed. */
+export async function verifyClinicalDetail(value:unknown,practice:string,location:string,encounter:string):Promise<ClinicalDetail> {
+ const detail=clinicalDetail(value,practice,location,encounter)
+ const sorted=(item:unknown):unknown=>Array.isArray(item)?item.map(sorted):clinicalObject(item)?Object.fromEntries(Object.keys(item).sort().map(key=>[key,sorted(item[key])])):item
+ for(const version of detail.versions){
+  const bytes=new TextEncoder().encode(version.canonical_snapshot)
+  if(bytes.length>131072)return unavailable()
+  const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(byte=>byte.toString(16).padStart(2,'0')).join('')
+  let source:unknown;try{source=JSON.parse(version.canonical_snapshot)}catch{return unavailable()}
+  if(hash!==version.snapshot_sha256||JSON.stringify(sorted(source))!==JSON.stringify(sorted(version.snapshot)))return unavailable()
+ }
+ return detail
+}
 export function clinicalCommandResult(value:unknown):ClinicalCommandResult {
  if(!safeEnvelope(value)||!clinicalUuid(value.encounter_id)||!clinicalUuid(value.version_id)||!Number.isSafeInteger(value.version)||Number(value.version)<1||!statuses.includes(String(value.status))||(value.release_id!==null&&!clinicalUuid(value.release_id)))return unavailable()
  return value as unknown as ClinicalCommandResult
