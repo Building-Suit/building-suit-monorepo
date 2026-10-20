@@ -1,0 +1,14 @@
+{
+  "id": "dos-m3-009",
+  "task": "DOS-M3-009",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-009.md"
+  ],
+  "reason": "Versioned synthetic import preview and reconciliation only; canonical writes and real custody remain gated."
+}
