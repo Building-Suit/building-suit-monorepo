@@ -12,7 +12,8 @@
     "apps/doctor-suit/tests/e2e/dos-m3-007.spec.ts",
     "apps/doctor-suit/tests/unit/dos-m3-007.test.mjs",
     "docs/work-packages/doctor-suit/implementation/dos-m3-007-provider-evidence.json",
-    "docs/work-packages/doctor-suit/implementation/dos-m3-007.md"
+    "docs/work-packages/doctor-suit/implementation/dos-m3-007.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-007-verification.json"
   ],
   "reason": "Provider evidence packet and disabled external delivery guard; no approved provider or operational activation."
 }
