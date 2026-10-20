@@ -1,0 +1,14 @@
+{
+  "id": "dos-m3-007",
+  "task": "DOS-M3-007",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-007.md"
+  ],
+  "reason": "Provider evidence packet and disabled external delivery guard; no approved provider or operational activation."
+}
