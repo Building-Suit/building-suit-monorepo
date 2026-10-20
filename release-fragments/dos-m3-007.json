@@ -7,7 +7,11 @@
   "classification": "internal",
   "disposition": "internal",
   "paths": [
-    "apps/doctor-suit/",
+    "apps/doctor-suit/app/utils/communicationProvider.ts",
+    "apps/doctor-suit/supabase/tests/dos-m3-007.sql",
+    "apps/doctor-suit/tests/e2e/dos-m3-007.spec.ts",
+    "apps/doctor-suit/tests/unit/dos-m3-007.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-007-provider-evidence.json",
     "docs/work-packages/doctor-suit/implementation/dos-m3-007.md"
   ],
   "reason": "Provider evidence packet and disabled external delivery guard; no approved provider or operational activation."
