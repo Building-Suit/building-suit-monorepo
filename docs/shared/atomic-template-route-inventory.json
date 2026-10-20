@@ -3137,6 +3137,16 @@
       "status": "implemented; acceptance in progress",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/operational-reports.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsReportsPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/operational-reports.vue",
+      "purpose": "scoped-synthetic-operational-reports",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [

@@ -1,3 +1,4 @@
+import{verifyReportsConcurrency}from'./reports-concurrency.mjs'
 import{verifyImportConcurrency}from'./import-concurrency.mjs'
 import{verifyFulfillmentConcurrency}from'./fulfillment-concurrency.mjs'
 import{verifyOutboxConcurrency}from'./outbox-concurrency.mjs'
@@ -120,6 +121,7 @@ try {
     console.log(`${file}: ${passed.length} SQL assertions passed`)
   }
   if(!focused){
+  await verifyReportsConcurrency(container)
   await verifyImportConcurrency(container)
   await verifyFulfillmentConcurrency(container)
   await verifyOutboxConcurrency(container)

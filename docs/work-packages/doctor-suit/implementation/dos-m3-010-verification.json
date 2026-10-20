@@ -1,0 +1,489 @@
+{
+  "task": "DOS-M3-010",
+  "checks": [
+    {
+      "check": "task-units",
+      "argv": [
+        "node",
+        "--test",
+        "apps/doctor-suit/tests/unit/dos-m3-010.test.mjs"
+      ],
+      "source_head": "d3b7bee01d1c25e2a49e0b63d53912b38f2fed09",
+      "started_at": "2026-10-20T18:35:12.191260+00:00",
+      "finished_at": "2026-10-20T18:35:12.331195+00:00",
+      "exit_code": 0,
+      "log_sha256": "de51e45e32f1da5fbde9b60cc09ef58252df48d6b430cea869ea8170b9c83097"
+    },
+    {
+      "check": "full-sql",
+      "argv": [
+        "node",
+        "apps/doctor-suit/tests/disposable-postgres.mjs",
+        "--types"
+      ],
+      "source_head": "d3b7bee01d1c25e2a49e0b63d53912b38f2fed09",
+      "started_at": "2026-10-20T18:35:12.331439+00:00",
+      "finished_at": "2026-10-20T18:37:54.746078+00:00",
+      "exit_code": 0,
+      "log_sha256": "b6ebf8061f02d5591ca5268b0f3037495d13e89bc53f3ab0ff75b17061273120"
+    },
+    {
+      "check": "types",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "typecheck"
+      ],
+      "source_head": "d3b7bee01d1c25e2a49e0b63d53912b38f2fed09",
+      "started_at": "2026-10-20T18:37:54.746212+00:00",
+      "finished_at": "2026-10-20T18:38:27.003411+00:00",
+      "exit_code": 0,
+      "log_sha256": "afd99a48f34bef5e8748f9cf480f22e1fcc56e92d1fba88d235f02b7ad481fe6"
+    },
+    {
+      "check": "lint",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "lint"
+      ],
+      "source_head": "d3b7bee01d1c25e2a49e0b63d53912b38f2fed09",
+      "started_at": "2026-10-20T18:38:27.003481+00:00",
+      "finished_at": "2026-10-20T18:38:35.986931+00:00",
+      "exit_code": 0,
+      "log_sha256": "5582d2ffa16dda662f9947939fa3f79a15ee99b6856664e2f75837e25cc77de7"
+    },
+    {
+      "check": "architecture",
+      "argv": [
+        "pnpm",
+        "check"
+      ],
+      "source_head": "d3b7bee01d1c25e2a49e0b63d53912b38f2fed09",
+      "started_at": "2026-10-20T18:38:35.986999+00:00",
+      "finished_at": "2026-10-20T18:38:43.170207+00:00",
+      "exit_code": 0,
+      "log_sha256": "8f7012025537908757eddc50b37b044296c34f82d6b29db9a9d682857992b2f8"
+    },
+    {
+      "check": "release",
+      "argv": [
+        "pnpm",
+        "release:check"
+      ],
+      "source_head": "d3b7bee01d1c25e2a49e0b63d53912b38f2fed09",
+      "started_at": "2026-10-20T18:38:43.170309+00:00",
+      "finished_at": "2026-10-20T18:38:50.791280+00:00",
+      "exit_code": 0,
+      "log_sha256": "0a9d5275392985f88737a17f4c6c7b8b59d8a91b52f073cd1a197b3e8cbb0220"
+    },
+    {
+      "check": "final-build",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/doctor-suit",
+        "build"
+      ],
+      "source_head": "d3b7bee01d1c25e2a49e0b63d53912b38f2fed09",
+      "started_at": "2026-10-20T18:38:33.815079+00:00",
+      "finished_at": "2026-10-20T18:39:21.302150+00:00",
+      "exit_code": 0,
+      "log_sha256": "275d7777f1ea4c56ee6b72dd8f630b8f78ec31e9e7e8fad43513cdb5db968c01"
+    },
+    {
+      "check": "final-all-doctor-units",
+      "argv": [
+        "node",
+        "--test",
+        "apps/doctor-suit/tests/unit/administration-protocol.test.mjs",
+        "apps/doctor-suit/tests/unit/administration-readiness.test.mjs",
+        "apps/doctor-suit/tests/unit/administrative-edition.test.mjs",
+        "apps/doctor-suit/tests/unit/administrative-presentation.test.mjs",
+        "apps/doctor-suit/tests/unit/auth-entry.test.mjs",
+        "apps/doctor-suit/tests/unit/auth-root-presentation.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-002.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-003.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-004.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-005.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-006.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-007.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-008.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-009.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-010.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-011.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-012-files.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-012-http.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-012-provider-diagnostics.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-012.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-013.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-014.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-015.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-016.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-017.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-018.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-019.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-020-evidence.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-020-shop-backend.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-020.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-001.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-002.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-003.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-004.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-005.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-006.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-007.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-008.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-009.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-010.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-011-files.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-011.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-012.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-013.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m2-014.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-001.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-002.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-003.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-004.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-005.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-006.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-007.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-008.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-009.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m3-010.test.mjs",
+        "apps/doctor-suit/tests/unit/early-administrative-scope.test.mjs",
+        "apps/doctor-suit/tests/unit/email-lookup-protocol.test.mjs",
+        "apps/doctor-suit/tests/unit/entitlement-context.test.mjs",
+        "apps/doctor-suit/tests/unit/instapay-catalog.test.mjs",
+        "apps/doctor-suit/tests/unit/instapay-evidence.test.mjs",
+        "apps/doctor-suit/tests/unit/launch-pricing.test.mjs",
+        "apps/doctor-suit/tests/unit/manual-payment-contracts.test.mjs",
+        "apps/doctor-suit/tests/unit/manual-payment-controller.test.mjs",
+        "apps/doctor-suit/tests/unit/manual-payment-session.test.mjs",
+        "apps/doctor-suit/tests/unit/manual-reconciliation.test.mjs",
+        "apps/doctor-suit/tests/unit/onboarding-refresh.test.mjs",
+        "apps/doctor-suit/tests/unit/operations-readiness.test.mjs",
+        "apps/doctor-suit/tests/unit/policy-drafts.test.mjs",
+        "apps/doctor-suit/tests/unit/privacy-requests.test.mjs",
+        "apps/doctor-suit/tests/unit/registration-flow.test.mjs",
+        "apps/doctor-suit/tests/unit/registration.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-document.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-financial.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-quotes.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-status.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-terms.test.mjs",
+        "apps/doctor-suit/tests/unit/saas-write-offers.test.mjs",
+        "apps/doctor-suit/tests/unit/subscription-controller.test.mjs",
+        "apps/doctor-suit/tests/unit/ui-consistency.test.mjs"
+      ],
+      "source_head": "d3b7bee01d1c25e2a49e0b63d53912b38f2fed09",
+      "started_at": "2026-10-20T18:40:18.898030+00:00",
+      "finished_at": "2026-10-20T18:40:30.188693+00:00",
+      "exit_code": 0,
+      "log_sha256": "15477aa854af04ef6d43ea15eab4268fde1fc00059c9bb8413e06330aa7aec7d"
+    }
+  ],
+  "base_sha": "5cd44035ad01430d186f805b9e776653cccfc9f0",
+  "parent_pr": 433,
+  "runtime_source_sha": "d3b7bee01d1c25e2a49e0b63d53912b38f2fed09",
+  "node": "26.8.1",
+  "pnpm": "10.33.0",
+  "supabase_cli": "2.116.0",
+  "source_clean_after_checks": true,
+  "doctor_units": {
+    "tests": 453,
+    "passed": 453,
+    "failed": 0,
+    "skipped": 0
+  },
+  "sql": {
+    "M3-006": 36,
+    "M3-007": 5,
+    "M3-008": 28,
+    "M3-009": 24,
+    "M3-010": 28,
+    "new_transaction_scenarios": 18,
+    "recovery_table_fingerprints": 86
+  },
+  "repository_results": {
+    "counts": {
+      "tests": 2165,
+      "passed": 2088,
+      "failed": 54,
+      "skipped": 23
+    },
+    "failure_locations": [
+      "apps/shop-suit/tests/unit/arabic-copy.test.mjs:26:1",
+      "apps/shop-suit/tests/unit/arabic-copy.test.mjs:49:1",
+      "apps/shop-suit/tests/unit/arabic-copy.test.mjs:59:1",
+      "apps/shop-suit/tests/unit/commission-adapter.test.mjs:8:1",
+      "apps/shop-suit/tests/unit/google-onboarding.test.mjs:51:1",
+      "apps/shop-suit/tests/unit/google-onboarding.test.mjs:69:1",
+      "apps/shop-suit/tests/unit/google-onboarding.test.mjs:80:1",
+      "apps/shop-suit/tests/unit/google-onboarding.test.mjs:86:1",
+      "apps/shop-suit/tests/unit/google-onboarding.test.mjs:97:1",
+      "apps/shop-suit/tests/unit/google-onboarding.test.mjs:102:1",
+      "apps/shop-suit/tests/unit/google-onboarding.test.mjs:108:1",
+      "apps/shop-suit/tests/unit/landing-journey.test.mjs:12:1",
+      "apps/shop-suit/tests/unit/landing-journey.test.mjs:19:1",
+      "apps/shop-suit/tests/unit/landing-journey.test.mjs:27:1",
+      "apps/shop-suit/tests/unit/locations.test.mjs:1:1",
+      "apps/shop-suit/tests/unit/permission-menu.test.mjs:20:3",
+      "apps/shop-suit/tests/unit/permission-menu.test.mjs:20:3",
+      "apps/shop-suit/tests/unit/permission-menu.test.mjs:63:1",
+      "apps/shop-suit/tests/unit/platform-admin.test.mjs:35:1",
+      "apps/shop-suit/tests/unit/pos-customer-ssr.test.mjs:29:48",
+      "apps/shop-suit/tests/unit/pos-customer-ssr.test.mjs:29:48",
+      "apps/shop-suit/tests/unit/pos.test.mjs:30:1",
+      "apps/shop-suit/tests/unit/public-contact-actions.test.mjs:7:1",
+      "apps/shop-suit/tests/unit/purchase-entity-picker.test.mjs:30:1",
+      "apps/shop-suit/tests/unit/purchase-entity-picker.test.mjs:52:1",
+      "apps/shop-suit/tests/unit/receipt-image-scope.test.mjs:33:70",
+      "apps/shop-suit/tests/unit/receipt-image-scope.test.mjs:33:70",
+      "apps/shop-suit/tests/unit/receipt-image-scope.test.mjs:33:70",
+      "apps/shop-suit/tests/unit/receipt-image-scope.test.mjs:33:70",
+      "apps/shop-suit/tests/unit/receipt-image-scope.test.mjs:54:1",
+      "apps/shop-suit/tests/unit/sale-receipt.test.mjs:1:1",
+      "apps/shop-suit/tests/unit/shared-ui-migration.test.mjs:97:1",
+      "apps/shop-suit/tests/unit/shared-ui-migration.test.mjs:143:1",
+      "apps/shop-suit/tests/unit/shop-context.test.mjs:58:1",
+      "apps/shop-suit/tests/unit/shop-context.test.mjs:81:1",
+      "apps/shop-suit/tests/unit/shop-context.test.mjs:103:1",
+      "apps/shop-suit/tests/unit/shop-profile-settings.test.mjs:1:1",
+      "apps/shop-suit/tests/unit/signup-session-transition.test.mjs:8:1",
+      "apps/shop-suit/tests/unit/ss-launch-single-session-001-2.test.mjs:41:1",
+      "apps/shop-suit/tests/unit/ss-launch-single-session-001-2.test.mjs:57:1",
+      "apps/shop-suit/tests/unit/ss-launch-single-session-001-2.test.mjs:67:1",
+      "apps/shop-suit/tests/unit/shop-context.test.mjs:58:1",
+      "apps/shop-suit/tests/unit/shop-context.test.mjs:81:1",
+      "apps/shop-suit/tests/unit/shop-context.test.mjs:103:1",
+      "apps/shop-suit/tests/unit/signup-session-transition.test.mjs:8:1",
+      "apps/shop-suit/tests/unit/tax-quote.test.mjs:18:1",
+      "apps/shop-suit/tests/unit/tax-quote.test.mjs:26:1",
+      "apps/shop-suit/tests/unit/tax-quote.test.mjs:32:1",
+      "apps/shop-suit/tests/unit/team.test.mjs:1:1",
+      "apps/shop-suit/tests/unit/ux-async-actions.test.mjs:47:1",
+      "apps/shop-suit/tests/unit/ux-async-actions.test.mjs:61:1",
+      "apps/shop-suit/tests/unit/ux-async-actions.test.mjs:75:1",
+      "apps/shop-suit/tests/unit/ux-async-actions.test.mjs:88:1",
+      "apps/shop-suit/tests/unit/ux-async-actions.test.mjs:102:1"
+    ],
+    "failure_labels": [
+      "primary owner journeys keep natural Egyptian action and recovery copy (40.697687ms)",
+      "plain explanations retain operational and compliance precision (10.518249ms)",
+      "the maintained convention documents concise RTL review (12.555295ms)",
+      "commission draft loader uses the two-argument RPC and retains attribution rows across tenant changes (269.496795ms)",
+      "new Google account retains locked identity, needs workspace fields and creates only one shop (22.368875ms)",
+      "missing provider name remains editable through the account step without password (2.440343ms)",
+      "existing Google account goes to its existing shop without provisioning (12.238939ms)",
+      "reload restores incomplete Google workspace but revalidates identity and never requires password or OTP (43.412314ms)",
+      "identity lookup failure blocks signup rather than creating another account (5.944738ms)",
+      "unavailable shop lookup cannot provision a duplicate account or shop (2.300863ms)",
+      "Google callback exchanges once, and reload resumes through authenticated getUser without a code (1.794741ms)",
+      "Shop-only cinematic story preserves original pricing and non-Shop fallback (2.140221ms)",
+      "Cinematic beats reflect real POS flow rather than fake functionality (0.335725ms)",
+      "GSAP is lazy, scoped, scrubbed, reversible, and mobile/reduced-motion safe (0.85691ms)",
+      "apps/shop-suit/tests/unit/locations.test.mjs (51.101386ms)",
+      "en: permission sections follow canonical navigation names and order (14.455083ms)",
+      "ar: permission sections follow canonical navigation names and order (0.610128ms)",
+      "website stack keeps existing settings and appointment grants under their actual menu pages (2.225089ms)",
+      "operator surface uses only authenticated RPCs and clears on identity changes (4.23267ms)",
+      "SSR locks appointment customer context before hydration (customer-1) (1472.125575ms)",
+      "SSR locks appointment customer context before hydration (walk-in) (706.849794ms)",
+      "POS page covers scanner recovery, locked context, keyboard and bilingual responsive states (46.085517ms)",
+      "contact duplicate commands stay locked until one authoritative request settles (307.620513ms)",
+      "lazy purchase search discards stale results and clears choices when identity or shop changes (287.291834ms)",
+      "failed load-more retries the same page without dropping previously fetched or selected entities (106.644019ms)",
+      "pending receipt image and fallback do not survive merchant changes (5.331454ms)",
+      "pending receipt image and fallback do not survive location changes (0.27933ms)",
+      "pending receipt image and fallback do not survive receipt changes (0.242696ms)",
+      "pending receipt image and fallback do not survive unmount changes (0.245269ms)",
+      "current receipt completes normally and context changes clear its download fallback (0.276837ms)",
+      "apps/shop-suit/tests/unit/sale-receipt.test.mjs (627.448936ms)",
+      "Shop CRUD tables use shared capabilities, toolbar controls, pagination, and row actions (7.488049ms)",
+      "remaining authenticated root mutations use shared action dialogs (3.730043ms)",
+      "account replacement hides tenant data before membership resolves and ignores the old account location response (9.942584ms)",
+      "A \u2192 B \u2192 A ignores delayed earlier locations and reports only the latest switch failure (0.904742ms)",
+      "sign-out invalidates in-flight membership reads (0.675596ms)",
+      "apps/shop-suit/tests/unit/shop-profile-settings.test.mjs (141.964147ms)",
+      "signup survives session establishment and provisioning while operational context changes still remount (611.032682ms)",
+      "SIGNED_OUT synchronously clears tenant/admin state and schedules login outside Auth lock (28.915398ms)",
+      "refresh and sign-in events preserve session; queued logout cannot redirect a new account (1.038203ms)",
+      "signed-out public auth routes retain their recovery navigation (6.673454ms)",
+      "account replacement hides tenant data before membership resolves and ignores the old account location response (66.978693ms)",
+      "A \u2192 B \u2192 A ignores delayed earlier locations and reports only the latest switch failure (48.430098ms)",
+      "sign-out invalidates in-flight membership reads (1.543303ms)",
+      "signup survives session establishment and provisioning while operational context changes still remount (565.477323ms)",
+      "sale quote uses server totals and scopes cache identity (1.366326ms)",
+      "offline allows confirmed disabled calculation and rejects enabled or unknown state (0.256286ms)",
+      "delayed quote cannot overwrite tax state after account or location changes (0.205249ms)",
+      "apps/shop-suit/tests/unit/team.test.mjs (51.047167ms)",
+      "report export freezes its query, pages all rows and uses the original columns (157.988351ms)",
+      "changing report filters and returning to the original filter still cancels the old export (45.171634ms)",
+      "context disposal suppresses a delayed report download and stale error feedback (51.179437ms)",
+      "barcode export goes past twenty pages using the catalog RPC maximum and does not stop on sparse label pages (16.643378ms)",
+      "import cancellation performs no write and releases the pending lock (33.493999ms)"
+    ],
+    "all_failures_shop": true,
+    "log_sha256": "06cd083e77c2c4cda8ca4b1998b851312e4bc5be11dbb79c9404b5021e1e21fe",
+    "shop_tree_unchanged_since_M3_005": true
+  },
+  "full_repository_acceptance": false,
+  "actual_service_browser_acceptance": false,
+  "provider_acceptance": false,
+  "professional_approval": false,
+  "inherited_root_ci": {
+    "pr": 401,
+    "head": "ba9b7e051746a50bd2bdfd3c0ad5463e063584e3",
+    "mergeable_state": "unstable",
+    "checks": [
+      {
+        "conclusion": "skipped",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440806861/job/118689956938",
+        "name": "publish-releases",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440806861/job/118689955741",
+        "name": "github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-verify' || 'verify'",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440806861/job/118689806646",
+        "name": "github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-review' || 'review'",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440806861/job/118689803838",
+        "name": "branch-policy",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440303377/job/118689074508",
+        "name": "publish-releases",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440303377/job/118689074435",
+        "name": "github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-verify' || 'verify'",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440351003/job/118688423911",
+        "name": "publish-releases",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440351003/job/118688422470",
+        "name": "github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-verify' || 'verify'",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440351003/job/118688225180",
+        "name": "github.event_name == 'pull_request' && github.event.action == 'edited' && github.event.changes.base == null && (github.event.changes.title != null || github.event.changes.body != null) && 'metadata-review' || 'review'",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440351003/job/118688223381",
+        "name": "branch-policy",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/runs/118688116296",
+        "name": "Supabase Preview",
+        "status": "completed"
+      },
+      {
+        "conclusion": "failure",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440303377/job/118688055956",
+        "name": "review",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440303434/job/118688055673",
+        "name": "doctor-sql",
+        "status": "completed"
+      },
+      {
+        "conclusion": "failure",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440303434/job/118688055562",
+        "name": "shared-settings-browser",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440303377/job/118688055355",
+        "name": "branch-policy",
+        "status": "completed"
+      },
+      {
+        "conclusion": "failure",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440303434/job/118688055106",
+        "name": "doctor-browser",
+        "status": "completed"
+      },
+      {
+        "conclusion": "failure",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440303378/job/118688054597",
+        "name": "marketing-privacy",
+        "status": "completed"
+      },
+      {
+        "conclusion": "failure",
+        "html_url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/39440303379/job/118688054490",
+        "name": "website-launch",
+        "status": "completed"
+      }
+    ]
+  },
+  "limitations": [
+    "M3-007 provider implementation is blocked; twelve packet evidence items remain null. No real provider/sandbox acceptance is claimed.",
+    "Actual local Supabase browser startup was stopped during run-owned image extraction after concurrent SQL reported no disk space. All new actual-service browser/visual journeys remain UNRUN; the failed receipt is committed under M3-006.",
+    "Full-provider Realtime, qualified clinical/legal/minor approval, custody and real import remain unavailable.",
+    "Report pages are fresh request snapshots, not a frozen export; concurrent writes between page requests can alter later pages.",
+    "The full repository run still fails54 inherited Shop tests;23 tests are skipped. Root401 has failing required CI and is not merged.",
+    "No hosted migration, actual external message, Automation mutation, operational release registration, staging merge, deployment or main promotion was performed."
+  ],
+  "prior_diagnostics": [
+    "Initial report fixture omitted required lifecycle timestamps and would have created multiple in-progress visits; corrected fixture values, all constraints retained.",
+    "First full SQL run passed before the later M3-008 exact-request content correction. After the owning PR fix and explicit parent merges, full SQL was rerun on this exact runtime candidate and passed.",
+    "Final report denial handling retains unavailable/denied state rather than showing a fabricated empty authorized population."
+  ],
+  "diagnostics": [
+    {
+      "check": "full-repository",
+      "argv": [
+        "pnpm",
+        "test"
+      ],
+      "exit_code": 1,
+      "log_sha256": "06cd083e77c2c4cda8ca4b1998b851312e4bc5be11dbb79c9404b5021e1e21fe",
+      "timing": "Earlier broad diagnostic was not instrumented; distinguish from final exact runtime command receipts."
+    },
+    {
+      "check": "docs-types",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@building-suit/docs",
+        "typecheck"
+      ],
+      "exit_code": 0,
+      "log_sha256": "937e4927edced4169a72ee673d1beffbaca62506573f2c634c2025dd69e56e15",
+      "timing": "Earlier broad diagnostic was not instrumented; distinguish from final exact runtime command receipts."
+    }
+  ]
+}
