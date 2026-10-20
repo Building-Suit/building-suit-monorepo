@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { calendarDateKey, calendarLocalDate, calendarWindow } from '@building-suit/ux'
+import { calendarDateKey, calendarLocalDate, calendarWindow, useInlineForm } from '@building-suit/ux'
 import type { BsAppointmentCard, BsAppointmentsView } from '@building-suit/ui/types/appointmentsPresentation'
 import type { PrivacyPresentation } from '@building-suit/ux'
 import type { ChangelogFeed, ChangelogCopy } from '@building-suit/contracts'
@@ -120,6 +120,20 @@ const choices = Array.from({ length: 10000 }, (_, index) => ({ id: String(index 
 const formError = ref('')
 const formPending = ref(false)
 const formValue = ref('')
+const inlineSettingsSource = ref('Example shop')
+const inlineSettingsName = ref(inlineSettingsSource.value)
+const inlineSettingsSaved = ref(false)
+const inlineSettingsDraft = useInlineForm({
+  read: () => inlineSettingsName.value,
+  source: () => inlineSettingsSource.value,
+  write: value => { inlineSettingsName.value = value },
+  scope: () => 'synthetic-catalogue',
+})
+function saveInlineSettingsExample() {
+  inlineSettingsSource.value = inlineSettingsName.value.trim()
+  inlineSettingsDraft.reset()
+  inlineSettingsSaved.value = true
+}
 const notes = ref('')
 const tab = ref('overview')
 const segment = ref('summary')
@@ -443,6 +457,14 @@ const invitationPreviewCopy={
           <BsFormActions><BsButton type="button">{{ ui('cancel') }}</BsButton><BsButton type="submit" variant="primary">{{ ui('save') }}</BsButton></BsFormActions>
         </BsForm>
         <div class="flex flex-wrap gap-2"><BsButton variant="chip" :aria-pressed="formPending" @click="formPending = !formPending">{{ ui('loading') }}</BsButton><BsButton @click="toastSuccess(isArabic ? 'تم الحفظ' : 'Saved')">{{ isArabic ? 'إظهار إشعار' : 'Show notification' }}</BsButton></div>
+        <BsDivider />
+        <BsHeading :level="3">{{ isArabic ? 'إعدادات مباشرة في الصفحة' : 'On-page settings' }}</BsHeading>
+        <BsText size="sm" tone="muted">{{ isArabic ? 'مثال توضيحي فقط: محرر مباشر دون نافذة، مع مسودة مستقلة وحفظ وإلغاء وحالات التعطيل والخطأ.' : 'Synthetic example only: an inline editor with an independent draft, Save and Cancel, and pending, disabled and error states.' }}</BsText>
+        <BsSettingsForm :pending="formPending" :error="formError" :dirty="inlineSettingsDraft.dirty.value" :submit-disabled="inlineSettingsName.trim().length < 2" :submit-label="ui('save')" :cancel-label="ui('cancel')" :success="inlineSettingsSaved ? (isArabic ? 'تم حفظ المثال.' : 'Example saved.') : ''" @submit="saveInlineSettingsExample" @cancel="inlineSettingsDraft.reset(); inlineSettingsSaved = false">
+          <BsField v-slot="field" :label="isArabic ? 'اسم المتجر' : 'Shop name'" required>
+            <BsInput :id="field.id" v-model="inlineSettingsName" :aria-describedby="field.describedby" required :minlength="2" :maxlength="120" />
+          </BsField>
+        </BsSettingsForm>
       </div>
     </BsCard>
 

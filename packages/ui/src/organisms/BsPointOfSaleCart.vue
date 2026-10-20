@@ -53,6 +53,7 @@ defineExpose({ checkout, focus: () => { update(); heading.value?.$el.focus() }, 
       </BsDisclosure>
     </div>
     <footer class="bs-pos-cart__footer">
+      <BsText v-if="view.offerSummary" role="status" size="sm">{{view.offerSummary}}</BsText>
       <BsInline justify="between"><BsText emphasis="semibold">{{ copy.total }}</BsText><BsText as="strong" size="lg">{{ view.total }}</BsText></BsInline>
       <BsText size="xs">{{ copy.serverTotal }}</BsText>
       <BsButton v-if="wizard.step.value === 1" variant="primary" :disabled="locked || !cartLines.length" @click="wizard.select(2)">{{ copy.continueToPayment || copy.paymentMethod }}<BsIcon name="arrowRight" directional :size="18" /></BsButton>

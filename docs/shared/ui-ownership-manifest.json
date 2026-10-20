@@ -697,6 +697,29 @@
       ],
       "adapterBoundary": "Typed request/offer/history views and controlled record forms. Doctor owns request permission, atomic holds, acceptance, expiry and capability scopes. No provider dispatch or patient priority is inferred.",
       "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "inline-business-settings",
+      "owner": "packages/ui",
+      "components": [
+        "BsBusinessSettingsPage",
+        "BsSettingsForm"
+      ],
+      "adapterBoundary": "Typed on-page business settings drafts, translated copy, permission/quota projections and existing authorized commands. UX owns scoped dirty snapshots, refresh-safe drafts and unsaved-navigation protection. Website and public-booking editors retain their existing presentation.",
+      "task": "SHOP-INLINE-SETTINGS-20261020",
+      "migrationStatus": "implemented-source; automated and rendered verification unrun at owner instruction"
+    },
+    {
+      "family": "shop-storefront-builder-offers",
+      "owner": "packages/ui",
+      "components": [
+        "BsStorefrontBuilderPage",
+        "BsCatalogOffersPage",
+        "BsOfferStrip"
+      ],
+      "adapterBoundary": "Shop owns Team/Multi eligibility, private draft and explicit owner publishing, public disclosure, tenant-scoped offers and atomic server price matching. Shared UI owns the layout/media editors, bundle worklist and public/POS offer strip. Shared UX owns bounded raster processing and record/dialog lifecycle. Receipt snapshots retain matched offer names.",
+      "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
+      "migrationStatus": "implemented-source; browser/database tests deferred at user instruction"
     }
   ]
 }

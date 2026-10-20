@@ -4,6 +4,14 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      shop_storefront_builder: { Args: {p_shop_id:string}; Returns: import('../../shared/storefrontBuilder').StorefrontBuilder }
+      shop_storefront_builder_save: { Args: {p_shop_id:string;p_layout:import('../../shared/storefrontBuilder').StorefrontLayout;p_revision:number;p_publish?:boolean}; Returns: import('../../shared/storefrontBuilder').StorefrontBuilder }
+      shop_offers: { Args: {p_shop_id:string;p_page?:number}; Returns: {canManage:boolean;canPublish:boolean;items:import('../../shared/catalogOffers').CatalogOffer[];total:number} }
+      shop_offer_sources: { Args: {p_shop_id:string;p_search?:string;p_page?:number}; Returns: {items:import('../../shared/catalogOffers').OfferSource[];total:number} }
+      shop_offer_save: { Args: {p_shop_id:string;p_id:string|null;p_revision:number;p_offer:{name:string;description:string;price:number;priority:number;active:boolean;websiteVisible:boolean;startsAt:string|null;endsAt:string|null;lines:{kind:'product'|'service';sourceId:string;quantity:number}[]}}; Returns:string }
+      pos_catalog_offers: { Args: {p_shop_id:string;p_location_id:string}; Returns: import('../../shared/catalogOffers').CatalogOffer[] }
+      quote_pos_sale: { Args: {p_shop_id:string;p_location_id:string;p_lines:{item_type:string;source_id:string;quantity:number}[]}; Returns: import('./tax').TaxQuote & {discount:number;offers:import('../../shared/catalogOffers').OfferMatch[]} }
+
       shop_subscription_currency_catalog: { Args: { p_currency: 'EGP' | 'USD' }; Returns: import('./plans').PublicPlan[] }
       shop_billing_currency_plans: { Args: { p_shop_id: string; p_currency: 'EGP' | 'USD' }; Returns: import('./billing').BillingPlanOption[] }
       shop_booking_settings:{Args:{p_shop_id:string};Returns:unknown}

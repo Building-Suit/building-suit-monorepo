@@ -390,7 +390,12 @@
     "./templates/BsConsultationTypesPage": "./src/templates/BsConsultationTypesPage.vue",
     "./utils/consultationPresentation": "./src/utils/consultationPresentation.ts",
     "./templates/BsWaitlistPage": "./src/templates/BsWaitlistPage.vue",
-    "./utils/waitlistPresentation": "./src/utils/waitlistPresentation.ts"
+    "./utils/waitlistPresentation": "./src/utils/waitlistPresentation.ts",
+    "./organisms/BsSettingsForm": "./src/organisms/BsSettingsForm.vue",
+    "./types/storefrontBuilderPresentation": "./src/types/storefrontBuilderPresentation.ts",
+    "./templates/BsStorefrontBuilderPage": "./src/templates/BsStorefrontBuilderPage.vue",
+    "./templates/BsCatalogOffersPage": "./src/templates/BsCatalogOffersPage.vue",
+    "./molecules/BsOfferStrip": "./src/molecules/BsOfferStrip.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

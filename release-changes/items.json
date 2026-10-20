@@ -1961,5 +1961,142 @@
     "sources": [
       "doctor-bilingual-policy-drafts"
     ]
+  },
+  {
+    "id": "shop-storefront-builder-offers-20261020",
+    "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux"
+    ],
+    "reason": "Add owner-published customer storefront composition for Team/Multi and fixed-price catalogue bundles with authoritative POS matching and immutable receipt names.",
+    "notes": {
+      "title": {
+        "en": "Custom storefronts and bundle offers",
+        "ar": "تصميم موقع المتجر وعروض الباقات"
+      },
+      "summary": {
+        "en": "Team and Multi shops can publish a banner, gallery and team; bundle offers appear on the storefront and apply automatically at the counter.",
+        "ar": "يمكن لمتاجر Team وMulti نشر بانر ومعرض صور وفريق، وتظهر الباقات على الموقع وتطبق تلقائيًا في نقطة البيع."
+      },
+      "details": {
+        "en": "Keep layout drafts separate from published content, show bundle savings, select complete bundles in POS and retain their names on saved receipts. Public basket requests still require merchant confirmation.",
+        "ar": "احتفظ بمسودات التصميم منفصلة عن المحتوى المنشور، واعرض توفير الباقات وأضفها كاملة في نقطة البيع مع حفظ أسمائها في الإيصالات. تظل طلبات سلة الموقع بحاجة إلى تأكيد المتجر."
+      }
+    },
+    "sources": [
+      "shop-storefront-builder-offers-20261020"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/website-builder.vue",
+        "contains": "<BsStorefrontBuilderPage"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261020114919_storefront_builder_bundle_offers.sql",
+        "contains": "create function public.quote_pos_sale"
+      },
+      {
+        "path": "packages/ui/src/templates/BsShopWebsitePage.vue",
+        "contains": "bs-shop-website__search-section--floating"
+      }
+    ]
+  },
+  {
+    "id": "shop-storefront-builder-offers-support-20261020",
+    "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
+    "suits": [
+      "shop-suit",
+      "ledger-suit",
+      "inventory-suit",
+      "doctor-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs",
+      "docs/shared",
+      "release-changes/items.json"
+    ],
+    "reason": "Maintain shared presentation exports, bounded image interaction, route ownership and synthetic catalogue documentation. Shared source consumption does not activate other products or create additional public release claims.",
+    "sources": [
+      "shop-storefront-builder-offers-support-20261020"
+    ]
+  },
+  {
+    "id": "shop-inline-settings-20261020",
+    "task": "SHOP-INLINE-SETTINGS-20261020",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/settings/[[section]].vue",
+      "packages/ui/src/templates/BsBusinessSettingsPage.vue"
+    ],
+    "reason": "Show existing non-Website business settings forms directly on their dedicated pages with consistent save, cancellation and unsaved-draft protection.",
+    "notes": {
+      "title": {
+        "en": "Edit business settings directly on the page",
+        "ar": "تعديل إعدادات النشاط مباشرة في الصفحة"
+      },
+      "summary": {
+        "en": "Update shop details, business mode, locations and receipt settings without opening an editor dialog.",
+        "ar": "عدّل بيانات المتجر وطريقة التشغيل والفروع وإعدادات الإيصال دون فتح نافذة تحرير."
+      },
+      "details": {
+        "en": "Profile, location and receipt editors appear inline. Cashier policy and business currency use the same Save and Cancel actions. Unsaved drafts are retained during background refreshes, and navigation prompts before discarding changes. Existing permissions, quotas and saving commands are preserved.",
+        "ar": "تظهر نماذج ملف المتجر والفروع والإيصالات داخل الصفحة. تستخدم سياسة ورديات الخزنة وعملة النشاط إجراءات الحفظ والإلغاء نفسها. تبقى المسودات غير المحفوظة أثناء تحديث البيانات في الخلفية، ويطلب التنقل تأكيد تجاهل التغييرات. تظل الصلاحيات والحصص وأوامر الحفظ الحالية محفوظة."
+      }
+    },
+    "sources": [
+      "shop-inline-settings-20261020"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsBusinessSettingsPage.vue",
+        "contains": "<BsSettingsForm :pending=\"profileEditor.pending\""
+      },
+      {
+        "path": "apps/shop-suit/app/pages/settings/[[section]].vue",
+        "contains": "const formGuard = useUnsavedFormGuard({"
+      }
+    ]
+  },
+  {
+    "id": "shop-inline-settings-support-20261020",
+    "task": "SHOP-INLINE-SETTINGS-20261020",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs",
+      "docs/shared/ui-ownership-manifest.json",
+      "release-changes/items.json"
+    ],
+    "reason": "Maintain shared inline-settings presentation, scoped draft and navigation controllers, explicit exports, catalogue examples and release provenance. The existing Shop settings template is the only operational consumer changed by this task; Website editors and other product activation remain unchanged.",
+    "sources": [
+      "shop-inline-settings-support-20261020"
+    ]
   }
 ]

@@ -1,3 +1,4 @@
+import { emptyStorefrontLayout } from '#shared/storefrontBuilder'
 import { configuredWebsiteDomain } from '#shared/websiteAddress'
 import { websiteBookingUrl } from '#shared/appointmentBooking'
 import { websitePortalUrl } from '#shared/customerPortal'
@@ -71,19 +72,39 @@ export function usePublicWebsite() {
   feedback.value=basket.add(item)?(ar?`تمت إضافة ${item.name} إلى السلة.`:`${item.name} added to your basket.`):(ar?'يمكن إضافة 10 أصناف مختلفة لكل طلب.':'You can request up to 10 different items at once.')
   basketSuccess.value=''
  }
+ function addOffer(id:string){
+  if(basketAction.pending.value)return
+  const offer=page.value.payload.storefront?.offers.find(offer=>offer.id===id)
+  if(!offer)return
+  const added=basket.addBundle(offer.lines.map(line=>({quantity:line.quantity,item:{publicId:line.id,kind:line.kind,name:line.name,description:'',image:line.image,displayOrder:0,priceMode:'shown' as const,price:line.price,currency:offer.currency}})))
+  feedback.value=added?(ar?`تمت إضافة ${offer.name}.`:`${offer.name} added.`):(ar?'لا يمكن إضافة الباقة: حد الطلب 10 أصناف و999 لكل صنف.':'Cannot add bundle: requests support 10 items and up to 999 of each.')
+  basketSuccess.value=''
+ }
  function quantity(id:string,value:number){if(!basketAction.pending.value)basket.quantity(id,value)}
  const money=(amount:number,currency:string)=>new Intl.NumberFormat(ar?'ar-EG':'en-US',{style:'currency',currency}).format(amount)
  function itemView(item:PublicWebsiteCatalogItem):BsWebsiteStoreItem {
   return{id:item.publicId,kind:item.kind,kindLabel:item.kind==='product'?(ar?'منتج':'Product'):(ar?'خدمة':'Service'),name:item.name,description:item.description,image:item.image,
    price:item.priceMode==='shown'?money(item.price,item.currency):(ar?'السعر عند التواصل':'Price on request'),
-   bookingLabel:ar?'احجز الخدمة':'Book service',bookingHref:item.kind==='service'&&item.bookable!==false&&catalog.value.bookingEnabled!==false?websiteBookingUrl(profile.canonicalSlug,locale,domain,item.publicId):undefined,
+   bookingLabel:ar?'احجز الخدمة':'Book service',bookingHref:item.kind==='service'&&item.bookable!==false&&catalog.value.bookingEnabled!==false?websiteBookingUrl(profile.canonicalSlug,locale,domain!,item.publicId):undefined,
    quantity:basket.lines.find(line=>line.item.publicId===item.publicId)?.quantity??0}
  }
  const view=computed<BsShopWebsiteView>(()=>{
   const data=catalog.value,counts=data.counts
   const totals=new Map<string,number>()
   for(const line of basket.lines)if(line.item.priceMode==='shown')totals.set(line.item.currency,(totals.get(line.item.currency)??0)+line.item.price*line.quantity)
+  const remaining=new Map(basket.lines.map(l=>[l.item.publicId,Math.round(l.quantity*1000)])),matched:string[]=[]
+  for(const offer of page.value.payload.storefront?.offers??[]){
+   let sets=1000000
+   for(const line of offer.lines)sets=Math.min(sets,Math.floor((remaining.get(line.id)??0)/Math.round(line.quantity*1000)))
+   if(sets<1)continue
+   for(const line of offer.lines)remaining.set(line.id,remaining.get(line.id)!-Math.round(line.quantity*1000)*sets)
+   const regular=offer.lines.reduce((sum,line)=>{const item=basket.lines.find(v=>v.item.publicId===line.id)?.item;return sum+(item?.priceMode==='shown'?item.price:line.price)*line.quantity},0)
+   totals.set(offer.currency,Math.max(0,(totals.get(offer.currency)??0)-(regular-offer.price)*sets))
+   matched.push(`${offer.name} × ${sets}`)
+  }
   return{
+   design:page.value.payload.storefront??emptyStorefrontLayout(),offerSummary:matched.join(' · '),
+   offers:(page.value.payload.storefront?.offers??[]).map(offer=>({id:offer.id,name:offer.name,description:offer.description,price:money(offer.price,offer.currency),oldPrice:money(offer.oldPrice,offer.currency),saving:`${ar?'وفّر':'Save'} ${money(offer.oldPrice-offer.price,offer.currency)}`,items:offer.lines.map(line=>`${line.quantity} × ${line.name}`).join(' · '),images:offer.lines.flatMap(line=>line.image?[line.image]:[])})),
    bookingLink:data.bookingEnabled!==false?{href:websiteBookingUrl(profile.canonicalSlug,locale,domain),label:ar?'احجز موعدك':'Book an appointment'}:undefined,
    portalLink:{href:websitePortalUrl(profile.canonicalSlug,locale,domain),label:ar?'مواعيدي':'My appointments'},
    name:profile.publicName,description:profile.description,logo:profile.logoDataUrl,locale,
@@ -99,13 +120,13 @@ export function usePublicWebsite() {
    basket:{count:basket.lines.length,lines:basket.lines.map(line=>({...itemView(line.item),quantity:line.quantity,lineTotal:line.item.priceMode==='shown'?money(line.quantity*line.item.price,line.item.currency):(ar?'السعر عند التأكيد':'To be confirmed')})),totals:Array.from(totals,([currency,amount])=>({currency,label:money(amount,currency)})),pending:basketAction.pending.value,error:basketAction.error.value??'',success:basketSuccess.value,feedback:feedback.value},
    pending:action.pending.value,error:action.error.value??'',success:success.value,
    copy:ar?{
-    catalog:'اكتشف ما يناسبك',locations:'زر أحد فروعنا',hours:'مواعيد العمل',contact:'نتحدث معك',inquiry:'كيف نقدر نساعدك؟',inquiryHelp:'أرسل سؤالك وسيصلك رد المتجر عبر بيانات الاتصال التي تدخلها.',name:'الاسم',replyContact:'البريد الإلكتروني أو رقم الهاتف',message:'رسالتك',send:'إرسال الرسالة',company:'الموقع الإلكتروني للشركة',previous:'السابق',next:'التالي',language:'اللغة',empty:'لم نجد أصنافاً بهذه الاختيارات. جرّب بحثاً مختلفاً أو امسح المرشحات.',
+    promos:'العروض والباقات',addOffer:'أضف الباقة',gallery:'صور من متجرنا',staff:'تعرّف على فريقنا',find:'ابحث الآن',searchType:'نوع الصنف',home:'الرئيسية',catalog:'اكتشف ما يناسبك',locations:'زر أحد فروعنا',hours:'مواعيد العمل',contact:'نتحدث معك',inquiry:'كيف نقدر نساعدك؟',inquiryHelp:'أرسل سؤالك وسيصلك رد المتجر عبر بيانات الاتصال التي تدخلها.',name:'الاسم',replyContact:'البريد الإلكتروني أو رقم الهاتف',message:'رسالتك',send:'إرسال الرسالة',company:'الموقع الإلكتروني للشركة',previous:'السابق',next:'التالي',language:'اللغة',empty:'لم نجد أصنافاً بهذه الاختيارات. جرّب بحثاً مختلفاً أو امسح المرشحات.',
     navigation:'تصفح المتجر',browse:'استكشف المتجر',products:'تسوق المنتجات',services:'اكتشف الخدمات',visit:'الفروع والتواصل',details:'عرض التفاصيل',add:'أضف للسلة',added:'في السلة',basket:'سلتك',basketEmpty:'سلتك جاهزة لاختياراتك.',basketHelp:'أرسل اختياراتك ليؤكد المتجر التوفر والسعر وطريقة الاستلام. هذا طلب تأكيد؛ لا يتم دفع أموال أو حجز مخزون هنا.',basketSend:'إرسال الطلب للمتجر',basketSuccess:'تم إرسال طلبك',basketNotes:'ملاحظات الطلب (اختياري)',quantity:'الكمية',increase:'زيادة الكمية',decrease:'تقليل الكمية',remove:'إزالة',total:'إجمالي الأصناف ذات السعر المعلن',priceHelp:'الأسعار المعروضة استرشادية. يؤكد المتجر الإجمالي النهائي وأي ضرائب أو رسوم والأصناف التي تحتاج عرض سعر.',search:'ابحث عن منتج أو خدمة',sort:'ترتيب العرض',clear:'مسح الاختيارات',retry:'إعادة المحاولة',loading:'جارٍ تحميل الأصناف…',catalogError:'تعذر تحميل الكتالوج. حاول مرة أخرى.',close:'إغلاق',imagePlaceholder:'صورة الصنف غير متاحة',discover:'تفاصيل صغيرة. اختيارات تناسبك.',bookingTitle:'احجز في الوقت المناسب لك',bookingBody:'اختر الخدمة والفرع والموعد المناسب من الأوقات المتاحة للحجز.',portalTitle:'موعدك، تحت عينك',portalBody:'ادخل برمز الوصول الخاص بك لعرض مواعيدك ومتابعتها بأمان.',directions:'الاتجاهات',about:'عن المتجر',requestLimit:'حتى 10 أصناف مختلفة لكل طلب.',poweredBy:'يعمل بواسطة Shop Suit'
    }:{
-    catalog:'Browse products and services',locations:'Visit us',hours:'Opening hours',contact:'Let’s talk',inquiry:'How can we help?',inquiryHelp:'Send a question. The shop will reply using the contact details you provide.',name:'Name',replyContact:'Email or phone',message:'Your message',send:'Send message',company:'Company website',previous:'Previous',next:'Next',language:'Language',empty:'No items match these choices. Try another search or clear the filters.',
+    promos:'Promos & offers',addOffer:'Add bundle',gallery:'A closer look',staff:'Meet our team',find:'Find items',searchType:'Choose type',home:'Home',catalog:'Browse products and services',locations:'Visit us',hours:'Opening hours',contact:'Let’s talk',inquiry:'How can we help?',inquiryHelp:'Send a question. The shop will reply using the contact details you provide.',name:'Name',replyContact:'Email or phone',message:'Your message',send:'Send message',company:'Company website',previous:'Previous',next:'Next',language:'Language',empty:'No items match these choices. Try another search or clear the filters.',
     navigation:'Shop navigation',browse:'Explore the shop',products:'Shop products',services:'Explore services',visit:'Visit & contact',details:'View details',add:'Add to basket',added:'In your basket',basket:'Your basket',basketEmpty:'Your basket is ready for your favourites.',basketHelp:'Send your selection so the shop can confirm availability, pricing and collection arrangements. This is a request for confirmation; no payment or stock reservation is made here.',basketSend:'Send request to shop',basketSuccess:'Your request is on its way',basketNotes:'Request notes (optional)',quantity:'Quantity',increase:'Increase quantity',decrease:'Decrease quantity',remove:'Remove',total:'Subtotal of priced items',priceHelp:'Published prices are indicative. The shop confirms the final total, any taxes or fees, and items that need a quote.',search:'Search products and services',sort:'Sort by',clear:'Clear choices',retry:'Try again',loading:'Loading items…',catalogError:'Could not load the catalogue. Please try again.',close:'Close',imagePlaceholder:'Item image unavailable',discover:'Good things. Thoughtfully chosen.',bookingTitle:'A time that works for you',bookingBody:'Choose a service, a branch and a time from the appointments available to book.',portalTitle:'Keep your plans close',portalBody:'Use your private access code to view and follow your appointments securely.',directions:'Get directions',about:'About the shop',requestLimit:'Up to 10 different items per request.',poweredBy:'Powered by Shop Suit'
    },
   }
  })
- return{view,form,basketForm,submit,submitBasket,add,quantity,selectKind,selectSort,selectPage,clearFilters,setSearch:(value:string)=>{search.value=value.slice(0,120)},retryCatalog:()=>catalogQuery.refresh(),initializeLocale:()=>setLocale(locale)}
+ return{view,form,basketForm,submit,submitBasket,add,addOffer,quantity,selectKind,selectSort,selectPage,clearFilters,setSearch:(value:string)=>{search.value=value.slice(0,120)},retryCatalog:()=>catalogQuery.refresh(),initializeLocale:()=>setLocale(locale)}
 }
