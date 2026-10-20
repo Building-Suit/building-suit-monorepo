@@ -31,6 +31,8 @@ const documentFormat = ref<'receipt' | 'a4'>('receipt')
 <template>
   <BsContentSection :title="copy('Workflow and presentation families', 'عائلات العرض وسير العمل')" :description="copy('Synthetic inputs; commands and policy stay in products.', 'بيانات تجريبية؛ تبقى الأوامر والسياسات في المنتج.')">
     <BsStack gap="lg">
+      <BsText as="p" size="sm">{{copy('Website builder: owner-published banner, gallery and public team; Team/Multi eligibility belongs to Shop. Offer prices and receipt snapshots are calculated by the server.', 'منشئ الموقع: بانر ومعرض وفريق عام ينشره المالك؛ أهلية Team وMulti يحددها المتجر. يحسب الخادم أسعار العروض ولقطات الإيصالات.')}}</BsText>
+      <BsOfferStrip :title="copy('Synthetic bundle example','مثال باقة تجريبي')" :select-label="copy('Add bundle','إضافة الباقة')" :items="[{id:'demo-bundle',name:copy('Cup and gift wrapping','كوب وتغليف هدية'),description:copy('Illustrative offer only','عرض توضيحي فقط'),price:'EGP 160.00',oldPrice:'EGP 180.00',saving:copy('Save EGP 20.00','وفّر 20 ج.م'),items:copy('1 cup + 1 gift wrapping','كوب واحد + تغليف واحد'),images:[]}]" @select="feedback=copy('Synthetic bundle selected','تم اختيار الباقة التجريبية')" />
       <BsInline gap="md" wrap>
         <BsMoneyText amount="9223372036854775807" currency="EGP" :locale="locale" />
         <BsMoneyText amount="-12345" currency="USD" :locale="locale" accounting />

@@ -383,7 +383,11 @@
     "./templates/BsManualPaymentPage.vue": "./src/templates/BsManualPaymentPage.vue",
     "./types/manualPaymentPresentation": "./src/types/manualPaymentPresentation.ts",
     "./templates/BsPaymentReconciliationPage.vue": "./src/templates/BsPaymentReconciliationPage.vue",
-    "./types/paymentReconciliationPresentation": "./src/types/paymentReconciliationPresentation.ts"
+    "./types/paymentReconciliationPresentation": "./src/types/paymentReconciliationPresentation.ts",
+    "./types/storefrontBuilderPresentation": "./src/types/storefrontBuilderPresentation.ts",
+    "./templates/BsStorefrontBuilderPage": "./src/templates/BsStorefrontBuilderPage.vue",
+    "./templates/BsCatalogOffersPage": "./src/templates/BsCatalogOffersPage.vue",
+    "./molecules/BsOfferStrip": "./src/molecules/BsOfferStrip.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

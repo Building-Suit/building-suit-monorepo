@@ -89,7 +89,9 @@
     "BsSubscriptionStatusPage": "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
     "BsPrivacyRequestsPage": "packages/ui/src/templates/BsPrivacyRequestsPage.vue",
     "BsManualPaymentPage": "packages/ui/src/templates/BsManualPaymentPage.vue",
-    "BsPaymentReconciliationPage": "packages/ui/src/templates/BsPaymentReconciliationPage.vue"
+    "BsPaymentReconciliationPage": "packages/ui/src/templates/BsPaymentReconciliationPage.vue",
+    "BsStorefrontBuilderPage": "packages/ui/src/templates/BsStorefrontBuilderPage.vue",
+    "BsCatalogOffersPage": "packages/ui/src/templates/BsCatalogOffersPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -97,9 +99,9 @@
     "routes": 74
   },
   "currentInventory": {
-    "suitVueFiles": 94,
+    "suitVueFiles": 96,
     "localComponents": 0,
-    "routes": 78,
+    "routes": 80,
     "layouts": 10,
     "roots": 6
   },
@@ -2928,6 +2930,44 @@
       "status": "implemented; candidate acceptance pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/shop-suit/app/pages/website-builder.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsStorefrontBuilderPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsStorefrontBuilderPage"
+      ],
+      "destination": "packages/ui/src/templates/BsStorefrontBuilderPage.vue",
+      "status": "implemented-source",
+      "domainAdapter": "apps/shop-suit/app/pages/website-builder.vue",
+      "dependencies": [
+        "@building-suit/ui/types/storefrontBuilderPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "Static validation pending; browser/database tests unrun at user instruction.",
+      "purpose": "shop-storefront-builder"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/offers.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCatalogOffersPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsCatalogOffersPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCatalogOffersPage.vue",
+      "status": "implemented-source",
+      "domainAdapter": "apps/shop-suit/app/pages/offers.vue",
+      "dependencies": [
+        "@building-suit/ui/types/storefrontBuilderPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "Static validation pending; browser/database tests unrun at user instruction.",
+      "purpose": "shop-catalog-offers"
     }
   ],
   "verifiedSharedHeads": [
@@ -3065,6 +3105,8 @@
     "BsSubscriptionStatusPage",
     "BsPrivacyRequestsPage",
     "BsManualPaymentPage",
-    "BsPaymentReconciliationPage"
+    "BsPaymentReconciliationPage",
+    "BsStorefrontBuilderPage",
+    "BsCatalogOffersPage"
   ]
 }

@@ -53,6 +53,7 @@ export function buildReceiptShareText(
     copy.items,
     ...receipt.lines.map(line => `${line.name}${receipt.presentation?.showDescriptions !== false && line.description ? ` (${line.description})` : ''} — ${copy.quantity} ${line.quantity} — ${money(line.total)}`),
     '',
+    ...(receipt.offers ?? []).map(offer => `${offer.name} × ${offer.quantity} — −${money(offer.saving)}`),
     ...receipt.payments.map(payment => `${copy.payment}: ${paymentLabel(payment.method)} — ${money(payment.amount)}`),
     ...(receipt.tax?.calculationEnabled ? [`${locale === 'ar' ? 'الضريبة' : 'Tax'}: ${money(receipt.tax.tax)}`] : []),
     `${copy.total}: ${money(receipt.total)}`,

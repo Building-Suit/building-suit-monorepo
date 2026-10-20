@@ -22,7 +22,7 @@ export async function readPublicLogo(file: File): Promise<string> {
   } finally { bitmap.close() }
 }
 
-function rasterDimensions(bytes: Uint8Array, mime: string): [number, number] | null {
+export function rasterDimensions(bytes: Uint8Array, mime: string): [number, number] | null {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   if (mime === 'image/png') return bytes.length >= 33 ? [view.getUint32(16), view.getUint32(20)] : null
   if (mime === 'image/webp') {

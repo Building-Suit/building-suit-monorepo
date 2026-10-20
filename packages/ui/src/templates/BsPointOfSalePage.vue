@@ -1,16 +1,17 @@
 <script setup lang="ts">
+import type { BsOfferCardView } from '../types/storefrontBuilderPresentation'
 import type { BsReceiptPreview } from '../types/receiptPresentation'
 import type { BsOfflineCounterView } from '../types/offlineCounterPresentation'
 import { usePointOfSaleSections } from '@building-suit/ux'
 import type { BsPointOfSaleCopy, BsPointOfSaleView, BsPointOfSaleChoice, BsPointOfSaleCatalogItem, BsPointOfSaleCartLine, BsPointOfSaleCustomer, BsPointOfSalePaymentForm } from '../types/pointOfSalePresentation'
-const props = withDefaults(defineProps<{ receiptPreview?: BsReceiptPreview; offline?: BsOfflineCounterView; variant?: 'default' | 'shop'; copy: BsPointOfSaleCopy; view: BsPointOfSaleView; itemTypeOptions: BsPointOfSaleChoice[]; categoryOptions: BsPointOfSaleChoice[]; appointmentOptions: BsPointOfSaleChoice[]; staffOptions: BsPointOfSaleChoice[]; paymentOptions: BsPointOfSaleChoice[]; catalogItems: BsPointOfSaleCatalogItem[]; cartLines: BsPointOfSaleCartLine[]; customerOptions: BsPointOfSaleCustomer[]; staffId: string; appointmentId: string; customerId: string }>(), { variant: 'default', offline: undefined })
+const props = withDefaults(defineProps<{ offers?: BsOfferCardView[]; offersTitle?: string; offerSelectLabel?: string; offersError?: string; offerSummary?: string; receiptPreview?: BsReceiptPreview; offline?: BsOfflineCounterView; variant?: 'default' | 'shop'; copy: BsPointOfSaleCopy; view: BsPointOfSaleView; itemTypeOptions: BsPointOfSaleChoice[]; categoryOptions: BsPointOfSaleChoice[]; appointmentOptions: BsPointOfSaleChoice[]; staffOptions: BsPointOfSaleChoice[]; paymentOptions: BsPointOfSaleChoice[]; catalogItems: BsPointOfSaleCatalogItem[]; cartLines: BsPointOfSaleCartLine[]; customerOptions: BsPointOfSaleCustomer[]; staffId: string; appointmentId: string; customerId: string }>(), { variant: 'default', offline: undefined, receiptPreview: undefined, offers: () => [], offersTitle: '', offerSelectLabel: '', offersError: '', offerSummary: '' })
 const receiptVisible = defineModel<boolean>('receiptVisible', { default: false })
 const catalogSearch = defineModel<string>('catalogSearch', { required: true })
 const categoryFilter = defineModel<string>('categoryFilter', { required: true })
 const itemType = defineModel<string>('itemType', { required: true })
 const catalogPage = defineModel<number>('catalogPage', { required: true })
 const paymentForm = defineModel<BsPointOfSalePaymentForm>('paymentForm', { required: true })
-const emit = defineEmits<{ openReceipt: []; receiptLanguage: [value: string | number | (string | number)[]]; selectReceipt: [id: string]; receiptPaper: [value: string]; retryReceipt: []; shareReceipt: []; downloadReceipt: []; printedReceipt: []; reconcileOffline: [id: string]; retryOffline: [id: string]; reset: []; checkout: []; retryCatalog: []; retryContext: []; add: [key: string]; remove: [id: string]; quantity: [id: string, value: number]; appointment: [id: string]; staff: [id: string]; customerSearch: [value: string]; resetCustomerSearch: []; customer: [value: string | number | null | undefined]; clearCustomer: []; dismissFeedback: []; barcode: [code: string] }>()
+const emit = defineEmits<{ selectOffer: [id: string]; retryOffers: []; openReceipt: []; receiptLanguage: [value: string | number | (string | number)[]]; selectReceipt: [id: string]; receiptPaper: [value: string]; retryReceipt: []; shareReceipt: []; downloadReceipt: []; printedReceipt: []; reconcileOffline: [id: string]; retryOffline: [id: string]; reset: []; checkout: []; retryCatalog: []; retryContext: []; add: [key: string]; remove: [id: string]; quantity: [id: string, value: number]; appointment: [id: string]; staff: [id: string]; customerSearch: [value: string]; resetCustomerSearch: []; customer: [value: string | number | null | undefined]; clearCustomer: []; dismissFeedback: []; barcode: [code: string] }>()
 const panels = usePointOfSaleSections()
 const shopCart = ref<{ focus: () => void; focusCustomer: () => void; checkout: () => void } | null>(null)
 const catalogHeading = ref<{ $el: HTMLElement } | null>(null)
@@ -44,6 +45,9 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
       <BsText v-if="view.error" role="alert" as="p" size="sm" tone="danger">{{ view.error }}</BsText>
       <BsVisuallyHidden aria-live="polite">{{ view.scanMessage }}</BsVisuallyHidden>
       <BsText v-if="view.checkingOut" role="status" as="p" size="sm" emphasis="semibold">{{ copy.paying }}</BsText>
+      <BsAlert v-if="offersError" tone="error">{{ offersError }} <BsButton @click="emit('retryOffers')">{{copy.retry}}</BsButton></BsAlert>
+      <BsOfferStrip v-if="offers?.length" :title="offersTitle || ''" :items="offers" :select-label="offerSelectLabel || ''" :disabled="view.checkingOut || view.confirming" @select="emit('selectOffer',$event)" />
+      <BsText v-if="offerSummary && variant !== 'shop'" role="status" size="sm" emphasis="semibold">{{offerSummary}}</BsText>
       <BsFieldGroup :disabled="view.checkingOut" :inert="view.checkingOut" :aria-busy="view.checkingOut" :legend="''">
         <BsGrid :columns="2" :class="{ 'bs-pos-workspace': variant === 'shop' }" :data-active-panel="panels.selected.value">
           <BsPanel aria-labelledby="pos-catalog-title" padding="md" :class="{ 'bs-pos-catalog-panel': variant === 'shop' }">
@@ -89,7 +93,7 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
             </BsInline>
             </div>
           </BsPanel>
-          <BsPointOfSaleCart v-if="variant === 'shop'" ref="shopCart" v-model:payment-form="paymentForm" :copy="copy" :view="view" :cart-lines="cartLines" :appointment-options="appointmentOptions" :staff-options="staffOptions" :customer-options="customerOptions" :payment-options="paymentOptions" :appointment-id="appointmentId" :staff-id="staffId" :customer-id="customerId" @checkout="emit('checkout')" @retry-context="emit('retryContext')" @remove="emit('remove', $event)" @quantity="(id, value) => emit('quantity', id, value)" @appointment="emit('appointment', $event)" @staff="emit('staff', $event)" @customer-search="emit('customerSearch', $event)" @reset-customer-search="emit('resetCustomerSearch')" @customer="emit('customer', $event)" @clear-customer="emit('clearCustomer')" />
+          <BsPointOfSaleCart v-if="variant === 'shop'" ref="shopCart" v-model:payment-form="paymentForm" :copy="copy" :view="{...view,offerSummary}" :cart-lines="cartLines" :appointment-options="appointmentOptions" :staff-options="staffOptions" :customer-options="customerOptions" :payment-options="paymentOptions" :appointment-id="appointmentId" :staff-id="staffId" :customer-id="customerId" @checkout="emit('checkout')" @retry-context="emit('retryContext')" @remove="emit('remove', $event)" @quantity="(id, value) => emit('quantity', id, value)" @appointment="emit('appointment', $event)" @staff="emit('staff', $event)" @customer-search="emit('customerSearch', $event)" @reset-customer-search="emit('resetCustomerSearch')" @customer="emit('customer', $event)" @clear-customer="emit('clearCustomer')" />
           <BsPanel v-else aria-labelledby="pos-cart-title" padding="md">
             <BsHeading id="pos-cart-title" tabindex="-1" :level="2">{{ copy.cart }}</BsHeading>
             <BsText v-if="view.contextLoading" role="status" as="p" size="sm">{{ copy.loading }}</BsText>
