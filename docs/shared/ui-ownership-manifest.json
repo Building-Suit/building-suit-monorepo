@@ -668,6 +668,17 @@
       ],
       "task": "DOS-AE-005",
       "migrationStatus": "synthetic acceptance pending; live payment disabled"
+    },
+    {
+      "family": "synthetic-clinical-workspace",
+      "owner": "packages/ui",
+      "components": [
+        "BsClinicalWorkspacePage",
+        "BsReleasedClinicalPage"
+      ],
+      "adapterBoundary": "Typed controlled entered-data fields and version/release/document projections; Doctor owns all queries, clinical fixture authority, validation, immutable operations and transport. No medical defaults or professional approval.",
+      "task": "DOS-M2",
+      "migrationStatus": "implemented-source; verification in progress; no clinical approval"
     }
   ]
 }

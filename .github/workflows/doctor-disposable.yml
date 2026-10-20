@@ -85,7 +85,9 @@ jobs:
         if: failure()
         with:
           name: doctor-synthetic-browser-results
-          path: test-results/doctor
+          path: |
+            test-results/doctor
+            test-results/doctor-m2-actual
           if-no-files-found: ignore
   shared-settings-browser:
     runs-on: ubuntu-latest

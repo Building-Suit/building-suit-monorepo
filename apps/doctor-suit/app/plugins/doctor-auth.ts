@@ -1,3 +1,5 @@
+import {clinicalReleaseRepository} from '../utils/clinicalReleaseRepository'
+import {createClinicalReleaseController,clinicalReleaseState} from '../utils/clinicalReleaseController'
 import{doctorManualReportRepository}from'../utils/manualReconciliationRepository'
 import{createManualReportController,manualReportState}from'../utils/manualReconciliationController'
 import{doctorManualPaymentRepository}from'../utils/manualPaymentRepository'
@@ -39,6 +41,8 @@ import { createDoctorPatientsController, doctorPatientsState } from '../utils/pa
 import { doctorDelegationRepository } from '../utils/delegationRepository'
 import { createDoctorTeamController, doctorTeamState } from '../utils/teamController'
 import { createDoctorInvitationController, doctorInvitationState } from '../utils/invitationController'
+import { clinicalRepository } from '../utils/clinicalRepository'
+import { createClinicalController,clinicalState } from '../utils/clinicalController'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig()
@@ -106,6 +110,10 @@ export default defineNuxtPlugin((nuxtApp) => {
     return selected?.locationId && selected.capabilities.includes('patients.read') ? selected : null
   }
   const patients = createDoctorPatientsController(client ? doctorPatientsRepository(client) : null, reactive(doctorPatientsState()), patientsScope)
+  const clinical=createClinicalController(client?clinicalRepository(client):null,reactive(clinicalState()),patientsScope)
+  context.registerClear(clinical.clear)
+  const clinicalRelease=createClinicalReleaseController(client?clinicalReleaseRepository(client,provider.url,provider.key):null,reactive(clinicalReleaseState()),()=>state.identity,provider.environment)
+  context.registerClear(clinicalRelease.clear)
   const patientProfile = createDoctorProfileController(client ? doctorPatientProfileRepository(client,provider.url,provider.key) : null,reactive(doctorProfileState()),patientsScope)
   const availabilityScope = () => { const selected = context.state.current; return selected?.capabilities.some(cap => cap==='availability.manage' || cap==='appointments.read') ? selected : null }
   const availability = createDoctorAvailabilityController(client ? doctorAvailabilityRepository(client) : null,reactive(doctorAvailabilityState()),availabilityScope)
@@ -132,5 +140,5 @@ export default defineNuxtPlugin((nuxtApp) => {
     })
     nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh();void context.clear(); void appointmentsLive.dispose() })
   }
-  return { provide: { doctorManualReport:manualReport,doctorManualPayment:manualPayment,doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
+  return { provide: { doctorClinicalRelease:clinicalRelease,doctorClinical:clinical,doctorManualReport:manualReport,doctorManualPayment:manualPayment,doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
 })

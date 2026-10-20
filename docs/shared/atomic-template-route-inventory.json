@@ -89,7 +89,9 @@
     "BsSubscriptionStatusPage": "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
     "BsPrivacyRequestsPage": "packages/ui/src/templates/BsPrivacyRequestsPage.vue",
     "BsManualPaymentPage": "packages/ui/src/templates/BsManualPaymentPage.vue",
-    "BsPaymentReconciliationPage": "packages/ui/src/templates/BsPaymentReconciliationPage.vue"
+    "BsPaymentReconciliationPage": "packages/ui/src/templates/BsPaymentReconciliationPage.vue",
+    "BsClinicalWorkspacePage": "packages/ui/src/templates/BsClinicalWorkspacePage.vue",
+    "BsReleasedClinicalPage": "packages/ui/src/templates/BsReleasedClinicalPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2988,6 +2990,26 @@
       "status": "implemented; CI acceptance and qualified policy approval pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/clinical.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsClinicalWorkspacePage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/clinical.vue",
+      "purpose": "synthetic-clinical-encounters-and-immutable-entered-records",
+      "status": "implemented; synthetic clinical checks in progress; qualified approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/clinical-releases/[id].vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsReleasedClinicalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/clinical-releases/[id].vue",
+      "purpose": "authenticated-recipient-specific-synthetic-record-release",
+      "status": "implemented; verification in progress; no clinical approval",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -3125,6 +3147,8 @@
     "BsSubscriptionStatusPage",
     "BsPrivacyRequestsPage",
     "BsManualPaymentPage",
-    "BsPaymentReconciliationPage"
+    "BsPaymentReconciliationPage",
+    "BsClinicalWorkspacePage",
+    "BsReleasedClinicalPage"
   ]
 }

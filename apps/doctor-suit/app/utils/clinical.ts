@@ -17,6 +17,7 @@ const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const statuses = ['draft','in_progress','finalized','amended','withdrawn']
 export const clinicalUuid = (value:unknown):value is string => typeof value==='string' && uuid.test(value)
 export const clinicalObject = (value:unknown):value is Record<string,unknown> => Boolean(value) && typeof value==='object' && !Array.isArray(value)
+// eslint-disable-next-line no-control-regex -- Reject control characters in entered clinical text.
 const text = (value:unknown,max:number,empty=false):value is string => typeof value==='string' && value.length<=max && (empty || Boolean(value.trim())) && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/u.test(value)
 const shape = (value:unknown,keys:string[]):value is Record<string,unknown> => clinicalObject(value) && Object.keys(value).length===keys.length && keys.every(key=>Object.hasOwn(value,key))
 const date = (value:unknown):value is string => typeof value==='string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0,10)===value
