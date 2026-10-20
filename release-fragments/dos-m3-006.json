@@ -35,7 +35,8 @@
     "docs/work-packages/doctor-suit/implementation/dos-m3-006.md",
     "packages/ui/package.json",
     "packages/ui/src/templates/BsMessageOutboxPage.vue",
-    "packages/ui/src/utils/messageOutboxPresentation.ts"
+    "packages/ui/src/utils/messageOutboxPresentation.ts",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-006-verification.json"
   ],
   "reason": "Doctor-only synthetic neutral outbox with durable separate acceptance and acknowledgement, fresh consent/guardian policy and redacted status. Only Doctor consumes the new template; all six Suits classified through the shared UI dependency graph. Doctor remains unregistered for operational publication; no provider or clinical/legal activation."
 }
