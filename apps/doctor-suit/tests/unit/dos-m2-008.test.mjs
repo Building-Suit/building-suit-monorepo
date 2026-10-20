@@ -1,0 +1,8 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {createClinicalController,clinicalState} from '../../app/utils/clinicalController.ts'
+import {clinicalDetail} from '../../app/utils/clinical.ts'
+import {detail,outcome,scope,id} from '../clinical-fixtures.mjs'
+test('M2-008 uncertain unchanged finalization retains its exact reviewed intent and retry key',async()=>{const calls=[];let attempt=0;const state=clinicalState();state.detail=detail();const controller=createClinicalController({command:async(...args)=>{calls.push(args);if(++attempt===1)throw new Error('Uncertain transport');return outcome()}},state,scope,()=>id(700+calls.length));const input={reviewed_version_id:id(301),reviewed_sha256:state.detail.versions[0].snapshot_sha256};assert.equal(await controller.command('finalize',input),null);assert.ok(await controller.command('finalize',input));assert.deepEqual(calls[0].slice(0,7),calls[1].slice(0,7))})
+test('M2-008 changing reviewed content uses another intent rather than replaying old signing',async()=>{const calls=[];const state=clinicalState();state.detail=detail();const controller=createClinicalController({command:async(...args)=>{calls.push(args);throw new Error('uncertain')}},state,scope,()=>id(700+calls.length));await controller.command('finalize',{reviewed_version_id:id(301),reviewed_sha256:'a'.repeat(64)});await controller.command('finalize',{reviewed_version_id:id(302),reviewed_sha256:'b'.repeat(64)});assert.notEqual(calls[0][6],calls[1][6])})
+test('M2-008 a response claiming a professional signature is rejected',()=>{const value=detail();value.versions[0].professional_signature=true;assert.throws(()=>clinicalDetail(value,id(101),id(102),id(300)))})
