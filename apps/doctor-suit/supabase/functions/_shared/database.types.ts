@@ -126,6 +126,7 @@ export type Database = {
           location_name: string
           patient_id: string
           practice_id: string
+          queue_position: number
           started_at: string | null
           starts_at: string
           state: string
@@ -148,6 +149,7 @@ export type Database = {
           location_name: string
           patient_id: string
           practice_id: string
+          queue_position?: number
           started_at?: string | null
           starts_at: string
           state?: string
@@ -170,6 +172,7 @@ export type Database = {
           location_name?: string
           patient_id?: string
           practice_id?: string
+          queue_position?: number
           started_at?: string | null
           starts_at?: string
           state?: string
@@ -3170,6 +3173,18 @@ export type Database = {
         Returns: Json
       }
       doctor_privacy_requests: { Args: never; Returns: Json }
+      doctor_reception_command: {
+        Args: {
+          p_action: string
+          p_appointment: string
+          p_expected_version: number
+          p_input: Json
+          p_key: string
+          p_location: string
+          p_practice: string
+        }
+        Returns: Json
+      }
       doctor_reschedule_appointment: {
         Args: {
           p_appointment: string

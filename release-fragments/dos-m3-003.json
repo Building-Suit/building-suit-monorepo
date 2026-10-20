@@ -1,0 +1,38 @@
+{
+  "id": "dos-m3-003",
+  "task": "DOS-M3-003",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/doctor-suit/app/composables/useDoctorAppointmentsPage.ts",
+    "apps/doctor-suit/app/pages/appointments.vue",
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/app/utils/appointments.ts",
+    "apps/doctor-suit/app/utils/appointmentsController.ts",
+    "apps/doctor-suit/app/utils/appointmentsPresentation.ts",
+    "apps/doctor-suit/app/utils/appointmentsRepository.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261020144058_practice_reception_exceptions.sql",
+    "apps/doctor-suit/supabase/tests/dos-m3-003.sql",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m3-003.spec.ts",
+    "apps/doctor-suit/tests/e2e/operations-actual-fixture.ts",
+    "apps/doctor-suit/tests/operations-actual-provider.mjs",
+    "apps/doctor-suit/tests/operations-reception-fixture.mjs",
+    "apps/doctor-suit/tests/reception-concurrency.mjs",
+    "apps/doctor-suit/tests/unit/dos-m3-003.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-003.md",
+    "docs/work-packages/doctor-suit/implementation/m3-continuation.md",
+    "packages/ui/src/templates/BsPracticeAppointmentsPage.vue"
+  ],
+  "reason": "Synthetic Doctor reception exceptions, versioned reason/actor history and administrative queue order. Shared optional template parameters preserve existing defaults and have only Doctor as consumer; the export/dependency graph includes all six Suits. No medical priority, signing authority, real identity merge, external message, provider activation, public Doctor registration or operational baseline is introduced."
+}

@@ -13,6 +13,10 @@ Each task receives its own feature branch, committed parent SHA, verification re
 | Task | Review | Engineering state |
 |---|---|---|
 | DOS-M3-001 | [PR425](https://github.com/Building-Suit/building-suit-monorepo/pull/425), parent422 | Published draft; synthetic engineering verified.393 Doctor unit tests,33 task SQL assertions,4 scheduling transaction scenarios and actual browser/visual acceptance passed. Full repository and qualified/provider acceptance remain separate. |
-| DOS-M3-002 | Branch codex/doctor-suit/m3-002-waitlist, parent425 | Synthetic engineering verified:402 Doctor units,34 SQL assertions,7 waitlist transaction scenarios,71-table restore and both actual M3 browser journeys passed. Draft publication prepared; no external messages. |
+| DOS-M3-002 | Published PR426; incorporated in consolidated PR401 | Synthetic engineering verified:402 Doctor units,34 SQL assertions,7 waitlist transaction scenarios,71-table restore and both actual M3 browser journeys passed. Draft publication prepared; no external messages. |
 
 M3-001's published head is f89f04a3ece57f902b35fc69c8cbb53987818d15. The runtime-tested candidate and diagnostic hashes remain in its verification record. M3-002 starts from that exact committed/published tip; its parent had no pending edits to copy.
+
+The owner authorized consolidation after task002. All20 open Doctor heads are preserved in PR401 at ba9b7e051746a50bd2bdfd3c0ad5463e063584e3, with current stg merged. Incorporated source PRs are closed/merged; PR401 remains open and unmerged because combined review fails on54 inherited Shop tests. M3 resumes from that published root; no retired source branch is recreated.
+
+| DOS-M3-003 | Branch codex/doctor-suit/m3-003-reception, parent401 | Implemented;409 Doctor units,28 SQL assertions and8 transaction scenarios pass. Final actual service/browser and publication pending. |

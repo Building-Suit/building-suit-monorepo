@@ -48,7 +48,8 @@ export function createDoctorAppointmentsController(repository: ReturnType<typeof
   async function command(input: DoctorAppointmentCommand) {
     if(state.pending)return false
     const selected = scope();const expected = capture()
-    if(!repository || !selected || !validDoctorAppointmentCommand(input) || (input.kind==='book' && input.destinationId!==selected.locationId)) { state.actionError = 'invalid';return false }
+    if(!repository || !selected || !validDoctorAppointmentCommand(input) || ((input.kind==='book'||input.kind==='walk_in') && input.destinationId!==selected.locationId)) { state.actionError = 'invalid';return false }
+    if((input.kind==='reception'||input.kind==='walk_in')&&!(['queue.manage','appointments.write','patients.read'] as const).every(cap=>selected.capabilities.includes(cap))){state.actionError='denied';return false}
     const required = input.kind==='transition' && !['cancelled','no_show'].includes(input.state) ? 'queue.manage' : 'appointments.write'
     if(!selected.capabilities.includes(required)) { state.actionError = 'denied';return false }
     const material = JSON.stringify([scopeKey(),input]);if(uncertain?.material!==material)uncertain = { material,key: key() }
