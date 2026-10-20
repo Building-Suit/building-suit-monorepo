@@ -10,19 +10,19 @@ Parent lineage is 401 →403 →404 →405 →366, reconciled with staging d5ea6
 
 | Task | Review PR | Status |
 |---|---|---|
-| DOS-M2-001 | [#366](https://github.com/Building-Suit/building-suit-monorepo/pull/366) | Synthetic engineering review; qualified acceptance remains separate |
-| DOS-M2-002 | [#410](https://github.com/Building-Suit/building-suit-monorepo/pull/410) | Synthetic engineering review; qualified acceptance remains separate |
-| DOS-M2-003 | [#411](https://github.com/Building-Suit/building-suit-monorepo/pull/411) | Synthetic engineering review; qualified acceptance remains separate |
-| DOS-M2-004 | [#412](https://github.com/Building-Suit/building-suit-monorepo/pull/412) | Synthetic engineering review; qualified acceptance remains separate |
-| DOS-M2-005 | [#413](https://github.com/Building-Suit/building-suit-monorepo/pull/413) | Synthetic engineering review; qualified acceptance remains separate |
-| DOS-M2-006 | [#414](https://github.com/Building-Suit/building-suit-monorepo/pull/414) | Synthetic engineering review; qualified acceptance remains separate |
-| DOS-M2-007 | [#415](https://github.com/Building-Suit/building-suit-monorepo/pull/415) | Synthetic engineering review; qualified acceptance remains separate |
-| DOS-M2-008 | [#416](https://github.com/Building-Suit/building-suit-monorepo/pull/416) | Synthetic engineering review; qualified acceptance remains separate |
-| DOS-M2-009 | [#417](https://github.com/Building-Suit/building-suit-monorepo/pull/417) | Synthetic engineering review; qualified acceptance remains separate |
-| DOS-M2-010 | [#418](https://github.com/Building-Suit/building-suit-monorepo/pull/418) | Synthetic engineering review; qualified acceptance remains separate |
-| DOS-M2-011 | [#419](https://github.com/Building-Suit/building-suit-monorepo/pull/419) | Synthetic engineering review; qualified acceptance remains separate |
-| DOS-M2-012 | [#420](https://github.com/Building-Suit/building-suit-monorepo/pull/420) | Synthetic engineering review; qualified acceptance remains separate |
-| DOS-M2-013 | [#421](https://github.com/Building-Suit/building-suit-monorepo/pull/421) | Synthetic engineering review; qualified acceptance remains separate |
+| DOS-M2-001 | [#366](https://github.com/Building-Suit/building-suit-monorepo/pull/366) | Implemented; integrated synthetic checks pass; qualified acceptance remains separate |
+| DOS-M2-002 | [#410](https://github.com/Building-Suit/building-suit-monorepo/pull/410) | Implemented; integrated synthetic checks pass; qualified acceptance remains separate |
+| DOS-M2-003 | [#411](https://github.com/Building-Suit/building-suit-monorepo/pull/411) | Implemented; integrated synthetic checks pass; qualified acceptance remains separate |
+| DOS-M2-004 | [#412](https://github.com/Building-Suit/building-suit-monorepo/pull/412) | Implemented; integrated synthetic checks pass; qualified acceptance remains separate |
+| DOS-M2-005 | [#413](https://github.com/Building-Suit/building-suit-monorepo/pull/413) | Implemented; integrated synthetic checks pass; qualified acceptance remains separate |
+| DOS-M2-006 | [#414](https://github.com/Building-Suit/building-suit-monorepo/pull/414) | Implemented; integrated synthetic checks pass; qualified acceptance remains separate |
+| DOS-M2-007 | [#415](https://github.com/Building-Suit/building-suit-monorepo/pull/415) | Implemented; integrated synthetic checks pass; qualified acceptance remains separate |
+| DOS-M2-008 | [#416](https://github.com/Building-Suit/building-suit-monorepo/pull/416) | Implemented; integrated synthetic checks pass; qualified acceptance remains separate |
+| DOS-M2-009 | [#417](https://github.com/Building-Suit/building-suit-monorepo/pull/417) | Implemented; integrated synthetic checks pass; qualified acceptance remains separate |
+| DOS-M2-010 | [#418](https://github.com/Building-Suit/building-suit-monorepo/pull/418) | Implemented; integrated synthetic checks pass; qualified acceptance remains separate |
+| DOS-M2-011 | [#419](https://github.com/Building-Suit/building-suit-monorepo/pull/419) | Implemented; integrated synthetic checks pass; qualified acceptance remains separate |
+| DOS-M2-012 | [#420](https://github.com/Building-Suit/building-suit-monorepo/pull/420) | Implemented; integrated synthetic checks pass; qualified acceptance remains separate |
+| DOS-M2-013 | [#421](https://github.com/Building-Suit/building-suit-monorepo/pull/421) | Implemented; integrated synthetic checks pass; qualified acceptance remains separate |
 | DOS-M2-014 | [#422](https://github.com/Building-Suit/building-suit-monorepo/pull/422) | Integrated synthetic engineering verified; qualified acceptance remains separate |
 
 No task PR is a production release or a claim that the clinical gates are closed. The initial001 PR has an inherited exact-parent release-coverage failure on generated token CSS from staging reconciliation; it remains a disclosed draft blocker. Later task-level exact-parent release checks passed, including014 against task013. PR422’s stack check passed.
@@ -45,7 +45,7 @@ The014 integration connects two canonical shared templates, controlled bilingual
 - Disposable SQL: all inherited and M2 suites passed, including33 combined assertions,6 actual archive-RPC assertions,10 separate clinical transaction scenarios and encrypted67-table isolated application-database restore. Public types were generated from the migrated DB. These minimal Auth/Storage scaffolds remain distinct from the successful actual M2 service proof.
 - Doctor/docs typechecks, Doctor/shared-template lint, strict ownership/token checks (120 full route templates, zero debt) and the production build passed. The print API keeps legacy consumers on the unchanged default path.
 - The full actual-provider command remains FAILED: after all M2 stages passed, the inherited M1 Realtime owner-A subscription check failed. Its assertions, controls and safe diagnostics remain intact. Full-provider/CI readiness is not claimed. The M2-001 parent also retains the separately disclosed inherited generated-token release-coverage blocker.
-- Broader unconfigured public and authentication-protocol browser regressions are being rerun after disposable-service cleanup. Earlier attempts during Docker network changes were failures, not accepted results; final receipts replace this line when complete.
+- Broader unconfigured public browser suite:60 passed. The inherited preview keyboard test was updated from the retired combined menu to the canonical rail cycle controls, retaining keyboard focus, locale/direction, mobile Escape/focus restoration and theme persistence after reload. Authentication-protocol regression is still running; no completed pass is claimed until its final result. Earlier network-change attempts remain failures, superseded only by completed reruns.
 
 ## Independent review still required
 
