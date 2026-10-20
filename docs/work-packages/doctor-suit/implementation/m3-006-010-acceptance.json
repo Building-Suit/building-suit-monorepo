@@ -78,5 +78,7 @@
   ],
   "provider_evidence_packet": "dos-m3-007-provider-evidence.json",
   "exact_candidate_commands": "dos-m3-010-verification.json",
-  "merge_or_deployment_performed": false
+  "github_pr_or_staging_main_merge_performed": false,
+  "deployment_performed": false,
+  "local_parent_checkpoint_merges": "History-preserving local feature-branch merges incorporated published parent fixes/evidence; no GitHub PR was merged."
 }
