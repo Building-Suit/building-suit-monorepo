@@ -2564,6 +2564,259 @@ export type Database = {
           },
         ]
       }
+      waitlist_entries: {
+        Row: {
+          contact_permission: boolean
+          created_at: string
+          created_by: string
+          date_from: string
+          date_to: string
+          doctor_user_id: string
+          id: string
+          location_id: string
+          location_name: string
+          location_version: number
+          minute_end: number
+          minute_start: number
+          patient_id: string
+          permission_recorded_at: string
+          permission_source: string
+          practice_id: string
+          requested_type: Json
+          state: string
+          timezone: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          contact_permission: boolean
+          created_at?: string
+          created_by: string
+          date_from: string
+          date_to: string
+          doctor_user_id: string
+          id?: string
+          location_id: string
+          location_name: string
+          location_version: number
+          minute_end: number
+          minute_start: number
+          patient_id: string
+          permission_recorded_at?: string
+          permission_source: string
+          practice_id: string
+          requested_type: Json
+          state?: string
+          timezone: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          contact_permission?: boolean
+          created_at?: string
+          created_by?: string
+          date_from?: string
+          date_to?: string
+          doctor_user_id?: string
+          id?: string
+          location_id?: string
+          location_name?: string
+          location_version?: number
+          minute_end?: number
+          minute_start?: number
+          patient_id?: string
+          permission_recorded_at?: string
+          permission_source?: string
+          practice_id?: string
+          requested_type?: Json
+          state?: string
+          timezone?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_entries_practice_id_doctor_user_id_fkey"
+            columns: ["practice_id", "doctor_user_id"]
+            isOneToOne: false
+            referencedRelation: "practices"
+            referencedColumns: ["id", "owner_user_id"]
+          },
+          {
+            foreignKeyName: "waitlist_entries_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "waitlist_entries_practice_id_patient_id_fkey"
+            columns: ["practice_id", "patient_id"]
+            isOneToOne: false
+            referencedRelation: "practice_patients"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
+      waitlist_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          entry_id: string
+          happened_at: string
+          id: number
+          location_id: string
+          offer_id: string | null
+          practice_id: string
+          reason: string | null
+          record_version: number
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          entry_id: string
+          happened_at?: string
+          id?: never
+          location_id: string
+          offer_id?: string | null
+          practice_id: string
+          reason?: string | null
+          record_version: number
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          entry_id?: string
+          happened_at?: string
+          id?: never
+          location_id?: string
+          offer_id?: string | null
+          practice_id?: string
+          reason?: string | null
+          record_version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_events_practice_id_entry_id_fkey"
+            columns: ["practice_id", "entry_id"]
+            isOneToOne: false
+            referencedRelation: "waitlist_entries"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "waitlist_events_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "waitlist_events_practice_id_offer_id_fkey"
+            columns: ["practice_id", "offer_id"]
+            isOneToOne: false
+            referencedRelation: "waitlist_offers"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
+      waitlist_offers: {
+        Row: {
+          appointment_id: string | null
+          commitment_end: string
+          commitment_start: string
+          consultation_snapshot: Json
+          created_at: string
+          created_by: string
+          day: string
+          doctor_user_id: string
+          ends_at: string
+          entry_id: string
+          expires_at: string
+          id: string
+          location_id: string
+          location_version: number
+          minute: number
+          practice_id: string
+          record_version: number
+          schedule_version: number
+          starts_at: string
+          state: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          commitment_end: string
+          commitment_start: string
+          consultation_snapshot: Json
+          created_at?: string
+          created_by: string
+          day: string
+          doctor_user_id: string
+          ends_at: string
+          entry_id: string
+          expires_at: string
+          id?: string
+          location_id: string
+          location_version: number
+          minute: number
+          practice_id: string
+          record_version: number
+          schedule_version: number
+          starts_at: string
+          state: string
+        }
+        Update: {
+          appointment_id?: string | null
+          commitment_end?: string
+          commitment_start?: string
+          consultation_snapshot?: Json
+          created_at?: string
+          created_by?: string
+          day?: string
+          doctor_user_id?: string
+          ends_at?: string
+          entry_id?: string
+          expires_at?: string
+          id?: string
+          location_id?: string
+          location_version?: number
+          minute?: number
+          practice_id?: string
+          record_version?: number
+          schedule_version?: number
+          starts_at?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_offers_practice_id_appointment_id_fkey"
+            columns: ["practice_id", "appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "waitlist_offers_practice_id_doctor_user_id_fkey"
+            columns: ["practice_id", "doctor_user_id"]
+            isOneToOne: false
+            referencedRelation: "practices"
+            referencedColumns: ["id", "owner_user_id"]
+          },
+          {
+            foreignKeyName: "waitlist_offers_practice_id_entry_id_fkey"
+            columns: ["practice_id", "entry_id"]
+            isOneToOne: false
+            referencedRelation: "waitlist_entries"
+            referencedColumns: ["practice_id", "id"]
+          },
+          {
+            foreignKeyName: "waitlist_offers_practice_id_location_id_fkey"
+            columns: ["practice_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["practice_id", "id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -3094,6 +3347,37 @@ export type Database = {
           p_key: string
           p_practice: string
           p_practice_name: string
+        }
+        Returns: Json
+      }
+      doctor_waitlist: {
+        Args: {
+          p_location: string
+          p_page?: number
+          p_practice: string
+          p_search?: string
+          p_state?: string
+        }
+        Returns: Json
+      }
+      doctor_waitlist_command: {
+        Args: {
+          p_action: string
+          p_entry: string
+          p_expected_version: number
+          p_input: Json
+          p_key: string
+          p_location: string
+          p_practice: string
+        }
+        Returns: Json
+      }
+      doctor_waitlist_history: {
+        Args: {
+          p_entry: string
+          p_location: string
+          p_page?: number
+          p_practice: string
         }
         Returns: Json
       }

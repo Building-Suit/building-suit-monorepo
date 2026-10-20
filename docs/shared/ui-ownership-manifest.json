@@ -688,6 +688,15 @@
       ],
       "adapterBoundary": "Typed configuration, controlled fields and semantic commands. Doctor owns consultation history, capacity, scope, scheduling and authorization.",
       "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "waitlist-request-worklist",
+      "owner": "packages/ui",
+      "components": [
+        "BsWaitlistPage"
+      ],
+      "adapterBoundary": "Typed request/offer/history views and controlled record forms. Doctor owns request permission, atomic holds, acceptance, expiry and capability scopes. No provider dispatch or patient priority is inferred.",
+      "migrationStatus": "implemented; acceptance in progress"
     }
   ]
 }

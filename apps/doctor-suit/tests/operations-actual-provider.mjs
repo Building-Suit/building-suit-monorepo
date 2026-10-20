@@ -1,7 +1,7 @@
 // Run-owned local Auth/PostgREST/Storage only; no hosted configuration or real identities.
 import {spawn,spawnSync}from'node:child_process'
 import {once}from'node:events'
-import {randomUUID}from'node:crypto'
+import {randomUUID,createHash}from'node:crypto'
 import {readFile,mkdtemp,writeFile,rm,access}from'node:fs/promises'
 import {tmpdir}from'node:os'
 import path from'node:path'
@@ -10,7 +10,8 @@ import{createServer}from'node:net'
 import{createClient}from'@supabase/supabase-js'
 import{validateLocalDoctorTarget}from'./local-lifecycle.mjs'
 const root=fileURLToPath(new URL('../../../',import.meta.url)),app=path.join(root,'apps/doctor-suit'),api='http://127.0.0.1:65321',origin='http://127.0.0.1:4342',project='building-suit-doctor'
-let owned=false,server,stage='guard'
+const startedAt=new Date().toISOString(),executionId=randomUUID();const git=args=>spawnSync('git',args,{cwd:root,encoding:'utf8'}).stdout.trim();const sourceHead=git(['rev-parse','HEAD']),initialDirty=git(['status','--porcelain']);const baseSha=process.env.DOCTOR_OPERATIONS_BASE_SHA??null;const baseVerified=typeof baseSha==='string'&&/^[0-9a-f]{40}$/.test(baseSha)&&spawnSync('git',['merge-base','--is-ancestor',baseSha,sourceHead],{cwd:root}).status===0
+let owned=false,server,stage='guard',browserResult=null
 const scratch=await mkdtemp(path.join(tmpdir(),'doctor-m3-provider-')),env={...process.env,SUPABASE_HOME:path.join(scratch,'cli')}
 const pause=ms=>new Promise(r=>setTimeout(r,ms))
 function expect(value,label){if(!value)throw new Error(label)}
@@ -36,11 +37,12 @@ try{
  stage='owned browser readiness';let ready=false;for(let i=0;i<120;i++){expect(server.exitCode===null,'Owned browser server exited');try{ready=(await fetch(origin,{signal:AbortSignal.timeout(1000)})).ok}catch{/* Run-owned resources may be absent or starting. */}if(ready)break;await pause(250)}expect(ready,'Owned web app unavailable')
  stage='actual M3 browser assertions';const fixture={origin,api,publicKey:status.ANON_KEY,day,owner:{credentials:owner.credentials,scope:owner.scope},other:{credentials:other.credentials,scope:other.scope}}
  const result=await new Promise((resolve,reject)=>{const c=spawn('pnpm',['exec','playwright','test','--config','apps/doctor-suit/tests/e2e/playwright.operations.config.ts'],{cwd:root,env:{...env,DOCTOR_OPERATIONS_ACCEPTANCE:'owned-actual-provider',DOCTOR_OPERATIONS_FIXTURE:JSON.stringify(fixture)},stdio:['ignore','pipe','pipe']});let output='';const timer=setTimeout(()=>c.kill('SIGTERM'),600000);c.stdout.on('data',d=>output+=d);c.stderr.on('data',d=>output+=d);c.once('error',()=>{clearTimeout(timer);reject(new Error('M3 browser executor unavailable'))});c.once('exit',code=>{clearTimeout(timer);resolve({code,output})})})
- await writeFile('/tmp/doctor-m3-browser-result.log',result.output,{mode:0o600});expect(result.code===0&&/1 passed/.test(result.output),'Actual M3 browser assertions failed; see private local test result')
+ browserResult={exitCode:result.code,logSha256:createHash('sha256').update(result.output).digest('hex')};await writeFile('/tmp/doctor-m3-browser-result.log',result.output,{mode:0o600});expect(result.code===0&&/2 passed/.test(result.output)&&!/[1-9][0-9]* skipped/.test(result.output),'Actual M3 browser assertions failed; see private local test result')
  console.log('M3 actual browser and service assertions passed against run-owned Auth/PostgREST. Synthetic data only; professional and provider approval remain OPEN.')
 }catch(e){console.error(`M3 actual-provider FAILED at ${stage}: ${e.message}`);process.exitCode=1}
 finally{
  if(server?.pid){try{process.kill(-server.pid,'SIGTERM')}catch{/* Run-owned resources may be absent or starting. */}if(server.exitCode===null)await Promise.race([once(server,'exit'),pause(2000)]);try{process.kill(-server.pid,'SIGKILL')}catch{/* Run-owned resources may be absent or starting. */}server.unref()}
  if(owned)try{await cli(['stop','--no-backup'],120000)}catch{process.exitCode=1;console.error('Owned Doctor cleanup failed; preserve resources for inspection')}
  await rm(scratch,{recursive:true,force:true})
+ const finalHead=git(['rev-parse','HEAD']),finalDirty=git(['status','--porcelain']);await writeFile('/tmp/doctor-m3-provider-receipt.json',JSON.stringify({executionId,startedAt,finishedAt:new Date().toISOString(),sourceHead,baseSha,baseVerified,finalHead,sourceClean:initialDirty===''&&finalDirty==='',candidateVerified:initialDirty===''&&finalDirty===''&&sourceHead===finalHead&&baseVerified&&(process.exitCode??0)===0&&browserResult?.exitCode===0,nodeVersion:process.version,commandArgv:[process.execPath,...process.argv.slice(1)],exitCode:process.exitCode??0,stage,browserResult,ownedLocalProject:project,hostedOperations:false,professionalApproval:false,providerApproval:false},null,2)+'\n',{mode:0o600})
 }

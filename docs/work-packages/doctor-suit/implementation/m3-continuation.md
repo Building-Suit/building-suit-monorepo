@@ -7,3 +7,12 @@ The engineering start is authorized for synthetic operation only. Parent M2 cand
 M3-007 prepares the provider decision packet. Absent accountable approval, provider/account/cost evidence and scoped sandbox/outreach authorization, no live adapter can be enabled. Tasks008–010 may implement and verify local synthetic operational tracking/import preview/reporting independently of external provider connectivity; their provider-dependent acceptance remains unavailable. This explicit synthetic dependency amendment preserves the original graph, stable IDs and genuine domain gates. Existing M2 clinical release/interpretation controls remain authoritative.
 
 Each task receives its own feature branch, committed parent SHA, verification record, release fragment and draft PR. Implemented, verified, published, merged and deployed are distinct states. No live use, actual provider delivery, qualified approval, final M3 acceptance or combined CI success is inferred from synthetic tests.
+
+## Task progress
+
+| Task | Review | Engineering state |
+|---|---|---|
+| DOS-M3-001 | [PR425](https://github.com/Building-Suit/building-suit-monorepo/pull/425), parent422 | Published draft; synthetic engineering verified.393 Doctor unit tests,33 task SQL assertions,4 scheduling transaction scenarios and actual browser/visual acceptance passed. Full repository and qualified/provider acceptance remain separate. |
+| DOS-M3-002 | Branch codex/doctor-suit/m3-002-waitlist, parent425 | Implemented; final service/browser verification in progress. No external messages. |
+
+M3-001's published head is f89f04a3ece57f902b35fc69c8cbb53987818d15. The runtime-tested candidate and diagnostic hashes remain in its verification record. M3-002 starts from that exact committed/published tip; its parent had no pending edits to copy.

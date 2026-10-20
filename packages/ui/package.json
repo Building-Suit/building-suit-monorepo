@@ -388,7 +388,9 @@
     "./utils/clinicalPresentation": "./src/utils/clinicalPresentation.ts",
     "./templates/BsReleasedClinicalPage": "./src/templates/BsReleasedClinicalPage.vue",
     "./templates/BsConsultationTypesPage": "./src/templates/BsConsultationTypesPage.vue",
-    "./utils/consultationPresentation": "./src/utils/consultationPresentation.ts"
+    "./utils/consultationPresentation": "./src/utils/consultationPresentation.ts",
+    "./templates/BsWaitlistPage": "./src/templates/BsWaitlistPage.vue",
+    "./utils/waitlistPresentation": "./src/utils/waitlistPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

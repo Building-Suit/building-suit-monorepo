@@ -92,7 +92,8 @@
     "BsPaymentReconciliationPage": "packages/ui/src/templates/BsPaymentReconciliationPage.vue",
     "BsClinicalWorkspacePage": "packages/ui/src/templates/BsClinicalWorkspacePage.vue",
     "BsReleasedClinicalPage": "packages/ui/src/templates/BsReleasedClinicalPage.vue",
-    "BsConsultationTypesPage": "packages/ui/src/templates/BsConsultationTypesPage.vue"
+    "BsConsultationTypesPage": "packages/ui/src/templates/BsConsultationTypesPage.vue",
+    "BsWaitlistPage": "packages/ui/src/templates/BsWaitlistPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -3031,6 +3032,16 @@
       "status": "implemented; acceptance in progress",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/waitlist.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsWaitlistPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/waitlist.vue",
+      "purpose": "synthetic-waitlist-offers-and-expiry",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -3171,6 +3182,7 @@
     "BsPaymentReconciliationPage",
     "BsClinicalWorkspacePage",
     "BsReleasedClinicalPage",
-    "BsConsultationTypesPage"
+    "BsConsultationTypesPage",
+    "BsWaitlistPage"
   ]
 }
