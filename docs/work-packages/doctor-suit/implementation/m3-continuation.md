@@ -16,7 +16,9 @@ Each task receives its own feature branch, committed parent SHA, verification re
 | DOS-M3-002 | Published PR426; incorporated in consolidated PR401 | Synthetic engineering verified:402 Doctor units,34 SQL assertions,7 waitlist transaction scenarios,71-table restore and both actual M3 browser journeys passed. Published draft, incorporated in PR401; no external messages. |
 | DOS-M3-003 | [PR427](https://github.com/Building-Suit/building-suit-monorepo/pull/427), parent401 | Synthetic engineering verified:409 Doctor units,28 task SQL assertions,8 reception races,71-table restore and all3 actual M3 browser journeys pass. Published draft; inherited full-provider/Shop CI and professional gates remain separate. |
 
-| DOS-M3-004 | Branch codex/doctor-suit/m3-004-worklists, parent427 | Synthetic engineering verified:417 Doctor units,45 task SQL assertions,8 worklist transaction scenarios,73-table restore and all4 actual M3 browser journeys pass. Draft publication prepared; inherited CI/professional/provider gates remain separate. |
+| DOS-M3-004 | [PR428](https://github.com/Building-Suit/building-suit-monorepo/pull/428), parent427 | Synthetic engineering verified:417 Doctor units,45 task SQL assertions,8 worklist transaction scenarios,73-table restore and all4 actual M3 browser journeys pass. Published draft; inherited CI/professional/provider gates remain separate. |
+
+| DOS-M3-005 | Branch codex/doctor-suit/m3-005-contact-consent, parent428 | Contact/guardian engineering verified:426 Doctor units,63 task SQL assertions,9 contact races,77-table restore and all5 actual M3 browser journeys pass. Draft publication prepared; persisted queue/dispatch suppression remains pending006. |
 
 M3-001's published head is f89f04a3ece57f902b35fc69c8cbb53987818d15. The runtime-tested candidate and diagnostic hashes remain in its verification record. M3-002 starts from that exact committed/published tip; its parent had no pending edits to copy.
 

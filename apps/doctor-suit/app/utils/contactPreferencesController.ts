@@ -1,0 +1,31 @@
+import{doctorScopeKey}from'./contextScope.ts'
+import{doctorUuid,type DoctorLocationContext}from'./locationContext.ts'
+import{doctorPatientFailure,type DoctorPatientError}from'./patientsController.ts'
+import type{DoctorPatientDirectory}from'./patients'
+import{validContactInput,type ContactDirectory,type GuardianOption,type ContactHistory,type ContactRecordKind,type ContactAction,type ContactInput}from'./contactPreferences.ts'
+import type{contactPreferencesRepository}from'./contactPreferencesRepository'
+type ReadKind='directory'|'history'|'guardians'|'patients'
+const flags=()=>({directory:false,history:false,guardians:false,patients:false}),errors=():Record<ReadKind,DoctorPatientError>=>({directory:null,history:null,guardians:null,patients:null})
+export const contactPreferencesState=()=>({patientId:null as string|null,directory:null as ContactDirectory|null,history:null as ContactHistory|null,guardians:[]as GuardianOption[],guardianOptionsPage:0,guardianOptionsTotal:0,guardianSearch:'',patients:null as DoctorPatientDirectory|null,loading:flags(),errors:errors(),pending:false,actionError:null as DoctorPatientError})
+export function createContactPreferencesController(repository:ReturnType<typeof contactPreferencesRepository>|null,state:ReturnType<typeof contactPreferencesState>,scope:()=>DoctorLocationContext|null,key=()=>crypto.randomUUID()){
+ let generation=0,abort=new AbortController(),intent:{material:string;key:string}|null=null
+ const revisions:Record<ReadKind,number>={directory:0,history:0,guardians:0,patients:0},scopeKey=()=>{const s=scope();return s?doctorScopeKey(s,'contact-preferences'):null},capture=()=>JSON.stringify([generation,scopeKey(),state.patientId]),signal=()=>AbortSignal.any([abort.signal,AbortSignal.timeout(15000)])
+ function clear(){generation++;abort.abort();abort=new AbortController();intent=null;Object.assign(state,contactPreferencesState())}
+ function discard(){intent=null;state.actionError=null;revisions.guardians++;state.guardians=[];state.guardianOptionsPage=0;state.guardianOptionsTotal=0;state.guardianSearch='';state.loading.guardians=false;state.errors.guardians=null}
+ function selectPatient(id:string){if(state.pending||!doctorUuid(id))return false;const patients=state.patients;clear();state.patients=patients;state.patientId=id;return true}
+ function failure(error:unknown){const type=doctorPatientFailure(error);if(type==='denied')clear();return type}
+ async function read<T>(kind:ReadKind,fetcher:(s:DoctorLocationContext,patient:string|null,signal:AbortSignal)=>Promise<T>,accept:(value:T)=>void){if(state.pending)return false;const s=scope(),patient=state.patientId,expected=capture(),revision=++revisions[kind];state.loading[kind]=true;state.errors[kind]=null;if(!repository||!s){state.loading[kind]=false;state.errors[kind]='denied';return false}try{const data=await fetcher(s,patient,signal());if(expected!==capture()||revision!==revisions[kind])return false;accept(data);return true}catch(error){if(expected===capture()&&revision===revisions[kind])state.errors[kind]=failure(error);return false}finally{if(expected===capture()&&revision===revisions[kind])state.loading[kind]=false}}
+ const page=(v:number)=>Number.isSafeInteger(v)&&v>=0&&v<=100000
+ async function load(contactPage=0,guardianPage=0){if(!page(contactPage)||!page(guardianPage)||!state.patientId){state.errors.directory='invalid';return false}return read('directory',async(s,p,signal)=>{const data=await repository!.load(s.practiceId,s.locationId,p!,contactPage,guardianPage,signal);if(data.timezone!==s.timezone||data.locationVersion!==s.locationVersion)throw{code:'40001'};return data},value=>{state.directory=value})}
+ async function patients(search=''){state.patients=null;if(search.length>100){state.errors.patients='invalid';return false}return read('patients',(s,_p,signal)=>repository!.patients(s.practiceId,s.locationId,search,signal),value=>{state.patients=value})}
+ async function guardians(search='',more=false){if(!state.patientId||search.length>100||more&&(search!==state.guardianSearch||state.guardians.length>=state.guardianOptionsTotal)){return false}const next=more?state.guardianOptionsPage+1:0;if(!more){state.guardians=[];state.guardianOptionsTotal=0;state.guardianOptionsPage=0;state.guardianSearch=search}return read('guardians',(s,p,signal)=>repository!.guardians(s.practiceId,s.locationId,p!,next,search,signal),value=>{state.guardians=[...new Map([...(more?state.guardians:[]),...value.rows].map(g=>[g.id,g])).values()];state.guardianOptionsPage=value.page;state.guardianOptionsTotal=value.total;state.guardianSearch=search})}
+ async function history(kind:ContactRecordKind,id:string,n=0){state.history=null;if(!['contact','guardian','consent'].includes(kind)||!doctorUuid(id)||!page(n)||!state.patientId){state.errors.history='invalid';return false}return read('history',(s,p,signal)=>repository!.history(s.practiceId,s.locationId,p!,kind,id,n,signal),value=>{state.history=value})}
+ async function command(id:string,version:number,action:ContactAction,input:ContactInput){
+  if(state.pending)return false;const s=scope(),patient=state.patientId,expected=capture(),d=state.directory
+  if(!repository||!s||!patient||!doctorUuid(id)||!Number.isSafeInteger(version)||version<0||action.startsWith('create_')&&version!==0||!action.startsWith('create_')&&action!=='grant_consent'&&version<1||!validContactInput(action,input)){state.actionError='invalid';return false}
+  if(!s.capabilities.includes('patients.read')||!s.capabilities.includes('patients.write')||!d||d.patientId!==patient||(action.startsWith('revoke_')?!d.canReduce:!d.canWrite)||action==='review_guardian'&&!d.canReview){state.actionError='denied';return false}
+  const material=JSON.stringify([scopeKey(),patient,id,version,action,input]);if(intent?.material!==material)intent={material,key:key()};state.pending=true;state.actionError=null
+  try{const data=await repository.command(s.practiceId,s.locationId,patient,id,version,action,{...input},intent.key,signal());if(expected!==capture())return false;intent=null;return data}catch(error){if(expected===capture()){state.actionError=failure(error);if(state.actionError!=='network')intent=null}return false}finally{if(expected===capture())state.pending=false}
+ }
+ return{state,scopeKey,clear,discard,selectPatient,load,patients,guardians,history,command}
+}
