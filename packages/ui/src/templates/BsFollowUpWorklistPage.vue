@@ -25,7 +25,7 @@ const historyColumns=computed(()=>[{key:'action',field:'action',header:props.cop
     <BsCheckbox v-model="overdue" :label="copy.overdue" :disabled="view.pending" @update:model-value="emit('filter')"/>
    </BsFilterBar>
    <BsDataTable :value="view.rows" :columns="columns" row-key="id" :label="copy.title" :scroll-label="copy.title" :capabilities="{insert:view.canCreate}" :action-labels="{insert:copy.create}" :row-action-pending="view.pending" lazy paginator :first="view.page*20" :page-size="20" :total-records="view.total" :query-adapter="adapter" @create="emit('create')">
-    <template #cell-kind="{row}"><BsStack gap="sm"><BsText as="span" emphasis="medium">{{row.kind}}</BsText><BsText v-if="row.patient" as="span" size="sm">{{row.patient}}</BsText><BsText v-if="row.blocked" as="span" size="sm" tone="muted">{{copy.blocked}}</BsText></BsStack></template>
+    <template #cell-kind="{row}"><BsStack gap="sm"><BsText as="span" emphasis="medium" wrap="nowrap">{{row.kind}}</BsText><BsText v-if="row.patient" as="span" size="sm">{{row.patient}}</BsText><BsText v-if="row.blocked" as="span" size="sm" tone="muted">{{copy.blocked}}</BsText></BsStack></template>
     <template #cell-assignee="{row}"><BsText as="bdi" dir="ltr" size="sm">{{row.assignee}}</BsText></template>
     <template #cell-due="{row}"><BsStack gap="sm"><BsText as="bdi" dir="ltr">{{row.due}}</BsText><BsText v-if="row.overdue" as="span" size="sm">{{copy.overdue}}</BsText></BsStack></template>
     <template #cell-actions="{row}"><BsStack gap="sm"><BsButton v-for="action in row.actions" :key="action.value" size="sm" text :aria-label="action.label+': '+row.kind" :disabled="view.pending" @click="emit('action',row.id,action.value)">{{action.label}}</BsButton></BsStack></template>
