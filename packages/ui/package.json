@@ -397,7 +397,9 @@
     "./templates/BsCatalogOffersPage": "./src/templates/BsCatalogOffersPage.vue",
     "./molecules/BsOfferStrip": "./src/molecules/BsOfferStrip.vue",
     "./templates/BsFollowUpWorklistPage": "./src/templates/BsFollowUpWorklistPage.vue",
-    "./utils/worklistPresentation": "./src/utils/worklistPresentation.ts"
+    "./utils/worklistPresentation": "./src/utils/worklistPresentation.ts",
+    "./templates/BsPatientContactPreferencesPage": "./src/templates/BsPatientContactPreferencesPage.vue",
+    "./utils/contactPreferencesPresentation": "./src/utils/contactPreferencesPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

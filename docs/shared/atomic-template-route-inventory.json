@@ -96,7 +96,8 @@
     "BsWaitlistPage": "packages/ui/src/templates/BsWaitlistPage.vue",
     "BsStorefrontBuilderPage": "packages/ui/src/templates/BsStorefrontBuilderPage.vue",
     "BsCatalogOffersPage": "packages/ui/src/templates/BsCatalogOffersPage.vue",
-    "BsFollowUpWorklistPage": "packages/ui/src/templates/BsFollowUpWorklistPage.vue"
+    "BsFollowUpWorklistPage": "packages/ui/src/templates/BsFollowUpWorklistPage.vue",
+    "BsPatientContactPreferencesPage": "packages/ui/src/templates/BsPatientContactPreferencesPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -3093,6 +3094,16 @@
       "status": "implemented; acceptance in progress",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/contact-preferences.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPatientContactPreferencesPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/contact-preferences.vue",
+      "purpose": "synthetic-patient-contact-consent-and-guardian-review",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -3237,6 +3248,7 @@
     "BsWaitlistPage",
     "BsStorefrontBuilderPage",
     "BsCatalogOffersPage",
-    "BsFollowUpWorklistPage"
+    "BsFollowUpWorklistPage",
+    "BsPatientContactPreferencesPage"
   ]
 }

@@ -1,3 +1,5 @@
+import{createContactPreferencesController,contactPreferencesState}from'../utils/contactPreferencesController'
+import{contactPreferencesRepository}from'../utils/contactPreferencesRepository'
 import{createWorklistsController,worklistsState}from'../utils/worklistsController'
 import{worklistsRepository}from'../utils/worklistsRepository'
 import {createWaitlistController,waitlistState}from'../utils/waitlistController'
@@ -115,6 +117,8 @@ export default defineNuxtPlugin((nuxtApp) => {
     const selected = context.state.current
     return selected?.locationId && selected.capabilities.includes('patients.read') ? selected : null
   }
+  const contactPreferences=createContactPreferencesController(client?contactPreferencesRepository(client):null,reactive(contactPreferencesState()),()=>{const selected=patientsScope();return selected?.edition==='synthetic_preview'?selected:null})
+  context.registerClear(contactPreferences.clear)
   const patients = createDoctorPatientsController(client ? doctorPatientsRepository(client) : null, reactive(doctorPatientsState()), patientsScope)
   const worklists=createWorklistsController(client?worklistsRepository(client):null,reactive(worklistsState()),()=>{const selected=context.state.current;return selected?.locationId&&selected.capabilities.includes('worklists.read')?selected:null})
   context.registerClear(worklists.clear)
@@ -150,5 +154,5 @@ export default defineNuxtPlugin((nuxtApp) => {
     })
     nuxtApp.vueApp.onUnmount(() => { data.subscription.unsubscribe(); client.auth.stopAutoRefresh();void context.clear(); void appointmentsLive.dispose() })
   }
-  return { provide: { doctorWorklists:worklists,doctorWaitlist:waitlist,doctorConsultations:consultations,doctorClinicalRelease:clinicalRelease,doctorClinical:clinical,doctorManualReport:manualReport,doctorManualPayment:manualPayment,doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
+  return { provide: { doctorContactPreferences:contactPreferences,doctorWorklists:worklists,doctorWaitlist:waitlist,doctorConsultations:consultations,doctorClinicalRelease:clinicalRelease,doctorClinical:clinical,doctorManualReport:manualReport,doctorManualPayment:manualPayment,doctorPrivacy:privacy,doctorSubscription:subscription,doctorAudit: audit,doctorAuditScope: auditScope,doctorPersonalAudit: personalAudit,doctorPersonalAuditScope: personalAuditScope,doctorAccount: account,doctorDashboard: dashboard,doctorAuth: controller, doctorPractice: practice, doctorContext: context, doctorLocations: locations, doctorLocationsScope: locationsScope, doctorTeam: team, doctorTeamScope: teamScope, doctorInvitation: invitation, doctorAvailability: availability, doctorAvailabilityScope: availabilityScope, doctorAppointments: appointments,doctorAppointmentsScope: appointmentsScope,doctorAppointmentsLive: appointmentsLive,doctorPatientProfile: patientProfile, doctorPatients: patients, doctorPatientsScope: patientsScope } }
 })
