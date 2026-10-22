@@ -157,7 +157,7 @@
       "providerStandins": true,
       "measuredJourney": "PASS",
       "physicalJourney": "PASS",
-      "legacySuites": 8,
+      "legacySuites": 9,
       "configurationStockRace": "PASS",
       "twoCashierReelRace": "PASS",
       "supplierSourceWithdrawal": "PASS",
@@ -179,6 +179,25 @@
       },
       "hardwareVerified": false
     },
-    "releaseReadiness": "BLOCKED; remaining E4/E5/E6 and external acceptance gates"
+    "releaseReadiness": "BLOCKED; remaining E4/E5/E6 and external acceptance gates",
+    "mergedParent": "a15ce63928cc23a57849ebd607926551ea899b2d",
+    "verifiedSourceCheckpoint": "78e4a8a4",
+    "fullShopUnit": {
+      "passed": 412,
+      "total": 463,
+      "failed": 51,
+      "newFailureNames": 0,
+      "comparison": "All51 failure names match prior54 failures after removing the three repaired landing contracts."
+    },
+    "typecheck": {
+      "shop": "PASS",
+      "ledger": "PASS",
+      "doctor": "PASS"
+    },
+    "build": {
+      "shop": "PASS",
+      "docs": "PASS"
+    },
+    "releaseCheck": "PASS against actual parent a15ce639"
   }
 }
