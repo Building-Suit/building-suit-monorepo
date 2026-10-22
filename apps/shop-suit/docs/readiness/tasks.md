@@ -1,5 +1,9 @@
 # Shop Suit Requirements V1 — canonical implementation tracker
 
+## Electrical supply and measurement initiative — 2026-10-22
+
+[SS-ELECTRICAL-001](../electrical-supply/README.md) is registered as an additional implementation stream. Its [task ledger](../electrical-supply/TASKS.md) owns only SS-ELEC-* status. Existing Pack V1 and launch statuses below remain unchanged. Implementation and production qualification are tracked separately.
+
 ## Current integration status — 2026-10-11
 
 Shop source is integrated through [#241](https://github.com/Building-Suit/building-suit-monorepo/pull/241) and [#242](https://github.com/Building-Suit/building-suit-monorepo/pull/242), staging merge `699b57afed66439e7a0b76bc5a7fc52dc50df5d6`. See the [current qualification evidence](../SS-VAL-001-verification.md#current-integration-status--2026-10-11) for exact candidate, CI, browser/SQL and staging observations. Replacement integration does not make #230 or #235 GitHub-merged.
