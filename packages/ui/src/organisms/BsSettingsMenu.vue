@@ -49,7 +49,7 @@ async function cycleLanguage() {
     :title="cycle === 'theme' ? `${ui('theme')}: ${themeLabel}` : `${ui('language')}: ${languageLabel}`"
     @click="cycle === 'theme' ? cycleTheme() : cycleLanguage()">
     <BsIcon v-if="cycle === 'theme'" :name="preference === 'light' ? 'sun' : preference === 'dark' ? 'moon' : 'monitor'" />
-    <span v-else class="bs-settings-menu__language" :lang="locale">{{ locale === 'ar' ? 'ع' : locale.toUpperCase() }}</span>
+    <span v-else class="bs-settings-menu__language" :lang="locale">{{ languageLabel }}</span>
   </button>
   <div v-else-if="embedded" class="space-y-3">
     <section>
