@@ -1,16 +1,22 @@
 {
   "task_id": "DOS-M4-001",
-  "status": "prepared-platform-selection-and-approval-missing",
+  "status": "android-first-selected; framework-device-distribution-and-offline-evidence-open",
   "parent_pr": 435,
   "parent_sha": "a438c2b59359c1bf6345664fee3362a2e3176437",
   "authorization": {
-    "scope": "Prepare the next Doctor milestone under the user request to continue milestone tasks. Synthetic repository work only.",
-    "platform_selection": null,
+    "scope": "Owner authorized continued Doctor tasks and explicitly selected an Android-first mobile app as its own app inside the monorepo. Synthetic repository work only.",
+    "platform_selection": "Android first; its own mobile app inside this monorepo",
     "framework_approval": null,
     "accountable_reviewer": null,
     "approved_at": null,
     "approved_candidate_sha": null,
-    "offline_clinical_review": null
+    "offline_clinical_review": null,
+    "platform_selection_source": {
+      "date": "2026-10-22",
+      "actor": "repository owner in this conversation",
+      "quote": "Android first if it's the mobile app, and it should have it's own app inside the monorepo too"
+    },
+    "platform_selection_is_framework_approval": false
   },
   "observed_repository": {
     "canonical_packet_sha256": "041145f78b703fda51a0185744c7f6b2e900fbca7c7ff5dc129ad2170ed5634d",
@@ -31,7 +37,7 @@
   "options": [
     {
       "id": "web-pwa",
-      "recommendation": "Lowest-change candidate for review; not selected",
+      "recommendation": "Not the selected mobile-app direction; retain existing web product independently",
       "platforms": [
         "Android browser",
         "iOS browser"
@@ -46,25 +52,23 @@
     },
     {
       "id": "hybrid",
-      "recommendation": "Alternative requiring explicit framework and distribution approval",
+      "recommendation": "Engineering recommendation for the selected Android-first app; exact architecture remains for accountable review",
       "platforms": [
-        "Android",
-        "iOS"
+        "Android first; no iOS admission"
       ],
-      "framework": "Capacitor wrapper is a candidate only, not installed or approved",
-      "distribution": "Signed internal/sandbox builds first; store accounts/signing/cost ownership missing",
+      "framework": "Capacitor core/android/cli 8.5.3 proposed, registry metadata observed 2026-10-22; not installed or approved",
+      "distribution": "Owned disposable debug APK/device verification first; no store upload, external distribution, release certificate or paid account",
       "rendering": "Existing DOM templates inside platform WebView; not a native UI renderer",
       "credential_storage": "Reviewed OS secure storage/keychain bridge would be required; no unreviewed plugin",
       "private_data_storage": "No private cache or offline writes before the separate clinical/security policy",
       "cost_owner": null,
-      "device_matrix": "Exact Android/iOS minimums, WebView versions, device runners and signing are unprovided"
+      "device_matrix": "Proposed Android API29 and API36 emulator smoke plus an accountable physical-device receipt; exact supported OS/WebView matrix and SDK/toolchain remain for review"
     },
     {
       "id": "native",
       "recommendation": "Separate architecture decision required before choosing React Native/Flutter or native SDKs",
       "platforms": [
-        "Android",
-        "iOS"
+        "Android first; no iOS admission"
       ],
       "framework": null,
       "distribution": "Unapproved signed distribution; no certificates/accounts purchased",
@@ -81,7 +85,7 @@
     "existing_presentation": "packages/ui/src/templates/ and organisms/",
     "existing_interactions": "packages/ux/src/",
     "shared_contracts": "packages/contracts/src/ (only concrete reviewed contracts)",
-    "future_mobile_root": "apps/doctor-suit/mobile/doctor/ (reserved; no scaffold created)",
+    "future_mobile_root": "apps/doctor-suit/mobile/doctor/ (own proposed @building-suit/doctor-mobile app; reserved, not scaffolded)",
     "browser_tests": "apps/doctor-suit/tests/e2e/",
     "native_runner": "unregistered; must be approved and named before framework work"
   },
@@ -98,7 +102,7 @@
   },
   "gates": {
     "DOS-M4-GATE-START": "OPEN: canonical state retained; preparation does not resolve dependency/admission",
-    "DOS-M4-GATE-PLATFORM": "OPEN: platform/framework/device/distribution/reviewer evidence absent",
+    "DOS-M4-GATE-PLATFORM": "OPEN: Android-first separate-app scope selected by owner; exact framework/renderer, device, command/path registration, distribution/cost and candidate review remain open",
     "DOS-M4-GATE-OFFLINE": "OPEN: clinically reviewed cache/conflict/device-loss policy absent"
   },
   "prerequisites": {
@@ -235,8 +239,8 @@
     }
   ],
   "criterion_results": {
-    "DOS-M4-001-C01": "BLOCKED: no selected scope, device matrix or accountable cost/distribution approval",
-    "DOS-M4-001-C02": "PROPOSED: architecture alternatives below are reviewable; none approved",
+    "DOS-M4-001-C01": "PARTIAL: owner selected Android first as its own monorepo app; exact framework/device/distribution/cost approvals remain missing",
+    "DOS-M4-001-C02": "PROPOSED: separate Capacitor8.5.3/Nuxt app recommendation is reviewable; not framework approval",
     "DOS-M4-001-C03": "PREPARED: reserved paths and existing harness owners named; no framework/scaffold/account added",
     "DOS-M4-001-C04": "PREPARED: missing approval evidence explicit; downstream implementation stays disabled"
   },
@@ -250,5 +254,32 @@
     "no hosted migrations",
     "no Automation mutation",
     "no staging/main promotion"
-  ]
+  ],
+  "android_app_proposal": {
+    "status": "reviewable engineering proposal; not a scaffold or approval",
+    "workspace_package": "@building-suit/doctor-mobile",
+    "reserved_app_root": "apps/doctor-suit/mobile/doctor/",
+    "independent_app": true,
+    "renderer": "A dedicated Nuxt/Vue client build hosted in Capacitor Android WebView; existing complete shared Bs templates and shared UX remain presentation owners. This is not a native-widget renderer.",
+    "web_app_unchanged": "The existing Doctor web app retains its own app root, build and deployment. Mobile must not import another app internal module.",
+    "framework_versions": {
+      "@capacitor/core": "8.5.3",
+      "@capacitor/android": "8.5.3",
+      "@capacitor/cli": "8.5.3"
+    },
+    "metadata_evidence": "Read-only pnpm view version/engines calls on 2026-10-22; CLI requires Node >=22, repository pins Node26.8.1. No package install or lockfile change.",
+    "workspace_registration_required": "The current apps/* glob does not discover the reserved nested app. Review a precise apps/doctor-suit/mobile/* workspace entry, root command/type/build/device registration and task path amendment before implementation; do not create a nested workspace or lockfile.",
+    "contract_boundaries": "Doctor-owned mobile adapters call the same authorized Doctor backend. Extract only concrete pure versioned contracts to packages/contracts; no web-app internal imports or duplicated authority.",
+    "native_permissions": "No notifications, contacts, camera, location or background delivery permission is granted by this packet.",
+    "secure_storage": "Propose an Android Keystore-backed session bridge, product/environment namespace, and fresh server SID checks. No raw session token in Preferences, localStorage or unreviewed plugin. Exact bridge selection and security review remain open.",
+    "offline": "Propose online-only initial operation, with no private chart caching, command replay or offline signing. This proposal does not grant the clinical offline-policy approval.",
+    "future_build_commands": [
+      "pnpm --filter @building-suit/doctor-mobile build",
+      "pnpm --filter @building-suit/doctor-mobile exec cap sync android",
+      "cd apps/doctor-suit/mobile/doctor/android && ./gradlew assembleDebug",
+      "adb install -r <exact-reviewed-debug-apk>"
+    ],
+    "command_status": "Proposed, unregistered and unexecuted; the package, SDK, Gradle wrapper, emulator/device and APK do not yet exist.",
+    "signing_and_cost": "No release signing/store account/cost acceptance supplied; no resource created."
+  }
 }
