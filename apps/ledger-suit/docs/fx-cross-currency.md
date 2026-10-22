@@ -1,5 +1,7 @@
 # Foreign-currency AR/AP and cross-currency settlement
 
+2026-10-22 update: native independent-session **competing FX allocations passed**. See [the current verification and boundaries](native-concurrency-verification.md) and [native SQL evidence](native-financial-verification.md). Historical blocked results below retain their original dates; this does not establish HTTP/Storage, provider, deployment or accountant acceptance.
+
 Status: LS-FX-001 implements the product/engineering contract approved in V2-D13 revision 2. This is not accountant acceptance, hosted migration evidence, deployment approval, or an IAS 21 compliance claim.
 
 ## Implemented contract

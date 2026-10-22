@@ -1,5 +1,7 @@
 # LS-BILL-002 — InstaPay/manual payment
 
+2026-10-22 update: native independent-session **approval contention and replay passed**. See [the current verification and boundaries](native-concurrency-verification.md) and [native SQL evidence](native-financial-verification.md). Historical blocked results below retain their original dates; this does not establish HTTP/Storage, provider, deployment or accountant acceptance.
+
 Implements BILL-MAN-01–04 and approved decision LS-D-MANUAL-PAYMENT. Changes are local and uncommitted; no hosted database, deployment or publication was performed.
 
 Customers select an approved launch plan and monthly/yearly interval in the existing checkout, then choose manual transfer. `prepare_manual_payment` resolves the existing catalog on the server and stores an immutable purchase quote, including customer-facing instructions. No amount, currency, price ID or entitlement target is accepted from the browser. One unfinished request per organization prevents competing quotes; cancel it to change plans. Unconfigured instructions fail closed.
