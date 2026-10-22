@@ -13,6 +13,11 @@ insert into app.platform_operators(user_id,role) values
 ('e0000000-0000-4000-8000-000000000004','billing_operator');
 create temp table operation_ids(key text primary key,id uuid);
 grant all on operation_ids to authenticated,service_role;
+create temp table operation_financial_before as
+select jsonb_build_object(
+  'transactions', (select coalesce(jsonb_agg(to_jsonb(t) order by t.id), '[]'::jsonb) from public.transactions t),
+  'entries', (select coalesce(jsonb_agg(to_jsonb(e) order by e.id), '[]'::jsonb) from public.transaction_entries e)
+) as snapshot;
 
 select set_config('request.jwt.claims','{"sub":"e0000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 set local role authenticated;
@@ -93,7 +98,10 @@ select is((select customer_message from public.support_requests where id=(select
 select throws_ok($$update public.support_requests set customer_message='tampered' where id=(select id from operation_ids where key='support')$$,'42501','SUPPORT_REQUEST_CONTENT_IMMUTABLE','customer support message is immutable');
 select is((select count(*) from app.platform_operator_audit where command_id in (select id from operation_ids where key in ('access_suspend','access_reactivate','subscription','support_start','support_wait','support_remind','support_close')) and outcome='succeeded'),7::bigint,'every successful mutation has one command audit');
 select ok(not exists(select 1 from app.platform_operator_audit where command_id in (select id from operation_ids) and outcome='succeeded' and (actor_id is null or reason is null or context is null or before_state is null or after_state is null or target_id is null)),'mutation audit records actor, reason, before, after and linked target');
-select is((select count(*) from public.transactions),0::bigint,'bounded admin operations do not create or mutate posted financial history');
+select is(jsonb_build_object(
+  'transactions', (select coalesce(jsonb_agg(to_jsonb(t) order by t.id), '[]'::jsonb) from public.transactions t),
+  'entries', (select coalesce(jsonb_agg(to_jsonb(e) order by e.id), '[]'::jsonb) from public.transaction_entries e)
+), (select snapshot from operation_financial_before), 'bounded admin operations do not create or mutate posted financial history');
 select ok(exists(select 1 from app.platform_operator_audit where command_id=(select id from operation_ids where key='unsafe_subscription') and error_code='ADMIN_PROVIDER_CHANGE_UNSAFE' and before_state=after_state),'blocked provider correction is audited with unchanged state');
 
 select * from finish();

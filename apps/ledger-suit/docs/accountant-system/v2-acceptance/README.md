@@ -1,5 +1,7 @@
 # V2-IMP-015 — cross-module acceptance review
 
+Native follow-up, 2026-10-22: [LS-REL-001 native verification](../../native-financial-verification.md) now passes 63 SQL files / 1,927 assertions and the separate 22-check accounting probe on the unchanged 105-migration chain. [Exact evidence](native-sql-verification-2026-10-22.json) preserves the environment and fixture repairs. Historical blocked attempts below remain retained. Whole release, provider API/Storage, recovery and accountant acceptance are still incomplete.
+
 Current follow-up (2026-10-22): [LS-READY-001](../work-packages/LS-READY-001.md) records the new readiness review, acceptance-register repair and actual current checks. The September attempts below remain historical; they do not establish the current execution environment or live Automation task status. Release/accountant acceptance remains incomplete.
 
 Status: **BLOCKED / acceptance incomplete**, updated 2026-09-27 by LS-REL-001. This is an acceptance package, not a release or an accountant sign-off. The original V2-IMP-015 review changed no runtime code or applied environment; later LS-FIX repair entries below describe local source changes only. LS-REL-001 made no hosted database write, deployment, commit or publication.
