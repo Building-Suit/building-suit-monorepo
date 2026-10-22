@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { createDoctorPracticeController, doctorPracticeState } from '../../app/utils/practiceController.ts'
 import { completeDoctorRegistration } from '../../app/utils/registrationCompletion.ts'
 import { doctorWorkspaceEntry } from '../../app/utils/workspaceEntry.ts'
+import { doctorTimezoneChoices } from '../../app/utils/timezoneChoices.ts'
 const form = { displayName: 'Synthetic doctor', practiceName: 'Synthetic practice', locationName: 'Synthetic clinic', timezone: 'Africa/Cairo' }
 const setup = { enrollment: 'owner', profile: null, practice: null, location: null, draft: null }
 const actor = { userId: 'synthetic-user', sessionId: 'synthetic-session', practiceId: null }
@@ -50,4 +51,11 @@ test('workspace routes only incomplete admitted owners to setup; missing access 
   assert.equal(doctorWorkspaceEntry(setup), '/onboarding')
   assert.equal(doctorWorkspaceEntry({ ...setup, subscriptionRequired: true }), '/subscription')
   assert.equal(doctorWorkspaceEntry(null), null)
+})
+test('timezone selection preserves valid stored UTC aliases and fixed-offset scheduling zones', () => {
+  const choices = doctorTimezoneChoices()
+  for (const zone of ['UTC', 'Etc/UTC', 'Etc/GMT+6', 'Etc/GMT-14', 'Africa/Cairo']) {
+    assert.ok(choices.some(choice => choice.value === zone))
+    assert.doesNotThrow(() => new Intl.DateTimeFormat('en', { timeZone: zone }).format(0))
+  }
 })

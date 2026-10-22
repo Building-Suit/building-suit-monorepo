@@ -2,6 +2,25 @@ import { doctorPasswordStep } from '../helpers/password-step.mjs'
 import { test, expect } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 const fixture = 'http://127.0.0.1:4338/__fixture'
+test('changing language through settings survives setup, account return and reload', async ({ page, request, context }) => {
+  await request.post(fixture, { data: { reset: true } })
+  await context.addCookies([{ name: 'building-suit-locale', value: 'en', url: 'http://127.0.0.1:4337' }])
+  await page.route('**/*', route => ['127.0.0.1', 'localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort())
+  await page.goto('/sign-in')
+  await page.getByRole('button', { name: 'Language · Theme', exact: true }).click()
+  await page.getByRole('menuitemradio', { name: 'العربية', exact: true }).click()
+  await page.getByLabel(/^البريد الإلكتروني/).fill('synthetic@example.test')
+  await doctorPasswordStep(page)
+  await page.getByLabel(/^كلمة المرور/).fill('synthetic-password-only')
+  await page.getByRole('button', { name: 'تسجيل الدخول', exact: true }).click()
+  await expect(page).toHaveURL(/\/onboarding$/)
+  await page.getByRole('link', { name: 'العودة إلى الحساب', exact: true }).click()
+  await expect(page).toHaveURL(/\/account$/)
+  await expect(page.getByRole('heading', { name: 'الحساب التجريبي', exact: true })).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'الحساب التجريبي', exact: true })).toBeVisible()
+  expect((await context.cookies()).find(cookie => cookie.name === 'building-suit-locale')?.value).toBe('ar')
+})
 test('canonical Doctor artwork is served byte for byte with discovered SVG favicon', async ({ page, request }) => {
   for (const kind of ['mark', 'wordmark']) for (const tone of ['light', 'dark']) {
     const filename = `doctor-suit-${kind}-${tone}.svg`
@@ -59,6 +78,11 @@ for (const ar of [false, true]) test(`linear setup, dashboard return and languag
   await page.getByRole('link', { name: ar ? 'لوحة التحكم' : 'Dashboard', exact: true }).click()
   await expect(page).toHaveURL(/\/workspace$/)
   await page.reload()
+  await expect(page.getByRole('heading', { name: ar ? 'لوحة التحكم' : 'Dashboard', exact: true })).toBeVisible()
+  await page.goto('/')
+  if (ar) await page.getByRole('button', { name: 'فتح القائمة', exact: true }).click()
+  await page.getByRole('link', { name: ar ? 'مساحة العمل' : 'Open workspace', exact: true }).click()
+  await expect(page).toHaveURL(/\/workspace$/)
   await expect(page.getByRole('heading', { name: ar ? 'لوحة التحكم' : 'Dashboard', exact: true })).toBeVisible()
   expect((await (await request.get(fixture)).json()).completeCalls).toBe(1)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
