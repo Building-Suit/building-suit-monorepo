@@ -418,7 +418,7 @@ const invitationPreviewCopy={
         sort-mode="multiple" removable-sort resizable-columns reorderable-columns striped-rows selection-mode="multiple"
         :meta-key-selection="false" :density="density" :loading="tableState === 'loading'"
         :error="tableState === 'error' ? (isArabic ? 'تعذر تحميل المثال.' : 'The example could not be loaded.') : null"
-        :label="isArabic ? 'أمثلة المكونات' : 'Component examples'"
+        :label="isArabic ? 'أمثلة المكونات' : 'Component examples'" :scroll-label="isArabic ? 'تمرير جدول المكونات' : 'Scroll component table'"
         :capabilities="{ insert: true, edit: true, select: true }"
         @create="add"
         @edit="edit"

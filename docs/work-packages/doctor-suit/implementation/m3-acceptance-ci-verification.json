@@ -3,7 +3,7 @@
   "pr": 442,
   "parent_pr": 438,
   "parent_sha": "5cda7ed43a9f2ecdb01387b76b1c17c4f5feaf2b",
-  "observed_at": "2026-10-22T20:55:05.197894+00:00",
+  "observed_at": "2026-10-22T21:41:38.428787+00:00",
   "local_checks": {
     "doctor_units": {
       "command": "node --test apps/doctor-suit/tests/unit/*.test.mjs",
@@ -39,7 +39,7 @@
     "pinned_meta_regressions": 5
   },
   "actual_service_execution": {
-    "status": "failed on latest completed source31f31545; subsequent fixes require new exact-candidate CI",
+    "status": "source70e20a9e completed; inherited actual-provider passed; M3 aggregate failed. Final interaction/fixture changes require new exact-head CI.",
     "candidate_verified": false
   },
   "limitations": [
@@ -159,6 +159,96 @@
           "Automation"
         ]
       }
+    },
+    {
+      "head": "70e20a9e721d7804ea21fdc24abf27bfe47c1acd",
+      "run_id": 39853227597,
+      "sql": "1871 assertions/59 suites, concurrency and86-table recovery pass; primary and official mirror all rate-limit within three attempts; generation remains unverified",
+      "public_preview": {
+        "passed": 60,
+        "failed": 0
+      },
+      "account_protocol": {
+        "passed": 80,
+        "failed": 5,
+        "remaining": "obsolete OTP destination, two reschedule fixture calls and two ambiguous staff queue selectors"
+      },
+      "m3_browser": {
+        "passed": [
+          "DOS-M3-001",
+          "DOS-M3-002",
+          "DOS-M3-004",
+          "DOS-M3-005",
+          "DOS-M3-006",
+          "DOS-M3-007",
+          "DOS-M3-008",
+          "DOS-M3-009"
+        ],
+        "failed": [
+          "DOS-M3-003",
+          "DOS-M3-010"
+        ],
+        "details": "keyboard movement and report choice timeouts; aggregate acceptance false"
+      },
+      "inherited_actual_provider": "passed: Auth signup/PKCE/recovery/reauthentication, Storage/Functions/Realtime, 14 M2 browser cases, M1 combined slice, synthetic manual payments and administrative candidate",
+      "shared_auth_parity": {
+        "passed": 48,
+        "failed": 0
+      },
+      "shared_settings": {
+        "passed": 6,
+        "failed": 6,
+        "failing_consumers": [
+          "Docs",
+          "Inventory",
+          "Automation"
+        ]
+      }
     }
+  ],
+  "local_execution_scope": {
+    "doctor_application_browser_provider": "GitHub-owned disposable execution only",
+    "shared_unit_command": "includes existing isolated Shop receipt document browser cases on local supplied reference assets",
+    "doctor_browser_or_device_acceptance_inferred": false
+  },
+  "latest_local_validation": {
+    "phase": "final working tree before publication commit; no runtime acceptance inferred",
+    "focused_doctor_ui_ux": {
+      "command": "node --test apps/doctor-suit/tests/unit/*.test.mjs packages/ui/tests/*.test.mjs packages/ux/tests/*.test.mjs",
+      "passed": 618,
+      "failed": 0,
+      "skipped": 0
+    },
+    "repository": {
+      "command": "pnpm test",
+      "tests": 2196,
+      "passed": 2119,
+      "failed": 54,
+      "skipped": 23,
+      "failure_products": [
+        "shop-suit"
+      ],
+      "failure_records": 54
+    },
+    "typechecks": {
+      "command": "pnpm exec turbo run typecheck --concurrency=2 --continue",
+      "successful": 7,
+      "failed": 0,
+      "cached": 0
+    },
+    "shared_changed_file_lint": "passed",
+    "workspace": "passed;6 Suits/130 templates/80 unchanged historical migrations",
+    "docs_catalogue_build": "passed",
+    "protocol_collection": 85,
+    "m3_collection": 10,
+    "collection_is_execution": false,
+    "m3_runner_syntax": "passed"
+  },
+  "final_changes": [
+    "Explicit focused-region physical arrow scrolling through shared UX; descendant controls/modified keys unchanged.",
+    "Optional report-filter hydration guard for Doctor only; first source snapshot, exact totals/rows and enabled/expanded controls are asserted.",
+    "Legacy rescheduling protocol handles current consultation-availability RPC, preserves source/destination permissions, excludes only the original appointment and rejects typed snapshots it cannot model.",
+    "OTP now expects explicit wizard completion into workspace and proves one practice/location setup with professional verification still unverified.",
+    "All staff queue selectors identify the keyboard-scroll region; failed M3 categories become safe GitHub annotations before later independent checks finish."
   ]
 }
