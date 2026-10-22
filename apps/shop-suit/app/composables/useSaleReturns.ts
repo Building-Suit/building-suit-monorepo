@@ -3,7 +3,7 @@ import type { Ref } from 'vue'
 import type { BsReturnForm, BsRefundRecordForm, BsDocumentReturnsCopy, BsDocumentReturnsView } from '@building-suit/ui/types/documentReturns'
 import type { SaleReturnContext, SaleReturnLineInput, SaleReturnPlan } from '~/types/saleReturns'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
-import { convertMeasurement } from '~/utils/measurement'
+import { convertMeasurement, isWholePackagingReturn } from '~/utils/measurement'
 import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 
 export function useSaleReturns(invoiceId: Ref<string>, enabled: () => boolean, changed: () => Promise<unknown>) {
@@ -16,7 +16,7 @@ export function useSaleReturns(invoiceId: Ref<string>, enabled: () => boolean, c
   const offset = ref(0)
   const open = ref(false)
   const recordOpen = ref(false)
-  const form = ref<BsReturnForm>({ quantities: {}, dispositions: {}, reason: '' })
+  const form = ref<BsReturnForm>({ quantities: {}, dispositions: {}, cutApprovals: {}, reason: '' })
   const recordForm = ref<BsRefundRecordForm>({ reference: '', reason: '' })
   const selectedRefund = ref<string | null>(null)
   const recordPending = ref(false)
@@ -37,11 +37,13 @@ export function useSaleReturns(invoiceId: Ref<string>, enabled: () => boolean, c
   )
   const input = () => ({ lines: (context.value?.lines ?? []).flatMap(line => {
     const quantity = Number(form.value.quantities[line.id] ?? 0)
-    return quantity > 0 ? [{ lineId: line.id, quantity, disposition: line.itemType === 'service' ? 'service' : form.value.dispositions[line.id] ?? 'resellable' } as SaleReturnLineInput] : []
+    return quantity > 0 ? [{ ...(form.value.cutApprovals?.[line.id] ? { approveCut: true } : {}), lineId: line.id, quantity, disposition: line.itemType === 'service' ? 'service' : form.value.dispositions[line.id] ?? 'resellable' } as SaleReturnLineInput] : []
   }), reason: form.value.reason.trim() })
   const reviewed = useReviewedCommand<ReturnType<typeof input>, SaleReturnPlan>(input, scope)
   function describe(cause: unknown) {
     const message = shopCommandErrorMessage(cause)
+    if (message.includes('REEL_CUT_RETURN_APPROVAL_REQUIRED')) return locale.value === 'ar' ? 'يلزم أن يعتمد مدير مرتجع الكابل المقطوع.' : 'A manager must approve this cut-cable return.'
+    if (message.includes('REEL_UNOPENED_RETURN_NOT_RESELLABLE')) return locale.value === 'ar' ? 'سياسة المنتج لا تسمح بإعادة بيع البكرات المرتجعة غير المفتوحة.' : 'This product policy does not allow reselling returned unopened reels.'
     if (message.includes('RETURN_PREVIEW_CHANGED')) return t('returns.changed')
     if (message.includes('PRECISION')) return t('returns.precision')
     if (message.includes('QUANTITY_EXCEEDED')) return t('returns.quantityExceeded')
@@ -52,7 +54,7 @@ export function useSaleReturns(invoiceId: Ref<string>, enabled: () => boolean, c
   const selected = computed(() => context.value?.history.flatMap(entry => entry.refunds).find(refund => refund.id === selectedRefund.value))
   function start() {
     if (!context.value?.canReturn || !online.value) return
-    if (!reviewed.locked.value) { form.value = { quantities: {}, dispositions: {}, reason: '' }; reviewed.reset() }
+    if (!reviewed.locked.value) { form.value = { quantities: {}, dispositions: {}, cutApprovals: {}, reason: '' }; reviewed.reset() }
     open.value = true
   }
   function validQuantity(line: SaleReturnLineInput) {
@@ -109,15 +111,19 @@ export function useSaleReturns(invoiceId: Ref<string>, enabled: () => boolean, c
     catch (cause) { if (scope() === originalScope) recordError.value = describe(cause) }
     finally { recordPending.value = false }
   }
-  watch(scope, () => { offset.value = 0; open.value = false; recordOpen.value = false; selectedRefund.value = null; frozenRecord.value = null; recordError.value = ''; recordForm.value = { reference: '', reason: '' }; form.value = { quantities: {}, dispositions: {}, reason: '' } })
+  watch(scope, () => { offset.value = 0; open.value = false; recordOpen.value = false; selectedRefund.value = null; frozenRecord.value = null; recordError.value = ''; recordForm.value = { reference: '', reason: '' }; form.value = { quantities: {}, dispositions: {}, cutApprovals: {}, reason: '' } })
   const money = (value: number) => new Intl.NumberFormat(locale.value, { style: 'currency', currency: context.value?.currency ?? 'EGP' }).format(Number(value))
   const date = (value: string) => new Date(value).toLocaleString(locale.value)
-  const copy = computed<BsDocumentReturnsCopy>(() => Object.fromEntries(['title', 'action', 'loading', 'loadError', 'retry', 'unsupported', 'offline', 'policy', 'item', 'quantity', 'remaining', 'disposition', 'resellable', 'damaged', 'service', 'reason', 'preview', 'confirm', 'cancel', 'total', 'debt', 'refund', 'due', 'allocations', 'history', 'empty', 'external', 'cash', 'failed', 'reference', 'record', 'recordNotice', 'uncertain', 'previous', 'next'].map(key => [key, t(`returns.${key}`)])) as unknown as BsDocumentReturnsCopy)
+  const copy = computed<BsDocumentReturnsCopy>(() => ({
+    ...(Object.fromEntries(['title', 'action', 'loading', 'loadError', 'retry', 'unsupported', 'offline', 'policy', 'item', 'quantity', 'remaining', 'disposition', 'resellable', 'damaged', 'service', 'reason', 'preview', 'confirm', 'cancel', 'total', 'debt', 'refund', 'due', 'allocations', 'history', 'empty', 'external', 'cash', 'failed', 'reference', 'record', 'recordNotice', 'uncertain', 'previous', 'next'].map(key => [key, t(`returns.${key}`)])) as unknown as BsDocumentReturnsCopy),
+    approveCut: locale.value === 'ar' ? 'أعتمد هذا المرتجع من كابل مقطوع' : 'I approve this cut-cable return',
+    approvalHelp: locale.value === 'ar' ? 'يحتاج هذا المرتجع إلى مدير لديه صلاحية إدارة المخزون.' : 'This return needs a manager with inventory-management permission.',
+  }))
   const view = computed<BsDocumentReturnsView>(() => ({
     loading: loading.value, error: Boolean(loadError.value), supported: context.value?.supported ?? true, canReturn: Boolean(context.value?.canReturn), online: online.value, pending: reviewed.pending.value, locked: reviewed.locked.value, dirty: dirty.value,
-    actionError: reviewed.error.value, lines: (context.value?.lines ?? []).filter(line => Number(line.remaining) > 0).map(line => ({ id: line.id, name: line.measurement ? `${line.name} (${locale.value === 'ar' ? line.measurement.baseUnitNameAr : line.measurement.baseUnitNameEn})` : line.name, quantityStep: Number(line.measurement?.quantityIncrement ?? 0.01), remaining: Number(line.remaining), service: line.itemType === 'service' })),
+    actionError: reviewed.error.value, lines: (context.value?.lines ?? []).filter(line => Number(line.remaining) > 0).map(line => ({ id: line.id, approvalRequired: Boolean(line.measurement?.reelTracking && line.measurement.reelReturnPolicy?.cutRequiresManagerApproval && Number(form.value.quantities[line.id] ?? 0) > 0 && !isWholePackagingReturn(String(form.value.quantities[line.id]),line.measurement)), canApprove: context.value?.canApproveCuts === true, name: line.measurement ? `${line.name} (${locale.value === 'ar' ? line.measurement.baseUnitNameAr : line.measurement.baseUnitNameEn})` : line.name, quantityStep: Number(line.measurement?.quantityIncrement ?? 0.01), remaining: Number(line.remaining), service: line.itemType === 'service' })),
     preview: reviewed.review.value ? { total: money(reviewed.review.value.total), debt: money(reviewed.review.value.debtReduction), refund: money(reviewed.review.value.refundDue), due: money(reviewed.review.value.dueAfter), allocations: reviewed.review.value.allocations.map(a => ({ id: a.allocationId, label: `${t(`payments.methods.${a.method}`)} · ${a.paymentId.slice(-8)}`, amount: money(a.amount) })) } : null,
-    history: (context.value?.history ?? []).map(entry => ({ id: entry.id, title: `${date(entry.created_at)} · ${money(entry.total)}`, detail: `${t('returns.debt')}: ${money(entry.debt_reduction)} · ${t('returns.originalRefund')}: ${money(entry.refund_due)} · ${entry.original_document.invoiceNumber}`, reason: entry.reason, actor: `${t('returns.recordId')}: ${entry.id.slice(-8)}${entry.actorName ? ` · ${t('returns.actor')}: ${entry.actorName}` : ''}`, lines: entry.lines.map(line => ({ id: line.line_id, label: `${context.value?.lines.find(l => l.id === line.line_id)?.name ?? line.line_id} · ${Number(line.quantity)} · ${t(`returns.${line.disposition}`)} · ${money(line.total)}` })), refunds: entry.refunds.map(refund => ({ id: refund.id, label: `${t(`payments.methods.${refund.method}`)} · ${money(refund.amount)} · ${t(`returns.states.${refund.state}`)}`, canRecord: Boolean(context.value?.canReturn && refund.state !== 'completed'), cash: refund.method === 'cash', events: refund.events.map(event => ({ id: event.id, label: [date(event.created_at), t(`returns.operations.${event.operation}`), event.reference, event.reason].filter(Boolean).join(' · ') })) })) })),
+    history: (context.value?.history ?? []).map(entry => ({ id: entry.id, title: `${date(entry.created_at)} · ${money(entry.total)}`, detail: `${t('returns.debt')}: ${money(entry.debt_reduction)} · ${t('returns.originalRefund')}: ${money(entry.refund_due)} · ${entry.original_document.invoiceNumber}`, reason: entry.reason, actor: `${t('returns.recordId')}: ${entry.id.slice(-8)}${entry.actorName ? ` · ${t('returns.actor')}: ${entry.actorName}` : ''}`, lines: entry.lines.map(line => ({ id: line.line_id, label: `${context.value?.lines.find(l => l.id === line.line_id)?.name ?? line.line_id} · ${Number(line.quantity)} · ${t(`returns.${line.disposition}`)} · ${money(line.total)}${entry.cutApprovals?.some(approval => approval.line_id === line.line_id) ? ` · ${locale.value === 'ar' ? 'اعتماد المدير' : 'Manager approval'}: ${entry.cutApprovals.find(approval => approval.line_id === line.line_id)?.actorName || '—'}` : ''}` })), refunds: entry.refunds.map(refund => ({ id: refund.id, label: `${t(`payments.methods.${refund.method}`)} · ${money(refund.amount)} · ${t(`returns.states.${refund.state}`)}`, canRecord: Boolean(context.value?.canReturn && refund.state !== 'completed'), cash: refund.method === 'cash', events: refund.events.map(event => ({ id: event.id, label: [date(event.created_at), t(`returns.operations.${event.operation}`), event.reference, event.reason].filter(Boolean).join(' · ') })) })) })),
     hasPrevious: offset.value > 0, hasNext: offset.value + 50 < (context.value?.totalCount ?? 0),
     record: { title: selected.value?.method === 'cash' ? t('returns.cash') : t('returns.external'), cash: selected.value?.method === 'cash', locked: Boolean(frozenRecord.value), pending: recordPending.value, dirty: recordDirty.value, error: recordError.value },
   }))

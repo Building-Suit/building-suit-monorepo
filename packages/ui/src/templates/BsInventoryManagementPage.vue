@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BsInventoryCopy, BsInventoryView, BsInventoryEditor, BsInventoryStockRow, BsInventoryMovementRow, BsInventoryCountRow, BsInventoryAdjustmentForm, BsInventoryCountForm } from '../types/inventoryPresentation'
-defineProps<{ text: BsInventoryCopy; view: BsInventoryView; rows: BsInventoryStockRow[]; movementRows: BsInventoryMovementRow[]; countRows: BsInventoryCountRow[]; productOptions: { id: string; name: string }[]; adjustmentEditor: BsInventoryEditor; countEditor: BsInventoryEditor; thresholdEditor: BsInventoryEditor }>()
+defineProps<{ physicalStockTo?: string; text: BsInventoryCopy; view: BsInventoryView; rows: BsInventoryStockRow[]; movementRows: BsInventoryMovementRow[]; countRows: BsInventoryCountRow[]; productOptions: { id: string; name: string }[]; adjustmentEditor: BsInventoryEditor; countEditor: BsInventoryEditor; thresholdEditor: BsInventoryEditor }>()
 const adjustmentForm = defineModel<BsInventoryAdjustmentForm>('adjustmentForm', { required: true })
 const countForm = defineModel<BsInventoryCountForm>('countForm', { required: true })
 const thresholdValue = defineModel<number>('thresholdValue', { required: true })
@@ -15,7 +15,7 @@ const emit = defineEmits<{ retryAccess: []; retry: []; retryHistory: []; saveAdj
 </script>
 <template>
   <BsStack gap="lg">
-    <BsPageHeader :title="text.title" :subtitle="text.subtitle" />
+    <BsPageHeader :title="text.title" :subtitle="text.subtitle"><template #actions><BsLink v-if="physicalStockTo && view.canView" :to="physicalStockTo">{{ text.physicalStock }}</BsLink></template></BsPageHeader>
     <BsPanel v-if="!view.available && !view.loadingContext" padding="md">
       <BsText as="p">{{ text.noShop }}</BsText>
       <BsLink to="/dashboard">{{ text.dashboard }}</BsLink>

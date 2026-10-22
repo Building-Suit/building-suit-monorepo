@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { measurementUnits } from '~/utils/measurement'
+import type { PosReelOptions, PosReel, ReelAvailability } from '~/types/electrical'
 import type { PosMeasurement } from '~/types/measurement'
 import { estimateOfferDiscount, type CatalogOffer } from '#shared/catalogOffers'
 import type { BsOfferCardView } from '@building-suit/ui/types/storefrontBuilderPresentation'
@@ -9,14 +10,14 @@ import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { businessModeSupportsProducts, businessModeSupportsServices } from '~/utils/businessMode'
 import { posCustomerOptions } from '~/utils/posCustomer.js'
-import { addOrIncrementCartLine, cartTotal, nextCartQuantity, cartQuantityLimit, cartLineKey, saleLineInput, cartQuantityStep, selectedMeasurement, measuredBaseQuantity, selectedUnitPrice } from '~/utils/pos'
+import { addOrIncrementCartLine, cartTotal, nextCartQuantity, cartQuantityLimit, cartLineKey, saleLineInput, cartQuantityStep, selectedMeasurement, measuredBaseQuantity, selectedUnitPrice, physicalCartError, cachedReelBarcodeItem } from '~/utils/pos'
 const { refreshShopQueries } = useShopInvalidation()
 
 const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
-type CatalogItem = { measurement?: PosMeasurement | null; unitSelection?: string; id: string; itemType: 'product' | 'service'; name: string; imageUrl?: string | null; sku: string | null; barcode: string | null; unitPrice: number; discount: number; stock: number | null }
+type CatalogItem = { reelId?: string; reelBarcode?: string; reelRemaining?: string; reelPrice?: number | null; reelStatus?: string; reelSummary?: ReelAvailability; catalogStock?: number; allowSplit?: boolean; cuttingLoss?: string; measurement?: PosMeasurement | null; unitSelection?: string; id: string; itemType: 'product' | 'service'; name: string; imageUrl?: string | null; sku: string | null; barcode: string | null; unitPrice: number; discount: number; stock: number | null }
 type CartLine = CatalogItem & { key: string; sourceId: string; quantity: number }
 type Appointment = { id: string; staffId: string; customerId: string | null; customerName: string; startsAt: string; status: string; service: CatalogItem }
 type Customer = { id: string; name: string; phone: string | null }
@@ -34,6 +35,7 @@ const { t, locale } = useI18n()
 const { current, currentId, currentLocationId, currentLocation, currentMembership, loading: shopLoading } = useShop()
 const confirmation = useConfirmation()
 const captureScope = useShopTaskScope()
+const actor = useSupabaseUser()
 const { push: pushToast } = useToasts()
 const catalogSearch = ref('')
 const debouncedSearch = ref('')
@@ -45,6 +47,8 @@ const debouncedCustomerSearch = ref('')
 const posPage = ref<{ focusCatalog: () => void } | null>(null)
 
 const lines = ref<CartLine[]>([])
+const physicalPickers = reactive<Record<string, { items: PosReel[]; total: number; page: number; query: string; pending: boolean; error: string | null; request: number; summary?: ReelAvailability }>>({})
+let physicalRequest = 0
 const staffId = ref('')
 const appointmentId = ref('')
 const consumedAppointmentLink = ref('')
@@ -78,6 +82,7 @@ const customerSearchInteraction = useDebouncedChange(customerSearch, value => { 
 watch(itemType, () => { catalogPage.value = 1 })
 watch(categoryFilter, () => { catalogPage.value = 1 })
 
+const offlinePhysicalError = computed(() => counter.online.value ? null : lines.value.map(physicalCartError).find(Boolean) ?? null)
 const locationChanged = computed(() => Boolean(transactionLocationId.value && currentLocationId.value !== transactionLocationId.value))
 const taxLines = computed(() => lines.value.map(saleLineInput))
 const { data: taxQuote, pending: taxPending, error: taxError, refresh: refreshPosQuote } = useSaleTaxQuote(currentId, currentLocationId, taxLines, counter, true)
@@ -95,7 +100,7 @@ const offerQuery = useShopQuery(() => `shop-data:pos-offers:${currentId.value}:$
  if (counter.ready.value) await counter.cache('pos-catalog-offers', offers)
  return offers
 }, { scope: 'location', server: false, enabled: () => !!currentId.value && !!currentLocationId.value, watch: [counter.ready], default: () => [] })
-const offlineOffers = computed(() => estimateOfferDiscount(offerQuery.data.value, lines.value.filter(line => !selectedMeasurement(line).startsWith('package:')).flatMap(line => { try { return [{ ...line, quantity: Number(measuredBaseQuantity(line)) }] } catch { return [] } })))
+const offlineOffers = computed(() => estimateOfferDiscount(offerQuery.data.value, lines.value.filter(line => !selectedMeasurement(line).startsWith('package:') && !(line.reelId && line.reelPrice != null)).flatMap(line => { try { return [{ ...line, quantity: Number(measuredBaseQuantity(line)) }] } catch { return [] } })))
 const appliedOffers = computed(() => counter.online.value ? taxQuote.value?.offers ?? [] : offlineOffers.value.offers)
 const offerCards = computed<BsOfferCardView[]>(() => offerQuery.data.value.filter(o => o.oldPrice !== null && o.price < o.oldPrice).map(offer => ({
  id: offer.id, name: offer.name, description: offer.description, price: money(offer.price), oldPrice: money(offer.oldPrice!), saving: `${locale.value === 'ar' ? 'وفّر' : 'Save'} ${money(offer.oldPrice! - offer.price)}`, items: offer.lines.map(l => `${l.quantity} × ${l.name}`).join(' · '), images: [],
@@ -227,7 +232,7 @@ function addItem(item: CatalogItem) {
   if (nextQuantity === null) { errorMessage.value = readableError('INSUFFICIENT_STOCK'); return }
   lockLocation(); lines.value = addOrIncrementCartLine(lines.value, item) as CartLine[]
   const added = lines.value.find(line => line.key === cartLineKey(item))
-  if (added) { added.quantity = nextQuantity; added.imageUrl = item.imageUrl }
+  if (added) { added.quantity = nextQuantity; added.imageUrl = item.imageUrl; if (added.measurement?.reelTracking) void loadPhysical(added.key) }
   errorMessage.value = ''; invalidateRequests(); scanMessage.value = t('pos.scanAdded', { name: item.name })
 }
 function setQuantity(line: CartLine, value: number) {
@@ -264,6 +269,12 @@ function resetSale(focus = true) {
 }
 function readableError(message?: string) {
   if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
+  if (message?.includes('REEL_STOCK_UNCONFIRMED')) return locale.value === 'ar' ? 'اتصل مرة لتحميل أطوال البكرات قبل تسجيل هذا القطع دون اتصال.' : 'Connect once to load reel lengths before recording this cut offline.'
+  if (message?.includes('CONTINUOUS_LENGTH_UNAVAILABLE')) return locale.value === 'ar' ? 'لا توجد بكرة واحدة توفر هذا الطول. اختر بكرة أخرى أو اسمح بقطع منفصلة.' : 'No single reel can supply this length. Choose another reel or allow separate pieces.'
+  if (message?.includes('REEL_NOT_AVAILABLE') || message?.includes('REEL_PLAN_CHANGED') || message?.includes('SELECTED_REEL_CANNOT_FULFILL')) return locale.value === 'ar' ? 'تغيرت البكرة أو لا تكفي. حدّث خيارات البكرات وراجع الطول.' : 'The selected reel changed or cannot supply this length. Refresh the reel choices and review the quantity.'
+  if (message?.includes('INSUFFICIENT_SEALED_REELS')) return locale.value === 'ar' ? 'لا توجد بكرات كاملة غير مفتوحة كافية لهذه العبوة.' : 'There are not enough unopened full reels for this package.'
+  if (message?.includes('INVALID_REEL_CUT') || message?.includes('INVALID_SEALED_REEL_SALE')) return locale.value === 'ar' ? 'راجع فاقد القطع بوحدة المخزون. فاقد البكرة الكاملة يجب أن يساوي صفرًا.' : 'Review cutting loss in the stock unit. A full reel package requires zero loss.'
+  if (message?.includes('INSUFFICIENT_REEL_LENGTH')) return locale.value === 'ar' ? 'أطوال البكرات المتاحة لا تكفي.' : 'Available reel lengths are insufficient.'
   if (message?.includes('MEASUREMENT_CONTEXT_CHANGED') || message?.includes('PACKAGE_CONTEXT_CHANGED')) return locale.value === 'ar' ? 'تغيرت وحدة المنتج أو العبوة. أزل الصنف وأضفه من الكتالوج المحدّث.' : 'The product unit or packaging changed. Remove the item and add it from the refreshed catalog.'
   if (message?.includes('MEASUREMENT') || message?.includes('PACKAGE_QUANTITY')) return locale.value === 'ar' ? 'راجع كمية الصنف ووحدة البيع المختارة.' : 'Review the item quantity and selected sale unit.'
   if (message?.includes('INSUFFICIENT_STOCK') || message?.includes('CROSS_LOCATION_STOCK')) return saleCopy(t, 'pos.insufficientStock', lines.value)
@@ -274,18 +285,24 @@ function readableError(message?: string) {
 }
 async function scanBarcode(code: string) {
   if (!currentId.value || !currentLocationId.value || locationChanged.value) return
+  const scanScope = captureScope()
   catalogSearch.value = ''
   if (!counter.online.value) {
     const cached = await counter.cached<CatalogResult>('catalog')
+    if (!scanScope()) return
     const matches = cached?.items.flatMap(item => {
       if (item.barcode === code) return [item]
       return (item.measurement?.packages ?? []).filter(pack => pack.canSell && pack.barcode === code).map(pack => { const selected = { ...item, unitSelection: `package:${pack.id}`, barcode: code }; return { ...selected, unitPrice: selectedUnitPrice(selected) } })
     }) ?? []
+    const physical = await Promise.all((cached?.items ?? []).filter(item => item.measurement?.reelTracking).map(async item => cachedReelBarcodeItem(item, await counter.cached<PosReelOptions>(`reels:${item.id}`), code)))
+    if (!scanScope()) return
+    matches.push(...physical.filter(item => item !== null) as CatalogItem[])
     if (matches.length === 1) addItem(matches[0]!)
     else scanMessage.value = t(matches.length ? 'pos.ambiguousBarcode' : 'pos.unknownBarcode', { code })
     return
   }
   const { data, error } = await rpc.rpc('pos_catalog_search', { p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_barcode: code, p_page: 1, p_page_size: 2 })
+  if (!scanScope()) return
   if (error) { errorMessage.value = readableError(error.message); return }
   const result = data as CatalogResult
   if (result.ambiguousBarcode) scanMessage.value = t('pos.ambiguousBarcode')
@@ -295,7 +312,7 @@ async function scanBarcode(code: string) {
 }
 
 async function checkout() {
-  if (taxPending.value || Boolean(taxError.value) || counter.shiftClosing.value || !currentId.value || !transactionLocationId.value || checkingOut.value || confirmingCheckout.value || contextPending.value || Boolean(contextError.value) || locationChanged.value || !lines.value.length || !staffId.value) {
+  if (Boolean(offlinePhysicalError.value) || taxPending.value || Boolean(taxError.value) || counter.shiftClosing.value || !currentId.value || !transactionLocationId.value || checkingOut.value || confirmingCheckout.value || contextPending.value || Boolean(contextError.value) || locationChanged.value || !lines.value.length || !staffId.value) {
     errorMessage.value = locationChanged.value ? t('pos.locationChanged') : t('pos.invalid'); return
   }
   const inScope = captureScope()
@@ -370,8 +387,8 @@ useShopRealtime('pos', () => lines.value.length > 0 || checkingOut.value || conf
 const posPaymentForm = computed<BsPointOfSalePaymentForm>({ get: () => ({ method: paymentMethod.value, reference: paymentReference.value, notes: notes.value }), set: value => { if (['cash','bank_transfer','card','wallet','cheque','other'].includes(value.method)) paymentMethod.value = value.method as PaymentMethod; paymentReference.value = value.reference; notes.value = value.notes } })
 const posItemType = computed<string>({ get: () => itemType.value, set: value => { if (value === 'all' || value === 'product' || value === 'service') itemType.value = value } })
 const posCatalogItems = computed<BsPointOfSaleCatalogItem[]>(() => catalog.value.items.map(item => ({ id: item.id, key: cartLineKey(item), name: item.name, quantity: lines.value.find(line => line.key === cartLineKey(item))?.quantity ?? 0, maximumQuantity: cartQuantityLimit(item), disabled: item.itemType === 'product' && item.stock != null && item.stock <= 0, imageUrl: item.imageUrl, description: item.sku || t(item.itemType === 'service' ? 'sales.service' : 'sales.product'), price: money(Math.max(0, item.unitPrice - item.discount)), stock: item.stock != null ? t('pos.stock', { count: item.stock }) : '' })))
-const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map(line => ({ id: line.key, quantityStep: line.measurement ? cartQuantityStep(line) : 1, unitValue: selectedMeasurement(line), unitChoices: line.measurement ? [...line.measurement.saleUnits.map(unit => ({ value: `unit:${unit}`, label: unitLabel(unit) })), ...line.measurement.packages.filter(pack => pack.canSell).map(pack => ({ value: `package:${pack.id}`, label: `${pack.name} (${pack.baseQuantity} ${unitLabel(line.measurement!.baseUnitCode)})` }))] : undefined, baseEquivalent: baseEquivalent(line), imageUrl: line.imageUrl, name: line.name, quantity: line.quantity, maximumQuantity: cartQuantityLimit(line), total: money((line.unitPrice - line.discount) * line.quantity) })))
-const posView = computed<BsPointOfSaleView>(() => ({ cartCount: locale.value === 'ar' ? `${lines.value.length} أصناف` : `${lines.value.length} ${lines.value.length === 1 ? 'item' : 'items'}`, available: !!current.value, loadingContext: shopLoading.value, location: transactionLocationName.value || currentLocation.value?.name || '—', staff: selectedStaff.value?.name || t('pos.selectStaff'), locationChanged: locationChanged.value, error: errorMessage.value || (taxError.value ? (locale.value === 'ar' ? 'تعذر تأكيد حساب الضريبة. اتصل بالإنترنت وحاول تاني.' : 'Unable to confirm tax calculation. Reconnect and retry.') : ''), scanMessage: scanMessage.value, checkingOut: checkingOut.value, confirming: confirmingCheckout.value, shortcutBlocked: posReceipt.visible.value || checkingOut.value || confirmingCheckout.value || !!confirmation.current.value, catalogLoading: catalogPending.value, catalogError: catalogError.value ? t(catalogError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', catalogTotal: catalog.value.total, catalogPageSize: catalog.value.pageSize, contextLoading: contextPending.value, contextError: contextError.value ? t(contextError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', appointmentLocked: !!appointmentId.value, customerDisabled: !counter.online.value || !!appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value, customerBusy: customerBusy.value, customerDisplay: customerId.value ? [customerName.value, customerPhone.value].filter(Boolean).join(' · ') : (appointmentId.value ? customerName.value || t('pos.noCustomer') : t('pos.noCustomer')), customerEmpty: customerBusy.value ? t('pos.loading') : t('pos.customerSearch'), customerEmptyFilter: customerBusy.value ? t('pos.loading') : (customerSearch.value.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')), hasCustomer: !!customerId.value, checkoutDisabled: taxPending.value || Boolean(taxError.value) || counter.shiftClosing.value || checkingOut.value || confirmingCheckout.value || contextPending.value || !!contextError.value || locationChanged.value || !lines.value.length || !staffId.value, total: money(total.value), reviewLabel: t('pos.reviewSale', { count: lines.value.length }), payLabel: t('pos.pay', { amount: money(total.value) }) }))
+const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map(line => ({ id: line.key, physical: physicalView(line), quantityStep: line.measurement ? cartQuantityStep(line) : 1, unitValue: selectedMeasurement(line), unitChoices: line.measurement ? [...line.measurement.saleUnits.map(unit => ({ value: `unit:${unit}`, label: unitLabel(unit) })), ...line.measurement.packages.filter(pack => pack.canSell).map(pack => ({ value: `package:${pack.id}`, label: `${pack.name} (${pack.baseQuantity} ${unitLabel(line.measurement!.baseUnitCode)})` }))] : undefined, baseEquivalent: baseEquivalent(line), imageUrl: line.imageUrl, name: line.name, quantity: line.quantity, maximumQuantity: cartQuantityLimit(line), total: money((line.unitPrice - line.discount) * line.quantity) })))
+const posView = computed<BsPointOfSaleView>(() => ({ cartCount: locale.value === 'ar' ? `${lines.value.length} أصناف` : `${lines.value.length} ${lines.value.length === 1 ? 'item' : 'items'}`, available: !!current.value, loadingContext: shopLoading.value, location: transactionLocationName.value || currentLocation.value?.name || '—', staff: selectedStaff.value?.name || t('pos.selectStaff'), locationChanged: locationChanged.value, error: errorMessage.value || (offlinePhysicalError.value ? readableError(offlinePhysicalError.value) : '') || (taxError.value ? readableError(taxError.value.message) : ''), scanMessage: scanMessage.value, checkingOut: checkingOut.value, confirming: confirmingCheckout.value, shortcutBlocked: posReceipt.visible.value || checkingOut.value || confirmingCheckout.value || !!confirmation.current.value, catalogLoading: catalogPending.value, catalogError: catalogError.value ? t(catalogError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', catalogTotal: catalog.value.total, catalogPageSize: catalog.value.pageSize, contextLoading: contextPending.value, contextError: contextError.value ? t(contextError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', appointmentLocked: !!appointmentId.value, customerDisabled: !counter.online.value || !!appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value, customerBusy: customerBusy.value, customerDisplay: customerId.value ? [customerName.value, customerPhone.value].filter(Boolean).join(' · ') : (appointmentId.value ? customerName.value || t('pos.noCustomer') : t('pos.noCustomer')), customerEmpty: customerBusy.value ? t('pos.loading') : t('pos.customerSearch'), customerEmptyFilter: customerBusy.value ? t('pos.loading') : (customerSearch.value.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')), hasCustomer: !!customerId.value, checkoutDisabled: Boolean(offlinePhysicalError.value) || taxPending.value || Boolean(taxError.value) || counter.shiftClosing.value || checkingOut.value || confirmingCheckout.value || contextPending.value || !!contextError.value || locationChanged.value || !lines.value.length || !staffId.value, total: money(total.value), reviewLabel: t('pos.reviewSale', { count: lines.value.length }), payLabel: t('pos.pay', { amount: money(total.value) }) }))
 function addPosItem(key: string) { const item = catalog.value.items.find(item => cartLineKey(item) === key); if (item) addItem(item) }
 function removePosLine(id: string) { const index = lines.value.findIndex(line => line.key === id); if (index >= 0) removeLine(index) }
 function setPosQuantity(id: string, value: number) { const line = lines.value.find(line => line.key === id); if (line) setQuantity(line, value) }
@@ -392,9 +409,65 @@ function setPosUnit(id: string, value: string) {
   next.unitPrice = selectedUnitPrice(next)
   lines.value = lines.value.map(other => other === line ? next : other); invalidateRequests()
 }
+async function loadPhysical(id: string, query?: string, more = false) {
+  const line = lines.value.find(line => line.key === id)
+  if (!line?.measurement?.reelTracking || !currentId.value || !currentLocationId.value) return
+  const product = line.sourceId; const previous = physicalPickers[product]
+  if (more && previous?.pending) return
+  const request = ++physicalRequest; const valid = captureScope()
+  const nextPage = more ? (previous?.page ?? 1) + 1 : 1
+  const search = query ?? previous?.query ?? ''
+  physicalPickers[product] = { items: more ? previous?.items ?? [] : [], total: previous?.total ?? 0, page: nextPage, query: search, pending: true, error: null, request }
+  try {
+    let result: PosReelOptions | null
+    if (!counter.online.value) result = await counter.cached<PosReelOptions>(`reels:${product}`)
+    else {
+      const response = await rpc.rpc('pos_reel_options', { p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_product_id: product, p_search: search || null, p_page: nextPage })
+      if (response.error) throw new Error(response.error.message)
+      result = response.data
+    }
+    if (!valid() || physicalPickers[product]?.request !== request) return
+    if (!result) throw new Error('REEL_CACHE_UNAVAILABLE')
+    physicalPickers[product]!.items = more ? [...physicalPickers[product]!.items, ...result.items] : result.items
+    physicalPickers[product]!.total = result.total; physicalPickers[product]!.summary = result.summary
+    if (counter.online.value && counter.ready.value && nextPage === 1 && !search) await counter.cache(`reels:${product}`, result)
+    if (!valid() || physicalPickers[product]?.request !== request) return
+    for (const cart of lines.value.filter(line => line.sourceId === product)) {
+      if (result.summary.available != null) { cart.catalogStock = Number(result.summary.available); cart.stock = cart.catalogStock }
+      cart.reelSummary = result.summary
+      const selected = result.items.find(reel => reel.id === cart.reelId)
+      if (selected) { cart.reelRemaining = selected.remainingLength; cart.reelStatus = selected.status; cart.reelPrice = selected.classification === 'discounted' ? selected.price : null; cart.unitPrice = selectedUnitPrice(cart) }
+    }
+    invalidateRequests()
+    if (counter.online.value) await refreshPosQuote()
+  } catch { if (valid() && physicalPickers[product]?.request === request) physicalPickers[product]!.error = locale.value === 'ar' ? 'تعذر تحميل البكرات. اتصل وأعد المحاولة.' : 'Could not load reels. Connect and retry.' }
+  finally { if (valid() && physicalPickers[product]?.request === request) physicalPickers[product]!.pending = false }
+}
+function physicalView(line: CartLine) {
+  if (!line.measurement?.reelTracking) return undefined
+  const picker = physicalPickers[line.sourceId]
+  const choices = (picker?.items ?? []).map(reel => ({ value: reel.id, label: `${reel.barcode} · ${reel.remainingLength} ${unitLabel(line.measurement!.baseUnitCode)}${reel.storagePosition ? ' · ' + reel.storagePosition : ''}${reel.classification === 'discounted' ? ' · ' + money(Number(reel.price)) : ''}` }))
+  if (line.reelId && !choices.some(choice => choice.value === line.reelId)) choices.unshift({ value: line.reelId, label: `${line.reelBarcode || line.reelId} · ${line.reelRemaining || '—'} ${unitLabel(line.measurement.baseUnitCode)}` })
+  return { source: line.reelId ?? '', split: line.allowSplit ?? false, loss: line.cuttingLoss || '0', unit: unitLabel(line.measurement.baseUnitCode), choices: [{ value: '', label: locale.value === 'ar' ? 'اختيار تلقائي' : 'Automatic allocation' }, ...choices], loading: picker?.pending ?? false, error: picker?.error ?? null, hasMore: counter.online.value && (picker?.items.length ?? 0) < (picker?.total ?? 0), canSplit: !line.reelId && !selectedMeasurement(line).startsWith('package:') }
+}
+function physicalEditable() { return !checkingOut.value && !confirmingCheckout.value && !locationChanged.value }
+function setPhysicalSource(id: string, value: string) {
+ if (!physicalEditable()) return
+ const line = lines.value.find(line => line.key === id); if (!line?.measurement?.reelTracking) return
+ const reel = physicalPickers[line.sourceId]?.items.find(reel => reel.id === value)
+ if (value && !reel) return
+ const next = { ...line, reelId: value || undefined, reelBarcode: reel?.barcode, reelRemaining: reel?.remainingLength, reelStatus: reel?.status, reelPrice: reel?.classification === 'discounted' ? reel.price : null }
+ next.key = cartLineKey(next)
+ if (lines.value.some(other => other !== line && other.key === next.key)) { errorMessage.value = locale.value === 'ar' ? 'هذا المصدر والوحدة موجودان في السلة.' : 'This source and unit are already in the cart.'; return }
+ next.unitPrice = selectedUnitPrice(next); lines.value = lines.value.map(other => other === line ? next : other); invalidateRequests()
+}
+function setPhysicalSplit(id: string, value: boolean) { if (!physicalEditable()) return; const line = lines.value.find(line => line.key === id); if (line?.measurement?.reelTracking && !line.reelId && !selectedMeasurement(line).startsWith('package:')) { line.allowSplit = value; invalidateRequests() } }
+function setPhysicalLoss(id: string, value: string) { if (!physicalEditable()) return; const line = lines.value.find(line => line.key === id); if (line?.measurement?.reelTracking) { line.cuttingLoss = value; invalidateRequests() } }
+watch([currentId,currentLocationId, () => actor.value?.id], () => { physicalRequest++; for (const key of Object.keys(physicalPickers)) Reflect.deleteProperty(physicalPickers,key) }, { flush: 'sync' })
 function setPosStaff(id: string) { staffId.value = id; lockLocation(); invalidateRequests() }
 function dismissPosFeedback() { errorMessage.value = ''; scanMessage.value = '' }
 const posCopy = computed<BsPointOfSaleCopy>(() => ({
+  physicalSource: locale.value === 'ar' ? 'البكرة المصدر' : 'Source reel', physicalSplit: locale.value === 'ar' ? 'السماح بقطع منفصلة عند الاختيار التلقائي' : 'Allow separate pieces with automatic allocation', physicalLoss: locale.value === 'ar' ? 'فاقد القطع' : 'Cutting loss', physicalLossHelp: locale.value === 'ar' ? 'يُخصم من المخزون ولا يُحمّل على العميل. البكرة الكاملة تتطلب فاقدًا صفريًا.' : 'Deducted from stock without charging the customer. Full reel packages require zero loss.', physicalMore: locale.value === 'ar' ? 'بكرات إضافية' : 'More reels',
   unit: locale.value === 'ar' ? 'وحدة البيع' : 'Sale unit',
   reviewStep: locale.value === 'ar' ? 'مراجعة الأصناف' : 'Review items', paymentStep: locale.value === 'ar' ? 'الدفع' : 'Payment', continueToPayment: locale.value === 'ar' ? 'متابعة للدفع' : 'Continue to payment', backToCart: locale.value === 'ar' ? 'العودة للأصناف' : 'Back to items', optionalDetails: locale.value === 'ar' ? 'تفاصيل اختيارية' : 'Optional details', add: locale.value === 'ar' ? 'إضافة' : 'Add',
   decrease: locale.value === 'ar' ? 'تقليل الكمية' : 'Decrease quantity', increase: locale.value === 'ar' ? 'زيادة الكمية' : 'Increase quantity',
@@ -492,6 +565,12 @@ const posPaymentOptions = computed(() => ['cash','card','bank_transfer','wallet'
     @remove="removePosLine"
     @quantity="setPosQuantity"
     @unit="setPosUnit"
+    @physical-source="setPhysicalSource"
+    @physical-split="setPhysicalSplit"
+    @physical-loss="setPhysicalLoss"
+    @physical-search="(id, query) => loadPhysical(id, query)"
+    @physical-more="id => loadPhysical(id, undefined, true)"
+    @physical-retry="id => loadPhysical(id)"
     @appointment="chooseAppointment"
     @staff="setPosStaff"
     @customer-search="customerSearch = $event"

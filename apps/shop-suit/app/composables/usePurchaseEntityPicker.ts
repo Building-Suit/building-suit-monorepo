@@ -30,6 +30,7 @@ export function usePurchaseEntityPicker(kind: 'product' | 'supplier') {
       if (request !== generation) return
       if (result.error) throw result.error
       const data = result.data as { items: Choice[]; total: number }
+      if (!data || !Array.isArray(data.items) || !Number.isFinite(data.total)) throw new Error('INVALID_PICKER_RESPONSE')
       items.value = append ? [...items.value, ...data.items] : data.items
       total.value = data.total
     } catch { if (request === generation) failed.value = true }

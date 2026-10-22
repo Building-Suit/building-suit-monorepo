@@ -43,3 +43,13 @@ export function convertMeasurement(quantity, from, to, increment = null) {
   }
   return printable(result)
 }
+
+/** Return quantities are canonical; unopened packages require an exact whole package. */
+export function isWholePackagingReturn(quantity, snapshot) {
+  if (!snapshot.packageId) return false
+  try {
+    const base = decimal(snapshot.baseQuantity), entered = decimal(snapshot.enteredQuantity)
+    if ((base * scale) % entered !== 0n) return false
+    return decimal(quantity) % ((base * scale) / entered) === 0n
+  } catch { return false }
+}
