@@ -37,7 +37,7 @@ function disposition(id: string, value: unknown) { form.value = { ...form.value,
     <BsText v-if="view.locked" as="p" role="status">{{ copy.uncertain }}</BsText>
     <BsStack v-for="line in view.lines" :key="line.id" gap="sm">
       <BsText as="p" emphasis="semibold">{{ line.name }} · {{ copy.remaining }}: {{ line.remaining }}</BsText>
-      <BsField v-slot="field" :label="copy.quantity"><BsInput :id="field.id" :model-value="form.quantities[line.id] ?? 0" :disabled="view.locked" type="number" min="0" :max="line.remaining" step="0.01" @update:model-value="quantity(line.id, $event)" /></BsField>
+      <BsField v-slot="field" :label="copy.quantity"><BsInput :id="field.id" :model-value="form.quantities[line.id] ?? 0" :disabled="view.locked" type="number" min="0" :max="line.remaining" :step="line.quantityStep ?? 0.01" @update:model-value="quantity(line.id, $event)" /></BsField>
       <BsField v-if="!line.service" v-slot="field" :label="copy.disposition"><BsSelect :input-id="field.id" :label="copy.disposition" :disabled="view.locked" :model-value="form.dispositions[line.id] ?? 'resellable'" :options="[{ value: 'resellable', label: copy.resellable }, { value: 'damaged', label: copy.damaged }]" option-label="label" option-value="value" @update:model-value="disposition(line.id, $event)" /></BsField>
       <BsText v-else as="p" size="sm" tone="muted">{{ copy.service }}</BsText>
     </BsStack>

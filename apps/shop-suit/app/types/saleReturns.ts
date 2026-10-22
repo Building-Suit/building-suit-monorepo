@@ -13,5 +13,5 @@ export interface SaleReturnRecord {
 }
 export interface SaleReturnContext {
   version: 1; canReturn: boolean; supported: boolean; due: number; currency: string; totalCount: number
-  lines: { id: string; name: string; itemType: 'product' | 'service'; quantity: number; remaining: number }[]; history: SaleReturnRecord[]
+  lines: { measurement?: import('./measurement').MeasurementSnapshot | null; id: string; name: string; itemType: 'product' | 'service'; quantity: number; remaining: number }[]; history: SaleReturnRecord[]
 }

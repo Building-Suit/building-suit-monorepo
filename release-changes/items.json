@@ -1997,5 +1997,152 @@
     "sources": [
       "ss-electrical-measurement-tooling-20261022"
     ]
+  },
+  {
+    "id": "ss-electrical-measured-retail-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui"
+    ],
+    "reason": "Enable exact measured receiving, sales and canonical FIFO stock through existing authorized workflows.",
+    "notes": {
+      "title": {
+        "en": "Sell and receive products by unit or package",
+        "ar": "بيع واستلام المنتجات بالوحدة أو العبوة"
+      },
+      "summary": {
+        "en": "Set product units and allowed increments, define product-specific packaging, and use them in purchasing and sales.",
+        "ar": "حدد وحدات المنتجات وأصغر كمية مسموحة، وعرّف عبوات كل منتج واستخدمها في المشتريات والمبيعات."
+      },
+      "details": {
+        "en": "Measured sales show their base quantity and preserve entered units and prices on receipts. Stock, counts and eligible returns use the same canonical quantity; used products retain their historical unit.",
+        "ar": "تعرض المبيعات المقاسة الكمية الأساسية وتحفظ الوحدات والأسعار المدخلة على الإيصالات. يستخدم المخزون والجرد والمرتجعات المؤهلة الكمية الأساسية نفسها، وتحتفظ المنتجات المستخدمة بوحدتها التاريخية."
+      }
+    },
+    "sources": [
+      "ss-electrical-measured-retail-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/pos.vue",
+        "contains": "@unit=\"setPosUnit\""
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+        "contains": "create function public.save_product_packaging"
+      },
+      {
+        "path": "packages/ui/src/templates/BsCataloguePage.vue",
+        "contains": "<BsFieldGroup v-if=\"form.measurement && copy.measurement && measurement\""
+      }
+    ]
+  },
+  {
+    "id": "ss-shop-query-error-recovery-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables",
+      "apps/shop-suit/app/plugins",
+      "apps/shop-suit/app/utils/shopQueryError.ts",
+      "apps/shop-suit/tests/unit/query-error-payload.test.mjs"
+    ],
+    "reason": "A failed server read must render its retry state without breaking SSR serialization or retaining provider request secrets.",
+    "notes": {
+      "title": {
+        "en": "Recover safely from failed reads",
+        "ar": "استعادة العرض بعد تعذر تحميل البيانات"
+      },
+      "summary": {
+        "en": "Failed reads can render their error and retry state during server rendering.",
+        "ar": "يمكن عرض حالة الخطأ وإعادة المحاولة عند تعذر قراءة البيانات أثناء عرض الصفحة على الخادم."
+      },
+      "details": {
+        "en": "Read failures retain their error code across hydration without retaining provider requests or credentials in page state.",
+        "ar": "تُحفظ رموز أخطاء القراءة عند تحميل الصفحة دون الاحتفاظ بطلبات المزود أو بيانات الاعتماد في حالة الصفحة."
+      }
+    },
+    "sources": [
+      "ss-shop-query-error-recovery-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/plugins/query-errors.ts",
+        "contains": "definePayloadReducer('ShopQueryError'"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-retail-verification-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/database",
+      "release-changes/items.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      ".github/workflows/shop-measurement-disposable.yml"
+    ],
+    "reason": "Extend the disposable Shop merchant harness and compatible optional shared measurement presentation contracts for existing consumers, including the internal Doctor scaffold. Public Shop/Ledger sign-in label recovery is classified separately; no other Suit is activated.",
+    "sources": [
+      "ss-electrical-retail-verification-20261022"
+    ]
+  },
+  {
+    "id": "shared-sign-in-label-hydration-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit",
+      "ledger-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsSignInPage.vue"
+    ],
+    "reason": "Stable page-level sign-in control IDs preserve accessible labels after SSR hydration.",
+    "notes": {
+      "title": {
+        "en": "Keep sign-in fields labeled",
+        "ar": "الحفاظ على تسميات حقول تسجيل الدخول"
+      },
+      "summary": {
+        "en": "Email and password labels stay linked to their controls after the page loads.",
+        "ar": "تبقى تسميات البريد الإلكتروني وكلمة المرور مرتبطة بحقولها بعد تحميل الصفحة."
+      },
+      "details": {
+        "en": "Stable sign-in control IDs preserve keyboard and assistive-technology access across server rendering and hydration.",
+        "ar": "تحافظ معرفات حقول تسجيل الدخول الثابتة على الوصول بلوحة المفاتيح والتقنيات المساعدة أثناء عرض الصفحة وتحميلها."
+      }
+    },
+    "sources": [
+      "shared-sign-in-label-hydration-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsSignInPage.vue",
+        "contains": "for=\"bs-sign-in-email\""
+      }
+    ]
   }
 ]

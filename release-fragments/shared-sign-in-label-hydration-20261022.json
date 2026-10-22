@@ -1,0 +1,28 @@
+{
+  "id": "shared-sign-in-label-hydration-20261022",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit",
+    "ledger-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/templates/BsSignInPage.vue"
+  ],
+  "reason": "Stable page-level sign-in control IDs preserve accessible labels after SSR hydration.",
+  "notes": {
+    "title": {
+      "en": "Keep sign-in fields labeled",
+      "ar": "الحفاظ على تسميات حقول تسجيل الدخول"
+    },
+    "summary": {
+      "en": "Email and password labels stay linked to their controls after the page loads.",
+      "ar": "تبقى تسميات البريد الإلكتروني وكلمة المرور مرتبطة بحقولها بعد تحميل الصفحة."
+    },
+    "details": {
+      "en": "Stable sign-in control IDs preserve keyboard and assistive-technology access across server rendering and hydration.",
+      "ar": "تحافظ معرفات حقول تسجيل الدخول الثابتة على الوصول بلوحة المفاتيح والتقنيات المساعدة أثناء عرض الصفحة وتحميلها."
+    }
+  }
+}

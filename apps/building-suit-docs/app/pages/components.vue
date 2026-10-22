@@ -46,6 +46,7 @@ const billingExampleView = computed<BsBillingView>(() => ({
     actionVisible: !billingExampleBlocked.value, helpLabel: isArabic.value ? 'رابط دعم توضيحي' : 'Example support link', helpTo: '/components#hosted-checkout' },
 }))
 const exampleQuantity = ref(1)
+const exampleMeasuredQuantity = ref(12.5)
 const examplePayment = ref('cash')
 const exampleReceiptVisible = ref(false)
 const exampleReceiptListOpen = ref(true)
@@ -279,6 +280,7 @@ const invitationPreviewCopy={
     </BsContentSection>
 
     <BsContentSection :title="isArabic ? 'الكمية' : 'Touch quantity controls'"><BsQuantityStepper v-model="exampleQuantity" :max="3" :label="isArabic ? 'الكمية' : 'Quantity'" :decrease-label="isArabic ? 'تقليل الكمية' : 'Decrease quantity'" :increase-label="isArabic ? 'زيادة الكمية' : 'Increase quantity'" /></BsContentSection>
+    <BsContentSection :title="isArabic ? 'الكميات المقاسة' : 'Measured quantities'"><BsText as="p">{{ isArabic ? 'تزود قوالب الكتالوج والمشتريات والمبيعات والمخزون المشترك بخيارات الوحدات وأصغر كمية من التطبيق. يتحقق الخادم من التحويل والسعر.' : 'Shared catalog, purchase, sale and inventory templates accept unit choices and product increments from the app. The server validates conversion and pricing.' }}</BsText><BsQuantityStepper v-model="exampleMeasuredQuantity" :step="0.001" :max="100" :label="isArabic ? 'الكمية بالمتر' : 'Quantity in meters'" :decrease-label="isArabic ? 'تقليل الكمية المقاسة' : 'Decrease measured quantity'" :increase-label="isArabic ? 'زيادة الكمية المقاسة' : 'Increase measured quantity'" /></BsContentSection>
 
     <BsContentSection :title="isArabic ? 'بطاقات كتالوج نقطة البيع' : 'POS catalog image cards'">
       <BsGrid :columns="3"><BsCatalogTile large :quantity="exampleQuantity" :maximum-quantity="3" :add-label="isArabic ? 'إضافة' : 'Add'" :quantity-label="isArabic ? 'الكمية' : 'Quantity'" :decrease-label="isArabic ? 'تقليل الكمية' : 'Decrease quantity'" :increase-label="isArabic ? 'زيادة الكمية' : 'Increase quantity'" @select="exampleQuantity = Math.min(3, exampleQuantity + 1)" @quantity="exampleQuantity = $event" :name="isArabic ? 'مثال منتج بدون صورة' : 'Example product without image'" price="30" :detail="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :image-label="isArabic ? 'بدون صورة' : 'No image'" /><BsCatalogTile :name="isArabic ? 'مثال خدمة بدون صورة' : 'Example service without image'" price="10" :detail="isArabic ? 'بيانات توضيحية' : 'Illustrative data'" :image-label="isArabic ? 'بدون صورة' : 'No image'" /></BsGrid>

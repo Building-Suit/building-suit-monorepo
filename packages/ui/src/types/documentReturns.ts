@@ -8,7 +8,7 @@ export interface BsDocumentReturnsCopy {
 }
 export interface BsDocumentReturnsView {
   loading: boolean; error: boolean; supported: boolean; canReturn: boolean; online: boolean; pending: boolean; locked: boolean; dirty: boolean; actionError: string
-  lines: { id: string; name: string; remaining: number; service: boolean }[]
+  lines: { id: string; name: string; remaining: number; quantityStep?: number; service: boolean }[]
   preview: { total: string; debt: string; refund: string; due: string; allocations: { id: string; label: string; amount: string }[] } | null
   history: { id: string; title: string; detail: string; reason: string; actor: string; lines: { id: string; label: string }[]; refunds: { id: string; label: string; canRecord: boolean; cash: boolean; events: { id: string; label: string }[] }[] }[]
   hasPrevious: boolean; hasNext: boolean

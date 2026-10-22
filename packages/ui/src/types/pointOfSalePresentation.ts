@@ -1,10 +1,10 @@
 export interface BsPointOfSaleChoice { value: string; label: string; icon?: string; disabled?: boolean }
 export interface BsPointOfSaleCatalogItem { quantity?: number; maximumQuantity?: number | null; disabled?: boolean; imageUrl?: string | null; id: string; key: string; name: string; description: string; price: string; stock: string }
-export interface BsPointOfSaleCartLine { imageUrl?: string | null; id: string; name: string; quantity: number; maximumQuantity?: number | null; total: string }
+export interface BsPointOfSaleCartLine { quantityStep?: number; unitValue?: string; unitChoices?: BsPointOfSaleChoice[]; baseEquivalent?: string; imageUrl?: string | null; id: string; name: string; quantity: number; maximumQuantity?: number | null; total: string }
 export interface BsPointOfSaleCustomer { id: string; identity: string; name: string; phone: string | null }
 export interface BsPointOfSalePaymentForm { method: string; reference: string; notes: string }
 export interface BsPointOfSaleView { offerSummary?: string; cartCount?: string; available: boolean; loadingContext: boolean; location: string; staff: string; locationChanged: boolean; error: string; scanMessage: string; checkingOut: boolean; confirming: boolean; shortcutBlocked: boolean; catalogLoading: boolean; catalogError: string; catalogTotal: number; catalogPageSize: number; contextLoading: boolean; contextError: string; appointmentLocked: boolean; customerDisabled: boolean; customerBusy: boolean; customerDisplay: string; customerEmpty: string; customerEmptyFilter: string; hasCustomer: boolean; checkoutDisabled: boolean; total: string; reviewLabel: string; payLabel: string }
-export interface BsPointOfSaleCopy { reviewStep?: string; paymentStep?: string; continueToPayment?: string; backToCart?: string; optionalDetails?: string; lastReceipt?: string; add?: string; decrease?: string; increase?: string; imagePlaceholder?: string;
+export interface BsPointOfSaleCopy { unit?: string; reviewStep?: string; paymentStep?: string; continueToPayment?: string; backToCart?: string; optionalDetails?: string; lastReceipt?: string; add?: string; decrease?: string; increase?: string; imagePlaceholder?: string;
   appointment: string
   cart: string
   catalog: string

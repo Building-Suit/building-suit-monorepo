@@ -103,5 +103,50 @@
     "workspaceBoundaries": "PASS",
     "releaseCheck": "PASS",
     "fullShopLint": "FAIL: two inherited errors"
+  },
+  "measuredRetailChild": {
+    "parentSha": "c2bd65d9fbf398bc7496161b0f4d6e91f318e802",
+    "migrations": [
+      "20261022192645",
+      "20261022193300"
+    ],
+    "businessMigrations": 106,
+    "providerMode": "Explicit PostgreSQL provider stand-ins; real Supabase measured-retail CI newly wired and pending publication",
+    "merchantJourney": "PASS",
+    "legacySqlSuites": {
+      "passed": 8,
+      "failed": 0
+    },
+    "configurationStockRace": "PASS",
+    "focusedUnitGate": {
+      "passed": 35,
+      "failed": 0,
+      "scope": "measured cart, SSR-safe error payload and ETA including explicit frozen stock-unit mapping"
+    },
+    "fullShopUnit": {
+      "passed": 402,
+      "failed": 54,
+      "total": 456,
+      "newFailureNames": [],
+      "note": "Run preceded one additional passing ETA measurement case; same inherited54 failure names",
+      "comparison": "Grouped inherited failure names match after removing SSR fixture customer parameters; total failing cases remains54."
+    },
+    "browser": {
+      "passed": 2,
+      "scope": "Synthetic transport exercising authenticated SSR/browser EN/light/1440 and AR/dark/390 measured cart unit changes, decimal-string quote commands, historical product lock and package display",
+      "physicalDevices": false,
+      "realProvider": false
+    },
+    "typecheck": {
+      "shop": "PASS",
+      "ledger": "PASS",
+      "doctor": "PASS"
+    },
+    "build": {
+      "shop": "PASS",
+      "docs": "PASS"
+    },
+    "lint": "changed Shop files PASS; provider mjs ignored by app ESLint and separately covered by ETA tests",
+    "workspace": "PASS for shared template and docs edits; final CI/tooling gate rerun pending"
   }
 }

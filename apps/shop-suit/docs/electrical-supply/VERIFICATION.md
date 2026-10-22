@@ -54,3 +54,16 @@ Node26.8.1 repeats the core104-migration/upgrade/race/conformance pass, the60 re
 ## Reviewable source
 
 Draft [PR441](https://github.com/Building-Suit/building-suit-monorepo/pull/441) contains source checkpoint `ce62100b`. Final pinned-runtime typecheck and build both exited0. `pnpm release:check` passed current main-to-head evidence/coverage and private fragment provenance. The original checkout remains clean. PR/CI results are separate and must be checked on its exact head; no remote merge or production deployment is claimed.
+
+
+## Measured retail child — 2026-10-22
+
+Forward migrations 20261022192645 and 20261022193300 widen reviewed quantity/cost dependencies atomically, preserve view ACLs and original totals, activate canonical units and versioned packaging, and integrate the existing purchase, sale, FIFO, count, return and immutable receipt commands. Routine body guards fail closed if the reviewed parent changes.
+
+The disposable PostgreSQL 17 schema harness passes all 106 business migrations, upgrade-history preservation, registry conformance, configuration/stock concurrency, the electrical merchant journey, and all seven included legacy SQL suites. Provider interfaces remain explicit stand-ins: this is not a substitute for exact-head Supabase CI or hosted deployment. The supplier fixture now asserts payables through public.get_purchase; private ledger grants remain revoked.
+
+The journey receives 100m at 25/m, sells 12.5m at 35/m, leaves87.5m and recognizes312.5 FIFO COGS; it also covers250cm,250g, whole pieces, measured counts/eligible returns, fixed-price reels, package barcode identity, CSV dry run/application, stale revisions, immutable archived-package receipts and retries, and cross-tenant denial.
+
+Focused unit execution:55 passed before adding SSR error recovery. Current browser, full-unit, lint, build/typecheck and release results are recorded at the next verified checkpoint; pending commands are not passes. New UI uses the existing shared templates with bilingual product copy. ETA exports require an explicit stock-unit mapping and continue to reject unsupported provider precision.
+
+Latest measured-retail verification: all eight included legacy SQL suites pass, including operating/margin reports. The reporting fixture now derives its expected acquisition-time FIFO cost from the earliest received batch: supplier documents use Cairo noon, while manual receipts use the current instant, so RPC call order is not FIFO chronology. All financial assertions remain. Shop, Ledger and Doctor typechecks pass; Shop and documentation builds pass for the measured workflow, including the final reporting build. Two synthetic authenticated browser cases pass (EN light desktop and AR dark mobile); physical device/native-speaker/real provider acceptance is not implied. Full unit comparison remains402/456 with the same54 inherited failure names; all new tests pass.

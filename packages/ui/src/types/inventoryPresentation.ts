@@ -3,7 +3,7 @@ export interface BsInventoryMovementRow { id: string; date: string; source: stri
 export interface BsInventoryCountRow { id: string; date: string; reference: string; reason: string; expected: string; counted: string; variance: string }
 export interface BsInventoryAdjustmentForm { productId: string; quantity: number; unitCost: number; reason: string }
 export interface BsInventoryCountForm { quantity: number; date: string; unitCost: number; reference: string; reason: string }
-export interface BsInventoryEditor { dirty: boolean; pending: boolean }
+export interface BsInventoryEditor { quantityStep?: number; unit?: string; costStep?: number; dirty: boolean; pending: boolean }
 export interface BsInventoryView { available: boolean; loadingContext: boolean; accessError: boolean; accessLoading: boolean; canView: boolean; planNotice: boolean; canAdjust: boolean; valuation: string; lowCount: string; loading: boolean; error: string; actionError: string; historyName: string; historyError: boolean; movementsLoading: boolean; movementsTotal: number; countsLoading: boolean; countsTotal: number; historyPageSize: number; adjustmentTitle: string; receive: boolean; countProduct: string; countExpected: string; countVariance: string; positiveVariance: boolean }
 export interface BsInventoryCopy {
   actions: string

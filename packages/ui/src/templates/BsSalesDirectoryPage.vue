@@ -92,8 +92,10 @@ function updateLine(index: number, values: Partial<BsSalesDraftLine>) { updateFo
           <BsField v-slot="field" :label="(copy.item)">
             <BsSelect :model-value="line.sourceId" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.item" :options="lineViews[index]?.options ?? []" option-label="label" option-value="value" :placeholder="copy.selectItem" :invalid="Boolean(view.errorMessage) && !line.sourceId" :aria-required="true" :disabled="view.catalogLoading || view.saving || view.issuing" filter virtual @update:model-value="value => updateLine(index, { sourceId: String(value ?? '') })"/>
           </BsField>
+          <BsField v-if="lineViews[index]?.unitChoices" v-slot="field" :label="copy.unit || copy.quantity"><BsSelect :input-id="field.id" :aria-describedby="field.describedby" :model-value="line.unitSelection" :label="copy.unit || copy.quantity" :options="lineViews[index]?.unitChoices" option-label="label" option-value="value" :disabled="view.saving || view.issuing || view.locked" @update:model-value="value => updateLine(index, { unitSelection: String(value) })" /></BsField>
+          <BsText v-if="lineViews[index]?.baseEquivalent" size="sm" tone="muted">{{ lineViews[index]?.baseEquivalent }}</BsText>
           <BsField v-slot="field" :label="(copy.quantity)">
-            <BsInput :id="field.id" :model-value="line.quantity" :aria-describedby="field.describedby" type="number" :min="0.001" :max="1000000" :step="0.001" required @update:model-value="value => updateLine(index, { quantity: Number(value) })"/>
+            <BsInput :id="field.id" :model-value="line.quantity" :aria-describedby="field.describedby" type="number" :min="lineViews[index]?.quantityStep ?? 0.001" :max="1000000" :step="lineViews[index]?.quantityStep ?? 0.001" required @update:model-value="value => updateLine(index, { quantity: Number(value) })"/>
           </BsField>
           <BsBox>
             <BsText as="p" size="xs" tone="muted" emphasis="semibold">{{ copy.lineTotal }}</BsText>

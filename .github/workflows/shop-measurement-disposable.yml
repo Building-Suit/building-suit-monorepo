@@ -1,0 +1,50 @@
+name: Disposable Shop measured retail
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/shop-measurement-disposable.yml'
+      - 'apps/shop-suit/supabase/**'
+      - 'tooling/database/test-shop-measurement*.mjs'
+permissions:
+  contents: read
+concurrency:
+  group: shop-measurement-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  measured-retail:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Prepare maintained disposable legacy upgrade baseline
+        env:
+          ACCOUNT_PROVISION_DISPOSABLE: '1'
+        run: node tooling/database/account-provisioning-disposable.mjs --prepare-baseline
+      - name: Start disposable Shop backend
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          export SUPABASE_HOME="$RUNNER_TEMP/shop-measurement-supabase"
+          if ! pnpm exec supabase --workdir apps/shop-suit start --exclude studio,realtime,imgproxy,postgres-meta,edge-runtime,logflare,vector,supavisor > "$RUNNER_TEMP/shop-measurement-start.log" 2>&1; then
+            python - <<'PY'
+          import os,re
+          from pathlib import Path
+          for line in Path(os.environ['RUNNER_TEMP']+'/shop-measurement-start.log').read_text().splitlines():
+              if re.search(r'^(ERROR:|error:|Error:|Applying migration|At statement|failed to|unexpected)',line):
+                  line=re.sub(r'eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+','[redacted]',line)
+                  line=re.sub(r'(postgres(?:ql)?://)\S+',r'\1[redacted]',line)
+                  print(line[:1000])
+          PY
+            exit 1
+          fi
+      - run: node tooling/database/test-shop-measurement-local.mjs
+      - name: Stop owned disposable backend
+        if: always()
+        env:
+          SUPABASE_HOME: ${{ runner.temp }}/shop-measurement-supabase
+        run: pnpm exec supabase --workdir apps/shop-suit stop --no-backup

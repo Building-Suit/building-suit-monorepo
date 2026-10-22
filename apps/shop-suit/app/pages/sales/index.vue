@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { saleLineInput, cartQuantityStep, measuredBaseQuantity, selectedUnitPrice } from '~/utils/pos'
+import { measurementUnits } from '~/utils/measurement'
+import type { PosMeasurement, MeasurementSnapshot } from '~/types/measurement'
 import type { BsSalesDirectoryCopy, BsSalesDirectoryView, BsSalesDirectoryRow, BsSalesDraftForm, BsSalesLineView } from '@building-suit/ui/types/salesDirectoryPresentation'
 import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 import { saleCopy } from '~/utils/saleCopy'
@@ -31,7 +34,7 @@ type SalePage = {
   canIssue: boolean
   permissionDenied?: boolean
 }
-type CatalogProduct = { id: string; name: string; sku: string | null; barcode: string | null; unitPrice: number; stock: number }
+type CatalogProduct = { measurement?: PosMeasurement | null; id: string; name: string; sku: string | null; barcode: string | null; unitPrice: number; stock: number }
 type CatalogService = { id: string; name: string; unitPrice: number; discountType: 'amount' | 'percent'; discountValue: number }
 type CatalogCustomer = { id: string; name: string }
 type SaleCatalog = {
@@ -41,8 +44,8 @@ type SaleCatalog = {
   services: CatalogService[]
   customers: CatalogCustomer[]
 }
-type DraftLine = { key: string; itemType: 'product' | 'service'; sourceId: string; quantity: number }
-type SaleDetail = { id: string; status: SaleStatus; client_id: string | null; due_date: string | null; notes: string | null; canManage: boolean; lines: Array<{ item_type: 'product' | 'service'; product_id: string | null; service_id: string | null; quantity: number }> }
+type DraftLine = { unitSelection?: string; key: string; itemType: 'product' | 'service'; sourceId: string; quantity: number }
+type SaleDetail = { id: string; status: SaleStatus; client_id: string | null; due_date: string | null; notes: string | null; canManage: boolean; lines: Array<{ measurement_snapshot?: MeasurementSnapshot | null; item_type: 'product' | 'service'; product_id: string | null; service_id: string | null; quantity: number }> }
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
 
 const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
@@ -155,9 +158,22 @@ function selectedItem(line: DraftLine) {
   return lineCatalog(line).find(item => item.id === line.sourceId)
 }
 
+function measuredLine(line: DraftLine) {
+  const item = selectedItem(line)
+  return { ...line, id: line.sourceId, unitPrice: Number(item?.unitPrice ?? 0), measurement: item && 'measurement' in item ? item.measurement : undefined }
+}
+function unitLabel(code: string) { const unit = measurementUnits.find(unit => unit.code === code); return (locale.value === 'ar' ? unit?.nameAr : unit?.nameEn) || code }
+function salesMeasurementView(line: DraftLine) {
+  const measured = measuredLine(line); const m = measured.measurement
+  if (!m) return {}
+  let equivalent: string
+  try { equivalent = `${measuredBaseQuantity(measured)} ${unitLabel(m.baseUnitCode)}` }
+  catch { equivalent = locale.value === 'ar' ? 'راجع الكمية ووحدة البيع.' : 'Review the quantity and sale unit.' }
+  return { quantityStep: cartQuantityStep(measured), baseEquivalent: equivalent, unitChoices: [...m.saleUnits.map(unit => ({ value: `unit:${unit}`, label: unitLabel(unit) })), ...m.packages.filter(pack => pack.canSell).map(pack => ({ value: `package:${pack.id}`, label: `${pack.name} (${pack.baseQuantity} ${unitLabel(m.baseUnitCode)})` }))] }
+}
 function lineAmounts(line: DraftLine) {
   const item = selectedItem(line)
-  const price = Number(item?.unitPrice ?? 0)
+  const price = 'measurement' in (item ?? {}) ? selectedUnitPrice(measuredLine(line)) : Number(item?.unitPrice ?? 0)
   const quantity = Number(line.quantity || 0)
   let discount = 0
   if (item && line.itemType === 'service') {
@@ -170,7 +186,7 @@ function lineAmounts(line: DraftLine) {
   return { price, discount, total: Math.max(0, Math.round((price * quantity - discount) * 100) / 100) }
 }
 
-const taxLines = computed(() => lines.value.map(line => ({ item_type: line.itemType, source_id: line.sourceId, quantity: Number(line.quantity) })))
+const taxLines = computed(() => lines.value.map(line => saleLineInput(measuredLine(line))))
 const { data: taxQuote, pending: taxPending, error: taxError } = useSaleTaxQuote(currentId, currentLocationId, taxLines)
 const previewTotal = computed(() => Number(taxQuote.value?.total ?? lines.value.reduce((sum, line) => sum + lineAmounts(line).total, 0)))
 
@@ -215,7 +231,8 @@ async function openEdit(saleId: string) {
     key: crypto.randomUUID(),
     itemType: line.item_type,
     sourceId: line.product_id ?? line.service_id ?? '',
-    quantity: Number(line.quantity),
+    quantity: Number(line.measurement_snapshot?.enteredQuantity ?? line.quantity),
+    unitSelection: line.measurement_snapshot ? (line.measurement_snapshot.packageId ? `package:${line.measurement_snapshot.packageId}` : `unit:${line.measurement_snapshot.enteredUnitCode}`) : undefined,
   }))
   draftRequestId.value = null
   issueRequestId.value = null
@@ -228,6 +245,7 @@ watch(() => route.query.edit, (value) => {
 }, { immediate: true })
 
 function changeLineType(line: DraftLine) {
+  line.unitSelection = undefined
   line.sourceId = ''
   line.quantity = 1
 }
@@ -266,7 +284,7 @@ async function persistDraft() {
       p_customer_id: customerId.value || null,
       p_due_date: customerId.value && dueDate.value ? dueDate.value : null,
       p_notes: notes.value.trim() || null,
-      p_lines: lines.value.map(line => ({ item_type: line.itemType, source_id: line.sourceId, quantity: Number(line.quantity) })),
+      p_lines: lines.value.map(line => saleLineInput(measuredLine(line))),
     })
     if (error) throw error
     editingId.value = data
@@ -347,7 +365,7 @@ async function fastPay() {
         p_customer_id: customerId.value || null,
         p_due_date: customerId.value && dueDate.value ? dueDate.value : null,
         p_notes: notes.value.trim() || null,
-        p_lines: lines.value.map(line => ({ item_type: line.itemType, source_id: line.sourceId, quantity: Number(line.quantity) })),
+        p_lines: lines.value.map(line => saleLineInput(measuredLine(line))),
         p_amount: previewTotal.value, p_paid_at: new Date().toISOString(),
         p_method: paymentMethod.value, p_reference: paymentReference.value.trim() || null,
       }
@@ -383,14 +401,15 @@ useShopRealtime('sales', () => editorDirty.value)
 
 const salesForm = computed<BsSalesDraftForm>({
   get: () => ({ customerId: customerId.value, dueDate: dueDate.value, notes: notes.value, paymentMethod: paymentMethod.value, paymentReference: paymentReference.value, lines: lines.value }),
-  set: value => { customerId.value = value.customerId; dueDate.value = value.dueDate; notes.value = value.notes; paymentReference.value = value.paymentReference; if (['cash','bank_transfer','card','wallet','cheque','other'].includes(value.paymentMethod)) paymentMethod.value = value.paymentMethod as PaymentMethod; lines.value = value.lines.map(line => ({ ...line, itemType: line.itemType === 'product' ? 'product' : 'service' })) },
+  set: value => { customerId.value = value.customerId; dueDate.value = value.dueDate; notes.value = value.notes; paymentReference.value = value.paymentReference; if (['cash','bank_transfer','card','wallet','cheque','other'].includes(value.paymentMethod)) paymentMethod.value = value.paymentMethod as PaymentMethod; lines.value = value.lines.map(line => { const old = lines.value.find(entry => entry.key === line.key); const next: DraftLine = { ...line, itemType: line.itemType === 'product' ? 'product' : 'service' }; if (old?.sourceId !== next.sourceId) { const item = lineCatalog(next).find(item => item.id === next.sourceId); next.unitSelection = item && 'measurement' in item && item.measurement ? `unit:${item.measurement.baseUnitCode}` : undefined } return next }) },
 })
 const salesStatus = computed<string>({ get: () => statusFilter.value, set: value => { if (value === 'all' || value === 'draft' || value === 'issued') statusFilter.value = value } })
 const salesRows = computed<BsSalesDirectoryRow[]>(() => (salePage.value?.items ?? []).map(sale => ({ id: sale.id, number: sale.invoice_number || t('sales.draftNumber'), lineCount: `${sale.line_count} ${t('sales.lines')}`, customer: sale.client_name_snapshot || '—', status: t(`sales.${sale.status}`), statusTone: sale.status === 'issued' ? 'success' : 'neutral', total: money(Number(sale.total_amount), sale.status === 'draft' ? businessCurrency.value : sale.currency || businessCurrency.value), date: formatDate(sale.issued_at || sale.created_at), editable: sale.status === 'draft' && !!salePage.value?.canManage, href: `/sales/${sale.id}` })))
-const salesLines = computed<BsSalesLineView[]>(() => lines.value.map(line => ({ key: line.key, options: lineCatalog(line).map(item => ({ value: item.id, label: itemLabel(item) })), total: money(lineAmounts(line).total), discount: lineAmounts(line).discount ? money(lineAmounts(line).discount) : '' })))
+const salesLines = computed<BsSalesLineView[]>(() => lines.value.map(line => ({ ...salesMeasurementView(line), key: line.key, options: lineCatalog(line).map(item => ({ value: item.id, label: itemLabel(item) })), total: money(lineAmounts(line).total), discount: lineAmounts(line).discount ? money(lineAmounts(line).discount) : '' })))
 const salesView = computed<BsSalesDirectoryView>(() => ({ available: !!current.value, loadingContext: shopLoading.value, denied: !!salePage.value?.permissionDenied, canManage: !!salePage.value?.canManage, canIssue: !!salePage.value?.canIssue, canFastPay: !!salePage.value?.canManage && !!salePage.value.canIssue && paymentAccess.value.can_receive && !taxPending.value && !taxError.value, loading: pending.value, error: error.value ? t('sales.loadError') : '', total: salePage.value?.total ?? 0, pageSize, catalogLoading: catalogPending.value, catalogError: !!catalogError.value, editing: !!editingId.value, saving: saving.value, issuing: issuing.value, errorMessage: editorError.value || (taxError.value ? (locale.value === 'ar' ? 'تعذر تأكيد حساب الضريبة. حاول تاني.' : 'Unable to confirm tax calculation. Retry.') : ''), dirty: editorDirty.value, locked: !!fastPayAttempt.value, previewTotal: money(previewTotal.value) }))
 function updateLineType(index: number, value: string) { const line = lines.value[index]; if (!line || (value !== 'product' && value !== 'service') || !availableLineTypes.value.includes(value)) return; line.itemType = value; changeLineType(line) }
 const salesCopy = computed<BsSalesDirectoryCopy>(() => ({
+  unit: locale.value === 'ar' ? 'وحدة البيع' : 'Sale unit',
   addLine: t('sales.addLine'),
   allStatuses: t('sales.allStatuses'),
   cancel: t('sales.cancel'),

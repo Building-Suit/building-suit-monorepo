@@ -12,13 +12,17 @@ const props = defineProps<{
   table: { loading: boolean; error: string | null; canManage: boolean; archivePendingId: string | null; pageSize: number; page: number; total: number; filtered: boolean }
   editor: { uploadBlocked?: boolean; mediaSupported?: boolean; editing: boolean; dirty: boolean; pending: boolean; error: string; priceMax?: number }
   upload?: { preview: string; status: 'idle' | 'uploading' | 'uploaded' | 'error' | 'invalid' }
+  packaging?: { available: boolean; items: { id: string; label: string }[]; units: { value: string; label: string }[]; contentUnits: { value: string; label: string }[]; pending: boolean }
+  measurement?: { units: { value: string; label: string }[]; saleUnits: { value: string; label: string }[]; locked: boolean; loading: boolean }
   scheduling?: { loading: boolean; error: string | null; locations: { value: string; label: string }[]; staff: { value: string; label: string }[] }
   discounts?: { value: string; label: string }[]
 }>()
-const emit = defineEmits<{ imageSelect: [file: File]; imageRemove: []; imageRetry: []; search: [value: string]; page: [page: number]; retry: []; create: []; edit: [id: string]; archive: [id: string]; submit: [] }>()
+const emit = defineEmits<{ savePackaging: []; editPackaging: [id: string]; archivePackaging: [id: string]; resetPackaging: []; imageSelect: [file: File]; imageRemove: []; imageRetry: []; search: [value: string]; page: [page: number]; retry: []; create: []; edit: [id: string]; archive: [id: string]; submit: [] }>()
 function change<K extends keyof BsCatalogueForm>(key: K, value: BsCatalogueForm[K]) { form.value = { ...form.value, [key]: value } }
 function discount<K extends keyof BsCatalogueForm['discount']>(key: K, value: BsCatalogueForm['discount'][K]) { change('discount', { ...form.value.discount, [key]: value }) }
 function schedule<K extends keyof BsCatalogueForm['schedule']>(key: K, value: BsCatalogueForm['schedule'][K]) { change('schedule', { ...form.value.schedule, [key]: value }) }
+function changeMeasurement<K extends keyof NonNullable<BsCatalogueForm['measurement']>>(key: K, value: NonNullable<BsCatalogueForm['measurement']>[K]) { if (form.value.measurement) change('measurement', { ...form.value.measurement, [key]: value }) }
+function changePackaging<K extends keyof NonNullable<BsCatalogueForm['packaging']>>(key: K, value: NonNullable<BsCatalogueForm['packaging']>[K]) { if (form.value.packaging) change('packaging', { ...form.value.packaging, [key]: value }) }
 const columns = computed(() => [
   { key: 'name', header: props.copy.name }, { key: 'category', header: props.copy.category, field: 'category' },
   ...(props.kind === 'product' ? [{ key: 'sku', header: props.copy.sku ?? '', field: 'sku' }, { key: 'barcode', header: props.copy.barcode ?? '', field: 'barcode' }] : []),
@@ -41,6 +45,36 @@ const columns = computed(() => [
         </template>
         <BsField v-else v-slot="field" :label="copy.description ?? ''"><BsTextarea :id="field.id" :model-value="form.description" :placeholder="copy.description" :aria-describedby="field.describedby" :maxlength="1000" :rows="2" @update:model-value="change('description', String($event))" /></BsField>
         <BsField v-slot="field" :label="copy.price"><BsInput :id="field.id" :model-value="form.price" :aria-describedby="field.describedby" type="number" :min="0" :max="editor.priceMax" :step="0.01" required @update:model-value="change('price', Number($event))" /></BsField>
+        <BsFieldGroup v-if="form.measurement && copy.measurement && measurement" :legend="copy.measurement.baseUnit">
+          <BsCheckbox :model-value="form.measurement.enabled" :label="copy.measurement.enabled" :disabled="measurement.locked || measurement.loading || editor.pending" @update:model-value="changeMeasurement('enabled', Boolean($event))" />
+          <BsText as="p" size="sm" tone="muted">{{ measurement.locked ? copy.measurement.locked : copy.measurement.help }}</BsText>
+          <template v-if="form.measurement.enabled">
+            <BsField v-slot="field" :label="copy.measurement.baseUnit"><BsSelect :input-id="field.id" :aria-describedby="field.describedby" :model-value="form.measurement.baseUnit" :label="copy.measurement.baseUnit" :options="measurement.units" option-label="label" option-value="value" :disabled="measurement.locked || measurement.loading || editor.pending" @update:model-value="changeMeasurement('baseUnit', String($event))" /></BsField>
+            <BsField v-slot="field" :label="copy.measurement.increment"><BsInput :id="field.id" :aria-describedby="field.describedby" :model-value="form.measurement.increment" type="text" inputmode="decimal" :disabled="measurement.locked || measurement.loading || editor.pending" required @update:model-value="changeMeasurement('increment', String($event))" /></BsField>
+            <BsFieldGroup :legend="copy.measurement.saleUnits"><BsCheckbox v-for="unit in measurement.saleUnits" :key="unit.value" :model-value="form.measurement.saleUnits" :value="unit.value" :label="unit.label" :disabled="unit.value === form.measurement.baseUnit || measurement.locked || measurement.loading || editor.pending" @update:model-value="changeMeasurement('saleUnits', $event as string[])" /></BsFieldGroup>
+          </template>
+        </BsFieldGroup>
+        <BsFieldGroup v-if="copy.packaging && packaging" :legend="copy.packaging.title">
+          <BsText as="p" size="sm" tone="muted">{{ copy.packaging.help }}</BsText>
+          <template v-if="packaging.available">
+            <BsInline v-for="item in packaging.items" :key="item.id" justify="between"><BsText>{{ item.label }}</BsText><BsButton type="button" variant="text" :disabled="editor.pending" @click="emit('editPackaging', item.id)">{{ copy.packaging.edit }}</BsButton><BsButton type="button" variant="text" :disabled="editor.pending" @click="emit('archivePackaging', item.id)">{{ copy.packaging.archive }}</BsButton></BsInline>
+            <template v-if="form.packaging">
+              <BsField v-slot="field" :label="copy.packaging.code"><BsInput :id="field.id" :model-value="form.packaging.code" :aria-describedby="field.describedby" :maxlength="80" :disabled="editor.pending" @update:model-value="changePackaging('code', String($event))" /></BsField>
+              <BsField v-slot="field" :label="copy.packaging.name"><BsInput :id="field.id" :model-value="form.packaging.name" :aria-describedby="field.describedby" :maxlength="160" :disabled="editor.pending" @update:model-value="changePackaging('name', String($event))" /></BsField>
+              <BsField v-slot="field" :label="copy.packaging.unit"><BsSelect :input-id="field.id" :model-value="form.packaging.unitCode" :label="copy.packaging.unit" :options="packaging.units" option-label="label" option-value="value" :disabled="editor.pending" @update:model-value="changePackaging('unitCode', String($event))" /></BsField>
+              <BsField v-slot="field" :label="copy.packaging.contents"><BsInput :id="field.id" :model-value="form.packaging.containedQuantity" :aria-describedby="field.describedby" inputmode="decimal" :disabled="editor.pending" @update:model-value="changePackaging('containedQuantity', String($event))" /></BsField>
+              <BsField v-slot="field" :label="copy.packaging.contentsUnit"><BsSelect :input-id="field.id" :model-value="form.packaging.containedUnitCode" :label="copy.packaging.contentsUnit" :options="packaging.contentUnits" option-label="label" option-value="value" :disabled="editor.pending" @update:model-value="changePackaging('containedUnitCode', String($event))" /></BsField>
+              <BsField v-slot="field" :label="copy.packaging.barcode"><BsInput :id="field.id" :model-value="form.packaging.barcode" :aria-describedby="field.describedby" :maxlength="80" :disabled="editor.pending" @update:model-value="changePackaging('barcode', String($event))" /></BsField>
+              <BsField v-slot="field" :label="copy.packaging.salePrice" :hint="copy.packaging.priceHelp"><BsInput :id="field.id" :model-value="form.packaging.salePrice" :aria-describedby="field.describedby" inputmode="decimal" :disabled="editor.pending" @update:model-value="changePackaging('salePrice', String($event))" /></BsField>
+              <BsCheckbox :model-value="form.packaging.canPurchase" :label="copy.packaging.canPurchase" :disabled="editor.pending" @update:model-value="changePackaging('canPurchase', Boolean($event))" />
+              <BsCheckbox :model-value="form.packaging.canSell" :label="copy.packaging.canSell" :disabled="editor.pending" @update:model-value="changePackaging('canSell', Boolean($event))" />
+              <BsCheckbox :model-value="form.packaging.defaultPurchase" :label="copy.packaging.defaultPurchase" :disabled="editor.pending" @update:model-value="changePackaging('defaultPurchase', Boolean($event))" />
+              <BsCheckbox :model-value="form.packaging.defaultSale" :label="copy.packaging.defaultSale" :disabled="editor.pending" @update:model-value="changePackaging('defaultSale', Boolean($event))" />
+              <BsInline><BsButton type="button" :pending="packaging.pending" :disabled="editor.pending" @click="emit('savePackaging')">{{ copy.packaging.save }}</BsButton><BsButton type="button" variant="text" :disabled="editor.pending" @click="emit('resetPackaging')">{{ copy.packaging.cancel }}</BsButton></BsInline>
+            </template>
+            <BsButton v-else type="button" variant="secondary" :disabled="editor.pending" @click="emit('resetPackaging')">{{ copy.packaging.add }}</BsButton>
+          </template>
+        </BsFieldGroup>
         <template v-if="kind === 'service'">
           <BsField v-slot="field" :label="copy.discountType ?? ''"><BsSelect :model-value="form.discount.type" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.discountType ?? ''" :options="discounts" option-label="label" option-value="value" @update:model-value="discount('type', String($event))" /></BsField>
           <BsField v-slot="field" :label="copy.discountValue ?? ''"><BsInput :id="field.id" :model-value="form.discount.value" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required @update:model-value="discount('value', Number($event))" /></BsField>

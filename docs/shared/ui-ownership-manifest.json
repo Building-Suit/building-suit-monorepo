@@ -338,7 +338,7 @@
         "BsReceiptPreviewDialog",
         "BsQuantityStepper"
       ],
-      "adapterBoundary": "Typed image catalog/cart/customer projections, payment choices and immutable receipt previews. Product owns quantity limits, scoped own-receipt queries and a newest-first index limited to ten own receipts, and atomic checkout commands; shared UX owns two-stage checkout, isolated document printing, viewport, keyboard, stepping and focus lifecycle.",
+      "adapterBoundary": "Typed image catalog/cart/customer projections, optional unit choices, product quantity steps and formatted base equivalents, payment choices and immutable receipt previews. Unit conversion, packaging identities, prices and financial authority stay product-owned. Product owns quantity limits, scoped own-receipt queries and a newest-first index limited to ten own receipts, and atomic checkout commands; shared UX owns two-stage checkout, isolated document printing, viewport, keyboard, stepping and focus lifecycle.",
       "auditSources": [
         "apps/shop-suit/app/pages/pos.vue"
       ],
