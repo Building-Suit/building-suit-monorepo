@@ -41,7 +41,7 @@ test('DOS-M1-006 protocol fixture: signup, expired OTP, resend and verified acco
   await page.getByRole('button', { name: 'Continue', exact: true }).click()
   await page.getByLabel(/^Practice name/).fill('Synthetic registration practice')
   await page.getByLabel(/^First location name/).fill('Synthetic registration location')
-  await page.getByLabel(/^Timezone/).fill('Africa/Cairo')
+  await page.getByRole('combobox',{name:/^Timezone/}).click();await page.getByRole('option',{name:'Africa/Cairo',exact:true}).click()
   await page.getByRole('button', { name: 'Create synthetic account', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Verify account', exact: true })).toBeVisible()
   const digits = page.locator('input[autocomplete="one-time-code"], input[inputmode="numeric"]')

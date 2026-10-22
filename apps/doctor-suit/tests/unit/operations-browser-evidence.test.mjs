@@ -106,3 +106,11 @@ test('arbitrary source paths and invalid coordinates cannot enter redacted evide
     assert.equal(JSON.stringify(result).includes('sentinel'), false)
   }
 })
+
+test('ANSI-coloured Playwright matchers remain fixed diagnostic categories', () => {
+  const value = report(), row = spec(value, 5).tests[0].results[0]
+  row.status = 'failed'; row.error = {message: 'expect(value).\u001b[31mtoBe\u001b[39m(true): private sentinel'}
+  const result = evidence(value, 1)
+  assert.equal(result.failed[0].category, 'value-equality')
+  assert.equal(JSON.stringify(result).includes('sentinel'), false)
+})
