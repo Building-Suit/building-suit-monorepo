@@ -37,3 +37,7 @@ Production release catalog/config/log access; real Supabase image storage; origi
 # Next implementation step
 
 Restore disposable Supabase capacity and close foundational regression gates, then SS-ELEC-103/105: migrate all dependent quantity/snapshot contracts coherently and extend the existing product editor before activating measured purchasing/POS. Retain legacy compatibility and prepared guards until that complete path is verified.
+
+# Review checkpoint
+
+Draft [PR441](https://github.com/Building-Suit/building-suit-monorepo/pull/441), source commit `ce62100b`; targets stg as the Shop root. No merge/deployment performed.

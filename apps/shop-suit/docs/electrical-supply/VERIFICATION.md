@@ -50,3 +50,7 @@ No quantity storage was widened, measured checkout enabled, package/reel/wholesa
 ## Final pinned-runtime comparison
 
 Node26.8.1 repeats the core104-migration/upgrade/race/conformance pass, the60 release-unit passes and the workspace-boundary pass. Feature unit results remain450/396/54; exact-parent results remain444/390/54 with the same failure-name set. The combined Turbo quality command fails on inherited lint and cancels sibling tasks; separate final typecheck/build results are tracked independently. Raw broad-suite failures were never converted into passes.
+
+## Reviewable source
+
+Draft [PR441](https://github.com/Building-Suit/building-suit-monorepo/pull/441) contains source checkpoint `ce62100b`. Final pinned-runtime typecheck and build both exited0. `pnpm release:check` passed current main-to-head evidence/coverage and private fragment provenance. The original checkout remains clean. PR/CI results are separate and must be checked on its exact head; no remote merge or production deployment is claimed.

@@ -15,7 +15,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Audit current source, all listed workflows, effective local schema and tests; distinguish unavailable hosted history. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: AUDIT.md and PRECISION-AUDIT.md
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -30,7 +30,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Match each live upcoming item to production receipt and frozen version; recover through trusted publisher without rewriting history. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: RELEASE-RECONCILIATION.md; production catalog503/config403/failed publisher
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Production catalog503, failed publisher; environment config and archived logs denied. No bypass or live relabeling.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -45,7 +45,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Register all mandatory tasks, dependencies, ownership, acceptance and actual evidence in the existing Shop tracker. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: README.md, REQUIREMENTS.md and this ledger
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -60,7 +60,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Document canonical units, precision, legacy/service compatibility, immutable snapshots and operational activation sequencing. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: ARCHITECTURE.md, DECISIONS.md and MIGRATION-PLAN.md
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -75,7 +75,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Prepare meaningful EN/AR milestone copy; activate inventory probes only for genuinely delivered staging behavior. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: RELEASE-PLAN.md; draft only
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -90,7 +90,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Seal bilingual dimension registry; pair/dozen exact; no universal package/set factors; reject invalid dimension/precision. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: Forward migration20261022185512, app/utils/measurement.js, shop_measurement_foundation.sql and disposable schema runner. Core tests pass; full Supabase/provider/operational acceptance remains pending.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Full Supabase startup exceeds workspace storage; operational precision/snapshots and product editor pending. No measured transaction activation.
 - Completion notes / release fragment: tested internal preparation; fragment ss-electrical-measurement-foundation-20261022. No operational completion claim. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -105,7 +105,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Persist canonical product unit/increment and legacy distinction; only authorized unused-product configuration. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: Forward migration20261022185512, app/utils/measurement.js, shop_measurement_foundation.sql and disposable schema runner. Core tests pass; full Supabase/provider/operational acceptance remains pending.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Full Supabase startup exceeds workspace storage; operational precision/snapshots and product editor pending. No measured transaction activation.
 - Completion notes / release fragment: tested internal preparation; fragment ss-electrical-measurement-foundation-20261022. No operational completion claim. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -120,7 +120,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Audit every quantity/cost/price dependency; migrate quantities consistently without rounding or weakening constraints. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -135,7 +135,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Resolve compatible units on the server using exact ratios and product increment; never trust client conversion factors. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: Forward migration20261022185512, app/utils/measurement.js, shop_measurement_foundation.sql and disposable schema runner. Core tests pass; full Supabase/provider/operational acceptance remains pending.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Full Supabase startup exceeds workspace storage; operational precision/snapshots and product editor pending. No measured transaction activation.
 - Completion notes / release fragment: tested internal preparation; fragment ss-electrical-measurement-foundation-20261022. No operational completion claim. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -150,7 +150,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Extend existing shared product editor with translated measurement/increment fields and locked historical settings. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -165,7 +165,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Preserve old stock/financial meaning and each/mL/g declarations; block unsupported used-product reassignment. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: Forward migration20261022185512, app/utils/measurement.js, shop_measurement_foundation.sql and disposable schema runner. Core tests pass; full Supabase/provider/operational acceptance remains pending.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Full Supabase startup exceeds workspace storage; operational precision/snapshots and product editor pending. No measured transaction activation.
 - Completion notes / release fragment: tested internal preparation; fragment ss-electrical-measurement-foundation-20261022. No operational completion claim. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -180,7 +180,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Prove role/tenant/subscription denial, immutable definitions, configured piece validation and legacy regressions. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: Forward migration20261022185512, app/utils/measurement.js, shop_measurement_foundation.sql and disposable schema runner. Core tests pass; full Supabase/provider/operational acceptance remains pending.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Full Supabase startup exceeds workspace storage; operational precision/snapshots and product editor pending. No measured transaction activation.
 - Completion notes / release fragment: tested internal preparation; fragment ss-electrical-measurement-foundation-20261022. No operational completion claim. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -195,7 +195,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Receive 2 reels of 100m at 2500 each into 200m at25/m; supplier total5000; preserve idempotency and snapshots. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -210,7 +210,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Version product-specific package definitions, barcode uniqueness, sale/purchase eligibility and archive lifecycle. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -225,7 +225,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Apply fixed package price and canonical deduction server-side with deterministic bundle precedence. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -240,7 +240,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Show valid units and product increments in POS; server revalidate 250cm/12.5m; preserve ordinary piece behavior. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -255,7 +255,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Use one canonical FIFO stock balance and original acquisition costs across converted transactions. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -270,7 +270,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Count/correct/set thresholds in base units with audit reason and exact increments; preserve closed periods. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -285,7 +285,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Freeze entered and base quantities, unit/conversion/package/price snapshots and display units on printed receipts. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -300,7 +300,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Return only original eligible quantity/cost/tax snapshots; no over-return, duplicate refund or false restock. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -315,7 +315,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Extend legacy-compatible CSV templates and exports; validate unit/package barcode identity without formula injection. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -330,7 +330,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Version offline unit/package payloads; stale rules conflict; preserve request retries and frozen ETA mapping. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -345,7 +345,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Group quantities by compatible units; preserve authorized FIFO COGS, margin, supplier and customer reports. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -360,7 +360,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Store reusable typed technical attributes; distinguish cable cross-section from stock unit and support search. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -375,7 +375,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Give each stocked color/size its own SKU and stock; optional family does not merge balances. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -390,7 +390,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Identify physical reels by product/location/batch/barcode with original and remaining length tied to FIFO. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -405,7 +405,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Reject continuous80m from two50m reels; allow explicit split allocation only when requested and valid. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -420,7 +420,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Atomically record reel cut, actor, sale/order, requested/actual/loss and resulting FIFO stock. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -435,7 +435,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Track sellable/discounted/damaged/scrap remnants with auditable quantity and valuation effects. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -450,7 +450,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Apply configurable unopened/cut/damaged return policies and approvals using original sale lineage. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -465,7 +465,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Paginate reel movements and report remaining/reserved/continuous lengths, scrap and valuation. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -480,7 +480,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Maintain tenant-scoped configurable customer groups without changing existing balances or privacy. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -495,7 +495,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Resolve contract/group/quantity/package/base precedence server-side; freeze prices and authorized overrides. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -510,7 +510,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Version quotations with validity, taxes, agreed measurements, explicit transitions and immutable issued history. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -525,7 +525,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Convert accepted quote to order retaining agreed prices and preventing duplicate conversion. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -540,7 +540,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Reserve canonical location/reel stock atomically; release expiry/cancellation; concurrent orders cannot overallocate. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -555,7 +555,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Reconcile deposits and partial deliveries with existing payment/invoice ledgers and no duplicate stock deduction. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -570,7 +570,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Issue supplier purchase orders with measured/package lines; ordering alone never creates stock. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -585,7 +585,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Receive6 of10 reels, retain4 outstanding; retry does not double receive or duplicate supplier debt. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -600,7 +600,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Track tenant/location bin and shelf positions without disconnected inventory balances. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -615,7 +615,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Maintain supplier-specific item references, package choices and lead times with scoped access. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -630,7 +630,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Preserve historical supplier purchase unit/price/currency snapshots and paginated comparisons. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -645,7 +645,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Support only verified GS1/market variable-measure formats with checksums and bounded values; normal barcodes unchanged. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -660,7 +660,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Use an optional supported scale adapter with stable/tare/net readings, units, failures and staff confirmation. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -675,7 +675,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Require approved versioned product-specific mass/length relationship; reject universal cross-dimensional conversion. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -690,7 +690,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Derive explainable canonical reorder suggestions from scoped demand/lead times; no automatic stock writes. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -705,7 +705,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Introduce commodity rules only with justified source, currency, effective time and frozen authoritative pricing. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -720,7 +720,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Review 1000s-SKU plan capacity and performance without changing approved commercial prices/entitlements. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -735,7 +735,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Verify all new RPC/table grants, roles, RLS, cross-tenant/location denial and immutable historical objects. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -750,7 +750,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Run real concurrent cashiers/reels/reservations and duplicate purchase/sale UUIDs; no oversell/duplicate movements. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -765,7 +765,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Execute EN/AR RTL/LTR both themes desktop/mobile keyboard/screen-reader and all operation states. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -780,7 +780,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Run affected original product/service/payment/tax/bundle/return/reporting regressions without weakening assertions. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -795,7 +795,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Run full migrated disposable DB plus browser merchant journey; record every pass/failure/skipped gate. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -810,7 +810,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Obtain real merchant review of cable, copper and piece journey including printed receipt and balances. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -825,6 +825,6 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Bind exact candidate SHA, migrations, security/regression/pilot and production evidence before release handoff. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: pending this feature checkpoint.
+- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.

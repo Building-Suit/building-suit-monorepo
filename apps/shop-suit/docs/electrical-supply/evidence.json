@@ -93,5 +93,15 @@
   },
   "fullSupabase": "BLOCKED: image storage exhaustion",
   "supplierRegression": "FAIL: purchase_payable permission; unchanged with all measurement guards transactionally removed",
-  "status": "PARTIAL_IMPLEMENTATION_NOT_PRODUCTION_READY"
+  "status": "PARTIAL_IMPLEMENTATION_NOT_PRODUCTION_READY",
+  "pullRequest": "https://github.com/Building-Suit/building-suit-monorepo/pull/441",
+  "sourceCheckpoint": "ce62100bce2a6e4e4a3250de8927b0deec5878f5",
+  "quality": {
+    "typecheck": "PASS",
+    "build": "PASS",
+    "changedFilesLint": "PASS",
+    "workspaceBoundaries": "PASS",
+    "releaseCheck": "PASS",
+    "fullShopLint": "FAIL: two inherited errors"
+  }
 }
