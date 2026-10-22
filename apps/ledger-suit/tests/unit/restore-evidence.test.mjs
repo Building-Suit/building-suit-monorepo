@@ -2,12 +2,13 @@ import assert from 'node:assert/strict'
 import { readFileSync, readdirSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import test from 'node:test'
-import { compareRestoreEvidence } from '../../scripts/compare-restore-evidence.mjs'
-import { assertTenantStoragePath, tenantTables } from '../../scripts/export-organization-portability.mjs'
+import { compareRestoreEvidence as compare } from '../../scripts/compare-restore-evidence.mjs'
+import { assertTenantStoragePath, tenantTables, excludedTenantTables } from '../../scripts/export-organization-portability.mjs'
 
 function snapshot(environmentId = 'source') {
   return {
-    schema_version: 'ls-ops-001-v1',
+    schema_version: 'ls-ops-001-v2',
+    migration_history_digest: 'a'.repeat(32),
     environment_id: environmentId,
     organization_id: '11111111-1111-4111-8111-111111111111',
     from_date: '2036-01-01',
@@ -20,18 +21,35 @@ function snapshot(environmentId = 'source') {
     reports: { trial_balance_digest: 'tb', balance_sheet_digest: 'bs', profit_loss_digest: 'pl' },
     configuration: { accounts_digest: 'accounts' },
     preserved_operations: { recurring_rules_digest: 'recurring' },
-    attachments: { count: '1', bytes: '3', metadata_digest: 'metadata' },
+    attachments: { count: '1', bytes: '3', metadata_count: '1', receipt_metadata_count: '0', metadata_conflicts: '0', metadata_digest: 'metadata' },
   }
 }
 
 function attachments(environmentId = 'source') {
   return {
-    schema_version: 'ls-ops-001-attachments-v1',
+    schema_version: 'ls-ops-001-attachments-v2',
     environment_id: environmentId,
     organization_id: '11111111-1111-4111-8111-111111111111',
     objects: [{ storage_bucket: 'attachments', storage_key: '11111111-1111-4111-8111-111111111111/transaction/id/file.pdf',
+      path: 'objects/attachments/11111111-1111-4111-8111-111111111111/transaction/id/file.pdf',
       size_bytes: '3', sha256: createHash('sha256').update('pdf').digest('hex') }],
   }
+}
+
+function exportManifest(value) {
+  return {
+    schema_version: 'ls-ops-001-portability-v2', environment_id: value.environment_id,
+    organization_id: value.organization_id, from_date: value.from_date, to_date: value.to_date,
+    excluded_tenant_tables: structuredClone(excludedTenantTables),
+    tables: tenantTables.map(([table]) => ({ table,
+      rows: table === 'transactions' ? value.ledger.journals : table === 'transaction_entries' ? value.ledger.entries : table === 'attachments' ? '1' : '0',
+      files: [{ path: `tables/${table}/page-000001.json`, sha256: 'b'.repeat(64) }] })),
+    reports: ['profit-loss', 'balance-sheet', 'trial-balance', 'cash-flow'].map(name => ({ path: `reports/${name}.csv`, sha256: 'c'.repeat(64) })),
+    attachment_manifest_sha256: 'd'.repeat(64),
+  }
+}
+function compareRestoreEvidence(source, restored, sourceObjects, restoredObjects, sourceExport = exportManifest(source), restoredExport = exportManifest(restored)) {
+  return compare(source, restored, sourceObjects, restoredObjects, sourceExport, restoredExport)
 }
 
 test('restore comparison preserves exact bigint strings and attachment bytes', () => {
@@ -93,6 +111,20 @@ test('restore rehearsal rejects absent, mismatched or foreign attachment evidenc
     /foreign attachment path/)
   assert.throws(() => compareRestoreEvidence(snapshot(), snapshot('restored'), attachments('another-source'), attachments('restored')),
     /source attachment environment differs/)
+})
+
+test('restore comparison rejects missing newer financial tables, changed payloads and migration history', () => {
+  const source = snapshot(), restored = snapshot('restored')
+  const missing = exportManifest(restored)
+  missing.tables = missing.tables.filter(table => table.table !== 'fx_open_items')
+  assert.throws(() => compareRestoreEvidence(source, restored, attachments(), attachments('restored'), exportManifest(source), missing),
+    /current financial table inventory differs/)
+  const changed = exportManifest(restored)
+  changed.tables.find(table => table.table === 'migration_original_rows').files[0].sha256 = 'e'.repeat(64)
+  assert.throws(() => compareRestoreEvidence(source, restored, attachments(), attachments('restored'), exportManifest(source), changed),
+    /financial export pages differ/)
+  restored.migration_history_digest = 'f'.repeat(32)
+  assert.throws(() => compareRestoreEvidence(source, restored, attachments(), attachments('restored')), /migration history differs/)
 })
 
 test('portability inventory is unique and keeps attachment paths tenant scoped', () => {

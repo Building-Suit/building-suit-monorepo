@@ -1,8 +1,8 @@
 # Restore, retention, and customer portability
 
-Status: **portability query/integrity repairs and native PostgREST checks pass; complete current inventory and native restore pending** (LS-OPS-PORT-001, 2026-10-22). See [the current package and evidence](accountant-system/work-packages/LS-OPS-PORT-001.md). This does not claim a recovery-point objective (RPO), recovery-time objective (RTO), deployment, or accountant acceptance.
+Status: **current 103-table portability and version-2 recovery evidence implemented and verified through native PostgREST; actual Storage/restore drill pending** (LS-OPS-PORT-002, 2026-10-22). See [the current package and evidence](accountant-system/work-packages/LS-OPS-PORT-002.md). This does not claim a recovery-point objective (RPO), recovery-time objective (RTO), deployment, or accountant acceptance.
 
-The current 64-table export now works against actual PostgREST, preserves exact large minor units and produces verifiable on-disk hashes. The restore comparison rejects empty/mismatched attachment evidence. The inventory still needs newer FX/ETA/migration/manual-payment records and receipt bytes; it is not a complete current financial backup. HTTP unit fixtures are separate from genuine Storage-provider evidence. A tenant API export is not a transactionally consistent database backup: freeze source writes for recovery evidence and retain the separate database/Storage backup procedure below.
+The 103-table export includes FX/ETA/migration/manual-payment records, existing financial modules and both private object buckets. Object files use `objects/<encoded-bucket>/<tenant-key>`. Recovery comparison requires version-2 SQL/object/export manifests and validates every actual file, table row count, report and object digest. HTTP unit fixtures remain separate from genuine Storage-provider evidence. A tenant API export is not a transactionally consistent database backup: freeze source writes for recovery evidence and retain the separate database/Storage backup procedure below.
 
 ## Original exercise result (2026-09-27)
 
@@ -32,7 +32,7 @@ Read-only review of official Supabase material on 2026-09-27 established:
 | Team | Starts at USD 599/month and includes daily database backups retained for 14 days. | Not selected or enabled. |
 | PITR add-on | Available on paid plans, requires at least Small compute, and is currently listed at about USD 100/200/400 monthly for 7/14/28 days. Enabling PITR replaces daily backups for that project. | No PITR purchase or RPO is approved. Provider granularity is not a measured Ledger RPO or RTO. |
 | Restore | A managed restore makes the project inaccessible; duration varies with database size. | Only an actual timed Ledger rehearsal can establish recovery time. |
-| Storage | Database backups cover database data/metadata, not the object bytes stored through Storage. | Every usable Ledger backup must separately copy the private `attachments` object bytes and reconcile them with `public.attachments`. |
+| Storage | Database backups cover database data/metadata, not the object bytes stored through Storage. | Every usable Ledger backup must separately copy private `attachments` and `manual-payment-receipts` bytes and reconcile both metadata sources. |
 
 Sources: [Supabase database backups](https://supabase.com/docs/guides/platform/backups), [Supabase pricing](https://supabase.com/pricing), [Supabase CLI backup/restore and Storage migration](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore), and [Storage object downloads](https://supabase.com/docs/guides/storage/management/download-objects).
 
@@ -41,7 +41,7 @@ Sources: [Supabase database backups](https://supabase.com/docs/guides/platform/b
 Use the existing V2-IMP-015 synthetic fixture and dates. Do not reset the normal local Ledger project and never restore over the source.
 
 1. Create source and target disposable Supabase projects under this worktree with unique project IDs, container ownership labels, ports, and service keys. Record their resolved workdirs and prove that neither URL is hosted.
-2. Replay the complete Ledger migration chain into the source. Create a committed synthetic organization through the existing public commands; include posted/reversed journals, AR/AP, configuration, recurrence/import evidence, and at least one real private attachment object.
+2. Replay the complete Ledger migration chain into the source. Create a committed synthetic organization through the existing public commands; include posted/reversed journals, AR/AP, configuration, recurrence/import evidence, at least one real private attachment and a manual-payment receipt object.
 3. Run `capture-restore-evidence.sql` on the source with `psql -X -Atq -v ON_ERROR_STOP=1`, saving its single JSON row. Run `export-organization-portability.mjs` with the source user's publishable key/access token to capture the existing report CSVs, tenant tables, attachment bytes, and SHA-256 manifest. Tokens are environment variables and must never enter shell history, logs, or artifacts.
 4. Create the database backup using the current official Supabase CLI procedure (roles, schema, data, and `supabase_migrations` history). Copy the private Storage objects separately. Record UTC start/end timestamps, CLI versions, migration-manifest hash, database bytes, attachment count/bytes, exit codes, and artifact SHA-256 values.
 5. Restore only into the second fresh target instance using the official procedure. Recreate only externally managed configuration—Auth/Storage customizations from migrations, Edge Functions, secrets by **name**, Vault entries by **name**, scheduler jobs, SMTP/callbacks, and provider settings. Do not copy secret values into evidence.
@@ -51,7 +51,8 @@ Use the existing V2-IMP-015 synthetic fixture and dates. Do not reset the normal
    node apps/ledger-suit/scripts/compare-restore-evidence.mjs \
      source.json restored.json \
      source-export/attachments-manifest.json \
-     restored-export/attachments-manifest.json
+     restored-export/attachments-manifest.json \
+     source-export/manifest.json restored-export/manifest.json
    ```
 
    Passing requires nonempty journals, zero unbalanced journals, exact journal/entry identities and minor-unit totals, exact TB/BS/P&L/Control and existing CSV digests, configuration/recurrence/import equality, and byte-identical attachment manifests. Row counts alone are insufficient.
