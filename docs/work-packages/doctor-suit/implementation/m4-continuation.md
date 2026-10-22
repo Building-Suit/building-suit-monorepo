@@ -2,7 +2,7 @@
 
 The owner requested milestone continuation after the dashboard/branding feature. New work starts from published Doctor leaf PR435, `a438c2b59359c1bf6345664fee3362a2e3176437`. Shop/Ledger branding is independent on the shared stack and is not copied into the Doctor parent.
 
-M4 task001 is published for review in PR438 and has a concrete platform/distribution decision packet in dos-m4-001.md and dos-m4-001-decision-packet.json. It compares the current web/PWA path, a hybrid wrapper and a genuinely native renderer, with reserved paths, existing verification commands and missing device/signing/cost evidence. No platform is silently chosen. The owner's platform question remains pending.
+M4 task001 is published for review in PR438 and has a concrete platform/distribution decision packet in dos-m4-001.md and dos-m4-001-decision-packet.json. It compares the current web/PWA path, a hybrid wrapper and a genuinely native renderer, with reserved paths, existing verification commands and missing device/signing/cost evidence. The owner explicitly selected Android first as its own app inside the monorepo on 2026-10-22. The updated packet recommends a distinct Capacitor8.5.3/Nuxt mobile package at the reserved root and names the required workspace/command registration. Framework/renderer, exact device/distribution/cost and clinical offline approvals remain OPEN; the platform answer alone is not those approvals.
 
 M4 tasks002–010 depend on this decision and both platform/offline gates. Their canonical IDs, dependency graph, decisions and fingerprints remain unchanged. Do not create a scaffold, install a framework or create store/signing resources before approved evidence. Mobile clinical acceptance also retains M2-014's qualified gate.
 

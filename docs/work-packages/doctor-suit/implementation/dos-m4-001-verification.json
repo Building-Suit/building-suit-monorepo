@@ -1,6 +1,6 @@
 {
   "task": "DOS-M4-001",
-  "status": "evidence-packet-prepared; task acceptance and downstream implementation blocked",
+  "status": "Android-first separate-app scope selected; exact architecture/device/distribution/offline acceptance blocked",
   "parent_sha": "a438c2b59359c1bf6345664fee3362a2e3176437",
   "parent_pr": 435,
   "checks": {
@@ -35,14 +35,15 @@
     "stack_check": "PR438 -> PR435 -> PR434 -> existing Doctor chain -> PR401 -> stg verified"
   },
   "acceptance": {
-    "platform_selected": false,
+    "platform_selected": true,
     "framework_renderer_approved": false,
     "reviewer_candidate_evidence_supplied": false,
     "device_matrix_approved": false,
     "actual_device_receipt": false,
     "cost_distribution_owner_approved": false,
     "offline_clinical_policy_approved": false,
-    "downstream_m4_tasks_admitted": false
+    "downstream_m4_tasks_admitted": false,
+    "separate_android_app_selected": true
   },
   "limitations": [
     "Documentation-only task; product/mobile tests not run or represented as passing.",
@@ -50,5 +51,11 @@
     "No framework install, native scaffold, signing/store resource, hosted operation, provider activation, real patient, Automation mutation or staging/main merge."
   ],
   "pr": 438,
-  "verified_packet_source_sha": "4f21eeaaccd077184e7c378a823cc17934357455"
+  "verified_packet_source_sha": "4f21eeaaccd077184e7c378a823cc17934357455",
+  "owner_platform_decision": {
+    "date": "2026-10-22",
+    "platform": "Android first",
+    "own_monorepo_app": true,
+    "framework_approval_inferred": false
+  }
 }
