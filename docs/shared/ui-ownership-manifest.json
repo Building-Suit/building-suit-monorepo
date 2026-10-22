@@ -765,6 +765,17 @@
       ],
       "adapterBoundary": "Typed preview batches/counts/errors and controlled synthetic source form. Doctor owns mapping, provenance, cursor/idempotency, custody gate and canonical-write denial.",
       "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "mobile-shell-access",
+      "owner": "packages/ui",
+      "components": [
+        "BsMobileAccessPage",
+        "BsWorkspaceShell"
+      ],
+      "adapterBoundary": "Separate Doctor Android client supplies explicit synthetic access state and fresh versioned context; shared templates own all presentation. Nested mobile clients receive the same zero-debt boundary checks.",
+      "task": "DOS-M4-002",
+      "migrationStatus": "synthetic shell engineering; actual device and clinical/offline acceptance pending"
     }
   ]
 }

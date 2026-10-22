@@ -1,0 +1,62 @@
+{
+  "task": "DOS-M4-002",
+  "parent_pr": 442,
+  "parent_sha": "31f315457a8737e3995a686d5efe3c688eeb3488",
+  "observed_at": "2026-10-22T20:48:19.776605+00:00",
+  "checks": {
+    "focused_doctor_boundaries_generator": {
+      "command": "node --test apps/doctor-suit/tests/unit/*.test.mjs tooling/checks/*.test.mjs tooling/new-platform/tests/*.test.mjs",
+      "tests": 570,
+      "passed": 570,
+      "failed": 0,
+      "skipped": 0
+    },
+    "repository_units": {
+      "command": "pnpm test",
+      "tests": 2203,
+      "passed": 2126,
+      "failed": 54,
+      "skipped": 23,
+      "failure_products": [
+        "shop-suit"
+      ],
+      "result": "failed; inherited baseline retained"
+    },
+    "workspace_check": {
+      "command": "pnpm check",
+      "result": "passed",
+      "suits": 6,
+      "applications": 7,
+      "templates": 131,
+      "historical_migrations_unchanged": 80
+    },
+    "canonical_task_packets": {
+      "command": "node docs/work-packages/doctor-suit/planning-v0.4/scripts/validate.mjs",
+      "result": "passed",
+      "tasks": 104,
+      "canonical_metadata": "byte/hash verified, dependency graph unchanged"
+    },
+    "mobile_typecheck": "passed",
+    "mobile_static_build": "passed",
+    "capacitor_source_sync": "passed, no SDK/device runtime",
+    "canonical_android_vector": "passed, source SHA b66e34ab7f4eed9fabf0dc1cdde52d9bb9aff2cb4eba315285b8a41951c34b6c",
+    "docs_catalogue_build": "passed",
+    "frozen_install": "passed",
+    "existing_lockfile_graph": {
+      "importers_preserved": 19,
+      "packages_preserved": 1085,
+      "snapshots_preserved": 1099,
+      "added_importers": 1,
+      "added_packages": 54,
+      "added_snapshots": 64
+    },
+    "workflow_yaml_and_script_syntax": "passed"
+  },
+  "limitations": [
+    "Android APK compilation and API29/API36 emulator execution are GitHub CI-only and unrun at this record; no physical device evidence.",
+    "No native sign-in, persistent token store, clinical/private offline data, provider delivery or production/mobile release authority is implemented.",
+    "Aggregate M4-001, M2-014 and offline gates remain open; this is partial synthetic shell engineering.",
+    "Initial source build required the documented root setup to prepare parent Nuxt types. An intermediate lockfile merge was rejected by frozen install, corrected, and verified before publication.",
+    "M3 browser acceptance and schema generation limitations on the parent remain open; all 54 inherited Shop failures are retained."
+  ]
+}

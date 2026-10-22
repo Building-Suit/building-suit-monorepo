@@ -1,0 +1,28 @@
+{
+  "task": "DOS-M4-002",
+  "status": "unrun",
+  "source_candidate": "source head captured by the CI receipt; this packet is not execution evidence",
+  "command": "node apps/doctor-suit/mobile/doctor/scripts/verify-android.mjs",
+  "runner": "GitHub-owned disposable Android emulator",
+  "planned_api_levels": [
+    29,
+    36
+  ],
+  "planned_cases": [
+    "cold-launch-signed-out",
+    "cold-deep-link-signed-out",
+    "unknown-deep-link-denied"
+  ],
+  "apk_binding": [
+    "sourceHead",
+    "apkSha256",
+    "debug variant",
+    "synthetic application ID"
+  ],
+  "execution_artifact": "doctor-android-device-<api>-<head>/device-<api>.json",
+  "physical_device_evidence": false,
+  "clinical_approval": false,
+  "offline_clinical_approval": false,
+  "store_upload": false,
+  "acceptance": "unavailable until exact-candidate CI results; emulator evidence cannot substitute for physical/qualified acceptance"
+}

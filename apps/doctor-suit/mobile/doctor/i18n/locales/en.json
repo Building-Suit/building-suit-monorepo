@@ -1,0 +1,40 @@
+{
+  "product": {
+    "name": "Doctor Suit"
+  },
+  "description": "Your practice, on Android",
+  "notice": "Synthetic preview. Clinical care and external delivery remain unavailable.",
+  "retry": "Try again",
+  "verifiedContext": "Practice and location verified for this session.",
+  "nav": {
+    "workspace": "Dashboard",
+    "schedule": "Schedule",
+    "account": "Account"
+  },
+  "phase": {
+    "loading": {
+      "title": "Checking access",
+      "body": "Confirming your current account and practice."
+    },
+    "signed-out": {
+      "title": "You are signed out",
+      "body": "Mobile sign-in is not available yet. Your account stays signed out."
+    },
+    "denied": {
+      "title": "Access unavailable",
+      "body": "This destination is unavailable for your current account and practice."
+    },
+    "offline": {
+      "title": "You are offline",
+      "body": "Reconnect to check access. Private records are not stored on this device."
+    },
+    "error": {
+      "title": "Could not check access",
+      "body": "Try again after checking your connection."
+    },
+    "ready": {
+      "title": "Workspace ready",
+      "body": "Your current practice and location have been checked. Clinical actions remain unavailable."
+    }
+  }
+}

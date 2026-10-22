@@ -5,6 +5,13 @@ on:
       - 'apps/doctor-suit/**'
       - 'docs/architecture/environments.json'
       - 'packages/ui/**'
+      - 'packages/contracts/**'
+      - 'packages/nuxt-layer/**'
+      - 'packages/brand/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.node-version'
       - 'packages/ux/**'
       - 'packages/testing/playwright.auth-parity.config.ts'
       - '.github/workflows/doctor-disposable.yml'
@@ -14,6 +21,13 @@ on:
       - 'apps/doctor-suit/**'
       - 'docs/architecture/environments.json'
       - 'packages/ui/**'
+      - 'packages/contracts/**'
+      - 'packages/nuxt-layer/**'
+      - 'packages/brand/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.node-version'
       - 'packages/ux/**'
       - 'packages/testing/playwright.auth-parity.config.ts'
       - '.github/workflows/doctor-disposable.yml'
@@ -138,3 +152,79 @@ jobs:
           name: shared-settings-focus-results
           path: test-results/settings-focus
           if-no-files-found: ignore
+
+  doctor-android-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run setup
+      - name: Build the separate bundled synthetic Android client
+        run: |
+          pnpm --filter @building-suit/doctor-mobile typecheck
+          pnpm --filter @building-suit/doctor-mobile build
+          python3 apps/doctor-suit/mobile/doctor/scripts/android-brand.py
+          pnpm --filter @building-suit/doctor-mobile sync
+          pnpm --filter @building-suit/doctor-mobile android:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: doctor-android-debug-${{ github.event.pull_request.head.sha || github.sha }}
+          path: .local/doctor-android/
+          if-no-files-found: error
+          retention-days: 7
+  doctor-android-device:
+    needs: doctor-android-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [29, 36]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/download-artifact@v4
+        with:
+          name: doctor-android-debug-${{ github.event.pull_request.head.sha || github.sha }}
+          path: .local/doctor-android/
+      - name: Allow the owned runner to accelerate its disposable emulator
+        run: sudo chmod a+rw /dev/kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        env:
+          DOCTOR_ANDROID_API: ${{ matrix.api }}
+        with:
+          api-level: ${{ matrix.api }}
+          arch: x86_64
+          target: google_apis
+          profile: pixel_5
+          disable-animations: true
+          script: node apps/doctor-suit/mobile/doctor/scripts/verify-android.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: doctor-android-device-${{ matrix.api }}-${{ github.event.pull_request.head.sha || github.sha }}
+          path: test-results/doctor-mobile/
+          if-no-files-found: error
+          retention-days: 7
