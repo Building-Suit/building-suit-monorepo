@@ -1900,5 +1900,37 @@
     "sources": [
       "shop-inline-settings-support-20261020"
     ]
+  },
+  {
+    "id": "supabase-explicit-access-maintenance",
+    "task": "SUPABASE-EXPLICIT-ACCESS-20261022",
+    "suits": [
+      "ledger-suit",
+      "shop-suit",
+      "inventory-suit",
+      "doctor-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "README.md",
+      "apps/ledger-suit",
+      "apps/shop-suit",
+      "apps/inventory-suit",
+      "apps/doctor-suit",
+      "apps/super-admin-suit",
+      "apps/automation-suit",
+      "docs/architecture/environments.json",
+      "docs/shared",
+      "supabase/operations",
+      "tooling",
+      "release-changes/items.json"
+    ],
+    "reason": "Owner-authorized infrastructure access maintenance: preserve application data and RPC contracts under explicit-grant platform defaults, remove superfluous SQL capabilities, harden legacy routines and add migration checks. No product feature, runtime activation, clinical capability or release registration is introduced.",
+    "sources": [
+      "supabase-explicit-access-20261022"
+    ]
   }
 ]

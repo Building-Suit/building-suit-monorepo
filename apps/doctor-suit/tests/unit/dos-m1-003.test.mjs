@@ -7,10 +7,14 @@ const root = new URL('../../../../', import.meta.url)
 const registry = JSON.parse(readFileSync(new URL('docs/architecture/environments.json', root), 'utf8'))
 const config = readFileSync(new URL('apps/doctor-suit/supabase/config.toml', root), 'utf8')
 
-test('DOS-M1-003: local target is isolated and hosted refs remain unprovisioned', () => {
+test('DOS-M1-003: local target is isolated and hosted catalog registration cannot change local-only lifecycle safety', () => {
   const doctor = validateLocalDoctorTarget(registry, config)
-  for (const kind of ['production', 'staging']) assert.deepEqual(doctor[kind], { projectRef: '', appUrl: '', status: 'unprovisioned; user-managed connections' })
-  assert.equal(doctor.organizationId, '')
+  assert.match(doctor.organizationId, /^[a-z]{20}$/)
+  for (const kind of ['production', 'staging']) {
+    assert.match(doctor[kind].projectRef, /^[a-z]{20}$/)
+    assert.equal(doctor[kind].appUrl, '') // Catalog identity does not activate a hosted runtime.
+  }
+  assert.notEqual(doctor.production.projectRef, doctor.staging.projectRef)
   assert.equal(doctor.schema, 'public')
   assert.deepEqual(commands.reset, ['db', 'reset', '--local'])
   assert.deepEqual(commands.test, ['test', 'db', '--local'])

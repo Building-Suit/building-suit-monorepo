@@ -6,7 +6,7 @@ Run the root `pnpm install --frozen-lockfile`, `pnpm run setup`, then `pnpm dev:
 
 Run `pnpm --filter @building-suit/doctor-suit build` then `pnpm exec playwright test -c apps/doctor-suit/tests/e2e/playwright.config.ts`. The harness starts this app's production build on 127.0.0.1:4336. It rejects remote backend URLs and does not create provider resources or credentials. Unit coverage: `node --test apps/doctor-suit/tests/unit/dos-m1-002.test.mjs`.
 
-`.env.example` contains blank values only. No hosted project, public origin, canonical URL or operational release registration is configured. The user handles provider connections separately; independent product identity and backend authorization precede protected workflows. No real patient data is allowed.
+`.env.example` contains blank values only. Hosted catalog identities are registered for access maintenance. No public origin, canonical URL or operational release registration is inferred from that registration. The user handles provider connections separately; independent product identity and backend authorization precede protected workflows. No real patient data is allowed.
 
 All visual composition belongs in `packages/ui`, interactions in `packages/ux`, and Doctor logic/props in this app. Every route uses one registered complete shared template; no local components, CSS or presentation factories. Consult root and scoped AGENTS and the [implementation contract](../../docs/work-packages/doctor-suit/website-contract-v0.2.md).
 
