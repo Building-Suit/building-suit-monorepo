@@ -1,0 +1,254 @@
+{
+  "task_id": "DOS-M4-001",
+  "status": "prepared-platform-selection-and-approval-missing",
+  "parent_pr": 435,
+  "parent_sha": "a438c2b59359c1bf6345664fee3362a2e3176437",
+  "authorization": {
+    "scope": "Prepare the next Doctor milestone under the user request to continue milestone tasks. Synthetic repository work only.",
+    "platform_selection": null,
+    "framework_approval": null,
+    "accountable_reviewer": null,
+    "approved_at": null,
+    "approved_candidate_sha": null,
+    "offline_clinical_review": null
+  },
+  "observed_repository": {
+    "canonical_packet_sha256": "041145f78b703fda51a0185744c7f6b2e900fbca7c7ff5dc129ad2170ed5634d",
+    "canonical_milestones": 9,
+    "m4_tasks": 10,
+    "current_renderer": "Nuxt 4.5.2 / Vue 3.5.42 DOM; complete shared packages/ui page templates",
+    "node": "26.8.1",
+    "pnpm": "10.33.0",
+    "browser_runner": "Playwright 1.62.1; cached Chromium x86 Linux only",
+    "android_adb_available": false,
+    "android_emulator_available": false,
+    "xcodebuild_available": false,
+    "flutter_available": false,
+    "actual_mobile_device_receipt": null,
+    "native_signing_or_store_account_evidence": null,
+    "automation_runtime_mutation": false
+  },
+  "options": [
+    {
+      "id": "web-pwa",
+      "recommendation": "Lowest-change candidate for review; not selected",
+      "platforms": [
+        "Android browser",
+        "iOS browser"
+      ],
+      "framework": "Existing pinned Nuxt/Vue; no new renderer",
+      "distribution": "Existing HTTPS web origin; optional install manifest after approval; no app-store purchase",
+      "rendering": "Reuse the exact registered web templates and shared UX",
+      "credential_storage": "Retain independent Doctor environment session cookies and server SID checks; no extra local-storage token copy",
+      "private_data_storage": "No new persistent chart cache, offline mutation queue or service-worker interception of Auth/API/private responses",
+      "cost_owner": "Owner and hosting cost acceptance not supplied; no purchase authorized",
+      "device_matrix": "Proposed Android Chrome and iOS Safari current supported versions; exact OS/browser versions and actual device runners require approval/evidence"
+    },
+    {
+      "id": "hybrid",
+      "recommendation": "Alternative requiring explicit framework and distribution approval",
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "framework": "Capacitor wrapper is a candidate only, not installed or approved",
+      "distribution": "Signed internal/sandbox builds first; store accounts/signing/cost ownership missing",
+      "rendering": "Existing DOM templates inside platform WebView; not a native UI renderer",
+      "credential_storage": "Reviewed OS secure storage/keychain bridge would be required; no unreviewed plugin",
+      "private_data_storage": "No private cache or offline writes before the separate clinical/security policy",
+      "cost_owner": null,
+      "device_matrix": "Exact Android/iOS minimums, WebView versions, device runners and signing are unprovided"
+    },
+    {
+      "id": "native",
+      "recommendation": "Separate architecture decision required before choosing React Native/Flutter or native SDKs",
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "framework": null,
+      "distribution": "Unapproved signed distribution; no certificates/accounts purchased",
+      "rendering": "Current web-only Bs templates cannot be imported as native UI; a reviewed shared native presentation boundary would be required",
+      "credential_storage": "OS secure storage policy and implementation unapproved",
+      "private_data_storage": "Clinical/privacy/conflict/device-loss policy unapproved",
+      "cost_owner": null,
+      "device_matrix": null
+    }
+  ],
+  "proposed_reserved_paths": {
+    "existing_web_routes": "apps/doctor-suit/app/pages/",
+    "existing_web_domain": "apps/doctor-suit/app/composables/ and app/utils/",
+    "existing_presentation": "packages/ui/src/templates/ and organisms/",
+    "existing_interactions": "packages/ux/src/",
+    "shared_contracts": "packages/contracts/src/ (only concrete reviewed contracts)",
+    "future_mobile_root": "apps/doctor-suit/mobile/doctor/ (reserved; no scaffold created)",
+    "browser_tests": "apps/doctor-suit/tests/e2e/",
+    "native_runner": "unregistered; must be approved and named before framework work"
+  },
+  "verification_commands": {
+    "available_repository_checks": [
+      "pnpm check",
+      "node docs/work-packages/doctor-suit/planning-v0.4/scripts/validate.mjs",
+      "pnpm --filter @building-suit/doctor-suit typecheck",
+      "pnpm --filter @building-suit/doctor-suit build"
+    ],
+    "existing_protocol_browser": "pnpm exec playwright test -c apps/doctor-suit/tests/e2e/playwright.auth.config.ts",
+    "proposed_device_commands": null,
+    "note": "Existing Chromium mobile viewport tests are not Android/iOS device acceptance; no invented command is marked registered."
+  },
+  "gates": {
+    "DOS-M4-GATE-START": "OPEN: canonical state retained; preparation does not resolve dependency/admission",
+    "DOS-M4-GATE-PLATFORM": "OPEN: platform/framework/device/distribution/reviewer evidence absent",
+    "DOS-M4-GATE-OFFLINE": "OPEN: clinically reviewed cache/conflict/device-loss policy absent"
+  },
+  "prerequisites": {
+    "DOS-M2-014": "Synthetic engineering receipts exist; qualified clinical acceptance remains OPEN. No missing acceptance is silently marked complete."
+  },
+  "task_readiness": [
+    {
+      "task_id": "DOS-M4-001",
+      "dependencies": [
+        "DOS-M2-014"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M4-GATE-START"
+      ],
+      "status": "packet prepared; acceptance blocked"
+    },
+    {
+      "task_id": "DOS-M4-002",
+      "dependencies": [
+        "DOS-M4-001"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M4-GATE-START",
+        "DOS-M4-GATE-PLATFORM",
+        "DOS-M4-GATE-OFFLINE"
+      ],
+      "status": "blocked; not scaffolded or executed"
+    },
+    {
+      "task_id": "DOS-M4-003",
+      "dependencies": [
+        "DOS-M4-002"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M4-GATE-START",
+        "DOS-M4-GATE-PLATFORM",
+        "DOS-M4-GATE-OFFLINE"
+      ],
+      "status": "blocked; not scaffolded or executed"
+    },
+    {
+      "task_id": "DOS-M4-004",
+      "dependencies": [
+        "DOS-M4-003"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M4-GATE-START",
+        "DOS-M4-GATE-PLATFORM",
+        "DOS-M4-GATE-OFFLINE"
+      ],
+      "status": "blocked; not scaffolded or executed"
+    },
+    {
+      "task_id": "DOS-M4-005",
+      "dependencies": [
+        "DOS-M4-004"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M4-GATE-START",
+        "DOS-M4-GATE-PLATFORM",
+        "DOS-M4-GATE-OFFLINE"
+      ],
+      "status": "blocked; not scaffolded or executed"
+    },
+    {
+      "task_id": "DOS-M4-006",
+      "dependencies": [
+        "DOS-M2-014",
+        "DOS-M4-005"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M4-GATE-START",
+        "DOS-M4-GATE-PLATFORM",
+        "DOS-M4-GATE-OFFLINE"
+      ],
+      "status": "blocked; not scaffolded or executed"
+    },
+    {
+      "task_id": "DOS-M4-007",
+      "dependencies": [
+        "DOS-M2-014",
+        "DOS-M4-006"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M4-GATE-START",
+        "DOS-M4-GATE-PLATFORM",
+        "DOS-M4-GATE-OFFLINE"
+      ],
+      "status": "blocked; not scaffolded or executed"
+    },
+    {
+      "task_id": "DOS-M4-008",
+      "dependencies": [
+        "DOS-M4-007"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M4-GATE-START",
+        "DOS-M4-GATE-PLATFORM",
+        "DOS-M4-GATE-OFFLINE"
+      ],
+      "status": "blocked; not scaffolded or executed"
+    },
+    {
+      "task_id": "DOS-M4-009",
+      "dependencies": [
+        "DOS-M4-008"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M4-GATE-START",
+        "DOS-M4-GATE-PLATFORM",
+        "DOS-M4-GATE-OFFLINE"
+      ],
+      "status": "blocked; not scaffolded or executed"
+    },
+    {
+      "task_id": "DOS-M4-010",
+      "dependencies": [
+        "DOS-M4-001",
+        "DOS-M4-002",
+        "DOS-M4-003",
+        "DOS-M4-004",
+        "DOS-M4-005",
+        "DOS-M4-006",
+        "DOS-M4-007",
+        "DOS-M4-008",
+        "DOS-M4-009"
+      ],
+      "blocking_decision_ids": [
+        "DOS-M4-GATE-START",
+        "DOS-M4-GATE-PLATFORM",
+        "DOS-M4-GATE-OFFLINE"
+      ],
+      "status": "blocked; not scaffolded or executed"
+    }
+  ],
+  "criterion_results": {
+    "DOS-M4-001-C01": "BLOCKED: no selected scope, device matrix or accountable cost/distribution approval",
+    "DOS-M4-001-C02": "PROPOSED: architecture alternatives below are reviewable; none approved",
+    "DOS-M4-001-C03": "PREPARED: reserved paths and existing harness owners named; no framework/scaffold/account added",
+    "DOS-M4-001-C04": "PREPARED: missing approval evidence explicit; downstream implementation stays disabled"
+  },
+  "prohibited_actions_preserved": [
+    "no real patients",
+    "no clinical/legal authority inferred",
+    "no provider/store purchase",
+    "no native framework install",
+    "no signing certificate",
+    "no private offline cache or mutation replay",
+    "no hosted migrations",
+    "no Automation mutation",
+    "no staging/main promotion"
+  ]
+}
