@@ -4,6 +4,14 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      prepare_product_measurement: {
+        Args: { p_shop_id: string; p_product_id: string; p_base_unit_code: string; p_quantity_increment: string; p_reason: string }
+        Returns: import('./measurement').PreparedProductMeasurement
+      }
+      resolve_product_measurement: {
+        Args: { p_shop_id: string; p_product_id: string; p_quantity: string; p_unit_code: string }
+        Returns: import('./measurement').ResolvedProductMeasurement
+      }
       shop_storefront_builder: { Args: {p_shop_id:string}; Returns: import('../../shared/storefrontBuilder').StorefrontBuilder }
       shop_storefront_builder_save: { Args: {p_shop_id:string;p_layout:import('../../shared/storefrontBuilder').StorefrontLayout;p_revision:number;p_publish?:boolean}; Returns: import('../../shared/storefrontBuilder').StorefrontBuilder }
       shop_offers: { Args: {p_shop_id:string;p_page?:number}; Returns: {canManage:boolean;canPublish:boolean;items:import('../../shared/catalogOffers').CatalogOffer[];total:number} }

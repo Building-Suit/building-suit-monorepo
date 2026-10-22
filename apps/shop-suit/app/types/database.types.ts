@@ -3055,6 +3055,7 @@ export type Database = {
           issued_by_profile_id: string | null
           location_id: string
           notes: string | null
+          offer_snapshot: Json
           shop_id: string
           status: Database["public"]["Enums"]["invoice_status"]
           tax_order_discount: number
@@ -3079,6 +3080,7 @@ export type Database = {
           issued_by_profile_id?: string | null
           location_id: string
           notes?: string | null
+          offer_snapshot?: Json
           shop_id: string
           status?: Database["public"]["Enums"]["invoice_status"]
           tax_order_discount?: number
@@ -3103,6 +3105,7 @@ export type Database = {
           issued_by_profile_id?: string | null
           location_id?: string
           notes?: string | null
+          offer_snapshot?: Json
           shop_id?: string
           status?: Database["public"]["Enums"]["invoice_status"]
           tax_order_discount?: number
@@ -4050,6 +4053,91 @@ export type Database = {
           },
         ]
       }
+      product_measurement_changes: {
+        Row: {
+          actor_profile_id: string
+          base_unit_code: string
+          created_at: string
+          id: string
+          previous_measurement_status: string
+          previous_quantity_increment: number
+          previous_unit_code: string
+          product_id: string
+          quantity_increment: number
+          reason: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          base_unit_code: string
+          created_at?: string
+          id?: string
+          previous_measurement_status: string
+          previous_quantity_increment: number
+          previous_unit_code: string
+          product_id: string
+          quantity_increment: number
+          reason: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          base_unit_code?: string
+          created_at?: string
+          id?: string
+          previous_measurement_status?: string
+          previous_quantity_increment?: number
+          previous_unit_code?: string
+          product_id?: string
+          quantity_increment?: number
+          reason?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_measurement_changes_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_measurement_changes_base_unit_code_fkey"
+            columns: ["base_unit_code"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "product_measurement_changes_previous_unit_code_fkey"
+            columns: ["previous_unit_code"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "product_measurement_changes_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "low_stock_products"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "product_measurement_changes_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "product_measurement_changes_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
       product_suppliers: {
         Row: {
           created_at: string
@@ -4110,6 +4198,7 @@ export type Database = {
       products: {
         Row: {
           barcode: string | null
+          base_unit_code: string
           category_id: string | null
           created_at: string
           created_by_profile_id: string
@@ -4117,7 +4206,9 @@ export type Database = {
           image_object_name: string | null
           image_url: string | null
           is_active: boolean
+          measurement_status: string
           name: string
+          quantity_increment: number
           reorder_threshold: number
           sale_price: number
           shop_id: string
@@ -4126,6 +4217,7 @@ export type Database = {
         }
         Insert: {
           barcode?: string | null
+          base_unit_code?: string
           category_id?: string | null
           created_at?: string
           created_by_profile_id: string
@@ -4133,7 +4225,9 @@ export type Database = {
           image_object_name?: string | null
           image_url?: string | null
           is_active?: boolean
+          measurement_status?: string
           name: string
+          quantity_increment?: number
           reorder_threshold?: number
           sale_price?: number
           shop_id: string
@@ -4142,6 +4236,7 @@ export type Database = {
         }
         Update: {
           barcode?: string | null
+          base_unit_code?: string
           category_id?: string | null
           created_at?: string
           created_by_profile_id?: string
@@ -4149,7 +4244,9 @@ export type Database = {
           image_object_name?: string | null
           image_url?: string | null
           is_active?: boolean
+          measurement_status?: string
           name?: string
+          quantity_increment?: number
           reorder_threshold?: number
           sale_price?: number
           shop_id?: string
@@ -4157,6 +4254,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "products_base_unit_code_fkey"
+            columns: ["base_unit_code"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
+            referencedColumns: ["code"]
+          },
           {
             foreignKeyName: "products_category_shop_fk"
             columns: ["category_id", "shop_id"]
@@ -6347,6 +6451,65 @@ export type Database = {
           },
         ]
       }
+      shop_catalog_offers: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          ends_at: string | null
+          id: string
+          lines: Json
+          name: string
+          price: number
+          priority: number
+          revision: number
+          shop_id: string
+          starts_at: string | null
+          updated_at: string
+          website_visible: boolean
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          ends_at?: string | null
+          id?: string
+          lines: Json
+          name: string
+          price: number
+          priority?: number
+          revision?: number
+          shop_id: string
+          starts_at?: string | null
+          updated_at?: string
+          website_visible?: boolean
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          ends_at?: string | null
+          id?: string
+          lines?: Json
+          name?: string
+          price?: number
+          priority?: number
+          revision?: number
+          shop_id?: string
+          starts_at?: string | null
+          updated_at?: string
+          website_visible?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_catalog_offers_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_currency_changes: {
         Row: {
           changed_at: string
@@ -7223,6 +7386,73 @@ export type Database = {
             columns: ["subscription_id"]
             isOneToOne: false
             referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_storefront_events: {
+        Row: {
+          action: string
+          actor_user_id: string
+          id: string
+          occurred_at: string
+          record_id: string | null
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          id?: string
+          occurred_at?: string
+          record_id?: string | null
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          id?: string
+          occurred_at?: string
+          record_id?: string | null
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_storefront_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_storefront_layouts: {
+        Row: {
+          draft: Json
+          published: Json | null
+          revision: number
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          draft?: Json
+          published?: Json | null
+          revision?: number
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          draft?: Json
+          published?: Json | null
+          revision?: number
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_storefront_layouts_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -9343,6 +9573,39 @@ export type Database = {
           },
         ]
       }
+      units_of_measure: {
+        Row: {
+          allowed_precision: number
+          canonical_conversion_factor: number | null
+          code: string
+          dimension: string
+          is_active: boolean
+          name_ar: string
+          name_en: string
+          symbol: string
+        }
+        Insert: {
+          allowed_precision: number
+          canonical_conversion_factor?: number | null
+          code: string
+          dimension: string
+          is_active?: boolean
+          name_ar: string
+          name_en: string
+          symbol: string
+        }
+        Update: {
+          allowed_precision?: number
+          canonical_conversion_factor?: number | null
+          code?: string
+          dimension?: string
+          is_active?: boolean
+          name_ar?: string
+          name_en?: string
+          symbol?: string
+        }
+        Relationships: []
+      }
       vendor_invoice_items: {
         Row: {
           created_at: string
@@ -10952,6 +11215,14 @@ export type Database = {
         Args: { p_invoice_id: string; p_location_id: string; p_shop_id: string }
         Returns: Json
       }
+      get_own_pos_receipt: {
+        Args: {
+          p_invoice_id?: string
+          p_location_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       get_purchase: {
         Args: { p_purchase_id: string; p_shop_id: string }
         Returns: Json
@@ -11090,6 +11361,10 @@ export type Database = {
           p_page_size?: number
           p_shop_id: string
         }
+        Returns: Json
+      }
+      list_own_pos_receipts: {
+        Args: { p_location_id: string; p_shop_id: string }
         Returns: Json
       }
       list_products: {
@@ -11282,6 +11557,10 @@ export type Database = {
         }
         Returns: Json
       }
+      pos_catalog_offers: {
+        Args: { p_location_id: string; p_shop_id: string }
+        Returns: Json
+      }
       pos_catalog_search: {
         Args: {
           p_barcode?: string
@@ -11329,6 +11608,16 @@ export type Database = {
         }
         Returns: Json
       }
+      prepare_product_measurement: {
+        Args: {
+          p_base_unit_code: string
+          p_product_id: string
+          p_quantity_increment: string
+          p_reason: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       prepare_support_notification: {
         Args: { p_id: string; p_lease_token: string; p_payload: Json }
         Returns: Json
@@ -11361,6 +11650,10 @@ export type Database = {
           p_shop_id: string
         }
         Returns: string
+      }
+      quote_pos_sale: {
+        Args: { p_lines: Json; p_location_id: string; p_shop_id: string }
+        Returns: Json
       }
       quote_sale_tax: {
         Args: { p_lines: Json; p_location_id: string; p_shop_id: string }
@@ -11589,6 +11882,15 @@ export type Database = {
           p_sha256: string
           p_size_bytes: number
           p_submission_id: string
+        }
+        Returns: Json
+      }
+      resolve_product_measurement: {
+        Args: {
+          p_product_id: string
+          p_quantity: string
+          p_shop_id: string
+          p_unit_code: string
         }
         Returns: Json
       }
@@ -12118,6 +12420,23 @@ export type Database = {
         Args: { _feature_key: string; _shop_id: string }
         Returns: boolean
       }
+      shop_offer_save: {
+        Args: {
+          p_id: string
+          p_offer: Json
+          p_revision: number
+          p_shop_id: string
+        }
+        Returns: string
+      }
+      shop_offer_sources: {
+        Args: { p_page?: number; p_search?: string; p_shop_id: string }
+        Returns: Json
+      }
+      shop_offers: {
+        Args: { p_page?: number; p_shop_id: string }
+        Returns: Json
+      }
       shop_operating_report: {
         Args: {
           p_anchor_date?: string
@@ -12177,6 +12496,16 @@ export type Database = {
           trial_days: number
           variant_name: string
         }[]
+      }
+      shop_storefront_builder: { Args: { p_shop_id: string }; Returns: Json }
+      shop_storefront_builder_save: {
+        Args: {
+          p_layout: Json
+          p_publish?: boolean
+          p_revision: number
+          p_shop_id: string
+        }
+        Returns: Json
       }
       shop_subscription_currency_catalog: {
         Args: { p_currency: string }
@@ -12245,6 +12574,18 @@ export type Database = {
         Args: { p_shop_id: string; p_slug: string }
         Returns: Json
       }
+      shop_website_basket_request: {
+        Args: {
+          p_contact: string
+          p_honeypot?: string
+          p_lines: Json
+          p_locale: string
+          p_message: string
+          p_name: string
+          p_slug: string
+        }
+        Returns: Json
+      }
       shop_website_catalog: {
         Args: { p_page?: number; p_search?: string; p_shop_id: string }
         Returns: Json
@@ -12311,6 +12652,16 @@ export type Database = {
       shop_website_public_profile: { Args: { p_slug: string }; Returns: Json }
       shop_website_showcase: {
         Args: { p_page?: number; p_slug: string }
+        Returns: Json
+      }
+      shop_website_storefront_catalog: {
+        Args: {
+          p_kind?: string
+          p_page?: number
+          p_search?: string
+          p_slug: string
+          p_sort?: string
+        }
         Returns: Json
       }
       shop_xpay_apply_session: {
