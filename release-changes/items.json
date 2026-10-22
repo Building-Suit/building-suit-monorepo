@@ -2238,5 +2238,46 @@
     "sources": [
       "doctor-workspace-entry-shop-support-20261022"
     ]
+  },
+  {
+    "id": "doctor-android-synthetic-shell-20261022",
+    "task": "DOS-M4-002",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      ".github/workflows/doctor-disposable.yml",
+      "pnpm-workspace.yaml",
+      "pnpm-lock.yaml",
+      "tooling/checks/application-roots.mjs",
+      "tooling/checks/application-roots.test.mjs",
+      "tooling/checks/workspace.mjs",
+      "tooling/checks/suit-template-boundaries.mjs",
+      "tooling/checks/atomic-template-architecture.mjs",
+      "packages/contracts/src/doctorMobile.ts",
+      "packages/contracts/src/index.ts",
+      "packages/ui/src/templates/BsMobileAccessPage.vue",
+      "packages/ui/package.json",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/doctor-suit/mobile/doctor",
+      "apps/doctor-suit/tests/unit/dos-m4-002.test.mjs",
+      "docs/work-packages/doctor-suit/implementation/dos-m4-002.md",
+      "docs/work-packages/doctor-suit/implementation/dos-m4-002-device-evidence.json",
+      "docs/work-packages/doctor-suit/implementation/dos-m4-002-verification.json"
+    ],
+    "reason": "Register the owner's separate nested Doctor Android client in the existing workspace and strict UI checks, add a typed synthetic access template and shared contract, and configure owned debug/emulator CI. Existing applications retain their dependency nodes and strict boundaries. All shared consumers are classified; no operational mobile, clinical or release activation is implied.",
+    "sources": [
+      "dos-m4-002",
+      "dos-m4-002-support"
+    ]
   }
 ]
