@@ -1902,6 +1902,63 @@
     ]
   },
   {
+    "id": "shop-plan-website-feature-20261022",
+    "task": "SHOP-PLAN-WEBSITE-FEATURE-20261022",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables/useShopPlanPresentation.ts"
+    ],
+    "reason": "Clarify the existing Website inclusion in Team and Multi plan cards without changing subscription entitlements.",
+    "notes": {
+      "title": {
+        "en": "Website inclusion is clear on plan cards",
+        "ar": "توضيح تضمين الموقع في بطاقات الباقات"
+      },
+      "summary": {
+        "en": "Team and Multi show the shop website as included; Solo shows it as not included.",
+        "ar": "تعرض باقتا تيم ومالتي موقع المتجر كميزة مشمولة، وتعرضه باقة سولو كميزة غير مشمولة."
+      },
+      "details": {
+        "en": "The English and Arabic feature row appears in public pricing and Subscription & billing, for monthly and yearly plan variants. Pricing and subscription access rules are unchanged.",
+        "ar": "يظهر صف الميزة بالعربية والإنجليزية في الأسعار العامة والاشتراك والفوترة، للخيارات الشهرية والسنوية. تظل الأسعار وقواعد الوصول إلى الاشتراك دون تغيير."
+      }
+    },
+    "sources": [
+      "shop-plan-website-feature-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useShopPlanPresentation.ts",
+        "contains": "{ key: 'website', included: offer.planSlug === 'team' || offer.planSlug === 'multi', text: copy.value.website }"
+      }
+    ]
+  },
+  {
+    "id": "shop-plan-website-release-support-20261022",
+    "task": "SHOP-PLAN-WEBSITE-FEATURE-20261022",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "release-changes/items.json"
+    ],
+    "reason": "Maintain private bilingual release inventory provenance for the Shop plan-card clarification. This bookkeeping does not change other products or activate public releases for internal consumers.",
+    "sources": [
+      "shop-plan-website-release-support-20261022"
+    ]
+  },
+  {
     "id": "supabase-explicit-access-maintenance",
     "task": "SUPABASE-EXPLICIT-ACCESS-20261022",
     "suits": [
