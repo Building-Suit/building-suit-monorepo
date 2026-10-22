@@ -31,8 +31,8 @@
       "running_project_containers": 0,
       "new_actual_supabase_startup_attempted": false
     },
-    "release_check": "pending final publication",
-    "stack_check": "pending PR creation"
+    "release_check": "passed against parent a438c2b59359c1bf6345664fee3362a2e3176437; final head rechecked before publication",
+    "stack_check": "PR438 -> PR435 -> PR434 -> existing Doctor chain -> PR401 -> stg verified"
   },
   "acceptance": {
     "platform_selected": false,
@@ -48,5 +48,7 @@
     "Documentation-only task; product/mobile tests not run or represented as passing.",
     "Prior Doctor runtime receipt retains 460 Doctor units and 16 protocol journeys, 54 inherited Shop failures, six shared-settings browser failures; these are inherited records, not new M4 test passes.",
     "No framework install, native scaffold, signing/store resource, hosted operation, provider activation, real patient, Automation mutation or staging/main merge."
-  ]
+  ],
+  "pr": 438,
+  "verified_packet_source_sha": "4f21eeaaccd077184e7c378a823cc17934357455"
 }
