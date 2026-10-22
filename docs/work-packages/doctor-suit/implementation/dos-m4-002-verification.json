@@ -87,5 +87,14 @@
     "mobile_lint": "passed",
     "mobile_typecheck": "passed",
     "runtime": "API29 cold launch and API36 rejected-link device failures retained; new guard/privacy regressions pass; native re-execution pending"
+  },
+  "native_ci_observation": {
+    "run_id": 39855576196,
+    "source_head": "a384d7bed8019941553e758f981cb68ec104015d",
+    "build": "passed",
+    "api36_webview133": "five synthetic cases passed",
+    "api29_webview74": "cold launch failed; four cases unrun",
+    "aggregate_acceptance": false,
+    "followup": "require a newly generated accessibility hierarchy per observation; discard owned dump at cleanup; capture only fixed categories from Capacitor console tags as well as Chromium. Old hierarchy files cannot prove a new state."
   }
 }

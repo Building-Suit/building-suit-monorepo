@@ -1,7 +1,7 @@
 {
   "task": "DOS-M4-002",
-  "status": "unrun",
-  "source_candidate": "source head captured by the CI receipt; this packet is not execution evidence",
+  "status": "partial: API36/WebView133 passes five synthetic cases; API29/WebView74 cold launch failed",
+  "source_candidate": "Each retained CI receipt binds its own exact source head and APK digest; this packet does not grant aggregate acceptance.",
   "command": "node apps/doctor-suit/mobile/doctor/scripts/verify-android.mjs",
   "runner": "GitHub-owned disposable Android emulator",
   "planned_api_levels": [
@@ -26,7 +26,7 @@
   "clinical_approval": false,
   "offline_clinical_approval": false,
   "store_upload": false,
-  "acceptance": "unavailable until exact-candidate CI results; emulator evidence cannot substitute for physical/qualified acceptance",
+  "acceptance": "failed native matrix at sourcea384d7be because API29 fails; physical/qualified clinical/offline/distribution acceptance remains unavailable",
   "first_execution": {
     "source_head": "c08fc8b018453823699912efbd29661f9f5e275a",
     "run_id": 39852312601,
@@ -60,5 +60,101 @@
     },
     "aggregate_acceptance": false,
     "followup": "retain rejected destination across lifecycle retry; add bounded engine/category diagnostics; both API cases remain mandatory"
+  },
+  "runtime_receipts": {
+    "run_id": 39855576196,
+    "source_head": "a384d7bed8019941553e758f981cb68ec104015d",
+    "receipts": [
+      {
+        "version": 1,
+        "sourceHead": "a384d7bed8019941553e758f981cb68ec104015d",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "3c34a804a0065114554c5e89a3d624f60d25ab9dc432ceeb48dcd4e61472f4af",
+        "api": 36,
+        "accepted": true,
+        "stage": "complete",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 133,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "passed"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "passed"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "sourceHead": "a384d7bed8019941553e758f981cb68ec104015d",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "3c34a804a0065114554c5e89a3d624f60d25ab9dc432ceeb48dcd4e61472f4af",
+        "api": 29,
+        "accepted": false,
+        "stage": "cold-launch-signed-out",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 74,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "failed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "unrun"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "unrun"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      }
+    ],
+    "aggregate_acceptance": false,
+    "limitation": "API36/WebView133 passes five synthetic journeys. API29/WebView74 fails cold launch; four cases remain unrun. No narrower OS/renderer claim, replaced matrix, physical evidence or clinical approval is invented."
   }
 }

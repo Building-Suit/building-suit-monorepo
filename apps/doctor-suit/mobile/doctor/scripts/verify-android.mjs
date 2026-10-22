@@ -18,13 +18,14 @@ const devices = execFileSync('adb', ['devices'], {encoding: 'utf8'}).split('\n')
   .map(line => /^(emulator-\d+)\s+device$/.exec(line.trim())?.[1]).filter(Boolean)
 if (devices.length !== 1) throw new Error('Exactly one owned disposable emulator required')
 const serial = devices[0], app = metadata.appId
-const adb = args => execFileSync('adb', ['-s', serial, ...args], {encoding: 'utf8', timeout: 30000, maxBuffer: 1024 * 1024}).trim()
+const adb = args => execFileSync('adb', ['-s', serial, ...args], {encoding: 'utf8', timeout: 30000, maxBuffer: 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe']}).trim()
 if (Number(adb(['shell', 'getprop', 'ro.build.version.sdk'])) !== api) throw new Error('Emulator API mismatch')
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms))
 async function visibleText(value) {
   const deadline = Date.now() + 30000
   while (Date.now() < deadline) {
     try {
+      adb(['shell', 'rm', '-f', '/sdcard/doctor-shell.xml'])
       adb(['shell', 'uiautomator', 'dump', '/sdcard/doctor-shell.xml'])
       if (adb(['shell', 'cat', '/sdcard/doctor-shell.xml']).includes(value)) return
     } catch { /* Bounded readiness for this run's owned synthetic emulator only. */ }
@@ -64,10 +65,11 @@ try {
   console.error('Synthetic Android verification failed at ' + stage)
 } finally {
   const diagnosticRead = args => {try {return adb(args)} catch {return null}}
-  const runtime = androidRuntimeDiagnostics(diagnosticRead(['shell', 'dumpsys', 'webviewupdate']), diagnosticRead(['logcat', '-d', '-t', '300', 'chromium:I', 'AndroidRuntime:E', '*:S']), diagnosticRead(['shell', 'cat', '/sdcard/doctor-shell.xml']))
+  const runtime = androidRuntimeDiagnostics(diagnosticRead(['shell', 'dumpsys', 'webviewupdate']), diagnosticRead(['logcat', '-d', '-t', '300', 'chromium:I', 'Capacitor/Console:I', 'Capacitor:I', 'AndroidRuntime:E', '*:S']), diagnosticRead(['shell', 'cat', '/sdcard/doctor-shell.xml']))
   try {
     // Only the synthetic package installed by this run is owned.
     if (installed) {adb(['shell', 'am', 'force-stop', app]); adb(['uninstall', app])}
+    adb(['shell', 'rm', '-f', '/sdcard/doctor-shell.xml'])
     cleanup = 'passed'
   } catch {cleanup = 'failed'; process.exitCode = 1}
   await mkdir('test-results/doctor-mobile', {recursive: true})
