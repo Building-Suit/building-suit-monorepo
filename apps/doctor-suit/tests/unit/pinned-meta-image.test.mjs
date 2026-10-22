@@ -45,3 +45,13 @@ test('an actual process timeout can retry but malformed or permanent failures ca
     assert.equal(count, 1)
   }
 })
+
+test('failed pinned pulls retain bounded fixed registry identities and categories without stderr', async () => {
+  let attempts = 0
+  await assert.rejects(pull(() => ({status: 1, stderr: ++attempts === 1 ? 'toomanyrequests private sentinel' : 'manifest unknown private sentinel'}), async () => {}), error => {
+    assert.match(error.message, /primary:registry-rate-limit,official-mirror:registry-not-found$/)
+    assert.equal(error.message.includes('sentinel'), false)
+    return true
+  })
+  assert.equal(attempts, 2)
+})

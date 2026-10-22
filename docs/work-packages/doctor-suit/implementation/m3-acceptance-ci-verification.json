@@ -2,8 +2,8 @@
   "task": "Doctor M3 actual-service CI continuation",
   "pr": 442,
   "parent_pr": 438,
-  "parent_sha": "4241d0835c150b9fd4892fa87f6510eb897f86ae",
-  "observed_at": "2026-10-22T19:28:26.087051+00:00",
+  "parent_sha": "5cda7ed43a9f2ecdb01387b76b1c17c4f5feaf2b",
+  "observed_at": "2026-10-22T20:55:05.197894+00:00",
   "local_checks": {
     "doctor_units": {
       "command": "node --test apps/doctor-suit/tests/unit/*.test.mjs",
@@ -39,7 +39,7 @@
     "pinned_meta_regressions": 5
   },
   "actual_service_execution": {
-    "status": "pending GitHub owned disposable runner; not executed locally",
+    "status": "failed on latest completed source31f31545; subsequent fixes require new exact-candidate CI",
     "candidate_verified": false
   },
   "limitations": [
@@ -77,5 +77,88 @@
       "run_id": 39834273969,
       "result": "SQL assertions/concurrency/recovery passed; pinned PostgreSQL Meta pull exhausted bounded retries; schema generation unverified"
     }
-  }
+  },
+  "followup_local_checks": {
+    "doctor_and_shared_ui_units": {
+      "tests": 544,
+      "passed": 544,
+      "failed": 0,
+      "skipped": 0
+    },
+    "strict_workspace": "passed; 6 Suits,130 templates,80 historical migrations unchanged",
+    "doctor_typecheck": "passed after correcting a scoped-slot name collision caught by TypeScript",
+    "new_regressions": [
+      "candidate protocol document/worklist capability exclusion",
+      "ANSI matcher diagnostic redaction",
+      "bounded fixed registry failure categories"
+    ],
+    "shared_ui_units_after_label_slot_fix": {
+      "passed": 66,
+      "failed": 0
+    },
+    "docs_catalogue_build": "passed"
+  },
+  "completed_github_runs": [
+    {
+      "head": "7e191afb3f1f11b18e535102871828b17fcb1c08",
+      "run_id": 39842287323,
+      "sql": "passed including schema/type generation",
+      "public_preview": {
+        "passed": 52,
+        "failed": 8
+      },
+      "m3_browser": {
+        "passed": 7,
+        "failed": [
+          "DOS-M3-006",
+          "DOS-M3-008",
+          "DOS-M3-010"
+        ]
+      },
+      "inherited_actual_provider": "failed at obsolete timezone text-input fixture",
+      "shared_auth_parity": {
+        "passed": 47,
+        "failed": 1
+      },
+      "shared_settings": "not reached"
+    },
+    {
+      "head": "31f315457a8737e3995a686d5efe3c688eeb3488",
+      "run_id": 39847718585,
+      "sql": "all 1871 SQL assertions/59 suites, concurrency and 86-table recovery passed; pinned Meta pull failed; generation unverified",
+      "public_preview": {
+        "passed": 60,
+        "failed": 0
+      },
+      "account_protocol": {
+        "passed": 71,
+        "failed": 14
+      },
+      "m3_browser": {
+        "passed": 5,
+        "failed": [
+          "DOS-M3-003",
+          "DOS-M3-006",
+          "DOS-M3-008",
+          "DOS-M3-009",
+          "DOS-M3-010"
+        ],
+        "locations": "allowlisted spec line/column only, no private raw reports"
+      },
+      "inherited_actual_provider": "failed after practice fields at exact Timezone name lookup",
+      "shared_auth_parity": {
+        "passed": 48,
+        "failed": 0
+      },
+      "shared_settings": {
+        "passed": 6,
+        "failed": 6,
+        "failing_consumers": [
+          "Docs",
+          "Inventory",
+          "Automation"
+        ]
+      }
+    }
+  ]
 }
