@@ -36,5 +36,10 @@
       "title": "Workspace ready",
       "body": "Your current practice and location have been checked. Clinical actions remain unavailable."
     }
+  },
+  "destination": {
+    "workspace": "Your practice, on Android",
+    "schedule": "Your schedule, on Android",
+    "account": "Your account, on Android"
   }
 }

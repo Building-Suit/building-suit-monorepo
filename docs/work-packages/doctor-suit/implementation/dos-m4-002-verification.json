@@ -58,5 +58,17 @@
     "Aggregate M4-001, M2-014 and offline gates remain open; this is partial synthetic shell engineering.",
     "Initial source build required the documented root setup to prepare parent Nuxt types. An intermediate lockfile merge was rejected by frozen install, corrected, and verified before publication.",
     "M3 browser acceptance and schema generation limitations on the parent remain open; all 54 inherited Shop failures are retained."
-  ]
+  ],
+  "followup": {
+    "parent_pr": 442,
+    "parent_sha": "70e20a9e721d7804ea21fdc24abf27bfe47c1acd",
+    "parent_sync": "history-preserving merge",
+    "focused_mobile_boundary_tests": 15,
+    "mobile_typecheck": "passed",
+    "mobile_static_build": "passed",
+    "workspace_check": "passed; 6 Suits/7 applications/131 templates/80 unchanged historical migrations",
+    "workflow_yaml_and_script_syntax": "passed",
+    "native_ci": "first setup failure, before APK/device execution; exact run39852312601 diagnosis pending archive",
+    "full_repository_suite": "historical c08fc8b0 count retained; not repeated for parent-only/test/copy follow-up"
+  }
 }

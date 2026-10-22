@@ -2272,12 +2272,14 @@
       "apps/doctor-suit/tests/unit/dos-m4-002.test.mjs",
       "docs/work-packages/doctor-suit/implementation/dos-m4-002.md",
       "docs/work-packages/doctor-suit/implementation/dos-m4-002-device-evidence.json",
-      "docs/work-packages/doctor-suit/implementation/dos-m4-002-verification.json"
+      "docs/work-packages/doctor-suit/implementation/dos-m4-002-verification.json",
+      ".github/workflows/doctor-android.yml"
     ],
     "reason": "Register the owner's separate nested Doctor Android client in the existing workspace and strict UI checks, add a typed synthetic access template and shared contract, and configure owned debug/emulator CI. Existing applications retain their dependency nodes and strict boundaries. All shared consumers are classified; no operational mobile, clinical or release activation is implied.",
     "sources": [
       "dos-m4-002",
-      "dos-m4-002-support"
+      "dos-m4-002-support",
+      "dos-m4-002-android-ci"
     ]
   }
 ]

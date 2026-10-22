@@ -30,3 +30,9 @@ Actual local Supabase browser startup006 was stopped during owned image extracti
 M3-001's published head is f89f04a3ece57f902b35fc69c8cbb53987818d15. The runtime-tested candidate and diagnostic hashes remain in its verification record. M3-002 starts from that exact committed/published tip; its parent had no pending edits to copy.
 
 The owner authorized consolidation after task002. All20 open Doctor heads are preserved in PR401 at ba9b7e051746a50bd2bdfd3c0ad5463e063584e3, with current stg merged. Incorporated source PRs are closed/merged; PR401 remains open and unmerged because combined review fails on54 inherited Shop tests. M3 resumes from that published root; no retired source branch is recreated.
+
+## Actual-service follow-up and Android continuation
+
+PR442 retains exact-source GitHub actual-service observations and diagnosed fixes in `m3-acceptance-ci.md` / `m3-acceptance-ci-verification.json`. Later SQL executions have exercised all ten M3 suites, transaction races and recovery; browser/schema acquisition failures remain explicitly recorded. Historical local capacity failures above remain history, not a permanent assertion that no service execution has since occurred. Final M3/provider/qualified acceptance stays open until current evidence satisfies its gates.
+
+The owner's Android-first separate-app continuation is recorded in `m4-continuation.md`. PR446 is the separate DOS-M4-002 synthetic Android shell, stacked on PR442. Refresh live GitHub and read its committed records; no temporary executor file or earlier chat is required to discover its scope, validation or remaining gates.

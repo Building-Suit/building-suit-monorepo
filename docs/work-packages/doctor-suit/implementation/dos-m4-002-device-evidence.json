@@ -11,6 +11,8 @@
   "planned_cases": [
     "cold-launch-signed-out",
     "cold-deep-link-signed-out",
+    "hardware-back-workspace",
+    "background-resume-signed-out",
     "unknown-deep-link-denied"
   ],
   "apk_binding": [
@@ -24,5 +26,13 @@
   "clinical_approval": false,
   "offline_clinical_approval": false,
   "store_upload": false,
-  "acceptance": "unavailable until exact-candidate CI results; emulator evidence cannot substitute for physical/qualified acceptance"
+  "acceptance": "unavailable until exact-candidate CI results; emulator evidence cannot substitute for physical/qualified acceptance",
+  "first_execution": {
+    "source_head": "c08fc8b018453823699912efbd29661f9f5e275a",
+    "run_id": 39852312601,
+    "android_build": "failed during android-actions/setup-android@v3; full log diagnosis pending completed run archive",
+    "apk_compiled": false,
+    "device_runs": "skipped because compilation/setup failed",
+    "acceptance": false
+  }
 }

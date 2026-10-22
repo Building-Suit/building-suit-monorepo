@@ -31,7 +31,7 @@ async function visibleText(value) {
   }
   throw new Error('Expected synthetic shell state unavailable')
 }
-const cases = ['cold-launch-signed-out', 'cold-deep-link-signed-out', 'unknown-deep-link-denied']
+const cases = ['cold-launch-signed-out', 'cold-deep-link-signed-out', 'hardware-back-workspace', 'background-resume-signed-out', 'unknown-deep-link-denied']
   .map(id => ({id, status: 'unrun'}))
 let stage = 'install', installed = false, cleanup = 'unrun'
 try {
@@ -39,14 +39,21 @@ try {
   adb(['shell', 'pm', 'clear', app])
   stage = cases[0].id
   adb(['shell', 'am', 'start', '-n', app + '/.MainActivity'])
-  await visibleText('You are signed out'); cases[0].status = 'passed'
+  await visibleText('You are signed out'); await visibleText('Your practice, on Android'); cases[0].status = 'passed'
   stage = cases[1].id
   adb(['shell', 'am', 'force-stop', app])
   adb(['shell', 'am', 'start', '-W', '-a', 'android.intent.action.VIEW', '-d', 'doctor-suit-synthetic://schedule', app])
-  await visibleText('You are signed out'); cases[1].status = 'passed'
+  await visibleText('You are signed out'); await visibleText('Your schedule, on Android'); cases[1].status = 'passed'
   stage = cases[2].id
+  adb(['shell', 'input', 'keyevent', 'KEYCODE_BACK'])
+  await visibleText('Your practice, on Android'); await visibleText('You are signed out'); cases[2].status = 'passed'
+  stage = cases[3].id
+  adb(['shell', 'input', 'keyevent', 'KEYCODE_HOME'])
+  adb(['shell', 'am', 'start', '-W', '-n', app + '/.MainActivity'])
+  await visibleText('You are signed out'); await visibleText('Your practice, on Android'); cases[3].status = 'passed'
+  stage = cases[4].id
   adb(['shell', 'am', 'start', '-W', '-a', 'android.intent.action.VIEW', '-d', 'doctor-suit-synthetic://patients', app])
-  await visibleText('Access unavailable'); cases[2].status = 'passed'
+  await visibleText('Access unavailable'); cases[4].status = 'passed'
   stage = 'complete'
 } catch {
   const failed = cases.find(item => item.id === stage)
@@ -67,4 +74,4 @@ try {
     syntheticOnly: true, clinicalApproval: false, offlineClinicalApproval: false, storeUpload: false,
   }, null, 2) + '\n')
 }
-if (!process.exitCode) console.log('Android emulator API' + api + ': three synthetic launch/navigation cases passed')
+if (!process.exitCode) console.log('Android emulator API' + api + ': five synthetic launch/navigation/lifecycle cases passed')
