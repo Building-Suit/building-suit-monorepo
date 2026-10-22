@@ -16,7 +16,9 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       return undefined
     })
     await goto('/dashboard')
-    const dashboardLink = page.locator('#bs-primary-navigation nav').getByRole('link', { name: copy.nav.dashboard, exact: true, includeHidden: true })
+    const dashboardLink = page.getByRole('complementary', { includeHidden: true })
+      .getByRole('navigation', { name: copy.nav.primary, includeHidden: true })
+      .getByRole('link', { name: copy.nav.dashboard, exact: true, includeHidden: true })
     await expect(dashboardLink).toHaveAttribute('href', '/dashboard')
     await expect(page.getByRole('heading', { level: 1, name: copy.dashboard.title })).toBeVisible()
     await expect(page.getByRole('row').filter({ hasText: 'Fixture posted expense' })).toContainText(/125|١٢٥/)
@@ -33,7 +35,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       expect(chartBounds!.width / cashBounds!.width).toBeGreaterThan(1.75)
     }
     await expectNoPageOverflow(page)
-   await recordShellGeometry(page)
+   await recordShellGeometry(page, page.locator('.bs-app-shell__page-context'))
     await page.screenshot({ path: `.local/atomic-template-evidence/screenshots/dashboard-ledger-${locale}-${theme}-${width}.png`, fullPage: true, animations: 'disabled' })
   })
 }
