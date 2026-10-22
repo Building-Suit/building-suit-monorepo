@@ -2144,5 +2144,29 @@
         "contains": "for=\"bs-sign-in-email\""
       }
     ]
+  },
+  {
+    "id": "ss-measured-decimal-regression-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/database",
+      "apps/shop-suit/supabase/tests/shop_website_catalog.sql",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Keep exact numeric stock/price assertions across widened decimal scales; exercise the original website catalog regression alongside measured retail without weakening isolation, concurrency or public-field allowlists.",
+    "sources": [
+      "ss-measured-decimal-regression-20261022"
+    ]
   }
 ]

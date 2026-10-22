@@ -62,7 +62,7 @@ try {
   sql(`BEGIN;\n${readFileSync(new URL('supabase/tests/shop_measurement_foundation.sql', app), 'utf8')}\nROLLBACK;`)
   sql(`BEGIN;\n${readFileSync(new URL('supabase/tests/shop_measured_retail.sql', app), 'utf8')}\nROLLBACK;`)
   console.log('Electrical measured merchant journey: PASS')
-  for (const suite of regressions ? ['shop_crm_product_catalog', 'shop_sale_issuance', 'shop_stock_counts_corrections', 'shop_supplier_payables_returns', 'shop_service_materials', 'shop_partial_returns', 'shop_storefront_bundle_offers', 'shop_operating_reports'] : []) {
+  for (const suite of regressions ? ['shop_crm_product_catalog', 'shop_sale_issuance', 'shop_stock_counts_corrections', 'shop_supplier_payables_returns', 'shop_service_materials', 'shop_partial_returns', 'shop_storefront_bundle_offers', 'shop_operating_reports', 'shop_website_catalog'] : []) {
     const fixture = readFileSync(new URL(`supabase/tests/${suite}.sql`, app), 'utf8').replace(/\bshop_crm\b/g, 'public')
     try {
       sql(`BEGIN;\n${fixture}\nROLLBACK;`)
