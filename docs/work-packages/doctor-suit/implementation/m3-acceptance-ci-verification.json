@@ -1,0 +1,49 @@
+{
+  "task": "Doctor M3 actual-service CI continuation",
+  "pr": 442,
+  "parent_pr": 438,
+  "parent_sha": "4241d0835c150b9fd4892fa87f6510eb897f86ae",
+  "observed_at": "2026-10-22T19:28:26.087051+00:00",
+  "local_checks": {
+    "doctor_units": {
+      "command": "node --test apps/doctor-suit/tests/unit/*.test.mjs",
+      "passed": 468,
+      "failed": 0,
+      "skipped": 0
+    },
+    "structured_evidence_cases": 8,
+    "playwright_collection": {
+      "expected_task_ids": [
+        "DOS-M3-001",
+        "DOS-M3-002",
+        "DOS-M3-003",
+        "DOS-M3-004",
+        "DOS-M3-005",
+        "DOS-M3-006",
+        "DOS-M3-007",
+        "DOS-M3-008",
+        "DOS-M3-009",
+        "DOS-M3-010"
+      ],
+      "count": 10,
+      "list_only_accepted_as_execution": false
+    },
+    "boundaries": {
+      "suits": 6,
+      "templates": 130,
+      "historical_migrations_unchanged": 80,
+      "result": "passed"
+    },
+    "syntax_and_workflow_yaml": "passed",
+    "release_check": "publication head checked separately"
+  },
+  "actual_service_execution": {
+    "status": "pending GitHub owned disposable runner; not executed locally",
+    "candidate_verified": false
+  },
+  "limitations": [
+    "54 inherited Shop unit failures retained; full repository suite not repeated for this verification-only change.",
+    "Earlier shared-settings and actual-provider limitations remain open until exact-candidate evidence resolves them.",
+    "No clinical, provider, mobile, store/signing, hosted migration, Automation or staging/main authority inferred."
+  ]
+}
