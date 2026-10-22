@@ -26,6 +26,9 @@ function component(file, language = 'en', imports = {}) {
 async function render(file, props, slot, language) {
   const app = vue.createSSRApp({ render: () => vue.h(component(file, language), props, slot ? () => slot : undefined) })
   app.component('BsIcon', { render: () => vue.h('svg', { 'aria-hidden': 'true' }) })
+  if (file === 'templates/BsAdministrationShell.vue') app.component('BsAppShell', {
+    setup(_, { slots }) { return () => vue.h('div', [slots.mark?.(), slots['navigation-title']?.(), slots['rail-navigation']?.(), slots.navigation?.({ collapsed: false, close: () => {} }), slots.header?.(), slots.default?.()]) },
+  })
   app.config.globalProperties.$primevue = { config: { unstyled: true, locale: { emptySelectionMessage: 'No selection', selectionMessage: '{0} selected' } } }
   return renderToString(app)
 }
@@ -274,16 +277,32 @@ test('authenticated chrome is composed from canonical shared organisms', () => {
   const topHeader = readFileSync(new URL('../src/organisms/BsTopHeader.vue', import.meta.url), 'utf8')
   const userMenu = readFileSync(new URL('../src/organisms/BsUserMenu.vue', import.meta.url), 'utf8')
   assert.match(shell, /<BsSideMenu\b/)
-  assert.match(shell, /<BsTopHeader\b/)
+  assert.doesNotMatch(shell, /<BsTopHeader\b/)
+  assert.match(shell, /:collapsed="collapsed"/)
+  assert.match(shell, /bs-app-shell__scope-actions/)
+  assert.doesNotMatch(shell, /variant === 'shop'/)
   assert.doesNotMatch(shell, /<aside\b|<header\b/)
-  assert.match(sideMenu, /id="bs-primary-navigation"/)
+  assert.match(sideMenu, /:id="navigationId"/)
   assert.match(sideMenu, /useSideNavigation/)
-  assert.match(sideMenu, /class="fixed inset-0 z-30 ls-scrim lg:hidden"/)
+  assert.match(sideMenu, /class="fixed inset-0 z-30 ls-scrim bs-side-navigation__scrim lg:hidden"/)
   assert.match(topHeader, /aria-controls="bs-primary-navigation"/)
   assert.match(userMenu, /<BsUserIdentity\b/)
-  assert.match(userMenu, /<BsSettingsMenu embedded/)
+  assert.match(userMenu, /<BsSettingsMenu\b[^>]*embedded/)
   assert.match(userMenu, /v-for="action in actions"/)
   assert.match(userMenu, /@click="emit\('signOut'\)"/)
+})
+
+test('all workspace consumers share rail chrome and retain product-owned context controls', () => {
+  const workspace = readFileSync(new URL('../src/templates/BsWorkspaceShell.vue', import.meta.url), 'utf8')
+  const administration = readFileSync(new URL('../src/templates/BsAdministrationShell.vue', import.meta.url), 'utf8')
+  assert.match(workspace, /<BsSidebarAccount v-if="account"/)
+  assert.doesNotMatch(workspace, /variant === 'shop'|variant !== 'shop'/)
+  for (const control of ['BsContextSwitcher', 'BsScopeSwitcher', 'BsNotificationMenu', 'BsTrialCountdown']) assert.ok(workspace.includes(`<${control}`))
+  assert.match(administration, /<BsAppShell\b/)
+  assert.match(administration, /#rail-navigation/)
+  assert.match(administration, /#navigation=/)
+  assert.match(administration, /item.disabled/)
+  assert.doesNotMatch(administration, /<header\b/)
 })
 
 test('status badges expose written labels and semantic tone instead of color alone', async () => {

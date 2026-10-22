@@ -152,7 +152,8 @@ else setPageLayout('landing')
 const view = computed<BsShopPublicEntryView>(() => website ? { kind: 'website', website: website.view.value } : marketing!.view.value)
 const journey = computed(() => marketing?.journey.value)
 const inquiry = website?.form ?? ref(emptyWebsiteInquiry())
+const basketContact = website?.basketForm ?? ref(emptyWebsiteInquiry())
 </script>
 <template>
-  <BsShopPublicEntryPage v-model:inquiry="inquiry" :view="view" :journey="journey" @submit-inquiry="website?.submit()" @currency="marketing?.chooseCurrency($event)" @interval="marketing?.chooseInterval($event)" @variant="(id, value) => marketing?.chooseVariant(id, value)" @action="marketing?.choose($event)" @retry="marketing?.refresh()" @changelog-retry="marketing?.refreshReleases()" />
+  <BsShopPublicEntryPage v-model:inquiry="inquiry" v-model:basket-contact="basketContact" :view="view" :journey="journey" @submit-basket="website?.submitBasket()" @add="website?.add($event)" @add-offer="website?.addOffer($event)" @quantity="(id, value) => website?.quantity(id, value)" @search="website?.setSearch($event)" @kind="website?.selectKind($event)" @sort="website?.selectSort($event)" @page="website?.selectPage($event)" @clear-filters="website?.clearFilters()" @retry-catalog="website?.retryCatalog()" @submit-inquiry="website?.submit()" @currency="marketing?.chooseCurrency($event)" @interval="marketing?.chooseInterval($event)" @variant="(id, value) => marketing?.chooseVariant(id, value)" @action="marketing?.choose($event)" @retry="marketing?.refresh()" @changelog-retry="marketing?.refreshReleases()" />
 </template>

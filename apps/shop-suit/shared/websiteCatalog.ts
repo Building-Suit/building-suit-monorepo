@@ -2,8 +2,8 @@ export type WebsiteCatalogKind = 'product' | 'service'
 export type WebsiteCatalogEntry = { publicName: string; description: string; image: string | null; displayOrder: number; showPrice: boolean }
 export type WebsiteCatalogItem = WebsiteCatalogEntry & { itemId: string; kind: WebsiteCatalogKind; operationalName: string; active: boolean; price: number | null; configured: boolean; published: boolean }
 export type WebsiteCatalogSettings = { items: WebsiteCatalogItem[]; total: number; page: number; pageSize: number; catalog: {integration:'ready';publishedItemCount:number} }
-export type PublicWebsiteCatalogItem = { publicId: string; kind: WebsiteCatalogKind; name: string; description: string; image: string | null; displayOrder: number } & ({priceMode:'contact';price?:never;currency?:never}|{priceMode:'shown';price:number;currency:string})
-export type PublicWebsiteCatalog = { canonicalSlug:string;items:PublicWebsiteCatalogItem[];total:number;page:number;pageSize:number }
+export type PublicWebsiteCatalogItem = { publicId: string; kind: WebsiteCatalogKind; name: string; description: string; image: string | null; displayOrder: number; bookable?: boolean } & ({priceMode:'contact';price?:never;currency?:never}|{priceMode:'shown';price:number;currency:string})
+export type PublicWebsiteCatalog = { canonicalSlug:string;items:PublicWebsiteCatalogItem[];total:number;page:number;pageSize:number; counts?:{all:number;product:number;service:number};bookingEnabled?:boolean }
 export const emptyWebsiteCatalogEntry = (): WebsiteCatalogEntry => ({publicName:'',description:'',image:null,displayOrder:0,showPrice:false})
 export function parseWebsiteCatalogSettings(value:unknown):WebsiteCatalogSettings {
   const record=(v:unknown):v is Record<string,unknown>=>Boolean(v&&typeof v==='object'&&!Array.isArray(v))

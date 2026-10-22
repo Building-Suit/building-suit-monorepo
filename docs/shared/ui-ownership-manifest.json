@@ -12,6 +12,19 @@
   "components": [],
   "workflowFamilies": [
     {
+      "family": "workspace-chrome",
+      "owner": "packages/ui",
+      "components": [
+        "BsAppShell",
+        "BsWorkspaceShell",
+        "BsSideMenu",
+        "BsSidebarAccount"
+      ],
+      "adapterBoundary": "Product-supplied navigation, scopes, account, trial, notification and registry projections; shared rail/collapse/drawer defaults with no standalone top header. Shop variant controls catalogue filtering only.",
+      "task": "SHARED-WORKSPACE-CHROME-20261019",
+      "migrationStatus": "implemented-source: rendered and local check verification unrun at owner instruction"
+    },
+    {
       "family": "money",
       "owner": "packages/ui",
       "components": [
@@ -270,9 +283,9 @@
       "components": [
         "BsAdministrationShell"
       ],
-      "adapterBoundary": "App-supplied registry, context navigation, selection, translated labels and intent handlers; no product queries or authorization",
+      "adapterBoundary": "App-supplied registry, context navigation, selection, translated labels and intent handlers; canonical BsAppShell frame and drawer; no product queries or authorization",
       "task": "BS-SA-SHELL-001",
-      "migrationStatus": "verified-local: canonical template ownership and browser acceptance complete"
+      "migrationStatus": "implemented-source: canonical frame convergence; rendered/local verification unrun at owner instruction"
     },
     {
       "family": "changelog",
@@ -348,6 +361,17 @@
       "adapterBoundary": "typed policy forms, staff and draft assignment projections, formatted earning rows, translated copy and authorized semantic commands",
       "task": "SS-BARBER-COMP-001",
       "migrationStatus": "implemented; verification recorded in product task evidence"
+    },
+    {
+      "family": "inline-business-settings",
+      "owner": "packages/ui",
+      "components": [
+        "BsBusinessSettingsPage",
+        "BsSettingsForm"
+      ],
+      "adapterBoundary": "Typed on-page business settings drafts, translated copy, permission/quota projections and existing authorized commands. UX owns scoped dirty snapshots, refresh-safe drafts and unsaved-navigation protection. Website and public-booking editors retain their existing presentation.",
+      "task": "SHOP-INLINE-SETTINGS-20261020",
+      "migrationStatus": "implemented-source; automated and rendered verification unrun at owner instruction"
     },
     {
       "family": "shop-tax-settings",
@@ -427,9 +451,10 @@
       "components": [
         "BsShopPublicEntryPage",
         "BsShopWebsitePage",
+        "BsWebsiteCatalogCard",
         "BsWebsiteInquiryInbox"
       ],
-      "adapterBoundary": "Shop owns trusted Host resolution, anonymous allowlisted reads, inquiry validation/rate limits, owner permissions and SEO. Shared complete entry template selects the existing marketing template or tenant showcase from a finite typed union. UX owns record/form interaction and BFCache refresh mechanics.",
+      "adapterBoundary": "Shop owns trusted Host resolution, anonymous allowlisted discovery, public-only basket state, server-validated basket inquiries, booking links, publication, owner permissions and SEO. Shared templates own the storefront, catalog cards, item details, basket/contact dialogs and responsive navigation. Shared UX owns optional raster media, record/overlay interaction and BFCache refresh mechanics. Basket requests require merchant confirmation and never post payments or reserve stock.",
       "task": "SS-WEB-PUBLIC-001",
       "migrationStatus": "registered host-aware root page and optional private owner inbox; no app-local presentation"
     },
@@ -654,6 +679,18 @@
       ],
       "task": "DOS-AE-005",
       "migrationStatus": "synthetic acceptance pending; live payment disabled"
+    },
+    {
+      "family": "shop-storefront-builder-offers",
+      "owner": "packages/ui",
+      "components": [
+        "BsStorefrontBuilderPage",
+        "BsCatalogOffersPage",
+        "BsOfferStrip"
+      ],
+      "adapterBoundary": "Shop owns Team/Multi eligibility, private draft and explicit owner publishing, public disclosure, tenant-scoped offers and atomic server price matching. Shared UI owns the layout/media editors, bundle worklist and public/POS offer strip. Shared UX owns bounded raster processing and record/dialog lifecycle. Receipt snapshots retain matched offer names.",
+      "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
+      "migrationStatus": "implemented-source; browser/database tests deferred at user instruction"
     }
   ]
 }

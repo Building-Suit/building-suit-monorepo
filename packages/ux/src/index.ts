@@ -6,6 +6,7 @@ export function csvCell(value: unknown): string {
 
 export type BsDataTableRowAction = 'edit' | 'delete' | 'archive' | 'void'
 export { useRecordAction } from './composables/useRecordAction.ts'
+export { useInlineForm, useUnsavedFormGuard } from './composables/useInlineForm.ts'
 export type BsDataTableAlign = 'start' | 'center' | 'end'
 export type BsDataTableWidth = 'selection' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'content'
 export type BsDataTableSticky = 'start' | 'end'
@@ -258,3 +259,7 @@ export type { CalendarInterval } from './utils/calendarIntervals.ts'
 export { useCalendarSlotNavigation } from './composables/useCalendarSlotNavigation.ts'
 export { usePointOfSaleCheckout } from './composables/usePointOfSaleCheckout.ts'
 export { useElementPrint } from './composables/useElementPrint.ts'
+
+export { useNavigationChamber } from './composables/useNavigationChamber.ts'
+
+export { readWebsiteImage } from './utils/readWebsiteImage.ts'

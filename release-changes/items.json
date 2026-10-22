@@ -1669,5 +1669,293 @@
     "sources": [
       "shop-local-ui-shared-support-20261019"
     ]
+  },
+  {
+    "id": "shared-ci-consolidation-20261019",
+    "task": "SHARED-CI-CONSOLIDATION-20261019",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      ".github/workflows",
+      "tooling/git/tests/ci-workflow-efficiency.test.mjs",
+      "docs/shared/continuous-integration.md",
+      "README.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Consolidate duplicated Shop website/booking qualification and Doctor builds while retaining unique SQL, browser, reminder and authorization coverage. Retire completed PR-specific bootstrap jobs, preserve required verification/release/cancellation gates, and document suite ownership. This changes CI orchestration only and does not remove failing application tests or activate a product.",
+    "sources": [
+      "shared-ci-consolidation-20261019"
+    ]
+  },
+  {
+    "id": "shared-workspace-chrome-20261019",
+    "task": "SHARED-WORKSPACE-CHROME-20261019",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs",
+      "docs/shared"
+    ],
+    "reason": "Keep Shop workspace selection available in the inline page tools and retain account/settings actions while adopting one common navigation implementation across consumers.",
+    "notes": {
+      "title": {
+        "en": "Workspace controls stay within reach",
+        "ar": "أدوات مساحة العمل في متناولك"
+      },
+      "summary": {
+        "en": "Use workspace controls beside the working page, with account and settings actions grouped in the shared sidebar.",
+        "ar": "استخدم أدوات مساحة العمل بجانب الصفحة، مع تجميع إجراءات الحساب والإعدادات في القائمة الجانبية المشتركة."
+      },
+      "details": {
+        "en": "Navigation retains its collapsible rail, mobile drawer, theme and language controls. Shop catalogue filters stay specific to the shop; workspace and account actions keep their existing permissions.",
+        "ar": "يحتفظ التنقل بالشريط القابل للطي والقائمة على الهاتف وأدوات المظهر واللغة. تبقى فلاتر الكتالوج خاصة بالمتجر، وتحتفظ إجراءات مساحة العمل والحساب بصلاحياتها الحالية."
+      }
+    },
+    "sources": [
+      "shared-workspace-chrome-20261019"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsWorkspaceShell.vue",
+        "contains": "<template #header><BsContextSwitcher"
+      },
+      {
+        "path": "packages/ui/src/templates/BsWorkspaceShell.vue",
+        "contains": "<BsSidebarAccount v-if=\"account\""
+      }
+    ]
+  },
+  {
+    "id": "shared-workspace-chrome-support-20261019",
+    "task": "SHARED-WORKSPACE-CHROME-20261019",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs",
+      "apps/super-admin-suit/tests/unit/bootstrap.test.mjs",
+      "docs/shared",
+      "release-changes/items.json"
+    ],
+    "reason": "Converge every shared-shell source consumer on the canonical rail, drawer, collapse and page-context presentation, including the registry-driven control plane; maintain contracts, catalogue and regression coverage. Public Shop control changes are separately classified. Other consumer release registration/baselines remain unchanged; shared source consumption does not authorize product activation or fabricated public releases.",
+    "sources": [
+      "shared-workspace-chrome-support-20261019"
+    ]
+  },
+  {
+    "id": "shop-storefront-builder-offers-20261020",
+    "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui",
+      "packages/ux"
+    ],
+    "reason": "Add owner-published customer storefront composition for Team/Multi and fixed-price catalogue bundles with authoritative POS matching and immutable receipt names.",
+    "notes": {
+      "title": {
+        "en": "Custom storefronts and bundle offers",
+        "ar": "تصميم موقع المتجر وعروض الباقات"
+      },
+      "summary": {
+        "en": "Team and Multi shops can publish a banner, gallery and team; bundle offers appear on the storefront and apply automatically at the counter.",
+        "ar": "يمكن لمتاجر Team وMulti نشر بانر ومعرض صور وفريق، وتظهر الباقات على الموقع وتطبق تلقائيًا في نقطة البيع."
+      },
+      "details": {
+        "en": "Keep layout drafts separate from published content, show bundle savings, select complete bundles in POS and retain their names on saved receipts. Public basket requests still require merchant confirmation.",
+        "ar": "احتفظ بمسودات التصميم منفصلة عن المحتوى المنشور، واعرض توفير الباقات وأضفها كاملة في نقطة البيع مع حفظ أسمائها في الإيصالات. تظل طلبات سلة الموقع بحاجة إلى تأكيد المتجر."
+      }
+    },
+    "sources": [
+      "shop-storefront-builder-offers-20261020"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/website-builder.vue",
+        "contains": "<BsStorefrontBuilderPage"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261020114919_storefront_builder_bundle_offers.sql",
+        "contains": "create function public.quote_pos_sale"
+      },
+      {
+        "path": "packages/ui/src/templates/BsShopWebsitePage.vue",
+        "contains": "bs-shop-website__search-section--floating"
+      }
+    ]
+  },
+  {
+    "id": "shop-storefront-builder-offers-support-20261020",
+    "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
+    "suits": [
+      "shop-suit",
+      "ledger-suit",
+      "inventory-suit",
+      "doctor-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs",
+      "docs/shared",
+      "release-changes/items.json"
+    ],
+    "reason": "Maintain shared presentation exports, bounded image interaction, route ownership and synthetic catalogue documentation. Shared source consumption does not activate other products or create additional public release claims.",
+    "sources": [
+      "shop-storefront-builder-offers-support-20261020"
+    ]
+  },
+  {
+    "id": "shop-inline-settings-20261020",
+    "task": "SHOP-INLINE-SETTINGS-20261020",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/settings/[[section]].vue",
+      "packages/ui/src/templates/BsBusinessSettingsPage.vue"
+    ],
+    "reason": "Show existing non-Website business settings forms directly on their dedicated pages with consistent save, cancellation and unsaved-draft protection.",
+    "notes": {
+      "title": {
+        "en": "Edit business settings directly on the page",
+        "ar": "تعديل إعدادات النشاط مباشرة في الصفحة"
+      },
+      "summary": {
+        "en": "Update shop details, business mode, locations and receipt settings without opening an editor dialog.",
+        "ar": "عدّل بيانات المتجر وطريقة التشغيل والفروع وإعدادات الإيصال دون فتح نافذة تحرير."
+      },
+      "details": {
+        "en": "Profile, location and receipt editors appear inline. Cashier policy and business currency use the same Save and Cancel actions. Unsaved drafts are retained during background refreshes, and navigation prompts before discarding changes. Existing permissions, quotas and saving commands are preserved.",
+        "ar": "تظهر نماذج ملف المتجر والفروع والإيصالات داخل الصفحة. تستخدم سياسة ورديات الخزنة وعملة النشاط إجراءات الحفظ والإلغاء نفسها. تبقى المسودات غير المحفوظة أثناء تحديث البيانات في الخلفية، ويطلب التنقل تأكيد تجاهل التغييرات. تظل الصلاحيات والحصص وأوامر الحفظ الحالية محفوظة."
+      }
+    },
+    "sources": [
+      "shop-inline-settings-20261020"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsBusinessSettingsPage.vue",
+        "contains": "<BsSettingsForm :pending=\"profileEditor.pending\""
+      },
+      {
+        "path": "apps/shop-suit/app/pages/settings/[[section]].vue",
+        "contains": "const formGuard = useUnsavedFormGuard({"
+      }
+    ]
+  },
+  {
+    "id": "shop-inline-settings-support-20261020",
+    "task": "SHOP-INLINE-SETTINGS-20261020",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs",
+      "docs/shared/ui-ownership-manifest.json",
+      "release-changes/items.json"
+    ],
+    "reason": "Maintain shared inline-settings presentation, scoped draft and navigation controllers, explicit exports, catalogue examples and release provenance. The existing Shop settings template is the only operational consumer changed by this task; Website editors and other product activation remain unchanged.",
+    "sources": [
+      "shop-inline-settings-support-20261020"
+    ]
+  },
+  {
+    "id": "shop-plan-website-feature-20261022",
+    "task": "SHOP-PLAN-WEBSITE-FEATURE-20261022",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables/useShopPlanPresentation.ts"
+    ],
+    "reason": "Clarify the existing Website inclusion in Team and Multi plan cards without changing subscription entitlements.",
+    "notes": {
+      "title": {
+        "en": "Website inclusion is clear on plan cards",
+        "ar": "توضيح تضمين الموقع في بطاقات الباقات"
+      },
+      "summary": {
+        "en": "Team and Multi show the shop website as included; Solo shows it as not included.",
+        "ar": "تعرض باقتا تيم ومالتي موقع المتجر كميزة مشمولة، وتعرضه باقة سولو كميزة غير مشمولة."
+      },
+      "details": {
+        "en": "The English and Arabic feature row appears in public pricing and Subscription & billing, for monthly and yearly plan variants. Pricing and subscription access rules are unchanged.",
+        "ar": "يظهر صف الميزة بالعربية والإنجليزية في الأسعار العامة والاشتراك والفوترة، للخيارات الشهرية والسنوية. تظل الأسعار وقواعد الوصول إلى الاشتراك دون تغيير."
+      }
+    },
+    "sources": [
+      "shop-plan-website-feature-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useShopPlanPresentation.ts",
+        "contains": "{ key: 'website', included: offer.planSlug === 'team' || offer.planSlug === 'multi', text: copy.value.website }"
+      }
+    ]
+  },
+  {
+    "id": "shop-plan-website-release-support-20261022",
+    "task": "SHOP-PLAN-WEBSITE-FEATURE-20261022",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "release-changes/items.json"
+    ],
+    "reason": "Maintain private bilingual release inventory provenance for the Shop plan-card clarification. This bookkeeping does not change other products or activate public releases for internal consumers.",
+    "sources": [
+      "shop-plan-website-release-support-20261022"
+    ]
   }
 ]

@@ -28,6 +28,8 @@ export function shopNavigation(mode: BusinessMode, locale: string, t: (key: stri
     ] }] : []),
     { key: 'manage', label: copy.manage, links: [
       { to: '/reports', label: copy.reports, icon: 'reports' },
+      { to: '/offers', label: locale === 'ar' ? 'العروض والباقات' : 'Promos & offers', icon: 'basket' },
+      { to: '/website-builder', label: locale === 'ar' ? 'منشئ الموقع' : 'Website builder', icon: 'monitor' },
       { to: '/catalog-import', label: copy.catalogSetup, icon: 'ledger' },
       ...(businessModeSupportsServices(mode) ? [{ to: '/services', label: copy.services, icon: 'invoice' }] : []),
       { to: '/expenses', label: copy.expenses, icon: 'cash' },
@@ -47,6 +49,7 @@ export function shopSettingsNavigation(isArabic: boolean, includeBilling: boolea
     : ['Shop profile', 'Business operation mode', 'Business locations', 'Receipt settings', 'Cashier shift policy', 'Public booking', 'Website inquiries', 'Public catalog', 'Public shop profile', 'Shop website address', 'Business currency']
   const icons = ['store', 'settings', 'store', 'invoice', 'wallet', 'invoice', 'mail', 'ledger', 'store', 'monitor', 'cash']
   return [
+    { to: '/website-builder', label: isArabic ? 'منشئ الموقع' : 'Website builder', icon: 'monitor' },
     ...SHOP_SETTINGS_SECTIONS.map((section, index) => ({ to: `/settings/${section}`, label: labels[index]!, icon: icons[index]! })),
     ...(includeBilling ? [{ to: '/billing', label: shopShellCopy(isArabic).billing, icon: 'wallet' }] : []),
   ]

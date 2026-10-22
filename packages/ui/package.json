@@ -220,6 +220,7 @@
     "./types/customerProfilePresentation": "./src/types/customerProfilePresentation.ts",
     "./organisms/BsCustomerIdentityFields": "./src/organisms/BsCustomerIdentityFields.vue",
     "./templates/BsBusinessSettingsPage": "./src/templates/BsBusinessSettingsPage.vue",
+    "./organisms/BsSettingsForm": "./src/organisms/BsSettingsForm.vue",
     "./types/businessSettingsPresentation": "./src/types/businessSettingsPresentation.ts",
     "./templates/BsCashShiftsPage": "./src/templates/BsCashShiftsPage.vue",
     "./types/cashShiftPresentation": "./src/types/cashShiftPresentation.ts",
@@ -318,6 +319,7 @@
     "./organisms/BsSidebarAccount": "./src/organisms/BsSidebarAccount.vue",
     "./organisms/BsMetricChart": "./src/organisms/BsMetricChart.vue",
     "./molecules/BsCatalogImage": "./src/molecules/BsCatalogImage.vue",
+    "./molecules/BsWebsiteCatalogCard": "./src/molecules/BsWebsiteCatalogCard.vue",
     "./molecules/BsCatalogTile": "./src/molecules/BsCatalogTile.vue",
     "./organisms/BsAppointmentCalendar": "./src/organisms/BsAppointmentCalendar.vue",
     "./molecules/BsSectionNavigation": "./src/molecules/BsSectionNavigation.vue",
@@ -382,7 +384,11 @@
     "./templates/BsManualPaymentPage.vue": "./src/templates/BsManualPaymentPage.vue",
     "./types/manualPaymentPresentation": "./src/types/manualPaymentPresentation.ts",
     "./templates/BsPaymentReconciliationPage.vue": "./src/templates/BsPaymentReconciliationPage.vue",
-    "./types/paymentReconciliationPresentation": "./src/types/paymentReconciliationPresentation.ts"
+    "./types/paymentReconciliationPresentation": "./src/types/paymentReconciliationPresentation.ts",
+    "./types/storefrontBuilderPresentation": "./src/types/storefrontBuilderPresentation.ts",
+    "./templates/BsStorefrontBuilderPage": "./src/templates/BsStorefrontBuilderPage.vue",
+    "./templates/BsCatalogOffersPage": "./src/templates/BsCatalogOffersPage.vue",
+    "./molecules/BsOfferStrip": "./src/molecules/BsOfferStrip.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",
