@@ -5,9 +5,16 @@ onlyBuiltDependencies:
   - esbuild
   - unrs-resolver
   - '@parcel/watcher'
+# Nuxt DevTools' older dependency ranges retain known command-execution flaws.
+# Keep the patched Git guard/parser and shell argument quoting across consumers.
+overrides:
+  shell-quote: 1.11.0
+  simple-git: 4.0.2
 # The Supabase module imports h3 without declaring it. Keep its server helpers
 # on the same request API as the pinned Nuxt/Nitro runtime.
 packageExtensions:
   '@nuxtjs/supabase@1.6.2':
     dependencies:
       h3: 1.15.11
+patchedDependencies:
+  '@nuxt/devtools@3.4.2': patches/@nuxt__devtools@3.4.2.patch

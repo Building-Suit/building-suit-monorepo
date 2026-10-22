@@ -1957,5 +1957,30 @@
     "sources": [
       "shop-plan-website-release-support-20261022"
     ]
+  },
+  {
+    "id": "critical-toolchain-command-security",
+    "task": "LS-SEC-DEP-001",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "pnpm-workspace.yaml",
+      "pnpm-lock.yaml",
+      "patches/@nuxt__devtools@3.4.2.patch",
+      "tooling/checks/toolchain-command-security.test.mjs"
+    ],
+    "reason": "Patch reproduced critical command-execution flaws in shared Nuxt development tooling and verify consumer compatibility. No customer-facing behavior or operational activation changes.",
+    "sources": [
+      "ls-sec-dep-001-critical-toolchain",
+      "ls-sec-dep-001-shared-consumers"
+    ]
   }
 ]

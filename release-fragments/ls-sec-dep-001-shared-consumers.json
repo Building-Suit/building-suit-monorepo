@@ -1,0 +1,22 @@
+{
+  "id": "ls-sec-dep-001-shared-consumers",
+  "task": "LS-SEC-DEP-001",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "pnpm-workspace.yaml",
+    "pnpm-lock.yaml",
+    "patches",
+    "tooling/checks",
+    "release-changes/items.json"
+  ],
+  "reason": "Record all shared consumers of the patched root Nuxt development-tool dependencies and command-security regression checks. All seven app preparation commands passed; this does not assert production exploitability or full product acceptance."
+}
