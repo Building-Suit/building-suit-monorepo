@@ -72,11 +72,11 @@ export function trackRouteCoverage(page: Page) {
 }
 
 /** Compare shared chrome only; product content and branding remain configurable. */
-export async function recordShellGeometry(page: Page) {
+export async function recordShellGeometry(page: Page, chrome: Locator = page.locator('header').first()) {
  const url = new URL(page.url())
  const suit = routeProducts[url.port]
  if (!suit) throw new Error('Unregistered Suit shell')
- const geometry = await page.locator('header').first().evaluate(element => {
+ const geometry = await chrome.evaluate(element => {
   const box = element.getBoundingClientRect(), style = getComputedStyle(element)
   return { width: Math.round(box.width), height: Math.round(box.height), background: style.backgroundColor, border: style.borderColor, radius: style.borderRadius, font: style.fontFamily }
  })

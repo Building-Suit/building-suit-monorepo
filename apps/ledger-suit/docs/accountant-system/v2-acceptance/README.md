@@ -1,5 +1,7 @@
 # V2-IMP-015 — cross-module acceptance review
 
+Current follow-up (2026-10-22): [LS-READY-001](../work-packages/LS-READY-001.md) records the new readiness review, acceptance-register repair and actual current checks. The September attempts below remain historical; they do not establish the current execution environment or live Automation task status. Release/accountant acceptance remains incomplete.
+
 Status: **BLOCKED / acceptance incomplete**, updated 2026-09-27 by LS-REL-001. This is an acceptance package, not a release or an accountant sign-off. The original V2-IMP-015 review changed no runtime code or applied environment; later LS-FIX repair entries below describe local source changes only. LS-REL-001 made no hosted database write, deployment, commit or publication.
 
 LS-OPS-001 added a read-only exact restore snapshot, a source/target comparator, and a tenant-authorized portability export that reuses the existing report CSV RPCs and includes attachment bytes. The [retention/restore record](../../restore-retention-portability.md) documents the current Free-plan limitation and separate Storage/configuration boundary. The required native second-instance restore remains **blocked before backup** because Docker is denied and no local PostgreSQL server exists; no timings, recoverable period, RPO, or RTO are claimed.
