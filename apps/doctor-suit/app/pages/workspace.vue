@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { doctorWorkspaceEntry } from '../utils/workspaceEntry'
 import { doctorLocationsCopy } from '../utils/locationsPresentation'
 definePageMeta({ layout: 'practice', middleware: 'doctor-auth' })
 const { practice,copy } = useDoctorPracticePresentation()
@@ -12,7 +13,8 @@ await context.refresh()
 // is never promoted just because no active location can be selected.
 if(context.state.phase==='choosing' && !context.state.options.length && !auth.state.identity?.practiceId) {
   await practice.load()
-  if(practice.state.setup?.enrollment==='owner')await navigateTo(practice.state.setup.subscriptionRequired?'/subscription':'/onboarding')
+  const target = doctorWorkspaceEntry(practice.state.setup)
+  if (target) await navigateTo(target)
 }
 const denied = computed(() => !context.state.options.length ? { title: scopeCopy.value.choose, description: scopeCopy.value.chooseDescription } : undefined)
 const profile = computed(() => {
@@ -26,5 +28,5 @@ const location = computed(() => {
 const actions = computed(() => context.state.current?.portal === 'doctor' ? [{ label: copy.value.edit, to: '/onboarding' }, { label: scopeCopy.value.title, to: '/locations' }] : [])
 </script>
 <template>
-  <BsPracticeOverviewPage :title="copy.workspace" :description="scopeCopy.workspaceDescription" :notice="{ title: copy.synthetic, description: copy.boundaries }" :loading="context.state.phase === 'loading' || context.state.phase === 'idle'" :loading-label="copy.loading" :error="null" :retry-label="copy.retry" :denied="denied" :profile="profile" :location="location" :actions="actions" :activity="dashboard.copy.value" :activity-sections="dashboard.sections.value" :activity-loading="dashboard.loading.value" :activity-pending="dashboard.pending.value" :activity-error="dashboard.error.value" :refreshed-at="dashboard.refreshedAt.value" @refresh="dashboard.refresh()" @page="dashboard.page" @source="dashboard.source" @retry="context.refresh()" />
+  <BsPracticeOverviewPage :title="copy.dashboard" :description="scopeCopy.workspaceDescription" :notice="{ title: copy.synthetic, description: copy.boundaries }" :loading="context.state.phase === 'loading' || context.state.phase === 'idle'" :loading-label="copy.loading" :error="null" :retry-label="copy.retry" :denied="denied" :profile="profile" :location="location" :actions="actions" :activity="dashboard.copy.value" :activity-sections="dashboard.sections.value" :activity-loading="dashboard.loading.value" :activity-pending="dashboard.pending.value" :activity-error="dashboard.error.value" :refreshed-at="dashboard.refreshedAt.value" @refresh="dashboard.refresh()" @page="dashboard.page" @source="dashboard.source" @retry="context.refresh()" />
 </template>

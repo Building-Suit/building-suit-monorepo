@@ -20,7 +20,7 @@
         "BsSideMenu",
         "BsSidebarAccount"
       ],
-      "adapterBoundary": "Product-supplied navigation, scopes, account, trial, notification and registry projections; shared rail/collapse/drawer defaults with no standalone top header. Shop variant controls catalogue filtering only.",
+      "adapterBoundary": "Product-supplied navigation, scopes, account, trial, notification and registry projections; shared rail/collapse/drawer defaults with no standalone top header. Shop variant controls catalogue filtering only.; language controls render configured language names; Doctor owns continuation routing and enrollment",
       "task": "SHARED-WORKSPACE-CHROME-20261019",
       "migrationStatus": "implemented-source: rendered and local check verification unrun at owner instruction"
     },

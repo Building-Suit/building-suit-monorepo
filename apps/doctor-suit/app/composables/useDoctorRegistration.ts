@@ -1,11 +1,14 @@
 import { createEmailStepController, emailStepState, emailStepDelay, normalizedAuthEmail, validAuthEmail, useSignupWizard, useVerificationTimer } from '@building-suit/ux'
 import { bindDoctorRegistrationDraft, newDoctorRegistrationDraft, readDoctorRegistrationDraft, saveDoctorRegistrationDraft, type DoctorRegistrationDraft } from '../utils/registrationDraft.ts'
+import { completeDoctorRegistration } from '../utils/registrationCompletion.ts'
+import { doctorSuggestedTimezone } from '../utils/timezoneChoices.ts'
 import { validDoctorSetupForm } from '../utils/practiceSetup.ts'
 import type { DoctorRegistrationIdentity } from '../utils/authController'
 
 export function useDoctorRegistration() {
   const { auth, copy, error } = useDoctorAuthPresentation(false)
   const environment = useRuntimeConfig().public.doctorAuth.environment
+  const practice = useDoctorPractice()
   const handoff = useDoctorRegistrationHandoff()
   const route = useRoute()
   const wizard = useSignupWizard(2)
@@ -53,7 +56,17 @@ export function useDoctorRegistration() {
     await wizard.advance()
     persist('practice')
     // Verification is not admission, enrollment, entitlement or clinical authority.
-    if (await auth.refresh() && !disposed) { await navigateTo('/onboarding'); return true }
+    if (await auth.refresh() && !disposed) {
+      const captured = generation, actor = auth.state.identity
+      const target = await completeDoctorRegistration(practice, values(), () => !disposed && captured === generation && auth.state.identity === actor)
+      if (!target) return false
+      if (target === '/workspace') { handoff.value = null; saveDoctorRegistrationDraft(storage, environment, null) }
+      const refreshed = await auth.refresh()
+      const currentActor = auth.state.identity
+      if (!refreshed || disposed || captured !== generation || !actor || currentActor?.userId !== actor.userId || currentActor.sessionId !== actor.sessionId) return false
+      await navigateTo(target)
+      return true
+    }
     return false
   }
   async function submit() {
@@ -167,6 +180,7 @@ export function useDoctorRegistration() {
     try { storage = window.sessionStorage } catch { /* Continue without persistence. */ }
     draft.value = readDoctorRegistrationDraft(storage, environment) || (handoff.value && handoff.value.createdAt <= Date.now() && Date.now() - handoff.value.createdAt < 86400000 ? handoff.value : null) || newDoctorRegistrationDraft()
     Object.assign(form.value, { name: draft.value.displayName, email: draft.value.email, workspaceName: draft.value.practiceName, locationName: draft.value.locationName, timezone: draft.value.timezone })
+    if (!form.value.timezone) form.value.timezone = doctorSuggestedTimezone()
     restored.value = Boolean(form.value.email)
     timer.restore(draft.value.challengeAt ? draft.value.challengeAt + 3600000 : 0, draft.value.resendAt ? draft.value.resendAt + 60000 : 0)
     try { await resolveIdentity(captured) } finally { if (!disposed && captured === generation) hydrated.value = true }

@@ -2098,5 +2098,95 @@
     "sources": [
       "shop-inline-settings-support-20261020"
     ]
+  },
+  {
+    "id": "shared-language-names-20261022",
+    "task": "DOCTOR-WORKSPACE-ENTRY",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsSettingsMenu.vue"
+    ],
+    "reason": "Display configured language names in the shared sidebar control already used by Shop.",
+    "notes": {
+      "title": {
+        "en": "Recognizable language choices",
+        "ar": "خيارات لغة واضحة"
+      },
+      "summary": {
+        "en": "The sidebar language control displays English and العربية.",
+        "ar": "يعرض زر اللغة في القائمة الجانبية English والعربية."
+      },
+      "details": {
+        "en": "Language switching retains the existing shared keyboard, focus and theme behavior.",
+        "ar": "يحتفظ تبديل اللغة بسلوك لوحة المفاتيح والتركيز والمظهر المشترك."
+      }
+    },
+    "sources": [
+      "shared-language-names-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": "<span v-else class=\"bs-settings-menu__language\" :lang=\"locale\">{{ languageLabel }}</span>"
+      }
+    ]
+  },
+  {
+    "id": "doctor-workspace-entry-20261022",
+    "task": "DOCTOR-WORKSPACE-ENTRY",
+    "suits": [
+      "doctor-suit",
+      "automation-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "README.md",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/doctor-suit/README.md",
+      "apps/doctor-suit/app/composables/useDoctorRegistration.ts",
+      "apps/doctor-suit/app/pages/account.vue",
+      "apps/doctor-suit/app/pages/onboarding.vue",
+      "apps/doctor-suit/app/pages/sign-up.vue",
+      "apps/doctor-suit/app/pages/workspace.vue",
+      "apps/doctor-suit/app/utils/practicePresentation.ts",
+      "apps/doctor-suit/app/utils/registrationCompletion.ts",
+      "apps/doctor-suit/app/utils/timezoneChoices.ts",
+      "apps/doctor-suit/app/utils/workspaceEntry.ts",
+      "apps/doctor-suit/nuxt.config.ts",
+      "apps/doctor-suit/tests/e2e/dos-m1-007.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/registration.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/workspace-entry.auth.fixture.ts",
+      "apps/doctor-suit/tests/unit/registration-flow.test.mjs",
+      "apps/doctor-suit/tests/unit/workspace-entry.test.mjs",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/doctor-suit/implementation/workspace-entry-flow-verification.json",
+      "docs/work-packages/doctor-suit/implementation/workspace-entry-flow.md",
+      "package.json",
+      "packages/brand/README.md",
+      "packages/brand/assets/doctor-suit-mark-dark.svg",
+      "packages/brand/assets/doctor-suit-mark-light.svg",
+      "packages/brand/assets/doctor-suit-wordmark-dark.svg",
+      "packages/brand/assets/doctor-suit-wordmark-light.svg",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ui/src/organisms/BsSignupEnrollment.vue",
+      "packages/ui/src/templates/BsAccountSessionPage.vue",
+      "packages/ui/src/types/signupPresentation.ts",
+      "tooling/git/dev-worktrees.mjs",
+      "tooling/git/dev.mjs",
+      "tooling/git/tests/dev-worktrees.test.mjs"
+    ],
+    "reason": "Doctor synthetic enrollment/dashboard continuation, canonical generated artwork, named timezone choices and active-worktree preview selection; opt-in shared signup/account projections preserve existing consumer defaults. Internal consumers of the shared language label remain unregistered; no operational activation or production baseline is invented.",
+    "sources": [
+      "doctor-workspace-entry-20261022"
+    ]
   }
 ]

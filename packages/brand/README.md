@@ -72,8 +72,13 @@ collapsed workspace navigation. A normal fresh build detects newly committed
 files without future code edits or a separate asset-copy command. The shared
 Nuxt layer includes exact source bytes in production output under `/brand`.
 
-No Doctor artwork is invented here. With no SVGs present, Doctor retains its
-existing D monogram/name fallback and emits no missing favicon link. If one
+Doctor now supplies generated family artwork: a stethoscope/D inside the charcoal
+and gold tile, with outlined Doctor Suit wordmarks. Artwork was generated with
+image generation, then vector traced with VTracer 0.6.15 (alpha mask, spline paths;
+no external fonts or raster dependencies). Light is for dark backgrounds; dark
+is for light backgrounds. Both marks use the same self-contained contrast-safe
+tile. The mark also supplies the discovered SVG favicon. If no SVGs are present,
+Doctor retains its D monogram/name fallback and emits no missing favicon link. If one
 variant fails, the shared logo uses the available sibling; if both variants of
 that kind fail, it restores the monogram. A missing wordmark does not invent a
 wordmark from a mark. Shared rendered sizing remains unchanged (intrinsic

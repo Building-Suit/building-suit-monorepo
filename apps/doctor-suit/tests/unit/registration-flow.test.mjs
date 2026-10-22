@@ -19,6 +19,7 @@ function fixture({ lookup = async () => null, denied = false, draft = null, refr
     onMounted: callback => mounted.push(callback), onBeforeUnmount: callback => unmounted.push(callback), usePolling: () => {},
     useRuntimeConfig: () => ({ public: { doctorAuth: { environment: 'local' } } }), useRoute: () => route,
     useDoctorRegistrationHandoff: () => handoff,
+    useDoctorPractice: () => ({ load: async () => false, state: { setup: null } }),
     useDoctorAuthPresentation: () => ({ auth, copy: ref(doctorAuthCopy(false)), error: computed(() => state.error ? doctorAuthCopy(false).errors[state.error] : null) }),
     navigateTo: async target => { routes.push(target); route.query = typeof target === 'string' ? {} : target.query || {} },
     $fetch: async () => ({ canContinue: true }),
@@ -84,7 +85,7 @@ test('a provider change during failed completion queues fresh identity validatio
   } finally { await f.close() }
 })
 test('storage denial preserves collected setup in the app handoff after verified completion', async () => {
-  const f = fixture({ denied: true, lookup: async () => verified, refresh: async () => true })
+  const f = fixture({ denied: true, phase: 'authenticated', lookup: async () => verified, refresh: async () => true })
   try {
     await f.mount(); Object.assign(f.flow.form.value, { workspaceName: 'Synthetic practice', locationName: 'Synthetic location', timezone: 'Africa/Cairo' })
     await f.flow.submit(); assert.equal(f.handoff.value.userId, id); assert.equal(f.handoff.value.practiceName, 'Synthetic practice'); assert.equal(f.routes.at(-1), '/onboarding')
@@ -98,5 +99,19 @@ test('sign-out completing with only pending=false drains the queued identity rec
     await f.mount(); f.auth.state.pending = true; f.auth.state.identity = null; f.auth.state.phase = 'signed-out'; actor = null
     assert.equal(calls, 1); f.auth.state.pending = false; await nextTick(); await nextTick()
     assert.equal(calls, 2); assert.equal(f.flow.view.value.existingAccount, false); assert.equal(f.flow.view.value.stage, 'recovery')
+  } finally { await f.close() }
+})
+
+test('a changed account during final session refresh cannot navigate a prior registration', async () => {
+  let f, reads = 0
+  f = fixture({ phase: 'authenticated', lookup: async () => verified, refresh: async () => {
+    if (++reads === 2) f.auth.state.identity = { userId: other, sessionId: 'new-session' }
+    return true
+  } })
+  try {
+    await f.mount()
+    Object.assign(f.flow.form.value, { workspaceName: 'Synthetic practice', locationName: 'Synthetic clinic', timezone: 'Africa/Cairo' })
+    await f.flow.submit()
+    assert.equal(f.routes.length, 0)
   } finally { await f.close() }
 })

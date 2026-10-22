@@ -6,6 +6,6 @@ Parent: PR434, `080f87b9db40d3431163c3672709dd27581944a6` (clean published Docto
 
 Requested outcome: linear email check, account registration, practice setup and dashboard entry; returning members reach their workspace; English/العربية and shared controls match Shop; generated Doctor family branding replaces the placeholder.
 
-Investigation: the account page hides workspace entry when setup is incomplete; onboarding is a separate unstepped form; Doctor navigation uses unlocalized literal destinations, and Doctor locale definitions omit language names. Existing checked-email and registration infrastructure must be preserved and verified, not bypassed.
+Investigation: the account page hides workspace entry when setup is incomplete; onboarding is a separate unstepped form; Doctor locale definitions omit language names. Both products use no-prefix routing, so literal route paths alone do not establish a locale-reset cause. The original checkout predates PR401, and the Doctor preview script uniquely bypasses active-worktree selection; this serves the old email/password form even when a newer Doctor branch exists. Existing checked-email and registration infrastructure must be preserved and verified, not bypassed.
 
 Validation: pending. The inherited repository baseline remains 54 Shop test failures. Required consolidated CI remains a merge gate. Clinical/legal/provider approval and real patient use remain unavailable.

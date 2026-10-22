@@ -16,7 +16,8 @@ async function account(page: Page) {
 async function practice(page: Page) {
   await page.getByLabel(/^Practice name/).fill('Synthetic practice draft')
   await page.getByLabel(/^First location name/).fill('Synthetic location draft')
-  await page.getByLabel(/^Timezone/).fill('Africa/Cairo')
+  await page.getByRole('combobox', { name: /^Timezone/ }).click()
+  await page.getByRole('option', { name: 'Africa/Cairo', exact: true }).click()
 }
 test('real server email lookup holds password until success, coalesces clicks, focuses password and supports editing', async ({ page, request }) => {
   await request.post(fixture, { data: { emailLookupDelay: 850 } })
@@ -106,9 +107,9 @@ test('storage-denied registration keeps the verified setup handoff without treat
   const digits = page.locator('input[autocomplete="one-time-code"], input[inputmode="numeric"]')
   for (let index = 0; index < 6; index++) await digits.nth(index).fill(String(index + 1))
   await page.getByRole('button', { name: 'Verify account', exact: true }).click()
-  await expect(page).toHaveURL(/\/onboarding$/)
-  await expect(page.getByLabel(/^Practice name/)).toHaveValue('Synthetic practice draft')
-  expect((await (await request.get(fixture)).json()).completeCalls).toBe(0)
+  await expect(page).toHaveURL(/\/workspace$/)
+  await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible()
+  expect((await (await request.get(fixture)).json()).completeCalls).toBe(1)
 })
 
 test('signup policy review and browser Back retain only the bounded non-secret draft',async({page,request})=>{
