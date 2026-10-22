@@ -1544,5 +1544,15 @@
       "deployed": "unverified",
       "accountant_accepted": "pending"
     }
-  ]
+  ],
+  "native_sql_followup": {
+    "date": "2026-10-22",
+    "task": "LS-REL-001",
+    "evidence": "native-sql-verification-2026-10-22.json",
+    "files": 63,
+    "assertions": 1927,
+    "result": "PASS",
+    "requirement_states_promoted": false,
+    "whole_release_acceptance": "pending"
+  }
 }
