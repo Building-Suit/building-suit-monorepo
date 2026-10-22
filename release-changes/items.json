@@ -1989,5 +1989,22 @@
     "sources": [
       "supabase-explicit-access-20261022"
     ]
+  },
+  {
+    "id": "shared-parent-brand-doctor-consumer",
+    "task": "SUPABASE-EXPLICIT-ACCESS-20261022",
+    "suits": [
+      "doctor-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/brand/assets/shop-suit-wordmark-dark.svg",
+      "packages/brand/assets/shop-suit-wordmark-light.svg"
+    ],
+    "reason": "Classify the existing Doctor dependency on the already published shared brand parent PR437 in this integration tree. Existing shared support covers the other five Suits. No asset is edited here and this adds no Doctor feature or operational release registration.",
+    "sources": [
+      "supabase-access-stack-brand-consumer-20261022"
+    ]
   }
 ]

@@ -58,3 +58,11 @@ For a paused target, first obtain the owner's restoration choice. Reverify organ
 A final live catalog re-audit checks defaults, client table verbs, function execution/search paths and migration history. This task addresses the October 30 access transition and the audited excess grants; it is not a certification of all policy logic, future features, clinical readiness, billing or third-party availability.
 
 For legacy Finance, apply `finance.sql` **and then** `finance_view_scope.sql`; the latter is a required compatibility/security repair. The original applied file is immutable. Do not publish the intermediate invoker-only state as the final fix.
+
+## Review stack and provider observations
+
+While this task was in progress, shared parent PR437 was published at ea40781e7ccdf37c26191474e47a011558133c1a. It was merged into this feature's ancestry without rewriting either task; this PR targets that parent. Its asset files are unchanged in this task's parent-relative diff. A narrow internal provenance entry recognizes Doctor's existing shared-brand dependency, which the prior five-Suit support inventory omitted.
+
+The final application catalog audit passed on all 13 active projects: no excess client table verbs, no PUBLIC execution on application routines, no unpinned privileged functions, no automatic table/sequence/function grants for the migration role and no leftover probes. Existing type USAGE defaults remain; types are not table exposure.
+
+The Dashboard confirmed Automatic branching off for Shop, Ledger, Super Admin and Doctor staging, and Doctor production. The remaining production UI checks were interrupted by an expired Dashboard session; no settings were changed. Feature deployment filters remain disabled in Vercel source configuration. Management metadata reported MIGRATIONS_FAILED on the four staging Git integration branches; that provider status is not a failed access migration or proof of current API failure. Its cause and historical timing were not established here. Do not merge this branch or claim provider recovery from access-role checks alone; source/CI and the provider migration integration need their normal reviewed reconciliation. Full authenticated browser journeys and full clean database replays were not run.
