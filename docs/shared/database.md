@@ -1,6 +1,6 @@
 # Database development and release
 
-Each product owns a CLI root: `apps/ledger-suit/supabase`, `apps/shop-suit/supabase`, `apps/inventory-suit/supabase` and `apps/super-admin-suit/supabase`. Production and staging use the owning product's migration chain. Inventory and Super Admin currently have local-only empty skeletons and no business migrations. The target is always a product plus environment from `docs/architecture/environments.json`.
+Each product owns a CLI root: `apps/ledger-suit/supabase`, `apps/shop-suit/supabase`, `apps/inventory-suit/supabase` and `apps/super-admin-suit/supabase`. Production and staging use the owning product's migration chain. Doctor also owns `apps/doctor-suit/supabase`. Inventory has no business schema; its access-default migration prepares future setup. Super Admin owns configuration, adapter and publication migrations. Automation uses a protected control schema and dedicated direct-PostgreSQL roles, with schema sources in `tooling/control-plane/sql`. The target is always a product plus environment from `docs/architecture/environments.json`.
 
 ## Local commands
 
@@ -39,3 +39,11 @@ Verify the live project and organization, applied history and recovery point, th
 Production data and Auth users are not shared between products or with staging. New business tables/API objects belong in `public`, with explicit grants and RLS; privileged implementation helpers retain their protected schema. Inspect actual objects rather than assuming documentation proves deployment state.
 
 CI currently checks the workspace and public browser flows. Hosted publication and database migration remain explicit operations after credentials and project refs are configured.
+
+## Explicit Data API access (October 2026)
+
+Automatic grants are disabled in every app's `[api]` configuration. Forward access migrations preserve the audited per-object contracts and revoke automatic table, sequence and function grants for the owning migration roles. Global PUBLIC function execution is revoked separately; schema-local default revokes cannot remove that PostgreSQL default. Existing helper/RPC access is granted explicitly. Provider-owned schemas and defaults are not rewritten.
+
+Every newly added migration, including backdated files from stacked features, must name its GRANT/REVOKE declarations beside each new table/RPC and enable table RLS. `pnpm check` includes `tooling/database/check-explicit-access.mjs`. The immutable historical file list in `explicit-access-baseline.json` recognizes already applied history; never extend it to exempt new work. The static check catches missing declarations; it does not replace database role, policy or tenant tests.
+
+See [the access runbook](supabase-oct30-access.md) for exact verified targets, versions, recovery and paused projects. The live changes were owner-authorized access-only deployments; this does not authorize provisioning projects, activating Doctor clinical workflows or applying unrelated pending feature migrations. Types did not change: tables, columns, enum values and RPC signatures are unchanged.

@@ -2,9 +2,9 @@
 
 Ledger Suit, Shop Suit, Inventory Suit, Super Admin Suit and the Building Suit documentation app share one pnpm/Turbo workspace, Nuxt layer, Building design tokens, Atomic Design components and interaction controllers. Original source repositories remain untouched.
 
-Each product owns an independent Supabase production/staging pair in its own organization. Business tables and API objects use `public`. Auth identities and sessions are separate; Single Auth is deferred. Ledger and Shop's four hosted project refs are verified; Inventory's hosted pair remains intentionally unprovisioned. Shop's Production schema and scoped data copy are verified; its Staging schema is initialized and tested. SMTP, application deployment and final cutover remain pending. See [manual Supabase setup](docs/shared/supabase-manual-setup.md), the [Shop transfer record](docs/migration/shop-dedicated-projects.md) and [status](docs/work-packages/STATUS.md).
+Each product owns an independent Supabase production/staging pair in its own organization. Business tables and API objects use `public`. Auth identities and sessions are separate; Single Auth is deferred. Ledger, Shop, Doctor and Super Admin hosted catalog identities are verified; Inventory's pair exists but was paused at the 2026-10-22 audit. Shop's Production schema and scoped data copy are verified; its Staging schema is initialized and tested. SMTP, application deployment and final cutover remain pending. See [manual Supabase setup](docs/shared/supabase-manual-setup.md), the [Shop transfer record](docs/migration/shop-dedicated-projects.md) and [status](docs/work-packages/STATUS.md).
 
-Doctor Suit is being implemented as a synthetic public preview and administrative doctor/secretary browser portal in `apps/doctor-suit`. Its local data foundation is isolated; hosted projects remain unprovisioned and user-managed. Real patients, clinical care, payments and mobile availability are not enabled. Follow the [Doctor implementation contract](docs/work-packages/doctor-suit/website-contract-v0.2.md) and app README for current verification limits.
+Doctor Suit is being implemented as a synthetic public preview and administrative doctor/secretary browser portal in `apps/doctor-suit`. Its local data foundation is isolated; hosted catalog identities are registered and runtime connections remain user-managed. Real patients, clinical care, payments and mobile availability are not enabled. Follow the [Doctor implementation contract](docs/work-packages/doctor-suit/website-contract-v0.2.md) and app README for current verification limits.
 
 ## Development
 
@@ -53,7 +53,7 @@ Fill each ignored app `.env` with its local API URL and browser-safe publishable
 
 Verified production/staging refs are recorded in `docs/architecture/environments.json`. Account membership roles, including the requested CEO Owner arrangement, still require verification against Supabase's Free-project quota rules in [manual setup](docs/shared/supabase-manual-setup.md). No paid resources or hosted changes are created by workspace setup.
 
-`pnpm dev:doctor` deliberately serves the current worktree on loopback port 3006; run it from the Doctor implementation worktree. Doctor browser checks use port 4336, while its independent local database/API use 65322/65321. Doctor production/staging refs remain blank.
+`pnpm dev:doctor` deliberately serves the current worktree on loopback port 3006; run it from the Doctor implementation worktree. Doctor browser checks use port 4336, while its independent local database/API use 65322/65321. Doctor hosted refs are registered for explicit access maintenance; local preview and fixture commands remain local-only.
 
 ## Workspace commands
 
@@ -96,3 +96,5 @@ Each feature has a short-lived `codex/<stack>/<feature>` branch and review PR. F
 The finite [implementation plan](PLAN.md), [source audit](docs/source-audit.json) and `docs/migration` record one-time work. They do not add tasks to future agent work.
 
 After building Shop (or the workspace), `pnpm test:built-assets` verifies production public asset responses and rendered Shop favicon links. Run it after the build; ordinary `pnpm test` checks source inputs without requiring `.output`.
+
+The [October 30 database access runbook](docs/shared/supabase-oct30-access.md) records explicit role contracts, verified access-only migrations, future-migration checks and paused-project restoration requirements.

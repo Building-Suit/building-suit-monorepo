@@ -5,6 +5,8 @@
 project_id = "building-suit-automation"
 
 [api]
+# New objects require deliberate grants, matching hosted platform defaults.
+auto_expose_new_tables = false
 enabled = false
 port = 63321
 schemas = ["public", "graphql_public"]

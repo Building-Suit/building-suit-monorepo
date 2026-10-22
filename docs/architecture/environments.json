@@ -59,10 +59,10 @@
       }
     },
     "inventory-suit": {
-      "organizationId": "",
+      "organizationId": "qcnigzqjdohxaaxexjsi",
       "ownerEmail": "",
       "managementRole": "Owner",
-      "plan": "unprovisioned",
+      "plan": "unrecorded",
       "schema": "public",
       "cliWorkdir": "apps/inventory-suit",
       "appUrlVariable": "APP_URL",
@@ -73,14 +73,14 @@
         "emailInboxUrl": "http://127.0.0.1:62324"
       },
       "production": {
-        "projectRef": "",
+        "projectRef": "cqlvssuzajfmkkocaorv",
         "appUrl": "",
-        "status": "unprovisioned; provider identifiers intentionally blank"
+        "status": "live project/organization identity verified 2026-10-22; paused; access migration pending restoration; runtime binding unverified"
       },
       "staging": {
-        "projectRef": "",
+        "projectRef": "flxuivgakxnmmpjnhrop",
         "appUrl": "",
-        "status": "unprovisioned; provider identifiers intentionally blank"
+        "status": "live project/organization identity verified 2026-10-22; paused; access migration pending restoration; runtime binding unverified"
       }
     },
     "super-admin-suit": {
@@ -98,9 +98,9 @@
         "emailInboxUrl": "http://127.0.0.1:64324"
       },
       "production": {
-        "projectRef": "",
+        "projectRef": "dfeiuxsqhgzontefmrjc",
         "appUrl": "",
-        "status": "dedicated project exists; provider identifiers intentionally absent pending verification"
+        "status": "live organization/schema identity and access hardening verified 2026-10-22; runtime binding unverified"
       },
       "staging": {
         "projectRef": "lwecnmsosfwovlzxauml",
@@ -109,10 +109,10 @@
       }
     },
     "doctor-suit": {
-      "organizationId": "",
+      "organizationId": "nftfmxhqrenmixrvfsvf",
       "ownerEmail": "",
       "managementRole": "Owner",
-      "plan": "unprovisioned",
+      "plan": "unrecorded",
       "schema": "public",
       "cliWorkdir": "apps/doctor-suit",
       "appUrlVariable": "APP_URL",
@@ -123,14 +123,14 @@
         "emailInboxUrl": "http://127.0.0.1:65324"
       },
       "production": {
-        "projectRef": "",
+        "projectRef": "wzbfrinjrkzuxninstwr",
         "appUrl": "",
-        "status": "unprovisioned; user-managed connections"
+        "status": "live project/organization identity verified 2026-10-22; access hardening verified; synthetic-only scope and user-managed runtime binding unchanged"
       },
       "staging": {
-        "projectRef": "",
+        "projectRef": "ebfoddwjlxknmdshzhik",
         "appUrl": "",
-        "status": "unprovisioned; user-managed connections"
+        "status": "live project/organization identity verified 2026-10-22; access hardening verified; synthetic-only scope and user-managed runtime binding unchanged"
       }
     }
   },
@@ -145,6 +145,64 @@
       "dataSchema": "shop_crm",
       "helperSchema": "shop_private",
       "dedicatedTargetRequired": true
+    }
+  },
+  "observedProjects": {
+    "finance-legacy": {
+      "organizationId": "teqawtspijttcalwjrhz",
+      "projectRef": "kedjrbwnznvfqlzszawa",
+      "schemas": [
+        "public",
+        "app_core",
+        "app_finance",
+        "app_commercial",
+        "app_work",
+        "app_salary",
+        "app_reports"
+      ],
+      "status": "access hardening verified 2026-10-22; separate legacy project"
+    },
+    "building-legacy": {
+      "organizationId": "teqawtspijttcalwjrhz",
+      "projectRef": "jkdncdexqcymwbihwdhp",
+      "schemas": [
+        "public",
+        "shop_crm",
+        "shop_private"
+      ],
+      "status": "access hardening verified 2026-10-22; preserved source project"
+    },
+    "mail-production": {
+      "organizationId": "mpnrpngtgnwdtnlsgqcr",
+      "projectRef": "gfuldrnhohniofocoled",
+      "schemas": [
+        "public"
+      ],
+      "status": "access hardening verified 2026-10-22; no monorepo runtime binding inferred"
+    },
+    "app-production": {
+      "organizationId": "dcvouheytbupgjdsmjsq",
+      "projectRef": "mdwyjyumvhyqsikfmtdi",
+      "schemas": [
+        "public"
+      ],
+      "status": "access hardening verified 2026-10-22; no monorepo runtime binding inferred"
+    },
+    "automation-production": {
+      "organizationId": "lgsyyixaknigwbluwutd",
+      "projectRef": "padtxclxwwqvvuiebhte",
+      "schemas": [
+        "control"
+      ],
+      "status": "access hardening verified 2026-10-22; direct PostgreSQL role boundary preserved"
+    },
+    "automation-staging": {
+      "organizationId": "lgsyyixaknigwbluwutd",
+      "projectRef": "ndykampbptbfatqsebfh",
+      "schemas": [
+        "control"
+      ],
+      "status": "paused; access migration pending restoration; never resume scheduled jobs implicitly"
     }
   }
 }

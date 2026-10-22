@@ -1,3 +1,4 @@
+import { validateExplicitAccess } from '../database/check-explicit-access.mjs'
 import { readdir, readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
@@ -6,7 +7,7 @@ import { validateSuitTemplateBoundaries } from './suit-template-boundaries.mjs'
 import { validateAtomicTemplateArchitecture } from './atomic-template-architecture.mjs'
 
 const root = new URL('../../', import.meta.url).pathname
-const failures = []
+const failures = await validateExplicitAccess(root)
 const atomicLayers = ['atoms', 'molecules', 'organisms', 'templates']
 const ownershipManifestPath = 'docs/shared/ui-ownership-manifest.json'
 
