@@ -7,7 +7,7 @@
   "classification": "internal",
   "disposition": "internal",
   "paths": [
-    "apps/doctor-suit/tests/",
+    "apps/doctor-suit/tests",
     "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci.md",
     "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci-verification.json"
   ],
