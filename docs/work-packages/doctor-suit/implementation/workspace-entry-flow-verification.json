@@ -3,35 +3,100 @@
   "parent_pr": 434,
   "parent_sha": "080f87b9db40d3431163c3672709dd27581944a6",
   "pr": 435,
-  "status": "focused checks passed; extended verification in progress",
-  "verified_runtime_source_sha": null,
+  "status": "Doctor implementation and local synthetic journeys verified; integration and full provider acceptance remain held",
+  "verified_runtime_source_sha": "eed37328e23379e48a0dd84874989564ea4df0f5",
   "checks": {
-    "doctor_units_before_final_session_guard": {
-      "passed": 458,
-      "failed": 0
-    },
-    "final_registration_and_preview_units": {
-      "passed": 21,
-      "failed": 0
+    "doctor_units": {
+      "command": "node --test apps/doctor-suit/tests/unit/*.test.mjs",
+      "passed": 460,
+      "failed": 0,
+      "skipped": 0
     },
     "doctor_protocol_browser": {
-      "passed": 12,
+      "passed": 16,
       "failed": 0,
-      "scope": "EN desktop dark / AR mobile light; email loading/lookup, duplicate denial, resumable signup, explicit verified signup completion, guided setup, server draft resume, dashboard return/reload, locale retention; before final session navigation guard"
+      "skipped": 0,
+      "runtime_source_sha": "eed37328e23379e48a0dd84874989564ea4df0f5",
+      "runs": [
+        {
+          "config": "apps/doctor-suit/tests/e2e/playwright.auth.config.ts",
+          "files": [
+            "registration.auth.fixture.ts",
+            "dos-m1-007.auth.fixture.ts"
+          ],
+          "passed": 10
+        },
+        {
+          "config": "apps/doctor-suit/tests/e2e/playwright.auth.config.ts",
+          "files": [
+            "workspace-entry.auth.fixture.ts"
+          ],
+          "passed": 4
+        },
+        {
+          "config": "apps/doctor-suit/tests/e2e/playwright.auth.config.ts",
+          "files": [
+            "dos-m1-020.auth.fixture.ts"
+          ],
+          "passed": 2
+        }
+      ],
+      "scope": "EN desktop dark / AR mobile light; real loopback server email lookup loading, unknown/duplicate/error/rate-limit denial, resumable registration, explicit verified signup to dashboard, guided authenticated setup, server draft resume, returning landing Open workspace, account return/reload, settings-driven Arabic persistence, exact brand SVG/MIME/favicon responses; two-doctor secretary revocation journey. Protocol fixture, not actual Supabase services."
     },
-    "canonical_brand_http_browser": {
-      "passed": 1,
-      "failed": 0,
-      "scope": "four exact source SVG byte responses, MIME types, favicon discovery, visible decoded landing logos"
+    "shared_brand_and_preview_units": {
+      "command": "node --test tooling/git/tests/dev-worktrees.test.mjs packages/brand/tests/product-assets.test.mjs",
+      "passed": 15,
+      "failed": 0
     },
-    "doctor_typecheck": "passed before final session navigation guard",
-    "doctor_lint": "passed before final session navigation guard",
-    "doctor_build": "passed before final session navigation guard",
-    "shared_lint": "zero errors, one inherited first-attribute-linebreak warning in BsSettingsMenu",
-    "strict_architecture": "150 Vue files, six Suits, zero violations; 130 full route templates",
-    "extended_consumer_builds": "running",
-    "shared_settings_browser": "pending",
-    "repository_tests": "running"
+    "consumer_builds": {
+      "command": "pnpm exec turbo run build --concurrency=2",
+      "successful": 7,
+      "total": 7,
+      "shared_runtime_source_sha": "f230f12f4d9fa53abf3768d8ad6f8a5493525361",
+      "note": "All six Suits plus Docs. Doctor-only session/timezone follow-ups were subsequently rebuilt and browser-tested at verified_runtime_source_sha."
+    },
+    "doctor_build": "passed at final runtime source",
+    "doctor_typecheck": "passed at final runtime source",
+    "doctor_lint": "passed at final runtime source",
+    "docs_typecheck": "passed",
+    "shared_lint": "zero errors; one inherited first-attribute-linebreak warning at BsSettingsMenu.vue:47",
+    "workspace_check": {
+      "command": "pnpm check",
+      "result": "passed",
+      "suits": 6,
+      "full_route_templates": 130,
+      "unchanged_historical_migrations": 80
+    },
+    "strict_architecture": {
+      "command": "node tooling/checks/suit-template-boundaries.mjs --require-strict",
+      "result": "passed",
+      "vue_files": 150,
+      "violations": 0
+    },
+    "preview_selection": {
+      "command": "pnpm dev:doctor --list",
+      "selected_worktree": "/workspace/doctor-workspace-flow",
+      "selected_branch": "codex/doctor-suit/workspace-entry-flow",
+      "port": 3006
+    },
+    "shared_settings_browser": {
+      "command": "pnpm exec playwright test -c packages/testing/playwright.settings-focus.config.ts",
+      "passed": 6,
+      "failed": 6,
+      "passing_consumers": [
+        "Ledger mobile/desktop",
+        "Shop mobile/desktop",
+        "Super Admin mobile/desktop"
+      ],
+      "failing_consumers": [
+        "Docs mobile/desktop",
+        "Inventory mobile/desktop",
+        "Automation mobile/desktop"
+      ],
+      "failure": "Maintained suite looks for the combined Language · Theme menu; that selector is absent on those current surfaces. Assertions were retained. No passing full shared-browser acceptance claim; prior root CI already reports shared-settings-browser failure."
+    },
+    "release_check": "passed against exact PR parent before final documentation receipt; rechecked at publication",
+    "pr_stack": "PR435 -> PR434 -> PR433 -> PR432 -> PR431 -> PR430 -> PR429 -> PR428 -> PR427 -> PR401 -> stg; verified with agent:pr-check"
   },
   "baseline": {
     "inherited_shop_failures": 54,
@@ -40,6 +105,43 @@
   "limitations": [
     "Synthetic protocol fixtures are not actual Supabase Auth/Storage/Realtime acceptance.",
     "No real patients, hosted migration, provider/account/channel activation, Automation service mutation or main/staging promotion.",
-    "Clinical/legal/provider gates remain; required consolidated CI remains a merge gate."
-  ]
+    "Clinical/legal/provider gates remain; required consolidated CI remains a merge gate.",
+    "The six shared-settings browser failures remain explicit. Required combined CI remains blocked; no staging/main merge was attempted."
+  ],
+  "toolchain": {
+    "node": "26.8.1",
+    "pnpm": "10.33.0"
+  },
+  "repository_tests": {
+    "command": "pnpm test",
+    "tests": 2171,
+    "passed": 2094,
+    "failed": 54,
+    "skipped": 23,
+    "all_failures_in_shop": true,
+    "failure_locations": {
+      "apps/shop-suit/tests/unit/arabic-copy.test.mjs": 3,
+      "apps/shop-suit/tests/unit/commission-adapter.test.mjs": 1,
+      "apps/shop-suit/tests/unit/google-onboarding.test.mjs": 7,
+      "apps/shop-suit/tests/unit/landing-journey.test.mjs": 3,
+      "apps/shop-suit/tests/unit/locations.test.mjs": 1,
+      "apps/shop-suit/tests/unit/permission-menu.test.mjs": 3,
+      "apps/shop-suit/tests/unit/platform-admin.test.mjs": 1,
+      "apps/shop-suit/tests/unit/pos-customer-ssr.test.mjs": 2,
+      "apps/shop-suit/tests/unit/pos.test.mjs": 1,
+      "apps/shop-suit/tests/unit/public-contact-actions.test.mjs": 1,
+      "apps/shop-suit/tests/unit/purchase-entity-picker.test.mjs": 2,
+      "apps/shop-suit/tests/unit/receipt-image-scope.test.mjs": 5,
+      "apps/shop-suit/tests/unit/sale-receipt.test.mjs": 1,
+      "apps/shop-suit/tests/unit/shared-ui-migration.test.mjs": 2,
+      "apps/shop-suit/tests/unit/shop-context.test.mjs": 6,
+      "apps/shop-suit/tests/unit/shop-profile-settings.test.mjs": 1,
+      "apps/shop-suit/tests/unit/signup-session-transition.test.mjs": 2,
+      "apps/shop-suit/tests/unit/ss-launch-single-session-001-2.test.mjs": 3,
+      "apps/shop-suit/tests/unit/tax-quote.test.mjs": 3,
+      "apps/shop-suit/tests/unit/team.test.mjs": 1,
+      "apps/shop-suit/tests/unit/ux-async-actions.test.mjs": 5
+    },
+    "note": "One broad run preserved the inherited 54 Shop failures. Final Doctor-only session/timezone follow-ups and browser selector repair were checked with focused units, typecheck, lint, build and browser runs; the expensive whole-repository run was not repeated. Shop source and checks were not weakened."
+  }
 }
