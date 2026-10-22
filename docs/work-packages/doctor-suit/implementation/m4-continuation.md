@@ -9,3 +9,5 @@ M4 tasks002–010 depend on this decision and both platform/offline gates. Their
 M3 external provider delivery remains disabled and its actual-service acceptance remains OPEN. Focused capacity observation still finds the 32GiB executor using Docker vfs and no running project; the previously failed full Supabase extraction is not blindly repeated. No hosted connection, live-schema refresh, real-patient use, provider activation, Automation mutation or main/staging promotion is authorized.
 
 Use one separate PR per implemented milestone task. Task001 is a reviewable evidence packet with blocked acceptance, not a completed mobile milestone.
+
+Preview the existing Doctor runtime from this worktree with `pnpm dev:doctor --worktree codex/doctor-suit/m4-001-platform-decision`. Pinning the Doctor source avoids selecting the independently active shared-brand worktree, whose Doctor app still comes from staging. Shop/Ledger branding remains on PR437; the separate feature worktrees are not implicitly combined.
