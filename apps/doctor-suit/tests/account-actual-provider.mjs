@@ -41,7 +41,7 @@ export async function verifyDoctorAccountProvider({ root,api,key,serviceKey,proj
     await page.getByLabel(/^Display name/).fill('Synthetic personal web');await page.getByLabel(/^Email/).fill(email)
     await doctorPasswordStep(page);await page.getByLabel(/^Password/).fill(password)
     setStage('actual signup checked email and practice transition');await page.getByRole('button',{ name: 'Continue',exact: true }).click()
-    await page.getByLabel(/^Practice name/).fill('Synthetic signup practice');await page.getByLabel(/^First location name/).fill('Synthetic first location');await page.getByLabel(/^Timezone/).fill('Africa/Cairo')
+    await page.getByLabel(/^Practice name/).fill('Synthetic signup practice');await page.getByLabel(/^First location name/).fill('Synthetic first location');await page.getByRole('combobox',{name:'Timezone',exact:true}).click();await page.getByRole('option',{name:'Africa/Cairo',exact:true}).click()
     setStage('actual signup provider submission');await page.getByRole('button',{ name: 'Create synthetic account',exact: true }).click()
     setStage('actual signup verification form');await page.getByRole('heading',{ name: 'Verify account',exact: true }).waitFor()
     setStage('actual unconfirmed signup denial');const unconfirmed = await createClient(api,key,{ auth: { persistSession: false,autoRefreshToken: false } }).auth.signInWithPassword({ email,password });expect(Boolean(unconfirmed.error) && !unconfirmed.data.session,'Actual unconfirmed account admitted')

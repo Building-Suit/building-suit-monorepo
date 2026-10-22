@@ -3,13 +3,33 @@ export const doctorOperationsTaskIds = Object.freeze(
   Array.from({length: 10}, (_, index) => `DOS-M3-${String(index + 1).padStart(3, '0')}`),
 )
 
+function failureLocation(task, result) {
+  const value = result?.errorLocation
+  const file = typeof value?.file === 'string' ? value.file.split(/[\\/]/).at(-1) : ''
+  const allowed = [`${task.toLowerCase()}.spec.ts`, 'operations-actual-fixture.ts']
+  if (!allowed.includes(file) || !Number.isSafeInteger(value.line) || value.line < 1 || value.line > 100000 ||
+      !Number.isSafeInteger(value.column) || value.column < 1 || value.column > 100000) return null
+  return {file, line: value.line, column: value.column}
+}
+
+function failureCategory(result) {
+  const message = typeof result?.error?.message === 'string' ? result.error.message : ''
+  for (const [pattern, category] of [
+    [/toBeVisible\(\)/, 'locator-visible'], [/toBeEnabled\(\)/, 'locator-enabled'],
+    [/toHaveCount\(/, 'locator-count'], [/toBeNull\(\)/, 'null-value'],
+    [/toEqual\(|toBe\(/, 'value-equality'], [/Timeout|timed out/i, 'timeout'],
+  ]) if (pattern.test(message)) return category
+  return 'assertion-or-runtime'
+}
+
 export function doctorOperationsBrowserEvidence(report, exitCode) {
   const issues = new Set()
   const passed = new Set()
   const seen = new Set()
+  const failed = []
   if (exitCode !== 0) issues.add('browser-process-failed')
   if (!report || !Array.isArray(report.suites) || !Array.isArray(report.errors)) {
-    return {accepted: false, expected: doctorOperationsTaskIds, passed: [], issues: ['browser-report-invalid']}
+    return {accepted: false, expected: doctorOperationsTaskIds, passed: [], failed: [], issues: ['browser-report-invalid']}
   }
   if (report.errors.length) issues.add('browser-global-error')
   const stats = report.stats
@@ -37,6 +57,7 @@ export function doctorOperationsBrowserEvidence(report, exitCode) {
         if (spec.ok !== true || !Array.isArray(spec.tests) || spec.tests.length !== 1 || test?.expectedStatus !== 'passed' || test?.status !== 'expected' ||
             test.results?.length !== 1 || result?.status !== 'passed' || result?.retry !== 0 || !Array.isArray(result?.errors) || result.errors.length) {
           issues.add('browser-task-not-passed-once')
+          failed.push({task, category: failureCategory(result), location: failureLocation(task, result)})
         } else {
           passed.add(task)
         }
@@ -46,5 +67,5 @@ export function doctorOperationsBrowserEvidence(report, exitCode) {
   }
   visit(report.suites)
   if (doctorOperationsTaskIds.some(task => !seen.has(task))) issues.add('browser-task-missing')
-  return {accepted: issues.size === 0, expected: doctorOperationsTaskIds, passed: doctorOperationsTaskIds.filter(task => passed.has(task)), issues: [...issues].sort()}
+  return {accepted: issues.size === 0, expected: doctorOperationsTaskIds, passed: doctorOperationsTaskIds.filter(task => passed.has(task)), failed, issues: [...issues].sort()}
 }

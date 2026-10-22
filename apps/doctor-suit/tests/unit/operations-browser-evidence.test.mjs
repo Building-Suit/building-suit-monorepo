@@ -82,3 +82,27 @@ test('missing or malformed structured results fail closed', () => {
   const value = report(); delete spec(value).tests
   assert.equal(evidence(value, 0).accepted, false)
 })
+
+test('failed-case diagnostics expose only fixed categories and allowlisted source coordinates', () => {
+  const value = report(), row = spec(value, 5).tests[0].results[0]
+  row.status = 'failed'
+  row.error = {message: 'expect(locator).toBeVisible() failed: private token sentinel'}
+  row.errorLocation = {file: '/private/token/sentinel/dos-m3-006.spec.ts', line: 14, column: 240}
+  const result = evidence(value, 1)
+  assert.deepEqual(result.failed, [{task: 'DOS-M3-006', category: 'locator-visible', location: {file: 'dos-m3-006.spec.ts', line: 14, column: 240}}])
+  assert.equal(JSON.stringify(result).includes('sentinel'), false)
+})
+
+test('arbitrary source paths and invalid coordinates cannot enter redacted evidence', () => {
+  for (const location of [
+    {file: '/private/sentinel.txt', line: 1, column: 1},
+    {file: 'dos-m3-006.spec.ts', line: 'private sentinel', column: 1},
+    {file: 'dos-m3-006.spec.ts', line: 1, column: -1},
+  ]) {
+    const value = report(), row = spec(value, 5).tests[0].results[0]
+    row.status = 'failed'; row.errorLocation = location
+    const result = evidence(value, 1)
+    assert.equal(result.failed[0].location, null)
+    assert.equal(JSON.stringify(result).includes('sentinel'), false)
+  }
+})
