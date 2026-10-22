@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
+import { assertTenantStoragePath } from './export-organization-portability.mjs'
 
 export function compareRestoreEvidence(source, restored, sourceAttachments, restoredAttachments) {
   assert.equal(source.schema_version, 'ls-ops-001-v1', 'unsupported source evidence schema')
@@ -12,6 +13,9 @@ export function compareRestoreEvidence(source, restored, sourceAttachments, rest
   assert.match(source.ledger.journals, /^[1-9]\d*$/, 'source fixture must contain at least one journal')
   assert.equal(source.ledger.unbalanced_journals, '0', 'source contains an unbalanced journal')
   assert.equal(restored.ledger.unbalanced_journals, '0', 'restore contains an unbalanced journal')
+  assert.match(source.ledger.posted_debits_minor, /^\d+$/, 'source debit total must be an exact decimal string')
+  assert.ok(BigInt(source.ledger.posted_debits_minor) > 0n, 'source must include posted financial amounts')
+  assert.equal(source.ledger.posted_credits_minor, source.ledger.posted_debits_minor, 'source debit/credit totals differ')
 
   for (const section of ['ledger', 'reports', 'configuration', 'preserved_operations', 'attachments']) {
     assert.deepEqual(restored[section], source[section], `${section} differs after restore`)
@@ -21,8 +25,26 @@ export function compareRestoreEvidence(source, restored, sourceAttachments, rest
   assert.equal(restoredAttachments.schema_version, sourceAttachments.schema_version)
   assert.notEqual(sourceAttachments.environment_id, restoredAttachments.environment_id,
     'attachment comparison must use a second isolated environment')
+  assert.equal(sourceAttachments.environment_id, source.environment_id, 'source attachment environment differs')
+  assert.equal(restoredAttachments.environment_id, restored.environment_id, 'restored attachment environment differs')
   assert.equal(sourceAttachments.organization_id, source.organization_id)
   assert.equal(restoredAttachments.organization_id, restored.organization_id)
+  assert.ok(Array.isArray(sourceAttachments.objects) && sourceAttachments.objects.length > 0,
+    'restore rehearsal must include at least one attachment object')
+  assert.equal(source.attachments.count, String(sourceAttachments.objects.length), 'attachment metadata/object counts differ')
+  const keys = new Set()
+  let bytes = 0n
+  for (const object of sourceAttachments.objects) {
+    assertTenantStoragePath(source.organization_id, object.storage_key)
+    assert.ok(typeof object.storage_bucket === 'string' && object.storage_bucket.length > 0, 'attachment bucket required')
+    const key = `${object.storage_bucket}/${object.storage_key}`
+    assert.ok(!keys.has(key), 'duplicate attachment object')
+    keys.add(key)
+    assert.match(object.sha256, /^[a-f0-9]{64}$/, 'attachment SHA-256 required')
+    assert.match(object.size_bytes, /^[1-9]\d*$/, 'attachment byte size must be an exact positive decimal string')
+    bytes += BigInt(object.size_bytes)
+  }
+  assert.equal(source.attachments.bytes, String(bytes), 'attachment metadata/object byte totals differ')
   assert.deepEqual(restoredAttachments.objects, sourceAttachments.objects,
     'attachment object bytes differ after restore')
 

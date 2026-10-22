@@ -1,0 +1,9 @@
+{
+  "id": "ls-ops-port-001-integrity",
+  "task": "LS-OPS-PORT-001",
+  "suits": ["ledger-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/ledger-suit"],
+  "reason": "Repair operator portability query relationships, deterministic ordering and exact artifact hashes; keep internal requests private; reject invalid restore evidence; verify actual native PostgREST authorization and exact financial export bytes."
+}

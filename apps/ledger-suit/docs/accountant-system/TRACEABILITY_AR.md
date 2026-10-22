@@ -1,5 +1,7 @@
 # تتبع المتطلبات والأدلة
 
+تحديث 2026-10-22 — LS-OPS-PORT-001: [الحزمة](work-packages/LS-OPS-PORT-001.md) و[الدليل](v2-acceptance/portability-integrity-verification-2026-10-22.json) يثبتان تصديرًا فعليًا محروسًا وبصمات مطابقة ورفض أدلة مرفقات غير مطابقة. تتبع السجلات الأحدث وStorage والاستعادة الفعلية وUAT مستقلة، دون ترقية تلقائية لحالات المتطلبات.
+
 تحديث 2026-10-22 — LS-REL-CONC-001: [التحقق الأصلي](../native-concurrency-verification.md) و[سجل النتائج](v2-acceptance/native-concurrency-verification-2026-10-22.json) يضيفان دليل جلسات فعلية للوحدات والدفع، دون ترقية تلقائية لحالات المتطلبات أو قبول المحاسب.
 
 تحديث 2026-10-22 — LS-SEC-DEP-001: [الحزمة](work-packages/LS-SEC-DEP-001.md) و[التدقيق](v2-acceptance/critical-dependency-verification-2026-10-22.json) يثبتان انخفاض الثغرات الحرجة من ٣ إلى صفر ونجاح رفض أوامر Git/editor/shell الضارة في fixtures محلية. لا ترقية تلقائية لمتطلبات الأمن أو القبول أو النشر.

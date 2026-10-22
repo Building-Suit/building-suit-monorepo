@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { readFileSync, readdirSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import test from 'node:test'
 import { compareRestoreEvidence } from '../../scripts/compare-restore-evidence.mjs'
 import { assertTenantStoragePath, tenantTables } from '../../scripts/export-organization-portability.mjs'
@@ -19,7 +20,7 @@ function snapshot(environmentId = 'source') {
     reports: { trial_balance_digest: 'tb', balance_sheet_digest: 'bs', profit_loss_digest: 'pl' },
     configuration: { accounts_digest: 'accounts' },
     preserved_operations: { recurring_rules_digest: 'recurring' },
-    attachments: { count: '1', bytes: '900719925474099312345', metadata_digest: 'metadata' },
+    attachments: { count: '1', bytes: '3', metadata_digest: 'metadata' },
   }
 }
 
@@ -28,14 +29,15 @@ function attachments(environmentId = 'source') {
     schema_version: 'ls-ops-001-attachments-v1',
     environment_id: environmentId,
     organization_id: '11111111-1111-4111-8111-111111111111',
-    objects: [{ storage_key: 'org/transaction/id/file.pdf', size_bytes: '3', sha256: 'abc' }],
+    objects: [{ storage_bucket: 'attachments', storage_key: '11111111-1111-4111-8111-111111111111/transaction/id/file.pdf',
+      size_bytes: '3', sha256: createHash('sha256').update('pdf').digest('hex') }],
   }
 }
 
 test('restore comparison preserves exact bigint strings and attachment bytes', () => {
   const result = compareRestoreEvidence(snapshot(), snapshot('restored'), attachments(), attachments('restored'))
   assert.equal(result.result, 'exact_match')
-  assert.equal(result.attachment_bytes, '900719925474099312345')
+  assert.equal(result.attachment_bytes, '3')
 })
 
 test('restore comparison refuses same-instance evidence', () => {
@@ -65,6 +67,32 @@ test('restore comparison rejects empty or unbalanced source evidence', () => {
   unbalanced.ledger.unbalanced_journals = '1'
   assert.throws(() => compareRestoreEvidence(unbalanced, snapshot('restored'), attachments(), attachments('restored')),
     /unbalanced journal/)
+  const unposted = snapshot()
+  unposted.ledger.posted_debits_minor = '0'
+  unposted.ledger.posted_credits_minor = '0'
+  assert.throws(() => compareRestoreEvidence(unposted, snapshot('restored'), attachments(), attachments('restored')),
+    /posted financial amounts/)
+})
+
+test('restore rehearsal rejects absent, mismatched or foreign attachment evidence', () => {
+  const empty = attachments()
+  empty.objects = []
+  assert.throws(() => compareRestoreEvidence(snapshot(), snapshot('restored'), empty, attachments('restored')),
+    /at least one attachment object/)
+  const count = snapshot()
+  count.attachments.count = '2'
+  assert.throws(() => compareRestoreEvidence(count, structuredClone({ ...count, environment_id: 'restored' }), attachments(), attachments('restored')),
+    /metadata\/object counts differ/)
+  const bytes = snapshot()
+  bytes.attachments.bytes = '4'
+  assert.throws(() => compareRestoreEvidence(bytes, structuredClone({ ...bytes, environment_id: 'restored' }), attachments(), attachments('restored')),
+    /byte totals differ/)
+  const foreign = attachments()
+  foreign.objects[0].storage_key = '22222222-2222-4222-8222-222222222222/transaction/id/file.pdf'
+  assert.throws(() => compareRestoreEvidence(snapshot(), snapshot('restored'), foreign, attachments('restored')),
+    /foreign attachment path/)
+  assert.throws(() => compareRestoreEvidence(snapshot(), snapshot('restored'), attachments('another-source'), attachments('restored')),
+    /source attachment environment differs/)
 })
 
 test('portability inventory is unique and keeps attachment paths tenant scoped', () => {
