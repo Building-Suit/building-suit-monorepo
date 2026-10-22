@@ -2188,5 +2188,55 @@
     "sources": [
       "doctor-workspace-entry-20261022"
     ]
+  },
+  {
+    "id": "doctor-workspace-entry-shop-support-20261022",
+    "task": "DOCTOR-WORKSPACE-ENTRY",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "README.md",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/doctor-suit/README.md",
+      "apps/doctor-suit/app/composables/useDoctorRegistration.ts",
+      "apps/doctor-suit/app/pages/account.vue",
+      "apps/doctor-suit/app/pages/onboarding.vue",
+      "apps/doctor-suit/app/pages/sign-up.vue",
+      "apps/doctor-suit/app/pages/workspace.vue",
+      "apps/doctor-suit/app/utils/practicePresentation.ts",
+      "apps/doctor-suit/app/utils/registrationCompletion.ts",
+      "apps/doctor-suit/app/utils/timezoneChoices.ts",
+      "apps/doctor-suit/app/utils/workspaceEntry.ts",
+      "apps/doctor-suit/nuxt.config.ts",
+      "apps/doctor-suit/tests/e2e/dos-m1-007.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/registration.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/workspace-entry.auth.fixture.ts",
+      "apps/doctor-suit/tests/unit/registration-flow.test.mjs",
+      "apps/doctor-suit/tests/unit/workspace-entry.test.mjs",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/doctor-suit/implementation/workspace-entry-flow-verification.json",
+      "docs/work-packages/doctor-suit/implementation/workspace-entry-flow.md",
+      "package.json",
+      "packages/brand/README.md",
+      "packages/brand/assets/doctor-suit-mark-dark.svg",
+      "packages/brand/assets/doctor-suit-mark-light.svg",
+      "packages/brand/assets/doctor-suit-wordmark-dark.svg",
+      "packages/brand/assets/doctor-suit-wordmark-light.svg",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ui/src/organisms/BsSignupEnrollment.vue",
+      "packages/ui/src/templates/BsAccountSessionPage.vue",
+      "packages/ui/src/types/signupPresentation.ts",
+      "tooling/git/dev-worktrees.mjs",
+      "tooling/git/dev.mjs",
+      "tooling/git/tests/dev-worktrees.test.mjs"
+    ],
+    "reason": "Record Shop as an affected dependency consumer of root developer documentation and opt-in shared signup/account contracts. Existing Shop signup/session defaults and business flows are preserved; the actual visible language-control change has its own public fragment and inventory item.",
+    "sources": [
+      "doctor-workspace-entry-shop-support-20261022"
+    ]
   }
 ]
