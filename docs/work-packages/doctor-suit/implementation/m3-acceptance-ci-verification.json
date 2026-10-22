@@ -7,7 +7,7 @@
   "local_checks": {
     "doctor_units": {
       "command": "node --test apps/doctor-suit/tests/unit/*.test.mjs",
-      "passed": 468,
+      "passed": 473,
       "failed": 0,
       "skipped": 0
     },
@@ -35,7 +35,8 @@
       "result": "passed"
     },
     "syntax_and_workflow_yaml": "passed",
-    "release_check": "publication head checked separately"
+    "release_check": "publication head checked separately",
+    "pinned_meta_regressions": 5
   },
   "actual_service_execution": {
     "status": "pending GitHub owned disposable runner; not executed locally",
@@ -45,5 +46,36 @@
     "54 inherited Shop unit failures retained; full repository suite not repeated for this verification-only change.",
     "Earlier shared-settings and actual-provider limitations remain open until exact-candidate evidence resolves them.",
     "No clinical, provider, mobile, store/signing, hosted migration, Automation or staging/main authority inferred."
-  ]
+  ],
+  "registry_diagnostic": {
+    "primary": "ghcr.io/supabase/postgres-meta:v0.98.0",
+    "primary_result": "focused manifest read fails with toomanyrequests",
+    "official_mirror": "public.ecr.aws/supabase/postgres-meta:v0.98.0",
+    "mirror_result": "manifest read succeeds for exact digest sha256:cef71ba901751dcc242cc685cf13786935ea8926820fb342f23bb0fbef77de5a",
+    "upstream_source": "https://github.com/supabase/postgres-meta/blob/v0.98.0/.github/workflows/release.yml",
+    "new_container_or_service_started": false
+  },
+  "github_observations": {
+    "head": "39e03576348766dbfc3efe8dba7ed42156d0fb1c",
+    "review": {
+      "run_id": 39840928157,
+      "tests": 2181,
+      "passed": 2104,
+      "failed": 54,
+      "skipped": 23,
+      "failure_products": [
+        "shop-suit"
+      ],
+      "result": "failed; inherited baseline preserved"
+    },
+    "doctor_run": {
+      "run_id": 39840928047,
+      "doctor_sql": "failed; exact completed archive still pending at observation",
+      "doctor_browser": "not yet reached M3; preparing Chromium at observation"
+    },
+    "prior_stg_sql": {
+      "run_id": 39834273969,
+      "result": "SQL assertions/concurrency/recovery passed; pinned PostgreSQL Meta pull exhausted bounded retries; schema generation unverified"
+    }
+  }
 }
