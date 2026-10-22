@@ -1,3 +1,4 @@
+import {androidRuntimeDiagnostics} from '../../mobile/doctor/scripts/android-diagnostics.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {createDoctorMobileShell,doctorMobileDestination} from '../../mobile/doctor/app/utils/mobileShell.ts'
@@ -62,4 +63,21 @@ test('offline and account lifecycle changes clear context and prevent resurrecti
 })
 test('disposing an in-flight native shell aborts its own request and retains no context',async()=>{
  const f=fixture(),d=deferred();let signal;f.port.load=(_route,_scope,value)=>{signal=value;return d.promise};const read=f.shell.navigate('/workspace');f.shell.dispose();assert.equal(signal.aborted,true);d.resolve(f.value());assert.equal(await read,false);assert.equal(f.shell.state.context,null)
+})
+
+test('a rejected native destination remains denied across resume/reconnect until explicit valid navigation',async()=>{
+ const f=fixture();assert.equal(await f.shell.navigate('/schedule'),true)
+ assert.equal(await f.shell.navigate('doctor-suit-synthetic://patients'),false)
+ assert.equal(f.shell.state.phase,'denied');assert.equal(f.shell.state.context,null)
+ f.shell.sessionChanged();assert.equal(await f.shell.retry(),false);assert.equal(f.shell.state.phase,'denied')
+ f.shell.connectivity(false);f.shell.connectivity(true);assert.equal(await f.shell.retry(),false);assert.equal(f.shell.state.phase,'denied')
+ assert.equal(await f.shell.navigate('/account'),true);assert.equal(f.shell.state.route,'/account');assert.equal(await f.shell.retry(),true)
+})
+
+test('Android failure receipts retain bounded engine/category facts without private emulator strings',()=>{
+ const result=androidRuntimeDiagnostics('Current WebView package (name, version): (com.google.android.webview, 149.0.7) private sentinel','Uncaught SyntaxError: private sentinel https://example.test/private-token; Content Security Policy','<node package="com.buildingsuit.doctor.synthetic" class="android.webkit.WebView" text="private sentinel"/>')
+ assert.deepEqual(result,{webviewMajor:149,clientIssues:['client-syntax-error','client-content-policy'],webviewVisible:true,syntheticPackageVisible:true})
+ assert.equal(JSON.stringify(result).includes('sentinel'),false);assert.equal(JSON.stringify(result).includes('https:'),false)
+ assert.equal(androidRuntimeDiagnostics('Current WebView package (name, version): (secret, 12345.0)',null,null).webviewMajor,null)
+ assert.deepEqual(androidRuntimeDiagnostics(null,null,null),{webviewMajor:null,clientIssues:[],webviewVisible:false,syntheticPackageVisible:false})
 })

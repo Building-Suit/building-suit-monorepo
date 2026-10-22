@@ -2,6 +2,7 @@ import {execFileSync} from 'node:child_process'
 import {readFile, writeFile, mkdir} from 'node:fs/promises'
 import {createHash} from 'node:crypto'
 import {resolve} from 'node:path'
+import {androidRuntimeDiagnostics} from './android-diagnostics.mjs'
 
 if (process.env.GITHUB_ACTIONS !== 'true' || process.env.CI !== 'true') throw new Error('Owned CI emulator required')
 const api = Number(process.env.DOCTOR_ANDROID_API)
@@ -37,6 +38,7 @@ let stage = 'install', installed = false, cleanup
 try {
   adb(['install', '-r', apk]); installed = true
   adb(['shell', 'pm', 'clear', app])
+  adb(['logcat', '-c'])
   stage = cases[0].id
   adb(['shell', 'am', 'start', '-n', app + '/.MainActivity'])
   await visibleText('You are signed out'); await visibleText('Your practice, on Android'); cases[0].status = 'passed'
@@ -61,17 +63,21 @@ try {
   process.exitCode = 1
   console.error('Synthetic Android verification failed at ' + stage)
 } finally {
+  const diagnosticRead = args => {try {return adb(args)} catch {return null}}
+  const runtime = androidRuntimeDiagnostics(diagnosticRead(['shell', 'dumpsys', 'webviewupdate']), diagnosticRead(['logcat', '-d', '-t', '300', 'chromium:I', 'AndroidRuntime:E', '*:S']), diagnosticRead(['shell', 'cat', '/sdcard/doctor-shell.xml']))
   try {
     // Only the synthetic package installed by this run is owned.
     if (installed) {adb(['shell', 'am', 'force-stop', app]); adb(['uninstall', app])}
     cleanup = 'passed'
   } catch {cleanup = 'failed'; process.exitCode = 1}
   await mkdir('test-results/doctor-mobile', {recursive: true})
-  await writeFile('test-results/doctor-mobile/device-' + api + '.json', JSON.stringify({
+  const receipt = {
     version: 1, sourceHead: head, appId: app, apkSha256: metadata.apkSha256, api,
     accepted: stage === 'complete' && cleanup === 'passed' && cases.every(item => item.status === 'passed'),
-    stage, cleanup, runner: 'owned-disposable-android-emulator', physicalDevice: false, cases,
+    stage, cleanup, runtime, runner: 'owned-disposable-android-emulator', physicalDevice: false, cases,
     syntheticOnly: true, clinicalApproval: false, offlineClinicalApproval: false, storeUpload: false,
-  }, null, 2) + '\n')
+  }
+  await writeFile('test-results/doctor-mobile/device-' + api + '.json', JSON.stringify(receipt, null, 2) + '\n')
+  console.log('Synthetic Android receipt ' + JSON.stringify(receipt))
 }
 if (!process.exitCode) console.log('Android emulator API' + api + ': five synthetic launch/navigation/lifecycle cases passed')

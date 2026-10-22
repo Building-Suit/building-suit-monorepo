@@ -44,5 +44,21 @@
     "apk_compiled": false,
     "device_cases": "unrun; dependent job skipped",
     "acceptance": false
+  },
+  "compiled_execution": {
+    "source_head": "40e593e1e3100809f1e7d285a25202e7c4735443",
+    "run_id": 39854146344,
+    "android_build_job": 120087831655,
+    "apk_compilation": "passed",
+    "api29": {
+      "job": 120089162652,
+      "result": "failed at cold-launch-signed-out; subsequent cases unrun"
+    },
+    "api36": {
+      "job": 120089162578,
+      "result": "first four sequential cases passed; unknown-deep-link-denied failed"
+    },
+    "aggregate_acceptance": false,
+    "followup": "retain rejected destination across lifecycle retry; add bounded engine/category diagnostics; both API cases remain mandatory"
   }
 }

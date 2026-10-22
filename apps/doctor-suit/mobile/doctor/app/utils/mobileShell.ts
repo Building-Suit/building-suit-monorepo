@@ -10,11 +10,12 @@ export function doctorMobileDestination(input: string): DoctorMobileRoute | null
   return ['/workspace','/schedule','/account'].includes(path) ? path as DoctorMobileRoute : null
 }
 export function createDoctorMobileShell(port: MobileContextPort, state: MobileShellState = {phase:'signed-out',route:'/workspace',context:null}) {
-  let generation = 0, abort = new AbortController(), online = true
+  let generation = 0, abort = new AbortController(), online = true, destinationRejected = false
   function clear(phase: MobilePhase) {generation++;abort.abort();abort=new AbortController();state.context=null;state.phase=phase}
   async function navigate(input: string) {
     const route = doctorMobileDestination(input)
     clear('loading')
+    destinationRejected = !route
     if (!route) {state.phase='denied';return false}
     state.route=route
     if (!online) {state.phase='offline';return false}
@@ -39,5 +40,5 @@ export function createDoctorMobileShell(port: MobileContextPort, state: MobileSh
   }
   function sessionChanged() {clear('signed-out')}
   function connectivity(value: boolean) {online=value;clear(value?'signed-out':'offline')}
-  return {state,navigate,retry:()=>navigate(state.route),sessionChanged,connectivity,dispose:()=>clear('signed-out')}
+  return {state,navigate,retry:()=>navigate(destinationRejected ? '/unavailable' : state.route),sessionChanged,connectivity,dispose:()=>clear('signed-out')}
 }

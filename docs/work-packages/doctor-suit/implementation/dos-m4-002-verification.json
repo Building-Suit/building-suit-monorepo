@@ -70,6 +70,22 @@
     "workflow_yaml_and_script_syntax": "passed",
     "native_ci": "run39853801884/source8ac87d76 failed before APK compilation: upstream setup default requests retired SDK tools package. Explicit platform-tools fix requires new CI.",
     "full_repository_suite": "historical c08fc8b0 count retained; not repeated for parent-only/test/copy follow-up",
-    "mobile_lint": "passed after correcting type-only import and unused initial assignment"
+    "mobile_lint": "passed after correcting type-only import and unused initial assignment",
+    "all_workspace_typechecks": {
+      "command": "pnpm exec turbo run typecheck --concurrency=2 --continue",
+      "source_head": "40e593e1e3100809f1e7d285a25202e7c4735443",
+      "successful": 8,
+      "failed": 0,
+      "cached": 0
+    }
+  },
+  "native_guard_followup": {
+    "mobile_boundary_tests": {
+      "passed": 17,
+      "failed": 0
+    },
+    "mobile_lint": "passed",
+    "mobile_typecheck": "passed",
+    "runtime": "API29 cold launch and API36 rejected-link device failures retained; new guard/privacy regressions pass; native re-execution pending"
   }
 }
