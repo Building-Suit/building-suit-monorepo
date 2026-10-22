@@ -61,7 +61,7 @@ For legacy Finance, apply `finance.sql` **and then** `finance_view_scope.sql`; t
 
 ## Review stack and provider observations
 
-While this task was in progress, shared parent PR437 was published at ea40781e7ccdf37c26191474e47a011558133c1a. It was merged into this feature's ancestry without rewriting either task; this PR targets that parent. Its asset files are unchanged in this task's parent-relative diff. A narrow internal provenance entry recognizes Doctor's existing shared-brand dependency, which the prior five-Suit support inventory omitted.
+While this task was in progress, shared parent PR437 was published and advanced to 613177246eb05eda4e7458fd5d5d212062e03f5e. It was merged into this feature's ancestry without rewriting either task; this PR targets that parent. Its asset files are unchanged in this task's parent-relative diff. The updated parent supplies its own shared-consumer release provenance.
 
 The final application catalog audit passed on all 13 active projects: no excess client table verbs, no PUBLIC execution on application routines, no unpinned privileged functions, no automatic table/sequence/function grants for the migration role and no leftover probes. Existing type USAGE defaults remain; types are not table exposure.
 

@@ -1959,6 +1959,70 @@
     ]
   },
   {
+    "id": "brand-family-shop-crop-20261022",
+    "task": "BRAND-FAMILY-20261022",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/brand/assets/shop-suit-wordmark-light.svg",
+      "packages/brand/assets/shop-suit-wordmark-dark.svg"
+    ],
+    "reason": "Crop unused SVG canvas around the existing Shop wordmarks without modifying any painted node.",
+    "notes": {
+      "title": {
+        "en": "A clearer Shop logo",
+        "ar": "شعار أوضح لـ Shop Suit"
+      },
+      "summary": {
+        "en": "The Shop logo fills its available space without changing the artwork.",
+        "ar": "يملأ شعار Shop Suit المساحة المتاحة دون تغيير الرسم نفسه."
+      },
+      "details": {
+        "en": "Unused space was cropped from both light and dark wordmarks. The original shapes, text, colors and proportions are preserved.",
+        "ar": "قُصّت المساحة الفارغة من نسختَي الشعار الفاتحة والداكنة مع الحفاظ على الأشكال والنص والألوان والنسب الأصلية."
+      }
+    },
+    "sources": [
+      "brand-family-shop-crop-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "packages/brand/assets/shop-suit-wordmark-light.svg",
+        "contains": "viewBox=\"48 44 772 232\" width=\"772\" height=\"232\""
+      },
+      {
+        "path": "packages/brand/assets/shop-suit-wordmark-dark.svg",
+        "contains": "viewBox=\"48 44 772 232\" width=\"772\" height=\"232\""
+      }
+    ]
+  },
+  {
+    "id": "brand-family-ledger-support-20261022",
+    "task": "BRAND-FAMILY-20261022",
+    "suits": [
+      "shop-suit",
+      "ledger-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/brand",
+      "docs/work-packages/brand-family",
+      "release-changes/items.json"
+    ],
+    "reason": "Generated Ledger family artwork and canonical app icon aliases, brand catalogue documentation and exact artifact verification. Ledger remains an internal consumer with no invented operational registration or public production baseline; the actual visible Shop crop is independently covered by its public item.",
+    "sources": [
+      "brand-family-ledger-support-20261022"
+    ]
+  },
+  {
     "id": "supabase-explicit-access-maintenance",
     "task": "SUPABASE-EXPLICIT-ACCESS-20261022",
     "suits": [
@@ -1988,23 +2052,6 @@
     "reason": "Owner-authorized infrastructure access maintenance: preserve application data and RPC contracts under explicit-grant platform defaults, remove superfluous SQL capabilities, harden legacy routines and add migration checks. No product feature, runtime activation, clinical capability or release registration is introduced.",
     "sources": [
       "supabase-explicit-access-20261022"
-    ]
-  },
-  {
-    "id": "shared-parent-brand-doctor-consumer",
-    "task": "SUPABASE-EXPLICIT-ACCESS-20261022",
-    "suits": [
-      "doctor-suit"
-    ],
-    "classification": "internal",
-    "disposition": "internal",
-    "paths": [
-      "packages/brand/assets/shop-suit-wordmark-dark.svg",
-      "packages/brand/assets/shop-suit-wordmark-light.svg"
-    ],
-    "reason": "Classify the existing Doctor dependency on the already published shared brand parent PR437 in this integration tree. Existing shared support covers the other five Suits. No asset is edited here and this adds no Doctor feature or operational release registration.",
-    "sources": [
-      "supabase-access-stack-brand-consumer-20261022"
     ]
   }
 ]

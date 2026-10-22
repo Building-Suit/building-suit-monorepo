@@ -45,3 +45,22 @@ node --test apps/shop-suit/tests/unit/ss-launch-brand-001-2.test.mjs
 ```
 
 Production acceptance runs with `pnpm test:built-assets` after `pnpm build` (or a Shop build). It checks the compiled HTTP pipeline for all six canonical assets, exact bytes/MIME types and rendered favicon links. CI review checks validate source images without requiring stale build output; the full CI job runs production acceptance after its build.
+
+## Product family artwork, October 2026
+
+Shop wordmarks retain the exact existing drawing payload. Their SVG viewport is
+now `48 44 772 232`, removing unused canvas at the right and around the logo.
+This is a crop of the SVG canvas; no path, text, transform, color or gradient
+was redrawn. The Shop mark and email PNG are unchanged.
+
+Ledger now uses a white open ledger/L with gold ruled rows inside the same
+charcoal/gold tile family as Shop and Doctor. Both wordmark tones are outlined
+vectors without font/raster dependencies. The shared contrast-safe tile supplies
+both mark variants, `ledger-suit-app-icon.svg`, `ledger-suit-logo-mark.svg` and the
+512 × 512 PNG app-icon fallback. Existing public paths remain stable. The
+artwork was generated with image generation and converted to spline SVG paths
+with VTracer 0.6.15; the PNG is a raster of that canonical mark. No app logic,
+financial behavior, hosted email configuration or operational registration changed.
+
+See [the task record](../../docs/work-packages/brand-family/README.md) for
+canvas payload hashes, production asset checks and rendered states.
