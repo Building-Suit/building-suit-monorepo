@@ -48,11 +48,15 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: android-actions/setup-android@v3
+        with:
+          # The upstream default still requests the retired SDK package "tools".
+          packages: platform-tools
       - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
       - run: pnpm install --frozen-lockfile
       - run: pnpm run setup
       - name: Build the separate bundled synthetic Android client
         run: |
+          pnpm --filter @building-suit/doctor-mobile lint
           pnpm --filter @building-suit/doctor-mobile typecheck
           pnpm --filter @building-suit/doctor-mobile build
           python3 apps/doctor-suit/mobile/doctor/scripts/android-brand.py

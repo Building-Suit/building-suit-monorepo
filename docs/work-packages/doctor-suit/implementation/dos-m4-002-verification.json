@@ -68,7 +68,8 @@
     "mobile_static_build": "passed",
     "workspace_check": "passed; 6 Suits/7 applications/131 templates/80 unchanged historical migrations",
     "workflow_yaml_and_script_syntax": "passed",
-    "native_ci": "first setup failure, before APK/device execution; exact run39852312601 diagnosis pending archive",
-    "full_repository_suite": "historical c08fc8b0 count retained; not repeated for parent-only/test/copy follow-up"
+    "native_ci": "run39853801884/source8ac87d76 failed before APK compilation: upstream setup default requests retired SDK tools package. Explicit platform-tools fix requires new CI.",
+    "full_repository_suite": "historical c08fc8b0 count retained; not repeated for parent-only/test/copy follow-up",
+    "mobile_lint": "passed after correcting type-only import and unused initial assignment"
   }
 }

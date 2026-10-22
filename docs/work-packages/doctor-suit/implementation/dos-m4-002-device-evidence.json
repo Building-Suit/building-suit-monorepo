@@ -34,5 +34,15 @@
     "apk_compiled": false,
     "device_runs": "skipped because compilation/setup failed",
     "acceptance": false
+  },
+  "diagnosed_execution": {
+    "source_head": "8ac87d7600303942f21cc7caf775add47ddb66f9",
+    "run_id": 39853801884,
+    "result": "failed before APK compilation",
+    "cause": "setup-android@v3 defaults to tools platform-tools; sdkmanager reports Failed to find package tools",
+    "fix": "explicit supported platform-tools package; compile platform36/build-tools36 remain mandatory",
+    "apk_compiled": false,
+    "device_cases": "unrun; dependent job skipped",
+    "acceptance": false
   }
 }

@@ -33,7 +33,7 @@ async function visibleText(value) {
 }
 const cases = ['cold-launch-signed-out', 'cold-deep-link-signed-out', 'hardware-back-workspace', 'background-resume-signed-out', 'unknown-deep-link-denied']
   .map(id => ({id, status: 'unrun'}))
-let stage = 'install', installed = false, cleanup = 'unrun'
+let stage = 'install', installed = false, cleanup
 try {
   adb(['install', '-r', apk]); installed = true
   adb(['shell', 'pm', 'clear', app])
