@@ -1,8 +1,10 @@
 # Restore, retention, and customer portability
 
-Status: **tooling implemented locally; native restore evidence blocked** (LS-OPS-001, 2026-09-27). No hosted database, provider setting, deployment, or customer record was changed. This record does not claim a recovery-point objective (RPO), recovery-time objective (RTO), deployment, or accountant acceptance.
+Status: **portability query/integrity repairs and native PostgREST checks pass; complete current inventory and native restore pending** (LS-OPS-PORT-001, 2026-10-22). See [the current package and evidence](accountant-system/work-packages/LS-OPS-PORT-001.md). This does not claim a recovery-point objective (RPO), recovery-time objective (RTO), deployment, or accountant acceptance.
 
-## Actual exercise result
+The current 64-table export now works against actual PostgREST, preserves exact large minor units and produces verifiable on-disk hashes. The restore comparison rejects empty/mismatched attachment evidence. The inventory still needs newer FX/ETA/migration/manual-payment records and receipt bytes; it is not a complete current financial backup. HTTP unit fixtures are separate from genuine Storage-provider evidence. A tenant API export is not a transactionally consistent database backup: freeze source writes for recovery evidence and retain the separate database/Storage backup procedure below.
+
+## Original exercise result (2026-09-27)
 
 The required second-instance restore did not start in this worktree. The checks below were actually run against the prepared branch at `0db3ea00ffa8ab5ecf771d9de3b4af1031951302` before edits:
 

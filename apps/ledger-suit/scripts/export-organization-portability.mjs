@@ -14,7 +14,7 @@ export const tenantTables = [
   ['organization_settings', 'organization_id', '*', 'organization_id.asc'],
   ['organization_members', 'organization_id'],
   ['organization_invitations', 'organization_id'],
-  ['profiles', 'organization_members.organization_id', '*,organization_members!inner(organization_id)'],
+  ['profiles', 'organization_members.organization_id', '*,organization_members!organization_members_user_id_fkey!inner(organization_id)'],
   ['organization_roles', 'organization_id'],
   ['organization_system_roles', 'organization_id', '*', 'role.asc'],
   ['organization_system_role_capabilities', 'organization_id', '*', 'role.asc,capability_key.asc'],
@@ -53,8 +53,8 @@ export const tenantTables = [
   ['bank_reconciliations', 'organization_id'],
   ['bank_statement_lines', 'organization_id'],
   ['bank_match_groups', 'organization_id'],
-  ['bank_match_lines', 'organization_id'],
-  ['bank_match_transactions', 'organization_id'],
+  ['bank_match_lines', 'organization_id', '*', 'match_group_id.asc,statement_line_id.asc'],
+  ['bank_match_transactions', 'organization_id', '*', 'match_group_id.asc,transaction_id.asc'],
   ['bank_adjustments', 'organization_id'],
   ['bank_outstanding_items', 'organization_id'],
   ['bank_reconciliation_events', 'organization_id'],
@@ -65,8 +65,7 @@ export const tenantTables = [
   ['asset_disposals', 'organization_id'],
   ['accounting_dimension_values', 'organization_id'],
   ['account_dimension_policies', 'organization_id', '*', 'account_id.asc,kind.asc'],
-  ['dimension_value_requests', 'organization_id', '*', 'request_id.asc'],
-  ['organization_vat_profiles', 'organization_id', '*', 'organization_id.asc'],
+  ['organization_vat_profiles', 'organization_id'],
   ['vat_documents', 'organization_id'],
   ['inventory_accounting_sources', 'organization_id'],
   ['inventory_accounting_facts', 'organization_id'],
@@ -137,8 +136,9 @@ async function exportTable({ baseUrl, key, token, organizationId, output, table,
     const range = contentRangePage(response.headers.get('content-range'), table)
     total = range.total
     const pageName = `page-${String(files.length + 1).padStart(6, '0')}.json`
-    writeFileSync(join(directory, pageName), `${raw}\n`, { mode: 0o600 })
-    files.push({ path: `tables/${table}/${pageName}`, sha256: sha256(raw) })
+    const contents = `${raw}\n`
+    writeFileSync(join(directory, pageName), contents, { mode: 0o600 })
+    files.push({ path: `tables/${table}/${pageName}`, sha256: sha256(contents) })
     start = range.end + 1
   } while (start < total)
   return { table, rows: String(total), files }
@@ -212,6 +212,11 @@ async function exportAttachmentObjects(context) {
     )
     const bytes = Buffer.from(await response.arrayBuffer())
     if (BigInt(bytes.length) !== BigInt(row.size_bytes)) throw new Error(`attachment size mismatch: ${row.storage_key}`)
+    const digest = sha256(bytes)
+    // The legacy checksum column is optional and does not declare an algorithm.
+    // Recognize a SHA-256 value when present, while preserving other metadata.
+    if (typeof row.checksum === 'string' && /^[a-f0-9]{64}$/i.test(row.checksum)
+        && row.checksum.toLowerCase() !== digest) throw new Error(`attachment checksum mismatch: ${row.storage_key}`)
     const target = resolve(context.output, 'attachments', ...parts)
     const attachmentRoot = `${resolve(context.output, 'attachments')}${sep}`
     if (!target.startsWith(attachmentRoot)) throw new Error(`attachment escaped export root: ${row.storage_key}`)
@@ -221,7 +226,7 @@ async function exportAttachmentObjects(context) {
       storage_bucket: row.storage_bucket,
       storage_key: row.storage_key,
       size_bytes: String(bytes.length),
-      sha256: sha256(bytes),
+      sha256: digest,
     })
   }
   return objects.sort((left, right) => left.storage_key.localeCompare(right.storage_key))
@@ -260,7 +265,8 @@ export async function exportOrganizationPortability(options) {
     organization_id: options.organizationId,
     objects,
   }
-  writeFileSync(join(output, 'attachments-manifest.json'), `${JSON.stringify(attachmentManifest, null, 2)}\n`, { mode: 0o600 })
+  const attachmentManifestContents = `${JSON.stringify(attachmentManifest, null, 2)}\n`
+  writeFileSync(join(output, 'attachments-manifest.json'), attachmentManifestContents, { mode: 0o600 })
   const manifest = {
     schema_version: 'ls-ops-001-portability-v1',
     environment_id: options.environmentId,
@@ -269,7 +275,7 @@ export async function exportOrganizationPortability(options) {
     to_date: options.toDate,
     tables,
     reports,
-    attachment_manifest_sha256: sha256(JSON.stringify(attachmentManifest)),
+    attachment_manifest_sha256: sha256(attachmentManifestContents),
   }
   writeFileSync(join(output, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o600 })
   return manifest
