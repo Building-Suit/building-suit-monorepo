@@ -143,5 +143,32 @@
       "No physical device, qualified clinical/offline or distribution acceptance.",
       "Full repository suite not repeated for app-specific compilation/evidence changes; 54 inherited Shop failures retained."
     ]
+  },
+  "standard_api_followup": {
+    "observed_at": "2026-10-23T19:53:49.087557+00:00",
+    "change": "Pinned app-only core-js3.51.0 actual standard APIs imported eagerly by a pre-enforced Nuxt client plugin before routing/i18n/shared-control setup. Syntax lowering alone cannot supply Array.at/Object.hasOwn/String.replaceAll used by the bundle.",
+    "lockfile": {
+      "frozen_install": "passed",
+      "existing_importers": 20,
+      "existing_packages_preserved": 1139,
+      "existing_snapshots_preserved": 1163,
+      "added_packages": 1,
+      "added_snapshots": 1,
+      "existing_versions_or_peer_graph_changed": false,
+      "resolution_note": "pnpm add proposed unrelated workspace peer changes; discard that graph and preserve only its generated core-js package/snapshot and mobile dependency. Frozen install confirms the retained graph."
+    },
+    "validation": {
+      "mobile_boundary_units": {
+        "passed": 18,
+        "failed": 0
+      },
+      "actual_dependency_legacy_global_semantics": "passed in isolated child process with missing APIs, negative/out-of-range/generic at, own-property shadowing, replaceAll substitutions/empty match/global-regexp constraints and nonenumerability",
+      "mobile_static_build": "passed",
+      "mobile_lint": "passed",
+      "mobile_typecheck": "passed",
+      "source_sync": "passed",
+      "strict_workspace_check": "passed; 6 Suits/7 applications/131 templates/80 historical migrations unchanged"
+    },
+    "runtime": "new exact-head native CI required; previous API29 failure retained; compilation/API polyfills do not qualify layout/CSS/device or grant clinical/offline authority"
   }
 }

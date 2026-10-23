@@ -1,6 +1,8 @@
 import {androidRuntimeDiagnostics} from '../../mobile/doctor/scripts/android-diagnostics.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import {createRequire} from 'node:module'
+import {execFileSync} from 'node:child_process'
 import {createDoctorMobileShell,doctorMobileDestination} from '../../mobile/doctor/app/utils/mobileShell.ts'
 const id=n=>`d4020000-0000-4000-8000-${String(n).padStart(12,'0')}`
 function fixture(){
@@ -10,6 +12,27 @@ function fixture(){
  return{identity,selection,value,port,shell:createDoctorMobileShell(port)}
 }
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return{promise,resolve}}
+test('bundled compatibility dependency restores boot APIs absent from the stock renderer',()=>{
+ const require=createRequire(new URL('../../mobile/doctor/package.json',import.meta.url))
+ // Isolate legacy globals from the test runner and verify the actual pinned
+ // dependency, including edge semantics used by routing and shared controls.
+ execFileSync(process.execPath,['--eval',`
+  const assert=require('node:assert/strict');
+  delete Array.prototype.at;delete String.prototype.at;
+  delete String.prototype.replaceAll;delete Object.hasOwn;
+  require(process.argv[1]);
+  assert.equal([1,2,3].at(-1),3);
+  assert.equal([1,2,3].at(-4),undefined);
+  assert.equal(Array.prototype.at.call({0:'first',length:1},0),'first');
+  assert.equal('abc'.at(-1),'c');
+  assert.equal(Object.hasOwn(Object.create({hidden:true}),'hidden'),false);
+  assert.equal(Object.hasOwn({hasOwnProperty:null},'hasOwnProperty'),true);
+  assert.equal('a.b.a'.replaceAll('a','$&!'),'a!.b.a!');
+  assert.equal('ab'.replaceAll('','-'),'-a-b-');
+  assert.throws(()=>'aba'.replaceAll(/a/,'x'),TypeError);
+  assert.equal(Object.getOwnPropertyDescriptor(Array.prototype,'at').enumerable,false);
+ `,require.resolve('core-js/actual/index.js')],{stdio:'pipe'})
+})
 test('cold Android deep link retains the intended screen while signed out; only fresh validated context opens it',async()=>{
  const f=fixture();let signedIn=false;f.port.identity=()=>signedIn?f.identity:null
  assert.equal(await f.shell.navigate('doctor-suit-synthetic://schedule'),false)

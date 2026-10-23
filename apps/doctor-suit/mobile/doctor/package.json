@@ -21,7 +21,8 @@
     "@building-suit/ux": "workspace:*",
     "@capacitor/core": "8.5.3",
     "@capacitor/android": "8.5.3",
-    "@capacitor/app": "8.1.2"
+    "@capacitor/app": "8.1.2",
+    "core-js": "3.51.0"
   },
   "devDependencies": {
     "typescript": "5.9.3",
