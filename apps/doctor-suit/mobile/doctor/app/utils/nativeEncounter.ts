@@ -10,6 +10,7 @@ export interface NativeEncounterPort {
 export interface NativeEncounterState {
   phase: 'idle' | 'loading' | 'ready' | 'denied' | 'error'
   outcome: 'idle' | 'unsent' | 'submitting' | 'acknowledged' | 'conflict' | 'unknown'
+  historyPage: number
   catalogue: ClinicalDirectory | null
   creating: boolean
   patientId: string | null
@@ -18,7 +19,7 @@ export interface NativeEncounterState {
   draft: ClinicalSnapshot | null
   error: 'denied' | 'invalid' | 'conflict' | 'unknown' | null
 }
-export const nativeEncounterState = (): NativeEncounterState => ({phase:'idle',outcome:'idle',catalogue:null,creating:false,patientId:null,acknowledgedId:null,detail:null,draft:null,error:null})
+export const nativeEncounterState = (): NativeEncounterState => ({phase:'idle',outcome:'idle',historyPage:0,catalogue:null,creating:false,patientId:null,acknowledgedId:null,detail:null,draft:null,error:null})
 const owned = (context: DoctorMobileContext | null) => context?.portal === 'doctor' && context.userId === context.doctorId
 const cloneSnapshot=(value:ClinicalSnapshot):ClinicalSnapshot=>JSON.parse(JSON.stringify(value))
 const editable = (detail: ClinicalDetail | null) => detail && ['draft','in_progress','amended'].includes(detail.encounter.status)
@@ -31,7 +32,7 @@ export function createNativeEncounter(port: NativeEncounterPort | null, scope: (
   async function load(id: string, discard = false, page = 0): Promise<boolean> {
     if (state.outcome === 'submitting' || (state.draft && !discard)) return false
     const previous=verifiedKey===nativePatientScopeKey(scope())?state.catalogue:null
-    clear();state.catalogue=previous
+    clear();state.catalogue=previous;state.historyPage=page
     const context = scope(), selected = nativePatientScopeKey(context), revision = generation
     if (!port || !context || !owned(context) || !clinicalUuid(id)) {state.phase='denied';return false}
     state.phase='loading'
@@ -92,5 +93,13 @@ export function createNativeEncounter(port: NativeEncounterPort | null, scope: (
       return false
     }
   }
-  return {state,clear,directory,create,patient,load,edit,save,dirty:()=>state.draft!==null,dispose:clear}
+  function observe(detail:ClinicalDetail,catalogue:ClinicalDirectory):boolean{
+    const context=scope(),record=state.detail?.encounter
+    if(state.outcome==='submitting'||!context||!owned(context)||verifiedKey!==nativePatientScopeKey(context)||!record||detail.encounter.id!==record.id||detail.encounter.practice_id!==context.practiceId||detail.encounter.location_id!==context.locationId||detail.encounter.responsible_doctor!==context.doctorId||detail.encounter.version<record.version||detail.data_mode!=='synthetic'||detail.clinical_approval!==false||detail.live_prescribing!==false||catalogue.data_mode!=='synthetic'||catalogue.clinical_approval!==false||catalogue.live_prescribing!==false)return false
+    const previous=state.detail?.versions.find(item=>item.revision===record.version),latest=detail.versions.find(item=>item.revision===detail.encounter.version)
+    const changed=detail.encounter.version!==record.version||previous?.id!==latest?.id||previous?.snapshot_sha256!==latest?.snapshot_sha256
+    if(changed&&state.draft){state.outcome='conflict';state.error='conflict'}
+    state.detail=detail;state.catalogue=catalogue;return true
+  }
+  return {state,clear,directory,create,patient,load,edit,save,observe,dirty:()=>state.draft!==null,dispose:clear}
 }
