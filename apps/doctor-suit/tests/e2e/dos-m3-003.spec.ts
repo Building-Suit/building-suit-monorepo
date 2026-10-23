@@ -51,7 +51,11 @@ test('DOS-M3-003: actual reception exceptions, two-actor reconciliation, walk-in
       await scroll.press(ar?'ArrowLeft':'ArrowRight')
       await expect.poll(()=>scroll.evaluate(el=>Math.abs(el.scrollLeft))).toBeGreaterThan(before)
      }
-     await expect.poll(()=>scroll.evaluate(el=>Math.abs(el.scrollLeft)+el.clientWidth>=el.scrollWidth-1)).toBe(true)
+     try{await expect.poll(()=>scroll.evaluate(el=>Math.abs(el.scrollLeft)+el.clientWidth>=el.scrollWidth-1)).toBe(true)}catch(error){
+      const geometry=await scroll.evaluate(el=>({clientWidth:el.clientWidth,scrollWidth:el.scrollWidth,left:el.scrollLeft}))
+      test.info().annotations.push({type:'doctor-scroll-geometry',description:JSON.stringify({...geometry,width,rtl:ar,dark})})
+      throw error
+     }
      // Capture the actual keyboard-scrolled queue, retaining its horizontal
      // position. Repositioning a separate heading is not queue evidence.
      await scroll.screenshot({path:`${dir}/reception-queue-${ar?'ar':'en'}-${dark?'dark':'light'}.png`,animations:'disabled'})

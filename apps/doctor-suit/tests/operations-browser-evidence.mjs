@@ -25,6 +25,21 @@ function failureCategory(result) {
   return 'assertion-or-runtime'
 }
 
+function scrollGeometry(task,test){
+ if(task!=='DOS-M3-003'||!Array.isArray(test?.annotations))return null
+ const annotation=test.annotations.find(value=>value?.type==='doctor-scroll-geometry')
+ if(typeof annotation?.description!=='string'||annotation.description.length>512)return null
+ try{
+  const value=JSON.parse(annotation.description)
+  if(!value||Object.keys(value).sort().join(',')!=='clientWidth,dark,left,rtl,scrollWidth,width'||
+   !Number.isSafeInteger(value.clientWidth)||value.clientWidth<1||value.clientWidth>1000000||
+   !Number.isSafeInteger(value.scrollWidth)||value.scrollWidth<value.clientWidth||value.scrollWidth>1000000||
+   !Number.isFinite(value.left)||Math.abs(value.left)>value.scrollWidth||![390,1280].includes(value.width)||
+   typeof value.rtl!=='boolean'||typeof value.dark!=='boolean')return null
+  return{clientWidth:value.clientWidth,scrollWidth:value.scrollWidth,left:Math.round(value.left*1000)/1000,width:value.width,rtl:value.rtl,dark:value.dark}
+ }catch{return null}
+}
+
 export function doctorOperationsBrowserEvidence(report, exitCode) {
   const issues = new Set()
   const passed = new Set()
@@ -60,7 +75,8 @@ export function doctorOperationsBrowserEvidence(report, exitCode) {
         if (spec.ok !== true || !Array.isArray(spec.tests) || spec.tests.length !== 1 || test?.expectedStatus !== 'passed' || test?.status !== 'expected' ||
             test.results?.length !== 1 || result?.status !== 'passed' || result?.retry !== 0 || !Array.isArray(result?.errors) || result.errors.length) {
           issues.add('browser-task-not-passed-once')
-          failed.push({task, category: failureCategory(result), location: failureLocation(task, result)})
+          const geometry=scrollGeometry(task,test)
+          failed.push({task, category: failureCategory(result), location: failureLocation(task, result),...(geometry?{geometry}:{})})
         } else {
           passed.add(task)
         }
