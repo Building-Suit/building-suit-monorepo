@@ -1,6 +1,6 @@
 {
   "task": "DOS-M4-008",
-  "status": "in progress",
+  "status": "synthetic source implementation verified; device/qualified acceptance held",
   "parent_pr": 461,
   "parent_sha": "60b322725c336dcc0eaaefdca40996c369438446",
   "task_acceptance": false,
@@ -14,5 +14,29 @@
     "narrow-rtl-denied-action-stale-queue",
     "independent-secretary-location-revocation",
     "unknown-acknowledgement-no-duplicate"
-  ]
+  ],
+  "incorporated_parent": "b7940821386a237c3079042f9601e231d90b9de4",
+  "owned_units_passed": 14,
+  "combined_mobile_units_passed": 110,
+  "focused_units_passed": 49,
+  "source_checks": {
+    "mobile_lint": "passed",
+    "mobile_types": "passed",
+    "static_bundle": "passed",
+    "post_build_capacitor_sync": "passed",
+    "boundaries": "passed;138 templates",
+    "canonical_packets": "9 passed/104 task fingerprints unchanged",
+    "all_app_types": "8 passed serially/0 cached",
+    "changed_file_lint": "native/contracts/web facades passed"
+  },
+  "runtime": "exact integrated source needs CI; inherited shell/vault checks are not signed-in schedule evidence",
+  "initial_broad_failure": "duplicate overloaded export in availability facade; corrected without changing implementation or assertions",
+  "full_root_source_phase": {
+    "tests": 2314,
+    "passed": 2237,
+    "failed": 54,
+    "skipped": 23,
+    "failure_locations": "all Shop",
+    "later_owned_regression": "final destination-revocation case passes in owned14/combined110 command"
+  }
 }

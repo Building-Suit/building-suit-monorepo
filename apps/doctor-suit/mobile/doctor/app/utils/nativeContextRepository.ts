@@ -30,7 +30,7 @@ export function createNativeContextRepository(configuration: NativeSessionConfig
     return nativeContextChoice({context: {contractVersion: 1, product: 'doctor-suit', dataMode: 'synthetic', ...identity,
       doctorId, practiceId: row.practice_id, locationId: row.location_id, portal: row.portal as 'doctor' | 'secretary',
       grantsVersion: row.grants_version as number, locationVersion: row.location_version as number, capabilities: row.capabilities as string[]},
-      practiceName: row.practice_name, doctorName: row.doctor_name, locationName: row.location_name}, identity)
+      ...(row.timezone===undefined?{}:{timezone:row.timezone as string}),practiceName: row.practice_name, doctorName: row.doctor_name, locationName: row.location_name}, identity)
   }
   return {
     async list(identity, signal) {

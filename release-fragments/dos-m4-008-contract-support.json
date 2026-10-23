@@ -1,0 +1,24 @@
+{
+  "id": "dos-m4-008-contract-support",
+  "task": "DOS-M4-008",
+  "suits": [
+    "ledger-suit",
+    "shop-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "building-suit-docs",
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/contracts/src/doctorConsultations.ts",
+    "packages/contracts/src/doctorAvailability.ts",
+    "packages/contracts/src/doctorAppointments.ts",
+    "packages/contracts/src/index.ts",
+    "apps/doctor-suit/app/utils/appointments.ts",
+    "apps/doctor-suit/app/utils/availability.ts",
+    "apps/doctor-suit/app/utils/consultations.ts"
+  ],
+  "reason": "Extract unchanged pure Doctor appointment, availability and consultation DTOs for web/native reuse without activating internal consumers."
+}

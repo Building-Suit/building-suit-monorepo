@@ -1,0 +1,18 @@
+{
+  "id": "dos-m4-008-route-support",
+  "task": "DOS-M4-008",
+  "suits": [
+    "ledger-suit",
+    "shop-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "building-suit-docs",
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/shared/atomic-template-route-inventory.json"
+  ],
+  "reason": "Register the existing canonical complete appointment template for the separate native route with held qualified acceptance."
+}

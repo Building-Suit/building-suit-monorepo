@@ -3245,6 +3245,16 @@
       "status": "implemented native synthetic notes editor; device and qualified acceptance pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/schedule.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/schedule.vue",
+      "purpose": "native-synthetic-schedule-and-queue",
+      "status": "implemented synthetic native adapter; qualified device acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
