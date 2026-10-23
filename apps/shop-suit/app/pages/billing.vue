@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { navigateTo } from '#app'
 import type { BsBillingCopy, BsBillingView, BsBillingForm } from '@building-suit/ui/types/billingPresentation'
 import type { BillingPlanOption, BillingSubmission, PrivateOfferPreview, ShopBilling } from '~/types/billing'
 import type { PlanResourceKey, PlanUsageResource, ShopPlanInterval, ShopPlanOffer } from '~/types/plans'
