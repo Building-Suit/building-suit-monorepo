@@ -1,0 +1,18 @@
+{
+  "task": "DOS-M4-008",
+  "status": "in progress",
+  "parent_pr": 461,
+  "parent_sha": "60b322725c336dcc0eaaefdca40996c369438446",
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "physical_device": false,
+  "offline_chart_approval": false,
+  "provider_activation": false,
+  "executed_native_schedule_cases": [],
+  "planned_native_cases": [
+    "two-device-reschedule-checkin-conflict",
+    "narrow-rtl-denied-action-stale-queue",
+    "independent-secretary-location-revocation",
+    "unknown-acknowledgement-no-duplicate"
+  ]
+}
