@@ -269,6 +269,20 @@
       "signupLabelHydration": "PASS",
       "pricingCtaConsentDeduplication": "PASS",
       "fixture": "synthetic loopback; no external analytics collection"
-    }
+    },
+    "consumerBuilds": {
+      "passed": 7,
+      "failed": 0
+    },
+    "sharedAuthBrowser": {
+      "passed": 48,
+      "failed": 0
+    },
+    "settingsBrowser": {
+      "passed": 12,
+      "failed": 0,
+      "defaultPopupAndShellCycles": true
+    },
+    "releaseClassification": "Open draft signup public scope corrected to Shop; other consumers internal; no accepted parent fragment changed"
   }
 }

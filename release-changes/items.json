@@ -2443,11 +2443,7 @@
     "id": "ss-electrical-signup-labels-20261023",
     "task": "SS-ELECTRICAL-001",
     "suits": [
-      "doctor-suit",
-      "inventory-suit",
-      "ledger-suit",
-      "shop-suit",
-      "super-admin-suit"
+      "shop-suit"
     ],
     "classification": "patch",
     "disposition": "public",
@@ -2503,6 +2499,69 @@
     "reason": "Shared dependency qualification covers all six consumers. Existing landing event forwarding is inert without the Shop analytics adapter. Enrollment input label identities preserve current form behavior; public effects are separately curated for consuming signup products. No product activation or enrollment authority changes.",
     "sources": [
       "ss-electrical-shared-form-event-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-cycle-keyboard-focus-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts"
+    ],
+    "reason": "A focused native language-cycle button blurs when disabled during locale loading. Restore its focus after completion only if the user has not focused another control; preserve standard popup-menu behavior. Only Shop has verified public release registration in this initiative.",
+    "notes": {
+      "title": {
+        "en": "Keep keyboard focus after changing language",
+        "ar": "الحفاظ على تركيز لوحة المفاتيح بعد تغيير اللغة"
+      },
+      "summary": {
+        "en": "The language button keeps keyboard focus when the selected language finishes loading.",
+        "ar": "يحتفظ زر اللغة بتركيز لوحة المفاتيح بعد اكتمال تحميل اللغة المختارة."
+      },
+      "details": {
+        "en": "Focus stays with a different control if you move away while the language is loading.",
+        "ar": "يبقى التركيز على أي حقل آخر تنتقل إليه أثناء تحميل اللغة."
+      }
+    },
+    "sources": [
+      "ss-electrical-cycle-keyboard-focus-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": "await cycleFocus.preserveDuring(async () => {"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-settings-consumer-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts",
+      "packages/ux/tests/point-of-sale-keyboard.test.mjs",
+      "packages/testing/e2e/settings-menu-focus.spec.ts",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify all dependency consumers without activating an operational product or inventing a production baseline. Retain popup keyboard navigation checks and test actual shell cycle controls, mobile navigation, hydration, focus and both locales. Restrict this open draft PR new signup public fragment to Shop; protected parent fragments remain untouched.",
+    "sources": [
+      "ss-electrical-settings-consumer-qualification-20261023"
     ]
   }
 ]

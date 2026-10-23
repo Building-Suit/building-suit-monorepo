@@ -2,11 +2,7 @@
   "id": "ss-electrical-signup-labels-20261023",
   "task": "SS-ELECTRICAL-001",
   "suits": [
-    "doctor-suit",
-    "inventory-suit",
-    "ledger-suit",
-    "shop-suit",
-    "super-admin-suit"
+    "shop-suit"
   ],
   "classification": "patch",
   "disposition": "public",
