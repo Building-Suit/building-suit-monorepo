@@ -137,3 +137,9 @@ The remaining real SAS/PostgREST registration failure was narrowed to the earlie
 
 
 Final qualification checkpoint024d1e01: repository gate2026/2049 passed, zero failed,23 skipped. The actual full SAS/PostgREST disposable protocol and retrospective-history branch both exit successfully against the corrected combined inventory; no registry or guard bypass is introduced. Release coverage against published parent7ef59f5f passes. The source build/browser evidence above remains scoped to its actual commands. Native current-head CI is still required after publication.
+
+### Appointment editor context qualification — 2026-10-23
+
+The next exact-head website CI failure reproduced the appointment action fixture's obsolete expandable-card selectors. The current dialog journey then exposed real focus/context loss: an array-returning watch treated every recomputed presentation object as a scope change. Watch the four actual scope sources separately; keep details mounted under the editor and prevent the background dialog handling Escape while editing. Actual location/date/staff/availability changes still close the details.
+
+The full English/light desktop and Arabic/dark mobile recovery/confirmation journeys pass (2/2), retaining all validation failures, entered values, uncertain-save pending guards, dirty discard, focus restoration, cancellation/no-show confirmations and no-overflow assertions. Shop typecheck and the production build passed; strict ownership and scoped shared-template lint passed before the final watch correction, whose built browser behavior is covered above. No appointment authority or financial behavior changed.
