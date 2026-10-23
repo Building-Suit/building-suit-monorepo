@@ -26,7 +26,7 @@
   "clinical_approval": false,
   "offline_clinical_approval": false,
   "store_upload": false,
-  "acceptance": "failed native matrix at sourcea384d7be because API29 fails; physical/qualified clinical/offline/distribution acceptance remains unavailable",
+  "acceptance": "failed native matrix at latest source62d8eeb4 because API29 cold launch fails; physical/qualified clinical/offline/distribution acceptance remains unavailable",
   "first_execution": {
     "source_head": "c08fc8b018453823699912efbd29661f9f5e275a",
     "run_id": 39852312601,
@@ -156,5 +156,107 @@
     ],
     "aggregate_acceptance": false,
     "limitation": "API36/WebView133 passes five synthetic journeys. API29/WebView74 fails cold launch; four cases remain unrun. No narrower OS/renderer claim, replaced matrix, physical evidence or clinical approval is invented."
+  },
+  "latest_runtime_receipts": {
+    "run_id": 39857297615,
+    "source_head": "62d8eeb451ba4ab9c913af2dc59b6c7ec1218b41",
+    "android_build_job": 120098716790,
+    "build": "passed",
+    "device_jobs": {
+      "29": 120100452656,
+      "36": 120100452702
+    },
+    "receipts": [
+      {
+        "version": 1,
+        "sourceHead": "62d8eeb451ba4ab9c913af2dc59b6c7ec1218b41",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "ad7c29074848e34dd1a60136d21a334e9f8a222861872b0ef529dcc194bb55c6",
+        "api": 36,
+        "accepted": true,
+        "stage": "complete",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 133,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "passed"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "passed"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "sourceHead": "62d8eeb451ba4ab9c913af2dc59b6c7ec1218b41",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "ad7c29074848e34dd1a60136d21a334e9f8a222861872b0ef529dcc194bb55c6",
+        "api": 29,
+        "accepted": false,
+        "stage": "cold-launch-signed-out",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 74,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "failed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "unrun"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "unrun"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      }
+    ],
+    "aggregate_acceptance": false,
+    "limitation": "Fresh hierarchy observations confirm API36/WebView133 passes all five cases; API29/WebView74 fails cold launch, four cases unrun. Visible package/WebView and no fixed client issue category do not identify a confirmed root cause. Mandatory matrix unchanged; no physical/qualified/clinical approval."
   }
 }

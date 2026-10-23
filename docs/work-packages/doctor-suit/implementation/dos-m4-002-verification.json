@@ -96,5 +96,29 @@
     "api29_webview74": "cold launch failed; four cases unrun",
     "aggregate_acceptance": false,
     "followup": "require a newly generated accessibility hierarchy per observation; discard owned dump at cleanup; capture only fixed categories from Capacitor console tags as well as Chromium. Old hierarchy files cannot prove a new state."
+  },
+  "continuation_2026_10_23": {
+    "parent_pr": 442,
+    "parent_sha": "75ded8f5be428b2b86bef69070c810e3c1df7b34",
+    "parent_sync": "history-preserving merge",
+    "observed_at": "2026-10-23T19:47:47.782964+00:00",
+    "focused_mobile_boundaries": {
+      "passed": 17,
+      "failed": 0
+    },
+    "mobile_lint": "passed",
+    "mobile_typecheck": "passed",
+    "workspace_check": "passed: 6 Suits/7 applications/131 templates/80 historical migrations unchanged",
+    "latest_native_ci": {
+      "source": "62d8eeb451ba4ab9c913af2dc59b6c7ec1218b41",
+      "run_id": 39857297615,
+      "apk_build": "passed",
+      "api36_webview133": "five cases passed with fresh hierarchy per observation",
+      "api29_webview74": "cold launch failed, four cases unrun",
+      "aggregate_acceptance": false
+    },
+    "parent_ci": "source75ded8f5 SQL/schema, public60, inherited actual provider and nine M3 cases pass; protocol83/2 and reception003 failure, shared settings6/6 remain",
+    "baseline": "54 inherited Shop failures retained; no full suite repeat for parent merge/evidence-only follow-up",
+    "execution_scope": "Doctor application/provider acceptance and Android runtime CI-only; mandatory root/shared units retain existing isolated Shop receipt document browser cases locally"
   }
 }
