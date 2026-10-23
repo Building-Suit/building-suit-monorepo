@@ -790,6 +790,17 @@
       "adapterBoundary": "Native Doctor adapters own marker/user/SID validation, Keystore and token transport. Shared complete templates retain email-first login and optionally accept entered recovery code fields and semantic access actions. No credentials belong in presentation state or links.",
       "task": "DOS-M4-003",
       "migrationStatus": "synthetic engineering; native/qualified verification pending"
+    },
+    {
+      "family": "native-patient-read",
+      "owner": "packages/ui",
+      "components": [
+        "BsPatientDirectoryPage",
+        "BsPatientProfilePage"
+      ],
+      "adapterBoundary": "Separate native Doctor app projects scoped online-only patient reads into the same complete canonical templates. No local composition, patient identity matching, chart persistence or private file delivery; device/document policy acceptance remains held.",
+      "task": "DOS-M4-005",
+      "migrationStatus": "synthetic native routes; device and document acceptance pending"
     }
   ]
 }

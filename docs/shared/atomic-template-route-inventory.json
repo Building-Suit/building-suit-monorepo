@@ -3215,6 +3215,26 @@
       "status": "synthetic native session engineering; security/device acceptance pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/patients/index.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPatientDirectoryPage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/patients/index.vue",
+      "purpose": "patient-directory",
+      "status": "implemented synthetic read-only native adapter; qualified device/document acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/patients/[id].vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPatientProfilePage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/patients/[id].vue",
+      "purpose": "administrative-patient-profile-private-documents",
+      "status": "implemented synthetic read-only native adapter; qualified device/document acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [

@@ -2,12 +2,17 @@ import {decodeDoctorMobileContext, type DoctorMobileContext, type DoctorMobileId
 export type MobilePhase = 'loading' | 'signed-out' | 'denied' | 'offline' | 'error' | 'ready'
 export interface MobileShellState { phase: MobilePhase; route: DoctorMobileRoute; context: DoctorMobileContext | null }
 export interface MobileContextPort { identity(): DoctorMobileIdentity | null; selection(): DoctorMobileSelection | null; load(route: DoctorMobileRoute, selection: DoctorMobileSelection, signal: AbortSignal): Promise<unknown> }
-const permissions: Record<DoctorMobileRoute, string | null> = {'/workspace': null, '/schedule': 'appointments.read', '/account': null}
+const permissions: Record<string, string | null> = {'/workspace': null, '/schedule': 'appointments.read', '/account': null, '/patients': 'patients.read'}
 export function doctorMobileDestination(input: string): DoctorMobileRoute | null {
   if (input.length > 200 || /[%\\?#]/.test(input)) return null
   const path = input.startsWith('doctor-suit-synthetic://') ? '/' + input.slice('doctor-suit-synthetic://'.length) : input
   if (path === '/' || path === '/sign-in') return '/workspace'
-  return ['/workspace','/schedule','/account'].includes(path) ? path as DoctorMobileRoute : null
+  if (/^\/patients\/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(path)) return path as DoctorMobileRoute
+  return ['/workspace','/schedule','/account','/patients'].includes(path) ? path as DoctorMobileRoute : null
+}
+export function doctorMobileBackDestination(path: string): '/patients' | '/workspace' | null {
+  if (path === '/workspace') return null
+  return doctorMobileDestination(path)?.startsWith('/patients/') ? '/patients' : '/workspace'
 }
 export function createDoctorMobileShell(port: MobileContextPort, state: MobileShellState = {phase:'signed-out',route:'/workspace',context:null}) {
   let generation = 0, abort = new AbortController(), online = true, destinationRejected = false
@@ -30,7 +35,7 @@ export function createDoctorMobileShell(port: MobileContextPort, state: MobileSh
       const freshSelection=port.selection()
       if(!fresh || fresh.userId!==current.userId || fresh.sessionId!==current.sessionId || fresh.environment!==current.environment){clear('signed-out');return false}
       if(!freshSelection || freshSelection.doctorId!==selected.doctorId || freshSelection.practiceId!==selected.practiceId || freshSelection.locationId!==selected.locationId){clear('denied');return false}
-      const context=decodeDoctorMobileContext(raw,current,selected), required=permissions[route]
+      const context=decodeDoctorMobileContext(raw,current,selected), required=permissions[route.startsWith('/patients/')?'/patients':route]
       if (required && !context.capabilities.includes(required)) {state.phase='denied';return false}
       state.context=context;state.phase='ready';return true
     } catch (error) {

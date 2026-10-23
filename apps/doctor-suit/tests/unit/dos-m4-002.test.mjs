@@ -51,7 +51,7 @@ test('cold Android deep link retains the intended screen while signed out; only 
 })
 test('external, encoded, token-bearing and unknown navigation cannot reach a context adapter',async()=>{
  const f=fixture();f.port.load=()=>assert.fail('rejected navigation must not query')
- for(const path of ['https://example.test','//workspace','/workspace?token=synthetic','/workspace#schedule','/%2e%2e/account','doctor-suit-synthetic://other','/patients']){
+ for(const path of ['https://example.test','//workspace','/workspace?token=synthetic','/workspace#schedule','/%2e%2e/account','doctor-suit-synthetic://other','/unregistered']){
   assert.equal(doctorMobileDestination(path),null);assert.equal(await f.shell.navigate(path),false);assert.equal(f.shell.state.context,null);assert.equal(f.shell.state.phase,'denied')
  }
 })
@@ -100,7 +100,7 @@ test('disposing an in-flight native shell aborts its own request and retains no 
 
 test('a rejected native destination remains denied across resume/reconnect until explicit valid navigation',async()=>{
  const f=fixture();assert.equal(await f.shell.navigate('/schedule'),true)
- assert.equal(await f.shell.navigate('doctor-suit-synthetic://patients'),false)
+ assert.equal(await f.shell.navigate('doctor-suit-synthetic://unregistered'),false)
  assert.equal(f.shell.state.phase,'denied');assert.equal(f.shell.state.context,null)
  f.shell.sessionChanged();assert.equal(await f.shell.retry(),false);assert.equal(f.shell.state.phase,'denied')
  f.shell.connectivity(false);f.shell.connectivity(true);assert.equal(await f.shell.retry(),false);assert.equal(f.shell.state.phase,'denied')
