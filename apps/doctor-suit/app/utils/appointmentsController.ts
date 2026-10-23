@@ -5,24 +5,29 @@ import { validDoctorAppointmentCommand,type DoctorAppointmentBoard,type DoctorAp
 import { doctorPatientFailure,type DoctorPatientError } from './patientsController.ts'
 import type { DoctorPatientDirectory } from './patients'
 import type { doctorAppointmentsRepository } from './appointmentsRepository'
-export interface DoctorAppointmentsState { board: DoctorAppointmentBoard | null; history: DoctorAppointmentHistory | null; offers: DoctorAvailability | null; patients: DoctorPatientDirectory | null; loading: boolean; pending: boolean; historyLoading: boolean; offersLoading: boolean; patientsLoading: boolean; error: DoctorPatientError; actionError: DoctorPatientError; historyError: DoctorPatientError; offersError: DoctorPatientError; patientsError: DoctorPatientError; live: 'connecting' | 'current' | 'reconnecting' | 'offline' }
-export const doctorAppointmentsState = (): DoctorAppointmentsState => ({ board: null,history: null,offers: null,patients: null,loading: false,pending: false,historyLoading: false,offersLoading: false,patientsLoading: false,error: null,actionError: null,historyError: null,offersError: null,patientsError: null,live: 'offline' })
+export interface DoctorAppointmentsState { board: DoctorAppointmentBoard | null; history: DoctorAppointmentHistory | null; offers: DoctorAvailability | null; patients: DoctorPatientDirectory | null; loading: boolean; refreshing: boolean; pending: boolean; historyLoading: boolean; offersLoading: boolean; patientsLoading: boolean; error: DoctorPatientError; actionError: DoctorPatientError; historyError: DoctorPatientError; offersError: DoctorPatientError; patientsError: DoctorPatientError; live: 'connecting' | 'current' | 'reconnecting' | 'offline' }
+export const doctorAppointmentsState = (): DoctorAppointmentsState => ({ board: null,history: null,offers: null,patients: null,loading: false,refreshing: false,pending: false,historyLoading: false,offersLoading: false,patientsLoading: false,error: null,actionError: null,historyError: null,offersError: null,patientsError: null,live: 'offline' })
 export function createDoctorAppointmentsController(repository: ReturnType<typeof doctorAppointmentsRepository> | null,state: DoctorAppointmentsState,scope: () => DoctorLocationContext | null,key = () => crypto.randomUUID()) {
   let generation = 0; const revisions = { board: 0,history: 0,offers: 0,patients: 0 };let abort = new AbortController();let uncertain: { material: string; key: string } | null = null;let latestQuery: DoctorAppointmentQuery | null = null;let refreshQueued = false
+  let boardScopeKey: string | null = null
   const scopeKey = () => { const selected = scope();return selected ? doctorScopeKey(selected,'appointments') : null }
   const capture = () => ({ generation,key: scopeKey() });const accepts = (value: ReturnType<typeof capture>) => value.generation===generation && value.key===scopeKey()
   const signal = () => AbortSignal.any([abort.signal,AbortSignal.timeout(15000)])
-  function clear() { generation++;abort.abort();abort = new AbortController();uncertain = null;latestQuery = null;refreshQueued = false;Object.assign(state,doctorAppointmentsState()) }
+  function clear() { generation++;abort.abort();abort = new AbortController();uncertain = null;latestQuery = null;refreshQueued = false;boardScopeKey=null;Object.assign(state,doctorAppointmentsState()) }
   function discard() { uncertain = null;state.actionError = null;state.offers = null;state.offersError = null;state.patients = null;state.patientsError = null }
   function failure(error: unknown) { const result = doctorPatientFailure(error);if(result==='denied')clear();return result }
-  function disconnected() { state.live = 'reconnecting';state.board = null;state.history = null;state.offers = null;revisions.offers++;state.offersLoading=false;state.offersError='network' }
+  function disconnected() { state.live = 'reconnecting';state.board = null;boardScopeKey=null;state.history = null;state.offers = null;revisions.offers++;state.offersLoading=false;state.offersError='network' }
   async function load(query: DoctorAppointmentQuery) {
     if(state.pending) { latestQuery = { ...query };refreshQueued = true;return false }
-    const selected = scope();const expected = capture();const revision = ++revisions.board;latestQuery = { ...query };state.loading = true;state.error = null
-    if(!repository || !selected || !doctorScheduleDate(query.date) || !Number.isSafeInteger(query.page) || query.page<0 || !Number.isSafeInteger(query.queuePage) || query.queuePage<0) { state.loading = false;state.board = null;state.error = 'invalid';return false }
-    try { const result = await repository.board(selected.practiceId,selected.locationId,query,signal());if(!accepts(expected) || revision!==revisions.board)return false;if(result.locationVersion!==selected.locationVersion || result.timezone!==selected.timezone)throw { code: '40001' };state.board = result;return true }
-    catch(error) { if(accepts(expected) && revision===revisions.board) { state.board = null;state.error = failure(error) };return false }
-    finally { if(accepts(expected) && revision===revisions.board)state.loading = false }
+    const selected = scope();const expected = capture();const revision = ++revisions.board;latestQuery = { ...query }
+    const previous=state.board
+    const refreshing=Boolean(selected&&previous&&boardScopeKey===expected.key&&previous.practiceId===selected.practiceId&&previous.locationId===selected.locationId&&previous.locationVersion===selected.locationVersion&&previous.timezone===selected.timezone&&previous.date===query.date&&previous.page===query.page&&previous.queuePage===query.queuePage)
+    state.loading=!refreshing;state.refreshing=refreshing;state.error=null
+    if(!refreshing){state.board=null;boardScopeKey=null}
+    if(!repository || !selected || !doctorScheduleDate(query.date) || !Number.isSafeInteger(query.page) || query.page<0 || !Number.isSafeInteger(query.queuePage) || query.queuePage<0) { state.loading = false;state.refreshing=false;state.board = null;boardScopeKey=null;state.error = 'invalid';return false }
+    try { const result = await repository.board(selected.practiceId,selected.locationId,query,signal());if(!accepts(expected) || revision!==revisions.board)return false;if(result.locationVersion!==selected.locationVersion || result.timezone!==selected.timezone)throw { code: '40001' };state.board = result;boardScopeKey=expected.key;return true }
+    catch(error) { if(accepts(expected) && revision===revisions.board) { state.board = null;boardScopeKey=null;state.error = failure(error) };return false }
+    finally { if(accepts(expected) && revision===revisions.board){state.loading = false;state.refreshing=false} }
   }
   async function history(appointmentId: string,page = 0) {
     const selected = scope();const expected = capture();const revision = ++revisions.history;state.history = null;state.historyLoading = true;state.historyError = null
