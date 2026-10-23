@@ -1,0 +1,85 @@
+{
+  "task": "LS-REL-CYCLE-001",
+  "observed_at": "2026-10-23",
+  "parent_pr": 451,
+  "parent_sha": "c2964002f9e4a6a0c6c63c43277a9d5b1d4f7500",
+  "runtime": {
+    "postgres": "17.6 native Supabase filesystem",
+    "migrations": 106,
+    "latest": "20261022213133",
+    "execution_role": "authenticated with actual JWT claims",
+    "fixture": "One isolated tenant; all writes roll back; actor absent after run"
+  },
+  "module_expected": {
+    "depreciation_formula": "round(24000 * 25 / 366) = 1639",
+    "rounding": "half away from zero",
+    "journals": 8,
+    "entries": 16,
+    "all_debits_minor": "192939",
+    "all_credits_minor": "192939",
+    "period_debits_minor": "92939",
+    "period_credits_minor": "92939",
+    "closing_tb_debit_minor": "142639",
+    "closing_tb_credit_minor": "142639",
+    "bank_minor": "80700",
+    "AR_minor": "18000",
+    "AP_minor": "11000",
+    "asset_NBV_minor": "22361",
+    "profit_minor": "10061",
+    "total_assets_minor": "121061",
+    "cash": {
+      "opening_minor": "100000",
+      "operating_minor": "4700",
+      "investing_minor": "-24000",
+      "financing_minor": "0",
+      "change_minor": "-19300",
+      "closing_minor": "80700",
+      "unclassified_minor": "0",
+      "reconciled": true
+    }
+  },
+  "verification": {
+    "focused_sql": {
+      "files": 1,
+      "assertions": 38,
+      "result": "pass"
+    },
+    "complete_native_sql": {
+      "files": 65,
+      "assertions": 1979,
+      "elapsed_seconds": 28,
+      "result": "pass"
+    },
+    "original_manual_worksheet": {
+      "checks": 22,
+      "depreciation_minor": "2000",
+      "debit_credit_minor": "193300",
+      "profit_minor": "9700",
+      "assets_minor": "120700",
+      "result": "pass; original source retained unchanged"
+    },
+    "acceptance_register": "138 distinct requirement states and independent worksheet validator pass",
+    "period_controls": [
+      "hard close succeeds",
+      "new AR/AP/asset and reversal commands denied",
+      "reopening requires a reason",
+      "four actor-attributed transitions preserved",
+      "financial overview unchanged",
+      "all journal and entry fingerprints unchanged"
+    ],
+    "workspace_check": "pass",
+    "source_policy_changes": "none",
+    "new_migrations": "none",
+    "full_ci": "No combined release-green claim; parent CI retains unrelated failures"
+  },
+  "source_sha256": {
+    "supabase/tests/53_integrated_financial_cycle_test.sql": "58f500740910e0def58530791936d0ae7657cc43f771d9c30eab8e2b814c120d",
+    "scripts/verify-v2-reconciliation.sql": "640a900339962c1282b2cd0fd4cc92009dec2341c0f74534d28e0f0ad985172e"
+  },
+  "pending": [
+    "Actual Storage-byte transfer and timed native second-instance recovery",
+    "Configured hosted review and remaining advisories",
+    "Live Automation queue reconciliation",
+    "Accountant browser/UAT and release provider verification"
+  ]
+}
