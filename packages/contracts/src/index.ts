@@ -152,3 +152,5 @@ export type {
 } from './administration.ts'
 export * from './changelog.ts'
 export * from './doctorMobile.ts'
+export * from './doctorPatients.ts'
+export * from './doctorPatientProfile.ts'

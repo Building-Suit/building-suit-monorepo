@@ -1,0 +1,13 @@
+{
+  "task": "DOS-M4-005",
+  "status": "in progress",
+  "parent_pr": 456,
+  "initial_parent_sha": "9410934019178b988168c2455b207d4266c6aaec",
+  "executed_native_cases": [],
+  "task_acceptance": false,
+  "physical_device": false,
+  "clinical_approval": false,
+  "offline_chart_approval": false,
+  "provider_activation": false,
+  "document_delivery": "disabled; device cache/custody policy and native verification outstanding"
+}
