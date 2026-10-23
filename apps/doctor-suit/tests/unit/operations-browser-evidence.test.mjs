@@ -13,6 +13,17 @@ function report() {
 }
 const spec = (value, index = 0) => value.suites[0].suites[index].specs[0]
 
+test('failed reception retains only bounded numeric geometry and fixed viewport flags',()=>{
+ const value=report(),entry=spec(value,2),geometry={clientWidth:330,scrollWidth:1200,left:-868.5,width:390,rtl:true,dark:false}
+ entry.tests[0].results[0].status='failed'
+ entry.tests[0].annotations=[{type:'doctor-scroll-geometry',description:JSON.stringify(geometry)}]
+ assert.deepEqual(evidence(value,1).failed[0].geometry,geometry)
+ for(const input of [{...geometry,patient:'private sentinel'},{...geometry,left:'private sentinel'},{...geometry,scrollWidth:1000001},{...geometry,width:555},null]){
+  entry.tests[0].annotations[0].description=JSON.stringify(input)
+  const actual=evidence(value,1);assert.equal('geometry'in actual.failed[0],false);assert.equal(JSON.stringify(actual).includes('private sentinel'),false)
+ }
+})
+
 test('action diagnostics retain fixed categories without private locator or screenshot text', () => {
   for (const [message, category] of [
     ['locator.scrollIntoViewIfNeeded: strict mode violation: private sentinel', 'locator-ambiguous'],
