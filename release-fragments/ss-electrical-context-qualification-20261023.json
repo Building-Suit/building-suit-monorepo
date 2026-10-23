@@ -1,0 +1,30 @@
+{
+  "id": "ss-electrical-context-qualification-20261023",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/plugins/query-scope.ts",
+    "apps/shop-suit/app/composables/useShopQueryCache.ts",
+    "apps/shop-suit/app/stores/shop.ts",
+    "apps/shop-suit/app/utils/shopQueryCleanup.ts"
+  ],
+  "reason": "Keep counter receipt state off public storefront SSR and clear prior-scope cached snapshots before detaching active consumers. Existing server permissions remain authoritative.",
+  "notes": {
+    "title": {
+      "en": "Keep workspace state scoped to its context",
+      "ar": "حفظ حالة مساحة العمل ضمن سياقها"
+    },
+    "summary": {
+      "en": "Public storefront pages omit counter receipt-selection state. Account and location changes clear prior workspace snapshots immediately.",
+      "ar": "لا تتضمن صفحات المتجر العامة حالة اختيار إيصال نقطة البيع، وتُمسح لقطات مساحة العمل السابقة فور تغيير الحساب أو الفرع."
+    },
+    "details": {
+      "en": "Cancelled reads cannot restore a prior context after its consumers move. Current receipt selection is still cleared on sign-out.",
+      "ar": "لا تعيد القراءات الملغاة بيانات سياق سابق بعد انتقال الواجهة، ويظل اختيار الإيصال الحالي يُمسح عند تسجيل الخروج."
+    }
+  }
+}

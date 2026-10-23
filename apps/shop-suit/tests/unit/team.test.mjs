@@ -9,7 +9,7 @@ const shell = await readFile(new URL('../../app/utils/shopNavigation.ts', import
 const products = await readFile(new URL('../../app/pages/products/index.vue', import.meta.url), 'utf8')
 const services = await readFile(new URL('../../app/pages/services/index.vue', import.meta.url), 'utf8')
 const expenses = await readFile(new URL('../../app/pages/expenses/index.vue', import.meta.url), 'utf8')
-const settings = await readFile(new URL('../../app/pages/settings.vue', import.meta.url), 'utf8')
+const settings = await readFile(new URL('../../app/pages/settings/[[section]].vue', import.meta.url), 'utf8')
 
 test('team contract preserves granular authorization and history', () => {
   assert.match(migration, /shop_team_invitations/)

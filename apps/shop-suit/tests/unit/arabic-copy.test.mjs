@@ -15,7 +15,7 @@ const files = {
   products: new URL('../../app/pages/products/index.vue', import.meta.url),
   services: new URL('../../app/pages/services/index.vue', import.meta.url),
   catalogImport: new URL('../../app/pages/catalog-import.vue', import.meta.url),
-  settings: new URL('../../app/pages/settings.vue', import.meta.url),
+  settings: new URL('../../app/pages/settings/[[section]].vue', import.meta.url),
   convention: new URL('../../docs/arabic-copy.md', import.meta.url),
 }
 

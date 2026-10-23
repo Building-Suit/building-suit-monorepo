@@ -728,13 +728,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E6 / P0 / QA.
 - Dependencies: SS-ELEC-107, SS-ELEC-210, SS-ELEC-405.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Verify all new RPC/table grants, roles, RLS, cross-tenant/location denial and immutable historical objects.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Verify all new RPC/table grants, roles, RLS, cross-tenant/location denial and immutable historical objects. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Qualification child repairs the51 inherited Shop unit failure names;478 Shop unit cases now pass. Eight built public-host/customer/booking isolation scenarios and actual Pinia/Colada account-switch/cancelled-response tests pass. Parent450 reel SQL/race passed on real Supabase; a further catalog entry-point correction and full current-head qualification remain in progress. See VERIFICATION.md for limits.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -743,13 +743,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E6 / P0 / QA.
 - Dependencies: SS-ELEC-205, SS-ELEC-305, SS-ELEC-405, SS-ELEC-408.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Run real concurrent cashiers/reels/reservations and duplicate purchase/sale UUIDs; no oversell/duplicate movements.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Run real concurrent cashiers/reels/reservations and duplicate purchase/sale UUIDs; no oversell/duplicate movements. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Qualification child repairs the51 inherited Shop unit failure names;478 Shop unit cases now pass. Eight built public-host/customer/booking isolation scenarios and actual Pinia/Colada account-switch/cancelled-response tests pass. Parent450 reel SQL/race passed on real Supabase; a further catalog entry-point correction and full current-head qualification remain in progress. See VERIFICATION.md for limits.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -773,13 +773,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E6 / P0 / QA.
 - Dependencies: SS-ELEC-210, SS-ELEC-211, SS-ELEC-406.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Run affected original product/service/payment/tax/bundle/return/reporting regressions without weakening assertions.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Run affected original product/service/payment/tax/bundle/return/reporting regressions without weakening assertions. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Qualification child repairs the51 inherited Shop unit failure names;478 Shop unit cases now pass. Eight built public-host/customer/booking isolation scenarios and actual Pinia/Colada account-switch/cancelled-response tests pass. Parent450 reel SQL/race passed on real Supabase; a further catalog entry-point correction and full current-head qualification remain in progress. See VERIFICATION.md for limits.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -788,13 +788,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E6 / P0 / QA.
 - Dependencies: SS-ELEC-602, SS-ELEC-603, SS-ELEC-604, SS-ELEC-605.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Run full migrated disposable DB plus browser merchant journey; record every pass/failure/skipped gate.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Run full migrated disposable DB plus browser merchant journey; record every pass/failure/skipped gate. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Qualification child repairs the51 inherited Shop unit failure names;478 Shop unit cases now pass. Eight built public-host/customer/booking isolation scenarios and actual Pinia/Colada account-switch/cancelled-response tests pass. Parent450 reel SQL/race passed on real Supabase; a further catalog entry-point correction and full current-head qualification remain in progress. See VERIFICATION.md for limits.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.

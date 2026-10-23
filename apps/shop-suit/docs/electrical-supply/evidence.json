@@ -199,5 +199,42 @@
       "docs": "PASS"
     },
     "releaseCheck": "PASS against actual parent a15ce639"
+  },
+  "regressionQualification": {
+    "branch": "codex/shop-suit/electrical-regression-qualification",
+    "initialParent": "50f5b5828b2e55415428ea07bc0140199dda7d9d",
+    "shopUnit": {
+      "passed": 478,
+      "failed": 0
+    },
+    "publicBuiltIntegration": {
+      "passed": 8,
+      "failed": 0
+    },
+    "scopeCleanupUnit": {
+      "passed": 2,
+      "usesActualColada": true,
+      "lateResponseRejected": true
+    },
+    "realStoreAccountTransition": {
+      "passed": 3,
+      "usesActualPiniaColadaAndScopePlugin": true
+    },
+    "fullRepositoryUnit": {
+      "firstRun": {
+        "passed": 2021,
+        "total": 2049,
+        "failed": 5,
+        "skipped": 23
+      },
+      "retainedFailureReasons": [
+        "Unused duplicate physical-template export; corrected on parent15b52a32",
+        "Four browser checks lacked the pinned Playwright binary; installed and all14 focused browser/control-plane cases pass"
+      ],
+      "finalMergedRun": "PENDING"
+    },
+    "mergedParentQualification": "PENDING",
+    "merchantHardwareAcceptance": false,
+    "publishedParentCorrection": "946b0f582261b7ce01e02ac7c925326f6d8757a7"
   }
 }

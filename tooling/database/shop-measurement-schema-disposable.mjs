@@ -14,9 +14,11 @@ const args = process.argv.slice(2)
 const regressions = args.includes('--regressions')
 if (regressions) args.splice(args.indexOf('--regressions'), 1)
 const outputs = new Map()
+const extraSuites = new Set()
 while (args.length) {
   const flag = args.shift(), path = args.shift()
-  assert.ok(['--types','--schema'].includes(flag) && path && !outputs.has(flag), 'Expected optional --regressions, --types output-file and --schema output-file')
+  if (flag === '--suite') { assert.match(path ?? '',/^shop_[a-z0-9_]+$/,'Expected a Shop SQL suite basename');extraSuites.add(path);continue }
+  assert.ok(['--types','--schema'].includes(flag) && path && !outputs.has(flag), 'Expected optional --regressions, --suite Shop-suite-basename, --types output-file and --schema output-file')
   outputs.set(flag, path)
 }
 const regressionFailures = []
@@ -70,7 +72,10 @@ try {
   console.log('Electrical measured merchant journey: PASS')
   sql(`BEGIN;\n${readFileSync(new URL('supabase/tests/shop_electrical_reels.sql', app), 'utf8')}\nROLLBACK;`)
   console.log('Physical reel merchant journey: PASS')
-  for (const suite of regressions ? ['shop_crm_product_catalog', 'shop_sale_issuance', 'shop_stock_counts_corrections', 'shop_supplier_payables_returns', 'shop_service_materials', 'shop_partial_returns', 'shop_storefront_bundle_offers', 'shop_operating_reports', 'shop_website_catalog'] : []) {
+  const suites = new Set([...(regressions ? ['shop_crm_product_catalog', 'shop_sale_issuance', 'shop_stock_counts_corrections', 'shop_supplier_payables_returns', 'shop_service_materials', 'shop_partial_returns', 'shop_storefront_bundle_offers', 'shop_operating_reports', 'shop_website_catalog'] : []), ...extraSuites])
+  const availableSuites = readdirSync(new URL('supabase/tests/',app))
+  for (const suite of suites) {
+    assert.ok(availableSuites.includes(`${suite}.sql`),'Requested Shop SQL suite is unavailable')
     const fixture = readFileSync(new URL(`supabase/tests/${suite}.sql`, app), 'utf8').replace(/\bshop_crm\b/g, 'public')
     try {
       sql(`BEGIN;\n${fixture}\nROLLBACK;`)

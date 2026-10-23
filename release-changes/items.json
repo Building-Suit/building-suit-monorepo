@@ -2256,5 +2256,104 @@
     "sources": [
       "ss-electrical-landing-fixture-lint-20261022"
     ]
+  },
+  {
+    "id": "ss-electrical-context-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/plugins/query-scope.ts",
+      "apps/shop-suit/app/composables/useShopQueryCache.ts",
+      "apps/shop-suit/app/stores/shop.ts",
+      "apps/shop-suit/app/utils/shopQueryCleanup.ts"
+    ],
+    "reason": "Keep counter receipt state off public storefront SSR and clear prior-scope cached snapshots before detaching active consumers. Existing server permissions remain authoritative.",
+    "notes": {
+      "title": {
+        "en": "Keep workspace state scoped to its context",
+        "ar": "حفظ حالة مساحة العمل ضمن سياقها"
+      },
+      "summary": {
+        "en": "Public storefront pages omit counter receipt-selection state. Account and location changes clear prior workspace snapshots immediately.",
+        "ar": "لا تتضمن صفحات المتجر العامة حالة اختيار إيصال نقطة البيع، وتُمسح لقطات مساحة العمل السابقة فور تغيير الحساب أو الفرع."
+      },
+      "details": {
+        "en": "Cancelled reads cannot restore a prior context after its consumers move. Current receipt selection is still cleared on sign-out.",
+        "ar": "لا تعيد القراءات الملغاة بيانات سياق سابق بعد انتقال الواجهة، ويظل اختيار الإيصال الحالي يُمسح عند تسجيل الخروج."
+      }
+    },
+    "sources": [
+      "ss-electrical-context-qualification-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/plugins/query-scope.ts",
+        "contains": "if (scope.actorId || posReceipt)"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-storefront-permission-menu-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/utils/shopPermissionMenu.ts"
+    ],
+    "reason": "Map the existing sales/settings permissions to the current offers and website-builder navigation entries without adding backend authority.",
+    "notes": {
+      "title": {
+        "en": "Review storefront permissions with their pages",
+        "ar": "مراجعة صلاحيات المتجر بجوار صفحاتها"
+      },
+      "summary": {
+        "en": "The role editor groups existing offer and website-builder permissions under their current page names.",
+        "ar": "يجمع محرر الأدوار صلاحيات العروض ومنشئ الموقع الحالية تحت أسماء صفحاتها."
+      },
+      "details": {
+        "en": "Saved and ungrantable permissions retain their existing behavior; backend permission keys are unchanged.",
+        "ar": "تحتفظ الصلاحيات المحفوظة وغير القابلة للمنح بسلوكها الحالي، دون تغيير مفاتيح الصلاحيات في الخادم."
+      }
+    },
+    "sources": [
+      "ss-electrical-storefront-permission-menu-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+        "contains": "'/offers': ['sales.manage', 'settings.manage']"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-regression-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "tooling/database/shop-measurement-schema-disposable.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Repair stale Shop harnesses around the current data client, real Pinia/Colada stores, current settings/receipt templates and scoped query contracts; preserve tenant/race/amount assertions and add actual cache-cancellation checks. Support explicitly selected existing SQL fixtures only in the uniquely owned disposable schema runner. No product activation or hosted mutation is included.",
+    "sources": [
+      "ss-electrical-regression-qualification-20261023"
+    ]
   }
 ]

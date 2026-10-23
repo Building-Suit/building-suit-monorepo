@@ -18,6 +18,8 @@ export const SHOP_PAGE_PERMISSIONS: Record<string, readonly string[]> = {
   '/inventory': ['inventory.view', 'inventory.manage', 'inventory.adjust'],
   '/purchases': ['vendors.view', 'vendors.manage', 'vendor_invoices.view', 'vendor_invoices.manage', 'supplier_payments.record', 'supplier_payments.reverse', 'supplier_credits.manage', 'purchase_returns.manage'],
   '/reports': ['reports.view', 'reports.cost_profit.view'],
+  '/offers': ['sales.manage', 'settings.manage'],
+  '/website-builder': ['settings.manage'],
   '/catalog-import': ['products.view', 'products.manage', 'services.view', 'services.manage', 'clients.manage', 'vendors.manage', 'reports.view'],
   '/services': ['services.view', 'services.manage'],
   '/expenses': ['expenses.view', 'expenses.manage'],
