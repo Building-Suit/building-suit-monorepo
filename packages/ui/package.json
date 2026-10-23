@@ -396,7 +396,9 @@
     "./molecules/BsPriceApprovalFields": "./src/molecules/BsPriceApprovalFields.vue",
     "./types/priceApprovalPresentation": "./src/types/priceApprovalPresentation.ts",
     "./templates/BsTradeQuotationsPage": "./src/templates/BsTradeQuotationsPage.vue",
-    "./types/tradeQuotationPresentation": "./src/types/tradeQuotationPresentation.ts"
+    "./types/tradeQuotationPresentation": "./src/types/tradeQuotationPresentation.ts",
+    "./templates/BsTradeOrdersPage": "./src/templates/BsTradeOrdersPage.vue",
+    "./types/tradeOrderPresentation": "./src/types/tradeOrderPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

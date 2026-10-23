@@ -33,6 +33,7 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
    if (name === 'list_products') return { items: [{ id: 'product-1', name: 'Project cable' }], total: 1, page: 1, pageSize: 20 }
    if (name === 'list_customers') return { items: [{ id: 'customer-1', name: 'Contractor customer' }], total: 1, page: 1, pageSize: 20 }
    if (name === 'product_measurement_options') return measurement
+   if (name === 'trade_order_context') return { items: [], total: 0, page: 1, pageSize: 20, detail: null, quotation: null, canManage: true }
    if (name === 'trade_quotation_context') return { items: record ? [record] : [], total: record ? 1 : 0, page: 1, pageSize: 20, canManage: true, canIssue: true, detail: args.p_quotation_id && record ? { record, snapshot, versions, events, versionCount: versions.length, eventCount: events.length, historyPage: 1 } : null }
    if (name === 'trade_quotation_command') return apply(args)
    return undefined

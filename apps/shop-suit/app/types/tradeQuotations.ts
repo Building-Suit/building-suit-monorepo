@@ -7,8 +7,8 @@ export interface QuotationRecord {
 }
 export interface QuotationSnapshot {
  quotationNumber: string; version: number; currency: string; customerId: string; customerName: string; projectReference: string | null; notes: string | null; validUntil: string
- orderDiscount: number; net: number; tax: number; total: number
- lines: { name: string; quantity: string; unitPrice: string; total: number; input: SaleLineInput; measurement: MeasurementSnapshot | null; pricing: { source: string } | null }[]
+ orderDiscount: string | number; net: string | number; tax: string | number; total: string | number
+ lines: { name: string; quantity: string; unitPrice: string; total: string | number; input: SaleLineInput; measurement: MeasurementSnapshot | null; pricing: { source: string } | null }[]
 }
 export interface QuotationDetail { record: QuotationRecord; snapshot: QuotationSnapshot; versions: { version: number; snapshot: QuotationSnapshot; reason: string; actor_profile_id: string; actor_name?: string | null; created_at: string }[]; events: { revision: number; version: number; action: string; previous_status: string | null; status: string; reason: string; actor_profile_id: string; actor_name?: string | null; created_at: string }[]; versionCount: number; eventCount: number; historyPage: number }
 export interface QuotationContext { items: QuotationRecord[]; total: number; page: number; pageSize: number; detail: QuotationDetail | null; canManage: boolean; canIssue: boolean }

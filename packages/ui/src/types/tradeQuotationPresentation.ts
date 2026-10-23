@@ -9,7 +9,7 @@ export interface BsQuotationHistoryRow { id: string; version: string; status: st
 export interface BsQuotationView {
  locked: boolean; available: boolean; loading: boolean; error: string; total: number; pageSize: number; canCreate: boolean
  editor: { canProducts: boolean; canServices: boolean; title: string; dirty: boolean; pending: boolean; locked: boolean; error: string }
- detail: { locked: boolean; actionError: string; loading: boolean; error: string; title: string; subtitle: string; status: string; notice: string; pending: boolean; reason: string; canEdit: boolean; canRevise: boolean; actions: { id: string; label: string }[]; lines: BsQuotationDetailLine[]; totals: { label: string; value: string }[]; history: BsQuotationHistoryRow[]; events: BsQuotationHistoryRow[]; versionCount: number; eventCount: number }
+ detail: { relatedAction?: { label: string; to: string }; locked: boolean; actionError: string; loading: boolean; error: string; title: string; subtitle: string; status: string; notice: string; pending: boolean; reason: string; canEdit: boolean; canRevise: boolean; actions: { id: string; label: string }[]; lines: BsQuotationDetailLine[]; totals: { label: string; value: string }[]; history: BsQuotationHistoryRow[]; events: BsQuotationHistoryRow[]; versionCount: number; eventCount: number }
 }
 export interface BsQuotationCopy {
  title: string; subtitle: string; add: string; search: string; number: string; customer: string; project: string; status: string; version: string; validity: string; total: string; actions: string; open: string; edit: string; revise: string; print: string; empty: string; retry: string; noShop: string

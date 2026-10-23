@@ -518,14 +518,14 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-403.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Convert accepted quote to order retaining agreed prices and preventing duplicate conversion.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Convert accepted quote to order retaining agreed prices and preventing duplicate conversion. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: Forward migration20261023222339, public-command shop_trade_orders.sql and shared order page. Local111-migration replay, quotation/order SQL cases, large exact-money transport and both bilingual conversion/retry browser cases pass. Reservation/fulfillment remain separate open tasks.
+- PR / commit: Local `codex/shop-suit/contractor-orders`, based on published quotation PR463; feature publication pending.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 

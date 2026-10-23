@@ -1,0 +1,8 @@
+import type { QuotationSnapshot } from './tradeQuotations'
+import type { MeasurementSnapshot } from './measurement'
+export type TradeOrderStatus = 'open' | 'partially_fulfilled' | 'fulfilled' | 'cancelled'
+export interface TradeOrderSummary { id: string; order_number: string; status: TradeOrderStatus; currency: string; total_amount: string; revision: number; quotation_id: string; quotation_version: number; customer_name: string; project_reference: string | null; created_at: string }
+export interface OrderQuotationChoice { id: string; name: string; currency: string; total_amount: string; project_reference: string | null }
+export interface OrderQuotationPreview { id: string; number: string; revision: number; version: number; status: string; currency: string; total: string; customerName: string; projectReference: string | null; orderId: string | null }
+export interface TradeOrderDetail { record: Omit<TradeOrderSummary, 'customer_name' | 'project_reference'> & { agreed_snapshot: QuotationSnapshot }; lines: { id: string; line_order: number; item_name: string; item_type: string; product_id: string | null; service_id: string | null; quantity: string; unit_price: string; discount_amount: string; measurement_snapshot: MeasurementSnapshot | null }[]; events: { id: string; action: string; reason: string; actor_name: string | null; created_at: string }[]; eventCount: number; historyPage: number }
+export interface TradeOrderContext { items: (TradeOrderSummary | OrderQuotationChoice)[]; total: number; page: number; pageSize: number; detail: TradeOrderDetail | null; quotation: OrderQuotationPreview | null; canManage: boolean }
