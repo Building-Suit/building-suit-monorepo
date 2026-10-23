@@ -2,12 +2,12 @@
   "id": "dos-m4-008-route-support",
   "task": "DOS-M4-008",
   "suits": [
-    "ledger-suit",
+    "doctor-suit",
     "shop-suit",
+    "ledger-suit",
     "inventory-suit",
     "super-admin-suit",
-    "building-suit-docs",
-    "doctor-suit"
+    "automation-suit"
   ],
   "classification": "internal",
   "disposition": "internal",
