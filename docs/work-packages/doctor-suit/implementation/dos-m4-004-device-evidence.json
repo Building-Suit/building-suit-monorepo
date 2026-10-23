@@ -1,0 +1,12 @@
+{
+  "task": "DOS-M4-004",
+  "status": "in progress",
+  "parent_pr": 453,
+  "parent_sha": "4b537e2cd240856c4166a1cbf3b6f19598c19db5",
+  "executed_native_cases": [],
+  "task_acceptance": false,
+  "physical_device": false,
+  "clinical_approval": false,
+  "offline_chart_approval": false,
+  "provider_activation": false
+}
