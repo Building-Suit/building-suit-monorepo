@@ -1,12 +1,12 @@
 # Restore, retention, and customer portability
 
-Status: **current 103-table portability and version-2 recovery evidence implemented and verified through native PostgREST; actual Storage/restore drill pending** (LS-OPS-PORT-002, 2026-10-22). See [the current package and evidence](accountant-system/work-packages/LS-OPS-PORT-002.md). This does not claim a recovery-point objective (RPO), recovery-time objective (RTO), deployment, or accountant acceptance.
+Status: **native second-instance database/private-file recovery verified** (LS-OPS-RECOVERY-001, 2026-10-23). The actual 107-version rehearsal matches 153 application/Auth/Storage tables, the 103-table/four-report customer export, both private buckets and all five project object files. See [the work package and timings](accountant-system/work-packages/LS-OPS-RECOVERY-001.md). Hosted configuration, operating off-site backups, retention commitments and accountant UAT remain unverified; no production RPO/RTO is promised.
 
 The 103-table export includes FX/ETA/migration/manual-payment records, existing financial modules and both private object buckets. Object files use `objects/<encoded-bucket>/<tenant-key>`. Recovery comparison requires version-2 SQL/object/export manifests and validates every actual file, table row count, report and object digest. HTTP unit fixtures remain separate from genuine Storage-provider evidence. A tenant API export is not a transactionally consistent database backup: freeze source writes for recovery evidence and retain the separate database/Storage backup procedure below.
 
-## Original exercise result (2026-09-27)
+## Original exercise result (2026-09-27; superseded by the native rehearsal above)
 
-The required second-instance restore did not start in this worktree. The checks below were actually run against the prepared branch at `0db3ea00ffa8ab5ecf771d9de3b4af1031951302` before edits:
+The historical September exercise did not start its second-instance restore. The October rehearsal above closes that local execution blocker; the following observations remain historical. The checks below were actually run against the prepared branch at `0db3ea00ffa8ab5ecf771d9de3b4af1031951302` before edits:
 
 | Check | Observed result |
 |---|---|
@@ -17,11 +17,11 @@ The required second-instance restore did not start in this worktree. The checks 
 | Local PostgreSQL | `pg_isready` found no server on `127.0.0.1:60322` or `127.0.0.1:5432`; no `postgres`/`initdb` server binary is installed. |
 | Backup, restore, reconciliation, attachment copy | Not started. Consequently there is no honest backup duration, restore duration, recoverable point, storage volume, RPO, or RTO to report. |
 
-This is a hard acceptance blocker, not a skipped test counted as evidence. A real run needs two fresh, explicitly owned disposable Supabase instances and Docker/native PostgreSQL access. Hosted writes are outside this task's authorization.
+These September environment blockers are preserved as historical evidence. The October native run used two fresh owned projects and actual providers; its separate remaining hosted/off-site/UAT gates are recorded above.
 
-## Verified hosting-plan limits
+## Historical hosting-plan review (2026-09-27; current hosted plan unverified)
 
-No paid Supabase plan has been selected or created in the maintained environment setup. The current planning baseline is therefore **Free**, subject to owner confirmation in the provider dashboard. This is a source-level conclusion, not verification of either live Ledger project's plan or backup dashboard.
+At the September checkpoint, no paid plan selection was recorded in the maintained setup and the planning baseline was **Free**. The current hosted plan and backup dashboard remain unverified; the native rehearsal does not select or purchase a hosting plan.
 
 Read-only review of official Supabase material on 2026-09-27 established:
 
@@ -106,9 +106,9 @@ The package intentionally excludes Auth credentials/passwords, service-role keys
 
 | Requirement | Code/tooling | Tests | Deployed | Accountant accepted |
 |---|---|---|---|---|
-| CORE-04 | Existing append-only/reversal behavior is included in exact restore digests; unchanged | Comparator unit coverage passed locally; native restore unverified | Unverified | Pending |
-| CORE-07 | Portability/export and attachment-byte evidence tooling added; runtime behavior unchanged | Offline unit coverage passed locally; native RLS/API/export/Storage run unverified | Unverified | Pending |
-| CORE-08 | Exact source/target evidence contract added | Offline mismatch detection passed; real source/target reconciliation unverified | Unverified | Pending |
+| CORE-04 | Existing append-only/reversal behavior is included in exact restore digests; unchanged | Native 11-journal/22-entry recovery and exact data/identity comparison pass; continuation rolls back without financial changes | Unverified | Pending |
+| CORE-07 | Portability/export and attachment-byte evidence tooling added; runtime behavior unchanged | Actual native Auth/Storage/API export, two private buckets and cross-tenant/key denials pass | Unverified | Pending |
+| CORE-08 | Exact source/target evidence contract added | Native independent source/target reconciliation and corruption rejection pass; hosted/off-site operation remains pending | Unverified | Pending |
 | VAL-08 | Separate states retained | Artifact/state validator remains the authority | Unverified | Pending |
 
-LS-OPS-001 is not complete until one native, isolated, timed restore produces reviewed matching artifacts. The tooling and provider review are ready for that independent run.
+The native, isolated, timed restore now has matching artifacts and actual Auth/Storage/permission evidence. LS-OPS-001 still requires an operating off-site destination/schedule, current hosted configuration, responsible operator and separately recorded acceptance before any production recovery guarantee.
