@@ -2257,6 +2257,105 @@
     ]
   },
   {
+    "id": "ss-electrical-context-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/plugins/query-scope.ts",
+      "apps/shop-suit/app/composables/useShopQueryCache.ts",
+      "apps/shop-suit/app/stores/shop.ts",
+      "apps/shop-suit/app/utils/shopQueryCleanup.ts"
+    ],
+    "reason": "Keep counter receipt state off public storefront SSR and clear prior-scope cached snapshots before detaching active consumers. Existing server permissions remain authoritative.",
+    "notes": {
+      "title": {
+        "en": "Keep workspace state scoped to its context",
+        "ar": "حفظ حالة مساحة العمل ضمن سياقها"
+      },
+      "summary": {
+        "en": "Public storefront pages omit counter receipt-selection state. Account and location changes clear prior workspace snapshots immediately.",
+        "ar": "لا تتضمن صفحات المتجر العامة حالة اختيار إيصال نقطة البيع، وتُمسح لقطات مساحة العمل السابقة فور تغيير الحساب أو الفرع."
+      },
+      "details": {
+        "en": "Cancelled reads cannot restore a prior context after its consumers move. Current receipt selection is still cleared on sign-out.",
+        "ar": "لا تعيد القراءات الملغاة بيانات سياق سابق بعد انتقال الواجهة، ويظل اختيار الإيصال الحالي يُمسح عند تسجيل الخروج."
+      }
+    },
+    "sources": [
+      "ss-electrical-context-qualification-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/plugins/query-scope.ts",
+        "contains": "if (scope.actorId || posReceipt)"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-storefront-permission-menu-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/utils/shopPermissionMenu.ts"
+    ],
+    "reason": "Map the existing sales/settings permissions to the current offers and website-builder navigation entries without adding backend authority.",
+    "notes": {
+      "title": {
+        "en": "Review storefront permissions with their pages",
+        "ar": "مراجعة صلاحيات المتجر بجوار صفحاتها"
+      },
+      "summary": {
+        "en": "The role editor groups existing offer and website-builder permissions under their current page names.",
+        "ar": "يجمع محرر الأدوار صلاحيات العروض ومنشئ الموقع الحالية تحت أسماء صفحاتها."
+      },
+      "details": {
+        "en": "Saved and ungrantable permissions retain their existing behavior; backend permission keys are unchanged.",
+        "ar": "تحتفظ الصلاحيات المحفوظة وغير القابلة للمنح بسلوكها الحالي، دون تغيير مفاتيح الصلاحيات في الخادم."
+      }
+    },
+    "sources": [
+      "ss-electrical-storefront-permission-menu-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+        "contains": "'/offers': ['sales.manage', 'settings.manage']"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-regression-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "tooling/database/shop-measurement-schema-disposable.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Repair stale Shop harnesses around the current data client, real Pinia/Colada stores, current settings/receipt templates and scoped query contracts; preserve tenant/race/amount assertions and add actual cache-cancellation checks. Support explicitly selected existing SQL fixtures only in the uniquely owned disposable schema runner. No product activation or hosted mutation is included.",
+    "sources": [
+      "ss-electrical-regression-qualification-20261023"
+    ]
+  },
+  {
     "id": "ss-reel-catalog-entrypoint-qualification-20261023",
     "task": "SS-ELECTRICAL-001",
     "suits": [
@@ -2299,6 +2398,172 @@
     ]
   },
   {
+    "id": "ss-electrical-consented-pricing-event-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/index.vue",
+      "packages/ui/src/templates/BsLandingPage.vue"
+    ],
+    "reason": "Restore the existing optional pricing CTA event through the shared landing template; consent, route allowlist and deduplication remain authoritative.",
+    "notes": {
+      "title": {
+        "en": "Restore optional pricing-link measurement",
+        "ar": "استعادة القياس الاختياري لروابط الأسعار"
+      },
+      "summary": {
+        "en": "Pricing-card clicks forward the existing anonymous event when optional analytics is accepted.",
+        "ar": "ترسل نقرات بطاقات الأسعار الحدث المجهول الحالي عند قبول التحليلات الاختيارية."
+      },
+      "details": {
+        "en": "The existing consent and deduplication checks still apply; no plan, customer or form identifiers are sent.",
+        "ar": "تظل فحوص الموافقة ومنع التكرار سارية، ولا تُرسل معرّفات الخطط أو العملاء أو بيانات النماذج."
+      }
+    },
+    "sources": [
+      "ss-electrical-consented-pricing-event-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/index.vue",
+        "contains": "trackPricing: () => analytics.track('pricing_cta')"
+      },
+      {
+        "path": "packages/ui/src/templates/BsLandingPage.vue",
+        "contains": "linkAction: [planId: string]"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-signup-labels-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsSignupEnrollment.vue"
+    ],
+    "reason": "The browser conversion regression reproduced signup email labels losing their control association after hydration. Use distinct semantic field IDs in the existing shared enrollment form, as the sign-in form already does.",
+    "notes": {
+      "title": {
+        "en": "Keep sign-up labels connected to their fields",
+        "ar": "ربط عناوين التسجيل بحقولها"
+      },
+      "summary": {
+        "en": "Account and workspace field labels retain their input associations after the sign-up form loads.",
+        "ar": "تحتفظ عناوين حقول الحساب ومساحة العمل بارتباطها بالمدخلات بعد تحميل نموذج التسجيل."
+      },
+      "details": {
+        "en": "Keyboard and assistive technology can identify the existing fields without changing enrollment or verification behavior.",
+        "ar": "يمكن للوحة المفاتيح والتقنيات المساعدة تحديد الحقول الحالية دون تغيير سلوك التسجيل أو التحقق."
+      }
+    },
+    "sources": [
+      "ss-electrical-signup-labels-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+        "contains": "for=\"bs-signup-email\""
+      },
+      {
+        "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+        "contains": "for=\"bs-signup-verified-email\""
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-shared-form-event-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsLandingPage.vue",
+      "packages/ui/src/organisms/BsSignupEnrollment.vue"
+    ],
+    "reason": "Shared dependency qualification covers all six consumers. Existing landing event forwarding is inert without the Shop analytics adapter. Enrollment input label identities preserve current form behavior; public effects are separately curated for consuming signup products. No product activation or enrollment authority changes.",
+    "sources": [
+      "ss-electrical-shared-form-event-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-cycle-keyboard-focus-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts"
+    ],
+    "reason": "A focused native language-cycle button blurs when disabled during locale loading. Restore its focus after completion only if the user has not focused another control; preserve standard popup-menu behavior. Only Shop has verified public release registration in this initiative.",
+    "notes": {
+      "title": {
+        "en": "Keep keyboard focus after changing language",
+        "ar": "الحفاظ على تركيز لوحة المفاتيح بعد تغيير اللغة"
+      },
+      "summary": {
+        "en": "The language button keeps keyboard focus when the selected language finishes loading.",
+        "ar": "يحتفظ زر اللغة بتركيز لوحة المفاتيح بعد اكتمال تحميل اللغة المختارة."
+      },
+      "details": {
+        "en": "Focus stays with a different control if you move away while the language is loading.",
+        "ar": "يبقى التركيز على أي حقل آخر تنتقل إليه أثناء تحميل اللغة."
+      }
+    },
+    "sources": [
+      "ss-electrical-cycle-keyboard-focus-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": "await cycleFocus.preserveDuring(async () => {"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-settings-consumer-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts",
+      "packages/ux/tests/point-of-sale-keyboard.test.mjs",
+      "packages/testing/e2e/settings-menu-focus.spec.ts",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify all dependency consumers without activating an operational product or inventing a production baseline. Retain popup keyboard navigation checks and test actual shell cycle controls, mobile navigation, hydration, focus and both locales. Restrict this open draft PR new signup public fragment to Shop; protected parent fragments remain untouched.",
+    "sources": [
+      "ss-electrical-settings-consumer-qualification-20261023"
+    ]
+  },
+  {
     "id": "ss-signin-draft-public-scope-20261023",
     "task": "SS-ELECTRICAL-001",
     "suits": [
@@ -2318,6 +2583,138 @@
     "reason": "Correct the new, unaccepted public sign-in fragment in draft PR445 to Shop only. The real SAS/PostgREST fixture has no public Ledger registration/baseline for this change; shared consumers remain internal provenance. No protected accepted fragment, product registry, production version or release history changes.",
     "sources": [
       "ss-signin-draft-public-scope-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-shared-preview-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit/tests/e2e/dos-m1-004.spec.ts",
+      "packages/testing/e2e/settings-menu-focus.spec.ts",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts",
+      "apps/shop-suit/docs/electrical-supply"
+    ],
+    "reason": "Qualify current shared shell controls in their synthetic Doctor consumer without changing Doctor domain behavior, provider setup or clinical/public authority. Preserve scope disclosure, keyboard focus, theme transitions, mobile navigation and no-overflow assertions. Other consumers retain their actual popup/cycle checks.",
+    "sources": [
+      "ss-electrical-shared-preview-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-appointment-editor-context-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsAppointmentsPage.vue"
+    ],
+    "notes": {
+      "title": {
+        "en": "Return to appointment details after editing",
+        "ar": "العودة إلى تفاصيل الموعد بعد التعديل"
+      },
+      "summary": {
+        "en": "Appointment details stay available while you edit, and keyboard focus returns to Reschedule when you close the editor.",
+        "ar": "تبقى تفاصيل الموعد متاحة أثناء التعديل، ويعود تركيز لوحة المفاتيح إلى إعادة الجدولة عند إغلاق المحرر."
+      },
+      "details": {
+        "en": "Unsaved-change confirmation, pending-write protection and cancellation confirmations retain their existing behavior.",
+        "ar": "تحتفظ تأكيدات التغييرات غير المحفوظة وحماية الحفظ الجاري وتأكيدات الإلغاء بسلوكها الحالي."
+      }
+    },
+    "sources": [
+      "ss-electrical-appointment-editor-context-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsAppointmentsPage.vue",
+        "contains": "if (id) emit('edit', id)"
+      }
+    ],
+    "reason": "The current appointment detail dialog was destroyed as its editor opened, disconnecting the focus-return control. Keep the informational dialog mounted under the editor and qualify the actual dialog journey in both locales."
+  },
+  {
+    "id": "ss-electrical-appointment-dialog-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsAppointmentsPage.vue",
+      "apps/shop-suit/tests/e2e/appointment-actions.spec.ts",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify the current shared appointment detail/editor composition, actual scope-source watcher and nested Escape/focus recovery. Only Shop uses this operational route and has public registration for these notes; other dependency consumers remain internal provenance with no product activation.",
+    "sources": [
+      "ss-electrical-appointment-dialog-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-public-website-links-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app/composables/usePublicWebsite.ts",
+      "packages/ui/src/templates/BsShopWebsitePage.vue"
+    ],
+    "reason": "Preserve existing main-branch public permalink, locale/canonical and section-anchor contracts while qualifying the newer storefront composition. These links already work on main; restoring them in this open feature stack creates no separate public release capability.",
+    "sources": [
+      "ss-electrical-public-website-links-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-public-website-link-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app/composables/usePublicWebsite.ts",
+      "packages/ui/src/templates/BsShopWebsitePage.vue",
+      "apps/shop-suit/tests/e2e/ss-web-public-001-obligation-2.spec.ts",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify the current shared public storefront in both locales, three widths and both themes; assert both intentional phone links and current inquiry labels while retaining public-only data, host isolation, language/canonical/permalink and hydration checks. Other dependency consumers remain internal without operational activation.",
+    "sources": [
+      "ss-electrical-public-website-link-qualification-20261023"
     ]
   }
 ]

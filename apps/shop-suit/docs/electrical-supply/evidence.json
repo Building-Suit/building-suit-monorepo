@@ -199,5 +199,107 @@
       "docs": "PASS"
     },
     "releaseCheck": "PASS against actual parent a15ce639"
+  },
+  "regressionQualification": {
+    "branch": "codex/shop-suit/electrical-regression-qualification",
+    "initialParent": "50f5b5828b2e55415428ea07bc0140199dda7d9d",
+    "shopUnit": {
+      "passed": 478,
+      "failed": 0
+    },
+    "publicBuiltIntegration": {
+      "passed": 8,
+      "failed": 0
+    },
+    "scopeCleanupUnit": {
+      "passed": 2,
+      "usesActualColada": true,
+      "lateResponseRejected": true
+    },
+    "realStoreAccountTransition": {
+      "passed": 3,
+      "usesActualPiniaColadaAndScopePlugin": true
+    },
+    "fullRepositoryUnit": {
+      "firstRun": {
+        "passed": 2021,
+        "total": 2049,
+        "failed": 5,
+        "skipped": 23
+      },
+      "retainedFailureReasons": [
+        "Unused duplicate physical-template export; corrected on parent15b52a32",
+        "Four browser checks lacked the pinned Playwright binary; installed and all14 focused browser/control-plane cases pass"
+      ],
+      "finalMergedRun": {
+        "total": 2049,
+        "passed": 2026,
+        "failed": 0,
+        "skipped": 23
+      }
+    },
+    "mergedParentQualification": {
+      "parentSha": "15b52a324e1e0cd5301f75e5ab23c0ad220b5235",
+      "migrations": 108,
+      "legacySqlSuites": 17,
+      "merchantJourneys": 2,
+      "realSessionRaces": 2,
+      "providerMode": "explicit stand-ins; native parent CI separately recorded",
+      "shopBuild": "PASS",
+      "shopTypecheck": "PASS",
+      "electricalBrowser": {
+        "passed": 6,
+        "failed": 0,
+        "cacheCleanupWarnings": 0
+      },
+      "workspaceBoundaries": "PASS",
+      "releaseCheck": "PASS"
+    },
+    "merchantHardwareAcceptance": false,
+    "publishedParentCorrection": "7ef59f5fac1d715ad428371c7bcde89235832d14",
+    "nativeParentCi": {
+      "sha": "15b52a324e1e0cd5301f75e5ab23c0ad220b5235",
+      "measuredRetail": "PASS",
+      "media": "PASS",
+      "accounts": "PASS"
+    },
+    "privacyBrowser": {
+      "passed": 9,
+      "failed": 0,
+      "signupLabelHydration": "PASS",
+      "pricingCtaConsentDeduplication": "PASS",
+      "fixture": "synthetic loopback; no external analytics collection"
+    },
+    "consumerBuilds": {
+      "passed": 7,
+      "failed": 0
+    },
+    "sharedAuthBrowser": {
+      "passed": 48,
+      "failed": 0
+    },
+    "settingsBrowser": {
+      "passed": 12,
+      "failed": 0,
+      "defaultPopupAndShellCycles": true
+    },
+    "releaseClassification": "Open draft signup public scope corrected to Shop; other consumers internal; no accepted parent fragment changed",
+    "appointmentAccessBrowser": {
+      "passed": 4,
+      "failed": 0
+    },
+    "doctorSharedConsumer": {
+      "existingUnchangedCasesPassed": 48,
+      "repairedShellCasesPassed": 8,
+      "clinicalAcceptance": false
+    },
+    "qualifiedSourceSha": "024d1e011c52f7adcf030acf3e88a2790c185342",
+    "actualSasPostgrestCatalog": "PASS; canonical pg-safeupdate/authenticator/PostgREST protocol and retrospective branch; no hosted writes",
+    "finalRepositoryUnit": {
+      "total": 2049,
+      "passed": 2026,
+      "failed": 0,
+      "skipped": 23
+    }
   }
 }

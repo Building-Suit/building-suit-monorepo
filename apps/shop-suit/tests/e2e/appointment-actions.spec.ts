@@ -18,9 +18,10 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
       return undefined
     })
     await fixtureGoto(page, '/appointments?from=2026-10-13')
-    const event = page.locator('.bs-appointment-event')
-    await event.locator('summary').click()
-    const reschedule = event.getByRole('button', { name: ar ? 'إعادة الجدولة' : 'Reschedule', exact: true })
+    const event = page.getByRole('button', { name: new RegExp(item.customerName) })
+    const details = page.getByRole('dialog', { name: item.customerName, exact: true })
+    await event.click()
+    const reschedule = details.getByRole('button', { name: ar ? 'إعادة الجدولة' : 'Reschedule', exact: true })
     await reschedule.click()
     const form = page.getByRole('dialog', { name: ar ? 'تعديل الموعد' : 'Edit appointment', exact: true })
     await expect(form.getByLabel(ar ? 'الاسم' : 'Name', { exact: true })).toHaveValue(item.customerName)
@@ -64,7 +65,7 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
     releaseSave()
     await expect(form).toHaveCount(0)
     await fixtureUnroute(page, '**/rest/v1/rpc/save_appointment')
-    await event.locator('summary').click()
+    await expect(details).toBeVisible()
     await reschedule.click()
     await expect(starts).toHaveValue('2026-10-13T11:00')
     await form.getByLabel(ar ? 'ملاحظات' : 'Notes', { exact: true }).fill('Discard this change')
@@ -75,8 +76,9 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
     expect(item.notes).toBe('Keep original note')
 
     for (const [status, label] of [['cancelled', ar ? 'إلغاء الموعد' : 'Cancel appointment'], ['no_show', ar ? 'لم يحضر' : 'No-show']] as const) {
-      if (status === 'no_show') { item.status = 'booked'; await fixtureGoto(page, '/appointments?from=2026-10-13'); await event.locator('summary').click() }
-      const action = event.getByRole('button', { name: label, exact: true })
+      if (status === 'no_show') { item.status = 'booked'; await fixtureGoto(page, '/appointments?from=2026-10-13'); await event.click() }
+      if (!await details.isVisible()) await event.click()
+      const action = details.getByRole('button', { name: label, exact: true })
       await action.click()
       const confirmation = page.getByRole('dialog', { name: label, exact: true })
       await expect(confirmation).toContainText(item.customerName)
@@ -88,7 +90,7 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
       await page.screenshot({ path: test.info().outputPath(`confirmation-${status}.png`), fullPage: true, animations: 'disabled' })
       await confirmation.getByRole('button', { name: label, exact: true }).click()
       await expect(confirmation).toHaveCount(0)
-      await expect(event.getByRole('button', { name: /Reschedule|إعادة الجدولة/ })).toHaveCount(0)
+      await expect(details.getByRole('button', { name: /Reschedule|إعادة الجدولة/ })).toHaveCount(0)
       expect(calls.filter(call => call.name === 'transition_appointment').at(-1)?.args).toMatchObject({ p_shop_id: 'shop-1', p_appointment_id: item.id, p_status: status })
     }
     await expectNoPageOverflow(page)

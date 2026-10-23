@@ -107,9 +107,9 @@ test('Shop CRUD tables use shared capabilities, toolbar controls, pagination, an
   const customers = presentationFor('pages/customers/index.vue')
   assert.match(customers, /:capabilities="\{ insert: canManage \}"/)
   assert.match(customers, /@create=/)
-  const settings = presentationFor('pages/settings.vue')
+  const settings = presentationFor('pages/settings/[[section]].vue')
   assert.match(settings, /<BsDataTable[\s\S]+copy\.locationsTitle/)
-  assert.match(settings, /<BsRecordActionDialog v-model:visible="locationDialogOpen"/)
+  assert.match(settings, /<BsSettingsForm[\s\S]+locationForm/)
   assert.doesNotMatch(settings, /<BsForm v-if="canManage && \(editingLocationId/)
 })
 
@@ -140,13 +140,18 @@ test('every Shop template conforms to the exhaustive zero-native contract', asyn
   assert.deepEqual(audit.debt.filter(item => item.file.startsWith('apps/shop-suit/')), [])
 })
 
-test('remaining authenticated root mutations use shared action dialogs', async () => {
-  for (const file of ['pages/settings.vue', 'pages/dashboard.vue', 'pages/platform-admin.vue']) {
+test('authenticated root mutations use shared dialogs or explicit inline settings controllers', async () => {
+  for (const file of ['pages/dashboard.vue', 'pages/platform-admin.vue']) {
     const source = sources.find(item => item.file === file)?.source || ''
     assert.doesNotMatch(source, /<BsForm\b/, `${file} retains a root mutation form`)
     assert.match(await readPresentationTree(workspaceRoot, `apps/shop-suit/app/${file}`), /<BsRecordActionDialog\b/)
     assert.match(source, /useRecordAction\(/)
   }
+  const file = 'pages/settings/[[section]].vue'
+  const source = sources.find(item => item.file === file)?.source || ''
+  assert.doesNotMatch(source, /<BsForm\b/)
+  assert.match(source, /useInlineForm/);assert.match(source, /useUnsavedFormGuard/)
+  assert.match(await readPresentationTree(workspaceRoot, `apps/shop-suit/app/${file}`), /<BsForm\b/)
 })
 
 test('Shop billing no longer exposes manual mutation or upload orchestration', () => {
