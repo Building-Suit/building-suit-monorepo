@@ -43,7 +43,10 @@ test('DOS-M3-003: actual reception exceptions, two-actor reconciliation, walk-in
    const v=await openOperations(browser,'/appointments',{role:'reception',width,ar,dark})
    try{
     await expect(v.page.getByLabel(ar?'التاريخ المحلي':'Local date',{exact:true})).toBeVisible()
-    await v.page.getByRole('button',{name:ar?'تحديث':'Refresh',exact:true}).click()
+    const refreshButton=v.page.getByRole('button',{name:ar?'تحديث':'Refresh',exact:true})
+    await expect(refreshButton).toBeEnabled()
+    const refreshed=v.page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/rpc/doctor_appointment_board'))
+    await refreshButton.click();await refreshed;await expect(refreshButton).toBeEnabled()
     await expect(v.page.getByRole('heading',{name:ar?'طابور الحضور الحالي':'Current waiting queue',exact:true})).toBeVisible()
     await expect(v.page.getByRole('row').filter({hasText:'Synthetic reception walk-in patient'})).toHaveCount(1)
     await expect(v.page.locator('html')).toHaveAttribute('dir',ar?'rtl':'ltr')
@@ -65,9 +68,10 @@ test('DOS-M3-003: actual reception exceptions, two-actor reconciliation, walk-in
       test.info().annotations.push({type:'doctor-scroll-geometry',description:JSON.stringify({...geometry,width,rtl:ar,dark})})
       throw error
      }
-     // Capture the actual keyboard-scrolled queue, retaining its horizontal
-     // position. Repositioning a separate heading is not queue evidence.
-     await scroll.screenshot({path:`${dir}/reception-queue-${ar?'ar':'en'}-${dark?'dark':'light'}.png`,animations:'disabled'})
+     // Retain the keyboard-scrolled queue in the full-page image. Capture
+     // through the page while the table can replace its own DOM node.
+     await expect(scroll).toBeVisible()
+     await v.page.screenshot({path:`${dir}/reception-queue-${ar?'ar':'en'}-${dark?'dark':'light'}.png`,fullPage:true,animations:'disabled'})
     }
     if(width===390&&ar&&dark){
      await v.page.getByRole('button',{name:'تسجيل حضور اصطناعي دون حجز سابق',exact:true}).click()
