@@ -363,17 +363,6 @@
       "migrationStatus": "implemented; verification recorded in product task evidence"
     },
     {
-      "family": "inline-business-settings",
-      "owner": "packages/ui",
-      "components": [
-        "BsBusinessSettingsPage",
-        "BsSettingsForm"
-      ],
-      "adapterBoundary": "Typed on-page business settings drafts, translated copy, permission/quota projections and existing authorized commands. UX owns scoped dirty snapshots, refresh-safe drafts and unsaved-navigation protection. Website and public-booking editors retain their existing presentation.",
-      "task": "SHOP-INLINE-SETTINGS-20261020",
-      "migrationStatus": "implemented-source; automated and rendered verification unrun at owner instruction"
-    },
-    {
       "family": "shop-tax-settings",
       "owner": "packages/ui",
       "components": [
@@ -679,6 +668,46 @@
       ],
       "task": "DOS-AE-005",
       "migrationStatus": "synthetic acceptance pending; live payment disabled"
+    },
+    {
+      "family": "synthetic-clinical-workspace",
+      "owner": "packages/ui",
+      "components": [
+        "BsClinicalWorkspacePage",
+        "BsReleasedClinicalPage"
+      ],
+      "adapterBoundary": "Typed controlled entered-data fields and version/release/document projections; Doctor owns all queries, clinical fixture authority, validation, immutable operations and transport. No medical defaults or professional approval.",
+      "task": "DOS-M2",
+      "migrationStatus": "implemented-source; verification in progress; no clinical approval"
+    },
+    {
+      "family": "consultation-type-settings",
+      "owner": "packages/ui",
+      "components": [
+        "BsConsultationTypesPage"
+      ],
+      "adapterBoundary": "Typed configuration, controlled fields and semantic commands. Doctor owns consultation history, capacity, scope, scheduling and authorization.",
+      "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "waitlist-request-worklist",
+      "owner": "packages/ui",
+      "components": [
+        "BsWaitlistPage"
+      ],
+      "adapterBoundary": "Typed request/offer/history views and controlled record forms. Doctor owns request permission, atomic holds, acceptance, expiry and capability scopes. No provider dispatch or patient priority is inferred.",
+      "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "inline-business-settings",
+      "owner": "packages/ui",
+      "components": [
+        "BsBusinessSettingsPage",
+        "BsSettingsForm"
+      ],
+      "adapterBoundary": "Typed on-page business settings drafts, translated copy, permission/quota projections and existing authorized commands. UX owns scoped dirty snapshots, refresh-safe drafts and unsaved-navigation protection. Website and public-booking editors retain their existing presentation.",
+      "task": "SHOP-INLINE-SETTINGS-20261020",
+      "migrationStatus": "implemented-source; automated and rendered verification unrun at owner instruction"
     },
     {
       "family": "shop-storefront-builder-offers",

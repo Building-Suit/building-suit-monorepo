@@ -1,0 +1,16 @@
+{
+  "id": "dos-m2-008-synthetic-engineering",
+  "task": "DOS-M2-008",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/supabase/migrations/20261020000609_clinical_m2_008.sql",
+    "apps/doctor-suit/supabase/tests/dos-m2-008.sql",
+    "apps/doctor-suit/tests/unit/dos-m2-008.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m2-008.md"
+  ],
+  "reason": "Implement reviewed finalization and amendments for the unactivated synthetic Doctor workspace. Shared new typed contracts/templates have no existing operational product consumers. Preserve explicit fixture authority, qualified review and live-use boundaries; no hosted activation or professional approval."
+}

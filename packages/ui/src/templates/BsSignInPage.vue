@@ -57,6 +57,7 @@ const passwordStep = ref(false)
 const passwordControl = ref<{ focus: () => void } | null>(null)
 watch(() => props.emailStepApproved, (approved) => {
   if (approved && !passwordStep.value) passwordStep.value = true
+  else if (props.emailStepRequired && !approved) { passwordStep.value = false; password.value = '' }
 })
 watch(passwordStep, async (visible) => {
   if (visible) {
@@ -85,7 +86,7 @@ watch(passwordFieldError, async (message) => {
 })
 function onSubmit() {
   if (props.pending || props.emailStepPending) return
-  if (glass.value && !passwordStep.value) {
+  if ((glass.value || props.emailStepRequired) && !passwordStep.value) {
     if (email.value.trim()) {
       if (props.emailStepRequired) emit('validateEmail', email.value.trim())
       else passwordStep.value = true
@@ -120,13 +121,7 @@ function goBack() {
       />
     </template>
 
-    <BsStateSurface
-      v-if="availability"
-      :title-level="1"
-      :state="availability.state"
-      :title="availability.title"
-      :description="availability.description"
-    />
+    <BsAuthForm v-if="availability" :title="availability.title" :description="availability.description" :pending="availability.state === 'loading'" :pending-label="copy.pending" />
 
     <BsAuthForm
       v-else-if="glass"
@@ -270,18 +265,19 @@ function goBack() {
       :eyebrow="copy.eyebrow"
       :title="copy.title"
       :description="copy.description"
-      :pending="pending"
+      :pending="pending || emailStepPending"
       :error="error"
-      :submit-label="copy.submit"
-      :pending-label="copy.pending"
+      :submit-label="emailStepRequired && !passwordStep ? (copy.continue ?? copy.submit) : copy.submit"
+      :pending-label="emailStepPending ? (copy.checkingEmail ?? copy.pending) : copy.pending"
       :data-hydrated="hydrated"
       :data-client-ready="hydrated ? 'true' : 'false'"
       @submit="onSubmit"
     >
-      <BsField v-slot="field" :label="copy.email" required>
-        <BsInput :id="field.id" v-model="email" type="email" :autocomplete="emailAutocomplete ?? 'email'" required dir="ltr" />
+      <BsField v-slot="field" :label="copy.email" :error="emailStepError" required>
+        <BsInput :id="field.id" v-model="email" type="email" :autocomplete="emailAutocomplete ?? 'email'" :readonly="emailStepRequired && (passwordStep || emailStepPending)" required dir="ltr" />
       </BsField>
-      <BsField v-slot="field" :label="copy.password" required>
+      <BsButton v-if="emailStepRequired && passwordStep" type="button" variant="link" :disabled="pending" @click="goBack">{{ copy.back ?? copy.email }}</BsButton>
+      <BsField v-if="!emailStepRequired || passwordStep" v-slot="field" :label="copy.password" required>
         <BsInput :id="field.id" v-model="password" type="password" autocomplete="current-password" required dir="ltr" />
       </BsField>
       <BsLink v-if="forgot" :to="forgot.to" variant="muted">{{ forgot.label }}</BsLink>

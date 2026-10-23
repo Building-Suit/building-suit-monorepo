@@ -1,4 +1,6 @@
-export type DoctorAuthError = 'unavailable' | 'credentials' | 'expired' | 'rate-limit' | 'network' | 'session' | 'password' | 'sign-out'
+export type DoctorAuthError = 'unavailable' | 'credentials' | 'exists' | 'expired' | 'rate-limit' | 'network' | 'session' | 'password' | 'sign-out'
+export interface DoctorRegistrationIdentity { userId: string; email: string; name: string; providerNameVerified: boolean }
+export type DoctorSignupOutcome = 'challenge' | 'verified'
 export interface DoctorIdentity { userId: string; sessionId: string; practiceId: string | null }
 export interface DoctorAuthState {
   phase: 'checking' | 'unavailable' | 'signed-out' | 'verification' | 'authenticated'
@@ -6,12 +8,14 @@ export interface DoctorAuthState {
   identity: DoctorIdentity | null
   error: DoctorAuthError | null
   providerReady: boolean
+  signupOutcome: DoctorSignupOutcome | null
 }
 export interface DoctorAuthBackend {
   marker(): Promise<boolean>
   identity(): Promise<DoctorIdentity | null>
   signIn(email: string, password: string): Promise<void>
-  signUp(name: string, email: string, password: string): Promise<void>
+  signUp(name: string, email: string, password: string): Promise<DoctorSignupOutcome | undefined>
+  registrationIdentity?(): Promise<DoctorRegistrationIdentity | null>
   verify(email: string, code: string): Promise<void>
   exchange(code: string, flowId?: string): Promise<void>
   resend(email: string): Promise<void>
@@ -20,7 +24,7 @@ export interface DoctorAuthBackend {
   signOut(): Promise<void>
 }
 export function doctorAuthState(): DoctorAuthState {
-  return { phase: 'checking', pending: false, identity: null, error: null, providerReady: false }
+  return { phase: 'checking', pending: false, identity: null, error: null, providerReady: false, signupOutcome: null }
 }
 export function authFailure(error: unknown): DoctorAuthError {
   const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : ''
@@ -29,6 +33,7 @@ export function authFailure(error: unknown): DoctorAuthError {
   if (['over_email_send_rate_limit', 'over_request_rate_limit'].includes(code)) return 'rate-limit'
   if (['weak_password', 'same_password'].includes(code)) return 'password'
   if (code === 'DOCTOR_SESSION_REQUIRED') return 'session'
+  if (['DOCTOR_ACCOUNT_EXISTS', 'user_already_exists', 'email_exists'].includes(code)) return 'exists'
   return 'network'
 }
 
@@ -119,7 +124,22 @@ export function createDoctorAuthController(backend: DoctorAuthBackend | null, st
       if (!state.pending) queueMicrotask(() => { void refresh() })
     },
     signIn(email: string, password: string) { return action(() => backend!.signIn(email, password), true) },
-    signUp(name: string, email: string, password: string) { return action(() => backend!.signUp(name, email, password), false, true) },
+    async signUp(name: string, email: string, password: string) {
+      if (state.pending) return false
+      state.signupOutcome = null
+      let outcome: DoctorSignupOutcome = 'challenge'
+      const succeeded = await action(async () => { outcome = await backend!.signUp(name, email, password) || 'challenge' }, false, true)
+      if (succeeded) state.signupOutcome = outcome
+      return succeeded
+    },
+    async registrationIdentity() {
+      const captured = revision
+      if (effects.locked()) return null
+      if (!backend?.registrationIdentity || !await provider(captured)) throw new Error('DOCTOR_REGISTRATION_IDENTITY_UNAVAILABLE')
+      const identity = await backend.registrationIdentity()
+      if (captured !== revision) throw new Error('DOCTOR_REGISTRATION_IDENTITY_UNAVAILABLE')
+      return !effects.locked() ? identity : null
+    },
     verify(email: string, code: string) { return action(() => backend!.verify(email, code), true) },
     exchange(code: string, flowId?: string) { return action(() => backend!.exchange(code, flowId), true) },
     resend(email: string) { return action(() => backend!.resend(email), false, true) },

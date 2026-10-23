@@ -6,6 +6,7 @@ import { doctorAvailabilityCopy } from '../utils/availabilityPresentation'
 import { doctorPatientsCopy } from '../utils/patientsPresentation'
 import { doctorDelegationCopy } from '../utils/delegationPresentation'
 import { doctorWorkspaceNavigation } from '../utils/workspaceNavigation'
+const brand = useDoctorBrand()
 const { auth } = useDoctorAuthPresentation(false)
 const { copy } = useDoctorPracticePresentation()
 const { locale } = useI18n()
@@ -18,7 +19,7 @@ const teamCopy = computed(() => doctorDelegationCopy(locale.value === 'ar'))
 const hydrated = ref(false)
 onMounted(() => { hydrated.value = true })
 const navigation = computed(() => doctorWorkspaceNavigation({capabilities:context.state.current?.capabilities??[],portal:context.state.current?.portal,ownsPractice:Boolean(auth.state.identity?.practiceId),hasCurrent:Boolean(context.state.current),hasOptions:Boolean(context.state.options.length),choosing:context.state.phase==='choosing'},
-  {workspace:copy.value.workspace,patients:patientsCopy.value.title,appointments:appointmentsCopy.value.title,availability:availabilityCopy.value.title,audit:locale.value==='ar'?'سجل النشاط الإداري':'Administrative audit',locations:scopeCopy.value.title,practice:copy.value.edit,team:teamCopy.value.teamLink,account:copy.value.account}))
+  {waitlist:locale.value==='ar'?'قائمة الانتظار':'Waitlist',appointmentTypes:locale.value==='ar'?'أنواع المواعيد':'Appointment types',clinical:locale.value==='ar'?'مساحة سريرية اصطناعية':'Synthetic clinical workspace',workspace:copy.value.workspace,patients:patientsCopy.value.title,appointments:appointmentsCopy.value.title,availability:availabilityCopy.value.title,audit:locale.value==='ar'?'سجل النشاط الإداري':'Administrative audit',locations:scopeCopy.value.title,practice:copy.value.edit,team:teamCopy.value.teamLink,account:copy.value.account}))
 const caption = computed(() => {
   const selected = context.state.current
   return selected ? [selected.doctorName, selected.practiceName, selected.locationName, selected.timezone, selected.portal === 'doctor' ? scopeCopy.value.owner : scopeCopy.value.secretary].join(' · ') : scopeCopy.value.noContext
@@ -31,5 +32,5 @@ async function signOut() { await auth.signOut(); await navigateTo('/sign-in') }
 watch(() => auth.state.phase, phase => { if (phase === 'signed-out' || phase === 'unavailable') void navigateTo('/sign-in') })
 </script>
 <template>
-  <BsWorkspaceShell home-path="/workspace" product-name="Doctor Suit" :groups="navigation.groups" :mobile-links="navigation.mobileLinks" :labels="{ open: copy.open, close: copy.close, navigation: copy.navigation, dashboard: copy.workspace }" :context="caption" :scope-notice="{ title: copy.synthetic, description: caption }" :header-scopes="scopes" :state="state" :account="account" :logo="{ kind: 'product' }" @scope="selectScope" @retry="context.refresh()" @sign-out="signOut"><slot /></BsWorkspaceShell>
+  <BsWorkspaceShell home-path="/workspace" product-name="Doctor Suit" :groups="navigation.groups" :mobile-links="navigation.mobileLinks" :labels="{ open: copy.open, close: copy.close, navigation: copy.navigation, dashboard: copy.workspace }" :context="caption" :scope-notice="{ title: copy.synthetic, description: caption }" :header-scopes="scopes" :state="state" :account="account" :logo="{ kind: 'product', assetPrefix: brand.assetPrefix }" @scope="selectScope" @retry="context.refresh()" @sign-out="signOut"><slot /></BsWorkspaceShell>
 </template>

@@ -33,6 +33,10 @@ export function applyDelegationFixtureInput(state,input) {
 export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny }) {
   if (!state.delegation) return false
   const data = model(state)
+  if (url.pathname === '/rest/v1/rpc/doctor_auth_email_exists') {
+    if (req.headers.apikey !== 'sb_secret_synthetic_protocol_fixture') { send({},403); return true }
+    send(data.users.some(user => user.email === input.p_email)); return true
+  }
   if (state.milestone) initializeMilestoneProtocol(data)
   if (state.patients) seedPatientProtocol(data)
   if (state.documents) seedDocumentProtocol(data)

@@ -79,11 +79,15 @@ jobs:
         # Synthetic local users/files only. Runner owns its project lifecycle.
         # Captured service keys, emails and byte bodies are never published.
         run: node apps/doctor-suit/tests/disposable-provider.mjs
+      - name: Verify canonical Doctor asset drop-in with a fresh production build
+        run: node apps/doctor-suit/tests/brand-build-fixture.mjs
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: doctor-synthetic-browser-results
-          path: test-results/doctor
+          path: |
+            test-results/doctor
+            test-results/doctor-m2-actual
           if-no-files-found: ignore
   shared-settings-browser:
     runs-on: ubuntu-latest

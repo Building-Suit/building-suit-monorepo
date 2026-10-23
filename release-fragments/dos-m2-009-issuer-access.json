@@ -1,0 +1,14 @@
+{
+  "id": "dos-m2-009-issuer-access",
+  "task": "DOS-M2-009",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/supabase/migrations/20261020001557_clinical_release_issuer_access.sql",
+    "apps/doctor-suit/supabase/tests/dos-m2-009.sql"
+  ],
+  "reason": "End synthetic recipient delivery when its issuing responsible account is disabled or practice ownership no longer matches the source. Preserve the published migration through a forward change, with actual positive and denial SQL assertions; no clinical authority or hosted activation."
+}

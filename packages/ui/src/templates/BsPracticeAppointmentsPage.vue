@@ -9,12 +9,13 @@ const props = defineProps<{
   days: BsAppointmentsView['days']; queue: QueueRow[]; total: number; page: number; queueTotal: number; queuePage: number
   editor: { title: string; dirty: boolean; pending: boolean; error: string | null; disabled: boolean; selectingPatient: boolean; earliestDate: string; latestDate: string; timezone: string; patientLoading: boolean; patientError: string | null; offersLoading: boolean; offersError: string | null }
   patientOptions: { value: string; label: string }[]; clinicOptions: { value: string; label: string }[]; slotOptions: { value: number; label: string }[]
+  consultationLabel?:string;consultationOptions?:{value:string;label:string}[]
   reasonOptions?: { value: string; label: string }[]
   transition: { title: string; description: string; reasonRequired: boolean; dirty: boolean; pending: boolean; error: string | null; disabled: boolean }
   history: { title: string; record?: { id: string; label: string; value: string }[]; hasHistory?: boolean; loadLabel?: string; loading: boolean; error: string | null; total: number; page: number; rows: { id: string; event: string; actor: string; at: string; reason: string; original: string; replacement: string }[] }
 }>()
 const date = defineModel<string>('date',{ required: true })
-const form = defineModel<{ patientId: string; destinationId: string; date: string; minute: number | null; reason: string }>('form',{ required: true })
+const form = defineModel<{ consultationId?:string;patientId: string; destinationId: string; date: string; minute: number | null; reason: string }>('form',{ required: true })
 const reason = defineModel<string>('reason',{ required: true })
 const editorOpen = defineModel<boolean>('editorOpen',{ required: true })
 const transitionOpen = defineModel<boolean>('transitionOpen',{ required: true })
@@ -41,6 +42,7 @@ const historyColumns = computed(() => [{ key: 'at',field: 'at',header: props.cop
       <BsEntityPicker v-if="editor.selectingPatient" :model-value="form.patientId" :label="copy.patient" :options="patientOptions" option-label="label" option-value="value" :loading="editor.patientLoading" :error="editor.patientError" :load-more-label="copy.loadMore" :retry-label="copy.retry" :disabled="editor.pending" @update:model-value="form.patientId=String($event || '')" @search="emit('patients',$event)" @retry="emit('patients','')" />
       <BsText v-if="editor.selectingPatient" as="p" size="sm">{{ copy.searchHint }}</BsText>
       <BsSelect v-model="form.destinationId" :label="copy.clinic" :options="clinicOptions" option-label="label" option-value="value" :disabled="editor.pending || editor.selectingPatient" @update:model-value="emit('offers')" />
+      <BsSelect v-if="editor.selectingPatient && consultationLabel" v-model="form.consultationId" :label="consultationLabel" :options="consultationOptions" option-label="label" option-value="value" :disabled="editor.pending || editor.offersLoading" @update:model-value="emit('offers')" />
       <BsField v-slot="field" :label="copy.date" required><BsInput :id="field.id" v-model="form.date" :aria-describedby="field.describedby" type="date" :min="editor.earliestDate" :max="editor.latestDate" required :disabled="editor.pending" @change="emit('offers')" /></BsField>
       <BsText as="p">{{ editor.timezone }}</BsText>
       <BsStateSurface v-if="editor.offersError" state="error" :title="editor.offersError"><BsButton @click="emit('offers')">{{ copy.retry }}</BsButton></BsStateSurface>
