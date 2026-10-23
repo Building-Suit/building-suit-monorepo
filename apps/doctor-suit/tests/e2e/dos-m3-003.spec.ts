@@ -11,7 +11,16 @@ test('DOS-M3-003: actual reception exceptions, two-actor reconciliation, walk-in
  const{context,page}=await openOperations(browser,'/appointments',{role:'reception'}),dir='test-results/doctor-m3-actual';await mkdir(dir,{recursive:true})
  const card=(name:string)=>page.getByRole('listitem').filter({has:page.getByText(name,{exact:true})}),queueRow=(name:string)=>page.getByRole('row').filter({hasText:name}),lateName='Synthetic reception owner patient',queueName='Synthetic reception waiting patient',missedName='Synthetic reception missed patient'
  async function refresh(){await expect(page.getByLabel('Local date',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Refresh',exact:true}).click();await expect(page.getByRole('heading',{name:'Current waiting queue',exact:true})).toBeVisible()}
- async function openCardAction(name:string,action:string){const c=card(name);await expect(c).toHaveCount(1);const control=c.getByText('Actions and history',{exact:true});if(!await control.evaluate(el=>el.closest('details')?.open))await control.click();await c.getByRole('button',{name:action,exact:true}).click();return page.getByRole('dialog')}
+ async function openCardAction(name:string,action:string){
+  const c=card(name)
+  await expect(c).toHaveCount(1)
+  // Locator attribute reads re-resolve a card replaced by a board refresh.
+  // Element evaluation can race detachment between resolution and execution.
+  const disclosure=c.locator('details').filter({has:c.getByText('Actions and history',{exact:true})})
+  if(await disclosure.getAttribute('open')===null)await disclosure.getByText('Actions and history',{exact:true}).click()
+  await c.getByRole('button',{name:action,exact:true}).click()
+  return page.getByRole('dialog')
+ }
  async function commitReason(d:ReturnType<typeof page.getByRole>,label:string,text:string){await d.getByLabel('Administrative reason').fill(text);await d.getByRole('button',{name:label,exact:true}).click();await expect(d).toHaveCount(0)}
  async function available(){const v=await rpc(owner,'doctor_availability',{...scope,p_day:day});return v.slots.find((s:{available:boolean})=>s.available)}
  const time=(minute:number)=>`${String(Math.floor(minute/60)).padStart(2,'0')}:${String(minute%60).padStart(2,'0')}`
