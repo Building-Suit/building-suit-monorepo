@@ -4,6 +4,9 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      create_trade_order: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_quotation_id: string; p_revision: number; p_reason: string }; Returns: { id: string; revision: number; status: import('./tradeOrders').TradeOrderStatus; alreadyConverted: boolean } }
+      trade_order_context: { Args: { p_shop_id: string; p_location_id: string; p_order_id?: string | null; p_quotation_id?: string | null; p_search?: string | null; p_page?: number; p_history_page?: number; p_kind?: 'orders' | 'quotations' }; Returns: import('./tradeOrders').TradeOrderContext }
+
       trade_quotation_context: { Args: { p_shop_id: string; p_location_id: string; p_quotation_id?: string | null; p_search?: string | null; p_page?: number; p_history_page?: number }; Returns: import('./tradeQuotations').QuotationContext }
       trade_quotation_command: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_action: import('./tradeQuotations').QuotationAction; p_quotation_id: string | null; p_revision: number; p_payload: import('./tradeQuotations').QuotationValues | Record<string, never>; p_reason: string }; Returns: { id: string; revision: number; version: number; status: import('./tradeQuotations').QuotationStatus } }
 

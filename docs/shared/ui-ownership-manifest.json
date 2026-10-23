@@ -721,6 +721,16 @@
       "adapterBoundary": "Typed commercial version, state/history and line-editor projections; bounded pickers and semantic commands. Shop retains server pricing, immutable history, location/actor/period authority and print data.",
       "task": "SS-ELECTRICAL-001",
       "migrationStatus": "implementation qualification in progress"
+    },
+    {
+      "family": "contractor-orders",
+      "owner": "packages/ui",
+      "components": [
+        "BsTradeOrdersPage"
+      ],
+      "adapterBoundary": "Typed accepted-quotation picker, agreed order rows/details/history and frozen conversion retry state. Shop owns quotation authority, agreed prices, quantities and subsequent inventory/payment commands.",
+      "task": "SS-ELECTRICAL-001",
+      "migrationStatus": "implementation qualification in progress"
     }
   ]
 }

@@ -10457,6 +10457,251 @@ export type Database = {
           },
         ]
       }
+      trade_order_events: {
+        Row: {
+          action: string
+          actor_profile_id: string
+          created_at: string
+          id: string
+          order_id: string
+          previous_status: string | null
+          reason: string
+          revision: number
+          shop_id: string
+          status: string
+        }
+        Insert: {
+          action: string
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          order_id: string
+          previous_status?: string | null
+          reason: string
+          revision: number
+          shop_id: string
+          status: string
+        }
+        Update: {
+          action?: string
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          previous_status?: string | null
+          reason?: string
+          revision?: number
+          shop_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_order_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_order_events_order_id_shop_id_fkey"
+            columns: ["order_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "trade_orders"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      trade_order_lines: {
+        Row: {
+          discount_amount: number
+          id: string
+          item_name: string
+          item_type: Database["public"]["Enums"]["invoice_item_type"]
+          line_order: number
+          measurement_snapshot: Json | null
+          order_id: string
+          pricing_snapshot: Json | null
+          product_id: string | null
+          quantity: number
+          service_id: string | null
+          shop_id: string
+          tax_snapshot: Json
+          unit_price: number
+        }
+        Insert: {
+          discount_amount: number
+          id?: string
+          item_name: string
+          item_type: Database["public"]["Enums"]["invoice_item_type"]
+          line_order: number
+          measurement_snapshot?: Json | null
+          order_id: string
+          pricing_snapshot?: Json | null
+          product_id?: string | null
+          quantity: number
+          service_id?: string | null
+          shop_id: string
+          tax_snapshot: Json
+          unit_price: number
+        }
+        Update: {
+          discount_amount?: number
+          id?: string
+          item_name?: string
+          item_type?: Database["public"]["Enums"]["invoice_item_type"]
+          line_order?: number
+          measurement_snapshot?: Json | null
+          order_id?: string
+          pricing_snapshot?: Json | null
+          product_id?: string | null
+          quantity?: number
+          service_id?: string | null
+          shop_id?: string
+          tax_snapshot?: Json
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_order_lines_order_id_shop_id_fkey"
+            columns: ["order_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "trade_orders"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_order_lines_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "low_stock_products"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_order_lines_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_order_lines_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_order_lines_service_id_shop_id_fkey"
+            columns: ["service_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      trade_orders: {
+        Row: {
+          agreed_snapshot: Json
+          created_at: string
+          created_by_profile_id: string
+          currency: string
+          customer_id: string
+          id: string
+          location_id: string
+          order_number: string
+          quotation_id: string
+          quotation_version: number
+          revision: number
+          shop_id: string
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          agreed_snapshot: Json
+          created_at?: string
+          created_by_profile_id: string
+          currency: string
+          customer_id: string
+          id?: string
+          location_id: string
+          order_number: string
+          quotation_id: string
+          quotation_version: number
+          revision?: number
+          shop_id: string
+          status?: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          agreed_snapshot?: Json
+          created_at?: string
+          created_by_profile_id?: string
+          currency?: string
+          customer_id?: string
+          id?: string
+          location_id?: string
+          order_number?: string
+          quotation_id?: string
+          quotation_version?: number
+          revision?: number
+          shop_id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_orders_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_orders_customer_id_shop_id_fkey"
+            columns: ["customer_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "client_balances"
+            referencedColumns: ["client_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_orders_customer_id_shop_id_fkey"
+            columns: ["customer_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_orders_location_id_shop_id_fkey"
+            columns: ["location_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_locations"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_orders_quotation_id_quotation_version_fkey"
+            columns: ["quotation_id", "quotation_version"]
+            isOneToOne: false
+            referencedRelation: "trade_quotation_versions"
+            referencedColumns: ["quotation_id", "version"]
+          },
+          {
+            foreignKeyName: "trade_orders_quotation_id_shop_id_fkey"
+            columns: ["quotation_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "trade_quotations"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trade_price_rules: {
         Row: {
           active: boolean
@@ -12354,6 +12599,17 @@ export type Database = {
         }
         Returns: string
       }
+      create_trade_order: {
+        Args: {
+          p_location_id: string
+          p_quotation_id: string
+          p_reason: string
+          p_request_id: string
+          p_revision: number
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       create_vendor: {
         Args: {
           p_address: string
@@ -14136,6 +14392,19 @@ export type Database = {
         }[]
       }
       tax_settings: { Args: { p_shop_id: string }; Returns: Json }
+      trade_order_context: {
+        Args: {
+          p_history_page?: number
+          p_kind?: string
+          p_location_id: string
+          p_order_id?: string
+          p_page?: number
+          p_quotation_id?: string
+          p_search?: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       trade_pricing_context: {
         Args: {
           p_customer_id?: string
