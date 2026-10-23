@@ -470,5 +470,21 @@
     "fix": "Locator getAttribute(open) instead of detached element evaluation; all assertions/cases retained",
     "acceptance": false,
     "full_units": "not repeated for fixture-only change;54 inherited Shop failures retained"
+  },
+  "page_capture_followup": {
+    "source": "83d67c7a3f176d96471c051082e7ee7198054dd2",
+    "run": 40025373765,
+    "actual_m3_passed": 9,
+    "failed_task": "DOS-M3-003",
+    "category": "locator-detached",
+    "location": {
+      "file": "dos-m3-003.spec.ts",
+      "line": 70,
+      "column": 19
+    },
+    "observation": "Reached screenshot after passing the keyboard end-boundary assertion in that variant; later variants not inferred",
+    "change": "Full-page capture of the scrolled queue, with visible-region assertion; all prior cases/thresholds/variants unchanged",
+    "accepted": false,
+    "new_runtime": "unrun until fresh exact-source CI"
   }
 }
