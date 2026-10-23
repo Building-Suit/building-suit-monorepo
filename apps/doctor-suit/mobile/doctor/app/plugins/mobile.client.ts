@@ -1,3 +1,5 @@
+import {createNativeAppointments,nativeAppointmentsState,type NativeScheduleScope} from '../utils/nativeAppointments'
+import {createNativeAppointmentsRepository} from '../utils/nativeAppointmentsRepository'
 import {createNativePrescriptionReview,nativePrescriptionReviewState} from '../utils/nativePrescriptionReview'
 import {createNativeEncounter,nativeEncounterState} from '../utils/nativeEncounter'
 import {createNativeEncounterRepository} from '../utils/nativeEncounterRepository'
@@ -32,6 +34,12 @@ export default defineNuxtPlugin(async app=>{
   const prescriptionReview=createNativePrescriptionReview(encounterRepository,()=>auth.identity()&&context.state.phase==='ready'?context.state.current?.context??null:null,()=>encounters.state.detail,encounters.observe,()=>{void context.clear()},encounters.dirty,{state:reactive(nativePrescriptionReviewState()),historyPage:()=>encounters.state.historyPage})
   context.registerClear(prescriptionReview.clear)
   app.provide('doctorNativePrescriptionReview',prescriptionReview)
+  const appointmentScope=():NativeScheduleScope|null=>auth.identity()&&context.state.phase==='ready'&&context.state.current?.timezone&&context.state.current.context.capabilities.includes('appointments.read')?{...context.state.current.context,timezone:context.state.current.timezone}:null
+  const appointmentRepository=configured&&repository?createNativeAppointmentsRepository([configured,nativeAuthTransport,auth,()=>context.state.phase==='ready'?context.state.current:null,repository,()=>{void context.clear()}],()=>context.state.options,appointmentScope):null
+  const appointments=createNativeAppointments(appointmentRepository,reactive(nativeAppointmentsState()),appointmentScope)
+  context.registerClear(appointments.clear)
+  app.provide('doctorNativeAppointments',appointments)
+  app.provide('doctorNativeAppointmentScope',appointmentScope)
   const shell:ReturnType<typeof createDoctorMobileShell>=createDoctorMobileShell({identity:auth.identity,selection:context.selection,load:async(_route,selection,signal)=>{const choice=context.state.current,identity=auth.identity();if(!repository||!choice||!identity||nativeContextId(choice.context)!==nativeContextId(selection))throw new Error('Unavailable');return(await repository.resolve(choice,identity,signal)).context}},state)
   app.provide('doctorNativeSession',auth);app.provide('doctorNativeAvailability',readiness)
   let admission=0,disposed=false,active=true,monitor:ReturnType<typeof setTimeout>|undefined,expiry:ReturnType<typeof setTimeout>|undefined

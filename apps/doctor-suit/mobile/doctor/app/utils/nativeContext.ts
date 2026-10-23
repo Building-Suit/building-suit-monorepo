@@ -6,6 +6,7 @@ export interface NativeContextChoice {
   practiceName: string
   doctorName: string
   locationName: string
+  timezone?: string
 }
 export interface NativeContextPort {
   list(identity: DoctorMobileIdentity, signal: AbortSignal): Promise<NativeContextChoice[]>
@@ -26,7 +27,8 @@ export function nativeContextChoice(raw: NativeContextChoice, identity: DoctorMo
   for (const value of [raw.practiceName, raw.doctorName, raw.locationName]) {
     if (typeof value !== 'string' || !value.trim() || value.length > 200 || [...value].some(char => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)) throw new Error('Context unavailable')
   }
-  return {context, practiceName: raw.practiceName, doctorName: raw.doctorName, locationName: raw.locationName}
+  if(raw.timezone!==undefined){if(typeof raw.timezone!=='string'||raw.timezone.length>64)throw new Error('Context unavailable');try{new Intl.DateTimeFormat('en',{timeZone:raw.timezone})}catch{throw new Error('Context unavailable')}}
+  return {...(raw.timezone===undefined?{}:{timezone:raw.timezone}),context, practiceName: raw.practiceName, doctorName: raw.doctorName, locationName: raw.locationName}
 }
 
 /** Choices are memory-only projections of current server grants, never authority. */
