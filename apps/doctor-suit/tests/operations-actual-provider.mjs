@@ -45,6 +45,12 @@ try{
  const result=await new Promise((resolve,reject)=>{const c=spawn('pnpm',['exec','playwright','test','--config','apps/doctor-suit/tests/e2e/playwright.operations.config.ts','--reporter=json'],{cwd:root,env:{...env,DOCTOR_OPERATIONS_ACCEPTANCE:'owned-actual-provider',DOCTOR_OPERATIONS_FIXTURE:JSON.stringify(fixture),PLAYWRIGHT_JSON_OUTPUT_FILE:reportPath},detached:true,stdio:['ignore','pipe','pipe']});let output='';const stop=()=>{try{process.kill(-c.pid,'SIGKILL')}catch{/* Only this run's browser process group is owned. */}};const timer=setTimeout(stop,900000);const collect=d=>{output+=d;if(output.length>16*1024*1024)stop()};c.stdout.on('data',collect);c.stderr.on('data',collect);c.once('error',()=>{clearTimeout(timer);reject(new Error('M3 browser executor unavailable'))});c.once('exit',code=>{clearTimeout(timer);stop();resolve({code,output})})})
  let report=null;try{report=JSON.parse(await readFile(reportPath,'utf8'))}catch{/* Missing/malformed private evidence fails closed. */}
  const evidence=doctorOperationsBrowserEvidence(report,result.code)
+ // Fixed task/category/source coordinates are visible through GitHub check
+ // annotations before this job's later independent provider journeys finish.
+ if(process.env.GITHUB_ACTIONS==='true')for(const failed of evidence.failed){
+  const at=failed.location,position=at?` file=apps/doctor-suit/tests/e2e/${at.file},line=${at.line},col=${at.column}`:''
+  console.error(`::error${position}::${failed.task}: ${failed.category}; synthetic M3 acceptance remains failed`)
+ }
  browserResult={exitCode:result.code,logSha256:createHash('sha256').update(result.output).digest('hex'),...evidence};console.log('M3 browser evidence',JSON.stringify(evidence));expect(evidence.accepted,'Actual M3 browser population did not pass exactly once')
  const usersAfter=await admin.auth.admin.listUsers({perPage:100});expect(!usersAfter.error&&usersAfter.data.users.length===authUserCount,'Administrative records created an Auth identity');
  console.log('M3 actual browser and service assertions passed against run-owned Auth/PostgREST. Synthetic data only; professional and provider approval remain OPEN.')
