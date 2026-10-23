@@ -100,7 +100,8 @@
     "BsPatientContactPreferencesPage": "packages/ui/src/templates/BsPatientContactPreferencesPage.vue",
     "BsMessageOutboxPage": "packages/ui/src/templates/BsMessageOutboxPage.vue",
     "BsFulfillmentTrackingPage": "packages/ui/src/templates/BsFulfillmentTrackingPage.vue",
-    "BsSyntheticImportPreviewPage": "packages/ui/src/templates/BsSyntheticImportPreviewPage.vue"
+    "BsSyntheticImportPreviewPage": "packages/ui/src/templates/BsSyntheticImportPreviewPage.vue",
+    "BsMobileAccessPage": "packages/ui/src/templates/BsMobileAccessPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -108,11 +109,11 @@
     "routes": 74
   },
   "currentInventory": {
-    "suitVueFiles": 96,
+    "suitVueFiles": 99,
     "localComponents": 0,
-    "routes": 80,
-    "layouts": 10,
-    "roots": 6
+    "routes": 81,
+    "layouts": 11,
+    "roots": 7
   },
   "acceptance": "verified-local: all 76 routes, strict zero-debt architecture, cross-Suit parity and regressions; publication pending provider suppression verification",
   "entries": [
@@ -3147,6 +3148,34 @@
       "status": "implemented; acceptance in progress",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/app.vue",
+      "kind": "root",
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/app.vue",
+      "status": "synthetic engineering; device acceptance pending",
+      "verification": "source and unit checks pending",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/layouts/default.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/layouts/default.vue",
+      "status": "synthetic engineering; device acceptance pending",
+      "verification": "source and unit checks pending",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/[[...path]].vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsMobileAccessPage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/[[...path]].vue",
+      "status": "synthetic engineering; device acceptance pending",
+      "verification": "source and unit checks pending",
+      "dependencies": [],
+      "purpose": "doctor-mobile-guarded-shell"
     }
   ],
   "verifiedSharedHeads": [
@@ -3295,6 +3324,7 @@
     "BsPatientContactPreferencesPage",
     "BsMessageOutboxPage",
     "BsFulfillmentTrackingPage",
-    "BsSyntheticImportPreviewPage"
+    "BsSyntheticImportPreviewPage",
+    "BsMobileAccessPage"
   ]
 }

@@ -405,7 +405,8 @@
     "./templates/BsFulfillmentTrackingPage": "./src/templates/BsFulfillmentTrackingPage.vue",
     "./utils/fulfillmentPresentation": "./src/utils/fulfillmentPresentation.ts",
     "./templates/BsSyntheticImportPreviewPage": "./src/templates/BsSyntheticImportPreviewPage.vue",
-    "./utils/syntheticImportPresentation": "./src/utils/syntheticImportPresentation.ts"
+    "./utils/syntheticImportPresentation": "./src/utils/syntheticImportPresentation.ts",
+    "./templates/BsMobileAccessPage": "./src/templates/BsMobileAccessPage.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

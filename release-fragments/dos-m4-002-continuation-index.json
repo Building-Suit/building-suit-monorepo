@@ -1,0 +1,9 @@
+{
+  "id": "dos-m4-002-continuation-index",
+  "task": "DOS-M4-002",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["docs/work-packages/doctor-suit/implementation/m3-continuation.md", "docs/work-packages/doctor-suit/implementation/m4-continuation.md"],
+  "reason": "Retain durable links to current M3 actual-service and separate Android task records, historical baseline and independent gates for resumption without temporary files or chat history."
+}
