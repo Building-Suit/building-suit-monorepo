@@ -1,0 +1,22 @@
+{
+  "task": "DOS-M4-003",
+  "status": "in progress; native storage/device verification unrun at initial checkpoint",
+  "parent_pr": 446,
+  "parent_sha": "f65535c81aaab74a2bb09515744d2f20e90462dd",
+  "planned_native_cases": [
+    "vault-roundtrip-ciphertext",
+    "vault-tamper-denied",
+    "vault-namespace-denied",
+    "vault-clear-denied"
+  ],
+  "api_levels": [
+    29,
+    36
+  ],
+  "executed_native_cases": [],
+  "task_acceptance": false,
+  "physical_device": false,
+  "clinical_approval": false,
+  "offline_chart_approval": false,
+  "provider_activation": false
+}
