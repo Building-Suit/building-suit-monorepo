@@ -5,7 +5,7 @@ import { openPrintSession } from '@building-suit/ux'
 import type { BsFinancialReportCell, BsFinancialReportColumn, BsFinancialReportCopy, BsFinancialReportFilters, BsFinancialReportSection, BsFinancialReportsView } from '@building-suit/ui/types/financialReportsPresentation'
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
-import type { AccountsReportsRpcDatabase } from '~~/types/accounts-reports-rpc.types'
+import type { ExactReportRpcDatabase } from '~~/types/exact-report-rpc.types'
 import type { ReportFormatMetadata } from '../utils/reportFormats'
 
 definePageMeta({ layout: 'default' })
@@ -16,7 +16,7 @@ definePageMeta({ layout: 'default' })
  */
 
 const supabase = useSupabaseClient<Database>()
-const performanceRpc = useSupabaseClient<AccountsReportsRpcDatabase>()
+const exactRpc = useSupabaseClient<ExactReportRpcDatabase>()
 const user = useSupabaseUser()
 const config = useRuntimeConfig()
 const route = useRoute()
@@ -86,7 +86,7 @@ interface ReportRow {
   account_id: string | null
   code: string | null
   name: string
-  amount_minor: number
+  amount_minor: string
 }
 
 const profitLossKey = computed(() => scopedReportKey('profit-loss', { from: from.value, to: to.value }))
@@ -96,7 +96,7 @@ const { data: profitLossDetail, pending: profitLossDetailPending, error: profitL
     p_organization_id: currentId.value,
     p_from_date: from.value,
     p_to_date: to.value,
-  })
+  }).select('section,account_id,code,name,amount_minor::text')
   if (error) throw error
   return (data ?? []) as ReportRow[]
 }, { watch: [currentId, from, to, tab], default: () => [] })
@@ -129,31 +129,32 @@ const { data: balanceResult, pending: balanceSheetDetailPending, error: balanceS
 }, { watch: [tab] })
 const balanceSheetDetail = computed(() => balanceResult.value?.scope === reportScope.value ? (balanceResult.value?.rows ?? []) : [])
 
-interface StatementReconciliation { profit_loss_difference_minor: number, balance_sheet_difference_minor: number, mapping_complete: boolean, accounts: Array<{ statement: string, account_id: string, statement_minor: number, ledger_minor: number, difference_minor: number }> }
+interface StatementReconciliation { profit_loss_difference_minor: string, balance_sheet_difference_minor: string, mapping_complete: boolean, accounts: Array<{ statement: string, account_id: string, statement_minor: string, ledger_minor: string, difference_minor: string }> }
 
-interface CashAdjustment { account_id: string, code: string | null, name: string, line: string, amount_minor: number }
+interface CashAdjustment { account_id: string, code: string | null, name: string, line: string, amount_minor: string }
 interface IndirectCashFlow {
-  net_profit_minor: number
+  net_profit_minor: string
   operating_adjustments: CashAdjustment[]
-  operating_adjustments_minor: number
-  operating_cash_minor: number
-  investing_cash_minor: number
-  financing_cash_minor: number
-  unclassified_cash_minor: number
+  operating_adjustments_minor: string
+  operating_cash_minor: string
+  investing_cash_minor: string
+  financing_cash_minor: string
+  unclassified_cash_minor: string
   unclassified_entry_count: number
-  net_cash_change_minor: number
-  opening_cash_minor: number
-  closing_cash_minor: number
-  operating_adjustment_difference_minor: number
-  classification_difference_minor: number
+  net_cash_change_minor: string
+  opening_cash_minor: string
+  closing_cash_minor: string
+  operating_adjustment_difference_minor: string
+  classification_difference_minor: string
   classification_complete: boolean
   reconciled: boolean
 }
-interface CashDetail { transaction_id: string, entry_id: string, account_id: string, section: string, amount_minor: number, classification_source: string }
+interface CashDetail { transaction_id: string, entry_id: string, account_id: string, section: string, amount_minor: string, classification_source: string }
 const cashFlowKey = computed(() => scopedReportKey('cash-flow', { from: from.value, to: to.value }))
 const { data: cashFlow, pending: cashFlowPending, error: cashFlowError, refresh: refreshCashFlow } = useLazyAsyncData(cashFlowKey, async () => {
   if (tab.value !== 'cash-flow' || !currentId.value || periodInvalid.value) return null
-  const { data, error } = await supabase.rpc('report_indirect_cash_flow', {
+  const { data, error } = await exactRpc.rpc('read_exact_financial_report', {
+    p_report: 'cash_flow',
     p_organization_id: currentId.value, p_from_date: from.value, p_to_date: to.value,
   })
   if (error) throw error
@@ -164,7 +165,7 @@ const { data: cashDetail, error: cashDetailError, refresh: refreshCashDetail } =
   if (tab.value !== 'cash-flow' || !currentId.value || periodInvalid.value) return [] as CashDetail[]
   const { data, error } = await supabase.rpc('report_cash_flow_detail', {
     p_organization_id: currentId.value, p_from_date: from.value, p_to_date: to.value,
-  })
+  }).select('transaction_id,entry_id,account_id,section,amount_minor::text,classification_source')
   if (error) throw error
   return (data ?? []) as CashDetail[]
 }, { watch: [currentId, from, to, tab], default: () => [] })
@@ -181,7 +182,7 @@ const { data: ledger, pending: ledgerPending, error: ledgerError, refresh: refre
     p_account_id: ledgerAccountId.value,
     p_from_date: from.value,
     p_to_date: to.value,
-  })
+  }).select('entry_id,transaction_id,entry_date,reference,description,memo,debit_minor::text,credit_minor::text,running_balance_minor::text')
   if (error) throw error
   return data ?? []
 }, { watch: [currentId, ledgerAccountId, from, to, tab], default: () => [] })
@@ -210,7 +211,7 @@ interface FinancialOverview {
   profit_loss: ReportRow[]
   balance_sheet: ClassifiedRow[]
   trial_balance: TrialBalanceRow[]
-  integrity: Record<string, number | boolean | string>
+  integrity: { balanced: boolean, difference_minor: string }
   reconciliation: StatementReconciliation
 }
 const overviewScope = computed(() => scopedQueryKey({
@@ -224,7 +225,8 @@ const { data: overviewResult, pending: overviewPending, error: overviewError, re
   if (tab.value !== 'overview' || !organizationId || periodInvalid.value || !validDate(asOf.value)) {
     return { scope, payload: null as FinancialOverview | null }
   }
-  const { data, error } = await performanceRpc.rpc('report_financial_overview', {
+  const { data, error } = await exactRpc.rpc('read_exact_financial_report', {
+    p_report: 'overview',
     p_organization_id: organizationId,
     p_from_date: from.value,
     p_to_date: to.value,
@@ -438,8 +440,8 @@ const financialView = computed<BsFinancialReportsView>(() => {
   failed = !!overviewError.value; loading = overviewPending.value; empty = !trialBalance.value.length
   columns = trialColumns.map(item => column(item.field, t(`reports.${item.label}`), displayReportMoney(sumTrial(item.field))))
   sections = [{ id: 'trial', title: `${t('reports.trialBalance')} · ${baseCurrency.value}`, total: '', rows: trialBalance.value.map(row => ({ id: row.account_id, name: row.name, code: row.code || t('common.dash'), cells: trialColumns.map(item => reportCell(displayReportMoney(row[item.field]), row.account_id, item.scope, t('reports.drilldownAmount', { column: t(`reports.${item.label}`), account: row.name }))) })) }]
-  if (integrity.value?.balanced === false) warnings.push(`${t('reports.integrityTitle')} ${t('reports.integrityBody', { difference: formatMoney(Number(integrity.value.difference_minor), baseCurrency.value, locale.value) })}`)
-  if (statementReconciliation.value && (statementReconciliation.value.profit_loss_difference_minor !== 0 || statementReconciliation.value.balance_sheet_difference_minor !== 0 || !statementReconciliation.value.mapping_complete)) warnings.push(t('financialMapping.reconciliationWarning'))
+  if (integrity.value?.balanced === false) warnings.push(`${t('reports.integrityTitle')} ${t('reports.integrityBody', { difference: formatMoney(integrity.value.difference_minor, baseCurrency.value, locale.value) })}`)
+  if (statementReconciliation.value && (BigInt(statementReconciliation.value.profit_loss_difference_minor) !== 0n || BigInt(statementReconciliation.value.balance_sheet_difference_minor) !== 0n || !statementReconciliation.value.mapping_complete)) warnings.push(t('financialMapping.reconciliationWarning'))
  } else if (active === 'profit-loss') {
   failed = !!profitLossError.value; loading = profitLossPending.value; empty = !profitLoss.value.length
   if (plMappingIncomplete.value) warnings.push(t('financialMapping.incomplete'))
@@ -458,7 +460,7 @@ const financialView = computed<BsFinancialReportsView>(() => {
  } else {
   failed = !!ledgerError.value; loading = ledgerPending.value; empty = !ledger.value.length; emptyHint = t('reports.emptyLedgerHint')
   columns = [column('date', t('transactions.date')), column('reference', t('transactions.reference')), column('debit', t('detail.debit')), column('credit', t('detail.credit')), column('balance', t('reports.runningBalance'))]
-  sections = [{ id: 'ledger', title: '', total: '', rows: ledger.value.map(row => ({ id: row.entry_id, name: row.description || row.memo || t('common.dash'), code: '', cells: [reportCell(formatDate(row.entry_date, locale.value)), reportCell(row.reference || t('common.dash')), reportCell(Number(row.debit_minor) ? displayReportMoney(row.debit_minor) : t('common.dash')), reportCell(Number(row.credit_minor) ? displayReportMoney(row.credit_minor) : t('common.dash')), reportCell(displayReportMoney(row.running_balance_minor))] })) }]
+  sections = [{ id: 'ledger', title: '', total: '', rows: ledger.value.map(row => ({ id: row.entry_id, name: row.description || row.memo || t('common.dash'), code: '', cells: [reportCell(formatDate(row.entry_date, locale.value)), reportCell(row.reference || t('common.dash')), reportCell(BigInt(row.debit_minor) !== 0n ? displayReportMoney(row.debit_minor) : t('common.dash')), reportCell(BigInt(row.credit_minor) !== 0n ? displayReportMoney(row.credit_minor) : t('common.dash')), reportCell(displayReportMoney(row.running_balance_minor))] })) }]
  }
  const cashKeys = ['net_profit', 'operating_adjustments', 'operating_cash', 'investing_cash', 'financing_cash', 'unclassified_cash', 'net_cash_change', 'opening_cash', 'closing_cash'] as const
  return { context: ledgerPresentation.context(active === 'balance-sheet' ? undefined : from.value, active === 'balance-sheet' ? undefined : to.value, active === 'balance-sheet' ? asOf.value : undefined), tabs: TABS.map(item => ({ value: item.key, label: t(item.labelKey) })), accounts: accounts.value.map(account => ({ value: account.id, label: `${account.code ? `${account.code} · ` : ''}${account.name}` })), preferenceReady: tablePreferenceHydrated.value, canExport: can('reports.export'), canAllocate: can('accounts.update'), exporting: exportPending.value, exportError: exportError.value, invalidPeriod: periodInvalid.value ? t('reports.invalidPeriod') : '', loading, failed, errorLabel, emptyHint, warnings, columns, sections, totals,

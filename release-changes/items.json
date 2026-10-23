@@ -1982,5 +1982,66 @@
       "ls-sec-dep-001-critical-toolchain",
       "ls-sec-dep-001-shared-consumers"
     ]
+  },
+  {
+    "id": "ls-fin-precision-001-exact-report-transport",
+    "task": "LS-FIN-PRECISION-001",
+    "suits": [
+      "ledger-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/ledger-suit"
+    ],
+    "reason": "Preserve financial minor units across the real PostgREST/JavaScript report and allocation boundary.",
+    "notes": {
+      "title": {
+        "en": "Exact amounts in financial reports",
+        "ar": "مبالغ دقيقة في التقارير المالية"
+      },
+      "summary": {
+        "en": "Large financial amounts retain their exact minor units in reports and cash-flow allocations.",
+        "ar": "تحتفظ المبالغ المالية الكبيرة بوحداتها الصغرى الدقيقة في التقارير وتوزيعات التدفقات النقدية."
+      },
+      "details": {
+        "en": "Profit and loss, General Ledger, financial overview and cash-flow reports preserve exact decimal digits. Cash-flow allocation saves and retries preserve the same exact amounts.",
+        "ar": "تحفظ قائمة الدخل والأستاذ العام والملخص المالي وتقارير التدفقات النقدية الأرقام العشرية الدقيقة، وتحافظ عمليات حفظ توزيعات التدفقات وإعادة محاولتها على المبالغ نفسها."
+      }
+    },
+    "sources": [
+      "ls-fin-precision-001-exact-report-transport"
+    ],
+    "evidence": [
+      {
+        "path": "apps/ledger-suit/app/pages/reports.vue",
+        "contains": ".select('section,account_id,code,name,amount_minor::text')"
+      },
+      {
+        "path": "apps/ledger-suit/app/composables/useLedgerCashFlowAllocationDialogView.ts",
+        "contains": "supabase.rpc('classify_cash_flow_entry_exact'"
+      }
+    ]
+  },
+  {
+    "id": "ls-fin-precision-001-release-support",
+    "task": "LS-FIN-PRECISION-001",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "release-changes/items.json"
+    ],
+    "reason": "Maintain private bilingual release inventory for the Ledger financial precision correction; no other product behavior changes.",
+    "sources": [
+      "ls-fin-precision-001-release-support"
+    ]
   }
 ]

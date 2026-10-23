@@ -19,7 +19,7 @@ test('Reports only request the active surface and Overview uses one aggregate RP
   assert.match(reports, /tab\.value !== 'cash-flow'.*return null/s)
   assert.match(reports, /tab\.value !== 'ledger'.*return \[\]/s)
   assert.match(reports, /tab\.value !== 'overview'.*payload: null/s)
-  assert.equal(reports.match(/\.rpc\('report_financial_overview'/g)?.length, 1)
+  assert.equal(reports.match(/p_report: 'overview'/g)?.length, 1)
   assert.doesNotMatch(reports, /\.rpc\('report_statement_reconciliation'/)
   assert.doesNotMatch(reports, /\.rpc\('check_balance_sheet_integrity'/)
 })
