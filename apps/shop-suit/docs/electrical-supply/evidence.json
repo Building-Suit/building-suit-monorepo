@@ -256,7 +256,7 @@
       "releaseCheck": "PASS"
     },
     "merchantHardwareAcceptance": false,
-    "publishedParentCorrection": "946b0f582261b7ce01e02ac7c925326f6d8757a7",
+    "publishedParentCorrection": "7ef59f5fac1d715ad428371c7bcde89235832d14",
     "nativeParentCi": {
       "sha": "15b52a324e1e0cd5301f75e5ab23c0ad220b5235",
       "measuredRetail": "PASS",
@@ -283,6 +283,15 @@
       "failed": 0,
       "defaultPopupAndShellCycles": true
     },
-    "releaseClassification": "Open draft signup public scope corrected to Shop; other consumers internal; no accepted parent fragment changed"
+    "releaseClassification": "Open draft signup public scope corrected to Shop; other consumers internal; no accepted parent fragment changed",
+    "appointmentAccessBrowser": {
+      "passed": 4,
+      "failed": 0
+    },
+    "doctorSharedConsumer": {
+      "existingUnchangedCasesPassed": 48,
+      "repairedShellCasesPassed": 8,
+      "clinicalAcceptance": false
+    }
   }
 }

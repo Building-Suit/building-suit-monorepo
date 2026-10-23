@@ -2584,5 +2584,30 @@
     "sources": [
       "ss-signin-draft-public-scope-20261023"
     ]
+  },
+  {
+    "id": "ss-electrical-shared-preview-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit/tests/e2e/dos-m1-004.spec.ts",
+      "packages/testing/e2e/settings-menu-focus.spec.ts",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts",
+      "apps/shop-suit/docs/electrical-supply"
+    ],
+    "reason": "Qualify current shared shell controls in their synthetic Doctor consumer without changing Doctor domain behavior, provider setup or clinical/public authority. Preserve scope disclosure, keyboard focus, theme transitions, mobile navigation and no-overflow assertions. Other consumers retain their actual popup/cycle checks.",
+    "sources": [
+      "ss-electrical-shared-preview-qualification-20261023"
+    ]
   }
 ]
