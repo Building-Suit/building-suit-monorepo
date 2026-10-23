@@ -2112,8 +2112,7 @@
     "id": "shared-sign-in-label-hydration-20261022",
     "task": "SS-ELECTRICAL-001",
     "suits": [
-      "shop-suit",
-      "ledger-suit"
+      "shop-suit"
     ],
     "classification": "patch",
     "disposition": "public",
@@ -2562,6 +2561,28 @@
     "reason": "Qualify all dependency consumers without activating an operational product or inventing a production baseline. Retain popup keyboard navigation checks and test actual shell cycle controls, mobile navigation, hydration, focus and both locales. Restrict this open draft PR new signup public fragment to Shop; protected parent fragments remain untouched.",
     "sources": [
       "ss-electrical-settings-consumer-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-signin-draft-public-scope-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsSignInPage.vue",
+      "release-changes/items.json"
+    ],
+    "reason": "Correct the new, unaccepted public sign-in fragment in draft PR445 to Shop only. The real SAS/PostgREST fixture has no public Ledger registration/baseline for this change; shared consumers remain internal provenance. No protected accepted fragment, product registry, production version or release history changes.",
+    "sources": [
+      "ss-signin-draft-public-scope-20261023"
     ]
   }
 ]
