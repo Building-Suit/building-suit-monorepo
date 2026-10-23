@@ -4,6 +4,9 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      trade_quotation_context: { Args: { p_shop_id: string; p_location_id: string; p_quotation_id?: string | null; p_search?: string | null; p_page?: number; p_history_page?: number }; Returns: import('./tradeQuotations').QuotationContext }
+      trade_quotation_command: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_action: import('./tradeQuotations').QuotationAction; p_quotation_id: string | null; p_revision: number; p_payload: import('./tradeQuotations').QuotationValues | Record<string, never>; p_reason: string }; Returns: { id: string; revision: number; version: number; status: import('./tradeQuotations').QuotationStatus } }
+
       save_trade_configuration: { Args: { p_request_id: string; p_shop_id: string; p_action: 'group' | 'assignment' | 'price'; p_payload: Record<string, string | number | boolean | null>; p_reason: string }; Returns: { id: string; revision: number } }
       trade_pricing_context: { Args: { p_shop_id: string; p_kind?: 'group' | 'group_options' | 'price' | 'history'; p_product_id?: string | null; p_customer_id?: string | null; p_search?: string | null; p_page?: number }; Returns: import('./tradePricing').TradePricingContext }
       quote_customer_sale: { Args: { p_shop_id: string; p_location_id: string; p_customer_id: string | null; p_lines: import('./measurement').SaleLineInput[]; p_bundles?: boolean; p_invoice_id?: string | null }; Returns: import('./tax').TaxQuote }

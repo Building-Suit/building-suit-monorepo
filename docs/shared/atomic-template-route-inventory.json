@@ -93,7 +93,8 @@
     "BsStorefrontBuilderPage": "packages/ui/src/templates/BsStorefrontBuilderPage.vue",
     "BsCatalogOffersPage": "packages/ui/src/templates/BsCatalogOffersPage.vue",
     "BsPhysicalStockPage": "packages/ui/src/templates/BsPhysicalStockPage.vue",
-    "BsTradePricingPage": "packages/ui/src/templates/BsTradePricingPage.vue"
+    "BsTradePricingPage": "packages/ui/src/templates/BsTradePricingPage.vue",
+    "BsTradeQuotationsPage": "packages/ui/src/templates/BsTradeQuotationsPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -101,9 +102,9 @@
     "routes": 74
   },
   "currentInventory": {
-    "suitVueFiles": 96,
+    "suitVueFiles": 97,
     "localComponents": 0,
-    "routes": 80,
+    "routes": 81,
     "layouts": 10,
     "roots": 6
   },
@@ -3011,6 +3012,27 @@
       ],
       "verification": "Implementation qualification in progress; see electrical-supply/VERIFICATION.md.",
       "purpose": "shop-trade-pricing"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/quotations.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsTradeQuotationsPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsTradeQuotationsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsTradeQuotationsPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/pages/quotations.vue",
+      "dependencies": [
+        "@building-suit/ui/types/tradePricingPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/tradePricing",
+        "~/types/measurement"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/VERIFICATION.md.",
+      "purpose": "shop-formal-quotations"
     }
   ],
   "verifiedSharedHeads": [
@@ -3152,6 +3174,7 @@
     "BsStorefrontBuilderPage",
     "BsCatalogOffersPage",
     "BsPhysicalStockPage",
-    "BsTradePricingPage"
+    "BsTradePricingPage",
+    "BsTradeQuotationsPage"
   ]
 }

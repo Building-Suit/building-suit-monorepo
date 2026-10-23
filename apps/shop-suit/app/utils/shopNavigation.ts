@@ -19,6 +19,7 @@ export function shopNavigation(mode: BusinessMode, locale: string, t: (key: stri
       { to: '/taxes', label: locale === 'ar' ? 'الضرائب' : 'Taxes', icon: 'settings' },
       { to: '/commissions', label: locale === 'ar' ? 'العمولات' : 'Commissions', icon: 'wallet' },
       { to: '/cash-shifts', label: copy.cashShifts, icon: 'wallet' },
+      { to: '/quotations', label: locale === 'ar' ? 'عروض الأسعار' : 'Quotations', icon: 'invoice' },
       { to: '/sales', label: t('sales.title'), icon: 'invoice' },
     ] },
     ...(businessModeSupportsProducts(mode) ? [{ key: 'stock', label: copy.inventory, links: [

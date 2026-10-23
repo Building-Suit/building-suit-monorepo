@@ -1,7 +1,7 @@
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 type Choice = { id: string; name: string }
 /** Product-owned lazy RPC adapter; the shared picker owns presentation. */
-export function usePurchaseEntityPicker(kind: 'product' | 'supplier' | 'customer' | 'group') {
+export function usePurchaseEntityPicker(kind: 'product' | 'supplier' | 'customer' | 'group' | 'service') {
   const rpc = useShopClient<ShopRpcDatabase>().schema('public')
   const { currentId } = useShop()
   const user = useSupabaseUser()
@@ -27,6 +27,7 @@ export function usePurchaseEntityPicker(kind: 'product' | 'supplier' | 'customer
       const result = kind === 'product'
         ? await rpc.rpc('list_products', { ...args, p_category_id: null })
         : kind === 'supplier' ? await rpc.rpc('list_vendors', { ...args, p_is_active: true })
+          : kind === 'service' ? await rpc.rpc('list_services_by_category', { ...args, p_category_id: null })
           : kind === 'customer' ? await rpc.rpc('list_customers', { ...args, p_is_active: true })
             : await rpc.rpc('trade_pricing_context', { p_shop_id: shopId, p_kind: 'group_options', p_search: search.value.trim() || null, p_page: page.value })
       if (request !== generation) return

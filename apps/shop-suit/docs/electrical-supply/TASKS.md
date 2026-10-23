@@ -503,14 +503,14 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-402, SS-ELEC-207.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Version quotations with validity, taxes, agreed measurements, explicit transitions and immutable issued history.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Version quotations with validity, taxes, agreed measurements, explicit transitions and immutable issued history. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: Forward migration20261023215636, public-command quote/role/expiry SQL suite, generated schema types, shared quotation editor/history/print presentation and scoped adapter. Local110-migration replay and14-suite regression matrix passed; both bilingual version/retry/history/print journeys pass. Final combined-head checks and native CI remain pending.
+- PR / commit: Local `codex/shop-suit/formal-quotations`, based on published pricing PR460 and forward-merged parent8b951073. Draft [PR463](https://github.com/Building-Suit/building-suit-monorepo/pull/463), feature869d4df4; combined typecheck/build and repository suite pass.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 

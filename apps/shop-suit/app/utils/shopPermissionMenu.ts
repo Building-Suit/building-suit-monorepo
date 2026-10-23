@@ -13,6 +13,7 @@ export const SHOP_PAGE_PERMISSIONS: Record<string, readonly string[]> = {
   '/taxes': ['settings.manage'],
   '/commissions': ['team.manage', 'sales.manage'],
   '/cash-shifts': ['cash_shifts.use', 'cash_shifts.manage', 'cash_shifts.adjust'],
+  '/quotations': ['sales.view', 'sales.manage', 'sales.issue'],
   '/sales': ['sales.view', 'sales.manage', 'sales.issue', 'payments.view', 'payments.receive', 'payments.reverse', 'payments.refund'],
   '/products': ['products.view', 'products.manage'],
   '/inventory': ['inventory.view', 'inventory.manage', 'inventory.adjust'],
