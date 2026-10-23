@@ -4,10 +4,13 @@
   "parent_pr": 446,
   "parent_sha": "f65535c81aaab74a2bb09515744d2f20e90462dd",
   "planned_native_cases": [
-    "vault-roundtrip-ciphertext",
-    "vault-tamper-denied",
-    "vault-namespace-denied",
-    "vault-clear-denied"
+    "fresh-install-empty",
+    "ciphertext-roundtrip",
+    "tamper-denied",
+    "namespace-denied",
+    "purge-marker",
+    "seed-before-reinstall",
+    "fresh-after-reinstall"
   ],
   "api_levels": [
     29,
@@ -18,5 +21,14 @@
   "physical_device": false,
   "clinical_approval": false,
   "offline_chart_approval": false,
-  "provider_activation": false
+  "provider_activation": false,
+  "native_provider_device_flows": "unrun; pure native adapter/controller and inherited web-provider evidence do not replace device Auth acceptance",
+  "candidate_binding": [
+    "sourceHead",
+    "debug APK SHA256",
+    "instrumentation APK SHA256",
+    "API level",
+    "fixed case statuses",
+    "owned cleanup"
+  ]
 }

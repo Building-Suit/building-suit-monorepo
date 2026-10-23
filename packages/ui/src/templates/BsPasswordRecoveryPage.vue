@@ -2,6 +2,7 @@
 const email = defineModel<string>('email', { default: '' })
 const password = defineModel<string>('password', { default: '' })
 const confirmation = defineModel<string>('confirmation', { default: '' })
+const code = defineModel<string>('code', { default: '' })
 const props = defineProps<{
   availability?: { state: 'loading' | 'error' | 'permission'; title: string; description: string }
   mode: 'request' | 'reset'
@@ -11,8 +12,10 @@ const props = defineProps<{
   complete?: boolean
   valid?: boolean
   backTo?: string
+  /** Native recovery can use an entered code without credential-bearing URLs. */
+  recoveryCode?: {label:string;emailLabel:string;length:number;requestAgainLabel?:string}
 }>()
-const emit = defineEmits<{ submit: []; successAction: []; invalidAction: [] }>()
+const emit = defineEmits<{ submit: []; successAction: []; invalidAction: []; requestAgain: [] }>()
 const visibility = usePasswordVisibility()
 const stateKey = computed(() => props.complete ? 'success' : props.mode === 'reset' && !props.valid ? 'invalid' : props.mode)
 </script>
@@ -27,6 +30,13 @@ const stateKey = computed(() => props.complete ? 'success' : props.mode === 'res
           <BsInput :id="field.id" v-model="email" type="email" autocomplete="email" required :placeholder="copy.emailPlaceholder" />
         </BsField>
         <template v-else>
+          <BsField v-if="recoveryCode" v-slot="field" :label="recoveryCode.emailLabel" required>
+            <BsInput :id="field.id" v-model="email" type="email" autocomplete="email" required />
+          </BsField>
+          <BsField v-if="recoveryCode" v-slot="field" :label="recoveryCode.label" required>
+            <BsOtpInput v-model="code" :label="recoveryCode.label" :length="recoveryCode.length" :describedby="field.describedby" required />
+          </BsField>
+          <BsButton v-if="recoveryCode?.requestAgainLabel" variant="link" :disabled="pending" @click="emit('requestAgain')">{{recoveryCode.requestAgainLabel}}</BsButton>
           <BsField v-slot="field" :label="copy.password || ''">
             <BsInput :id="field.id" v-model="password" :type="visibility.inputType.value" autocomplete="new-password" />
           </BsField>

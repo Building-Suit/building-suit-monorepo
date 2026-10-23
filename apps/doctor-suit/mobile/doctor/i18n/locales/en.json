@@ -18,7 +18,7 @@
     },
     "signed-out": {
       "title": "You are signed out",
-      "body": "Mobile sign-in is not available yet. Your account stays signed out."
+      "body": "Sign in to open your practice when the Doctor Suit connection is available."
     },
     "denied": {
       "title": "Access unavailable",
@@ -41,5 +41,42 @@
     "workspace": "Your practice, on Android",
     "schedule": "Your schedule, on Android",
     "account": "Your account, on Android"
+  },
+  "auth": {
+    "home": "Doctor Suit home",
+    "welcome": "Welcome to Doctor Suit",
+    "signIn": "Sign in",
+    "description": "Use your synthetic Doctor Suit account.",
+    "email": "Email",
+    "password": "Password",
+    "pending": "Checking…",
+    "continue": "Continue",
+    "back": "Back",
+    "checkingEmail": "Checking email…",
+    "unknownEmail": "No account was found for this email.",
+    "emailUnavailable": "Could not check this email. Try again.",
+    "recover": "Recover password",
+    "checking": "Checking connection",
+    "unavailable": "Sign-in unavailable",
+    "connectionRequired": "A local synthetic Doctor Suit connection and secure session storage must be verified before entering credentials.",
+    "recoveryDescription": "Request a one-time email code, then enter it with your new password. Use synthetic addresses ending in .test only.",
+    "requestCode": "Request code",
+    "reset": "Set password",
+    "changed": "Password updated",
+    "account": "Account",
+    "confirmation": "Confirm password",
+    "reveal": "Show password",
+    "code": "Email code",
+    "invalid": "Enter the code and matching passwords of at least 12 characters.",
+    "signedIn": "You are signed in",
+    "accountDescription": "Your current account has been verified. Select your practice and location before opening its records.",
+    "signOut": "Sign out",
+    "errors": {
+      "unavailable": "The connection could not be verified. Try again.",
+      "credentials": "Sign-in failed. Check the credentials and email confirmation.",
+      "storage": "Secure session storage is unavailable.",
+      "revocation-unconfirmed": "Signed out on this device. Server session revocation could not be confirmed."
+    },
+    "requestAgain": "Request another code"
   }
 }

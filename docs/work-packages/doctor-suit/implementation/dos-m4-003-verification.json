@@ -1,0 +1,42 @@
+{
+  "task": "DOS-M4-003",
+  "parent_pr": 446,
+  "initial_parent_sha": "f65535c81aaab74a2bb09515744d2f20e90462dd",
+  "observed_at": "2026-10-23T20:55:17.575739+00:00",
+  "phase": "working tree validation before native candidate commit and parent diagnostic sync",
+  "checks": {
+    "native_session_protocol_privacy_units": {
+      "passed": 17,
+      "failed": 0
+    },
+    "earlier_shared_focused_command": {
+      "passed": 152,
+      "failed": 0,
+      "note": "later task-owned cases verified separately; no aggregate count invented"
+    },
+    "full_repository_units": {
+      "tests": 2232,
+      "passed": 2155,
+      "failed": 54,
+      "skipped": 23,
+      "failure_records": 54,
+      "failure_products": [
+        "shop-suit"
+      ]
+    },
+    "typechecks": "all8 pass across initial7 successes and corrected Docs; latest mobile also passes",
+    "lint": "mobile/shared/server pass; catalogue has0errors and5 inherited warnings",
+    "boundaries": "6 Suits/7 applications/134 templates/80 historical migrations unchanged; zero debt",
+    "mobile_static_build": "passed",
+    "capacitor_sync": "passed, no SDK/runtime",
+    "docs_catalogue_build": "passed"
+  },
+  "native_execution": "unrun for vault candidate; bound instrumentation APK and seven-case verification added to owned CI",
+  "limitations": [
+    "No actual-device native GoTrue recovery/refresh/revocation acceptance yet.",
+    "No physical device, independent security/platform, clinical/offline/distribution qualification.",
+    "No hosted/provider activation, real patient data, Automation mutation or promotion.",
+    "54 inherited Shop failures still block full CI."
+  ],
+  "execution_scope": "Doctor application/provider and Android runtime CI-only; required root/shared units retain existing isolated Shop receipt browser cases locally."
+}

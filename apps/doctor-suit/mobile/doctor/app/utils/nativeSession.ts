@@ -5,6 +5,7 @@ export interface NativeSessionTokens {accessToken:string;refreshToken:string;exp
 export interface NativeSessionVault {read():Promise<string|null>;write(value:string):Promise<void>;clear():Promise<void>}
 export interface NativeSessionBackend {
  marker(signal:AbortSignal):Promise<boolean>
+ emailExists(email:string,signal:AbortSignal):Promise<boolean>
  signIn(email:string,password:string,signal:AbortSignal):Promise<NativeSessionTokens>
  refresh(refreshToken:string,signal:AbortSignal):Promise<NativeSessionTokens>
  identity(accessToken:string,signal:AbortSignal):Promise<DoctorMobileIdentity|null>
@@ -14,11 +15,12 @@ export interface NativeSessionBackend {
  password(accessToken:string,password:string,signal:AbortSignal):Promise<void>
 }
 export interface NativeSessionState {
+ revision:number
  phase:'signed-out'|'loading'|'ready'|'recovery-sent'|'error'
  identity:DoctorMobileIdentity|null
  error:'unavailable'|'credentials'|'storage'|'revocation-unconfirmed'|null
 }
-export const nativeSessionState=():NativeSessionState=>({phase:'signed-out',identity:null,error:null})
+export const nativeSessionState=():NativeSessionState=>({revision:0,phase:'signed-out',identity:null,error:null})
 const uuid=(value:unknown):value is string=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
 export function decodeNativeSession(value:unknown):NativeSessionTokens {
  if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('Session unavailable')
@@ -26,7 +28,14 @@ export function decodeNativeSession(value:unknown):NativeSessionTokens {
  if(Object.keys(row).sort().join(',')!=='accessToken,expiresAt,refreshToken'||
    typeof row.accessToken!=='string'||row.accessToken.length<16||row.accessToken.length>16384||
    typeof row.refreshToken!=='string'||row.refreshToken.length<8||row.refreshToken.length>4096||
+   !/^[A-Za-z0-9._~+/=-]+$/.test(row.accessToken)||!/^[A-Za-z0-9._~+/=-]+$/.test(row.refreshToken)||
    !Number.isSafeInteger(row.expiresAt)||(row.expiresAt as number)<1)throw new Error('Session unavailable')
+ if(row.accessToken.startsWith('sb_')||row.refreshToken.startsWith('sb_'))throw new Error('Session unavailable')
+ const parts=row.accessToken.split('.')
+ if(parts.length===3){
+  try{if(JSON.parse(atob(parts[1]!.replace(/-/g,'+').replace(/_/g,'/'))).role!=='authenticated')throw new Error('Invalid role')}
+  catch{throw new Error('Session unavailable')}
+ }
  return{accessToken:row.accessToken,refreshToken:row.refreshToken,expiresAt:row.expiresAt as number}
 }
 const syntheticEmail=(email:string)=>/^[^\s@]+@[^\s@]+\.test$/i.test(email)&&email.length<=254
@@ -39,12 +48,22 @@ export function createNativeSession(backend:NativeSessionBackend|null,vault:Nati
  function stored<T>(command:()=>Promise<T>):Promise<T>{const result=storage.then(command);storage=result.then(()=>{},()=>{});return result}
  function begin(phase:NativeSessionState['phase']='loading'){
   generation++;abort.abort();abort=new AbortController();tokens=null
-  state.identity=null;state.error=null;state.phase=phase;clearProtected()
+  state.revision=generation;state.identity=null;state.error=null;state.phase=phase;clearProtected()
   return{revision:generation,signal:abort.signal}
  }
  function failed(revision:number,error:NativeSessionState['error']='unavailable'){
-  if(generation===revision){tokens=null;state.identity=null;state.phase='error';state.error=error;clearProtected()}
+  if(generation===revision){generation++;abort.abort();abort=new AbortController();state.revision=generation;tokens=null;state.identity=null;state.phase='error';state.error=error;clearProtected()}
   return false
+ }
+ async function rejected(revision:number,error:unknown){
+  if(generation!==revision)return false
+  const code=error&&typeof error==='object'&&'code'in error?error.code:null
+  if(code==='SESSION_REVOKED'||code==='CREDENTIALS_REJECTED'){
+   failed(revision,'credentials');const purgeRevision=generation
+   try{await stored(async()=>{if(generation===purgeRevision)await vault.clear()})}catch{if(generation===purgeRevision)state.error='storage'}
+   return false
+  }
+  return failed(revision)
  }
  async function marker(signal:AbortSignal){if(!backend||!await backend.marker(signal))throw new Error('Session unavailable')}
  async function accept(raw:unknown,revision:number,signal:AbortSignal){
@@ -52,12 +71,12 @@ export function createNativeSession(backend:NativeSessionBackend|null,vault:Nati
   if(value.expiresAt<=now())throw new Error('Session expired')
   const actor=await backend!.identity(value.accessToken,signal)
   if(generation!==revision)return false
-  if(!actor||!uuid(actor.userId)||!uuid(actor.sessionId)||actor.environment!=='local'){
+  if(value.expiresAt<=now()||!actor||!uuid(actor.userId)||!uuid(actor.sessionId)||actor.environment!=='local'){
    await stored(()=>vault.clear());return failed(revision,'credentials')
   }
-  await stored(async()=>{if(generation===revision)await vault.write(JSON.stringify(value))})
+  try{await stored(async()=>{if(generation===revision)await vault.write(JSON.stringify(value))})}catch{return failed(revision,'storage')}
   if(generation!==revision)return false
-  tokens=value;state.identity={...actor};state.phase='ready';state.error=null;return true
+  tokens=value;state.identity={userId:actor.userId,sessionId:actor.sessionId,environment:'local'};state.phase='ready';state.error=null;return true
  }
  async function signIn(email:string,password:string){
   const {revision,signal}=begin()
@@ -66,25 +85,45 @@ export function createNativeSession(backend:NativeSessionBackend|null,vault:Nati
    if(!syntheticEmail(email)||password.length<12||password.length>1024)return failed(revision,'credentials')
    await marker(signal);if(generation!==revision)return false
    return await accept(await backend!.signIn(email.trim().toLowerCase(),password,signal),revision,signal)
-  }catch{return failed(revision)}
+  }catch(error){return rejected(revision,error)}
  }
  async function resume(){
   const {revision,signal}=begin()
   try{
-   const encoded=await stored(()=>vault.read());if(generation!==revision)return false
+   let encoded:string|null
+   try{encoded=await stored(()=>vault.read())}catch{return failed(revision,'storage')}
+   if(generation!==revision)return false
    if(encoded===null){state.phase='signed-out';return false}
    let value:NativeSessionTokens
    try{value=decodeNativeSession(JSON.parse(encoded))}catch{await stored(()=>vault.clear());return failed(revision,'storage')}
    await marker(signal);if(generation!==revision)return false
    if(value.expiresAt<=now()+30000)value=await backend!.refresh(value.refreshToken,signal)
    return await accept(value,revision,signal)
-  }catch{return failed(revision)}
+  }catch(error){return rejected(revision,error)}
  }
  async function signOut(){
   const previous=tokens,{revision,signal}=begin('signed-out')
   try{await stored(()=>vault.clear())}catch{return failed(revision,'storage')}
   if(previous&&backend)try{await backend.revoke(previous.accessToken,signal)}catch{return failed(revision,'revocation-unconfirmed')}
   return generation===revision
+ }
+ async function revalidate(){
+  const previous=tokens,identity=state.identity,revision=generation,signal=abort.signal
+  if(state.phase!=='ready'||!previous||!identity||previous.expiresAt<=now()+30000)return resume()
+  try{
+   await marker(signal)
+   const actor=await backend!.identity(previous.accessToken,signal)
+   if(generation!==revision)return false
+   if(!actor||actor.userId!==identity.userId||actor.sessionId!==identity.sessionId||actor.environment!=='local'){
+    return rejected(revision,{code:'SESSION_REVOKED'})
+   }
+   if(previous.expiresAt<=now())return resume()
+   return true
+  }catch(error){
+   // A network outage cannot leave a protected chart looking usable. Retain
+   // encrypted recovery material only for transient failures, never authority.
+   return rejected(revision,error)
+  }
  }
  async function recover(email:string){
   const {revision,signal}=begin()
@@ -95,7 +134,7 @@ export function createNativeSession(backend:NativeSessionBackend|null,vault:Nati
    await backend!.recover(email.trim().toLowerCase(),signal)
    if(generation!==revision)return false
    state.phase='recovery-sent';return true
-  }catch{return failed(revision)}
+  }catch(error){return rejected(revision,error)}
  }
  async function completeRecovery(email:string,code:string,password:string){
   const {revision,signal}=begin()
@@ -107,10 +146,17 @@ export function createNativeSession(backend:NativeSessionBackend|null,vault:Nati
    if(generation!==revision)return false
    await backend!.password(value.accessToken,password,signal)
    return await accept(value,revision,signal)
-  }catch{return failed(revision)}
+  }catch(error){return rejected(revision,error)}
  }
  function lock(){begin('signed-out')}
- return{state,signIn,resume,signOut,recover,completeRecovery,lock,dispose:lock,
+ async function checkEmail(email:string,signal:AbortSignal){
+  if(!syntheticEmail(email))return false
+  await marker(signal)
+  return backend!.emailExists(email.trim().toLowerCase(),signal)
+ }
+ return{state,signIn,resume,revalidate,signOut,recover,completeRecovery,checkEmail,lock,dispose:lock,
+  expiresAt:()=>tokens?.expiresAt??null,
+  identity:()=>state.phase==='ready'&&tokens&&tokens.expiresAt>now()?state.identity:null,
   // Kept inside the product adapter, never in view projections or URLs.
-  accessToken:()=>state.phase==='ready'?tokens?.accessToken??null:null}
+  accessToken:()=>state.phase==='ready'&&tokens&&tokens.expiresAt>now()?tokens.accessToken:null}
 }

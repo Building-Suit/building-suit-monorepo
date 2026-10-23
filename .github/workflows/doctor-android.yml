@@ -102,7 +102,7 @@ jobs:
           target: google_apis
           profile: pixel_5
           disable-animations: true
-          script: node apps/doctor-suit/mobile/doctor/scripts/verify-android.mjs
+          script: node apps/doctor-suit/mobile/doctor/scripts/verify-android-device.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
