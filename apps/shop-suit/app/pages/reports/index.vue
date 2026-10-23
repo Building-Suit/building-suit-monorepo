@@ -123,7 +123,7 @@ const labels = computed<Record<string, string>>(() => isArabic.value ? {
   sales: 'المبيعات', saleCount: 'عدد البيعات', averageTicket: 'متوسط الفاتورة', productSales: 'مبيعات المنتجات', serviceSales: 'مبيعات الخدمات',
   collected: 'المحصل', refunded: 'المردود', netCollections: 'صافي التحصيل', outstanding: 'مستحقات العملاء', outstandingCustomerCount: 'عملاء عليهم مستحقات',
   purchases: 'المشتريات', supplierPayments: 'مدفوعات الموردين', openPurchaseCount: 'فواتير موردين مفتوحة', expenses: 'المصروفات', expenseCount: 'عدد المصروفات', categoryCount: 'عدد الفئات', operatingResult: 'النتيجة التشغيلية (المبيعات ناقص المصروفات)',
-  quantityOnHand: 'إجمالي الكمية', inventoryValue: 'إجمالي قيمة المخزون', productCount: 'عدد المنتجات', lowStockCount: 'مخزون منخفض',
+  base_unit_code: 'الوحدة', quantityByUnit: 'الكميات حسب الوحدة', quantityOnHand: 'إجمالي الكمية', inventoryValue: 'إجمالي قيمة المخزون', productCount: 'عدد المنتجات', lowStockCount: 'مخزون منخفض',
   fifoCost: 'تكلفة FIFO', marginPercent: 'نسبة الهامش', reconciledLineCount: 'بنود متصالحة', excludedLineCount: 'بنود مستبعدة', activityCount: 'عدد الأنشطة',
 } : {
   invoice_number: 'Invoice', occurred_at: 'Date', item_type: 'Type', item_name: 'Product/service', quantity: 'Quantity', amount: 'Amount', location_name: 'Location',
@@ -134,7 +134,7 @@ const labels = computed<Record<string, string>>(() => isArabic.value ? {
   sales: 'Sales', saleCount: 'Sales count', averageTicket: 'Average ticket', productSales: 'Product sales', serviceSales: 'Service sales',
   collected: 'Collected', refunded: 'Refunded', netCollections: 'Net collections', outstanding: 'Customer outstanding', outstandingCustomerCount: 'Customers outstanding',
   purchases: 'Purchases', supplierPayments: 'Supplier payments', openPurchaseCount: 'Open supplier bills', expenses: 'Expenses', expenseCount: 'Expense count', categoryCount: 'Categories', operatingResult: 'Operating result (sales less expenses)',
-  quantityOnHand: 'Total on hand', inventoryValue: 'Inventory value', productCount: 'Products', lowStockCount: 'Low-stock products',
+  base_unit_code: 'Unit', quantityByUnit: 'Quantities by unit', quantityOnHand: 'Total on hand', inventoryValue: 'Inventory value', productCount: 'Products', lowStockCount: 'Low-stock products',
   fifoCost: 'FIFO cost', marginPercent: 'Margin %', reconciledLineCount: 'Reconciled lines', excludedLineCount: 'Excluded lines', activityCount: 'Activity count',
 })
 
@@ -144,7 +144,7 @@ const columns = computed<ReportColumn[]>(() => {
   if (report.value === 'sales') return [
     { key: 'invoice_number', label: labels.value.invoice_number, format: 'text', primary: true }, date,
     { key: 'item_type', label: labels.value.item_type, format: 'text' }, { key: 'item_name', label: labels.value.item_name, format: 'text' },
-    { key: 'quantity', label: labels.value.quantity, format: 'number' }, { key: 'amount', label: labels.value.amount, format: 'money' }, location,
+    { key: 'quantity', label: labels.value.quantity, format: 'number' }, { key: 'base_unit_code', label: labels.value.base_unit_code, format: 'text' }, { key: 'amount', label: labels.value.amount, format: 'money' }, location,
   ]
   if (report.value === 'collections') return [date, { key: 'customer_name', label: labels.value.customer_name, format: 'text', primary: true },
     { key: 'direction', label: labels.value.direction, format: 'text' }, { key: 'method', label: labels.value.method, format: 'text' },
@@ -158,12 +158,12 @@ const columns = computed<ReportColumn[]>(() => {
   if (report.value === 'expenses') return [date, { key: 'title', label: labels.value.title, format: 'text', primary: true },
     { key: 'category_name', label: labels.value.category_name, format: 'text' }, { key: 'amount', label: labels.value.amount, format: 'money' }, location]
   if (report.value === 'inventory') return [{ key: 'name', label: labels.value.name, format: 'text', primary: true },
-    { key: 'sku', label: labels.value.sku, format: 'text' }, { key: 'quantity_on_hand', label: labels.value.quantity_on_hand, format: 'number' },
+    { key: 'sku', label: labels.value.sku, format: 'text' }, { key: 'quantity_on_hand', label: labels.value.quantity_on_hand, format: 'number' }, { key: 'base_unit_code', label: labels.value.base_unit_code, format: 'text' },
     { key: 'inventory_value', label: labels.value.inventory_value, format: 'money' }, { key: 'reorder_threshold', label: labels.value.reorder_threshold, format: 'number' },
     { key: 'low_stock', label: labels.value.low_stock, format: 'boolean' }, { key: 'movement_count', label: labels.value.movement_count, format: 'number' },
     { key: 'last_movement_at', label: labels.value.last_movement_at, format: 'date' }]
   if (report.value === 'margin') return [date, { key: 'invoice_number', label: labels.value.invoice_number, format: 'text', primary: true },
-    { key: 'item_name', label: labels.value.item_name, format: 'text' }, { key: 'quantity', label: labels.value.quantity, format: 'number' },
+    { key: 'item_name', label: labels.value.item_name, format: 'text' }, { key: 'quantity', label: labels.value.quantity, format: 'number' }, { key: 'base_unit_code', label: labels.value.base_unit_code, format: 'text' },
     { key: 'revenue', label: labels.value.revenue, format: 'money' }, { key: 'fifo_cost', label: labels.value.fifo_cost, format: 'money' },
     { key: 'margin', label: labels.value.margin, format: 'money' }, { key: 'margin_percent', label: labels.value.margin_percent, format: 'percent' }, location]
   return [date, { key: 'event_type', label: labels.value.event_type, format: 'text' },
@@ -173,10 +173,11 @@ const columns = computed<ReportColumn[]>(() => {
 const totalPages = computed(() => Math.max(1, Math.ceil(Number(result.value.total) / pageSize)))
 
 function money(value: unknown) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 20 }).format(Number(value ?? 0)) }
-function number(value: unknown) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { maximumFractionDigits: 3 }).format(Number(value ?? 0)) }
+function number(value: unknown) { return new Intl.NumberFormat(isArabic.value ? 'ar-EG' : 'en-EG', { maximumFractionDigits: 6 }).format(Number(value ?? 0)) }
 function date(value: unknown) { return value ? new Intl.DateTimeFormat(isArabic.value ? 'ar-EG' : 'en-EG', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Africa/Cairo' }).format(new Date(String(value))) : '—' }
 function display(value: unknown, format: ColumnFormat, key?: string) {
   if (value === null || value === undefined || value === '') return '—'
+  if (key === 'base_unit_code' && ['legacy','service'].includes(String(value))) return '—'
   if (format === 'money') return money(value)
   if (format === 'number') return number(value)
   if (format === 'date') return date(value)
@@ -196,6 +197,7 @@ function display(value: unknown, format: ColumnFormat, key?: string) {
   return String(value).replaceAll('_', ' ')
 }
 function summaryFormat(key: string): ColumnFormat {
+  if (key === 'quantityByUnit') return 'text'
   if (['sales', 'averageTicket', 'productSales', 'serviceSales', 'collected', 'refunded', 'netCollections', 'outstanding', 'purchases', 'supplierPayments', 'payable', 'expenses', 'operatingResult', 'inventoryValue', 'revenue', 'fifoCost', 'margin'].includes(key)) return 'money'
   if (key === 'marginPercent') return 'percent'
   return 'number'
@@ -235,7 +237,7 @@ async function exportReport() {
 }
 
 const reportFilters = computed<BsReportFilters>({ get: () => ({ report: report.value, location: locationId.value, from: fromDate.value, to: toDate.value }), set: value => { if (reportKinds.includes(value.report as OperationalReportKind)) report.value = value.report as OperationalReportKind; if (value.location === 'all' || activeLocations.value.some(item => item.id === value.location)) locationId.value = value.location; fromDate.value = value.from; toDate.value = value.to } })
-const reportView = computed<BsReportsView>(() => ({ workspace: current.value?.name ?? '', exporting: exporting.value, exportDisabled: accessPending.value || pending.value || Boolean(accessError.value || error.value) || !result.value.total || !canView.value || costDenied.value, exportLabel: exporting.value ? copy.value.exporting : copy.value.export, notice: copy.value.operational, detailNotice: report.value === 'margin' ? copy.value.fifoNotice : '', dateDisabled: ['inventory', 'receivables'].includes(report.value), failed: Boolean(accessError.value || error.value), exportError: exportError.value, loading: accessPending.value || pending.value, denied: !canView.value, restricted: costDenied.value, summary: Object.entries(result.value.summary).filter(([key]) => !['costBasis', 'snapshot'].includes(key)).map(([key, value]) => ({ id: key, label: labels.value[key] || key, value: display(value, summaryFormat(key)), to: summaryPath(key) })), columns: columns.value.map(column => ({ key: column.key, label: column.label ?? column.key, primary: Boolean(column.primary) })), rows: result.value.items.map((row, index) => ({ id: String(row.id ?? index), cells: Object.fromEntries(columns.value.map(column => [column.key, display(row[column.key], column.format, column.key)])), sourceTo: sourcePath(row) })), total: result.value.total, pagination: `${result.value.total} ${copy.value.records} · ${copy.value.page} ${page.value} ${copy.value.of} ${totalPages.value}`, previousDisabled: page.value <= 1, nextDisabled: page.value >= totalPages.value }))
+const reportView = computed<BsReportsView>(() => ({ workspace: current.value?.name ?? '', exporting: exporting.value, exportDisabled: accessPending.value || pending.value || Boolean(accessError.value || error.value) || !result.value.total || !canView.value || costDenied.value, exportLabel: exporting.value ? copy.value.exporting : copy.value.export, notice: copy.value.operational, detailNotice: report.value === 'margin' ? copy.value.fifoNotice : '', dateDisabled: ['inventory', 'receivables'].includes(report.value), failed: Boolean(accessError.value || error.value), exportError: exportError.value, loading: accessPending.value || pending.value, denied: !canView.value, restricted: costDenied.value, summary: Object.entries(result.value.summary).filter(([key]) => !['costBasis', 'snapshot'].includes(key) && !(key === 'quantityOnHand' && result.value.summary.quantityByUnit != null)).map(([key, value]) => ({ id: key, label: labels.value[key] || key, value: display(value, summaryFormat(key)), to: summaryPath(key) })), columns: columns.value.map(column => ({ key: column.key, label: column.label ?? column.key, primary: Boolean(column.primary) })), rows: result.value.items.map((row, index) => ({ id: String(row.id ?? index), cells: Object.fromEntries(columns.value.map(column => [column.key, display(row[column.key], column.format, column.key)])), sourceTo: sourcePath(row) })), total: result.value.total, pagination: `${result.value.total} ${copy.value.records} · ${copy.value.page} ${page.value} ${copy.value.of} ${totalPages.value}`, previousDisabled: page.value <= 1, nextDisabled: page.value >= totalPages.value }))
 const reportChoices = computed<BsReportChoices>(() => ({ reports: reportOptions.value, locations: [{ value: 'all', label: copy.value.allLocations }, ...activeLocations.value.map(item => ({ value: item.id, label: item.name }))] }))
 async function retryReport() { await Promise.all([refreshAccess(), refresh()]) }
 function changeReportPage(direction: number) { page.value = Math.max(1, Math.min(totalPages.value, page.value + direction)) }

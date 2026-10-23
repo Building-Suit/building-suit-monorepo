@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { measurementUnits } from '~/utils/measurement'
+import type { PosMeasurement } from '~/types/measurement'
 import { estimateOfferDiscount, type CatalogOffer } from '#shared/catalogOffers'
 import type { BsOfferCardView } from '@building-suit/ui/types/storefrontBuilderPresentation'
 import type { BsPointOfSaleCopy, BsPointOfSaleView, BsPointOfSaleCatalogItem, BsPointOfSaleCartLine, BsPointOfSalePaymentForm } from '@building-suit/ui/types/pointOfSalePresentation'
@@ -7,14 +9,14 @@ import { saleCopy } from '~/utils/saleCopy'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import { businessModeSupportsProducts, businessModeSupportsServices } from '~/utils/businessMode'
 import { posCustomerOptions } from '~/utils/posCustomer.js'
-import { addOrIncrementCartLine, cartTotal, nextCartQuantity, cartQuantityLimit } from '~/utils/pos'
+import { addOrIncrementCartLine, cartTotal, nextCartQuantity, cartQuantityLimit, cartLineKey, saleLineInput, cartQuantityStep, selectedMeasurement, measuredBaseQuantity, selectedUnitPrice } from '~/utils/pos'
 const { refreshShopQueries } = useShopInvalidation()
 
 const { businessCurrency } = useShop()
 
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
-type CatalogItem = { id: string; itemType: 'product' | 'service'; name: string; imageUrl?: string | null; sku: string | null; barcode: string | null; unitPrice: number; discount: number; stock: number | null }
+type CatalogItem = { measurement?: PosMeasurement | null; unitSelection?: string; id: string; itemType: 'product' | 'service'; name: string; imageUrl?: string | null; sku: string | null; barcode: string | null; unitPrice: number; discount: number; stock: number | null }
 type CartLine = CatalogItem & { key: string; sourceId: string; quantity: number }
 type Appointment = { id: string; staffId: string; customerId: string | null; customerName: string; startsAt: string; status: string; service: CatalogItem }
 type Customer = { id: string; name: string; phone: string | null }
@@ -77,7 +79,7 @@ watch(itemType, () => { catalogPage.value = 1 })
 watch(categoryFilter, () => { catalogPage.value = 1 })
 
 const locationChanged = computed(() => Boolean(transactionLocationId.value && currentLocationId.value !== transactionLocationId.value))
-const taxLines = computed(() => lines.value.map(line => ({ item_type: line.itemType, source_id: line.sourceId, quantity: Number(line.quantity) })))
+const taxLines = computed(() => lines.value.map(saleLineInput))
 const { data: taxQuote, pending: taxPending, error: taxError, refresh: refreshPosQuote } = useSaleTaxQuote(currentId, currentLocationId, taxLines, counter, true)
 const total = computed(() => Number(counter.online.value ? taxQuote.value?.total ?? cartTotal(lines.value) : Math.max(0, Math.round((cartTotal(lines.value)-offlineOffers.value.discount)*100)/100)))
 const selectedStaff = computed(() => context.value.staff.find(member => member.id === staffId.value))
@@ -93,7 +95,7 @@ const offerQuery = useShopQuery(() => `shop-data:pos-offers:${currentId.value}:$
  if (counter.ready.value) await counter.cache('pos-catalog-offers', offers)
  return offers
 }, { scope: 'location', server: false, enabled: () => !!currentId.value && !!currentLocationId.value, watch: [counter.ready], default: () => [] })
-const offlineOffers = computed(() => estimateOfferDiscount(offerQuery.data.value, lines.value))
+const offlineOffers = computed(() => estimateOfferDiscount(offerQuery.data.value, lines.value.filter(line => !selectedMeasurement(line).startsWith('package:')).flatMap(line => { try { return [{ ...line, quantity: Number(measuredBaseQuantity(line)) }] } catch { return [] } })))
 const appliedOffers = computed(() => counter.online.value ? taxQuote.value?.offers ?? [] : offlineOffers.value.offers)
 const offerCards = computed<BsOfferCardView[]>(() => offerQuery.data.value.filter(o => o.oldPrice !== null && o.price < o.oldPrice).map(offer => ({
  id: offer.id, name: offer.name, description: offer.description, price: money(offer.price), oldPrice: money(offer.oldPrice!), saving: `${locale.value === 'ar' ? 'وفّر' : 'Save'} ${money(offer.oldPrice! - offer.price)}`, items: offer.lines.map(l => `${l.quantity} × ${l.name}`).join(' · '), images: [],
@@ -105,10 +107,10 @@ function selectOffer(id: string) {
  if (!offer || !offer.active || offer.ends_at && Date.parse(offer.ends_at) <= Date.now() || offer.starts_at && Date.parse(offer.starts_at) > Date.now()) return
  const additions: CartLine[] = []
  for (const line of offer.lines) {
-  const existing = lines.value.find(v => v.itemType === line.kind && v.sourceId === line.sourceId)
-  const item: CatalogItem = { id: line.sourceId, itemType: line.kind, name: line.name, sku: null, barcode: null, unitPrice: line.unitPrice, discount: line.discount, stock: line.stock ?? null }
+  const item: CatalogItem = { id: line.sourceId, itemType: line.kind, name: line.name, sku: null, barcode: null, unitPrice: line.unitPrice, discount: line.discount, stock: line.stock ?? null, measurement: line.measurement }
+  const existing = lines.value.find(v => v.key === cartLineKey(item))
   if (!line.available || (existing?.quantity ?? 0) + line.quantity > cartQuantityLimit(item)) { errorMessage.value = readableError('INSUFFICIENT_STOCK'); return }
-  additions.push({ ...item, key: `${line.kind}:${line.sourceId}`, sourceId: line.sourceId, quantity: line.quantity })
+  additions.push({ ...item, key: cartLineKey(item), sourceId: line.sourceId, quantity: line.quantity })
  }
  lockLocation()
  const next = lines.value.map(line => ({ ...line }))
@@ -220,17 +222,17 @@ function invalidateRequests() {
 }
 function addItem(item: CatalogItem) {
   if (checkingOut.value || confirmingCheckout.value || locationChanged.value) return
-  const existing = lines.value.find(line => line.itemType === item.itemType && line.sourceId === item.id)
+  const existing = lines.value.find(line => line.key === cartLineKey(item))
   const nextQuantity = nextCartQuantity(existing?.quantity ?? 0, item)
   if (nextQuantity === null) { errorMessage.value = readableError('INSUFFICIENT_STOCK'); return }
   lockLocation(); lines.value = addOrIncrementCartLine(lines.value, item) as CartLine[]
-  const added = lines.value.find(line => line.itemType === item.itemType && line.sourceId === item.id)
+  const added = lines.value.find(line => line.key === cartLineKey(item))
   if (added) { added.quantity = nextQuantity; added.imageUrl = item.imageUrl }
   errorMessage.value = ''; invalidateRequests(); scanMessage.value = t('pos.scanAdded', { name: item.name })
 }
 function setQuantity(line: CartLine, value: number) {
   if (checkingOut.value || confirmingCheckout.value || locationChanged.value) return
-  line.quantity = Math.max(0.001, Math.min(1000000, Number(value) || 1)); invalidateRequests()
+  line.quantity = Number(value); invalidateRequests()
 }
 function removeLine(index: number) { if (checkingOut.value || confirmingCheckout.value || locationChanged.value) return; lines.value.splice(index, 1); invalidateRequests() }
 function chooseCustomer(customer: Customer) { lockLocation(); customerId.value = customer.id; customerName.value = customer.name; customerPhone.value = customer.phone; invalidateRequests() }
@@ -262,6 +264,8 @@ function resetSale(focus = true) {
 }
 function readableError(message?: string) {
   if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
+  if (message?.includes('MEASUREMENT_CONTEXT_CHANGED') || message?.includes('PACKAGE_CONTEXT_CHANGED')) return locale.value === 'ar' ? 'تغيرت وحدة المنتج أو العبوة. أزل الصنف وأضفه من الكتالوج المحدّث.' : 'The product unit or packaging changed. Remove the item and add it from the refreshed catalog.'
+  if (message?.includes('MEASUREMENT') || message?.includes('PACKAGE_QUANTITY')) return locale.value === 'ar' ? 'راجع كمية الصنف ووحدة البيع المختارة.' : 'Review the item quantity and selected sale unit.'
   if (message?.includes('INSUFFICIENT_STOCK') || message?.includes('CROSS_LOCATION_STOCK')) return saleCopy(t, 'pos.insufficientStock', lines.value)
   if (message?.includes('SHOP_PERMISSION_DENIED')) return t('pos.permissionDenied')
   if (message?.includes('POS_CHECKOUT_REQUIRES_FULL_PAYMENT') || message?.includes('TAX_QUOTE_CHANGED')) return locale.value === 'ar' ? 'تغير السعر أو العرض. راجع الإجمالي المحدّث قبل الدفع.' : 'A price or offer changed. Review the refreshed total before paying.'
@@ -273,7 +277,10 @@ async function scanBarcode(code: string) {
   catalogSearch.value = ''
   if (!counter.online.value) {
     const cached = await counter.cached<CatalogResult>('catalog')
-    const matches = cached?.items.filter(item => item.barcode === code) ?? []
+    const matches = cached?.items.flatMap(item => {
+      if (item.barcode === code) return [item]
+      return (item.measurement?.packages ?? []).filter(pack => pack.canSell && pack.barcode === code).map(pack => { const selected = { ...item, unitSelection: `package:${pack.id}`, barcode: code }; return { ...selected, unitPrice: selectedUnitPrice(selected) } })
+    }) ?? []
     if (matches.length === 1) addItem(matches[0]!)
     else scanMessage.value = t(matches.length ? 'pos.ambiguousBarcode' : 'pos.unknownBarcode', { code })
     return
@@ -311,7 +318,7 @@ async function checkout() {
         p_location_id: transactionLocationId.value, p_shift_id: shift.active.id,
         p_staff_membership_id: staffId.value, p_appointment_id: appointmentId.value || null,
         p_customer_id: customerId.value || null, p_notes: notes.value.trim() || null,
-        p_lines: lines.value.map(line => ({ item_type: line.itemType, source_id: line.sourceId, quantity: Number(line.quantity) })),
+        p_lines: lines.value.map(saleLineInput),
         p_amount: total.value, p_paid_at: checkoutPaidAt.value, p_method: paymentMethod.value,
         p_reference: paymentReference.value.trim() || null,
       } }, checkoutRequestId.value)
@@ -328,7 +335,7 @@ async function checkout() {
       resetSale(); scanMessage.value = `${offlineView.value.records.find(record => record.id === queued.envelope.localId)?.status} · ${queued.envelope.localId}`
       return
     }
-    const saved = await rpc.rpc('save_pos_sale_draft', { p_request_id: saveRequestId.value, p_shop_id: currentId.value, p_location_id: transactionLocationId.value, p_invoice_id: saveInvoiceInput.value, p_staff_membership_id: staffId.value, p_appointment_id: appointmentId.value || null, p_customer_id: customerId.value || null, p_notes: notes.value.trim() || null, p_lines: lines.value.map(line => ({ item_type: line.itemType, source_id: line.sourceId, quantity: Number(line.quantity) })) })
+    const saved = await rpc.rpc('save_pos_sale_draft', { p_request_id: saveRequestId.value, p_shop_id: currentId.value, p_location_id: transactionLocationId.value, p_invoice_id: saveInvoiceInput.value, p_staff_membership_id: staffId.value, p_appointment_id: appointmentId.value || null, p_customer_id: customerId.value || null, p_notes: notes.value.trim() || null, p_lines: lines.value.map(saleLineInput) })
     if (!inScope()) return
     if (saved.error) throw saved.error
     invoiceId.value = saved.data
@@ -362,15 +369,33 @@ useShopRealtime('pos', () => lines.value.length > 0 || checkingOut.value || conf
 
 const posPaymentForm = computed<BsPointOfSalePaymentForm>({ get: () => ({ method: paymentMethod.value, reference: paymentReference.value, notes: notes.value }), set: value => { if (['cash','bank_transfer','card','wallet','cheque','other'].includes(value.method)) paymentMethod.value = value.method as PaymentMethod; paymentReference.value = value.reference; notes.value = value.notes } })
 const posItemType = computed<string>({ get: () => itemType.value, set: value => { if (value === 'all' || value === 'product' || value === 'service') itemType.value = value } })
-const posCatalogItems = computed<BsPointOfSaleCatalogItem[]>(() => catalog.value.items.map(item => ({ id: item.id, key: `${item.itemType}:${item.id}`, name: item.name, quantity: lines.value.find(line => line.key === `${item.itemType}:${item.id}`)?.quantity ?? 0, maximumQuantity: cartQuantityLimit(item), disabled: item.itemType === 'product' && item.stock != null && item.stock <= 0, imageUrl: item.imageUrl, description: item.sku || t(item.itemType === 'service' ? 'sales.service' : 'sales.product'), price: money(Math.max(0, item.unitPrice - item.discount)), stock: item.stock != null ? t('pos.stock', { count: item.stock }) : '' })))
-const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map(line => ({ id: line.key, imageUrl: line.imageUrl, name: line.name, quantity: line.quantity, maximumQuantity: cartQuantityLimit(line), total: money((line.unitPrice - line.discount) * line.quantity) })))
+const posCatalogItems = computed<BsPointOfSaleCatalogItem[]>(() => catalog.value.items.map(item => ({ id: item.id, key: cartLineKey(item), name: item.name, quantity: lines.value.find(line => line.key === cartLineKey(item))?.quantity ?? 0, maximumQuantity: cartQuantityLimit(item), disabled: item.itemType === 'product' && item.stock != null && item.stock <= 0, imageUrl: item.imageUrl, description: item.sku || t(item.itemType === 'service' ? 'sales.service' : 'sales.product'), price: money(Math.max(0, item.unitPrice - item.discount)), stock: item.stock != null ? t('pos.stock', { count: item.stock }) : '' })))
+const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map(line => ({ id: line.key, quantityStep: line.measurement ? cartQuantityStep(line) : 1, unitValue: selectedMeasurement(line), unitChoices: line.measurement ? [...line.measurement.saleUnits.map(unit => ({ value: `unit:${unit}`, label: unitLabel(unit) })), ...line.measurement.packages.filter(pack => pack.canSell).map(pack => ({ value: `package:${pack.id}`, label: `${pack.name} (${pack.baseQuantity} ${unitLabel(line.measurement!.baseUnitCode)})` }))] : undefined, baseEquivalent: baseEquivalent(line), imageUrl: line.imageUrl, name: line.name, quantity: line.quantity, maximumQuantity: cartQuantityLimit(line), total: money((line.unitPrice - line.discount) * line.quantity) })))
 const posView = computed<BsPointOfSaleView>(() => ({ cartCount: locale.value === 'ar' ? `${lines.value.length} أصناف` : `${lines.value.length} ${lines.value.length === 1 ? 'item' : 'items'}`, available: !!current.value, loadingContext: shopLoading.value, location: transactionLocationName.value || currentLocation.value?.name || '—', staff: selectedStaff.value?.name || t('pos.selectStaff'), locationChanged: locationChanged.value, error: errorMessage.value || (taxError.value ? (locale.value === 'ar' ? 'تعذر تأكيد حساب الضريبة. اتصل بالإنترنت وحاول تاني.' : 'Unable to confirm tax calculation. Reconnect and retry.') : ''), scanMessage: scanMessage.value, checkingOut: checkingOut.value, confirming: confirmingCheckout.value, shortcutBlocked: posReceipt.visible.value || checkingOut.value || confirmingCheckout.value || !!confirmation.current.value, catalogLoading: catalogPending.value, catalogError: catalogError.value ? t(catalogError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', catalogTotal: catalog.value.total, catalogPageSize: catalog.value.pageSize, contextLoading: contextPending.value, contextError: contextError.value ? t(contextError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', appointmentLocked: !!appointmentId.value, customerDisabled: !counter.online.value || !!appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value, customerBusy: customerBusy.value, customerDisplay: customerId.value ? [customerName.value, customerPhone.value].filter(Boolean).join(' · ') : (appointmentId.value ? customerName.value || t('pos.noCustomer') : t('pos.noCustomer')), customerEmpty: customerBusy.value ? t('pos.loading') : t('pos.customerSearch'), customerEmptyFilter: customerBusy.value ? t('pos.loading') : (customerSearch.value.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')), hasCustomer: !!customerId.value, checkoutDisabled: taxPending.value || Boolean(taxError.value) || counter.shiftClosing.value || checkingOut.value || confirmingCheckout.value || contextPending.value || !!contextError.value || locationChanged.value || !lines.value.length || !staffId.value, total: money(total.value), reviewLabel: t('pos.reviewSale', { count: lines.value.length }), payLabel: t('pos.pay', { amount: money(total.value) }) }))
-function addPosItem(key: string) { const item = catalog.value.items.find(item => `${item.itemType}:${item.id}` === key); if (item) addItem(item) }
+function addPosItem(key: string) { const item = catalog.value.items.find(item => cartLineKey(item) === key); if (item) addItem(item) }
 function removePosLine(id: string) { const index = lines.value.findIndex(line => line.key === id); if (index >= 0) removeLine(index) }
 function setPosQuantity(id: string, value: number) { const line = lines.value.find(line => line.key === id); if (line) setQuantity(line, value) }
+function unitLabel(code: string) { const unit = measurementUnits.find(unit => unit.code === code); return (locale.value === 'ar' ? unit?.nameAr : unit?.nameEn) || code }
+function baseEquivalent(line: CartLine) {
+  if (!line.measurement) return undefined
+  try { return `${measuredBaseQuantity(line)} ${unitLabel(line.measurement.baseUnitCode)}` }
+  catch { return locale.value === 'ar' ? 'الكمية غير صالحة للوحدة المختارة.' : 'The quantity is invalid for the selected unit.' }
+}
+function setPosUnit(id: string, value: string) {
+  if (checkingOut.value || confirmingCheckout.value || locationChanged.value) return
+  const line = lines.value.find(line => line.key === id)
+  if (!line?.measurement || !value.startsWith('unit:') && !value.startsWith('package:')) return
+  const next = { ...line, unitSelection: value }
+  if (value.startsWith('unit:') ? !line.measurement.saleUnits.includes(value.slice(5)) : !line.measurement.packages.some(pack => pack.canSell && pack.id === value.slice(8))) return
+  next.key = cartLineKey(next)
+  if (lines.value.some(other => other !== line && other.key === next.key)) { errorMessage.value = locale.value === 'ar' ? 'هذه الوحدة موجودة بالفعل في السلة.' : 'This unit is already in the cart.'; return }
+  next.unitPrice = selectedUnitPrice(next)
+  lines.value = lines.value.map(other => other === line ? next : other); invalidateRequests()
+}
 function setPosStaff(id: string) { staffId.value = id; lockLocation(); invalidateRequests() }
 function dismissPosFeedback() { errorMessage.value = ''; scanMessage.value = '' }
 const posCopy = computed<BsPointOfSaleCopy>(() => ({
+  unit: locale.value === 'ar' ? 'وحدة البيع' : 'Sale unit',
   reviewStep: locale.value === 'ar' ? 'مراجعة الأصناف' : 'Review items', paymentStep: locale.value === 'ar' ? 'الدفع' : 'Payment', continueToPayment: locale.value === 'ar' ? 'متابعة للدفع' : 'Continue to payment', backToCart: locale.value === 'ar' ? 'العودة للأصناف' : 'Back to items', optionalDetails: locale.value === 'ar' ? 'تفاصيل اختيارية' : 'Optional details', add: locale.value === 'ar' ? 'إضافة' : 'Add',
   decrease: locale.value === 'ar' ? 'تقليل الكمية' : 'Decrease quantity', increase: locale.value === 'ar' ? 'زيادة الكمية' : 'Increase quantity',
   imagePlaceholder: locale.value === 'ar' ? 'بدون صورة' : 'No image',
@@ -466,6 +491,7 @@ const posPaymentOptions = computed(() => ['cash','card','bank_transfer','wallet'
     @add="addPosItem"
     @remove="removePosLine"
     @quantity="setPosQuantity"
+    @unit="setPosUnit"
     @appointment="chooseAppointment"
     @staff="setPosStaff"
     @customer-search="customerSearch = $event"

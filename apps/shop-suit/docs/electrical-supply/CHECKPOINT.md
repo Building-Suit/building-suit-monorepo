@@ -41,3 +41,6 @@ Restore disposable Supabase capacity and close foundational regression gates, th
 # Review checkpoint
 
 Draft [PR441](https://github.com/Building-Suit/building-suit-monorepo/pull/441), source commit `ce62100b`; targets stg as the Shop root. No merge/deployment performed.
+
+
+Active child: codex/shop-suit/measured-retail-operations at committed parent c2bd65d9, targeting the open foundation PR441. Parent's uncommitted schema-dump tooling is excluded. Current child adds measured product/package editing, purchasing, POS, sales, inventory/counts, receipt/return presentation, CSV and explicit ETA unit mapping. Physical reel identity/cuts/reservations, trade quotes/orders/deposits and later tasks remain unimplemented. Continue the canonical task ledger; do not treat this checkpoint as sellable readiness.

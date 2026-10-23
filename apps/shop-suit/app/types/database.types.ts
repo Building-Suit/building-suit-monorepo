@@ -2897,6 +2897,7 @@ export type Database = {
           item_name: string
           item_type: Database["public"]["Enums"]["invoice_item_type"]
           line_order: number | null
+          measurement_snapshot: Json | null
           product_barcode_snapshot: string | null
           product_id: string | null
           product_sku_snapshot: string | null
@@ -2920,6 +2921,7 @@ export type Database = {
           item_name: string
           item_type?: Database["public"]["Enums"]["invoice_item_type"]
           line_order?: number | null
+          measurement_snapshot?: Json | null
           product_barcode_snapshot?: string | null
           product_id?: string | null
           product_sku_snapshot?: string | null
@@ -2943,6 +2945,7 @@ export type Database = {
           item_name?: string
           item_type?: Database["public"]["Enums"]["invoice_item_type"]
           line_order?: number | null
+          measurement_snapshot?: Json | null
           product_barcode_snapshot?: string | null
           product_id?: string | null
           product_sku_snapshot?: string | null
@@ -4138,6 +4141,125 @@ export type Database = {
           },
         ]
       }
+      product_packagings: {
+        Row: {
+          active: boolean
+          actor_profile_id: string
+          barcode: string | null
+          base_quantity: number
+          can_purchase: boolean
+          can_sell: boolean
+          code: string
+          contained_quantity: number
+          contained_unit_code: string
+          created_at: string
+          default_purchase: boolean
+          default_sale: boolean
+          id: string
+          name: string
+          product_id: string
+          sale_price: number | null
+          shop_id: string
+          supersedes_id: string | null
+          unit_code: string
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          actor_profile_id: string
+          barcode?: string | null
+          base_quantity: number
+          can_purchase: boolean
+          can_sell: boolean
+          code: string
+          contained_quantity: number
+          contained_unit_code: string
+          created_at?: string
+          default_purchase?: boolean
+          default_sale?: boolean
+          id?: string
+          name: string
+          product_id: string
+          sale_price?: number | null
+          shop_id: string
+          supersedes_id?: string | null
+          unit_code: string
+          version: number
+        }
+        Update: {
+          active?: boolean
+          actor_profile_id?: string
+          barcode?: string | null
+          base_quantity?: number
+          can_purchase?: boolean
+          can_sell?: boolean
+          code?: string
+          contained_quantity?: number
+          contained_unit_code?: string
+          created_at?: string
+          default_purchase?: boolean
+          default_sale?: boolean
+          id?: string
+          name?: string
+          product_id?: string
+          sale_price?: number | null
+          shop_id?: string
+          supersedes_id?: string | null
+          unit_code?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_packagings_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_packagings_contained_unit_code_fkey"
+            columns: ["contained_unit_code"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "product_packagings_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "low_stock_products"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "product_packagings_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "product_packagings_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "product_packagings_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "product_packagings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_packagings_unit_code_fkey"
+            columns: ["unit_code"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       product_suppliers: {
         Row: {
           created_at: string
@@ -4206,11 +4328,13 @@ export type Database = {
           image_object_name: string | null
           image_url: string | null
           is_active: boolean
+          measurement_revision: number
           measurement_status: string
           name: string
           quantity_increment: number
           reorder_threshold: number
           sale_price: number
+          sale_unit_codes: string[]
           shop_id: string
           sku: string | null
           updated_at: string
@@ -4225,11 +4349,13 @@ export type Database = {
           image_object_name?: string | null
           image_url?: string | null
           is_active?: boolean
+          measurement_revision?: number
           measurement_status?: string
           name: string
           quantity_increment?: number
           reorder_threshold?: number
           sale_price?: number
+          sale_unit_codes?: string[]
           shop_id: string
           sku?: string | null
           updated_at?: string
@@ -4244,11 +4370,13 @@ export type Database = {
           image_object_name?: string | null
           image_url?: string | null
           is_active?: boolean
+          measurement_revision?: number
           measurement_status?: string
           name?: string
           quantity_increment?: number
           reorder_threshold?: number
           sale_price?: number
+          sale_unit_codes?: string[]
           shop_id?: string
           sku?: string | null
           updated_at?: string
@@ -9610,6 +9738,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          measurement_snapshot: Json | null
           product_id: string
           quantity: number
           total_cost: number
@@ -9619,6 +9748,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          measurement_snapshot?: Json | null
           product_id: string
           quantity: number
           total_cost: number
@@ -9628,6 +9758,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          measurement_snapshot?: Json | null
           product_id?: string
           quantity?: number
           total_cost?: number
@@ -11027,6 +11158,17 @@ export type Database = {
         }
         Returns: string
       }
+      configure_product_measurement: {
+        Args: {
+          p_increment: string
+          p_product_id: string
+          p_reason: string
+          p_sale_units: Json
+          p_shop_id: string
+          p_unit: string
+        }
+        Returns: Json
+      }
       correct_location_sale: {
         Args: {
           p_effective_at: string
@@ -11631,6 +11773,10 @@ export type Database = {
         }
         Returns: Json
       }
+      product_measurement_options: {
+        Args: { p_product_id: string; p_shop_id: string }
+        Returns: Json
+      }
       queue_eta_invoice: {
         Args: {
           p_invoice_id: string
@@ -12065,6 +12211,16 @@ export type Database = {
           p_sale_price: number
           p_shop_id: string
           p_sku: string
+        }
+        Returns: string
+      }
+      save_product_packaging: {
+        Args: {
+          p_definition: Json
+          p_package_id: string
+          p_product_id: string
+          p_request_id: string
+          p_shop_id: string
         }
         Returns: string
       }

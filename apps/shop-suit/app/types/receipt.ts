@@ -15,6 +15,7 @@ export interface SaleReceiptSnapshot {
   staffName: string | null
   customer: { name: string | null; phone: string | null }
   lines: Array<{
+    measurement?: import('./measurement').MeasurementSnapshot | null
     id: string
     itemType: 'product' | 'service'
     name: string

@@ -3,6 +3,7 @@ import type { Ref } from 'vue'
 import type { BsReturnForm, BsRefundRecordForm, BsDocumentReturnsCopy, BsDocumentReturnsView } from '@building-suit/ui/types/documentReturns'
 import type { SaleReturnContext, SaleReturnLineInput, SaleReturnPlan } from '~/types/saleReturns'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
+import { convertMeasurement } from '~/utils/measurement'
 import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 
 export function useSaleReturns(invoiceId: Ref<string>, enabled: () => boolean, changed: () => Promise<unknown>) {
@@ -54,10 +55,15 @@ export function useSaleReturns(invoiceId: Ref<string>, enabled: () => boolean, c
     if (!reviewed.locked.value) { form.value = { quantities: {}, dispositions: {}, reason: '' }; reviewed.reset() }
     open.value = true
   }
+  function validQuantity(line: SaleReturnLineInput) {
+    const measurement = context.value?.lines.find(item => item.id === line.lineId)?.measurement
+    if (!measurement) return Math.abs(line.quantity * 100 - Math.round(line.quantity * 100)) < 1e-8
+    try { convertMeasurement(String(line.quantity), measurement.baseUnitCode, measurement.baseUnitCode, measurement.quantityIncrement); return true } catch { return false }
+  }
   async function preview() {
     if (!online.value) return
     await reviewed.preview(async value => {
-      if (!value.lines.length || value.reason.length < 2 || value.lines.some(line => !Number.isFinite(line.quantity) || Math.abs(line.quantity * 100 - Math.round(line.quantity * 100)) > 1e-8)) throw new Error('PRECISION')
+      if (!value.lines.length || value.reason.length < 2 || value.lines.some(line => !Number.isFinite(line.quantity) || !validQuantity(line))) throw new Error('PRECISION')
       const { data, error } = await rpc.rpc('preview_sale_return', { ...args(), p_lines: value.lines })
       if (error) throw error
       return data as SaleReturnPlan
@@ -109,7 +115,7 @@ export function useSaleReturns(invoiceId: Ref<string>, enabled: () => boolean, c
   const copy = computed<BsDocumentReturnsCopy>(() => Object.fromEntries(['title', 'action', 'loading', 'loadError', 'retry', 'unsupported', 'offline', 'policy', 'item', 'quantity', 'remaining', 'disposition', 'resellable', 'damaged', 'service', 'reason', 'preview', 'confirm', 'cancel', 'total', 'debt', 'refund', 'due', 'allocations', 'history', 'empty', 'external', 'cash', 'failed', 'reference', 'record', 'recordNotice', 'uncertain', 'previous', 'next'].map(key => [key, t(`returns.${key}`)])) as unknown as BsDocumentReturnsCopy)
   const view = computed<BsDocumentReturnsView>(() => ({
     loading: loading.value, error: Boolean(loadError.value), supported: context.value?.supported ?? true, canReturn: Boolean(context.value?.canReturn), online: online.value, pending: reviewed.pending.value, locked: reviewed.locked.value, dirty: dirty.value,
-    actionError: reviewed.error.value, lines: (context.value?.lines ?? []).filter(line => Number(line.remaining) > 0).map(line => ({ id: line.id, name: line.name, remaining: Number(line.remaining), service: line.itemType === 'service' })),
+    actionError: reviewed.error.value, lines: (context.value?.lines ?? []).filter(line => Number(line.remaining) > 0).map(line => ({ id: line.id, name: line.measurement ? `${line.name} (${locale.value === 'ar' ? line.measurement.baseUnitNameAr : line.measurement.baseUnitNameEn})` : line.name, quantityStep: Number(line.measurement?.quantityIncrement ?? 0.01), remaining: Number(line.remaining), service: line.itemType === 'service' })),
     preview: reviewed.review.value ? { total: money(reviewed.review.value.total), debt: money(reviewed.review.value.debtReduction), refund: money(reviewed.review.value.refundDue), due: money(reviewed.review.value.dueAfter), allocations: reviewed.review.value.allocations.map(a => ({ id: a.allocationId, label: `${t(`payments.methods.${a.method}`)} · ${a.paymentId.slice(-8)}`, amount: money(a.amount) })) } : null,
     history: (context.value?.history ?? []).map(entry => ({ id: entry.id, title: `${date(entry.created_at)} · ${money(entry.total)}`, detail: `${t('returns.debt')}: ${money(entry.debt_reduction)} · ${t('returns.originalRefund')}: ${money(entry.refund_due)} · ${entry.original_document.invoiceNumber}`, reason: entry.reason, actor: `${t('returns.recordId')}: ${entry.id.slice(-8)}${entry.actorName ? ` · ${t('returns.actor')}: ${entry.actorName}` : ''}`, lines: entry.lines.map(line => ({ id: line.line_id, label: `${context.value?.lines.find(l => l.id === line.line_id)?.name ?? line.line_id} · ${Number(line.quantity)} · ${t(`returns.${line.disposition}`)} · ${money(line.total)}` })), refunds: entry.refunds.map(refund => ({ id: refund.id, label: `${t(`payments.methods.${refund.method}`)} · ${money(refund.amount)} · ${t(`returns.states.${refund.state}`)}`, canRecord: Boolean(context.value?.canReturn && refund.state !== 'completed'), cash: refund.method === 'cash', events: refund.events.map(event => ({ id: event.id, label: [date(event.created_at), t(`returns.operations.${event.operation}`), event.reference, event.reason].filter(Boolean).join(' · ') })) })) })),
     hasPrevious: offset.value > 0, hasNext: offset.value + 50 < (context.value?.totalCount ?? 0),

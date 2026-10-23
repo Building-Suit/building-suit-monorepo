@@ -1,6 +1,6 @@
 export interface BsCommerceDocumentForm { amount: number; date: string; method: string; reference: string; notes: string; reason: string; quantities: Record<string, number> }
 export interface BsCommerceCorrectionForm { date: string; reference: string; reason: string }
-export interface BsCommerceDocumentLine { id: string; name: string; description: string; quantity: string; price: string; total: string; discount: string; available: string; returnMaximum: number }
+export interface BsCommerceDocumentLine { id: string; name: string; description: string; quantity: string; price: string; total: string; discount: string; available: string; returnMaximum: number; returnStep?: number; returnUnit?: string }
 export interface BsCommerceDocumentEvent { id: string; title: string; description: string; reason: string; canReverse: boolean; canRefund: boolean }
 export interface BsCommerceDocumentMovement { id: string; date: string; name: string; quantity: string; cost: string; batch: string; to: string }
 export interface BsCommerceDocumentView {

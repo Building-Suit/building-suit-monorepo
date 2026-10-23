@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BsCommerceDocumentCopy, BsCommerceDocumentForm, BsCommerceCorrectionForm, BsCommerceDocumentView } from '@building-suit/ui/types/commerceDocumentPresentation'
 
+import { convertMeasurement } from '~/utils/measurement'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 const { refreshShopQueries } = useShopInvalidation()
 
@@ -9,7 +10,7 @@ const { businessCurrency } = useShop()
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
-type PurchaseItem = { id: string; productId: string; productName: string; quantity: number; unitCost: number; totalCost: number; availableToReturn: number; batchId: string | null }
+type PurchaseItem = { measurement?: import('~/types/measurement').MeasurementSnapshot | null; id: string; productId: string; productName: string; quantity: number; unitCost: number; totalCost: number; availableToReturn: number; batchId: string | null }
 type PaymentEvent = { id: string; eventType: 'payment' | 'reversal'; paymentId: string; allocationId: string; amount: number; eventAt: string; method?: PaymentMethod; reference?: string | null; reason?: string | null; remainingEffective?: number }
 type Credit = { id: string; amount: number; effectiveAt: string; reason: string; reference: string | null; purchaseReturnId: string | null }
 type PurchaseReturn = { id: string; returnedAt: string; reason: string; reference: string | null; totalAmount: number; items: Array<{ id: string; productId: string; quantity: number; unitCost: number; totalAmount: number; batchId: string }> }
@@ -151,11 +152,15 @@ async function saveCredit() {
 }
 
 function openReturn() { if (!purchase.value) return; Object.assign(returnForm, { date: localToday(), reason: '', reference: '', quantities: {} }); actionError.value = ''; success.value = ''; returnOpen.value = true }
+function validReturnQuantity(quantity: number, item: PurchaseItem) {
+  if (!item.measurement) return Math.round(quantity * 1000) === quantity * 1000
+  try { convertMeasurement(String(quantity), item.measurement.baseUnitCode, item.measurement.baseUnitCode, item.measurement.quantityIncrement); return true } catch { return false }
+}
 const returnTotal = computed(() => purchase.value?.items.reduce((total, item) => total + Number(returnForm.quantities[item.id] || 0) * Number(item.unitCost), 0) ?? 0)
 async function saveReturn() {
   if (!currentId.value || !purchase.value || pendingAction.value) return
   const items = purchase.value.items.flatMap(item => { const quantity = Number(returnForm.quantities[item.id] || 0); return quantity > 0 ? [{ vendor_invoice_item_id: item.id, quantity }] : [] })
-  if (!items.length || returnForm.reason.trim().length < 2 || returnTotal.value > Number(purchase.value.payable) || items.some(entry => { const item = purchase.value!.items.find(value => value.id === entry.vendor_invoice_item_id)!; return entry.quantity > Number(item.availableToReturn) || Math.round(entry.quantity * 1000) !== entry.quantity * 1000 })) { actionError.value = copy.value.invalidReturn; return }
+  if (!items.length || returnForm.reason.trim().length < 2 || returnTotal.value > Number(purchase.value.payable) || items.some(entry => { const item = purchase.value!.items.find(value => value.id === entry.vendor_invoice_item_id)!; return entry.quantity > Number(item.availableToReturn) || !validReturnQuantity(entry.quantity, item) })) { actionError.value = copy.value.invalidReturn; return }
   const inScope = captureScope()
   pendingAction.value = true; actionError.value = ''; requestId.value ??= crypto.randomUUID()
   try {
@@ -209,7 +214,7 @@ const commerceView = computed<BsCommerceDocumentView>(() => {
     detail: { date: value ? displayDate(value.issuedAt) : '', created: '', notes: value?.notes || '—', total: money(Number(value?.totalAmount || 0)), balance: money(Number(value?.payable || 0)), discount: '', paid: '', due: '', settlement: value ? settlementLabel(value.settlementState) : '' },
     showCreated: false, showDiscount: false, showNotes: false, showPaid: false, showDue: false, showAvailable: true, showPayments: true, showCredits: true, inventoryTable: true,
     canPayment: Boolean(actionable && value?.canRecordPayment), canCredit: Boolean(actionable && value?.canRecordCredit), canReturn: Boolean(actionable && value?.canReturnStock && value.items.some(item => Number(item.availableToReturn) > 0)), canIssue: false, issuing: false, editTo: '', receiptTo: '', canShare: false, sharing: false,
-    lines: (value?.items || []).map(item => ({ id: item.id, name: item.productName, description: '', quantity: String(item.quantity), price: money(item.unitCost), total: money(item.totalCost), discount: '', available: String(item.availableToReturn), returnMaximum: Number(item.availableToReturn) })),
+    lines: (value?.items || []).map(item => ({ id: item.id, name: item.productName, description: '', quantity: item.measurement ? `${item.measurement.enteredQuantity} ${item.measurement.packageName || (locale.value === 'ar' ? item.measurement.unitNameAr : item.measurement.unitNameEn)}` : String(item.quantity), price: money(Number(item.measurement?.enteredUnitPrice ?? item.unitCost)), total: money(item.totalCost), discount: '', available: `${item.availableToReturn}${item.measurement ? ' ' + item.measurement.baseUnitCode : ''}`, returnStep: item.measurement ? Number(item.measurement.quantityIncrement) : 0.001, returnUnit: item.measurement?.baseUnitCode, returnMaximum: Number(item.availableToReturn) })),
     events: (value?.paymentEvents || []).map(event => ({ id: event.id, title: `${eventLabel(event)} · ${money(event.amount)}`, description: [displayDate(event.eventAt), event.method ? methodLabel(event.method) : '', event.reference].filter(Boolean).join(' · '), reason: event.reason || '', canReverse: Boolean(event.eventType === 'payment' && value?.canReversePayment && Number(event.remainingEffective) > 0), canRefund: false })),
     credits: (value?.credits || []).map(credit => ({ id: credit.id, title: `${money(credit.amount)} · ${credit.purchaseReturnId ? copy.value.returns : copy.value.recordCredit}`, description: [displayDate(credit.effectiveAt), credit.reference].filter(Boolean).join(' · '), reason: credit.reason, canReverse: false, canRefund: false })),
     movements: (value?.receiptMovements || []).map(movement => ({ id: movement.id, date: displayDate(movement.createdAt), name: value?.items.find(item => item.productId === movement.productId)?.productName || '—', quantity: String(movement.quantityChange), cost: money(movement.unitCostSnapshot), batch: '', to: '' })),

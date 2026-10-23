@@ -1,14 +1,14 @@
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 import type { TaxQuote } from '~/types/tax'
 /** Server catalog prices are authoritative. Keying by the full input prevents stale totals. */
-export function useSaleTaxQuote(shop: Ref<string | null>, location: Ref<string | null>, lines: ComputedRef<{ item_type: string; source_id: string; quantity: number }[]>, offline?: Pick<ReturnType<typeof useOfflineCounter>, 'online' | 'cache' | 'cached'>, bundles = false) {
+export function useSaleTaxQuote(shop: Ref<string | null>, location: Ref<string | null>, lines: ComputedRef<import('~/types/measurement').SaleLineInput[]>, offline?: Pick<ReturnType<typeof useOfflineCounter>, 'online' | 'cache' | 'cached'>, bundles = false) {
  const user = useSupabaseUser()
  const rpc = useShopClient<ShopRpcDatabase>().schema('public')
  const online = offline?.online
  const counter = offline
  const key = computed(() => `shop-data:tax-quote:${bundles ? 'pos' : 'sale'}:${user.value?.id}:${shop.value}:${location.value}:${JSON.stringify(lines.value)}:${online?.value ?? true}`)
  const quote = useShopQuery(key, async () => {
-  if (!shop.value || !location.value || !lines.value.length || lines.value.some(line => !line.source_id || line.quantity <= 0)) return null
+  if (!shop.value || !location.value || !lines.value.length || lines.value.some(line => !line.source_id || Number(line.quantity) <= 0)) return null
   if (online?.value === false) {
    const enabled = await counter?.cached<boolean>('tax-calculation-enabled')
    if (enabled !== false || bundles && !(await counter?.cached('pos-catalog-offers'))) throw new Error('TAX_OFFLINE_QUOTE_REQUIRED')

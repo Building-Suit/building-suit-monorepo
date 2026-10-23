@@ -11,7 +11,7 @@ const categoryFilter = defineModel<string>('categoryFilter', { required: true })
 const itemType = defineModel<string>('itemType', { required: true })
 const catalogPage = defineModel<number>('catalogPage', { required: true })
 const paymentForm = defineModel<BsPointOfSalePaymentForm>('paymentForm', { required: true })
-const emit = defineEmits<{ selectOffer: [id: string]; retryOffers: []; openReceipt: []; receiptLanguage: [value: string | number | (string | number)[]]; selectReceipt: [id: string]; receiptPaper: [value: string]; retryReceipt: []; shareReceipt: []; downloadReceipt: []; printedReceipt: []; reconcileOffline: [id: string]; retryOffline: [id: string]; reset: []; checkout: []; retryCatalog: []; retryContext: []; add: [key: string]; remove: [id: string]; quantity: [id: string, value: number]; appointment: [id: string]; staff: [id: string]; customerSearch: [value: string]; resetCustomerSearch: []; customer: [value: string | number | null | undefined]; clearCustomer: []; dismissFeedback: []; barcode: [code: string] }>()
+const emit = defineEmits<{ selectOffer: [id: string]; retryOffers: []; openReceipt: []; receiptLanguage: [value: string | number | (string | number)[]]; selectReceipt: [id: string]; receiptPaper: [value: string]; retryReceipt: []; shareReceipt: []; downloadReceipt: []; printedReceipt: []; reconcileOffline: [id: string]; retryOffline: [id: string]; reset: []; checkout: []; retryCatalog: []; retryContext: []; add: [key: string]; remove: [id: string]; quantity: [id: string, value: number]; unit: [id: string, value: string]; appointment: [id: string]; staff: [id: string]; customerSearch: [value: string]; resetCustomerSearch: []; customer: [value: string | number | null | undefined]; clearCustomer: []; dismissFeedback: []; barcode: [code: string] }>()
 const panels = usePointOfSaleSections()
 const shopCart = ref<{ focus: () => void; focusCustomer: () => void; checkout: () => void } | null>(null)
 const catalogHeading = ref<{ $el: HTMLElement } | null>(null)
@@ -93,7 +93,7 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
             </BsInline>
             </div>
           </BsPanel>
-          <BsPointOfSaleCart v-if="variant === 'shop'" ref="shopCart" v-model:payment-form="paymentForm" :copy="copy" :view="{...view,offerSummary}" :cart-lines="cartLines" :appointment-options="appointmentOptions" :staff-options="staffOptions" :customer-options="customerOptions" :payment-options="paymentOptions" :appointment-id="appointmentId" :staff-id="staffId" :customer-id="customerId" @checkout="emit('checkout')" @retry-context="emit('retryContext')" @remove="emit('remove', $event)" @quantity="(id, value) => emit('quantity', id, value)" @appointment="emit('appointment', $event)" @staff="emit('staff', $event)" @customer-search="emit('customerSearch', $event)" @reset-customer-search="emit('resetCustomerSearch')" @customer="emit('customer', $event)" @clear-customer="emit('clearCustomer')" />
+          <BsPointOfSaleCart v-if="variant === 'shop'" ref="shopCart" v-model:payment-form="paymentForm" :copy="copy" :view="{...view,offerSummary}" :cart-lines="cartLines" :appointment-options="appointmentOptions" :staff-options="staffOptions" :customer-options="customerOptions" :payment-options="paymentOptions" :appointment-id="appointmentId" :staff-id="staffId" :customer-id="customerId" @checkout="emit('checkout')" @retry-context="emit('retryContext')" @remove="emit('remove', $event)" @unit="(id, value) => emit('unit', id, value)" @quantity="(id, value) => emit('quantity', id, value)" @appointment="emit('appointment', $event)" @staff="emit('staff', $event)" @customer-search="emit('customerSearch', $event)" @reset-customer-search="emit('resetCustomerSearch')" @customer="emit('customer', $event)" @clear-customer="emit('clearCustomer')" />
           <BsPanel v-else aria-labelledby="pos-cart-title" padding="md">
             <BsHeading id="pos-cart-title" tabindex="-1" :level="2">{{ copy.cart }}</BsHeading>
             <BsText v-if="view.contextLoading" role="status" as="p" size="sm">{{ copy.loading }}</BsText>
@@ -113,7 +113,7 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
                 </BsInline>
                 <BsInline justify="between">
                   <BsField v-slot="field" :label="(copy.quantity)">
-                    <BsQuantityInput :id="field.id" :aria-describedby="field.describedby" :model-value="line.quantity" :label="copy.quantity"  :min="0.001" :max="1000000" :step="1" @update:model-value="value => emit('quantity', line.id, Number(value))"/>
+                    <BsQuantityInput :id="field.id" :aria-describedby="field.describedby" :model-value="line.quantity" :label="copy.quantity"  :min="0.001" :max="1000000" :step="line.quantityStep ?? 1" @update:model-value="value => emit('quantity', line.id, Number(value))"/>
                   </BsField>
                   <BsText as="span" emphasis="semibold">{{ line.total }}</BsText>
                 </BsInline>

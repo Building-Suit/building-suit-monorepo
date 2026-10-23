@@ -21,7 +21,9 @@ function printable(value) {
 }
 function representable(value, precision) { return value % (10n ** BigInt(6 - precision)) === 0n }
 
-/** Exact dimension-safe preview, rejecting repeating or unsupported precision. */
+/** Exact dimension-safe preview, rejecting repeating or unsupported precision.
+ * @param {string | null} [increment]
+ */
 export function convertMeasurement(quantity, from, to, increment = null) {
   const entered = decimal(quantity)
   const source = units.get(from)
