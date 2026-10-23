@@ -5,6 +5,7 @@ import { doctorAvailabilityToday,doctorMinuteClock,doctorScheduleDate } from '..
 import { doctorAppointmentReason,doctorAppointmentTransitions,doctorReceptionTransitions,type DoctorReceptionAction,type DoctorAppointment,type DoctorAppointmentCommand,type DoctorAppointmentSnapshot } from '../utils/appointments'
 import { doctorAppointmentsCopy } from '../utils/appointmentsPresentation'
 export function useDoctorAppointmentsPage() {
+  const reloading=ref(false)
   const nuxt = useNuxtApp();const context = useDoctorContext();const appointments = nuxt.$doctorAppointments;const state = appointments.state;const { locale } = useI18n()
   const copy = computed(() => doctorAppointmentsCopy(locale.value==='ar'));const hydrated = ref(false);const scopeKey = computed(() => appointments.scopeKey())
   const administrative = computed(() => context.state.current?.edition==='administrative_candidate')
@@ -27,7 +28,12 @@ export function useDoctorAppointmentsPage() {
     if(initialRead) { refreshAfterInitial=true;return }
     if(!stopped)await read()
   }) } catch { appointments.disconnected() } }
-  async function reload() { if(state.pending)return;reset();await context.refresh();await nuxt.$doctorAppointmentsLive.update(null,async () => {}).catch(() => {});await bind();return read() }
+  async function reload() {
+    if(state.pending||reloading.value)return
+    reloading.value=true
+    try{reset();await context.refresh();await nuxt.$doctorAppointmentsLive.update(null,async () => {}).catch(() => {});await bind();return await read()}
+    finally{reloading.value=false}
+  }
   watch(scopeKey,() => { reset();appointments.clear();date.value = today();page.value = queuePage.value = 0;if(hydrated.value) { void bind();void read() } },{ flush: 'sync' })
   const route = useRoute()
   onMounted(async () => {
@@ -122,6 +128,6 @@ export function useDoctorAppointmentsPage() {
     return item ? [{ id: 'id',label: copy.value.recordId,value: item.id },{ id: 'version',label: copy.value.version,value: String(item.version) },{ id: 'patient',label: copy.value.patient,value: item.patientName || copy.value.restricted },{ id: 'time',label: copy.value.time,value: stamp(item.startsAt,item.timezone) },{ id: 'clinic',label: copy.value.clinic,value: item.locationName },{ id: 'state',label: copy.value.status,value: copy.value.states[item.state] }] : []
   })
   const historyView = computed(() => ({ title: sourceMode.value ? copy.value.sourceTitle : copy.value.history,record: historyRecord.value,hasHistory: Boolean(state.history),loadLabel: copy.value.loadHistory,loading: state.historyLoading,error: error(state.historyError),total: state.history?.total || 0,page: state.history?.page || 0,rows: state.history?.events.map(item => ({ id: item.id,event: item.type.startsWith('appointment.reception.')?copy.value.actions[item.type.slice('appointment.reception.'.length) as DoctorReceptionAction|'walk_in']:item.type==='appointment.booked' ? copy.value.booked : item.type==='appointment.rescheduled' ? copy.value.rescheduled : copy.value.states[item.nextState || 'booked'],actor: item.actorUserId,at: stamp(item.at,nuxt.$doctorAppointmentsScope()?.timezone || 'Etc/UTC'),reason: administrative.value ? doctorAdministrativeReasonLabel(item.reason,locale.value==='ar') : item.reason || '',original: snapshot(item.from),replacement: snapshot(item.to) })) || [] }))
-  return { context,appointments,state,copy,canWalkIn,openWalkIn:()=>open(null,true),consultationOptions,consultationLabel:computed(()=>administrative.value?undefined:locale.value==='ar'?'نوع الموعد':'Appointment type'),reasonOptions,scopeKey,hydrated,date,form,reason,historyOpen,editorOpen: editor.visible,transitionOpen: transition.visible,canCreate,clinicOptions,days,queue,editorView,transitionView,historyView,
+  return { reloading, context,appointments,state,copy,canWalkIn,openWalkIn:()=>open(null,true),consultationOptions,consultationLabel:computed(()=>administrative.value?undefined:locale.value==='ar'?'نوع الموعد':'Appointment type'),reasonOptions,scopeKey,hydrated,date,form,reason,historyOpen,editorOpen: editor.visible,transitionOpen: transition.visible,canCreate,clinicOptions,days,queue,editorView,transitionView,historyView,
     patientOptions: computed(() => state.patients?.rows.map(item => ({ value: item.id,label: item.name })) || []),slotOptions: computed(() => state.offers?.slots.filter(item => item.available).map(item => ({ value: item.minute,label: doctorMinuteClock(item.minute) })) || []),liveLabel: computed(() => copy.value[state.live]),liveTone: computed(() => state.live==='current' ? 'success' as const : state.live==='connecting' ? 'info' as const : 'warning' as const),error: computed(() => error(state.error)),denied: computed(() => !hydrated.value ? null : !scopeKey.value ? copy.value.choose : state.error==='denied' ? copy.value.denied : null),reload,open,action,save,submitTransition,patients,offers,changeDate,changePage,historyPage }
 }

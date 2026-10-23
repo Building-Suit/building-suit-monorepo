@@ -27,7 +27,7 @@ for (const locale of ['en', 'ar'] as const) for (const width of [390, 1280]) for
     }
     const settings = page.getByRole('button', { name: new RegExp(`^${copy.theme}:`) })
     await expect(settings).toHaveAccessibleName(`${copy.theme}: ${theme === 'light' ? copy.themeLight : copy.themeDark}`)
-    const language = page.getByRole('button', { name: `${copy.language}: ${locale}`, exact: true })
+    const language = page.getByRole('button', { name: `${copy.language}: ${locale === 'en' ? 'English' : 'العربية'}`, exact: true })
     await expect(language).toBeEnabled()
     await language.focus()
     await expect(language).toBeFocused()

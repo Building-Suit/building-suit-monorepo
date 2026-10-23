@@ -38,3 +38,5 @@ Do not combine a wrapper search box with a second independent global-search cont
 API inventory is generated from the pinned installed declaration files by `pnpm table:inventory`. Vendor behavior and unsupported native combinations follow the pinned upstream implementation, not a separately reimplemented grid.
 
 Column totals use the Bs-owned `footer` value and `footer-{key}` slots. Footer cells follow the column's alignment and width; products retain total calculations over the full report population. `ariaSort` preserves accessible sort state when a product's header actions own server sorting. Vendor column groups and passthrough styling are unnecessary for these cases.
+
+Named overflow regions (`scrollLabel`) accept physical Left/Right arrow keys while the region itself has focus. Shared UX scrolls immediately by half the visible width; browser clamping respects either text direction. Descendant form controls, modified shortcuts, prior handlers, vertical arrows and tables that fit retain native behavior. The component catalogue exposes the same named region.

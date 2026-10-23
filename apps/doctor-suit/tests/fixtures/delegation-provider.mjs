@@ -75,7 +75,7 @@ export function delegationProtocol({ state,req,res,url,input,rawBytes,send,deny 
   // focused fixtures may explicitly supply per-practice test periods.
   const entitlement = practice => ({ state:'unconfigured',revision:0,writes_allowed:false,can_add_staff:false,can_add_clinic:false,over_limit:false,valid_until:null,
     ...state.entitlements?.[practice],observed_at:new Date().toISOString() })
-  const allowed = doctorAdministrativeCapabilities.filter(key => !candidate || !key.startsWith('documents.'))
+  const allowed = doctorAdministrativeCapabilities.filter(key => !candidate || !['documents.','worklists.'].some(prefix=>key.startsWith(prefix)))
   const capability = (practice,location,key) => allowed.includes(key) && (owner(practice) || Boolean(memberFor(practice)?.grants.some(item => (!location || item.location_id===location) && item.capabilities.includes(key))))
   const contexts = () => data.locations.filter(item => !item.archived_at).flatMap(location => {
     const practice = data.practices.find(item => item.id===location.practice_id)

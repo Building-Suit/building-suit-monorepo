@@ -266,3 +266,5 @@ export { useElementPrint } from './composables/useElementPrint.ts'
 export { useNavigationChamber } from './composables/useNavigationChamber.ts'
 
 export { readWebsiteImage } from './utils/readWebsiteImage.ts'
+
+export { scrollRegionKey } from './scrollRegion.ts'

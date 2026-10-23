@@ -1,4 +1,5 @@
 import{verifyReportsConcurrency}from'./reports-concurrency.mjs'
+import{pullPinnedDoctorMetaImage}from'./pinned-meta-image.mjs'
 import{verifyImportConcurrency}from'./import-concurrency.mjs'
 import{verifyFulfillmentConcurrency}from'./fulfillment-concurrency.mjs'
 import{verifyOutboxConcurrency}from'./outbox-concurrency.mjs'
@@ -154,15 +155,7 @@ try {
     // cannot waive schema generation or select an unpinned image.
     // Official v0.98.0 release publishes this same build to GHCR, ECR and Docker Hub:
     // https://github.com/supabase/postgres-meta/blob/v0.98.0/.github/workflows/release.yml
-    const metaImage='ghcr.io/supabase/postgres-meta:v0.98.0@sha256:cef71ba901751dcc242cc685cf13786935ea8926820fb342f23bb0fbef77de5a'
-    for(let attempt=0;attempt<3;attempt++){
-      const pull=spawnSync('docker',['pull',metaImage],{encoding:'utf8',timeout:120000,maxBuffer:1024*1024})
-      if(!pull.error&&pull.status===0)break
-      const transient=/toomanyrequests|rate exceeded|429|timed? ?out|502|503|temporary failure/i.test(String(pull.stderr))
-      if(attempt===2||!transient)throw new Error('Pinned PostgreSQL Meta image unavailable; schema generation remains unverified')
-      console.log('Pinned PostgreSQL Meta registry temporarily unavailable; retrying the same image')
-      await new Promise(resolve=>setTimeout(resolve,[5000,15000][attempt]))
-    }
+    const metaImage=await pullPinnedDoctorMetaImage(image=>spawnSync('docker',['pull',image],{encoding:'utf8',timeout:120000,maxBuffer:1024*1024}))
     const output = docker(['run', '--rm', '--network', `container:${container}`,
       '-e', 'PG_META_DB_HOST=127.0.0.1', '-e', 'PG_META_DB_NAME=postgres', '-e', 'PG_META_DB_USER=postgres',
       '-e', 'PG_META_GENERATE_TYPES=typescript', '-e', 'PG_META_GENERATE_TYPES_INCLUDED_SCHEMAS=public',

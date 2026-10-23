@@ -49,7 +49,7 @@ jobs:
           retention-days: 7
   doctor-browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -62,7 +62,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @building-suit/doctor-suit build
+        id: production-build
       - run: pnpm exec playwright install --with-deps chromium
+        id: browser-runtime
       - name: Verify synthetic Doctor preview in both locales, themes and viewport sizes
         run: pnpm exec playwright test -c apps/doctor-suit/tests/e2e/playwright.config.ts
       - name: Verify account protocol journeys without external mail or credential artifacts
@@ -75,9 +77,18 @@ jobs:
 
       - name: Check portable private document function
         run: pnpm exec tsc -p apps/doctor-suit/tests/tsconfig.edge.json
+      - name: Verify all ten M3 tasks against owned disposable Auth and PostgREST
+        # Independent of protocol and inherited Realtime failures. Each runner
+        # must clean up its own project; existing resources are never reused.
+        # No provider delivery or clinical/legal approval is inferred.
+        if: ${{ !cancelled() && steps.production-build.outcome == 'success' && steps.browser-runtime.outcome == 'success' }}
+        env:
+          DOCTOR_OPERATIONS_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: node apps/doctor-suit/tests/operations-actual-provider.mjs
       - name: Verify actual disposable Doctor Auth, Storage and Functions
         # Synthetic local users/files only. Runner owns its project lifecycle.
         # Captured service keys, emails and byte bodies are never published.
+        if: ${{ !cancelled() && steps.production-build.outcome == 'success' && steps.browser-runtime.outcome == 'success' }}
         run: node apps/doctor-suit/tests/disposable-provider.mjs
       - name: Verify canonical Doctor asset drop-in with a fresh production build
         run: node apps/doctor-suit/tests/brand-build-fixture.mjs
@@ -89,6 +100,14 @@ jobs:
             test-results/doctor
             test-results/doctor-m2-actual
           if-no-files-found: ignore
+      - name: Retain redacted M3 execution receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-m3-receipt-${{ github.event.pull_request.head.sha || github.sha }}
+          path: test-results/doctor-m3-actual/provider-receipt.json
+          if-no-files-found: error
+          retention-days: 7
   shared-settings-browser:
     runs-on: ubuntu-latest
     timeout-minutes: 20

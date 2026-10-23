@@ -24,10 +24,10 @@ function updateFilter(key: keyof BsReportFilters, value: string | number | boole
     <BsFilterBar :label="copy.title">
       <BsGrid :columns="4">
         <BsField v-slot="field" :label="copy.title">
-          <BsSelect :model-value="filters.report" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.title" :options="choices.reports" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="updateFilter('report', $event)"/>
+          <BsSelect :model-value="filters.report" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.title" :disabled="view.filtersDisabled" :options="choices.reports" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="updateFilter('report', $event)"/>
         </BsField>
         <BsField v-slot="field" :label="copy.location">
-          <BsSelect :model-value="filters.location" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.location" :options="choices.locations" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="updateFilter('location', $event)"/>
+          <BsSelect :model-value="filters.location" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.location" :disabled="view.filtersDisabled" :options="choices.locations" option-label="label" option-value="value" option-disabled="disabled" @update:model-value="updateFilter('location', $event)"/>
         </BsField>
         <BsField v-slot="field" :label="copy.from">
           <BsInput :id="field.id" :model-value="filters.from" :aria-describedby="field.describedby" type="date" :disabled="view.dateDisabled" @update:model-value="updateFilter('from', $event)"/>
