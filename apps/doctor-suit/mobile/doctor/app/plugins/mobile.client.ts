@@ -1,3 +1,5 @@
+import {createNativeContext,nativeContextState,nativeContextId} from '../utils/nativeContext'
+import {createNativeContextRepository} from '../utils/nativeContextRepository'
 import {App} from '@capacitor/app'
 import {Capacitor} from '@capacitor/core'
 import{createNativeSession,nativeSessionState}from'../utils/nativeSession'
@@ -10,8 +12,11 @@ export default defineNuxtPlugin(async app=>{
   const configured=nativeSessionConfiguration(useRuntimeConfig().public.doctorNativeAuth)
   const backend=configured&&Capacitor.getPlatform()==='android'?createNativeSessionBackend(configured,nativeAuthTransport):null
   const readiness=ref<'checking'|'enabled'|'disabled'>(backend?'checking':'disabled')
-  const auth=createNativeSession(backend,nativeSessionVault(),reactive(nativeSessionState()),()=>shell?.sessionChanged())
-  const shell:ReturnType<typeof createDoctorMobileShell>=createDoctorMobileShell({identity:auth.identity,selection:()=>null,load:async()=>{throw new Error('Unavailable')}},state)
+  const auth=createNativeSession(backend,nativeSessionVault(),reactive(nativeSessionState()),()=>{shell?.sessionChanged();void context?.clear()})
+  const repository=configured&&backend?createNativeContextRepository(configured,nativeAuthTransport,auth.accessToken):null
+  const context=createNativeContext(repository,auth.identity,reactive(nativeContextState()),()=>shell?.sessionChanged())
+  app.provide('doctorNativeContext',context)
+  const shell:ReturnType<typeof createDoctorMobileShell>=createDoctorMobileShell({identity:auth.identity,selection:context.selection,load:async(_route,selection,signal)=>{const choice=context.state.current,identity=auth.identity();if(!repository||!choice||!identity||nativeContextId(choice.context)!==nativeContextId(selection))throw new Error('Unavailable');return(await repository.resolve(choice,identity,signal)).context}},state)
   app.provide('doctorNativeSession',auth);app.provide('doctorNativeAvailability',readiness)
   let admission=0,disposed=false,active=true,monitor:ReturnType<typeof setTimeout>|undefined,expiry:ReturnType<typeof setTimeout>|undefined
   function stopMonitor(){if(monitor!==undefined)clearTimeout(monitor);if(expiry!==undefined)clearTimeout(expiry);monitor=undefined;expiry=undefined}
@@ -21,7 +26,7 @@ export default defineNuxtPlugin(async app=>{
    const delay=Math.max(1000,Math.min(30000,(auth.expiresAt()??Date.now())-Date.now()-15000))
    // A slow request cannot extend the current view past known token expiry.
    expiry=setTimeout(()=>{auth.lock();void admit()},Math.max(0,(auth.expiresAt()??Date.now())-Date.now()-1000))
-   monitor=setTimeout(()=>{monitor=undefined;void auth.revalidate().finally(schedule)},delay)
+   monitor=setTimeout(()=>{monitor=undefined;void auth.revalidate().then(async ready=>{if(ready)await context.refresh();else await context.clear()}).finally(schedule)},delay)
   }
   watch(()=>[auth.state.phase,auth.state.revision],schedule)
   async function admit(){
@@ -34,12 +39,14 @@ export default defineNuxtPlugin(async app=>{
     const allowed=await backend.marker(controller.signal)
     if(disposed||revision!==admission)return
     if(allowed){
-     await auth.resume()
+     await auth.resume();if(auth.identity())await context.refresh()
      if(!disposed&&revision===admission){readiness.value=auth.state.error==='storage'?'disabled':'enabled';await shell.retry()}
     }else{readiness.value='disabled';auth.lock()}
    }catch{if(!disposed&&revision===admission){readiness.value='disabled';auth.lock()}}
    finally{clearTimeout(timer)}
   }
+  watch(()=>auth.state.phase,phase=>{if(phase==='ready')void context.refresh()})
+  watch(()=>context.state.current,()=>{void shell.retry()})
   void admit()
   app.provide('doctorMobile',shell)
   const offline=()=>{admission++;stopMonitor();readiness.value=backend?'checking':'disabled';auth.lock();shell.connectivity(false)},online=()=>{shell.connectivity(true);void admit()}

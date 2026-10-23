@@ -78,5 +78,13 @@
       "revocation-unconfirmed": "Signed out on this device. Server session revocation could not be confirmed."
     },
     "requestAgain": "Request another code"
+  },
+  "context": {
+    "choose": "Choose doctor, practice and location",
+    "discardTitle": "Discard unsaved changes?",
+    "discardBody": "Switching clears unsaved changes from the current practice and location.",
+    "discard": "Discard and switch",
+    "chooseHelp": "Select your doctor, practice and location from the workspace selector.",
+    "noScopes": "No active practice and location grants are available for this account."
   }
 }
