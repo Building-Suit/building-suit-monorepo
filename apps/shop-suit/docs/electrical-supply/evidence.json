@@ -256,12 +256,50 @@
       "releaseCheck": "PASS"
     },
     "merchantHardwareAcceptance": false,
-    "publishedParentCorrection": "946b0f582261b7ce01e02ac7c925326f6d8757a7",
+    "publishedParentCorrection": "7ef59f5fac1d715ad428371c7bcde89235832d14",
     "nativeParentCi": {
       "sha": "15b52a324e1e0cd5301f75e5ab23c0ad220b5235",
       "measuredRetail": "PASS",
       "media": "PASS",
       "accounts": "PASS"
+    },
+    "privacyBrowser": {
+      "passed": 9,
+      "failed": 0,
+      "signupLabelHydration": "PASS",
+      "pricingCtaConsentDeduplication": "PASS",
+      "fixture": "synthetic loopback; no external analytics collection"
+    },
+    "consumerBuilds": {
+      "passed": 7,
+      "failed": 0
+    },
+    "sharedAuthBrowser": {
+      "passed": 48,
+      "failed": 0
+    },
+    "settingsBrowser": {
+      "passed": 12,
+      "failed": 0,
+      "defaultPopupAndShellCycles": true
+    },
+    "releaseClassification": "Open draft signup public scope corrected to Shop; other consumers internal; no accepted parent fragment changed",
+    "appointmentAccessBrowser": {
+      "passed": 4,
+      "failed": 0
+    },
+    "doctorSharedConsumer": {
+      "existingUnchangedCasesPassed": 48,
+      "repairedShellCasesPassed": 8,
+      "clinicalAcceptance": false
+    },
+    "qualifiedSourceSha": "024d1e011c52f7adcf030acf3e88a2790c185342",
+    "actualSasPostgrestCatalog": "PASS; canonical pg-safeupdate/authenticator/PostgREST protocol and retrospective branch; no hosted writes",
+    "finalRepositoryUnit": {
+      "total": 2049,
+      "passed": 2026,
+      "failed": 0,
+      "skipped": 23
     }
   }
 }

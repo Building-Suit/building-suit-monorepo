@@ -1,0 +1,19 @@
+{
+  "id": "ss-electrical-shared-form-event-support-20261023",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/templates/BsLandingPage.vue",
+    "packages/ui/src/organisms/BsSignupEnrollment.vue"
+  ],
+  "reason": "Shared dependency qualification covers all six consumers. Existing landing event forwarding is inert without the Shop analytics adapter. Enrollment input label identities preserve current form behavior; public effects are separately curated for consuming signup products. No product activation or enrollment authority changes."
+}

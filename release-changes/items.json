@@ -2112,8 +2112,7 @@
     "id": "shared-sign-in-label-hydration-20261022",
     "task": "SS-ELECTRICAL-001",
     "suits": [
-      "shop-suit",
-      "ledger-suit"
+      "shop-suit"
     ],
     "classification": "patch",
     "disposition": "public",
@@ -2514,6 +2513,178 @@
     "reason": "Optional typed shared pricing/editor presentation, explicit exports/route ownership/catalogue, real-schema generated types and merchant/permission/legacy/regression/browser qualification. Other shared consumers remain internal; no product registration, plan term or hosted deployment changes.",
     "sources": [
       "ss-electrical-trade-pricing-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-signup-labels-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsSignupEnrollment.vue"
+    ],
+    "reason": "The browser conversion regression reproduced signup email labels losing their control association after hydration. Use distinct semantic field IDs in the existing shared enrollment form, as the sign-in form already does.",
+    "notes": {
+      "title": {
+        "en": "Keep sign-up labels connected to their fields",
+        "ar": "ربط عناوين التسجيل بحقولها"
+      },
+      "summary": {
+        "en": "Account and workspace field labels retain their input associations after the sign-up form loads.",
+        "ar": "تحتفظ عناوين حقول الحساب ومساحة العمل بارتباطها بالمدخلات بعد تحميل نموذج التسجيل."
+      },
+      "details": {
+        "en": "Keyboard and assistive technology can identify the existing fields without changing enrollment or verification behavior.",
+        "ar": "يمكن للوحة المفاتيح والتقنيات المساعدة تحديد الحقول الحالية دون تغيير سلوك التسجيل أو التحقق."
+      }
+    },
+    "sources": [
+      "ss-electrical-signup-labels-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+        "contains": "for=\"bs-signup-email\""
+      },
+      {
+        "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+        "contains": "for=\"bs-signup-verified-email\""
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-shared-form-event-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsLandingPage.vue",
+      "packages/ui/src/organisms/BsSignupEnrollment.vue"
+    ],
+    "reason": "Shared dependency qualification covers all six consumers. Existing landing event forwarding is inert without the Shop analytics adapter. Enrollment input label identities preserve current form behavior; public effects are separately curated for consuming signup products. No product activation or enrollment authority changes.",
+    "sources": [
+      "ss-electrical-shared-form-event-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-cycle-keyboard-focus-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts"
+    ],
+    "reason": "A focused native language-cycle button blurs when disabled during locale loading. Restore its focus after completion only if the user has not focused another control; preserve standard popup-menu behavior. Only Shop has verified public release registration in this initiative.",
+    "notes": {
+      "title": {
+        "en": "Keep keyboard focus after changing language",
+        "ar": "الحفاظ على تركيز لوحة المفاتيح بعد تغيير اللغة"
+      },
+      "summary": {
+        "en": "The language button keeps keyboard focus when the selected language finishes loading.",
+        "ar": "يحتفظ زر اللغة بتركيز لوحة المفاتيح بعد اكتمال تحميل اللغة المختارة."
+      },
+      "details": {
+        "en": "Focus stays with a different control if you move away while the language is loading.",
+        "ar": "يبقى التركيز على أي حقل آخر تنتقل إليه أثناء تحميل اللغة."
+      }
+    },
+    "sources": [
+      "ss-electrical-cycle-keyboard-focus-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": "await cycleFocus.preserveDuring(async () => {"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-settings-consumer-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts",
+      "packages/ux/tests/point-of-sale-keyboard.test.mjs",
+      "packages/testing/e2e/settings-menu-focus.spec.ts",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify all dependency consumers without activating an operational product or inventing a production baseline. Retain popup keyboard navigation checks and test actual shell cycle controls, mobile navigation, hydration, focus and both locales. Restrict this open draft PR new signup public fragment to Shop; protected parent fragments remain untouched.",
+    "sources": [
+      "ss-electrical-settings-consumer-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-signin-draft-public-scope-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsSignInPage.vue",
+      "release-changes/items.json"
+    ],
+    "reason": "Correct the new, unaccepted public sign-in fragment in draft PR445 to Shop only. The real SAS/PostgREST fixture has no public Ledger registration/baseline for this change; shared consumers remain internal provenance. No protected accepted fragment, product registry, production version or release history changes.",
+    "sources": [
+      "ss-signin-draft-public-scope-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-shared-preview-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit/tests/e2e/dos-m1-004.spec.ts",
+      "packages/testing/e2e/settings-menu-focus.spec.ts",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts",
+      "apps/shop-suit/docs/electrical-supply"
+    ],
+    "reason": "Qualify current shared shell controls in their synthetic Doctor consumer without changing Doctor domain behavior, provider setup or clinical/public authority. Preserve scope disclosure, keyboard focus, theme transitions, mobile navigation and no-overflow assertions. Other consumers retain their actual popup/cycle checks.",
+    "sources": [
+      "ss-electrical-shared-preview-qualification-20261023"
     ]
   }
 ]
