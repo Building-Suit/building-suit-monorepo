@@ -47,6 +47,12 @@ do $$declare shop uuid;location uuid;staff uuid;customer uuid;other_customer uui
  if (select total_amount from public.invoices where id=invoice)<>3100 or (select trade_pricing_snapshot->>'ruleId' from public.invoice_items where invoice_id=invoice)<>contract::text then raise exception 'Draft ignored authoritative contract';end if;
  -- Drafts reprice before issuance; issued documents freeze that exact revision.
  perform public.save_trade_configuration(gen_random_uuid(),shop,'price',args||jsonb_build_object('id',contract,'revision',1,'customerId',customer,'price','30'),'Revise future negotiated price');
+ -- The existing POS full-payment guard checks again after authoritative repricing.
+ -- A changed rule must roll back issue/FIFO/payment rather than collect a stale amount.
+ begin perform public.checkout_pos_sale(gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),null,shop,location,invoice,3100,clock_timestamp(),'bank_transfer',null);
+ raise exception 'Stale checkout amount accepted';exception when check_violation then if sqlerrm<>'POS_CHECKOUT_REQUIRES_FULL_PAYMENT' then raise;end if;end;
+ if (select status::text from public.invoices where id=invoice)<>'draft' or (select total_amount from public.invoices where id=invoice)<>3100
+ or (select quantity_on_hand from public.product_stock where product_id=cable)<>1000 or exists(select 1 from public.payments where shop_id=shop) then raise exception 'Stale checkout partially issued, collected or consumed stock';end if;
  perform public.issue_location_sale(gen_random_uuid(),shop,location,invoice);
  if (select total_amount from public.invoices where id=invoice)<>3000 or (select quantity_on_hand from public.product_stock where product_id=cable)<>900 then raise exception 'Issued contract price or one stock deduction incorrect';end if;
  select trade_pricing_snapshot into before_snapshot from public.invoice_items where invoice_id=invoice;
