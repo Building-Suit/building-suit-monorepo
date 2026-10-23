@@ -10600,6 +10600,215 @@ export type Database = {
           },
         ]
       }
+      trade_quotation_events: {
+        Row: {
+          action: string
+          actor_profile_id: string
+          created_at: string
+          id: string
+          previous_status: string | null
+          quotation_id: string
+          reason: string
+          revision: number
+          shop_id: string
+          status: string
+          version: number
+        }
+        Insert: {
+          action: string
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          previous_status?: string | null
+          quotation_id: string
+          reason: string
+          revision: number
+          shop_id: string
+          status: string
+          version: number
+        }
+        Update: {
+          action?: string
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          previous_status?: string | null
+          quotation_id?: string
+          reason?: string
+          revision?: number
+          shop_id?: string
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_quotation_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_quotation_events_quotation_id_shop_id_fkey"
+            columns: ["quotation_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "trade_quotations"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_quotation_events_quotation_id_version_fkey"
+            columns: ["quotation_id", "version"]
+            isOneToOne: false
+            referencedRelation: "trade_quotation_versions"
+            referencedColumns: ["quotation_id", "version"]
+          },
+        ]
+      }
+      trade_quotation_versions: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          quotation_id: string
+          reason: string
+          shop_id: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          quotation_id: string
+          reason: string
+          shop_id: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          quotation_id?: string
+          reason?: string
+          shop_id?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_quotation_versions_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_quotation_versions_quotation_id_shop_id_fkey"
+            columns: ["quotation_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "trade_quotations"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      trade_quotations: {
+        Row: {
+          created_at: string
+          created_by_profile_id: string
+          currency: string
+          customer_id: string
+          id: string
+          location_id: string
+          notes: string | null
+          project_reference: string | null
+          quotation_number: string
+          revision: number
+          shop_id: string
+          status: string
+          total_amount: number
+          updated_at: string
+          valid_until: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by_profile_id: string
+          currency: string
+          customer_id: string
+          id?: string
+          location_id: string
+          notes?: string | null
+          project_reference?: string | null
+          quotation_number: string
+          revision?: number
+          shop_id: string
+          status?: string
+          total_amount: number
+          updated_at?: string
+          valid_until: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by_profile_id?: string
+          currency?: string
+          customer_id?: string
+          id?: string
+          location_id?: string
+          notes?: string | null
+          project_reference?: string | null
+          quotation_number?: string
+          revision?: number
+          shop_id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          valid_until?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_quotations_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_quotations_customer_id_shop_id_fkey"
+            columns: ["customer_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "client_balances"
+            referencedColumns: ["client_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_quotations_customer_id_shop_id_fkey"
+            columns: ["customer_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_quotations_id_version_fkey"
+            columns: ["id", "version"]
+            isOneToOne: false
+            referencedRelation: "trade_quotation_versions"
+            referencedColumns: ["quotation_id", "version"]
+          },
+          {
+            foreignKeyName: "trade_quotations_location_id_shop_id_fkey"
+            columns: ["location_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_locations"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_quotations_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       units_of_measure: {
         Row: {
           allowed_precision: number
@@ -13933,6 +14142,30 @@ export type Database = {
           p_kind?: string
           p_page?: number
           p_product_id?: string
+          p_search?: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      trade_quotation_command: {
+        Args: {
+          p_action: string
+          p_location_id: string
+          p_payload: Json
+          p_quotation_id: string
+          p_reason: string
+          p_request_id: string
+          p_revision: number
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      trade_quotation_context: {
+        Args: {
+          p_history_page?: number
+          p_location_id: string
+          p_page?: number
+          p_quotation_id?: string
           p_search?: string
           p_shop_id: string
         }

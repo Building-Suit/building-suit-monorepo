@@ -2746,5 +2746,78 @@
     "sources": [
       "ss-electrical-appointment-dialog-support-20261023"
     ]
+  },
+  {
+    "id": "ss-electrical-formal-quotations-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase/migrations/20261023215636_formal_trade_quotations.sql",
+      "packages/ui/src/templates/BsTradeQuotationsPage.vue",
+      "packages/ui/src/types/tradeQuotationPresentation.ts"
+    ],
+    "reason": "Formal quotations retain exact server-priced commercial versions, validity, measured lines, taxes and explicit authorized transitions separately from invoice and inventory ledgers.",
+    "notes": {
+      "title": {
+        "en": "Formal quotations with saved versions",
+        "ar": "عروض أسعار رسمية بإصدارات محفوظة"
+      },
+      "summary": {
+        "en": "Prepare measured material offers, review their server prices and taxes, and record issue, customer acceptance or rejection with validity rules.",
+        "ar": "جهّز عروض المواد المقاسة وراجع أسعارها وضرائبها من الخادم، وسجّل الإصدار وقبول العميل أو رفضه مع قواعد الصلاحية."
+      },
+      "details": {
+        "en": "Saved versions and state history remain available when catalog prices change. Print an offer, prepare an explicit new version, and retry an unconfirmed action safely without creating a sale or reserving stock.",
+        "ar": "تبقى الإصدارات وسجلات الحالات محفوظة عند تغير أسعار الكتالوج. اطبع العرض وجهّز إصدارًا جديدًا صريحًا وأعد محاولة الإجراء غير المؤكد بأمان، دون إنشاء بيع أو حجز مخزون."
+      }
+    },
+    "sources": [
+      "ss-electrical-formal-quotations-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/quotations.vue",
+        "contains": "rpc.rpc('trade_quotation_command', frozen.value)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261023215636_formal_trade_quotations.sql",
+        "contains": "create table public.trade_quotation_versions"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-quotation-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/shop-suit/app/types/database.types.ts",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/supabase/tests/shop_trade_quotations.sql",
+      "apps/shop-suit/docs/electrical-supply",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Optional typed quotation editor/history presentation, explicit exports and ownership registry, bilingual browser journeys and public-command SQL approval/expiry/legacy regression qualification. Other dependency consumers remain internal; no hosted deployment, product registration or competing financial ledger.",
+    "sources": [
+      "ss-electrical-quotation-support-20261023"
+    ]
   }
 ]

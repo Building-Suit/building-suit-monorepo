@@ -711,6 +711,16 @@
       "adapterBoundary": "Typed price/group/history rows, bounded pickers, immutable command retry state and semantic group, assignment and price-rule commands. Shop owns pricing, scope, conversion and financial authority.",
       "task": "SS-ELECTRICAL-001",
       "migrationStatus": "implementation qualification in progress"
+    },
+    {
+      "family": "formal-quotations",
+      "owner": "packages/ui",
+      "components": [
+        "BsTradeQuotationsPage"
+      ],
+      "adapterBoundary": "Typed commercial version, state/history and line-editor projections; bounded pickers and semantic commands. Shop retains server pricing, immutable history, location/actor/period authority and print data.",
+      "task": "SS-ELECTRICAL-001",
+      "migrationStatus": "implementation qualification in progress"
     }
   ]
 }
