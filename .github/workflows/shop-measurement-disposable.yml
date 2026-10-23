@@ -5,6 +5,7 @@ on:
       - '.github/workflows/shop-measurement-disposable.yml'
       - 'apps/shop-suit/supabase/**'
       - 'tooling/database/test-shop-measurement*.mjs'
+      - 'tooling/database/*reel*.mjs'
 permissions:
   contents: read
 concurrency:
@@ -43,6 +44,10 @@ jobs:
             exit 1
           fi
       - run: node tooling/database/test-shop-measurement-local.mjs
+      - name: Verify physical reel cashier serialization on real Supabase
+        env:
+          SHOP_REEL_RACE_DISPOSABLE: '1'
+        run: node tooling/database/test-shop-reel-concurrency-local.mjs
       - name: Stop owned disposable backend
         if: always()
         env:

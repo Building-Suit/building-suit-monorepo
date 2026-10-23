@@ -12,6 +12,7 @@ const props = defineProps<{
   table: { loading: boolean; error: string | null; canManage: boolean; archivePendingId: string | null; pageSize: number; page: number; total: number; filtered: boolean }
   editor: { uploadBlocked?: boolean; mediaSupported?: boolean; editing: boolean; dirty: boolean; pending: boolean; error: string; priceMax?: number }
   upload?: { preview: string; status: 'idle' | 'uploading' | 'uploaded' | 'error' | 'invalid' }
+  technical?: { definitions: { code: string; label: string; type: string; unit?: string | null }[]; loading: boolean; existing: boolean; trackingAllowed: boolean; trackingLocked: boolean }
   packaging?: { available: boolean; items: { id: string; label: string }[]; units: { value: string; label: string }[]; contentUnits: { value: string; label: string }[]; pending: boolean }
   measurement?: { units: { value: string; label: string }[]; saleUnits: { value: string; label: string }[]; locked: boolean; loading: boolean }
   scheduling?: { loading: boolean; error: string | null; locations: { value: string; label: string }[]; staff: { value: string; label: string }[] }
@@ -23,6 +24,8 @@ function discount<K extends keyof BsCatalogueForm['discount']>(key: K, value: Bs
 function schedule<K extends keyof BsCatalogueForm['schedule']>(key: K, value: BsCatalogueForm['schedule'][K]) { change('schedule', { ...form.value.schedule, [key]: value }) }
 function changeMeasurement<K extends keyof NonNullable<BsCatalogueForm['measurement']>>(key: K, value: NonNullable<BsCatalogueForm['measurement']>[K]) { if (form.value.measurement) change('measurement', { ...form.value.measurement, [key]: value }) }
 function changePackaging<K extends keyof NonNullable<BsCatalogueForm['packaging']>>(key: K, value: NonNullable<BsCatalogueForm['packaging']>[K]) { if (form.value.packaging) change('packaging', { ...form.value.packaging, [key]: value }) }
+function changeTechnical(value: Partial<NonNullable<BsCatalogueForm['technical']>>) { if (form.value.technical) change('technical', { ...form.value.technical, ...value }) }
+function changeAttribute(index: number, value: Partial<{ code: string; value: string }>) { if (form.value.technical) changeTechnical({ attributes: form.value.technical.attributes.map((attribute, i) => i === index ? { ...attribute, ...value } : attribute) }) }
 const columns = computed(() => [
   { key: 'name', header: props.copy.name }, { key: 'category', header: props.copy.category, field: 'category' },
   ...(props.kind === 'product' ? [{ key: 'sku', header: props.copy.sku ?? '', field: 'sku' }, { key: 'barcode', header: props.copy.barcode ?? '', field: 'barcode' }] : []),
@@ -52,6 +55,24 @@ const columns = computed(() => [
             <BsField v-slot="field" :label="copy.measurement.baseUnit"><BsSelect :input-id="field.id" :aria-describedby="field.describedby" :model-value="form.measurement.baseUnit" :label="copy.measurement.baseUnit" :options="measurement.units" option-label="label" option-value="value" :disabled="measurement.locked || measurement.loading || editor.pending" @update:model-value="changeMeasurement('baseUnit', String($event))" /></BsField>
             <BsField v-slot="field" :label="copy.measurement.increment"><BsInput :id="field.id" :aria-describedby="field.describedby" :model-value="form.measurement.increment" type="text" inputmode="decimal" :disabled="measurement.locked || measurement.loading || editor.pending" required @update:model-value="changeMeasurement('increment', String($event))" /></BsField>
             <BsFieldGroup :legend="copy.measurement.saleUnits"><BsCheckbox v-for="unit in measurement.saleUnits" :key="unit.value" :model-value="form.measurement.saleUnits" :value="unit.value" :label="unit.label" :disabled="unit.value === form.measurement.baseUnit || measurement.locked || measurement.loading || editor.pending" @update:model-value="changeMeasurement('saleUnits', $event as string[])" /></BsFieldGroup>
+          </template>
+        </BsFieldGroup>
+        <BsFieldGroup v-if="form.technical && copy.technical && technical" :legend="copy.technical.title">
+          <BsCheckbox :model-value="form.technical.enabled" :label="copy.technical.enabled" :disabled="technical.existing || technical.loading || editor.pending" @update:model-value="changeTechnical({ enabled: Boolean($event) })" />
+          <BsText as="p" size="sm" tone="muted">{{ copy.technical.help }}</BsText>
+          <template v-if="form.technical.enabled">
+            <BsField v-slot="field" :label="copy.technical.family" :hint="copy.technical.familyHelp"><BsInput :id="field.id" :model-value="form.technical.family" :aria-describedby="field.describedby" :maxlength="160" :disabled="technical.loading || editor.pending" @update:model-value="changeTechnical({ family: String($event) })" /></BsField>
+            <BsFieldGroup :legend="copy.technical.attributes">
+              <BsStack v-for="(attribute, index) in form.technical.attributes" :key="index" gap="sm">
+                <BsField v-slot="field" :label="copy.technical.attribute"><BsSelect :input-id="field.id" :aria-describedby="field.describedby" :model-value="attribute.code" :label="copy.technical.attribute" :options="technical.definitions.filter(definition => definition.code === attribute.code || !form.technical?.attributes.some(value => value.code === definition.code))" option-label="label" option-value="code" :disabled="technical.loading || editor.pending" @update:model-value="changeAttribute(index, { code: String($event), value: '' })" /></BsField>
+                <BsField v-slot="field" :label="technical.definitions.find(definition => definition.code === attribute.code)?.label || copy.technical.value" :hint="technical.definitions.find(definition => definition.code === attribute.code)?.unit || ''"><BsInput :id="field.id" :model-value="attribute.value" :aria-describedby="field.describedby" :inputmode="['number','integer'].includes(technical.definitions.find(definition => definition.code === attribute.code)?.type || '') ? 'decimal' : 'text'" :maxlength="250" :disabled="technical.loading || editor.pending" @update:model-value="changeAttribute(index, { value: String($event) })" /></BsField>
+                <BsButton type="button" variant="text" :disabled="technical.loading || editor.pending" @click="changeTechnical({ attributes: form.technical.attributes.filter((_, i) => i !== index) })">{{ copy.technical.remove }}</BsButton>
+              </BsStack>
+              <BsButton type="button" variant="secondary" :disabled="technical.loading || editor.pending || form.technical.attributes.length >= technical.definitions.length" @click="changeTechnical({ attributes: [...form.technical.attributes, { code: '', value: '' }] })">{{ copy.technical.add }}</BsButton>
+            </BsFieldGroup>
+            <BsCheckbox :model-value="form.technical.reelTracking" :label="copy.technical.reelTracking" :disabled="technical.loading || editor.pending || technical.trackingLocked || (!technical.trackingAllowed && !form.technical.reelTracking)" @update:model-value="changeTechnical({ reelTracking: Boolean($event) })" />
+            <BsText as="p" size="sm" tone="muted">{{ technical.trackingLocked ? copy.technical.locked : copy.technical.reelHelp }}</BsText>
+            <template v-if="form.technical.reelTracking"><BsCheckbox :model-value="form.technical.unopenedResellable" :label="copy.technical.unopenedResellable" :disabled="technical.loading || editor.pending" @update:model-value="changeTechnical({ unopenedResellable: Boolean($event) })" /><BsCheckbox :model-value="form.technical.cutRequiresManagerApproval" :label="copy.technical.cutRequiresManagerApproval" :disabled="technical.loading || editor.pending" @update:model-value="changeTechnical({ cutRequiresManagerApproval: Boolean($event) })" /></template>
           </template>
         </BsFieldGroup>
         <BsFieldGroup v-if="copy.packaging && packaging" :legend="copy.packaging.title">

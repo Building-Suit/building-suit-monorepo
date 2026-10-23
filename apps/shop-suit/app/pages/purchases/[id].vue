@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BsCommerceDocumentCopy, BsCommerceDocumentForm, BsCommerceCorrectionForm, BsCommerceDocumentView } from '@building-suit/ui/types/commerceDocumentPresentation'
 
+import { shopCommandErrorMessage } from '~/utils/shopCommandErrorMessage'
 import { convertMeasurement } from '~/utils/measurement'
 import type { ShopRpcDatabase } from '~/types/shopCrmRpc'
 const { refreshShopQueries } = useShopInvalidation()
@@ -10,7 +11,7 @@ const { businessCurrency } = useShop()
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
-type PurchaseItem = { measurement?: import('~/types/measurement').MeasurementSnapshot | null; id: string; productId: string; productName: string; quantity: number; unitCost: number; totalCost: number; availableToReturn: number; batchId: string | null }
+type PurchaseItem = { reelTracking?: boolean; measurement?: import('~/types/measurement').MeasurementSnapshot | null; id: string; productId: string; productName: string; quantity: number; unitCost: number; totalCost: number; availableToReturn: number; batchId: string | null }
 type PaymentEvent = { id: string; eventType: 'payment' | 'reversal'; paymentId: string; allocationId: string; amount: number; eventAt: string; method?: PaymentMethod; reference?: string | null; reason?: string | null; remainingEffective?: number }
 type Credit = { id: string; amount: number; effectiveAt: string; reason: string; reference: string | null; purchaseReturnId: string | null }
 type PurchaseReturn = { id: string; returnedAt: string; reason: string; reference: string | null; totalAmount: number; items: Array<{ id: string; productId: string; quantity: number; unitCost: number; totalAmount: number; batchId: string }> }
@@ -46,7 +47,7 @@ const paymentMethods: PaymentMethod[] = ['cash', 'bank_transfer', 'card', 'walle
 function localToday() { return new Date().toISOString().slice(0, 10) }
 const paymentForm = reactive({ amount: 0, date: localToday(), method: 'cash' as PaymentMethod, reference: '', notes: '' })
 const creditForm = reactive({ amount: 0, date: localToday(), reason: '', reference: '' })
-const returnForm = reactive({ date: localToday(), reason: '', reference: '', quantities: {} as Record<string, number> })
+const returnForm = reactive({ date: localToday(), reason: '', reference: '', quantities: {} as Record<string, number>, reelSources: {} as Record<string,string> })
 const reversalForm = reactive({ amount: 0, date: localToday(), reason: '', reference: '' })
 
 const { dirty: paymentDirty } = useRecordAction(() => paymentForm, paymentOpen)
@@ -104,8 +105,9 @@ function methodLabel(method: PaymentMethod) { return copy.value[method] }
 function settlementLabel(state: PurchaseDetail['settlementState']) { return copy.value[state] }
 function hasCentPrecision(value: number) { return Math.abs(Math.round(value * 100) - value * 100) < 0.000001 }
 function readableError(value: unknown) {
-  const message = value instanceof Error ? value.message : ''
+  const message = shopCommandErrorMessage(value)
   if (message.includes('OVERPAYMENT') || message.includes('EXCEEDS_PAYABLE')) return copy.value.invalidPayment
+  if (message.includes('PURCHASE_RETURN_REEL_UNAVAILABLE')) return isArabic.value ? 'البكرة المختارة لا تكفي أو تغيرت. حدّث خيارات البكرات وراجع الكمية.' : 'The selected reel changed or cannot supply this return. Refresh the reel choices and review the quantity.'
   if (message.includes('STOCK_UNAVAILABLE')) return copy.value.invalidReturn
   if (message.includes('ACCOUNTING_PERIOD_CLOSED')) return isArabic.value ? 'الفترة المحاسبية مغلقة.' : 'The accounting period is closed.'
   if (message.includes('SHOP_PERMISSION_DENIED')) return isArabic.value ? 'ليست لديك صلاحية تنفيذ هذا الإجراء.' : 'You do not have permission for this action.'
@@ -151,7 +153,24 @@ async function saveCredit() {
   } catch (error) { if (inScope()) actionError.value = readableError(error) } finally { pendingAction.value = false }
 }
 
-function openReturn() { if (!purchase.value) return; Object.assign(returnForm, { date: localToday(), reason: '', reference: '', quantities: {} }); actionError.value = ''; success.value = ''; returnOpen.value = true }
+function openReturn() { if (!purchase.value) return; Object.assign(returnForm, { date: localToday(), reason: '', reference: '', quantities: {}, reelSources: {} }); for (const item of purchase.value.items) if (item.reelTracking) void loadReturnSources(item.id); actionError.value = ''; success.value = ''; returnOpen.value = true }
+type ReturnSourceState = { items: { id: string; barcode: string; remainingLength: string }[]; total: number; page: number; query: string; pending: boolean; error: string | null; request: number }
+const returnSources = reactive<Record<string,ReturnSourceState>>({})
+let sourceGeneration = 0
+watch([currentId, purchaseId], () => { sourceGeneration++; for (const key of Object.keys(returnSources)) Reflect.deleteProperty(returnSources,key) }, { flush: 'sync' })
+async function loadReturnSources(id: string, query = '', more = false) {
+ if (!currentId.value || !purchase.value) return
+ const valid = captureScope(); const previous = returnSources[id]; const request = ++sourceGeneration; const page = more ? (previous?.page ?? 0)+1 : 1
+ returnSources[id] = { items: more ? previous?.items ?? [] : [], total: previous?.total ?? 0, page, query, pending: true, error: null, request }
+ try {
+  const result = await shopRpc.rpc('purchase_reel_options', { p_shop_id: currentId.value, p_purchase_id: purchase.value.id, p_line_id: id, p_search: query || null, p_page: page })
+  if (!valid() || returnSources[id]?.request !== request) return
+  if (result.error) throw result.error
+  returnSources[id]!.items = more ? [...returnSources[id]!.items,...result.data.items] : result.data.items; returnSources[id]!.total = result.data.total
+ } catch { if (valid() && returnSources[id]?.request === request) returnSources[id]!.error = copy.value.loadError }
+ finally { if (valid() && returnSources[id]?.request === request) returnSources[id]!.pending = false }
+}
+function returnSourceView(id: string) { const state = returnSources[id]; return { options: [{ value: '', label: locale.value === 'ar' ? 'الأقدم من هذا الشراء أولًا' : 'Oldest from this purchase first' }, ...(state?.items ?? []).map(reel => ({ value: reel.id, label: `${reel.barcode} · ${reel.remainingLength}` }))], loading: state?.pending ?? false, error: state?.error ?? null, hasMore: (state?.items.length ?? 0)<(state?.total ?? 0) } }
 function validReturnQuantity(quantity: number, item: PurchaseItem) {
   if (!item.measurement) return Math.round(quantity * 1000) === quantity * 1000
   try { convertMeasurement(String(quantity), item.measurement.baseUnitCode, item.measurement.baseUnitCode, item.measurement.quantityIncrement); return true } catch { return false }
@@ -159,7 +178,7 @@ function validReturnQuantity(quantity: number, item: PurchaseItem) {
 const returnTotal = computed(() => purchase.value?.items.reduce((total, item) => total + Number(returnForm.quantities[item.id] || 0) * Number(item.unitCost), 0) ?? 0)
 async function saveReturn() {
   if (!currentId.value || !purchase.value || pendingAction.value) return
-  const items = purchase.value.items.flatMap(item => { const quantity = Number(returnForm.quantities[item.id] || 0); return quantity > 0 ? [{ vendor_invoice_item_id: item.id, quantity }] : [] })
+  const items = purchase.value.items.flatMap(item => { const quantity = Number(returnForm.quantities[item.id] || 0); return quantity > 0 ? [{ vendor_invoice_item_id: item.id, quantity, ...(returnForm.reelSources[item.id] ? { reel_id: returnForm.reelSources[item.id] } : {}) }] : [] })
   if (!items.length || returnForm.reason.trim().length < 2 || returnTotal.value > Number(purchase.value.payable) || items.some(entry => { const item = purchase.value!.items.find(value => value.id === entry.vendor_invoice_item_id)!; return entry.quantity > Number(item.availableToReturn) || !validReturnQuantity(entry.quantity, item) })) { actionError.value = copy.value.invalidReturn; return }
   const inScope = captureScope()
   pendingAction.value = true; actionError.value = ''; requestId.value ??= crypto.randomUUID()
@@ -192,16 +211,16 @@ const commerceDialogOpen = computed({ get: () => paymentOpen.value || creditOpen
 const unusedCorrectionOpen = ref(false)
 const unusedCorrectionForm = ref<BsCommerceCorrectionForm>({ date: '', reference: '', reason: '' })
 const commerceForm = computed<BsCommerceDocumentForm>({
-  get: () => ({ amount: paymentOpen.value ? paymentForm.amount : creditOpen.value ? creditForm.amount : reversalForm.amount, date: paymentOpen.value ? paymentForm.date : creditOpen.value ? creditForm.date : returnOpen.value ? returnForm.date : reversalForm.date, method: paymentForm.method, reference: paymentOpen.value ? paymentForm.reference : creditOpen.value ? creditForm.reference : returnOpen.value ? returnForm.reference : reversalForm.reference, notes: paymentForm.notes, reason: creditOpen.value ? creditForm.reason : returnOpen.value ? returnForm.reason : reversalForm.reason, quantities: { ...returnForm.quantities } }),
+  get: () => ({ amount: paymentOpen.value ? paymentForm.amount : creditOpen.value ? creditForm.amount : reversalForm.amount, date: paymentOpen.value ? paymentForm.date : creditOpen.value ? creditForm.date : returnOpen.value ? returnForm.date : reversalForm.date, method: paymentForm.method, reference: paymentOpen.value ? paymentForm.reference : creditOpen.value ? creditForm.reference : returnOpen.value ? returnForm.reference : reversalForm.reference, notes: paymentForm.notes, reason: creditOpen.value ? creditForm.reason : returnOpen.value ? returnForm.reason : reversalForm.reason, quantities: { ...returnForm.quantities }, reelSources: { ...returnForm.reelSources } }),
   set: value => {
     if (paymentOpen.value) Object.assign(paymentForm, { amount: value.amount, date: value.date, method: paymentMethods.includes(value.method as PaymentMethod) ? value.method : paymentForm.method, reference: value.reference, notes: value.notes })
     else if (creditOpen.value) Object.assign(creditForm, { amount: value.amount, date: value.date, reason: value.reason, reference: value.reference })
-    else if (returnOpen.value) Object.assign(returnForm, { date: value.date, reason: value.reason, reference: value.reference, quantities: { ...value.quantities } })
+    else if (returnOpen.value) Object.assign(returnForm, { date: value.date, reason: value.reason, reference: value.reference, quantities: { ...value.quantities }, reelSources: { ...value.reelSources } })
     else if (reversalOpen.value) Object.assign(reversalForm, { amount: value.amount, date: value.date, reason: value.reason, reference: value.reference })
   },
 })
 const commerceMethods = computed(() => paymentMethods.map(value => ({ value, label: methodLabel(value) })))
-const commerceCopy = computed<BsCommerceDocumentCopy>(() => ({
+const commerceCopy = computed<BsCommerceDocumentCopy>(() => ({ returnSource: locale.value === 'ar' ? 'البكرة المصدر' : 'Source reel', moreSources: locale.value === 'ar' ? 'بكرات إضافية' : 'More reels',
   back: copy.value.back, loading: copy.value.loading, loadError: copy.value.loadError, retry: copy.value.retry, notFound: copy.value.notFound, party: copy.value.supplier, date: copy.value.date, created: copy.value.date, notes: copy.value.notes, total: copy.value.total, balance: copy.value.payable, discount: '', paid: '', due: '', settlement: copy.value.status,
   lines: copy.value.lines, item: copy.value.product, quantity: copy.value.quantity, price: copy.value.unitCost, available: copy.value.available, payments: copy.value.payments, credits: copy.value.credits, inventory: copy.value.inventory, empty: copy.value.empty, noInventory: copy.value.empty, noParty: copy.value.empty, details: copy.value.invoice, batch: '', open: '', recordPayment: copy.value.recordPayment, recordCredit: copy.value.recordCredit, recordReturn: copy.value.recordReturn, reverse: copy.value.reverse, refund: '', issue: '', issuing: '', edit: '', reprint: '', share: '', amount: copy.value.amount, method: copy.value.method, reference: copy.value.reference, reason: copy.value.reason, save: copy.value.save, cancel: copy.value.cancel, correction: '', correctionLoading: '', correctionError: '', refunded: '', restored: '', correct: '', correctionDialog: '', correctionSubmit: '',
 }))
@@ -214,7 +233,7 @@ const commerceView = computed<BsCommerceDocumentView>(() => {
     detail: { date: value ? displayDate(value.issuedAt) : '', created: '', notes: value?.notes || '—', total: money(Number(value?.totalAmount || 0)), balance: money(Number(value?.payable || 0)), discount: '', paid: '', due: '', settlement: value ? settlementLabel(value.settlementState) : '' },
     showCreated: false, showDiscount: false, showNotes: false, showPaid: false, showDue: false, showAvailable: true, showPayments: true, showCredits: true, inventoryTable: true,
     canPayment: Boolean(actionable && value?.canRecordPayment), canCredit: Boolean(actionable && value?.canRecordCredit), canReturn: Boolean(actionable && value?.canReturnStock && value.items.some(item => Number(item.availableToReturn) > 0)), canIssue: false, issuing: false, editTo: '', receiptTo: '', canShare: false, sharing: false,
-    lines: (value?.items || []).map(item => ({ id: item.id, name: item.productName, description: '', quantity: item.measurement ? `${item.measurement.enteredQuantity} ${item.measurement.packageName || (locale.value === 'ar' ? item.measurement.unitNameAr : item.measurement.unitNameEn)}` : String(item.quantity), price: money(Number(item.measurement?.enteredUnitPrice ?? item.unitCost)), total: money(item.totalCost), discount: '', available: `${item.availableToReturn}${item.measurement ? ' ' + item.measurement.baseUnitCode : ''}`, returnStep: item.measurement ? Number(item.measurement.quantityIncrement) : 0.001, returnUnit: item.measurement?.baseUnitCode, returnMaximum: Number(item.availableToReturn) })),
+    lines: (value?.items || []).map(item => ({ id: item.id, name: item.productName, description: '', quantity: item.measurement ? `${item.measurement.enteredQuantity} ${item.measurement.packageName || (locale.value === 'ar' ? item.measurement.unitNameAr : item.measurement.unitNameEn)}` : String(item.quantity), price: money(Number(item.measurement?.enteredUnitPrice ?? item.unitCost)), total: money(item.totalCost), discount: '', available: `${item.availableToReturn}${item.measurement ? ' ' + item.measurement.baseUnitCode : ''}`, returnStep: item.measurement ? Number(item.measurement.quantityIncrement) : 0.001, returnUnit: item.measurement?.baseUnitCode, returnSources: item.reelTracking ? returnSourceView(item.id) : undefined, returnMaximum: Number(item.availableToReturn) })),
     events: (value?.paymentEvents || []).map(event => ({ id: event.id, title: `${eventLabel(event)} · ${money(event.amount)}`, description: [displayDate(event.eventAt), event.method ? methodLabel(event.method) : '', event.reference].filter(Boolean).join(' · '), reason: event.reason || '', canReverse: Boolean(event.eventType === 'payment' && value?.canReversePayment && Number(event.remainingEffective) > 0), canRefund: false })),
     credits: (value?.credits || []).map(credit => ({ id: credit.id, title: `${money(credit.amount)} · ${credit.purchaseReturnId ? copy.value.returns : copy.value.recordCredit}`, description: [displayDate(credit.effectiveAt), credit.reference].filter(Boolean).join(' · '), reason: credit.reason, canReverse: false, canRefund: false })),
     movements: (value?.receiptMovements || []).map(movement => ({ id: movement.id, date: displayDate(movement.createdAt), name: value?.items.find(item => item.productId === movement.productId)?.productName || '—', quantity: String(movement.quantityChange), cost: money(movement.unitCostSnapshot), batch: '', to: '' })),
@@ -228,5 +247,5 @@ function submitCommerce() { if (paymentOpen.value) return savePayment(); if (cre
 </script>
 
 <template>
-  <BsCommerceDocumentPage v-model:form="commerceForm" v-model:correction-form="unusedCorrectionForm" v-model:dialog-open="commerceDialogOpen" v-model:correction-open="unusedCorrectionOpen" :copy="commerceCopy" :view="commerceView" back-to="/purchases" inventory-to="/inventory" :methods="commerceMethods" :constraints="{ referenceLength: 200, notesLength: 2000, reasonMinimum: 2, reasonMaximum: 1000, amountMinimum: 0.01, amountStep: 0.01, quantityStep: 0.001 }" @retry="refresh()" @payment="openPayment" @credit="openCredit" @return="openReturn" @reverse="reverseCommerceEvent" @submit="submitCommerce"/>
+  <BsCommerceDocumentPage v-model:form="commerceForm" v-model:correction-form="unusedCorrectionForm" v-model:dialog-open="commerceDialogOpen" v-model:correction-open="unusedCorrectionOpen" :copy="commerceCopy" :view="commerceView" back-to="/purchases" inventory-to="/inventory" :methods="commerceMethods" :constraints="{ referenceLength: 200, notesLength: 2000, reasonMinimum: 2, reasonMaximum: 1000, amountMinimum: 0.01, amountStep: 0.01, quantityStep: 0.001 }" @retry="refresh()" @payment="openPayment" @credit="openCredit" @return="openReturn" @reverse="reverseCommerceEvent" @return-source-search="loadReturnSources" @return-source-more="loadReturnSources($event, returnSources[$event]?.query ?? '', true)" @return-source-retry="loadReturnSources($event, returnSources[$event]?.query ?? '')" @submit="submitCommerce"/>
 </template>

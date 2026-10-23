@@ -5,7 +5,7 @@ import { useShopMutation } from './useShopMutation'
 
 /** Explicit read RPC contract. Unknown/new RPCs are commands, never cached as reads. */
 const reads = new Set([
-  'product_measurement_options', 'shop_storefront_builder', 'shop_offers', 'shop_offer_sources', 'pos_catalog_offers', 'quote_pos_sale',
+  'purchase_reel_options', 'inventory_reel_context', 'pos_reel_options', 'product_technical_options', 'product_measurement_options', 'shop_storefront_builder', 'shop_offers', 'shop_offer_sources', 'pos_catalog_offers', 'quote_pos_sale',
   'appointment_access_status', 'appointment_calendar', 'appointment_options', 'barcode_label_data', 'business_currency_settings',
   'cash_shift_dashboard', 'catalog_sales_report', 'commission_assignment_context', 'commission_history', 'customer_access', 'customer_statement',
   'eta_settings', 'get_customer', 'get_location_sale', 'get_location_sale_receipt', 'get_own_pos_receipt', 'list_own_pos_receipts', 'get_purchase', 'get_sale', 'get_sale_tax_snapshot', 'inventory_access',

@@ -91,7 +91,8 @@
     "BsManualPaymentPage": "packages/ui/src/templates/BsManualPaymentPage.vue",
     "BsPaymentReconciliationPage": "packages/ui/src/templates/BsPaymentReconciliationPage.vue",
     "BsStorefrontBuilderPage": "packages/ui/src/templates/BsStorefrontBuilderPage.vue",
-    "BsCatalogOffersPage": "packages/ui/src/templates/BsCatalogOffersPage.vue"
+    "BsCatalogOffersPage": "packages/ui/src/templates/BsCatalogOffersPage.vue",
+    "BsPhysicalStockPage": "packages/ui/src/templates/BsPhysicalStockPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2968,6 +2969,26 @@
       ],
       "verification": "Static validation pending; browser/database tests unrun at user instruction.",
       "purpose": "shop-catalog-offers"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/inventory/reels.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPhysicalStockPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPhysicalStockPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPhysicalStockPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/pages/inventory/reels.vue",
+      "dependencies": [
+        "@building-suit/ui/types/physicalInventoryPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/electrical"
+      ],
+      "verification": "SS-ELEC-303/305/306/308: local schema107 and two-session cashier race PASS; EN desktop/light and AR mobile/dark browser count/history/cut scenarios PASS; native-provider CI and merchant hardware acceptance pending",
+      "purpose": "physical-reel-inventory"
     }
   ],
   "verifiedSharedHeads": [
@@ -3107,6 +3128,7 @@
     "BsManualPaymentPage",
     "BsPaymentReconciliationPage",
     "BsStorefrontBuilderPage",
-    "BsCatalogOffersPage"
+    "BsCatalogOffersPage",
+    "BsPhysicalStockPage"
   ]
 }

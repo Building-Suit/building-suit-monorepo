@@ -12,7 +12,8 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
    if (name === 'shop_permission_access') return { 'products.manage': true }
    if (name === 'list_catalog_categories') return []
    if (name === 'shop_catalog_media' && args.p_action === 'pos') return { items: [product], total: 1, page: 1, pageSize: 30, businessMode: 'mixed' }
-   if (name === 'shop_catalog_media' && args.p_action === 'products') return { supportsMeasurements: true, items: [product], total: 1, page: 1, pageSize: 20 }
+   if (name === 'shop_catalog_media' && args.p_action === 'products') return { supportsTechnicalDetails: true, supportsMeasurements: true, items: [product], total: 1, page: 1, pageSize: 20 }
+   if (name === 'product_technical_options') return { revision: 1, familyId: 'family-1', familyName: 'Cable family', reelTracking: true, trackingLocked: true, reelReturnPolicy: { unopenedResellable: true, cutRequiresManagerApproval: true }, attributes: { cross_section_mm2: '2.5' }, definitions: [{ code: 'cross_section_mm2', nameEn: 'Cross-section', nameAr: 'مساحة المقطع', type: 'number', unit: 'mm²' }] }
    if (name === 'product_measurement_options') return { ...measurement, status: 'active', locked: true }
    if (name === 'pos_checkout_context') return { staff: [{ id: 'member-1', name: 'Cashier' }], customers: [], appointments: [] }
    if (name === 'quote_pos_sale') {
@@ -45,6 +46,9 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
   await expect(dialog.getByRole('combobox', { name: ar ? 'وحدة المخزون وسعر البيع' : 'Stock and sale-price unit', exact: true })).toBeDisabled()
   await expect(dialog.getByLabel(ar ? 'أصغر كمية مسموحة' : 'Smallest allowed quantity', { exact: true })).toHaveValue('0.001')
   await expect(dialog).toContainText('100 m reel')
+  await expect(dialog.getByLabel(ar ? 'عائلة المتغيرات (اختياري)' : 'Variant family (optional)', { exact: true })).toHaveValue('Cable family')
+  await expect(dialog.getByLabel(ar ? 'مساحة المقطع' : 'Cross-section', { exact: true })).toHaveValue('2.5')
+  await expect(dialog.getByRole('checkbox', { name: ar ? 'تتبع البكرات المنفردة' : 'Track individual reels', exact: true })).toBeDisabled()
   await expectNoPageOverflow(page)
   await page.screenshot({ path: test.info().outputPath('measured-settings.png'), fullPage: true })
  })

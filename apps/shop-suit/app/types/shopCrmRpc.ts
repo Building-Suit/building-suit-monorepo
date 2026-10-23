@@ -4,6 +4,12 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      purchase_reel_options: { Args: { p_shop_id: string; p_purchase_id: string; p_line_id: string; p_search?: string | null; p_page?: number }; Returns: { items: { id: string; barcode: string; remainingLength: string }[]; total: number; page: number } }
+      inventory_reel_context: { Args: { p_shop_id: string; p_location_id: string; p_product_id?: string | null; p_search?: string | null; p_page?: number; p_page_size?: number; p_reel_id?: string | null; p_history_page?: number }; Returns: import('./electrical').InventoryReelContext }
+      pos_reel_options: { Args: { p_shop_id: string; p_location_id: string; p_product_id: string; p_search?: string | null; p_page?: number }; Returns: import('./electrical').PosReelOptions }
+      update_inventory_reel: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_reel_id: string; p_revision: number; p_action: 'count' | 'classify' | 'archive'; p_values: Record<string, string | null>; p_reason: string }; Returns: string }
+      product_technical_options: { Args: { p_shop_id: string; p_product_id: string | null }; Returns: import('./electrical').ProductTechnicalOptions }
+      save_product_technical_details: { Args: { p_shop_id: string; p_product_id: string; p_revision: number; p_family_name: string | null; p_attributes: Record<string, string | boolean>; p_reel_tracking: boolean; p_reason: string; p_reel_return_policy?: { unopenedResellable: boolean; cutRequiresManagerApproval: boolean } }; Returns: import('./electrical').ProductTechnicalSnapshot }
       product_measurement_options: { Args: { p_shop_id: string; p_product_id: string }; Returns: import('./measurement').ProductMeasurementOptions }
       configure_product_measurement: { Args: { p_shop_id: string; p_product_id: string; p_unit: string; p_increment: string; p_sale_units: string[]; p_reason: string }; Returns: unknown }
       save_product_packaging: { Args: { p_request_id: string; p_shop_id: string; p_product_id: string; p_package_id: string | null; p_definition: Record<string, string | number | boolean | null> }; Returns: string }

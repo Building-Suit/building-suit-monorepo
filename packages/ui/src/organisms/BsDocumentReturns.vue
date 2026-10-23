@@ -37,6 +37,8 @@ function disposition(id: string, value: unknown) { form.value = { ...form.value,
     <BsText v-if="view.locked" as="p" role="status">{{ copy.uncertain }}</BsText>
     <BsStack v-for="line in view.lines" :key="line.id" gap="sm">
       <BsText as="p" emphasis="semibold">{{ line.name }} · {{ copy.remaining }}: {{ line.remaining }}</BsText>
+      <BsCheckbox v-if="line.approvalRequired" :model-value="form.cutApprovals?.[line.id] ?? false" :label="copy.approveCut || copy.confirm" :disabled="view.locked || !line.canApprove" @update:model-value="form = { ...form, cutApprovals: { ...form.cutApprovals, [line.id]: Boolean($event) } }" />
+      <BsText v-if="line.approvalRequired && !line.canApprove" as="p" size="sm" tone="muted">{{ copy.approvalHelp }}</BsText>
       <BsField v-slot="field" :label="copy.quantity"><BsInput :id="field.id" :model-value="form.quantities[line.id] ?? 0" :disabled="view.locked" type="number" min="0" :max="line.remaining" :step="line.quantityStep ?? 0.01" @update:model-value="quantity(line.id, $event)" /></BsField>
       <BsField v-if="!line.service" v-slot="field" :label="copy.disposition"><BsSelect :input-id="field.id" :label="copy.disposition" :disabled="view.locked" :model-value="form.dispositions[line.id] ?? 'resellable'" :options="[{ value: 'resellable', label: copy.resellable }, { value: 'damaged', label: copy.damaged }]" option-label="label" option-value="value" @update:model-value="disposition(line.id, $event)" /></BsField>
       <BsText v-else as="p" size="sm" tone="muted">{{ copy.service }}</BsText>

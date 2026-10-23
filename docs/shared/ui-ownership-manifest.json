@@ -691,6 +691,16 @@
       "adapterBoundary": "Shop owns Team/Multi eligibility, private draft and explicit owner publishing, public disclosure, tenant-scoped offers and atomic server price matching. Shared UI owns the layout/media editors, bundle worklist and public/POS offer strip. Shared UX owns bounded raster processing and record/dialog lifecycle. Receipt snapshots retain matched offer names.",
       "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
       "migrationStatus": "implemented-source; browser/database tests deferred at user instruction"
+    },
+    {
+      "family": "physical-stock",
+      "owner": "packages/ui",
+      "components": [
+        "BsPhysicalStockPage"
+      ],
+      "adapterBoundary": "Product-supplied physical stock rows, server pagination, permissions, immutable movement projections and semantic count/classify/archive commands. Shared presentation owns fields, table, history and record dialog.",
+      "task": "SS-ELECTRICAL-001",
+      "migrationStatus": "implemented-local: database107-migration replay, actual cashier race, focused units and six EN/AR synthetic browser scenarios pass; provider CI and merchant acceptance pending"
     }
   ]
 }

@@ -214,6 +214,7 @@ function readableError(message?: string) {
   if (message?.includes('PAYMENT_OVERPAYMENT_REJECTED')) return t('payments.overpayment')
   if (message?.includes('PAYMENT_ADJUSTMENT_EXCEEDS_EFFECTIVE_AMOUNT')) return t('payments.adjustmentExceeded')
   if (message?.includes('CUSTOMERLESS_PAYMENT_ADJUSTMENT_DEFERRED')) return t('payments.customerlessDeferred')
+  if (message?.includes('REEL_RETURN_REQUIRES_LINE_WORKFLOW')) return locale.value === 'ar' ? 'استخدم إرجاع الأصناف لمراجعة حالة الكابل وموافقة المدير.' : 'Use item returns to review cable condition and manager approval.'
   if (message?.includes('SALE_ALREADY_CORRECTED')) return t('saleCorrections.alreadyCorrected')
   if (message?.includes('SALE_CORRECTION_REQUEST_CONFLICT')) return t('saleCorrections.requestConflict')
   if (message?.includes('ACCOUNTING_PERIOD_CLOSED')) return t('saleCorrections.periodClosed')

@@ -44,7 +44,7 @@ type SaleCatalog = {
   services: CatalogService[]
   customers: CatalogCustomer[]
 }
-type DraftLine = { unitSelection?: string; key: string; itemType: 'product' | 'service'; sourceId: string; quantity: number }
+type DraftLine = { allowSplit?: boolean; cuttingLoss?: string; unitSelection?: string; key: string; itemType: 'product' | 'service'; sourceId: string; quantity: number }
 type SaleDetail = { id: string; status: SaleStatus; client_id: string | null; due_date: string | null; notes: string | null; canManage: boolean; lines: Array<{ measurement_snapshot?: MeasurementSnapshot | null; item_type: 'product' | 'service'; product_id: string | null; service_id: string | null; quantity: number }> }
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
 
@@ -169,7 +169,7 @@ function salesMeasurementView(line: DraftLine) {
   let equivalent: string
   try { equivalent = `${measuredBaseQuantity(measured)} ${unitLabel(m.baseUnitCode)}` }
   catch { equivalent = locale.value === 'ar' ? 'راجع الكمية ووحدة البيع.' : 'Review the quantity and sale unit.' }
-  return { quantityStep: cartQuantityStep(measured), baseEquivalent: equivalent, unitChoices: [...m.saleUnits.map(unit => ({ value: `unit:${unit}`, label: unitLabel(unit) })), ...m.packages.filter(pack => pack.canSell).map(pack => ({ value: `package:${pack.id}`, label: `${pack.name} (${pack.baseQuantity} ${unitLabel(m.baseUnitCode)})` }))] }
+  return { physical: m.reelTracking ? { unit: unitLabel(m.baseUnitCode), canSplit: !line.unitSelection?.startsWith('package:') } : undefined, quantityStep: cartQuantityStep(measured), baseEquivalent: equivalent, unitChoices: [...m.saleUnits.map(unit => ({ value: `unit:${unit}`, label: unitLabel(unit) })), ...m.packages.filter(pack => pack.canSell).map(pack => ({ value: `package:${pack.id}`, label: `${pack.name} (${pack.baseQuantity} ${unitLabel(m.baseUnitCode)})` }))] }
 }
 function lineAmounts(line: DraftLine) {
   const item = selectedItem(line)
@@ -232,6 +232,7 @@ async function openEdit(saleId: string) {
     itemType: line.item_type,
     sourceId: line.product_id ?? line.service_id ?? '',
     quantity: Number(line.measurement_snapshot?.enteredQuantity ?? line.quantity),
+    allowSplit: line.measurement_snapshot?.allowSplit, cuttingLoss: line.measurement_snapshot?.cuttingLoss,
     unitSelection: line.measurement_snapshot ? (line.measurement_snapshot.packageId ? `package:${line.measurement_snapshot.packageId}` : `unit:${line.measurement_snapshot.enteredUnitCode}`) : undefined,
   }))
   draftRequestId.value = null
@@ -401,7 +402,7 @@ useShopRealtime('sales', () => editorDirty.value)
 
 const salesForm = computed<BsSalesDraftForm>({
   get: () => ({ customerId: customerId.value, dueDate: dueDate.value, notes: notes.value, paymentMethod: paymentMethod.value, paymentReference: paymentReference.value, lines: lines.value }),
-  set: value => { customerId.value = value.customerId; dueDate.value = value.dueDate; notes.value = value.notes; paymentReference.value = value.paymentReference; if (['cash','bank_transfer','card','wallet','cheque','other'].includes(value.paymentMethod)) paymentMethod.value = value.paymentMethod as PaymentMethod; lines.value = value.lines.map(line => { const old = lines.value.find(entry => entry.key === line.key); const next: DraftLine = { ...line, itemType: line.itemType === 'product' ? 'product' : 'service' }; if (old?.sourceId !== next.sourceId) { const item = lineCatalog(next).find(item => item.id === next.sourceId); next.unitSelection = item && 'measurement' in item && item.measurement ? `unit:${item.measurement.baseUnitCode}` : undefined } return next }) },
+  set: value => { customerId.value = value.customerId; dueDate.value = value.dueDate; notes.value = value.notes; paymentReference.value = value.paymentReference; if (['cash','bank_transfer','card','wallet','cheque','other'].includes(value.paymentMethod)) paymentMethod.value = value.paymentMethod as PaymentMethod; lines.value = value.lines.map(line => { const old = lines.value.find(entry => entry.key === line.key); const next: DraftLine = { ...line, itemType: line.itemType === 'product' ? 'product' : 'service' }; if (old?.sourceId !== next.sourceId) { const item = lineCatalog(next).find(item => item.id === next.sourceId); next.allowSplit = false; next.cuttingLoss = '0'; next.unitSelection = item && 'measurement' in item && item.measurement ? `unit:${item.measurement.baseUnitCode}` : undefined } return next }) },
 })
 const salesStatus = computed<string>({ get: () => statusFilter.value, set: value => { if (value === 'all' || value === 'draft' || value === 'issued') statusFilter.value = value } })
 const salesRows = computed<BsSalesDirectoryRow[]>(() => (salePage.value?.items ?? []).map(sale => ({ id: sale.id, number: sale.invoice_number || t('sales.draftNumber'), lineCount: `${sale.line_count} ${t('sales.lines')}`, customer: sale.client_name_snapshot || '—', status: t(`sales.${sale.status}`), statusTone: sale.status === 'issued' ? 'success' : 'neutral', total: money(Number(sale.total_amount), sale.status === 'draft' ? businessCurrency.value : sale.currency || businessCurrency.value), date: formatDate(sale.issued_at || sale.created_at), editable: sale.status === 'draft' && !!salePage.value?.canManage, href: `/sales/${sale.id}` })))
@@ -409,6 +410,9 @@ const salesLines = computed<BsSalesLineView[]>(() => lines.value.map(line => ({ 
 const salesView = computed<BsSalesDirectoryView>(() => ({ available: !!current.value, loadingContext: shopLoading.value, denied: !!salePage.value?.permissionDenied, canManage: !!salePage.value?.canManage, canIssue: !!salePage.value?.canIssue, canFastPay: !!salePage.value?.canManage && !!salePage.value.canIssue && paymentAccess.value.can_receive && !taxPending.value && !taxError.value, loading: pending.value, error: error.value ? t('sales.loadError') : '', total: salePage.value?.total ?? 0, pageSize, catalogLoading: catalogPending.value, catalogError: !!catalogError.value, editing: !!editingId.value, saving: saving.value, issuing: issuing.value, errorMessage: editorError.value || (taxError.value ? (locale.value === 'ar' ? 'تعذر تأكيد حساب الضريبة. حاول تاني.' : 'Unable to confirm tax calculation. Retry.') : ''), dirty: editorDirty.value, locked: !!fastPayAttempt.value, previewTotal: money(previewTotal.value) }))
 function updateLineType(index: number, value: string) { const line = lines.value[index]; if (!line || (value !== 'product' && value !== 'service') || !availableLineTypes.value.includes(value)) return; line.itemType = value; changeLineType(line) }
 const salesCopy = computed<BsSalesDirectoryCopy>(() => ({
+  physicalSplit: locale.value === 'ar' ? 'السماح بقطع منفصلة' : 'Allow separate pieces',
+  physicalLoss: locale.value === 'ar' ? 'فاقد القص' : 'Cutting loss',
+  physicalLossHelp: locale.value === 'ar' ? 'فاقد من المخزون لا يُحتسب على العميل.' : 'Stock consumed without charging the customer.',
   unit: locale.value === 'ar' ? 'وحدة البيع' : 'Sale unit',
   addLine: t('sales.addLine'),
   allStatuses: t('sales.allStatuses'),

@@ -388,7 +388,9 @@
     "./types/storefrontBuilderPresentation": "./src/types/storefrontBuilderPresentation.ts",
     "./templates/BsStorefrontBuilderPage": "./src/templates/BsStorefrontBuilderPage.vue",
     "./templates/BsCatalogOffersPage": "./src/templates/BsCatalogOffersPage.vue",
-    "./molecules/BsOfferStrip": "./src/molecules/BsOfferStrip.vue"
+    "./molecules/BsOfferStrip": "./src/molecules/BsOfferStrip.vue",
+    "./templates/BsPhysicalStockPage": "./src/templates/BsPhysicalStockPage.vue",
+    "./types/physicalInventoryPresentation": "./src/types/physicalInventoryPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

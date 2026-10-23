@@ -1,0 +1,23 @@
+{
+  "id": "ss-electrical-reels-verification-20261022",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/database",
+    "docs/shared",
+    "packages/ui",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "release-changes/items.json",
+    ".github/workflows/shop-measurement-disposable.yml"
+  ],
+  "reason": "Maintain typed optional shared reel presentation, template ownership/catalogue records and disposable physical-stock regression tooling. Other products retain their existing contracts; no additional Suit is activated."
+}

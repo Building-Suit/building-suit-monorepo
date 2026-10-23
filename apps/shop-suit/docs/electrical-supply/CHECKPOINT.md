@@ -1,46 +1,23 @@
-# Milestone
+# Electrical supply implementation checkpoint
 
-M0 readiness + M1 measurement foundation, SS-ELECTRICAL-001.
+The owner requires continuation through the full electrical-store scope. This file records an implementation checkpoint, not permission to stop or a claim that Shop Suit is commercially ready.
 
-# Status
+## Active review stack
 
-Partial implementation, tested internal foundation. Neither M0 nor M1 is complete. Live reconciliation and full Supabase/provider qualification are blocked.
+- Root: `codex/shop-suit/measurement-foundation`, draft PR441 into `stg`, committed foundation `c2bd65d9`. Its uncommitted schema-dump experiment remains excluded from children.
+- Measured retail: `codex/shop-suit/measured-retail-operations`, draft PR445 into the foundation. Published `a15ce639` includes exact precision, package/unit receiving and selling, original-cost FIFO, counts/returns/receipts/CSV/ETA adapters, and repaired regression fixtures. Exact-head CI remains authoritative.
+- Current local feature: `codex/shop-suit/reels-and-electrical-catalog`, initially based on published `bc4a0b4b`. It merged published parent `a15ce639` without rewriting history at `78e4a8a4`. Technical attributes/SKU families, physical reels, continuous/split allocation, cutting loss, remnants, counts/scrap/archive, frozen return approval policy, source receipts and supplier source withdrawal are implemented locally. All six expanded synthetic EN/AR browser scenarios pass.
 
-# Completed tasks
+## Evidence and limits
 
-SS-ELEC-002/003/004 implemented: complete55-task ledger, architecture/decisions and bilingual release draft. SS-ELEC-101/102/104/106/107 have scoped passing tests; operational acceptance remains pending. See TASKS.md and VERIFICATION.md for exact limits.
+The full107-migration disposable schema replay passes the measured and physical merchant journeys, nine included legacy SQL suites, and real two-session configuration/stock and reel/cashier races. These are explicit provider stand-ins. The parent measured-retail CI previously passed on real Supabase; the new reel journey/race is now included in that maintained real-backend CI job and still needs its exact-head result. Focused measurement/reel/cart/receipt tests pass17 cases. Builds, typechecks, lint and browser results are recorded in VERIFICATION.md with their actual scope.
 
-# In-progress tasks
+The canonical TASKS.md remains the status authority. E3 is still IN_PROGRESS during current-head qualification. M4 trade pricing, quotations, orders, reservations, deposits, supplier orders/deliveries, later E5 electrical-store tools and E6 qualification remain open. Inherited full-unit/browser failures must be repaired and retested before commercial readiness.
 
-SS-ELEC-103: precision dependency audit completed; coherent operational migration not enabled. SS-ELEC-000: deployed-history/provider audit blocked. SS-ELEC-001: live release reconciliation blocked.
+## External gates
 
-# Remaining tasks
+Production changelog recovery, deployment evidence, actual merchant acceptance, native-speaker review and physical scanner/scale/printer qualification remain separate gates. No production release, hardware compatibility or merchant approval is fabricated. No hosted business data has been reset and no review branch has been merged or deployed.
 
-SS-ELEC-105 and operational E2, electrical E3, wholesale E4, advanced E5 and production E6 remain NOT_STARTED, with explicit dependencies/acceptance in TASKS.md. Nothing claims the central measured-POS merchant journey is available.
+## Continue
 
-# Changes made
-
-Forward migration20261022185512; sealed23-unit registry; NUMERIC/BigInt exact converters; authorized prepared product configuration and resolver RPCs; immutable measurement audit; legacy/service compatibility; persistence guards; generated types; meaningful unit/SQL/upgrade/race checks and reproducible schema harness. Existing Shop/FIFO/bundle authorities retained.
-
-# Validation
-
-VERIFICATION.md records exact commands and pass/fail/block results, including54 reproduced parent unit failures, inherited lint errors, retained supplier SQL failure and Supabase image storage blocker. Core conversion/schema/security/upgrade/race, typecheck/build/check and release protocol tests pass within their stated scope.
-
-# Changelog
-
-No live entry relabeled.20 stale upcoming items are absent from current source net candidate, but production catalog503/publisher failure prevent authoritative recovery. Four newer net public items remain staging-only. Electrical copy is draft; internal release fragments classify this preparatory work and do not activate public claims.
-
-# Blockers
-
-Production release catalog/config/log access; real Supabase image storage; original regression failures; pending operational precision/snapshots/UI; real-provider/device/merchant evidence. No destructive hosted trial or permission bypass.
-
-# Next implementation step
-
-Restore disposable Supabase capacity and close foundational regression gates, then SS-ELEC-103/105: migrate all dependent quantity/snapshot contracts coherently and extend the existing product editor before activating measured purchasing/POS. Retain legacy compatibility and prepared guards until that complete path is verified.
-
-# Review checkpoint
-
-Draft [PR441](https://github.com/Building-Suit/building-suit-monorepo/pull/441), source commit `ce62100b`; targets stg as the Shop root. No merge/deployment performed.
-
-
-Active child: codex/shop-suit/measured-retail-operations at committed parent c2bd65d9, targeting the open foundation PR441. Parent's uncommitted schema-dump tooling is excluded. Current child adds measured product/package editing, purchasing, POS, sales, inventory/counts, receipt/return presentation, CSV and explicit ETA unit mapping. Physical reel identity/cuts/reservations, trade quotes/orders/deposits and later tasks remain unimplemented. Continue the canonical task ledger; do not treat this checkpoint as sellable readiness.
+Publish the verified reel checkpoint and monitor its exact-head CI. Repair the51 inherited Shop unit failures, unnecessary empty POS receipt state in public SSR, and relevant browser gates in the next Shop qualification feature; then continue trade workflows. Continue implementing every remaining task in TASKS.md, preserving financial, tenant/location, subscription, closed-period and idempotency invariants. Keep the release-readiness decision blocked until the required software and external evidence exist.

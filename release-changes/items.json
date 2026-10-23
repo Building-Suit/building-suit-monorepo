@@ -2145,6 +2145,77 @@
     ]
   },
   {
+    "id": "ss-electrical-reels-catalog-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui"
+    ],
+    "reason": "Track individual cable reels and exact cuts while preserving acquisition cost, stock balance, immutable receipts and controlled cable returns. Add typed electrical attributes and independently stocked SKU families.",
+    "notes": {
+      "title": {
+        "en": "Track cable reels and electrical specifications",
+        "ar": "تتبع بكرات الكابلات والمواصفات الكهربائية"
+      },
+      "summary": {
+        "en": "Record individual reels, sell continuous cable or explicit separate pieces, and maintain electrical specifications for each SKU.",
+        "ar": "سجل البكرات الفردية وبع الكابلات كقطع متصلة أو منفصلة باختيار واضح، واحتفظ بالمواصفات الكهربائية لكل صنف."
+      },
+      "details": {
+        "en": "Cuts record source barcodes, requested length and cutting loss. Reels support counts, remnant pricing, damage, scrap and history; eligible cable returns create separate pieces under the sale’s frozen policy.",
+        "ar": "تسجل عمليات القص باركود المصدر والطول المطلوب وفاقد القص. تدعم البكرات الجرد وتسعير البواقي والتلف والخردة والسجل، وتنشئ مرتجعات الكابلات المؤهلة قطعًا منفصلة وفق سياسة البيع المحفوظة."
+      }
+    },
+    "sources": [
+      "ss-electrical-reels-catalog-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261022202543_electrical_catalog_and_reels.sql",
+        "contains": "create function shop_private.plan_reel_sale"
+      },
+      {
+        "path": "apps/shop-suit/app/pages/inventory/reels.vue",
+        "contains": "<BsPhysicalStockPage"
+      },
+      {
+        "path": "packages/ui/src/organisms/BsPointOfSaleCart.vue",
+        "contains": "emit('physicalLoss', line.id, String($event))"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-reels-verification-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/database",
+      "docs/shared",
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "release-changes/items.json",
+      ".github/workflows/shop-measurement-disposable.yml"
+    ],
+    "reason": "Maintain typed optional shared reel presentation, template ownership/catalogue records and disposable physical-stock regression tooling. Other products retain their existing contracts; no additional Suit is activated.",
+    "sources": [
+      "ss-electrical-reels-verification-20261022"
+    ]
+  },
+  {
     "id": "ss-measured-decimal-regression-20261022",
     "task": "SS-ELECTRICAL-001",
     "suits": [
@@ -2183,6 +2254,48 @@
     "reason": "Remove unused fixture setup and update stale landing source-contract assertions to follow the extracted journey organism and current bilingual receipt story; runtime behavior is unchanged.",
     "sources": [
       "ss-electrical-landing-fixture-lint-20261022"
+    ]
+  },
+  {
+    "id": "ss-reel-catalog-entrypoint-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/supabase/migrations/20261023195653_catalog_media_entrypoint_authority.sql",
+      "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+      "tooling/database/shop-measurement-schema-disposable.mjs",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md",
+      "apps/shop-suit/supabase/tests/fixtures/measurement_provider_standins.sql"
+    ],
+    "reason": "Repair execution delegation inside the unpublished reel feature. The existing public catalog entry retains its ACL and delegates under its owner to private adapters whose tenant/actor checks remain authoritative. Preserve the authenticated denial for direct private adapter execution and add existing media/upload suites to local qualification.",
+    "sources": [
+      "ss-reel-catalog-entrypoint-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-reel-template-export-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/package.json",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md"
+    ],
+    "reason": "Retain the canonical physical-stock template export and remove its unused duplicate suffix alias, restoring the one-to-one governed source export invariant. No consumer imports the duplicate alias and no rendered behavior changes.",
+    "sources": [
+      "ss-reel-template-export-qualification-20261023"
     ]
   },
   {
