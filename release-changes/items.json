@@ -2112,8 +2112,7 @@
     "id": "shared-sign-in-label-hydration-20261022",
     "task": "SS-ELECTRICAL-001",
     "suits": [
-      "shop-suit",
-      "ledger-suit"
+      "shop-suit"
     ],
     "classification": "patch",
     "disposition": "public",
@@ -2297,6 +2296,28 @@
     "reason": "Retain the canonical physical-stock template export and remove its unused duplicate suffix alias, restoring the one-to-one governed source export invariant. No consumer imports the duplicate alias and no rendered behavior changes.",
     "sources": [
       "ss-reel-template-export-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-signin-draft-public-scope-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsSignInPage.vue",
+      "release-changes/items.json"
+    ],
+    "reason": "Correct the new, unaccepted public sign-in fragment in draft PR445 to Shop only. The real SAS/PostgREST fixture has no public Ledger registration/baseline for this change; shared consumers remain internal provenance. No protected accepted fragment, product registry, production version or release history changes.",
+    "sources": [
+      "ss-signin-draft-public-scope-20261023"
     ]
   }
 ]
