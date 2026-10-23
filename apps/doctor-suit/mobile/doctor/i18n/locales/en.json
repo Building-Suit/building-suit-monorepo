@@ -389,5 +389,15 @@
     "discardTitle": "Discard local draft?",
     "discardBody": "Discard unsaved edits and load the current server revision. This does not acknowledge a previous request.",
     "discard": "Discard and reload"
+  },
+  "prescriptionReview": {
+    "title": "Confirm synthetic finalization",
+    "description": "Confirm the reviewed synthetic version {version}. Professional signing and live prescribing remain unavailable.",
+    "stale": "The record or access changed. Close this confirmation and review the current server version.",
+    "expired": "This review expired. Close the confirmation and review the current draft again.",
+    "denied": "Current access does not permit this synthetic action.",
+    "unknown": "The outcome is unknown. Refresh the server record before another action; this request will not be replayed.",
+    "acknowledged": "The server acknowledged synthetic finalization.",
+    "invalid": "Check the entered fields and required note or reason. Clinical values will not be inferred."
   }
 }

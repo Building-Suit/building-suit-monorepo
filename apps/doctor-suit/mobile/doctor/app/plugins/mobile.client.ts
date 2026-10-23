@@ -1,3 +1,4 @@
+import {createNativePrescriptionReview,nativePrescriptionReviewState} from '../utils/nativePrescriptionReview'
 import {createNativeEncounter,nativeEncounterState} from '../utils/nativeEncounter'
 import {createNativeEncounterRepository} from '../utils/nativeEncounterRepository'
 import {createNativePatients,nativePatientsState} from '../utils/nativePatients'
@@ -28,6 +29,9 @@ export default defineNuxtPlugin(async app=>{
   const encounters=createNativeEncounter(encounterRepository,()=>auth.identity()&&context.state.phase==='ready'?context.state.current?.context??null:null,reactive(nativeEncounterState()))
   context.registerClear(encounters.clear)
   app.provide('doctorNativeEncounter',encounters)
+  const prescriptionReview=createNativePrescriptionReview(encounterRepository,()=>auth.identity()&&context.state.phase==='ready'?context.state.current?.context??null:null,()=>encounters.state.detail,encounters.observe,()=>{void context.clear()},encounters.dirty,{state:reactive(nativePrescriptionReviewState()),historyPage:()=>encounters.state.historyPage})
+  context.registerClear(prescriptionReview.clear)
+  app.provide('doctorNativePrescriptionReview',prescriptionReview)
   const shell:ReturnType<typeof createDoctorMobileShell>=createDoctorMobileShell({identity:auth.identity,selection:context.selection,load:async(_route,selection,signal)=>{const choice=context.state.current,identity=auth.identity();if(!repository||!choice||!identity||nativeContextId(choice.context)!==nativeContextId(selection))throw new Error('Unavailable');return(await repository.resolve(choice,identity,signal)).context}},state)
   app.provide('doctorNativeSession',auth);app.provide('doctorNativeAvailability',readiness)
   let admission=0,disposed=false,active=true,monitor:ReturnType<typeof setTimeout>|undefined,expiry:ReturnType<typeof setTimeout>|undefined
@@ -38,7 +42,7 @@ export default defineNuxtPlugin(async app=>{
    const delay=Math.max(1000,Math.min(30000,(auth.expiresAt()??Date.now())-Date.now()-15000))
    // A slow request cannot extend the current view past known token expiry.
    expiry=setTimeout(()=>{auth.lock();void admit()},Math.max(0,(auth.expiresAt()??Date.now())-Date.now()-1000))
-   monitor=setTimeout(()=>{monitor=undefined;void auth.revalidate().then(async ready=>{if(ready)await context.refresh();else await context.clear()}).finally(schedule)},delay)
+   monitor=setTimeout(()=>{monitor=undefined;void auth.revalidate().then(async ready=>{if(ready){await context.refresh();if(context.state.phase==='ready'&&encounters.state.outcome!=='submitting')await prescriptionReview.revalidate()}else await context.clear()}).finally(schedule)},delay)
   }
   watch(()=>[auth.state.phase,auth.state.revision],schedule)
   async function admit(){
