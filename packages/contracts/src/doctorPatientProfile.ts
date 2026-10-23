@@ -1,5 +1,5 @@
-const doctorUuid = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
 import { doctorPatientRow,type DoctorPatientRow } from './doctorPatients.ts'
+const doctorUuid = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
 export interface DoctorPatientActivity { id: number; type: string; version: number; actorId: string; actorLabel: string; locationId: string; locationName: string; happenedAt: string }
 export interface DoctorPatientProfile { patient: DoctorPatientRow; activity: DoctorPatientActivity[]; activityTotal: number; source: { locationId: string; locationName: string; actorLabel: string }; documentsRead: boolean; documentsWrite: boolean }
 export interface DoctorDocumentVersion { id: string; documentId: string; revision: number; filename: string; mime: 'application/pdf' | 'image/png' | 'image/jpeg'; size: number; uploadedBy: string; uploaderLabel: string; uploadedAt: string; locationId: string; locationName: string; timezone: string; provenance: 'uploaded_unreviewed' }

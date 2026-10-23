@@ -1,6 +1,6 @@
 export const doctorMobileContractVersion = 1 as const
-export const doctorMobileRoutes = ['/workspace', '/schedule', '/account'] as const
-export type DoctorMobileRoute = typeof doctorMobileRoutes[number]
+export const doctorMobileRoutes = ['/workspace', '/schedule', '/account', '/patients'] as const
+export type DoctorMobileRoute = typeof doctorMobileRoutes[number] | `/patients/${string}`
 export interface DoctorMobileIdentity { userId: string; sessionId: string; environment: 'local' }
 export interface DoctorMobileSelection {doctorId:string;practiceId:string;locationId:string}
 export interface DoctorMobileContext extends DoctorMobileIdentity {

@@ -1,21 +1,25 @@
-import type {DoctorMobileContext, DoctorPatientDirectory, DoctorPatientProfile, DoctorPatientQuery} from '@building-suit/contracts'
+import type {DoctorMobileContext, DoctorPatientDirectory, DoctorPatientProfile, DoctorPatientQuery, DoctorDocumentDirectory} from '@building-suit/contracts'
 export interface NativePatientsPort {
   directory(context: DoctorMobileContext, query: DoctorPatientQuery, signal: AbortSignal): Promise<DoctorPatientDirectory>
   profile(context: DoctorMobileContext, patientId: string, signal: AbortSignal): Promise<DoctorPatientProfile>
+  documents?(context: DoctorMobileContext, patientId: string, signal: AbortSignal): Promise<DoctorDocumentDirectory>
+  download?(): Promise<never>
 }
 export interface NativePatientsState {
   phase: 'idle' | 'loading' | 'ready' | 'denied' | 'error'
   directory: DoctorPatientDirectory | null
   profile: DoctorPatientProfile | null
+  documents: DoctorDocumentDirectory | null
+  documentError: 'denied' | 'error' | null
 }
-export const nativePatientsState = (): NativePatientsState => ({phase: 'idle', directory: null, profile: null})
+export const nativePatientsState = (): NativePatientsState => ({phase: 'idle', directory: null, profile: null, documents: null, documentError: null})
 export const nativePatientScopeKey = (context: DoctorMobileContext | null) => context ? JSON.stringify(['doctor-suit', context.environment, context.portal, context.userId, context.sessionId, context.doctorId, context.practiceId, context.locationId, context.grantsVersion, context.locationVersion, [...context.capabilities].sort()]) : null
 /** Online-only read state. No chart persistence, service worker or automatic retry. */
 export function createNativePatients(port: NativePatientsPort | null, context: () => DoctorMobileContext | null, state = nativePatientsState()) {
   let generation = 0, controller = new AbortController()
   function clear() {
     generation++; controller.abort(); controller = new AbortController()
-    state.directory = null; state.profile = null; state.phase = 'idle'
+    state.directory = null; state.profile = null; state.documents = null; state.documentError = null; state.phase = 'idle'
   }
   async function read(query: DoctorPatientQuery | string): Promise<boolean> {
     clear()
@@ -28,7 +32,19 @@ export function createNativePatients(port: NativePatientsPort | null, context: (
     try {
       const result = typeof query === 'string' ? await port.profile(selected, query, signal) : await port.directory(selected, {...query}, signal)
       if (revision !== generation || signal.aborted || nativePatientScopeKey(context()) !== key) return false
-      if (typeof query === 'string') state.profile = result as DoctorPatientProfile
+      if (typeof query === 'string') {
+        state.profile = result as DoctorPatientProfile
+        if (state.profile.documentsRead && selected.capabilities.includes('documents.read') && port.documents) {
+          try {
+            const documents = await port.documents(selected, query, signal)
+            if (revision !== generation || signal.aborted || nativePatientScopeKey(context()) !== key) return false
+            state.documents = documents
+          } catch (error) {
+            if (revision !== generation || signal.aborted || nativePatientScopeKey(context()) !== key) return false
+            state.documentError = error && typeof error === 'object' && 'code' in error && error.code === '42501' ? 'denied' : 'error'
+          }
+        }
+      }
       else state.directory = result as DoctorPatientDirectory
       state.phase = 'ready'; return true
     } catch (error) {

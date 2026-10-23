@@ -15,7 +15,7 @@ async function select(_key:string,id:string|null){
  }
 }
 
-const groups=computed(()=>[{key:'doctor',label:t('product.name'),links:[{to:'/workspace',label:t('nav.workspace'),icon:'dashboard'},{to:'/schedule',label:t('nav.schedule'),icon:'calendar'},{to:'/account',label:t('nav.account'),icon:'user'}]}])
+const groups=computed(()=>[{key:'doctor',label:t('product.name'),links:[{to:'/workspace',label:t('nav.workspace'),icon:'dashboard'},...(scope.value?.context.capabilities.includes('patients.read')?[{to:'/patients',label:t('nav.patients'),icon:'user'}]:[]),{to:'/schedule',label:t('nav.schedule'),icon:'calendar'},{to:'/account',label:t('nav.account'),icon:'user'}]}])
 const labels=computed(()=>({open:ui('open'),close:ui('close'),navigation:ui('navigation'),dashboard:t('nav.workspace')}))
 </script>
 <template><BsWorkspaceShell home-path="/workspace" :product-name="t('product.name')" :groups="groups" :context="scopeText" :header-scopes="scopes" :labels="labels" :mobile-links="groups[0]!.links" :logo="{kind:'product',assetPrefix:'doctor-suit',initials:'D'}" @scope="select"><slot/></BsWorkspaceShell></template>
