@@ -45,5 +45,13 @@
     "54 inherited Shop failures still block full CI."
   ],
   "execution_scope": "Doctor application/provider and Android runtime CI-only; required root/shared units retain existing isolated Shop receipt browser cases locally.",
-  "synced_parent_sha": "d993108969ea5d58ad4f0fcf3fac0a2e47694f28"
+  "synced_parent_sha": "d993108969ea5d58ad4f0fcf3fac0a2e47694f28",
+  "native_build_followup": {
+    "run": 40024324977,
+    "source": "4b537e2cd240856c4166a1cbf3b6f19598c19db5",
+    "app_java_and_test_apk": "pass",
+    "overall": "fail in third-party plugin instrumentation",
+    "fix": "explicit :app:assembleDebug and :app:assembleDebugAndroidTest; Doctor checks/cases unchanged",
+    "runtime": "requires fresh CI"
+  }
 }
