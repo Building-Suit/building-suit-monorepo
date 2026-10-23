@@ -93,6 +93,14 @@ Parent `a15ce639` real Supabase CI passes measured-retail, payments, returns, ta
 
 Final reel source checkpoint `78e4a8a4` merges published parent `a15ce639` without history rewriting. The merged full107-migration replay passes nine included legacy SQL suites (including website catalogue) and both real-session races. Full Shop unit execution is412/463: all51 failure names match the previous54 after the three repaired landing tests are removed; no new failure name is introduced. Shop/Ledger/Doctor typechecks, Shop/docs production builds, changed-source lint, workspace ownership checks and release provenance/evidence checking pass locally. Exact native Supabase reel CI is pending publication. All17 focused quantity/reel/receipt tests and6 synthetic EN/AR browser scenarios pass in their recorded scope.
 
+### Catalog entry-point qualification correction
+
+PR450’s real measured-retail/reel SQL and cashier-race job passed at50f5b582. Its media/accounts jobs failed. Expanding the local SQL matrix reproduced `permission denied for function catalog_media`: the new private adapter correctly revoked API-role execution, while the public SQL wrapper still ran as its caller. Forward migration20261023195653 makes that existing public entry a safe-search-path definer, preserving its ACL and all delegated tenant/actor/plan/media checks; direct API execution of the private adapter remains denied. Both existing media and image-upload suites now join the default local matrix. Exact rerun results follow at the corrected checkpoint.
+
+Corrected local execution passes all108 migrations, the measured and physical merchant journeys, eleven included legacy suites (including both media/upload cases), and both actual-session races. The Storage fixture now states provider schema/table ACL stand-ins explicitly; actual migrated Shop object RLS policies remain enabled and enforce the unauthorized/cross-tenant assertions. No hosted provider schema is altered. The forward entry-point change alters no function signature, row shape or generated schema type. Native CI on the corrected commit remains required.
+
+The full repository unit gate also identified a duplicate suffix alias for BsPhysicalStockPage in the UI export manifest. The unused suffix alias is removed; the canonical suffix-free export remains. The existing governed-source one-to-one export assertion verifies this boundary. This is an internal correction to the unpublished reel template.
+
 ### Regression qualification child — 2026-10-23
 
 `codex/shop-suit/electrical-regression-qualification` starts at published PR450 commit50f5b582. No parent dirty work was copied. The parent subsequently published forward catalog-authority correction946b0f58, which must be merged before this child is published.

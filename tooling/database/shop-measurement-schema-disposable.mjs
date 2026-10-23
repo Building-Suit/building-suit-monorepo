@@ -72,7 +72,7 @@ try {
   console.log('Electrical measured merchant journey: PASS')
   sql(`BEGIN;\n${readFileSync(new URL('supabase/tests/shop_electrical_reels.sql', app), 'utf8')}\nROLLBACK;`)
   console.log('Physical reel merchant journey: PASS')
-  const suites = new Set([...(regressions ? ['shop_crm_product_catalog', 'shop_sale_issuance', 'shop_stock_counts_corrections', 'shop_supplier_payables_returns', 'shop_service_materials', 'shop_partial_returns', 'shop_storefront_bundle_offers', 'shop_operating_reports', 'shop_website_catalog'] : []), ...extraSuites])
+  const suites = new Set([...(regressions ? ['shop_crm_product_catalog', 'shop_sale_issuance', 'shop_stock_counts_corrections', 'shop_supplier_payables_returns', 'shop_service_materials', 'shop_partial_returns', 'shop_storefront_bundle_offers', 'shop_operating_reports', 'shop_website_catalog', 'shop_catalog_media', 'shop_catalog_image_upload'] : []), ...extraSuites])
   const availableSuites = readdirSync(new URL('supabase/tests/',app))
   for (const suite of suites) {
     assert.ok(availableSuites.includes(`${suite}.sql`),'Requested Shop SQL suite is unavailable')
