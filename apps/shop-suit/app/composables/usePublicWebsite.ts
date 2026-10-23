@@ -63,7 +63,15 @@ export function usePublicWebsite() {
  }
  function selectKind(value:string){if(!['all','product','service'].includes(value))return;kind.value=value;catalogPage.value=1;queryEnabled.value=true}
  function selectSort(value:string){if(!['featured','name','price_asc','price_desc'].includes(value))return;sort.value=value;catalogPage.value=1;queryEnabled.value=true}
- function selectPage(value:number){if(!Number.isSafeInteger(value)||value<1||value>99999)return;catalogPage.value=value;queryEnabled.value=true}
+ function selectPage(value:number){
+  if(!Number.isSafeInteger(value)||value<1||value>99999)return
+  // Unfiltered page links are public permalinks with server-owned canonical and
+  // locale state. Keep reload/bookmark behavior; discovery filters stay local.
+  if(!term.value&&kind.value==='all'&&sort.value==='featured'){
+   void navigateTo(websitePageUrl(profile.canonicalSlug,locale,value,domain!),{external:true});return
+  }
+  catalogPage.value=value;queryEnabled.value=true
+ }
  function clearFilters(){search.value='';term.value='';kind.value='all';sort.value='featured';catalogPage.value=1;queryEnabled.value=true}
  function add(id:string){
   if(basketAction.pending.value)return
