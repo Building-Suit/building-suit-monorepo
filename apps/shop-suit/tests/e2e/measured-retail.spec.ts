@@ -5,6 +5,8 @@ const measurement = { baseUnitCode: 'm', increment: '0.001', revision: 1, saleUn
 const product = { id: 'product-1', name: 'Blue cable 2.5 mm²', itemType: 'product', unitPrice: 35, sale_price: 35, discount: 0, stock: 200, sku: 'BLUE-2.5', barcode: 'CABLE', measurement }
 for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]] as const) {
  test(`measured cart and immutable product settings ${locale} ${theme} ${width}`, async ({ page }) => {
+  const cacheWarnings: string[] = []
+  page.on('console', message => { if (message.text().includes('PINIA_COLADA_R0010')) cacheWarnings.push(message.text()) })
   await page.setViewportSize({ width, height: 1000 })
   await page.addInitScript(theme => localStorage.setItem('building-suit.theme', theme), theme)
   const { calls } = await pilotFixture(page, locale, 'owner', (name, args) => {
@@ -51,5 +53,6 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
   await expect(dialog.getByRole('checkbox', { name: ar ? 'تتبع البكرات المنفردة' : 'Track individual reels', exact: true })).toBeDisabled()
   await expectNoPageOverflow(page)
   await page.screenshot({ path: test.info().outputPath('measured-settings.png'), fullPage: true })
+  expect(cacheWarnings).toEqual([])
  })
 }

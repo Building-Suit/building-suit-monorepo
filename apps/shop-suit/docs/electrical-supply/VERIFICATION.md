@@ -112,3 +112,12 @@ The prior51 Shop unit failure names were repaired by bringing fixtures to the cu
 Shop typecheck/build and changed-source lint pass at their recorded local checkpoint; full repository units, merged-parent SQL/typecheck/build and relevant browser gates are pending. Native merchant, hardware and production-release gates remain open. E4 trade and remaining E5 tasks still require implementation.
 
 The first full repository run executes2049 cases:2021 pass,5 fail,23 skip. One failure is the unused duplicate reel-template export, corrected on parent15b52a32 without changing consumers. Four failures are missing Playwright binary prerequisites; after installing the exact pinned headless Chromium, all14 focused receipt/clipboard/operator-health browser and publication cases pass. Final merged-root execution is still required; intentional skips remain separately counted. Changed Shop source/test lint passes without suppressions.
+
+
+### Merged regression qualification
+
+Merged parent15b52a32 at7c3ec7ab. The full repository execution passes2026 of2049 cases, zero failures and23 separately reported skips. The full108-migration disposable replay passes both merchant journeys,17 included legacy SQL suites and both actual-session races. This expands compatibility coverage without changing the explicit provider-stand-in boundary. Native parent15b52a32 independently passes measured-retail, media and accounts CI, including real Supabase reel concurrency, full Shop SQL and Auth/Storage paths.
+
+Merged Shop production build, typecheck and all6 electrical EN/AR browser cases pass. The POS-to-products navigation now also asserts zero Colada active-query-removal warnings. Existing8 built public-site scenarios and478 Shop units pass within their recorded checkpoints. Workspace ownership and release coverage against actual parent15b52a32 pass. No intentional skip is counted as passing evidence.
+
+A broader privacy-browser run found two stale navigation selectors and a genuine dropped pricing-card link event. Tests now open settings through the Privacy Policy page; the shared landing template and Shop adapter restore the existing consent-controlled pricing event. The browser assertions still require allowlisted, anonymous, deduplicated transport and withdrawal/cookie cleanup. Final expanded browser/build results follow below.

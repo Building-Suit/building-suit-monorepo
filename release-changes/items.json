@@ -2397,5 +2397,46 @@
     "sources": [
       "ss-reel-template-export-qualification-20261023"
     ]
+  },
+  {
+    "id": "ss-electrical-consented-pricing-event-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/index.vue",
+      "packages/ui/src/templates/BsLandingPage.vue"
+    ],
+    "reason": "Restore the existing optional pricing CTA event through the shared landing template; consent, route allowlist and deduplication remain authoritative.",
+    "notes": {
+      "title": {
+        "en": "Restore optional pricing-link measurement",
+        "ar": "استعادة القياس الاختياري لروابط الأسعار"
+      },
+      "summary": {
+        "en": "Pricing-card clicks forward the existing anonymous event when optional analytics is accepted.",
+        "ar": "ترسل نقرات بطاقات الأسعار الحدث المجهول الحالي عند قبول التحليلات الاختيارية."
+      },
+      "details": {
+        "en": "The existing consent and deduplication checks still apply; no plan, customer or form identifiers are sent.",
+        "ar": "تظل فحوص الموافقة ومنع التكرار سارية، ولا تُرسل معرّفات الخطط أو العملاء أو بيانات النماذج."
+      }
+    },
+    "sources": [
+      "ss-electrical-consented-pricing-event-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/index.vue",
+        "contains": "trackPricing: () => analytics.track('pricing_cta')"
+      },
+      {
+        "path": "packages/ui/src/templates/BsLandingPage.vue",
+        "contains": "linkAction: [planId: string]"
+      }
+    ]
   }
 ]

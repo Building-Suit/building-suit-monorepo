@@ -231,10 +231,37 @@
         "Unused duplicate physical-template export; corrected on parent15b52a32",
         "Four browser checks lacked the pinned Playwright binary; installed and all14 focused browser/control-plane cases pass"
       ],
-      "finalMergedRun": "PENDING"
+      "finalMergedRun": {
+        "total": 2049,
+        "passed": 2026,
+        "failed": 0,
+        "skipped": 23
+      }
     },
-    "mergedParentQualification": "PENDING",
+    "mergedParentQualification": {
+      "parentSha": "15b52a324e1e0cd5301f75e5ab23c0ad220b5235",
+      "migrations": 108,
+      "legacySqlSuites": 17,
+      "merchantJourneys": 2,
+      "realSessionRaces": 2,
+      "providerMode": "explicit stand-ins; native parent CI separately recorded",
+      "shopBuild": "PASS",
+      "shopTypecheck": "PASS",
+      "electricalBrowser": {
+        "passed": 6,
+        "failed": 0,
+        "cacheCleanupWarnings": 0
+      },
+      "workspaceBoundaries": "PASS",
+      "releaseCheck": "PASS"
+    },
     "merchantHardwareAcceptance": false,
-    "publishedParentCorrection": "946b0f582261b7ce01e02ac7c925326f6d8757a7"
+    "publishedParentCorrection": "946b0f582261b7ce01e02ac7c925326f6d8757a7",
+    "nativeParentCi": {
+      "sha": "15b52a324e1e0cd5301f75e5ab23c0ad220b5235",
+      "measuredRetail": "PASS",
+      "media": "PASS",
+      "accounts": "PASS"
+    }
   }
 }
