@@ -36,9 +36,11 @@ function showAppointment(id: string) {
   appointmentId.value = id
   if (selectedAppointment.value) openAppointment()
 }
-function editSelectedAppointment() { const id = selectedAppointment.value?.id; if (id) { closeAppointment(); emit('edit', id) } }
+// Keep the details dialog mounted beneath its editor so closing/discarding the
+// editor restores focus to the same Reschedule control and preserves context.
+function editSelectedAppointment() { const id = selectedAppointment.value?.id; if (id) emit('edit', id) }
 function accessSelectedAppointment() { const id = selectedAppointment.value?.id; if (id) { closeAppointment(); emit('access', id) } }
-watch(() => [props.presentation.exists, props.presentation.locationId, props.selectedDate, staffId.value], () => { closeAppointment(); appointmentId.value = null })
+watch([() => props.presentation.exists, () => props.presentation.locationId, () => props.selectedDate, staffId], () => { closeAppointment(); appointmentId.value = null })
 watch(selectedAppointment, value => { if (!value) closeAppointment() })
 const { locale } = useI18n()
 const number = (value: number) => new Intl.NumberFormat(locale.value).format(value)
@@ -103,7 +105,7 @@ const ui = useUiCopy()
         <footer v-if="copy.availabilityHint && presentation.canManage && presentation.locationId && !presentation.failed" class="bs-appointments__footer">{{ copy.availabilityHint }}</footer>
       </div>
     </section>
-    <BsDialog v-if="selectedAppointment" v-model:visible="appointmentOpen" :title="selectedAppointment.customerName" :pending="selectedAppointment.pending">
+    <BsDialog v-if="selectedAppointment" v-model:visible="appointmentOpen" :title="selectedAppointment.customerName" :pending="selectedAppointment.pending || showForm">
       <BsStack gap="md">
         <BsInline justify="between" wrap><BsStatusBadge :status="selectedAppointment.status" :label="selectedAppointment.statusLabel" :tone="selectedAppointment.tone" /><BsText size="sm" tone="muted">{{ selectedAppointment.identityLabel }}</BsText></BsInline>
         <BsAlert v-if="presentation.error" tone="error">{{ presentation.error }}</BsAlert>
