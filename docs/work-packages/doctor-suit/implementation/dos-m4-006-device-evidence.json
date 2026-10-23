@@ -252,5 +252,6 @@
     "run": 40028052579,
     "conclusion": "failure",
     "known_inherited_harness_issue": "patients route now registered; task005 corrects unknown input; actual task006 runtime remains unrun"
-  }
+  },
+  "synced_parent_sha": "32f9a999ab026f4e89b6a83bb7c55d9867ebfc00"
 }
