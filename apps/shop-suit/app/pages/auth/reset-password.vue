@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { navigateTo } from '#app'
 definePageMeta({ layout: 'auth' })
 
 const supabase = useShopClient()

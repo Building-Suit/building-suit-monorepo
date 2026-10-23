@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { navigateTo } from '#app'
 import { doctorPkceCallback } from '../utils/authConfiguration'
 definePageMeta({ layout: 'auth' })
 const route = useRoute()

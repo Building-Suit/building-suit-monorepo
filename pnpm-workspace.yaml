@@ -8,6 +8,8 @@ onlyBuiltDependencies:
 # Nuxt DevTools' older dependency ranges retain known command-execution flaws.
 # Keep the patched Git guard/parser and shell argument quoting across consumers.
 overrides:
+  # One Vue runtime for workspace peers, SSR and shared interaction state.
+  vue: 3.5.44
   shell-quote: 1.11.0
   simple-git: 4.0.2
 # Compatible fixes for shared build/development tools. Keep major-version
@@ -25,5 +27,3 @@ packageExtensions:
   '@nuxtjs/supabase@1.6.2':
     dependencies:
       h3: 1.15.11
-patchedDependencies:
-  '@nuxt/devtools@3.4.2': patches/@nuxt__devtools@3.4.2.patch
