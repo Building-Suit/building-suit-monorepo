@@ -23,7 +23,7 @@ const actorKey = (actor: DoctorMobileIdentity | null) => actor ? `${actor.enviro
 export function nativeContextChoice(raw: NativeContextChoice, identity: DoctorMobileIdentity): NativeContextChoice {
   const context = decodeDoctorMobileContext(raw?.context, identity, raw?.context)
   for (const value of [raw.practiceName, raw.doctorName, raw.locationName]) {
-    if (typeof value !== 'string' || !value.trim() || value.length > 200 || /[\u0000-\u001f\u007f]/.test(value)) throw new Error('Context unavailable')
+    if (typeof value !== 'string' || !value.trim() || value.length > 200 || [...value].some(char => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)) throw new Error('Context unavailable')
   }
   return {context, practiceName: raw.practiceName, doctorName: raw.doctorName, locationName: raw.locationName}
 }
@@ -32,19 +32,27 @@ export function nativeContextChoice(raw: NativeContextChoice, identity: DoctorMo
 export function createNativeContext(port: NativeContextPort | null, identity: () => DoctorMobileIdentity | null,
   state = nativeContextState(), clearProtected: () => void | Promise<void> = () => {}, dirty: () => boolean = () => false) {
   let generation = 0, controller = new AbortController()
+  let cleanupTail = Promise.resolve()
+  const clearers = new Set<() => void | Promise<void>>([clearProtected])
+  const dirtyReaders = new Set<() => boolean>([dirty])
   function invalidate() {
     generation++; controller.abort(); controller = new AbortController()
     state.current = null; state.pending = null
-    return Promise.resolve().then(clearProtected)
+    const previous = cleanupTail
+    const pending = Promise.allSettled([...clearers].map(clear => { try { return Promise.resolve(clear()) } catch (error) { return Promise.reject(error) } }))
+    cleanupTail = Promise.all([previous.catch(() => {}), pending]).then(([, results]) => {
+      if (results.some(result => result.status === 'rejected')) throw new Error('Context cleanup failed')
+    })
+    return cleanupTail
   }
   async function clear() {
-    const cleanup = invalidate(); state.options = []; state.phase = 'signed-out'; state.error = null
-    try { await cleanup } catch { state.phase = 'error'; state.error = 'cleanup' }
+    const cleanup = invalidate(), revision = generation; state.options = []; state.phase = 'signed-out'; state.error = null
+    try { await cleanup } catch { if (revision === generation) { state.phase = 'error'; state.error = 'cleanup' } }
   }
   async function choose(id: string, confirmed = false): Promise<boolean> {
     const option = state.options.find(item => nativeContextId(item.context) === id)
     if (!option || !identity()) return false
-    if (!confirmed && dirty()) { state.pending = id; return false }
+    if (!confirmed && [...dirtyReaders].some(read => read())) { state.pending = id; return false }
     const cleanup = invalidate(), revision = generation, actor = identity(), key = actorKey(actor)
     state.phase = 'switching'; state.error = null
     try {
@@ -76,7 +84,9 @@ export function createNativeContext(port: NativeContextPort | null, identity: ()
       if (previous) {
         const retained = options.find(item => nativeContextId(item.context) === nativeContextId(previous.context))
         if (retained && JSON.stringify(retained) === JSON.stringify(previous)) return true
-        await invalidate()
+        const cleanup = invalidate()
+        state.phase = 'choosing'
+        try { await cleanup } catch { if (generation === revision + 1 && actorKey(identity()) === key) { state.phase = 'error'; state.error = 'cleanup' }; return false }
         if (generation !== revision + 1 || actorKey(identity()) !== key) return false
         state.phase = 'choosing'
         // Revocation or changed grants never silently selects another scope.
@@ -85,11 +95,16 @@ export function createNativeContext(port: NativeContextPort | null, identity: ()
       state.phase = 'choosing'; return true
     } catch {
       if (revision === generation && actorKey(identity()) === key) {
-        await clear(); state.phase = 'error'; state.error = 'unavailable'
+        const cleanup = clear(), cleared = generation
+        state.phase = 'error'; state.error = 'unavailable'
+        await cleanup
+        if (generation !== cleared || actorKey(identity()) !== key) return false
       }
       return false
     }
   }
-  return {state, clear, refresh, choose, confirm: () => state.pending ? choose(state.pending, true) : Promise.resolve(false), cancel: () => { state.pending = null },
-    selection: (): DoctorMobileSelection | null => state.phase === 'ready' && state.current && identity() ? {...state.current.context} : null}
+  return {state, clear, refresh, choose,
+    registerClear: (callback: () => void | Promise<void>) => { clearers.add(callback); return () => clearers.delete(callback) },
+    registerDirty: (callback: () => boolean) => { dirtyReaders.add(callback); return () => dirtyReaders.delete(callback) }, discardAndChoose: () => state.pending ? choose(state.pending, true) : Promise.resolve(false), cancel: () => { state.pending = null },
+    selection: (): DoctorMobileSelection | null => state.phase === 'ready' && state.current && actorKey(state.current.context) === actorKey(identity()) ? {doctorId: state.current.context.doctorId, practiceId: state.current.context.practiceId, locationId: state.current.context.locationId} : null}
 }

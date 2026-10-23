@@ -20,7 +20,7 @@ test('switch clears protected state, aborts prior read and discards delayed Doct
 test('unsaved edits need explicit discard confirmation and cancellation preserves current scope',async()=>{
  const f=fixture();await f.context.refresh();await f.context.choose(nativeContextId(a.context));f.dirty=true
  assert.equal(await f.context.choose(nativeContextId(b.context)),false);assert.equal(f.context.state.current.context.doctorId,a.context.doctorId);f.context.cancel();assert.equal(f.context.state.pending,null)
- await f.context.choose(nativeContextId(b.context));assert.equal(await f.context.confirm(),true);assert.equal(f.context.state.current.context.doctorId,b.context.doctorId)
+ await f.context.choose(nativeContextId(b.context));assert.equal(await f.context.discardAndChoose(),true);assert.equal(f.context.state.current.context.doctorId,b.context.doctorId)
 })
 test('revocation removes only affected scope without silently adopting another doctor',async()=>{
  const f=fixture();await f.context.refresh();await f.context.choose(nativeContextId(a.context));f.options=[b];assert.equal(await f.context.refresh(),false)
@@ -33,4 +33,33 @@ test('unchanged polls preserve drafts; changed grants and offline errors clear a
  const f=fixture();await f.context.refresh();await f.context.choose(nativeContextId(a.context));const before=f.clears;await f.context.refresh();assert.equal(f.clears,before)
  f.options=[{...a,context:{...a.context,grantsVersion:2,capabilities:[]}},b];assert.equal(await f.context.refresh(),false);assert.equal(f.context.selection(),null)
  f.port.list=async()=>{throw new Error('Offline')};await f.context.refresh();assert.equal(f.context.state.phase,'error');assert.deepEqual(f.context.state.options,[])
+})
+
+test('identity accessor denies a replaced session even before asynchronous cleanup',async()=>{
+ const f=fixture();await f.context.refresh();await f.context.choose(nativeContextId(a.context));f.actor={...actor,sessionId:id(90)};assert.equal(f.context.selection(),null)
+})
+test('cleanup failure cannot publish the requested scope',async()=>{
+ const context=createNativeContext({list:async()=>[a],resolve:async()=>a},()=>actor,undefined,()=>{throw new Error('Cannot clear')})
+ await context.refresh();assert.equal(await context.choose(nativeContextId(a.context)),false);assert.equal(context.selection(),null)
+})
+
+const {createNativeContextRepository}=await import('../../mobile/doctor/app/utils/nativeContextRepository.ts')
+const config={url:'http://127.0.0.1:65321',accountUrl:'http://127.0.0.1:4342',publicKey:'sb_publishable_synthetickeyonly',environment:'local',dataMode:'synthetic'}
+const raw=x=>({practice_id:x.context.practiceId,location_id:x.context.locationId,practice_name:x.practiceName,doctor_name:x.doctorName,location_name:x.locationName,portal:x.context.portal,grants_version:1,location_version:1,capabilities:x.context.capabilities,edition:'synthetic_preview',entitlement:{state:'preview'}})
+test('native repository uses current bearer/RLS owner and versioned server resolution',async()=>{
+ const requests=[],row=raw(a),port=createNativeContextRepository(config,async request=>{requests.push(request);return{status:200,data:request.url.includes('/practices?')?[{id:a.context.practiceId,owner_user_id:a.context.doctorId}]:request.url.endsWith('/doctor_contexts')?[row]:row}},()=> 'synthetic-current-token')
+ const signal=new AbortController().signal,choices=await port.list(actor,signal);assert.deepEqual(choices,[a]);assert.deepEqual(await port.resolve(a,actor,signal),a)
+ assert.equal(requests.every(request=>request.headers.Authorization==='Bearer synthetic-current-token'),true);assert.equal(requests.every(request=>!request.url.includes('synthetic-current-token')),true)
+ assert.deepEqual(requests.find(request=>request.url.endsWith('/doctor_resolve_context')).body,{p_practice:a.context.practiceId,p_location:a.context.locationId,p_expected_version:1})
+})
+test('native repository rejects denied owner lookup and non-preview editions',async()=>{
+ const signal=new AbortController().signal
+ for(const denied of [true,false]){
+  const port=createNativeContextRepository(config,async request=>({status:200,data:request.url.includes('/practices?')?(denied?[]:[{id:a.context.practiceId,owner_user_id:a.context.doctorId}]):[{...raw(a),edition:denied?'synthetic_preview':'administrative_candidate'}]}),()=> 'synthetic-current-token')
+  await assert.rejects(port.list(actor,signal))
+ }
+})
+test('native repository discards response when bearer changes during request',async()=>{
+ let token='synthetic-first-token';const d=deferred(),port=createNativeContextRepository(config,async()=>d.promise,()=>token)
+ const load=port.list(actor,new AbortController().signal);token='synthetic-second-token';d.resolve({status:200,data:[raw(a)]});await assert.rejects(load)
 })
