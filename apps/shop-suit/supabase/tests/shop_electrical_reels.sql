@@ -1,3 +1,11 @@
+-- Public entry owns execution; API callers retain no private adapter grant.
+do $$begin
+ if not (select prosecdef from pg_catalog.pg_proc where oid='public.shop_catalog_media(uuid,text,jsonb)'::regprocedure)
+ or has_function_privilege('anon','public.shop_catalog_media(uuid,text,jsonb)','execute')
+ or has_function_privilege('authenticated','shop_private.catalog_media(uuid,text,jsonb)','execute') then
+  raise exception 'Catalog RPC authority boundary changed';
+ end if;
+end;$$;
 -- Synthetic physical reel journey. Runner supplies BEGIN/ROLLBACK.
 create temporary table electrical_reel_fixture as select gen_random_uuid() actor;
 insert into auth.users(id,email,encrypted_password,aud,role,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
