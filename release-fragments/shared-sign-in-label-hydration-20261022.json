@@ -2,8 +2,7 @@
   "id": "shared-sign-in-label-hydration-20261022",
   "task": "SS-ELECTRICAL-001",
   "suits": [
-    "shop-suit",
-    "ledger-suit"
+    "shop-suit"
   ],
   "classification": "patch",
   "disposition": "public",
