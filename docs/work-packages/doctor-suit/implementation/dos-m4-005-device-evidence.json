@@ -1,6 +1,6 @@
 {
   "task": "DOS-M4-005",
-  "status": "in progress",
+  "status": "synthetic directory/profile engineering implemented; native/device and document-policy acceptance open",
   "parent_pr": 456,
   "initial_parent_sha": "9410934019178b988168c2455b207d4266c6aaec",
   "executed_native_cases": [],
@@ -9,5 +9,34 @@
   "clinical_approval": false,
   "offline_chart_approval": false,
   "provider_activation": false,
-  "document_delivery": "disabled; device cache/custody policy and native verification outstanding"
+  "document_delivery": "disabled; device cache/custody policy and native verification outstanding",
+  "planned_native_cases": [
+    "scoped-search-pagination-profile",
+    "shared-contact-distinct-identities",
+    "outsider-revoked-membership-denial",
+    "profile-switch-background-offline-clears-state",
+    "profile-directory-workspace-back-order"
+  ],
+  "checks": {
+    "doctor_and_contracts_broad_passed": 566,
+    "subsequent_task_owned_passed": 12,
+    "additional_case_in_later_command": "hardware-back; no combined aggregate inferred",
+    "mobile_lint_and_types": "passed",
+    "boundaries": "6 Suits/7 applications/136 templates;80 historical migrations unchanged",
+    "static_bundle_and_sync": "passed before final hardware-back-only update; later typecheck separate",
+    "shared_codecs_and_web_exports_lint": "passed",
+    "canonical_packets": {
+      "milestones": 9,
+      "tasks": 104,
+      "fingerprints_and_graph": "pass unchanged"
+    },
+    "serial_web_consumer_typechecks": "running after stopping concurrent memory-pressure run"
+  },
+  "parent_full_unit_baseline": {
+    "tests": 2232,
+    "passed": 2155,
+    "inherited_shop_failures": 54,
+    "skipped": 23,
+    "repeated_for_task005": false
+  }
 }
