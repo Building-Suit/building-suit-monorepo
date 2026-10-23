@@ -3176,6 +3176,45 @@
       "verification": "source and unit checks pending",
       "dependencies": [],
       "purpose": "doctor-mobile-guarded-shell"
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/sign-in.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsSignInPage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/sign-in.vue",
+      "status": "synthetic native session engineering; security/device acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "sign-in"
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/recover.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPasswordRecoveryPage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/recover.vue",
+      "status": "synthetic native session engineering; security/device acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "password-recovery"
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/account.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsAccountSessionPage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/account.vue",
+      "status": "synthetic native session engineering; security/device acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "verified-account-session"
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/layouts/auth.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsProductAuthFrame.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/layouts/auth.vue",
+      "status": "synthetic native session engineering; security/device acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
