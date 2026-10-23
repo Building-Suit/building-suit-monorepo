@@ -117,7 +117,9 @@ export async function pilotFixture(page: Page, locale: string, role = 'owner', o
       case 'pos_catalog_search':
       case 'pos_catalog_search_by_category': data = { items: [service], total: 1, page: 1, pageSize: 30, businessMode: 'service', ambiguousBarcode: false }; break
       case 'pos_checkout_context': data = { staff: [{ id: staff.membershipId, name: staff.name }], customers: [], appointments: appointments.filter(item => item.locationId === args.p_location_id).map(item => ({ ...item, staffId: staff.membershipId, service })) }; break
-      case 'quote_sale_tax': data = { calculationEnabled: false, tax: 0, net: 100 * (args.p_lines as { quantity: number }[]).reduce((sum, line) => sum + Number(line.quantity), 0), total: 100 * (args.p_lines as { quantity: number }[]).reduce((sum, line) => sum + Number(line.quantity), 0), lines: [] }; break
+      case 'quote_customer_sale':
+      case 'quote_pos_sale':
+      case 'quote_sale_tax': data = { tradePricingEnabled: false, calculationEnabled: false, tax: 0, net: 100 * (args.p_lines as { quantity: number }[]).reduce((sum, line) => sum + Number(line.quantity), 0), total: 100 * (args.p_lines as { quantity: number }[]).reduce((sum, line) => sum + Number(line.quantity), 0), lines: [] }; break
       case 'get_sale_tax_snapshot': data = null; break
       case 'save_pos_sale_draft': data = 'sale-1'; break
       case 'checkout_pos_sale': data = 'sale-1'; break

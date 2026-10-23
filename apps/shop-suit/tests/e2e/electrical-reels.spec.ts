@@ -17,7 +17,7 @@ for (const [locale, theme, width] of [['en','light',1440],['ar','dark',390]] as 
    if (name === 'pos_reel_options') return { items: [{ id: 'reel-1', barcode: 'SOURCE-1', remainingLength: '50', originalLength: '50', status: 'sealed', classification: 'sellable', price: null, storagePosition: 'A2', revision: 3 }], total: 1, page: 1, pageSize: 20, summary }
    if (name === 'shop_catalog_media' && args.p_action === 'pos') return { items: [{ id: 'product-1', itemType: 'product', name: 'Blue cable', unitPrice: 35, discount: 0, stock: 100, measurement, reelSummary: summary }], total: 1, page: 1, pageSize: 30, businessMode: 'mixed' }
    if (name === 'pos_checkout_context') return { staff: [{ id: 'member-1', name: 'Cashier' }], customers: [], appointments: [] }
-   if (name === 'quote_pos_sale') return { calculationEnabled: false, tax: 0, total: 437.5, lines: [], offers: [] }
+   if (name === 'quote_customer_sale') return { calculationEnabled: false, tradePricingEnabled: false, tax: 0, total: 437.5, lines: [], offers: [] }
    if (name === 'pos_catalog_offers') return []
    return undefined
   })
@@ -45,7 +45,7 @@ for (const [locale, theme, width] of [['en','light',1440],['ar','dark',390]] as 
   await cart.getByRole('spinbutton').fill('12.5');await cart.getByRole('spinbutton').blur()
   await cart.getByLabel(ar ? 'فاقد القطع (متر)' : 'Cutting loss (Meter)',{ exact: true }).fill('0.02')
   await cart.getByRole('checkbox').check()
-  await expect.poll(() => calls.filter(call => call.name === 'quote_pos_sale').at(-1)?.args.p_lines).toEqual([{ item_type: 'product', source_id: 'product-1', quantity: '12.5', unit_code: 'm', measurement_revision: 1, allow_split: true, cutting_loss: '0.02' }])
+  await expect.poll(() => calls.filter(call => call.name === 'quote_customer_sale').at(-1)?.args.p_lines).toEqual([{ item_type: 'product', source_id: 'product-1', quantity: '12.5', unit_code: 'm', measurement_revision: 1, allow_split: true, cutting_loss: '0.02' }])
   await expectNoPageOverflow(page)
   await page.screenshot({ path: test.info().outputPath('physical-cart.png'),fullPage: true })
  })

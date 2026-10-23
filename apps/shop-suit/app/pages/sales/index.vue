@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tradePricePresentation } from '~/utils/tradePricing'
 import { saleLineInput, cartQuantityStep, measuredBaseQuantity, selectedUnitPrice } from '~/utils/pos'
 import { measurementUnits } from '~/utils/measurement'
 import type { PosMeasurement, MeasurementSnapshot } from '~/types/measurement'
@@ -44,8 +45,8 @@ type SaleCatalog = {
   services: CatalogService[]
   customers: CatalogCustomer[]
 }
-type DraftLine = { allowSplit?: boolean; cuttingLoss?: string; unitSelection?: string; key: string; itemType: 'product' | 'service'; sourceId: string; quantity: number }
-type SaleDetail = { id: string; status: SaleStatus; client_id: string | null; due_date: string | null; notes: string | null; canManage: boolean; lines: Array<{ measurement_snapshot?: MeasurementSnapshot | null; item_type: 'product' | 'service'; product_id: string | null; service_id: string | null; quantity: number }> }
+type DraftLine = { overridePrice?: string; overrideReason?: string; allowSplit?: boolean; cuttingLoss?: string; unitSelection?: string; key: string; itemType: 'product' | 'service'; sourceId: string; quantity: number }
+type SaleDetail = { id: string; status: SaleStatus; client_id: string | null; due_date: string | null; notes: string | null; canManage: boolean; lines: Array<{ trade_pricing_snapshot?: { source: string; overrideEnteredUnitPrice?: string; reason?: string } | null; measurement_snapshot?: MeasurementSnapshot | null; item_type: 'product' | 'service'; product_id: string | null; service_id: string | null; quantity: number }> }
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
 
 const shopRpc = useShopClient<ShopRpcDatabase>().schema('public')
@@ -69,6 +70,7 @@ const issuing = ref(false)
 const editorError = ref('')
 const editingId = ref<string | null>(null)
 const customerId = ref('')
+watch(customerId, () => { lines.value = lines.value.map(line => ({ ...line, overridePrice: undefined, overrideReason: undefined })) }, { flush: 'sync' })
 const dueDate = ref('')
 const notes = ref('')
 const paymentMethod = ref<PaymentMethod>('cash')
@@ -187,7 +189,13 @@ function lineAmounts(line: DraftLine) {
 }
 
 const taxLines = computed(() => lines.value.map(line => saleLineInput(measuredLine(line))))
-const { data: taxQuote, pending: taxPending, error: taxError } = useSaleTaxQuote(currentId, currentLocationId, taxLines)
+const { data: pricePermission } = useShopQuery('shop-data:price-approval-access', async () => {
+ if (!currentId.value) return false
+ const r = await shopRpc.rpc('shop_permission_access', { p_shop_id: currentId.value, p_permission_keys: ['products.manage'] })
+ if (r.error) throw r.error
+ return r.data?.['products.manage'] === true
+}, { watch: [currentId], default: () => false })
+const { data: taxQuote, pending: taxPending, error: taxError } = useSaleTaxQuote(currentId, currentLocationId, taxLines, undefined, false, customerId, editingId)
 const previewTotal = computed(() => Number(taxQuote.value?.total ?? lines.value.reduce((sum, line) => sum + lineAmounts(line).total, 0)))
 
 function resetEditor() {
@@ -232,6 +240,7 @@ async function openEdit(saleId: string) {
     itemType: line.item_type,
     sourceId: line.product_id ?? line.service_id ?? '',
     quantity: Number(line.measurement_snapshot?.enteredQuantity ?? line.quantity),
+    overridePrice: line.trade_pricing_snapshot?.source === 'staff_override' ? line.trade_pricing_snapshot.overrideEnteredUnitPrice : undefined, overrideReason: line.trade_pricing_snapshot?.reason,
     allowSplit: line.measurement_snapshot?.allowSplit, cuttingLoss: line.measurement_snapshot?.cuttingLoss,
     unitSelection: line.measurement_snapshot ? (line.measurement_snapshot.packageId ? `package:${line.measurement_snapshot.packageId}` : `unit:${line.measurement_snapshot.enteredUnitCode}`) : undefined,
   }))
@@ -261,6 +270,10 @@ function validDraft(requireCustomer = false) {
 }
 
 function readableError(message?: string) {
+  if (message?.includes('TRADE_OFFLINE_QUOTE_REQUIRED')) return locale.value === 'ar' ? 'يلزم الاتصال للتحقق من أسعار التعاقد والكميات قبل إتمام البيع.' : 'Connect to verify customer and quantity prices before checkout.'
+  if (message?.includes('PRICE_OVERRIDE_PERMISSION_DENIED') || message?.includes('PRICE_APPROVAL_CONTEXT_CHANGED')) return locale.value === 'ar' ? 'يلزم اعتماد مدير لهذا السعر بعد تغيير العميل أو الكمية أو الوحدة.' : 'A manager must approve this price after changing the customer, quantity or unit.'
+  if (message?.includes('INVALID_PRICE_OVERRIDE')) return locale.value === 'ar' ? 'أدخل سعرًا صالحًا وسببًا واضحًا للتعديل.' : 'Enter a valid price and a clear adjustment reason.'
+
   if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
   if (message?.includes('INSUFFICIENT_STOCK')) return saleCopy(t, 'sales.insufficientStock', lines.value)
   if (message?.includes('OUTSTANDING_SALE_REQUIRES_CUSTOMER')) return t('sales.customerRequired')
@@ -402,11 +415,11 @@ useShopRealtime('sales', () => editorDirty.value)
 
 const salesForm = computed<BsSalesDraftForm>({
   get: () => ({ customerId: customerId.value, dueDate: dueDate.value, notes: notes.value, paymentMethod: paymentMethod.value, paymentReference: paymentReference.value, lines: lines.value }),
-  set: value => { customerId.value = value.customerId; dueDate.value = value.dueDate; notes.value = value.notes; paymentReference.value = value.paymentReference; if (['cash','bank_transfer','card','wallet','cheque','other'].includes(value.paymentMethod)) paymentMethod.value = value.paymentMethod as PaymentMethod; lines.value = value.lines.map(line => { const old = lines.value.find(entry => entry.key === line.key); const next: DraftLine = { ...line, itemType: line.itemType === 'product' ? 'product' : 'service' }; if (old?.sourceId !== next.sourceId) { const item = lineCatalog(next).find(item => item.id === next.sourceId); next.allowSplit = false; next.cuttingLoss = '0'; next.unitSelection = item && 'measurement' in item && item.measurement ? `unit:${item.measurement.baseUnitCode}` : undefined } return next }) },
+  set: value => { customerId.value = value.customerId; dueDate.value = value.dueDate; notes.value = value.notes; paymentReference.value = value.paymentReference; if (['cash','bank_transfer','card','wallet','cheque','other'].includes(value.paymentMethod)) paymentMethod.value = value.paymentMethod as PaymentMethod; lines.value = value.lines.map(line => { const old = lines.value.find(entry => entry.key === line.key); const next: DraftLine = { ...line, itemType: line.itemType === 'product' ? 'product' : 'service' }; if (old?.sourceId !== next.sourceId) { const item = lineCatalog(next).find(item => item.id === next.sourceId); next.overridePrice = undefined; next.overrideReason = undefined; next.allowSplit = false; next.cuttingLoss = '0'; next.unitSelection = item && 'measurement' in item && item.measurement ? `unit:${item.measurement.baseUnitCode}` : undefined } else if (old?.unitSelection !== next.unitSelection) { next.overridePrice = undefined; next.overrideReason = undefined } return next }) },
 })
 const salesStatus = computed<string>({ get: () => statusFilter.value, set: value => { if (value === 'all' || value === 'draft' || value === 'issued') statusFilter.value = value } })
 const salesRows = computed<BsSalesDirectoryRow[]>(() => (salePage.value?.items ?? []).map(sale => ({ id: sale.id, number: sale.invoice_number || t('sales.draftNumber'), lineCount: `${sale.line_count} ${t('sales.lines')}`, customer: sale.client_name_snapshot || '—', status: t(`sales.${sale.status}`), statusTone: sale.status === 'issued' ? 'success' : 'neutral', total: money(Number(sale.total_amount), sale.status === 'draft' ? businessCurrency.value : sale.currency || businessCurrency.value), date: formatDate(sale.issued_at || sale.created_at), editable: sale.status === 'draft' && !!salePage.value?.canManage, href: `/sales/${sale.id}` })))
-const salesLines = computed<BsSalesLineView[]>(() => lines.value.map(line => ({ ...salesMeasurementView(line), key: line.key, options: lineCatalog(line).map(item => ({ value: item.id, label: itemLabel(item) })), total: money(lineAmounts(line).total), discount: lineAmounts(line).discount ? money(lineAmounts(line).discount) : '' })))
+const salesLines = computed<BsSalesLineView[]>(() => lines.value.map((line, index) => ({ ...salesMeasurementView(line), pricing: line.itemType === 'product' ? tradePricePresentation(line, taxQuote.value?.lines[index]?.pricing?.source, pricePermission.value, locale.value === 'ar', businessCurrency.value) : undefined, key: line.key, options: lineCatalog(line).map(item => ({ value: item.id, label: itemLabel(item) })), total: money(taxQuote.value?.lines[index]?.total ?? lineAmounts(line).total), discount: lineAmounts(line).discount ? money(lineAmounts(line).discount) : '' })))
 const salesView = computed<BsSalesDirectoryView>(() => ({ available: !!current.value, loadingContext: shopLoading.value, denied: !!salePage.value?.permissionDenied, canManage: !!salePage.value?.canManage, canIssue: !!salePage.value?.canIssue, canFastPay: !!salePage.value?.canManage && !!salePage.value.canIssue && paymentAccess.value.can_receive && !taxPending.value && !taxError.value, loading: pending.value, error: error.value ? t('sales.loadError') : '', total: salePage.value?.total ?? 0, pageSize, catalogLoading: catalogPending.value, catalogError: !!catalogError.value, editing: !!editingId.value, saving: saving.value, issuing: issuing.value, errorMessage: editorError.value || (taxError.value ? (locale.value === 'ar' ? 'تعذر تأكيد حساب الضريبة. حاول تاني.' : 'Unable to confirm tax calculation. Retry.') : ''), dirty: editorDirty.value, locked: !!fastPayAttempt.value, previewTotal: money(previewTotal.value) }))
 function updateLineType(index: number, value: string) { const line = lines.value[index]; if (!line || (value !== 'product' && value !== 'service') || !availableLineTypes.value.includes(value)) return; line.itemType = value; changeLineType(line) }
 const salesCopy = computed<BsSalesDirectoryCopy>(() => ({

@@ -18,9 +18,9 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
    if (name === 'product_technical_options') return { revision: 1, familyId: 'family-1', familyName: 'Cable family', reelTracking: true, trackingLocked: true, reelReturnPolicy: { unopenedResellable: true, cutRequiresManagerApproval: true }, attributes: { cross_section_mm2: '2.5' }, definitions: [{ code: 'cross_section_mm2', nameEn: 'Cross-section', nameAr: 'مساحة المقطع', type: 'number', unit: 'mm²' }] }
    if (name === 'product_measurement_options') return { ...measurement, status: 'active', locked: true }
    if (name === 'pos_checkout_context') return { staff: [{ id: 'member-1', name: 'Cashier' }], customers: [], appointments: [] }
-   if (name === 'quote_pos_sale') {
+   if (name === 'quote_customer_sale') {
     const lines = args.p_lines as { quantity: string; unit_code?: string; package_id?: string }[]
-    return { calculationEnabled: false, tax: 0, total: lines.reduce((sum, line) => sum + Number(line.quantity) * (line.package_id ? 3200 : line.unit_code === 'cm' ? .35 : 35), 0), lines: [], offers: [] }
+    return { calculationEnabled: false, tradePricingEnabled: false, tax: 0, total: lines.reduce((sum, line) => sum + Number(line.quantity) * (line.package_id ? 3200 : line.unit_code === 'cm' ? .35 : 35), 0), lines: [], offers: [] }
    }
    if (name === 'pos_catalog_offers') return []
    return undefined
@@ -33,12 +33,12 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
   const quantity = cart.getByRole('spinbutton')
   await quantity.fill('12.5'); await quantity.blur()
   await expect(cart).toContainText(ar ? '12.5 متر' : '12.5 Meter')
-  await expect.poll(() => calls.filter(call => call.name === 'quote_pos_sale').at(-1)?.args.p_lines).toEqual([{ item_type: 'product', source_id: 'product-1', quantity: '12.5', unit_code: 'm', measurement_revision: 1 }])
+  await expect.poll(() => calls.filter(call => call.name === 'quote_customer_sale').at(-1)?.args.p_lines).toEqual([{ item_type: 'product', source_id: 'product-1', quantity: '12.5', unit_code: 'm', measurement_revision: 1 }])
   await cart.getByRole('combobox').click()
   await page.getByRole('option', { name: ar ? 'سنتيمتر' : 'Centimeter', exact: true }).click()
   await quantity.fill('250'); await quantity.blur()
   await expect(cart).toContainText(ar ? '2.5 متر' : '2.5 Meter')
-  await expect.poll(() => calls.filter(call => call.name === 'quote_pos_sale').at(-1)?.args.p_lines).toEqual([{ item_type: 'product', source_id: 'product-1', quantity: '250', unit_code: 'cm', measurement_revision: 1 }])
+  await expect.poll(() => calls.filter(call => call.name === 'quote_customer_sale').at(-1)?.args.p_lines).toEqual([{ item_type: 'product', source_id: 'product-1', quantity: '250', unit_code: 'cm', measurement_revision: 1 }])
   await expectNoPageOverflow(page)
   await page.screenshot({ path: test.info().outputPath('measured-cart.png'), fullPage: true })
   // Navigating away exercises the shared dirty-state controller before editing.

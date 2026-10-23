@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { tradePricePresentation } from '~/utils/tradePricing'
 import { measurementUnits } from '~/utils/measurement'
 import type { PosReelOptions, PosReel, ReelAvailability } from '~/types/electrical'
 import type { PosMeasurement } from '~/types/measurement'
@@ -18,7 +19,7 @@ const { businessCurrency } = useShop()
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
 type CatalogItem = { reelId?: string; reelBarcode?: string; reelRemaining?: string; reelPrice?: number | null; reelStatus?: string; reelSummary?: ReelAvailability; catalogStock?: number; allowSplit?: boolean; cuttingLoss?: string; measurement?: PosMeasurement | null; unitSelection?: string; id: string; itemType: 'product' | 'service'; name: string; imageUrl?: string | null; sku: string | null; barcode: string | null; unitPrice: number; discount: number; stock: number | null }
-type CartLine = CatalogItem & { key: string; sourceId: string; quantity: number }
+type CartLine = CatalogItem & { overridePrice?: string; overrideReason?: string; key: string; sourceId: string; quantity: number }
 type Appointment = { id: string; staffId: string; customerId: string | null; customerName: string; startsAt: string; status: string; service: CatalogItem }
 type Customer = { id: string; name: string; phone: string | null }
 type PosContext = { customerQuery?: string; staff: Array<{ id: string; name: string }>; appointments: Appointment[]; customers: Array<{ id: string; name: string; phone: string | null }> }
@@ -53,6 +54,7 @@ const staffId = ref('')
 const appointmentId = ref('')
 const consumedAppointmentLink = ref('')
 const customerId = ref('')
+watch(customerId, () => { lines.value = lines.value.map(line => ({ ...line, overridePrice: undefined, overrideReason: undefined })) }, { flush: 'sync' })
 const customerName = ref('')
 const customerPhone = ref<string | null>(null)
 const paymentMethod = ref<PaymentMethod>('cash')
@@ -85,7 +87,13 @@ watch(categoryFilter, () => { catalogPage.value = 1 })
 const offlinePhysicalError = computed(() => counter.online.value ? null : lines.value.map(physicalCartError).find(Boolean) ?? null)
 const locationChanged = computed(() => Boolean(transactionLocationId.value && currentLocationId.value !== transactionLocationId.value))
 const taxLines = computed(() => lines.value.map(saleLineInput))
-const { data: taxQuote, pending: taxPending, error: taxError, refresh: refreshPosQuote } = useSaleTaxQuote(currentId, currentLocationId, taxLines, counter, true)
+const { data: pricePermission } = useShopQuery('shop-data:price-approval-access', async () => {
+ if (!currentId.value) return false
+ const r = await rpc.rpc('shop_permission_access', { p_shop_id: currentId.value, p_permission_keys: ['products.manage'] })
+ if (r.error) throw r.error
+ return r.data?.['products.manage'] === true
+}, { watch: [currentId], default: () => false })
+const { data: taxQuote, pending: taxPending, error: taxError, refresh: refreshPosQuote } = useSaleTaxQuote(currentId, currentLocationId, taxLines, counter, true, customerId, invoiceId)
 const total = computed(() => Number(counter.online.value ? taxQuote.value?.total ?? cartTotal(lines.value) : Math.max(0, Math.round((cartTotal(lines.value)-offlineOffers.value.discount)*100)/100)))
 const selectedStaff = computed(() => context.value.staff.find(member => member.id === staffId.value))
 
@@ -268,6 +276,10 @@ function resetSale(focus = true) {
   if (focus) nextTick(() => posPage.value?.focusCatalog())
 }
 function readableError(message?: string) {
+  if (message?.includes('TRADE_OFFLINE_QUOTE_REQUIRED')) return locale.value === 'ar' ? 'يلزم الاتصال للتحقق من أسعار التعاقد والكميات قبل إتمام البيع.' : 'Connect to verify customer and quantity prices before checkout.'
+  if (message?.includes('PRICE_OVERRIDE_PERMISSION_DENIED') || message?.includes('PRICE_APPROVAL_CONTEXT_CHANGED')) return locale.value === 'ar' ? 'يلزم اعتماد مدير لهذا السعر بعد تغيير العميل أو الكمية أو الوحدة.' : 'A manager must approve this price after changing the customer, quantity or unit.'
+  if (message?.includes('INVALID_PRICE_OVERRIDE')) return locale.value === 'ar' ? 'أدخل سعرًا صالحًا وسببًا واضحًا للتعديل.' : 'Enter a valid price and a clear adjustment reason.'
+
   if (message?.includes('SALE_OPEN_CASH_SHIFT_REQUIRED')) return t('sales.openCashShiftRequired')
   if (message?.includes('REEL_STOCK_UNCONFIRMED')) return locale.value === 'ar' ? 'اتصل مرة لتحميل أطوال البكرات قبل تسجيل هذا القطع دون اتصال.' : 'Connect once to load reel lengths before recording this cut offline.'
   if (message?.includes('CONTINUOUS_LENGTH_UNAVAILABLE')) return locale.value === 'ar' ? 'لا توجد بكرة واحدة توفر هذا الطول. اختر بكرة أخرى أو اسمح بقطع منفصلة.' : 'No single reel can supply this length. Choose another reel or allow separate pieces.'
@@ -387,7 +399,12 @@ useShopRealtime('pos', () => lines.value.length > 0 || checkingOut.value || conf
 const posPaymentForm = computed<BsPointOfSalePaymentForm>({ get: () => ({ method: paymentMethod.value, reference: paymentReference.value, notes: notes.value }), set: value => { if (['cash','bank_transfer','card','wallet','cheque','other'].includes(value.method)) paymentMethod.value = value.method as PaymentMethod; paymentReference.value = value.reference; notes.value = value.notes } })
 const posItemType = computed<string>({ get: () => itemType.value, set: value => { if (value === 'all' || value === 'product' || value === 'service') itemType.value = value } })
 const posCatalogItems = computed<BsPointOfSaleCatalogItem[]>(() => catalog.value.items.map(item => ({ id: item.id, key: cartLineKey(item), name: item.name, quantity: lines.value.find(line => line.key === cartLineKey(item))?.quantity ?? 0, maximumQuantity: cartQuantityLimit(item), disabled: item.itemType === 'product' && item.stock != null && item.stock <= 0, imageUrl: item.imageUrl, description: item.sku || t(item.itemType === 'service' ? 'sales.service' : 'sales.product'), price: money(Math.max(0, item.unitPrice - item.discount)), stock: item.stock != null ? t('pos.stock', { count: item.stock }) : '' })))
-const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map(line => ({ id: line.key, physical: physicalView(line), quantityStep: line.measurement ? cartQuantityStep(line) : 1, unitValue: selectedMeasurement(line), unitChoices: line.measurement ? [...line.measurement.saleUnits.map(unit => ({ value: `unit:${unit}`, label: unitLabel(unit) })), ...line.measurement.packages.filter(pack => pack.canSell).map(pack => ({ value: `package:${pack.id}`, label: `${pack.name} (${pack.baseQuantity} ${unitLabel(line.measurement!.baseUnitCode)})` }))] : undefined, baseEquivalent: baseEquivalent(line), imageUrl: line.imageUrl, name: line.name, quantity: line.quantity, maximumQuantity: cartQuantityLimit(line), total: money((line.unitPrice - line.discount) * line.quantity) })))
+function setPriceApproval(id: string, value: string, reason = false) {
+ if (!pricePermission.value || !counter.online.value || checkingOut.value || confirmingCheckout.value) return
+ lines.value = lines.value.map(line => line.key === id && line.itemType === 'product' ? { ...line, ...(reason ? { overrideReason: value } : { overridePrice: value }) } : line)
+ invalidateRequests()
+}
+const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map((line, index) => ({ id: line.key, pricing: line.itemType === 'product' ? tradePricePresentation(line, counter.online.value ? taxQuote.value?.lines[index]?.pricing?.source : undefined, pricePermission.value && counter.online.value, locale.value === 'ar', businessCurrency.value) : undefined, physical: physicalView(line), quantityStep: line.measurement ? cartQuantityStep(line) : 1, unitValue: selectedMeasurement(line), unitChoices: line.measurement ? [...line.measurement.saleUnits.map(unit => ({ value: `unit:${unit}`, label: unitLabel(unit) })), ...line.measurement.packages.filter(pack => pack.canSell).map(pack => ({ value: `package:${pack.id}`, label: `${pack.name} (${pack.baseQuantity} ${unitLabel(line.measurement!.baseUnitCode)})` }))] : undefined, baseEquivalent: baseEquivalent(line), imageUrl: line.imageUrl, name: line.name, quantity: line.quantity, maximumQuantity: cartQuantityLimit(line), total: money(counter.online.value ? taxQuote.value?.lines[index]?.total ?? (line.unitPrice - line.discount) * line.quantity : (line.unitPrice - line.discount) * line.quantity) })))
 const posView = computed<BsPointOfSaleView>(() => ({ cartCount: locale.value === 'ar' ? `${lines.value.length} أصناف` : `${lines.value.length} ${lines.value.length === 1 ? 'item' : 'items'}`, available: !!current.value, loadingContext: shopLoading.value, location: transactionLocationName.value || currentLocation.value?.name || '—', staff: selectedStaff.value?.name || t('pos.selectStaff'), locationChanged: locationChanged.value, error: errorMessage.value || (offlinePhysicalError.value ? readableError(offlinePhysicalError.value) : '') || (taxError.value ? readableError(taxError.value.message) : ''), scanMessage: scanMessage.value, checkingOut: checkingOut.value, confirming: confirmingCheckout.value, shortcutBlocked: posReceipt.visible.value || checkingOut.value || confirmingCheckout.value || !!confirmation.current.value, catalogLoading: catalogPending.value, catalogError: catalogError.value ? t(catalogError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', catalogTotal: catalog.value.total, catalogPageSize: catalog.value.pageSize, contextLoading: contextPending.value, contextError: contextError.value ? t(contextError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', appointmentLocked: !!appointmentId.value, customerDisabled: !counter.online.value || !!appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value, customerBusy: customerBusy.value, customerDisplay: customerId.value ? [customerName.value, customerPhone.value].filter(Boolean).join(' · ') : (appointmentId.value ? customerName.value || t('pos.noCustomer') : t('pos.noCustomer')), customerEmpty: customerBusy.value ? t('pos.loading') : t('pos.customerSearch'), customerEmptyFilter: customerBusy.value ? t('pos.loading') : (customerSearch.value.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')), hasCustomer: !!customerId.value, checkoutDisabled: Boolean(offlinePhysicalError.value) || taxPending.value || Boolean(taxError.value) || counter.shiftClosing.value || checkingOut.value || confirmingCheckout.value || contextPending.value || !!contextError.value || locationChanged.value || !lines.value.length || !staffId.value, total: money(total.value), reviewLabel: t('pos.reviewSale', { count: lines.value.length }), payLabel: t('pos.pay', { amount: money(total.value) }) }))
 function addPosItem(key: string) { const item = catalog.value.items.find(item => cartLineKey(item) === key); if (item) addItem(item) }
 function removePosLine(id: string) { const index = lines.value.findIndex(line => line.key === id); if (index >= 0) removeLine(index) }
@@ -406,6 +423,7 @@ function setPosUnit(id: string, value: string) {
   if (value.startsWith('unit:') ? !line.measurement.saleUnits.includes(value.slice(5)) : !line.measurement.packages.some(pack => pack.canSell && pack.id === value.slice(8))) return
   next.key = cartLineKey(next)
   if (lines.value.some(other => other !== line && other.key === next.key)) { errorMessage.value = locale.value === 'ar' ? 'هذه الوحدة موجودة بالفعل في السلة.' : 'This unit is already in the cart.'; return }
+  next.overridePrice = undefined; next.overrideReason = undefined
   next.unitPrice = selectedUnitPrice(next)
   lines.value = lines.value.map(other => other === line ? next : other); invalidateRequests()
 }
@@ -558,6 +576,7 @@ const posPaymentOptions = computed(() => ['cash','card','bank_transfer','wallet'
     @retry-offline="counter.retry($event)"
     @reconcile-offline="counter.reconcile($event)"
     @reset="requestReset"
+    @price-override="(id, value) => setPriceApproval(id, value)" @price-reason="(id, value) => setPriceApproval(id, value, true)"
     @checkout="checkout"
     @retry-catalog="refreshCatalog"
     @retry-context="refreshContext"

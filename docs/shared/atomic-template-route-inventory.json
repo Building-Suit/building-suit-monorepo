@@ -92,7 +92,8 @@
     "BsPaymentReconciliationPage": "packages/ui/src/templates/BsPaymentReconciliationPage.vue",
     "BsStorefrontBuilderPage": "packages/ui/src/templates/BsStorefrontBuilderPage.vue",
     "BsCatalogOffersPage": "packages/ui/src/templates/BsCatalogOffersPage.vue",
-    "BsPhysicalStockPage": "packages/ui/src/templates/BsPhysicalStockPage.vue"
+    "BsPhysicalStockPage": "packages/ui/src/templates/BsPhysicalStockPage.vue",
+    "BsTradePricingPage": "packages/ui/src/templates/BsTradePricingPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -2989,6 +2990,27 @@
       ],
       "verification": "SS-ELEC-303/305/306/308: local schema107 and two-session cashier race PASS; EN desktop/light and AR mobile/dark browser count/history/cut scenarios PASS; native-provider CI and merchant hardware acceptance pending",
       "purpose": "physical-reel-inventory"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/trade-pricing.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsTradePricingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsTradePricingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsTradePricingPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/pages/trade-pricing.vue",
+      "dependencies": [
+        "@building-suit/ui/types/tradePricingPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/tradePricing",
+        "~/types/measurement"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/VERIFICATION.md.",
+      "purpose": "shop-trade-pricing"
     }
   ],
   "verifiedSharedHeads": [
@@ -3129,6 +3151,7 @@
     "BsPaymentReconciliationPage",
     "BsStorefrontBuilderPage",
     "BsCatalogOffersPage",
-    "BsPhysicalStockPage"
+    "BsPhysicalStockPage",
+    "BsTradePricingPage"
   ]
 }

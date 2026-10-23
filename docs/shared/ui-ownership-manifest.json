@@ -701,6 +701,16 @@
       "adapterBoundary": "Product-supplied physical stock rows, server pagination, permissions, immutable movement projections and semantic count/classify/archive commands. Shared presentation owns fields, table, history and record dialog.",
       "task": "SS-ELECTRICAL-001",
       "migrationStatus": "implemented-local: database107-migration replay, actual cashier race, focused units and six EN/AR synthetic browser scenarios pass; provider CI and merchant acceptance pending"
+    },
+    {
+      "family": "trade-pricing",
+      "owner": "packages/ui",
+      "components": [
+        "BsTradePricingPage"
+      ],
+      "adapterBoundary": "Typed price/group/history rows, bounded pickers, immutable command retry state and semantic group, assignment and price-rule commands. Shop owns pricing, scope, conversion and financial authority.",
+      "task": "SS-ELECTRICAL-001",
+      "migrationStatus": "implementation qualification in progress"
     }
   ]
 }
