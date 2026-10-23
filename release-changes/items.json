@@ -2439,6 +2439,83 @@
     ]
   },
   {
+    "id": "ss-electrical-customer-trade-prices-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase/migrations/20261023202711_trade_customer_groups_and_prices.sql",
+      "packages/ui/src/templates/BsTradePricingPage.vue",
+      "packages/ui/src/molecules/BsPriceApprovalFields.vue",
+      "packages/ui/src/organisms/BsPointOfSaleCart.vue",
+      "packages/ui/src/templates/BsPointOfSalePage.vue",
+      "packages/ui/src/templates/BsSalesDirectoryPage.vue",
+      "packages/ui/src/types"
+    ],
+    "reason": "Tenant customer groups, deterministic customer/group/quantity prices and server-owned manager approvals extend existing measured/legacy sale authority, FIFO, taxes and immutable receipts without creating a competing ledger.",
+    "notes": {
+      "title": {
+        "en": "Prices for customer groups and larger quantities",
+        "ar": "أسعار مجموعات العملاء والكميات الكبيرة"
+      },
+      "summary": {
+        "en": "Assign customer groups and use effective customer contracts, group prices and quantity breaks for measured and ordinary products.",
+        "ar": "عيّن مجموعات العملاء واستخدم أسعار التعاقد والمجموعات وشرائح الكميات السارية للمنتجات المقاسة والعادية."
+      },
+      "details": {
+        "en": "POS and sales resolve prices on the server, keep trade prices separate from bundle discounts and preserve issued price approvals and revision history.",
+        "ar": "تحسب نقطة البيع والمبيعات الأسعار في الخادم، ولا تجمع أسعار التعاقد مع خصومات الباقات، وتحفظ تفويضات الأسعار الصادرة وسجل المراجعات."
+      }
+    },
+    "sources": [
+      "ss-electrical-customer-trade-prices-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/trade-pricing.vue",
+        "contains": "rpc.rpc('save_trade_configuration', frozen.value)"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useSaleTaxQuote.ts",
+        "contains": "rpc.rpc('quote_customer_sale'"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-trade-pricing-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/shop-suit/app/types/database.types.ts",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/supabase/tests/shop_trade_pricing.sql",
+      "apps/shop-suit/docs/electrical-supply",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Optional typed shared pricing/editor presentation, explicit exports/route ownership/catalogue, real-schema generated types and merchant/permission/legacy/regression/browser qualification. Other shared consumers remain internal; no product registration, plan term or hosted deployment changes.",
+    "sources": [
+      "ss-electrical-trade-pricing-support-20261023"
+    ]
+  },
+  {
     "id": "ss-electrical-signup-labels-20261023",
     "task": "SS-ELECTRICAL-001",
     "suits": [

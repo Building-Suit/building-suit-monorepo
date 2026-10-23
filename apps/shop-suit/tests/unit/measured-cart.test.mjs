@@ -50,3 +50,11 @@ test('receipt projection uses frozen entered units and prices in both languages'
  assert.match(en.unitPrice, /0\.35/)
  assert.deepEqual(receipt, before)
 })
+
+test('price approvals preserve exact entered strings and service lines cannot carry product overrides', () => {
+ const line = { ...cable, sourceId: cable.id, quantity: '12.5', overridePrice: '33.125000000001', overrideReason: 'Approved contract adjustment' }
+ assert.equal(saleLineInput(line).override_price, '33.125000000001')
+ assert.equal(saleLineInput(line).override_reason, 'Approved contract adjustment')
+ assert.equal(saleLineInput({ ...line, overridePrice: '' }).override_price, undefined)
+ assert.equal(saleLineInput({ ...line, itemType: 'service' }).override_price, undefined)
+})

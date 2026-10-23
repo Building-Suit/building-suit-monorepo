@@ -1,7 +1,7 @@
 export interface BsSalesChoice { value: string; label: string }
 export interface BsSalesDirectoryRow { id: string; number: string; lineCount: string; customer: string; status: string; statusTone?: 'neutral' | 'success' | 'info' | 'warning' | 'danger'; total: string; date: string; editable: boolean; href: string }
-export interface BsSalesDraftLine { allowSplit?: boolean; cuttingLoss?: string; unitSelection?: string; key: string; itemType: string; sourceId: string; quantity: number }
-export interface BsSalesLineView { physical?: { unit: string; canSplit: boolean }; unitChoices?: BsSalesChoice[]; quantityStep?: number; baseEquivalent?: string; key: string; options: BsSalesChoice[]; total: string; discount: string }
+export interface BsSalesDraftLine { overridePrice?: string; overrideReason?: string; allowSplit?: boolean; cuttingLoss?: string; unitSelection?: string; key: string; itemType: string; sourceId: string; quantity: number }
+export interface BsSalesLineView { pricing?: import('./priceApprovalPresentation').BsPriceApproval; physical?: { unit: string; canSplit: boolean }; unitChoices?: BsSalesChoice[]; quantityStep?: number; baseEquivalent?: string; key: string; options: BsSalesChoice[]; total: string; discount: string }
 export interface BsSalesDraftForm { customerId: string; dueDate: string; notes: string; paymentMethod: string; paymentReference: string; lines: BsSalesDraftLine[] }
 export interface BsSalesDirectoryView { available: boolean; loadingContext: boolean; denied: boolean; canManage: boolean; canIssue: boolean; canFastPay: boolean; loading: boolean; error: string; total: number; pageSize: number; catalogLoading: boolean; catalogError: boolean; editing: boolean; saving: boolean; issuing: boolean; errorMessage: string; dirty: boolean; locked: boolean; previewTotal: string }
 export interface BsSalesDirectoryCopy { physicalSplit?: string; physicalLoss?: string; physicalLossHelp?: string; unit?: string;

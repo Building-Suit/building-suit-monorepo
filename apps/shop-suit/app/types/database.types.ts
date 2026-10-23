@@ -1787,6 +1787,100 @@ export type Database = {
           },
         ]
       }
+      customer_group_assignments: {
+        Row: {
+          customer_id: string
+          group_id: string | null
+          revision: number
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          customer_id: string
+          group_id?: string | null
+          revision?: number
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          customer_id?: string
+          group_id?: string | null
+          revision?: number
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_group_assignments_customer_id_shop_id_fkey"
+            columns: ["customer_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "client_balances"
+            referencedColumns: ["client_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "customer_group_assignments_customer_id_shop_id_fkey"
+            columns: ["customer_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "customer_group_assignments_group_id_shop_id_fkey"
+            columns: ["group_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "customer_groups"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      customer_groups: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by_profile_id: string
+          id: string
+          name: string
+          revision: number
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by_profile_id: string
+          id?: string
+          name: string
+          revision?: number
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by_profile_id?: string
+          id?: string
+          name?: string
+          revision?: number
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_groups_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_groups_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_payment_adjustments: {
         Row: {
           adjustment_group_id: string
@@ -3262,6 +3356,7 @@ export type Database = {
           service_staff_membership_ids_snapshot: string[] | null
           shop_id: string
           total_amount: number
+          trade_pricing_snapshot: Json | null
           unit_price: number
         }
         Insert: {
@@ -3286,6 +3381,7 @@ export type Database = {
           service_staff_membership_ids_snapshot?: string[] | null
           shop_id: string
           total_amount: number
+          trade_pricing_snapshot?: Json | null
           unit_price: number
         }
         Update: {
@@ -3310,6 +3406,7 @@ export type Database = {
           service_staff_membership_ids_snapshot?: string[] | null
           shop_id?: string
           total_amount?: number
+          trade_pricing_snapshot?: Json | null
           unit_price?: number
         }
         Relationships: [
@@ -10309,6 +10406,200 @@ export type Database = {
           },
         ]
       }
+      trade_configuration_history: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          id: string
+          kind: string
+          reason: string
+          record_id: string
+          revision: number
+          shop_id: string
+          snapshot: Json
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          reason: string
+          record_id: string
+          revision: number
+          shop_id: string
+          snapshot: Json
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          reason?: string
+          record_id?: string
+          revision?: number
+          shop_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_configuration_history_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_configuration_history_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trade_price_rules: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by_profile_id: string
+          currency_code: string
+          customer_id: string | null
+          ends_at: string | null
+          group_id: string | null
+          id: string
+          minimum_quantity: number
+          package_id: string | null
+          package_version: number | null
+          priority: number
+          product_id: string
+          product_revision: number
+          revision: number
+          shop_id: string
+          starts_at: string
+          stock_unit_code: string
+          unit_code: string | null
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by_profile_id: string
+          currency_code: string
+          customer_id?: string | null
+          ends_at?: string | null
+          group_id?: string | null
+          id?: string
+          minimum_quantity: number
+          package_id?: string | null
+          package_version?: number | null
+          priority?: number
+          product_id: string
+          product_revision: number
+          revision?: number
+          shop_id: string
+          starts_at: string
+          stock_unit_code: string
+          unit_code?: string | null
+          unit_price: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by_profile_id?: string
+          currency_code?: string
+          customer_id?: string | null
+          ends_at?: string | null
+          group_id?: string | null
+          id?: string
+          minimum_quantity?: number
+          package_id?: string | null
+          package_version?: number | null
+          priority?: number
+          product_id?: string
+          product_revision?: number
+          revision?: number
+          shop_id?: string
+          starts_at?: string
+          stock_unit_code?: string
+          unit_code?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_price_rules_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_price_rules_customer_id_shop_id_fkey"
+            columns: ["customer_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "client_balances"
+            referencedColumns: ["client_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_price_rules_customer_id_shop_id_fkey"
+            columns: ["customer_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_price_rules_group_id_shop_id_fkey"
+            columns: ["group_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "customer_groups"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_price_rules_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "product_packagings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_price_rules_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "low_stock_products"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_price_rules_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_price_rules_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_price_rules_stock_unit_code_fkey"
+            columns: ["stock_unit_code"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "trade_price_rules_unit_code_fkey"
+            columns: ["unit_code"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       units_of_measure: {
         Row: {
           allowed_precision: number
@@ -12442,6 +12733,17 @@ export type Database = {
         }
         Returns: string
       }
+      quote_customer_sale: {
+        Args: {
+          p_bundles?: boolean
+          p_customer_id: string
+          p_invoice_id?: string
+          p_lines: Json
+          p_location_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       quote_pos_sale: {
         Args: { p_lines: Json; p_location_id: string; p_shop_id: string }
         Returns: Json
@@ -13057,6 +13359,16 @@ export type Database = {
         }
         Returns: string
       }
+      save_trade_configuration: {
+        Args: {
+          p_action: string
+          p_payload: Json
+          p_reason: string
+          p_request_id: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       save_vendor: {
         Args: {
           p_address: string
@@ -13615,6 +13927,17 @@ export type Database = {
         }[]
       }
       tax_settings: { Args: { p_shop_id: string }; Returns: Json }
+      trade_pricing_context: {
+        Args: {
+          p_customer_id?: string
+          p_kind?: string
+          p_page?: number
+          p_product_id?: string
+          p_search?: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       transfer_shop_ownership: {
         Args: {
           p_reason: string

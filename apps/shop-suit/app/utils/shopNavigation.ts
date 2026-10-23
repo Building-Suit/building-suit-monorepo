@@ -28,6 +28,7 @@ export function shopNavigation(mode: BusinessMode, locale: string, t: (key: stri
     ] }] : []),
     { key: 'manage', label: copy.manage, links: [
       { to: '/reports', label: copy.reports, icon: 'reports' },
+      { to: '/trade-pricing', label: locale === 'ar' ? 'مجموعات وأسعار العملاء' : 'Customer groups & pricing', icon: 'user' },
       { to: '/offers', label: locale === 'ar' ? 'العروض والباقات' : 'Promos & offers', icon: 'basket' },
       { to: '/website-builder', label: locale === 'ar' ? 'منشئ الموقع' : 'Website builder', icon: 'monitor' },
       { to: '/catalog-import', label: copy.catalogSetup, icon: 'ledger' },

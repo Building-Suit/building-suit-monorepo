@@ -73,7 +73,7 @@ export function cartQuantityStep(item) {
   return Number(required / gcd(required, quantum) * quantum) / 1000000
 }
 export function saleLineInput(line) {
-  const input = { item_type: line.itemType, source_id: line.sourceId || line.id, quantity: line.measurement ? String(line.quantity) : Number(line.quantity) }
+  const input = { item_type: line.itemType, source_id: line.sourceId || line.id, quantity: line.measurement ? String(line.quantity) : Number(line.quantity), ...(line.itemType === 'product' && line.overridePrice !== undefined && line.overridePrice !== '' ? { override_price: line.overridePrice, override_reason: line.overrideReason ?? '' } : {}) }
   if (!line.measurement) return input
   const pack = selectedPackaging(line)
   return { ...input, measurement_revision: line.measurement.revision, ...(line.measurement.reelTracking ? { allow_split: line.allowSplit ?? false, cutting_loss: line.cuttingLoss || '0', ...(line.reelId ? { reel_id: line.reelId } : {}) } : {}), ...(pack ? { package_id: pack.id, package_version: pack.version } : { unit_code: selectedMeasurement(line).slice(5) }) }

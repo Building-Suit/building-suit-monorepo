@@ -473,14 +473,14 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-107.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Maintain tenant-scoped configurable customer groups without changing existing balances or privacy.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Maintain tenant-scoped configurable customer groups without changing existing balances or privacy. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: Forward migration20261023202711, TRADE-PRICING.md, public-command SQL scenarios and generated schema contract; local109-migration replay passes merchant/role/expiry/override/legacy/unit-reconfiguration cases and existing regressions. Shared editor, POS and sales adapters are implemented; final merged qualification and native CI remain pending.
+- PR / commit: Local feature `codex/shop-suit/trade-customer-pricing`, initially based on published qualification checkpoint6bb408b5. Stacked PR pending final qualification.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -488,14 +488,14 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-401, SS-ELEC-203.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Resolve contract/group/quantity/package/base precedence server-side; freeze prices and authorized overrides.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Resolve contract/group/quantity/package/base precedence server-side; freeze prices and authorized overrides. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: Forward migration20261023202711, TRADE-PRICING.md, public-command SQL scenarios and generated schema contract; local109-migration replay passes merchant/role/expiry/override/legacy/unit-reconfiguration cases and existing regressions. Shared editor, POS and sales adapters are implemented; final merged qualification and native CI remain pending.
+- PR / commit: Local feature `codex/shop-suit/trade-customer-pricing`, initially based on published qualification checkpoint6bb408b5. Stacked PR pending final qualification.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 

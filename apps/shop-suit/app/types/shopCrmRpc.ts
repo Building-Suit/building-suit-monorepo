@@ -4,6 +4,10 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      save_trade_configuration: { Args: { p_request_id: string; p_shop_id: string; p_action: 'group' | 'assignment' | 'price'; p_payload: Record<string, string | number | boolean | null>; p_reason: string }; Returns: { id: string; revision: number } }
+      trade_pricing_context: { Args: { p_shop_id: string; p_kind?: 'group' | 'group_options' | 'price' | 'history'; p_product_id?: string | null; p_customer_id?: string | null; p_search?: string | null; p_page?: number }; Returns: import('./tradePricing').TradePricingContext }
+      quote_customer_sale: { Args: { p_shop_id: string; p_location_id: string; p_customer_id: string | null; p_lines: import('./measurement').SaleLineInput[]; p_bundles?: boolean; p_invoice_id?: string | null }; Returns: import('./tax').TaxQuote }
+
       purchase_reel_options: { Args: { p_shop_id: string; p_purchase_id: string; p_line_id: string; p_search?: string | null; p_page?: number }; Returns: { items: { id: string; barcode: string; remainingLength: string }[]; total: number; page: number } }
       inventory_reel_context: { Args: { p_shop_id: string; p_location_id: string; p_product_id?: string | null; p_search?: string | null; p_page?: number; p_page_size?: number; p_reel_id?: string | null; p_history_page?: number }; Returns: import('./electrical').InventoryReelContext }
       pos_reel_options: { Args: { p_shop_id: string; p_location_id: string; p_product_id: string; p_search?: string | null; p_page?: number }; Returns: import('./electrical').PosReelOptions }

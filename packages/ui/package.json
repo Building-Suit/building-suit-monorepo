@@ -390,7 +390,11 @@
     "./templates/BsCatalogOffersPage": "./src/templates/BsCatalogOffersPage.vue",
     "./molecules/BsOfferStrip": "./src/molecules/BsOfferStrip.vue",
     "./templates/BsPhysicalStockPage": "./src/templates/BsPhysicalStockPage.vue",
-    "./types/physicalInventoryPresentation": "./src/types/physicalInventoryPresentation.ts"
+    "./types/physicalInventoryPresentation": "./src/types/physicalInventoryPresentation.ts",
+    "./templates/BsTradePricingPage": "./src/templates/BsTradePricingPage.vue",
+    "./types/tradePricingPresentation": "./src/types/tradePricingPresentation.ts",
+    "./molecules/BsPriceApprovalFields": "./src/molecules/BsPriceApprovalFields.vue",
+    "./types/priceApprovalPresentation": "./src/types/priceApprovalPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",
