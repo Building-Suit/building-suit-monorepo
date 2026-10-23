@@ -292,6 +292,14 @@
       "existingUnchangedCasesPassed": 48,
       "repairedShellCasesPassed": 8,
       "clinicalAcceptance": false
+    },
+    "qualifiedSourceSha": "024d1e011c52f7adcf030acf3e88a2790c185342",
+    "actualSasPostgrestCatalog": "PASS; canonical pg-safeupdate/authenticator/PostgREST protocol and retrospective branch; no hosted writes",
+    "finalRepositoryUnit": {
+      "total": 2049,
+      "passed": 2026,
+      "failed": 0,
+      "skipped": 23
     }
   }
 }
