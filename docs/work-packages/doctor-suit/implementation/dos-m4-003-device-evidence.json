@@ -30,5 +30,14 @@
     "API level",
     "fixed case statuses",
     "owned cleanup"
-  ]
+  ],
+  "latest_executed_build": {
+    "source": "4b537e2cd240856c4166a1cbf3b6f19598c19db5",
+    "run": 40024324977,
+    "doctor_app_java": "passed",
+    "doctor_app_instrumentation_java_and_apk": "passed",
+    "overall": "failed",
+    "reason": "unqualified aggregate builds third-party Cordova instrumentation with duplicate Kotlin stdlib classes",
+    "device_cases": "unrun; build dependency failed"
+  }
 }
