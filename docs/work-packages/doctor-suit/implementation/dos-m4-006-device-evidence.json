@@ -1,6 +1,6 @@
 {
   "task": "DOS-M4-006",
-  "status": "synthetic engineering in progress",
+  "status": "synthetic notes integration implemented; native actual-service/device and qualified acceptance open",
   "parent_pr": 457,
   "parent_sha": "e0777b28983545b02e984355af509722382c586b",
   "task_acceptance": false,
@@ -216,5 +216,41 @@
         "offlineChartApproval": false
       }
     ]
+  },
+  "checks": {
+    "broad_doctor_contract_ui_ux": {
+      "pass": 720,
+      "fail": 0,
+      "phase": "before later portable-runtime and amendment cases"
+    },
+    "full_repository": {
+      "tests": 2273,
+      "pass": 2196,
+      "fail": 54,
+      "skip": 23,
+      "all_failure_locations": "shop-suit",
+      "phase": "first integrated controller/repository/shared UI; later native-only cases verified separately"
+    },
+    "latest_tasks002_through006": {
+      "pass": 74,
+      "fail": 0,
+      "task006_cases": 18
+    },
+    "all_app_types": "8 successful at concurrency1; later native-only changes pass separate mobile check",
+    "lint": "mobile/shared/UI pass; catalogue0errors/5 inherited warnings",
+    "boundaries": "6Suits/7apps/137templates/80 historical migrations unchanged",
+    "builds": "final static native bundle/sync and Doctor web production build pass",
+    "canonical_packets": {
+      "milestones": 9,
+      "tasks": 104,
+      "fingerprints_and_graph": "unchanged; pass"
+    }
+  },
+  "native_encounter_runtime": "unrun; shell/vault receipts do not substitute",
+  "last_initial_ci": {
+    "sourceHead": "667b98e746e4d108394096e06995d2beb6392f92",
+    "run": 40028052579,
+    "conclusion": "failure",
+    "known_inherited_harness_issue": "patients route now registered; task005 corrects unknown input; actual task006 runtime remains unrun"
   }
 }

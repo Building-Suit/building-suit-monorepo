@@ -1,3 +1,5 @@
+import {createNativeEncounter,nativeEncounterState} from '../utils/nativeEncounter'
+import {createNativeEncounterRepository} from '../utils/nativeEncounterRepository'
 import {createNativePatients,nativePatientsState} from '../utils/nativePatients'
 import {createNativePatientsRepository} from '../utils/nativePatientsRepository'
 import {createNativeContext,nativeContextState,nativeContextId} from '../utils/nativeContext'
@@ -22,6 +24,10 @@ export default defineNuxtPlugin(async app=>{
   const patients=createNativePatients(patientRepository,()=>auth.identity()&&context.state.phase==='ready'?context.state.current?.context??null:null,reactive(nativePatientsState()))
   context.registerClear(patients.clear)
   app.provide('doctorNativePatients',patients)
+  const encounterRepository=configured&&repository?createNativeEncounterRepository(configured,nativeAuthTransport,auth,()=>context.state.phase==='ready'?context.state.current:null,repository,()=>{void context.clear()}):null
+  const encounters=createNativeEncounter(encounterRepository,()=>auth.identity()&&context.state.phase==='ready'?context.state.current?.context??null:null,reactive(nativeEncounterState()))
+  context.registerClear(encounters.clear)
+  app.provide('doctorNativeEncounter',encounters)
   const shell:ReturnType<typeof createDoctorMobileShell>=createDoctorMobileShell({identity:auth.identity,selection:context.selection,load:async(_route,selection,signal)=>{const choice=context.state.current,identity=auth.identity();if(!repository||!choice||!identity||nativeContextId(choice.context)!==nativeContextId(selection))throw new Error('Unavailable');return(await repository.resolve(choice,identity,signal)).context}},state)
   app.provide('doctorNativeSession',auth);app.provide('doctorNativeAvailability',readiness)
   let admission=0,disposed=false,active=true,monitor:ReturnType<typeof setTimeout>|undefined,expiry:ReturnType<typeof setTimeout>|undefined

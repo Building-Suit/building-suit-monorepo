@@ -22,7 +22,7 @@ export interface BsClinicalWorkspaceView {
  reading:{id:string;version:string;status:string;notes:{label:string;value:string}[];intake:{id:string;kind:string;knowledge:string;source:string;text:string;value:string;unit:string}[];prescriptions:{id:string;name:string;identity:string;strength:string;form:string;amount:string;route:string;schedule:string;instructions:string}[];orders:{id:string;kind:string;request:string;due:string;state:string;reason:string}[];results:{id:string;order:string;document:string;stage:string;annotation:string}[]}|null
  documents:{value:string;label:string;documentId:string;versionId:string}[]
  documentsHref:string;canUpload:boolean;documentsLoading:boolean;documentsPage:number;documentsTotal:number
- editor:{title:string;dirty:boolean;pending:boolean;error:string|null;disabled:boolean;creating:boolean}
+ editor:{title:string;dirty:boolean;pending:boolean;error:string|null;disabled:boolean;creating:boolean;readOnly?:boolean}
  confirmation:{title:string;description:string;needsReason:boolean;needsRecipient:boolean;pending:boolean;error:string|null}
  upload:{pending:boolean;error:string|null}
 }
