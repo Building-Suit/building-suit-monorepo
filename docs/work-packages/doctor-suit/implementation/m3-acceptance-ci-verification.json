@@ -315,6 +315,58 @@
         ]
       },
       "aggregate_acceptance": false
+    },
+    {
+      "head": "5c3a13e8b58e23f6b329f1c12cd7fee6526ef732",
+      "run_id": 40017112074,
+      "sql": "passed including pinned public-schema generation",
+      "public_preview": {
+        "passed": 60,
+        "failed": 0
+      },
+      "account_protocol": {
+        "passed": 85,
+        "failed": 0
+      },
+      "delegation_stress": {
+        "passed": 4,
+        "failed": 0
+      },
+      "m3_browser": {
+        "passed": [
+          "DOS-M3-001",
+          "DOS-M3-002",
+          "DOS-M3-004",
+          "DOS-M3-005",
+          "DOS-M3-006",
+          "DOS-M3-007",
+          "DOS-M3-008",
+          "DOS-M3-009",
+          "DOS-M3-010"
+        ],
+        "failed": [
+          {
+            "task": "DOS-M3-003",
+            "category": "value-equality",
+            "location": {
+              "file": "dos-m3-003.spec.ts",
+              "line": 54,
+              "column": 107
+            }
+          }
+        ],
+        "details": "Readable source now identifies the end-of-scroll equality assertion. The earlier image-positioning hypothesis was not the final cause. No dimensions were retained at this source."
+      },
+      "inherited_actual_provider": "passed",
+      "shared_auth_parity": {
+        "passed": 48,
+        "failed": 0
+      },
+      "shared_settings": {
+        "passed": 6,
+        "failed": 6
+      },
+      "aggregate_acceptance": false
     }
   ],
   "local_execution_scope": {
@@ -393,5 +445,14 @@
       "collection_is_execution": false
     },
     "runtime": "requires new exact-source CI; aggregate M3 acceptance remains failed at last executed source; no expensive suite repeated before focused diagnosis"
+  },
+  "geometry_diagnostic_followup": {
+    "change": "Keep the existing scroll movement/end assertions and add failure-only annotation with clientWidth,scrollWidth,scrollLeft and fixed viewport/direction/theme flags. Reader strictly validates bounded numeric fields and rejects arbitrary keys/strings.",
+    "validation": {
+      "evidence_privacy_tests_passed": 13,
+      "m3_collection": 10,
+      "collection_is_execution": false
+    },
+    "runtime": "requires new exact-source CI; no scroll limit/tolerance/layout fix guessed before geometry is available"
   }
 }
