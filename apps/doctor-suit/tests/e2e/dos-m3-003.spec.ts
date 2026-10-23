@@ -16,7 +16,7 @@ test('DOS-M3-003: actual reception exceptions, two-actor reconciliation, walk-in
   await expect(c).toHaveCount(1)
   // Locator attribute reads re-resolve a card replaced by a board refresh.
   // Element evaluation can race detachment between resolution and execution.
-  const disclosure=c.locator('details').filter({has:c.getByText('Actions and history',{exact:true})})
+  const disclosure=c.locator('details').filter({has:page.getByText('Actions and history',{exact:true})})
   if(await disclosure.getAttribute('open')===null)await disclosure.getByText('Actions and history',{exact:true}).click()
   await c.getByRole('button',{name:action,exact:true}).click()
   return page.getByRole('dialog')
