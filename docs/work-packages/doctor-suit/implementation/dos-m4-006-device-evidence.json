@@ -253,5 +253,10 @@
     "conclusion": "failure",
     "known_inherited_harness_issue": "patients route now registered; task005 corrects unknown input; actual task006 runtime remains unrun"
   },
-  "synced_parent_sha": "32f9a999ab026f4e89b6a83bb7c55d9867ebfc00"
+  "synced_parent_sha": "32f9a999ab026f4e89b6a83bb7c55d9867ebfc00",
+  "publication_coverage_followup": {
+    "initial": "failed: unclassified packages/contracts/src/doctorMobile.ts",
+    "correction": "append internal route-contract support fragment; no code/assertions changed",
+    "validation": "fresh release coverage/preflight required before next task"
+  }
 }
