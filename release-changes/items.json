@@ -2643,7 +2643,8 @@
         "path": "packages/ui/src/templates/BsAppointmentsPage.vue",
         "contains": "if (id) emit('edit', id)"
       }
-    ]
+    ],
+    "reason": "The current appointment detail dialog was destroyed as its editor opened, disconnecting the focus-return control. Keep the informational dialog mounted under the editor and qualify the actual dialog journey in both locales."
   },
   {
     "id": "ss-electrical-appointment-dialog-support-20261023",
