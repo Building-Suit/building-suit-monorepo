@@ -2686,5 +2686,65 @@
     "sources": [
       "ss-electrical-shared-preview-qualification-20261023"
     ]
+  },
+  {
+    "id": "ss-electrical-appointment-editor-context-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsAppointmentsPage.vue"
+    ],
+    "notes": {
+      "title": {
+        "en": "Return to appointment details after editing",
+        "ar": "العودة إلى تفاصيل الموعد بعد التعديل"
+      },
+      "summary": {
+        "en": "Appointment details stay available while you edit, and keyboard focus returns to Reschedule when you close the editor.",
+        "ar": "تبقى تفاصيل الموعد متاحة أثناء التعديل، ويعود تركيز لوحة المفاتيح إلى إعادة الجدولة عند إغلاق المحرر."
+      },
+      "details": {
+        "en": "Unsaved-change confirmation, pending-write protection and cancellation confirmations retain their existing behavior.",
+        "ar": "تحتفظ تأكيدات التغييرات غير المحفوظة وحماية الحفظ الجاري وتأكيدات الإلغاء بسلوكها الحالي."
+      }
+    },
+    "sources": [
+      "ss-electrical-appointment-editor-context-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsAppointmentsPage.vue",
+        "contains": "if (id) emit('edit', id)"
+      }
+    ],
+    "reason": "The current appointment detail dialog was destroyed as its editor opened, disconnecting the focus-return control. Keep the informational dialog mounted under the editor and qualify the actual dialog journey in both locales."
+  },
+  {
+    "id": "ss-electrical-appointment-dialog-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsAppointmentsPage.vue",
+      "apps/shop-suit/tests/e2e/appointment-actions.spec.ts",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify the current shared appointment detail/editor composition, actual scope-source watcher and nested Escape/focus recovery. Only Shop uses this operational route and has public registration for these notes; other dependency consumers remain internal provenance with no product activation.",
+    "sources": [
+      "ss-electrical-appointment-dialog-support-20261023"
+    ]
   }
 ]
