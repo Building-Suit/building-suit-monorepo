@@ -486,5 +486,37 @@
     "change": "Full-page capture of the scrolled queue, with visible-region assertion; all prior cases/thresholds/variants unchanged",
     "accepted": false,
     "new_runtime": "unrun until fresh exact-source CI"
+  },
+  "background_refresh_followup": {
+    "executed_source": "f910e89c0ecbb1f1503548d13089029cb554dcbd",
+    "run": 40030017610,
+    "m3_passed": 9,
+    "failed_task": "DOS-M3-003",
+    "category": "value-equality",
+    "geometry": {
+      "clientWidth": 308,
+      "scrollWidth": 379,
+      "left": 0,
+      "width": 390,
+      "rtl": true,
+      "dark": true
+    },
+    "root_cause": "loading=true on every read unmounted the queue; separate first-query and same-query refreshing",
+    "reproduction": "3 state cases failed before correction",
+    "focused_tests_passed": 38,
+    "doctor_typecheck": "passed",
+    "new_runtime": "requires fresh exact-source CI; no thresholds/assertions/variants removed",
+    "validation": {
+      "full_root": {
+        "tests": 2201,
+        "passed": 2124,
+        "failed": 54,
+        "skipped": 23,
+        "all_failure_locations": "apps/shop-suit/tests"
+      },
+      "all_parent_app_types": "passed;7 apps serially",
+      "app_and_shared_lint": "passed",
+      "workspace": "passed;6 Suits/130 templates/80 historical migrations unchanged"
+    }
   }
 }

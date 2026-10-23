@@ -43,7 +43,10 @@ test('DOS-M3-003: actual reception exceptions, two-actor reconciliation, walk-in
    const v=await openOperations(browser,'/appointments',{role:'reception',width,ar,dark})
    try{
     await expect(v.page.getByLabel(ar?'التاريخ المحلي':'Local date',{exact:true})).toBeVisible()
-    await v.page.getByRole('button',{name:ar?'تحديث':'Refresh',exact:true}).click()
+    const refreshButton=v.page.getByRole('button',{name:ar?'تحديث':'Refresh',exact:true})
+    await expect(refreshButton).toBeEnabled()
+    const refreshed=v.page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/rpc/doctor_appointment_board'))
+    await refreshButton.click();await refreshed;await expect(refreshButton).toBeEnabled()
     await expect(v.page.getByRole('heading',{name:ar?'طابور الحضور الحالي':'Current waiting queue',exact:true})).toBeVisible()
     await expect(v.page.getByRole('row').filter({hasText:'Synthetic reception walk-in patient'})).toHaveCount(1)
     await expect(v.page.locator('html')).toHaveAttribute('dir',ar?'rtl':'ltr')
