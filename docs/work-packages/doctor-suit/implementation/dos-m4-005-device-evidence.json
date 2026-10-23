@@ -30,7 +30,7 @@
       "tasks": 104,
       "fingerprints_and_graph": "pass unchanged"
     },
-    "serial_web_consumer_typechecks": "running after stopping concurrent memory-pressure run"
+    "serial_web_consumer_typechecks": "7 successful/7 total at concurrency1; separate latest mobile typecheck passed"
   },
   "parent_full_unit_baseline": {
     "tests": 2232,
