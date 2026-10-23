@@ -204,6 +204,60 @@
           "Automation"
         ]
       }
+    },
+    {
+      "head": "75ded8f5be428b2b86bef69070c810e3c1df7b34",
+      "run_id": 39859486296,
+      "sql": "passed: 1871 assertions/59 suites, concurrency, 86-table encrypted recovery and public schema type generation using CLI-pinned Meta v0.98.0",
+      "public_preview": {
+        "passed": 60,
+        "failed": 0
+      },
+      "account_protocol": {
+        "passed": 83,
+        "failed": 2,
+        "remaining": "EN/AR reschedule uncertain-response text matches both form summary and offers error; scope assertion to the form-owned alert"
+      },
+      "m3_browser": {
+        "passed": [
+          "DOS-M3-001",
+          "DOS-M3-002",
+          "DOS-M3-004",
+          "DOS-M3-005",
+          "DOS-M3-006",
+          "DOS-M3-007",
+          "DOS-M3-008",
+          "DOS-M3-009",
+          "DOS-M3-010"
+        ],
+        "failed": [
+          {
+            "task": "DOS-M3-003",
+            "category": "timeout",
+            "location": {
+              "file": "dos-m3-003.spec.ts",
+              "line": 14,
+              "column": 246
+            }
+          }
+        ],
+        "details": "Reception action helper can close an already-open disclosure before selecting another action. Remaining later assertions are not inferred as passed."
+      },
+      "inherited_actual_provider": "passed: Auth recovery/PKCE/reauthentication, Storage/Functions/Realtime, synthetic M1/M2/manual-payment/administrative candidate coverage",
+      "shared_auth_parity": {
+        "passed": 48,
+        "failed": 0
+      },
+      "shared_settings": {
+        "passed": 6,
+        "failed": 6,
+        "failing_consumers": [
+          "Docs",
+          "Inventory",
+          "Automation"
+        ]
+      },
+      "aggregate_acceptance": false
     }
   ],
   "local_execution_scope": {
@@ -250,5 +304,23 @@
     "Legacy rescheduling protocol handles current consultation-availability RPC, preserves source/destination permissions, excludes only the original appointment and rejects typed snapshots it cannot model.",
     "OTP now expects explicit wizard completion into workspace and proves one practice/location setup with professional verification still unverified.",
     "All staff queue selectors identify the keyboard-scroll region; failed M3 categories become safe GitHub annotations before later independent checks finish."
-  ]
+  ],
+  "fixture_followup": {
+    "observed_at": "2026-10-23T19:47:16.668826+00:00",
+    "changes": [
+      "Open reception actions only when its native disclosure is closed, including repeated no-show correction/reschedule actions.",
+      "Assert the reschedule form-owned alert instead of matching the separate same-text offers error."
+    ],
+    "validation": {
+      "protocol_collection": 85,
+      "m3_collection": 10,
+      "collection_is_execution": false,
+      "legacy_availability_and_scroll_units": {
+        "passed": 5,
+        "failed": 0
+      },
+      "full_suite": "not repeated for fixture-only edits; previous exact 54 inherited Shop failures retained"
+    },
+    "runtime": "requires new exact-head CI; no assertion/case removed or retries added"
+  }
 }
