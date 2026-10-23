@@ -170,5 +170,39 @@
       "strict_workspace_check": "passed; 6 Suits/7 applications/131 templates/80 historical migrations unchanged"
     },
     "runtime": "new exact-head native CI required; previous API29 failure retained; compilation/API polyfills do not qualify layout/CSS/device or grant clinical/offline authority"
+  },
+  "confirmed_native_execution": {
+    "source_head": "f29777d000a49ae6278dfda9291d0d73d36b25fd",
+    "run_id": 40015081233,
+    "workflow_result": "success",
+    "apk_sha256": "4bff8322b5b0c2c57648f480b00eb1eb474418e00338fa4df8de6e2455012660",
+    "api29_webview74": {
+      "cases_passed": 5,
+      "failed": 0,
+      "unrun": 0
+    },
+    "api36_webview133": {
+      "cases_passed": 5,
+      "failed": 0,
+      "unrun": 0
+    },
+    "cleanup": "passed on both devices",
+    "emulator_matrix_accepted": true,
+    "physical_device": false,
+    "qualified_platform_or_task_acceptance": false
+  },
+  "confirmed_repository_ci_baseline": {
+    "source_head": "f29777d000a49ae6278dfda9291d0d73d36b25fd",
+    "run_id": 40015081320,
+    "command": "pnpm test",
+    "tests": 2214,
+    "passed": 2137,
+    "failed": 54,
+    "skipped": 23,
+    "failure_records": 54,
+    "failure_products": [
+      "shop-suit"
+    ],
+    "result": "failed; all54 inherited Shop failures retained"
   }
 }

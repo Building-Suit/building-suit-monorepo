@@ -1,6 +1,6 @@
 {
   "task": "DOS-M4-002",
-  "status": "partial: API36/WebView133 passes five synthetic cases; API29/WebView74 cold launch failed",
+  "status": "synthetic API29/WebView74 and API36/WebView133 five-case matrix passed at sourcef29777d0; qualified/physical/task acceptance remains open",
   "source_candidate": "Each retained CI receipt binds its own exact source head and APK digest; this packet does not grant aggregate acceptance.",
   "command": "node apps/doctor-suit/mobile/doctor/scripts/verify-android.mjs",
   "runner": "GitHub-owned disposable Android emulator",
@@ -26,7 +26,7 @@
   "clinical_approval": false,
   "offline_clinical_approval": false,
   "store_upload": false,
-  "acceptance": "failed native matrix at latest source62d8eeb4 because API29 cold launch fails; physical/qualified clinical/offline/distribution acceptance remains unavailable",
+  "acceptance": "synthetic emulator matrix passed at exact sourcef29777d0; this is not physical-device, qualified platform, clinical, offline or distribution acceptance",
   "first_execution": {
     "source_head": "c08fc8b018453823699912efbd29661f9f5e275a",
     "run_id": 39852312601,
@@ -258,5 +258,107 @@
     ],
     "aggregate_acceptance": false,
     "limitation": "Fresh hierarchy observations confirm API36/WebView133 passes all five cases; API29/WebView74 fails cold launch, four cases unrun. Visible package/WebView and no fixed client issue category do not identify a confirmed root cause. Mandatory matrix unchanged; no physical/qualified/clinical approval."
+  },
+  "verified_runtime_receipts": {
+    "run_id": 40015081233,
+    "source_head": "f29777d000a49ae6278dfda9291d0d73d36b25fd",
+    "android_build_job": 120625132272,
+    "device_jobs": {
+      "29": 120626171302,
+      "36": 120626171167
+    },
+    "receipts": [
+      {
+        "version": 1,
+        "sourceHead": "f29777d000a49ae6278dfda9291d0d73d36b25fd",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "4bff8322b5b0c2c57648f480b00eb1eb474418e00338fa4df8de6e2455012660",
+        "api": 29,
+        "accepted": true,
+        "stage": "complete",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 74,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "passed"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "passed"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "sourceHead": "f29777d000a49ae6278dfda9291d0d73d36b25fd",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "4bff8322b5b0c2c57648f480b00eb1eb474418e00338fa4df8de6e2455012660",
+        "api": 36,
+        "accepted": true,
+        "stage": "complete",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 133,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "passed"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "passed"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      }
+    ],
+    "emulator_matrix_acceptance": true,
+    "task_acceptance": false,
+    "limitation": "Five signed-out synthetic navigation/lifecycle cases pass on both planned emulators. No native sign-in, physical device, visual/accessibility qualification, clinical/offline/distribution or milestone acceptance."
   }
 }
