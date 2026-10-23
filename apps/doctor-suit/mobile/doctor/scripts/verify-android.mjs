@@ -3,6 +3,7 @@ import {readFile, writeFile, mkdir} from 'node:fs/promises'
 import {createHash} from 'node:crypto'
 import {resolve} from 'node:path'
 import {androidRuntimeDiagnostics} from './android-diagnostics.mjs'
+import {androidForeground} from './android-lifecycle.mjs'
 
 if (process.env.GITHUB_ACTIONS !== 'true' || process.env.CI !== 'true') throw new Error('Owned CI emulator required')
 const api = Number(process.env.DOCTOR_ANDROID_API)
@@ -21,6 +22,14 @@ const serial = devices[0], app = metadata.appId
 const adb = args => execFileSync('adb', ['-s', serial, ...args], {encoding: 'utf8', timeout: 30000, maxBuffer: 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe']}).trim()
 if (Number(adb(['shell', 'getprop', 'ro.build.version.sdk'])) !== api) throw new Error('Emulator API mismatch')
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms))
+async function foreground(expected){
+  const deadline=Date.now()+20000
+  while(Date.now()<deadline){
+    try{const state=androidForeground(adb(['shell','dumpsys','activity','activities']));if(state.known&&state.syntheticForeground===expected)return}catch{/* Bounded observation only; no launch/action retry. */}
+    await pause(250)
+  }
+  throw new Error('Expected owned activity transition unavailable')
+}
 async function visibleText(value) {
   const deadline = Date.now() + 30000
   while (Date.now() < deadline) {
@@ -36,6 +45,7 @@ async function visibleText(value) {
 const cases = ['cold-launch-signed-out', 'cold-deep-link-signed-out', 'hardware-back-workspace', 'background-resume-signed-out', 'unknown-deep-link-denied']
   .map(id => ({id, status: 'unrun'}))
 let stage = 'install', installed = false, cleanup
+const lifecycle={backgroundObserved:false,resumeObserved:false}
 try {
   adb(['install', '-r', apk]); installed = true
   adb(['shell', 'pm', 'clear', app])
@@ -52,7 +62,9 @@ try {
   await visibleText('Your practice, on Android'); await visibleText('You are signed out'); cases[2].status = 'passed'
   stage = cases[3].id
   adb(['shell', 'input', 'keyevent', 'KEYCODE_HOME'])
+  await foreground(false);lifecycle.backgroundObserved=true
   adb(['shell', 'am', 'start', '-W', '-n', app + '/.MainActivity'])
+  await foreground(true);lifecycle.resumeObserved=true
   await visibleText('You are signed out'); await visibleText('Your practice, on Android'); cases[3].status = 'passed'
   stage = cases[4].id
   adb(['shell', 'am', 'start', '-W', '-a', 'android.intent.action.VIEW', '-d', 'doctor-suit-synthetic://patients', app])
@@ -76,7 +88,7 @@ try {
   const receipt = {
     version: 1, sourceHead: head, appId: app, apkSha256: metadata.apkSha256, api,
     accepted: stage === 'complete' && cleanup === 'passed' && cases.every(item => item.status === 'passed'),
-    stage, cleanup, runtime, runner: 'owned-disposable-android-emulator', physicalDevice: false, cases,
+    stage, cleanup, runtime, lifecycle, runner: 'owned-disposable-android-emulator', physicalDevice: false, cases,
     syntheticOnly: true, clinicalApproval: false, offlineClinicalApproval: false, storeUpload: false,
   }
   await writeFile('test-results/doctor-mobile/device-' + api + '.json', JSON.stringify(receipt, null, 2) + '\n')

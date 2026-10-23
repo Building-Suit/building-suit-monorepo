@@ -1,4 +1,5 @@
 import {androidRuntimeDiagnostics} from '../../mobile/doctor/scripts/android-diagnostics.mjs'
+import {androidForeground} from '../../mobile/doctor/scripts/android-lifecycle.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
@@ -12,6 +13,15 @@ function fixture(){
  return{identity,selection,value,port,shell:createDoctorMobileShell(port)}
 }
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return{promise,resolve}}
+test('native lifecycle observation requires a real foreground and prefers the current top activity',()=>{
+ assert.deepEqual(androidForeground('mResumedActivity: ActivityRecord{abc u0 com.buildingsuit.doctor.synthetic/.MainActivity t1}'),{known:true,syntheticForeground:true})
+ assert.deepEqual(androidForeground('mResumedActivity: ActivityRecord{old u0 com.buildingsuit.doctor.synthetic/.MainActivity t1}\n topResumedActivity=ActivityRecord{new u0 com.android.launcher/.Launcher t2}'),{known:true,syntheticForeground:false})
+ for(const input of [null,'mResumedActivity: null','mLastPausedActivity: ActivityRecord{old u0 com.buildingsuit.doctor.synthetic/.MainActivity t1}','topResumedActivity=ActivityRecord{a u0 com.android.launcher/.Launcher t2}\ntopResumedActivity=ActivityRecord{b u0 com.buildingsuit.doctor.synthetic/.MainActivity t3}'])assert.deepEqual(androidForeground(input),{known:false,syntheticForeground:false})
+})
+test('native lifecycle receipts expose no other application/component names',()=>{
+ const state=androidForeground('topResumedActivity=ActivityRecord{abc u0 private.sentinel/.SecretActivity t1}')
+ assert.equal(state.known,true);assert.equal(state.syntheticForeground,false);assert.equal(JSON.stringify(state).includes('sentinel'),false)
+})
 test('bundled compatibility dependency restores boot APIs absent from the stock renderer',()=>{
  const require=createRequire(new URL('../../mobile/doctor/package.json',import.meta.url))
  // Isolate legacy globals from the test runner and verify the actual pinned

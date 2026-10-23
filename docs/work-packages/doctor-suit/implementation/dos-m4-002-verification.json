@@ -204,5 +204,19 @@
       "shop-suit"
     ],
     "result": "failed; all54 inherited Shop failures retained"
+  },
+  "foreground_observation_followup": {
+    "source": "f65535c81aaab74a2bb09515744d2f20e90462dd",
+    "run_id": 40017225361,
+    "api29": "five pass",
+    "api36": "background/resume fails; final owned package/WebView absent; denial unrun",
+    "aggregate_acceptance": false,
+    "change": "Observe real background before resume and real owned foreground after resume; one HOME and one launch, no action retry. Bounded parser emits booleans only and refuses null/ambiguous activity state.",
+    "local_tests": {
+      "mobile_boundaries_passed": 20,
+      "failed": 0
+    },
+    "syntax": "passed",
+    "runtime": "pending new exact-source CI"
   }
 }
