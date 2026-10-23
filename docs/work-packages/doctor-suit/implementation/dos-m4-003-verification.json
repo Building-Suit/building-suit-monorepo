@@ -3,7 +3,7 @@
   "parent_pr": 446,
   "initial_parent_sha": "f65535c81aaab74a2bb09515744d2f20e90462dd",
   "observed_at": "2026-10-23T20:55:17.575739+00:00",
-  "phase": "working tree validation before native candidate commit and parent diagnostic sync",
+  "phase": "committed native candidate after history-preserving sync with parent d9931089",
   "checks": {
     "native_session_protocol_privacy_units": {
       "passed": 17,
@@ -29,7 +29,13 @@
     "boundaries": "6 Suits/7 applications/134 templates/80 historical migrations unchanged; zero debt",
     "mobile_static_build": "passed",
     "capacitor_sync": "passed, no SDK/runtime",
-    "docs_catalogue_build": "passed"
+    "docs_catalogue_build": "passed",
+    "merged_parent_and_session_units": {
+      "passed": 33,
+      "failed": 0
+    },
+    "latest_mobile_lint_and_typecheck": "passed",
+    "latest_static_build_and_capacitor_sync": "passed; no SDK/runtime"
   },
   "native_execution": "unrun for vault candidate; bound instrumentation APK and seven-case verification added to owned CI",
   "limitations": [
@@ -38,5 +44,6 @@
     "No hosted/provider activation, real patient data, Automation mutation or promotion.",
     "54 inherited Shop failures still block full CI."
   ],
-  "execution_scope": "Doctor application/provider and Android runtime CI-only; required root/shared units retain existing isolated Shop receipt browser cases locally."
+  "execution_scope": "Doctor application/provider and Android runtime CI-only; required root/shared units retain existing isolated Shop receipt browser cases locally.",
+  "synced_parent_sha": "d993108969ea5d58ad4f0fcf3fac0a2e47694f28"
 }
