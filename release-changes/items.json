@@ -2644,5 +2644,29 @@
         "contains": "if (id) emit('edit', id)"
       }
     ]
+  },
+  {
+    "id": "ss-electrical-appointment-dialog-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsAppointmentsPage.vue",
+      "apps/shop-suit/tests/e2e/appointment-actions.spec.ts",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify the current shared appointment detail/editor composition, actual scope-source watcher and nested Escape/focus recovery. Only Shop uses this operational route and has public registration for these notes; other dependency consumers remain internal provenance with no product activation.",
+    "sources": [
+      "ss-electrical-appointment-dialog-support-20261023"
+    ]
   }
 ]
