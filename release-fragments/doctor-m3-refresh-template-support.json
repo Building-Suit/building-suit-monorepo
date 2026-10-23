@@ -1,0 +1,19 @@
+{
+  "id": "doctor-m3-refresh-template-support",
+  "task": "DOS-M3-ACCEPTANCE-CI",
+  "suits": [
+    "doctor-suit",
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
+    "apps/building-suit-docs/app/pages/components.vue"
+  ],
+  "reason": "Optional refreshing state keeps the current appointment queue mounted and disables controls while fresh data arrives. Preserve existing consumer defaults, canonical template ownership and catalogue; no operational/provider activation."
+}
