@@ -38,5 +38,206 @@
     "inherited_shop_failures": 54,
     "skipped": 23,
     "repeated_for_task005": false
-  }
+  },
+  "executions": [
+    {
+      "sourceHead": "e0777b28983545b02e984355af509722382c586b",
+      "run": 40027392414,
+      "result": "failed at unknown-deep-link-denied on both APIs; first4 shell and all7 vault cases pass per API",
+      "cause": "harness still classified the now-implemented patients destination as unknown",
+      "change": "use an actually unregistered destination, preserving all cases/assertions and acceptance gates",
+      "receipts": [
+        {
+          "version": 1,
+          "sourceHead": "e0777b28983545b02e984355af509722382c586b",
+          "appId": "com.buildingsuit.doctor.synthetic",
+          "apkSha256": "9c2d439b1bb53aff97eef3ea1060358ceee404c07f117bed02d38f02c623a126",
+          "api": 29,
+          "accepted": false,
+          "stage": "unknown-deep-link-denied",
+          "cleanup": "passed",
+          "runtime": {
+            "webviewMajor": 74,
+            "clientIssues": [],
+            "webviewVisible": true,
+            "syntheticPackageVisible": true
+          },
+          "lifecycle": {
+            "backgroundObserved": true,
+            "resumeObserved": true
+          },
+          "runner": "owned-disposable-android-emulator",
+          "physicalDevice": false,
+          "cases": [
+            {
+              "id": "cold-launch-signed-out",
+              "status": "passed"
+            },
+            {
+              "id": "cold-deep-link-signed-out",
+              "status": "passed"
+            },
+            {
+              "id": "hardware-back-workspace",
+              "status": "passed"
+            },
+            {
+              "id": "background-resume-signed-out",
+              "status": "passed"
+            },
+            {
+              "id": "unknown-deep-link-denied",
+              "status": "failed"
+            }
+          ],
+          "syntheticOnly": true,
+          "clinicalApproval": false,
+          "offlineClinicalApproval": false,
+          "storeUpload": false
+        },
+        {
+          "version": 1,
+          "task": "DOS-M4-003",
+          "sourceHead": "e0777b28983545b02e984355af509722382c586b",
+          "apkSha256": "9c2d439b1bb53aff97eef3ea1060358ceee404c07f117bed02d38f02c623a126",
+          "testApkSha256": "a019b7a965cfb5ad7d03e607a14ad2199361cba3ea8955299fdd48847642f117",
+          "api": 29,
+          "cases": [
+            {
+              "id": "fresh-install-empty",
+              "status": "passed"
+            },
+            {
+              "id": "ciphertext-roundtrip",
+              "status": "passed"
+            },
+            {
+              "id": "tamper-denied",
+              "status": "passed"
+            },
+            {
+              "id": "namespace-denied",
+              "status": "passed"
+            },
+            {
+              "id": "purge-marker",
+              "status": "passed"
+            },
+            {
+              "id": "seed-before-reinstall",
+              "status": "passed"
+            },
+            {
+              "id": "fresh-after-reinstall",
+              "status": "passed"
+            }
+          ],
+          "stage": "complete",
+          "cleanup": "passed",
+          "issues": [],
+          "accepted": true,
+          "runner": "owned-disposable-android-emulator",
+          "physicalDevice": false,
+          "syntheticOnly": true,
+          "clinicalApproval": false,
+          "offlineChartApproval": false
+        },
+        {
+          "version": 1,
+          "sourceHead": "e0777b28983545b02e984355af509722382c586b",
+          "appId": "com.buildingsuit.doctor.synthetic",
+          "apkSha256": "9c2d439b1bb53aff97eef3ea1060358ceee404c07f117bed02d38f02c623a126",
+          "api": 36,
+          "accepted": false,
+          "stage": "unknown-deep-link-denied",
+          "cleanup": "passed",
+          "runtime": {
+            "webviewMajor": 133,
+            "clientIssues": [],
+            "webviewVisible": true,
+            "syntheticPackageVisible": true
+          },
+          "lifecycle": {
+            "backgroundObserved": true,
+            "resumeObserved": true
+          },
+          "runner": "owned-disposable-android-emulator",
+          "physicalDevice": false,
+          "cases": [
+            {
+              "id": "cold-launch-signed-out",
+              "status": "passed"
+            },
+            {
+              "id": "cold-deep-link-signed-out",
+              "status": "passed"
+            },
+            {
+              "id": "hardware-back-workspace",
+              "status": "passed"
+            },
+            {
+              "id": "background-resume-signed-out",
+              "status": "passed"
+            },
+            {
+              "id": "unknown-deep-link-denied",
+              "status": "failed"
+            }
+          ],
+          "syntheticOnly": true,
+          "clinicalApproval": false,
+          "offlineClinicalApproval": false,
+          "storeUpload": false
+        },
+        {
+          "version": 1,
+          "task": "DOS-M4-003",
+          "sourceHead": "e0777b28983545b02e984355af509722382c586b",
+          "apkSha256": "9c2d439b1bb53aff97eef3ea1060358ceee404c07f117bed02d38f02c623a126",
+          "testApkSha256": "a019b7a965cfb5ad7d03e607a14ad2199361cba3ea8955299fdd48847642f117",
+          "api": 36,
+          "cases": [
+            {
+              "id": "fresh-install-empty",
+              "status": "passed"
+            },
+            {
+              "id": "ciphertext-roundtrip",
+              "status": "passed"
+            },
+            {
+              "id": "tamper-denied",
+              "status": "passed"
+            },
+            {
+              "id": "namespace-denied",
+              "status": "passed"
+            },
+            {
+              "id": "purge-marker",
+              "status": "passed"
+            },
+            {
+              "id": "seed-before-reinstall",
+              "status": "passed"
+            },
+            {
+              "id": "fresh-after-reinstall",
+              "status": "passed"
+            }
+          ],
+          "stage": "complete",
+          "cleanup": "passed",
+          "issues": [],
+          "accepted": true,
+          "runner": "owned-disposable-android-emulator",
+          "physicalDevice": false,
+          "syntheticOnly": true,
+          "clinicalApproval": false,
+          "offlineChartApproval": false
+        }
+      ]
+    }
+  ]
 }

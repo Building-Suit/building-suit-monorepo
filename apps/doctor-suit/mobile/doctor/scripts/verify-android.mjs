@@ -67,7 +67,7 @@ try {
   await foreground(true);lifecycle.resumeObserved=true
   await visibleText('You are signed out'); await visibleText('Your practice, on Android'); cases[3].status = 'passed'
   stage = cases[4].id
-  adb(['shell', 'am', 'start', '-W', '-a', 'android.intent.action.VIEW', '-d', 'doctor-suit-synthetic://patients', app])
+  adb(['shell', 'am', 'start', '-W', '-a', 'android.intent.action.VIEW', '-d', 'doctor-suit-synthetic://unregistered', app])
   await visibleText('Access unavailable'); cases[4].status = 'passed'
   stage = 'complete'
 } catch {
