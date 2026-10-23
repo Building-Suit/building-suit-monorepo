@@ -801,6 +801,16 @@
       "adapterBoundary": "Separate native Doctor app projects scoped online-only patient reads into the same complete canonical templates. No local composition, patient identity matching, chart persistence or private file delivery; device/document policy acceptance remains held.",
       "task": "DOS-M4-005",
       "migrationStatus": "synthetic native routes; device and document acceptance pending"
+    },
+    {
+      "family": "native-clinical-notes",
+      "owner": "packages/ui",
+      "components": [
+        "BsClinicalWorkspacePage"
+      ],
+      "adapterBoundary": "One canonical clinical workspace template supports optional editor sections and read-only uncertain/conflicted drafts. Native Doctor owns current server scope, versioned synthetic commands and no-replay outcome state. Shared UX retains dialog, dirty-close and navigation confirmation. Existing web defaults retain all sections.",
+      "task": "DOS-M4-006",
+      "migrationStatus": "synthetic native notes route; qualified/native actual-service acceptance pending"
     }
   ]
 }

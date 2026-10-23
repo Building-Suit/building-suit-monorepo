@@ -1,3 +1,4 @@
+import {nativeOperationSignal} from './nativeWebCapabilities.ts'
 import type {DoctorMobileContext, DoctorPatientDirectory, DoctorPatientProfile, DoctorPatientQuery, DoctorDocumentDirectory} from '@building-suit/contracts'
 export interface NativePatientsPort {
   directory(context: DoctorMobileContext, query: DoctorPatientQuery, signal: AbortSignal): Promise<DoctorPatientDirectory>
@@ -28,7 +29,7 @@ export function createNativePatients(port: NativePatientsPort | null, context: (
     if (typeof query === 'string' ? !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(query) :
       !Number.isSafeInteger(query.page) || query.page < 0 || ![10,25,50].includes(query.size) || query.search.length > 160 || !['active','archived','all'].includes(query.status)) { state.phase = 'error'; return false }
     state.phase = 'loading'
-    const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(10000)])
+    const signal = nativeOperationSignal(controller.signal)
     try {
       const result = typeof query === 'string' ? await port.profile(selected, query, signal) : await port.directory(selected, {...query}, signal)
       if (revision !== generation || signal.aborted || nativePatientScopeKey(context()) !== key) return false

@@ -1,3 +1,4 @@
+import {nativeOperationSignal} from './nativeWebCapabilities.ts'
 import {decodeDoctorMobileContext, type DoctorMobileContext, type DoctorMobileIdentity, type DoctorMobileSelection} from '@building-suit/contracts'
 
 export interface NativeContextChoice {
@@ -58,7 +59,7 @@ export function createNativeContext(port: NativeContextPort | null, identity: ()
     try {
       await cleanup
       if (revision !== generation || actorKey(identity()) !== key || !actor || !port) return false
-      const result = nativeContextChoice(await port.resolve(option, actor, AbortSignal.any([controller.signal, AbortSignal.timeout(10000)])), actor)
+      const result = nativeContextChoice(await port.resolve(option, actor, nativeOperationSignal(controller.signal)), actor)
       if (revision !== generation || actorKey(identity()) !== key) return false
       if (nativeContextId(result.context) !== id) throw new Error('Context mismatch')
       state.current = result; state.phase = 'ready'; return true
@@ -74,7 +75,7 @@ export function createNativeContext(port: NativeContextPort | null, identity: ()
     if (!actor || !port) { await clear(); return false }
     if (!state.current) state.phase = 'loading'
     try {
-      const result = await port.list(actor, AbortSignal.any([controller.signal, AbortSignal.timeout(10000)]))
+      const result = await port.list(actor, nativeOperationSignal(controller.signal))
       if (revision !== generation || actorKey(identity()) !== key) return false
       if (!Array.isArray(result) || result.length > 200) throw new Error('Context unavailable')
       const options = result.map(item => nativeContextChoice(item, actor))

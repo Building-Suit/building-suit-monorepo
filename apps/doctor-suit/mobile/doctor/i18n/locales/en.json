@@ -10,7 +10,8 @@
     "workspace": "Dashboard",
     "schedule": "Schedule",
     "account": "Account",
-    "patients": "Patients"
+    "patients": "Patients",
+    "encounters": "Synthetic encounters"
   },
   "phase": {
     "loading": {
@@ -177,5 +178,216 @@
     "archivedEvent": "Attachment archived",
     "downloaded": "Attachment download requested",
     "devicePolicy": "File previews and downloads are unavailable until the device custody policy is approved and verified."
+  },
+  "clinical": {
+    "title": "Synthetic clinical workspace",
+    "description": "Encounters, entered content and preserved versions for workflow testing.",
+    "notice": "Synthetic data only. Qualified clinical approval is not recorded. A test attestation is not a professional signature and authorizes neither prescribing nor real-patient data.",
+    "unavailable": "This workspace requires separate synthetic clinical fixture access. Administrative permissions do not grant it.",
+    "retry": "Retry",
+    "search": "Search synthetic patient name",
+    "patient": "Synthetic patient",
+    "status": "Status",
+    "date": "Recorded time",
+    "open": "Open",
+    "create": "Add synthetic encounter",
+    "edit": "Edit draft",
+    "save": "Save draft",
+    "cancel": "Cancel",
+    "empty": "No matching encounters.",
+    "close": "Close",
+    "start": "Start synthetic encounter",
+    "finalize": "Finalize synthetic version",
+    "amend": "Start amendment",
+    "withdraw": "Withdraw version",
+    "print": "Print synthetic version",
+    "export": "Export synthetic record",
+    "release": "Release specific version",
+    "revoke": "Revoke release",
+    "confirm": "Confirm",
+    "reason": "Reason for action",
+    "recipient": "Explicitly linked recipient",
+    "expires": "Access duration",
+    "note": "Entered note",
+    "reviewNote": "Private review notes",
+    "intake": "History, allergies and observations",
+    "prescriptions": "Synthetic medicine instructions",
+    "orders": "Follow-up and requests",
+    "results": "Documents and review results",
+    "history": "Preserved versions",
+    "releases": "Limited releases",
+    "add": "Add",
+    "remove": "Remove from draft",
+    "kind": "Kind",
+    "knowledge": "Knowledge status",
+    "text": "Entered text",
+    "value": "Entered value",
+    "unit": "Entered unit",
+    "source": "Entry source",
+    "identity": "Unverified synthetic medicine identity",
+    "name": "Entered name",
+    "strength": "Entered strength",
+    "form": "Entered form",
+    "amount": "Entered amount",
+    "route": "Entered route",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "instructions": "Entered instructions",
+    "segments": "Schedule segments",
+    "timezone": "IANA timezone",
+    "interval": "Interval minutes (interval kind only)",
+    "weekdays": "Comma-separated weekdays (1 Monday–7 Sunday)",
+    "times": "Comma-separated local times (HH:mm)",
+    "request": "Entered request",
+    "due": "Optional due instant, ISO format with timezone",
+    "order": "Linked request",
+    "document": "Private documents",
+    "annotation": "Review annotation",
+    "revision": "Revision",
+    "actor": "Acting account",
+    "count": "Count",
+    "previous": "Previous",
+    "next": "Next",
+    "upload": "Upload private document",
+    "filename": "Filename",
+    "download": "Authorized download",
+    "syntheticIdentity": "Enter every value explicitly. There are no recommendations, inferred doses or assumed licensed medicine source. Validation establishes structural consistency only.",
+    "template": "Neutral synthetic template, revision 1. It is not an approved clinical template or specialty coverage.",
+    "privateNotes": "Working notes and intake remain practice-private. Releasing an artifact grants no chart membership and sends no external message.",
+    "releaseNotice": "Only a finalized synthetic version, its instructions and explicitly released results are available to an independently linked recipient, until expiry, withdrawal or supersession.",
+    "exportNotice": "Export includes every encounter revision, amendment link, event and document provenance digest. Snapshot time and the last included event ID are recorded; identical retries retain that snapshot. Storage bytes are separate; export grants no erasure or retention-policy approval."
+  },
+  "clinicalChoices": {
+    "intakeKinds": [
+      {
+        "value": "history",
+        "label": "History"
+      },
+      {
+        "value": "allergy",
+        "label": "Allergy"
+      },
+      {
+        "value": "observation",
+        "label": "Observation"
+      }
+    ],
+    "knowledge": [
+      {
+        "value": "missing",
+        "label": "Not collected"
+      },
+      {
+        "value": "unknown",
+        "label": "Unknown"
+      },
+      {
+        "value": "none_reported",
+        "label": "None reported"
+      },
+      {
+        "value": "reported",
+        "label": "Reported entry"
+      }
+    ],
+    "sources": [
+      {
+        "value": "patient",
+        "label": "Patient reported"
+      },
+      {
+        "value": "staff",
+        "label": "Staff entered, unreviewed"
+      },
+      {
+        "value": "clinician",
+        "label": "Fixture reviewer entered"
+      }
+    ],
+    "segmentKinds": [
+      {
+        "value": "interval",
+        "label": "Explicit interval"
+      },
+      {
+        "value": "weekdays",
+        "label": "Selected weekdays"
+      },
+      {
+        "value": "as_needed",
+        "label": "As-needed instructions, no cadence"
+      }
+    ],
+    "orderKinds": [
+      {
+        "value": "follow_up",
+        "label": "Follow-up"
+      },
+      {
+        "value": "lab",
+        "label": "Lab request"
+      },
+      {
+        "value": "imaging",
+        "label": "Imaging request"
+      },
+      {
+        "value": "referral",
+        "label": "Referral request"
+      }
+    ],
+    "orderStates": [
+      {
+        "value": "requested",
+        "label": "Requested"
+      },
+      {
+        "value": "tracking",
+        "label": "Operational tracking"
+      },
+      {
+        "value": "cancelled",
+        "label": "Cancelled with reason"
+      }
+    ],
+    "resultStages": [
+      {
+        "value": "requested",
+        "label": "Requested"
+      },
+      {
+        "value": "uploaded",
+        "label": "Uploaded, not reviewed"
+      },
+      {
+        "value": "received",
+        "label": "Received, not reviewed"
+      },
+      {
+        "value": "reviewed",
+        "label": "Explicitly reviewed"
+      },
+      {
+        "value": "released",
+        "label": "Explicitly released"
+      }
+    ]
+  },
+  "clinicalStatuses": {
+    "draft": "Draft",
+    "in_progress": "In progress",
+    "finalized": "Synthetic final version",
+    "amended": "Amendment draft",
+    "withdrawn": "Withdrawn",
+    "active": "Current synthetic final version",
+    "superseded": "Superseded"
+  },
+  "clinicalState": {
+    "unsent": "Memory-only draft, not sent.",
+    "unknown": "Save outcome is unknown. It will not be resent. Review and close the draft, then load the server revision before a new action.",
+    "conflict": "The server revision changed. The draft is retained for review; content is not merged or overwritten automatically.",
+    "discardTitle": "Discard local draft?",
+    "discardBody": "Discard unsaved edits and load the current server revision. This does not acknowledge a previous request.",
+    "discard": "Discard and reload"
   }
 }

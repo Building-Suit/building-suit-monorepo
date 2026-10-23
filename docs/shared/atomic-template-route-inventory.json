@@ -3235,6 +3235,16 @@
       "status": "implemented synthetic read-only native adapter; qualified device/document acceptance pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/encounters.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsClinicalWorkspacePage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/encounters.vue",
+      "purpose": "synthetic-clinical-encounters-and-immutable-entered-records",
+      "status": "implemented native synthetic notes editor; device and qualified acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
