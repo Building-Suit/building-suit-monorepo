@@ -6,11 +6,14 @@ import { mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync, exis
 import http from 'node:http'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createRequire } from 'node:module'
 import { exportOrganizationPortability, tenantTables, excludedTenantTables } from './export-organization-portability.mjs'
 import { verifyPortabilityFiles } from './compare-restore-evidence.mjs'
 
 assert.equal(process.env.LEDGER_PORTABILITY_DISPOSABLE_TEST, '1', 'Explicit disposable test opt-in required')
 const root = realpathSync(fileURLToPath(new URL('../../../', import.meta.url)))
+const sdkRequire = createRequire(import.meta.resolve('@nuxtjs/supabase'))
+const { createClient } = sdkRequire('@supabase/supabase-js')
 const env = { ...process.env }
 for (const key of ['DOCKER_HOST', 'DOCKER_CONTEXT', 'DOCKER_TLS', 'DOCKER_TLS_VERIFY', 'DOCKER_CERT_PATH']) delete env[key]
 const run = (file, args) => execFileSync(file, args, { cwd: root, env, encoding: 'utf8', stdio: 'pipe', timeout: 30_000 }).trim()
@@ -90,8 +93,13 @@ try {
     p_organization_id: organizationId, p_name: name, p_type: type, p_subtype: subtype,
   })
   const debit = await account('Portability bank', 'asset', 'bank')
-  const credit = await account('Portability capital', 'equity', 'owner_capital')
+  const credit = await account('Portability revenue', 'revenue', 'service_revenue')
   const date = sql('select current_date')
+  for (const [statement, line] of [['profit_loss', 'operating_revenue'], ['cash_flow', 'operating']]) {
+    await rpc(actor, 'schedule_account_financial_mapping', { p_organization_id: organizationId, p_account_id: credit,
+      p_dimension: statement, p_statement_line: line, p_effective_from: `${date.slice(0, 4)}-01-01`,
+      p_reason: 'Explicit owned precision fixture mapping', p_request_id: randomUUID() })
+  }
   await rpc(actor, 'create_adjustment', { p_organization_id: organizationId, p_transaction_date: date,
     p_lines: [{ account_id: debit, side: 'debit', amount_minor: '9007199254740993' }, { account_id: credit, side: 'credit', amount_minor: '9007199254740993' }],
     p_description: 'Exact portability fixture', p_reason: 'Owned disposable test', p_idempotency_key: id })
@@ -111,6 +119,60 @@ try {
   await new Promise(resolve => proxy.listen(0, '127.0.0.1', resolve))
   const options = { baseUrl: `http://127.0.0.1:${proxy.address().port}`, key: 'local-test-key', token: token(actor), organizationId,
     environmentId: `native-portability-${id}`, fromDate: `${date.slice(0, 4)}-01-01`, toDate: `${date.slice(0, 4)}-12-31`, output: path.join(directory, 'export') }
+  const client = createClient(options.baseUrl, options.key, { accessToken: async () => token(actor),
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } })
+  const period = { p_organization_id: organizationId, p_from_date: options.fromDate, p_to_date: options.toDate }
+  const legacy = await client.rpc('report_profit_and_loss', period)
+  assert.equal(legacy.error, null)
+  assert.equal(String(legacy.data.find(row => row.account_id === credit).amount_minor), '9007199254740992', 'Legacy numeric JSON demonstrates the rounding regression')
+  const exactProfit = await client.rpc('report_profit_and_loss', period).select('section,account_id,code,name,amount_minor::text')
+  assert.equal(exactProfit.error, null)
+  assert.equal(exactProfit.data.find(row => row.account_id === credit).amount_minor, '9007199254740993')
+  const exactLedger = await client.rpc('report_general_ledger', { ...period, p_account_id: debit })
+    .select('entry_id,transaction_id,entry_date,reference,description,memo,debit_minor::text,credit_minor::text,running_balance_minor::text')
+  assert.equal(exactLedger.error, null)
+  assert.equal(exactLedger.data[0].debit_minor, '9007199254740993')
+  assert.equal(exactLedger.data[0].running_balance_minor, '9007199254740993')
+  const cashDetail = await client.rpc('report_cash_flow_detail', period)
+    .select('transaction_id,entry_id,account_id,section,amount_minor::text,classification_source')
+  assert.equal(cashDetail.error, null)
+  assert.equal(cashDetail.data[0].amount_minor, '9007199254740993')
+  for (const report of ['overview', 'cash_flow']) {
+    const exact = await client.rpc('read_exact_financial_report', { ...period, p_report: report, p_as_of_date: options.toDate })
+    assert.equal(exact.error, null)
+    if (report === 'overview') {
+      assert.equal(exact.data.profit_loss.find(row => row.account_id === credit).amount_minor, '9007199254740993')
+      assert.equal(exact.data.integrity.balanced, true)
+      assert.equal(exact.data.integrity.difference_minor, '0')
+      assert.equal(exact.data.reconciliation.profit_loss_difference_minor, '0')
+      assert.equal(exact.data.reconciliation.unclassified_profit_loss_rows, 0)
+    } else {
+      assert.equal(exact.data.net_profit_minor, '9007199254740993')
+      assert.equal(exact.data.operating_cash_minor, '9007199254740993')
+      assert.equal(exact.data.closing_cash_minor, '9007199254740993')
+      assert.equal(exact.data.reconciled, true)
+    }
+  }
+  const entry = sql(`select id from public.transaction_entries where organization_id='${organizationId}' and account_id='${credit}';`)
+  const classify = { p_organization_id: organizationId, p_entry_id: entry, p_allocations: { operating: '9007199254740993' },
+    p_reason: 'Exact owned fixture allocation', p_request_id: randomUUID() }
+  const decision = await client.rpc('classify_cash_flow_entry_exact', classify)
+  assert.equal(decision.error, null)
+  const replay = await client.rpc('classify_cash_flow_entry_exact', classify)
+  assert.equal(replay.error, null)
+  assert.equal(replay.data, decision.data, 'Exact string allocation must replay the original decision')
+  const allocation = await client.rpc('read_exact_financial_report', { p_report: 'cash_allocation', p_organization_id: organizationId, p_entry_id: entry })
+  assert.equal(allocation.error, null)
+  assert.equal(allocation.data.amount_minor, '9007199254740993')
+  assert.equal(allocation.data.allocations.operating, '9007199254740993')
+  const conflict = await client.rpc('classify_cash_flow_entry_exact', { ...classify, p_reason: 'Changed retry payload' })
+  assert.equal(conflict.error.code, '22023')
+  const stale = await client.rpc('classify_cash_flow_entry_exact', { ...classify, p_request_id: randomUUID() })
+  assert.equal(stale.error.code, '40001')
+  const partial = await client.rpc('classify_cash_flow_entry_exact', { ...classify, p_request_id: randomUUID(),
+    p_expected_decision_id: decision.data, p_allocations: { operating: '9007199254740992' } })
+  assert.equal(partial.error.code, '23514')
+  assert.equal(sql(`select count(*) from public.cash_flow_allocation_decisions where organization_id='${organizationId}';`), '1')
   const result = await exportOrganizationPortability(options)
   for (const item of [...result.tables.flatMap(table => table.files), ...result.reports]) {
     const bytes = readFileSync(path.join(options.output, item.path))
@@ -158,8 +220,24 @@ try {
     await assert.rejects(exportOrganizationPortability({ ...options, token: token(user), organizationId: org, output }), /403|exports.create/)
     assert.equal(existsSync(output), false, 'Denied export must not create an output directory')
   }
+  for (const report of ['overview', 'cash_flow', 'cash_allocation']) {
+    const denied = await fetch(`${api}/rpc/read_exact_financial_report`, { method: 'POST',
+      headers: { Authorization: `Bearer ${token(outsider)}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...period, p_report: report, p_entry_id: entry }) })
+    assert.equal(denied.status, 403, 'Exact read must retain the original tenant boundary')
+  }
+  for (const deniedActor of [outsider, actor]) {
+    const denied = await fetch(`${api}/rpc/classify_cash_flow_entry_exact`, { method: 'POST',
+      headers: { Authorization: `Bearer ${token(deniedActor)}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...classify, p_organization_id: otherOrganization }) })
+    assert.equal(denied.status, 403, 'Outsider/viewer cannot allocate cash')
+  }
+  const unknown = await client.rpc('read_exact_financial_report', { ...period, p_report: 'arbitrary_sql' })
+  assert.equal(unknown.error.code, '22023')
   console.log(JSON.stringify({ result: 'pass', tables: result.tables.length, reports: result.reports.length,
-    actual_postgrest: '16.1', migration_files: files.length, exact_minor_units: true, file_digests: 'match',
+    actual_postgrest: '16.1', migration_files: files.length, exact_minor_units: true,
+    financial_report_transport: 'legacy rounding reproduced; exact P&L/GL/cash detail/overview/indirect cash/context verified',
+    allocation_transport: 'exact save/replay; changed retry, stale decision, partial total and outsider/viewer rejected', file_digests: 'match',
     second_readable_tenant: 'excluded', outsider_and_viewer_export: 'denied', internal_request_table: '403',
     tenant_relations_accounted: tenantRelations.length, captured_schema: snapshot.schema_version,
     two_metadata_sources: '2 objects / 7 bytes / 1 receipt verified', storage_bytes: 'not_exercised' }))
