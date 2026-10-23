@@ -1,0 +1,31 @@
+{
+  "id": "ss-electrical-signup-labels-20261023",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/organisms/BsSignupEnrollment.vue"
+  ],
+  "reason": "The browser conversion regression reproduced signup email labels losing their control association after hydration. Use distinct semantic field IDs in the existing shared enrollment form, as the sign-in form already does.",
+  "notes": {
+    "title": {
+      "en": "Keep sign-up labels connected to their fields",
+      "ar": "ربط عناوين التسجيل بحقولها"
+    },
+    "summary": {
+      "en": "Account and workspace field labels retain their input associations after the sign-up form loads.",
+      "ar": "تحتفظ عناوين حقول الحساب ومساحة العمل بارتباطها بالمدخلات بعد تحميل نموذج التسجيل."
+    },
+    "details": {
+      "en": "Keyboard and assistive technology can identify the existing fields without changing enrollment or verification behavior.",
+      "ar": "يمكن للوحة المفاتيح والتقنيات المساعدة تحديد الحقول الحالية دون تغيير سلوك التسجيل أو التحقق."
+    }
+  }
+}

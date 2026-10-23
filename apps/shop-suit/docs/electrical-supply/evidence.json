@@ -262,6 +262,13 @@
       "measuredRetail": "PASS",
       "media": "PASS",
       "accounts": "PASS"
+    },
+    "privacyBrowser": {
+      "passed": 9,
+      "failed": 0,
+      "signupLabelHydration": "PASS",
+      "pricingCtaConsentDeduplication": "PASS",
+      "fixture": "synthetic loopback; no external analytics collection"
     }
   }
 }
