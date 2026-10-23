@@ -60,7 +60,13 @@ async function uploadAttachment(event: Event) {
     })
     if (reserveError) throw reserveError
 
-    const { error: uploadError } = await supabase.storage.from('attachments').upload(key, file, {
+    // Raw bytes keep Content-Length equal to the reserved file size. The SDK
+    // wraps File/Blob bodies in multipart form data, which adds boundary bytes.
+    const bytes = await file.arrayBuffer().catch(async failure => {
+      await supabase.rpc('abort_attachment_upload', { p_reservation_id: reservationId })
+      throw failure
+    })
+    const { error: uploadError } = await supabase.storage.from('attachments').upload(key, bytes, {
       contentType: file.type,
       upsert: false,
     })

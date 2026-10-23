@@ -2043,5 +2043,66 @@
     "sources": [
       "ls-fin-precision-001-release-support"
     ]
+  },
+  {
+    "id": "ls-attach-001-native-upload-admission",
+    "task": "LS-ATTACH-001",
+    "suits": [
+      "ledger-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/ledger-suit"
+    ],
+    "reason": "Repair actual Storage admission metadata and browser File multipart overhead while preserving exact owned reservations and final commit validation.",
+    "notes": {
+      "title": {
+        "en": "Reliable private document uploads",
+        "ar": "رفع موثوق للمستندات الخاصة"
+      },
+      "summary": {
+        "en": "Upload transaction attachments and import source documents with their exact file size and type.",
+        "ar": "رفع مرفقات المعاملات ومستندات الاستيراد بحجم الملف ونوعه الدقيقين."
+      },
+      "details": {
+        "en": "Private document uploads preserve their original bytes while tenant permissions, file-type validation and storage quotas remain enforced.",
+        "ar": "تحفظ عمليات رفع المستندات الخاصة بايتات الملف الأصلية مع تطبيق صلاحيات المنشأة والتحقق من نوع الملف وحصص التخزين."
+      }
+    },
+    "sources": [
+      "ls-attach-001-native-upload-admission"
+    ],
+    "evidence": [
+      {
+        "path": "apps/ledger-suit/app/composables/useLedgerTransactionDetailDialogView.ts",
+        "contains": "supabase.storage.from('attachments').upload(key, bytes, {"
+      },
+      {
+        "path": "apps/ledger-suit/app/composables/useLedgerCsvImportDialogView.ts",
+        "contains": "supabase.storage.from('attachments').upload(key, bytes, {"
+      }
+    ]
+  },
+  {
+    "id": "ls-attach-001-release-support",
+    "task": "LS-ATTACH-001",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "release-changes/items.json"
+    ],
+    "reason": "Maintain private bilingual release inventory for Ledger document-upload correction; no other Suit behavior changes.",
+    "sources": [
+      "ls-attach-001-release-support"
+    ]
   }
 ]

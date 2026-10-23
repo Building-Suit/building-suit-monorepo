@@ -1,0 +1,88 @@
+{
+  "task": "LS-ATTACH-001",
+  "observed_at": "2026-10-23",
+  "parent_pr": 452,
+  "parent_sha": "0a51f6ee860ac77d8d0258bbd4c248e3bf0e1e5e",
+  "provider": {
+    "actual_api": "http://127.0.0.1:60621",
+    "database": "Owned ledger-recovery-source-20261023 / port60622",
+    "postgres": "17.6 native",
+    "storage": "1.70.3 official unmodified image",
+    "postgrest": "16.1",
+    "auth": "2.196.0 actual admin creation/password sign-in; normal JWT/RLS",
+    "scope": "No hosted URL, provider shim or bypass of authorization"
+  },
+  "regression": {
+    "before": "Actual valid reserved raw upload returns Storage403",
+    "cause": "Permission probe supplies contentLength rather than final size; browser File multipart adds boundary overhead",
+    "after": {
+      "result": "pass",
+      "raw_binary_and_file_bytes": "exact",
+      "multipart_overhead": "denied",
+      "committed_objects": 3,
+      "bytes": 147,
+      "quota_usage": "matches actual committed bytes",
+      "commit_retry": "same attachment",
+      "wrong_size_and_mime": "denied",
+      "forged_user_metadata": "cannot override actual length",
+      "anonymous_viewer_and_outsider_upload": "denied"
+    }
+  },
+  "migration_preservation": {
+    "previous_migrations_unchanged": 106,
+    "forward_migration": "20261023202826",
+    "public_app_tables": 122,
+    "all_fingerprints_equal": true,
+    "sha256": "30ffc15d69b5097ecf0597d9fb51fe998ae6443b0b7a4987eafe6aa55f46fe8f",
+    "journals": 11,
+    "entries": 22,
+    "audit_rows": 75,
+    "AR_documents": 2,
+    "AP_documents": 2,
+    "import_batches": 1,
+    "recurring_rules": 1,
+    "boundary": "Fingerprints immediately before/after migration application; subsequent native synthetic fixtures are separate."
+  },
+  "verification": {
+    "focused_SQL_assertions": 17,
+    "complete_native_SQL_files": 66,
+    "complete_native_SQL_assertions": 1996,
+    "complete_native_SQL_elapsed_seconds": 26,
+    "native_SQL_result": "pass",
+    "ledger_units": 128,
+    "ledger_unit_failures": 0,
+    "browser": {
+      "pass": 4,
+      "fail": 0,
+      "scope": "EN/AR actual outgoing PDF bytes and MIME from transaction attachment and reviewed import-document UI",
+      "boundary": "Controlled UI requests; actual provider requests tested independently"
+    },
+    "typecheck": "pass",
+    "app_lint": "pass",
+    "changed_file_lint": "pass",
+    "production_build": "pass",
+    "workspace_check": "pass",
+    "release_check": "Parent-aware committed check recorded in PR validation",
+    "full_CI": "No whole-repository release-green claim; unrelated parent CI failures remain",
+    "database_lint": {
+      "product_warning_count": 21,
+      "product_function_count": 13,
+      "product_error_count": 0,
+      "changed_helper_findings": 0
+    }
+  },
+  "source_sha256": {
+    "app/composables/useLedgerTransactionDetailDialogView.ts": "a3d73b2d0177a019c15cf09d14c1e3cbf5e51da6c6476871b6d6e8e2aa8c0a6b",
+    "app/composables/useLedgerCsvImportDialogView.ts": "21e6432a480476f5fe7e032d8434af0b9e8ebf8242aa79d7ace9085fefdc27a5",
+    "scripts/test-storage-admission-native.mjs": "9623b5b3c76e45b636855cd87915b14cc7545947c5c0fa8ce881a139aa015a56",
+    "supabase/migrations/20261023202826_storage_upload_admission_metadata.sql": "4ecb086a6afad51a3fa096fbf1243bea08210e1c4264d144843f6a15c5b96db6",
+    "supabase/tests/54_storage_upload_admission_test.sql": "df766b4fa80832c54d0592c68e28cc2522d4ec5b13732d1efdce8ef92de28c60",
+    "tests/e2e/atomic-journal-workspace.spec.ts": "b75074adf6231200d790bb0b23054f17d9762569c2de8fbf74d45c93df6b35b8"
+  },
+  "pending": [
+    "Timed native database/Storage restoration and operating off-site backup",
+    "Remaining advisories and configured hosted review",
+    "Live Automation reconciliation",
+    "Accountant UAT and controlled release"
+  ]
+}
