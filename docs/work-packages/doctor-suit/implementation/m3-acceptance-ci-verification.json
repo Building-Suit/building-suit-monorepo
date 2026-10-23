@@ -258,6 +258,63 @@
         ]
       },
       "aggregate_acceptance": false
+    },
+    {
+      "head": "ed16408bb59e9466b6ecc10d64f72c4ed7d43622",
+      "run_id": 40014276736,
+      "sql": "passed including pinned public-schema generation, migrated assertions/concurrency and encrypted recovery",
+      "public_preview": {
+        "passed": 60,
+        "failed": 0
+      },
+      "account_protocol": {
+        "passed": 85,
+        "failed": 0
+      },
+      "delegation_stress": {
+        "passed": 4,
+        "failed": 0
+      },
+      "m3_browser": {
+        "passed": [
+          "DOS-M3-001",
+          "DOS-M3-002",
+          "DOS-M3-004",
+          "DOS-M3-005",
+          "DOS-M3-006",
+          "DOS-M3-007",
+          "DOS-M3-008",
+          "DOS-M3-009",
+          "DOS-M3-010"
+        ],
+        "failed": [
+          {
+            "task": "DOS-M3-003",
+            "category": "assertion-or-runtime",
+            "location": {
+              "file": "dos-m3-003.spec.ts",
+              "line": 33,
+              "column": 1858
+            }
+          }
+        ],
+        "details": "Reception actions and horizontal-keyboard assertions progress past previous failures. Current failure location is the later heading scrollIntoViewIfNeeded before the queue screenshot; later variants/editor assertions are not inferred as passed."
+      },
+      "inherited_actual_provider": "passed; synthetic Auth recovery/PKCE/reauthentication, Storage/Functions/Realtime and inherited M1/M2/manual-payment/administrative-candidate coverage",
+      "shared_auth_parity": {
+        "passed": 48,
+        "failed": 0
+      },
+      "shared_settings": {
+        "passed": 6,
+        "failed": 6,
+        "failing_consumers": [
+          "Docs",
+          "Inventory",
+          "Automation"
+        ]
+      },
+      "aggregate_acceptance": false
     }
   ],
   "local_execution_scope": {
@@ -322,5 +379,19 @@
       "full_suite": "not repeated for fixture-only edits; previous exact 54 inherited Shop failures retained"
     },
     "runtime": "requires new exact-head CI; no assertion/case removed or retries added"
+  },
+  "queue_capture_followup": {
+    "observed_at": "2026-10-23T20:09:32.621211+00:00",
+    "change": "Capture the actual keyboard-scrolled queue region directly; preserve all eight full-page variants, direction/theme/viewport and keyboard movement/end assertions, plus Arabic modal/focus assertions. Remove only the unrelated heading reposition used before that extra queue image.",
+    "diagnostics": "Four fixed action categories distinguish ambiguous/detached/scroll/screenshot errors without exposing exception bodies, locators or private values.",
+    "validation": {
+      "evidence_privacy_units": {
+        "passed": 12,
+        "failed": 0
+      },
+      "m3_collection": 10,
+      "collection_is_execution": false
+    },
+    "runtime": "requires new exact-source CI; aggregate M3 acceptance remains failed at last executed source; no expensive suite repeated before focused diagnosis"
   }
 }

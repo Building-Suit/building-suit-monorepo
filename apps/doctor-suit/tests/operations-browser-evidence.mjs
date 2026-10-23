@@ -15,6 +15,9 @@ function failureLocation(task, result) {
 function failureCategory(result) {
   const message = typeof result?.error?.message === 'string' ? result.error.message.replace(/\u001b\[[0-9;]*m/g, '') : ''
   for (const [pattern, category] of [
+    [/strict mode violation/, 'locator-ambiguous'],
+    [/not attached to the DOM|element was detached/i, 'locator-detached'],
+    [/scrollIntoViewIfNeeded/, 'scroll-into-view'], [/screenshot/, 'screenshot'],
     [/toBeVisible\(\)/, 'locator-visible'], [/toBeEnabled\(\)/, 'locator-enabled'],
     [/toHaveCount\(/, 'locator-count'], [/toBeNull\(\)/, 'null-value'],
     [/toEqual\(|toBe\(/, 'value-equality'], [/Timeout|timed out/i, 'timeout'],

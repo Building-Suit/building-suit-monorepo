@@ -13,6 +13,22 @@ function report() {
 }
 const spec = (value, index = 0) => value.suites[0].suites[index].specs[0]
 
+test('action diagnostics retain fixed categories without private locator or screenshot text', () => {
+  for (const [message, category] of [
+    ['locator.scrollIntoViewIfNeeded: strict mode violation: private sentinel', 'locator-ambiguous'],
+    ['locator.scrollIntoViewIfNeeded: Element is not attached to the DOM: private sentinel', 'locator-detached'],
+    ['locator.scrollIntoViewIfNeeded: private sentinel', 'scroll-into-view'],
+    ['locator.screenshot: private sentinel', 'screenshot'],
+  ]) {
+    const value = report(), result = spec(value).tests[0].results[0]
+    result.status = 'failed'; result.error = {message}
+    const actual = evidence(value, 1)
+    assert.equal(actual.accepted, false)
+    assert.equal(actual.failed[0].category, category)
+    assert.equal(JSON.stringify(actual).includes('private sentinel'), false)
+  }
+})
+
 test('accepts exactly ten independently passed M3 journeys in nested Playwright JSON', () => {
   const result = evidence(report(), 0)
   assert.equal(result.accepted, true)
