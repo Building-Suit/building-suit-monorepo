@@ -120,5 +120,28 @@
     "parent_ci": "source75ded8f5 SQL/schema, public60, inherited actual provider and nine M3 cases pass; protocol83/2 and reception003 failure, shared settings6/6 remain",
     "baseline": "54 inherited Shop failures retained; no full suite repeat for parent merge/evidence-only follow-up",
     "execution_scope": "Doctor application/provider acceptance and Android runtime CI-only; mandatory root/shared units retain existing isolated Shop receipt document browser cases locally"
+  },
+  "renderer_syntax_followup": {
+    "parent_sha": "ed16408bb59e9466b6ecc10d64f72c4ed7d43622",
+    "observed_at": "2026-10-23T19:49:55.034796+00:00",
+    "change": "App-specific Vite build target chrome74 for the stock renderer observed in mandatory API29 CI; no shared build target, OS matrix or expected case changed.",
+    "motivation": "Previous default bundle contains newer optional chaining/nullish syntax; WebView74 cold launch fails without a captured fixed client error category. This does not establish a sole root cause.",
+    "validation": {
+      "bundled_static_build": "passed",
+      "mobile_and_boundary_units": {
+        "passed": 17,
+        "failed": 0
+      },
+      "mobile_lint": "passed",
+      "mobile_typecheck": "passed",
+      "capacitor_source_sync": "passed",
+      "canonical_task_packets": "104 tasks pass byte/hash/graph checks; no live Automation read"
+    },
+    "limitations": [
+      "Exact-head native execution pending; API29 remains failed at last executed source.",
+      "Compilation target does not polyfill runtime APIs or qualify shared CSS/rendering/language/accessibility on older WebView.",
+      "No physical device, qualified clinical/offline or distribution acceptance.",
+      "Full repository suite not repeated for app-specific compilation/evidence changes; 54 inherited Shop failures retained."
+    ]
   }
 }
