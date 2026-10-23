@@ -454,5 +454,21 @@
       "collection_is_execution": false
     },
     "runtime": "requires new exact-source CI; no scroll limit/tolerance/layout fix guessed before geometry is available"
+  },
+  "disclosure_detachment_followup": {
+    "source": "fa513e8d4e3e387e00ca611e762fe580233dda89",
+    "run": 40020528659,
+    "actual_m3_passed": 9,
+    "actual_failed_task": "DOS-M3-003",
+    "category": "locator-detached",
+    "location": {
+      "file": "dos-m3-003.spec.ts",
+      "line": 14,
+      "column": 306
+    },
+    "geometry": "not reached",
+    "fix": "Locator getAttribute(open) instead of detached element evaluation; all assertions/cases retained",
+    "acceptance": false,
+    "full_units": "not repeated for fixture-only change;54 inherited Shop failures retained"
   }
 }
