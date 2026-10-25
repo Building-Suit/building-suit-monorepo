@@ -50,6 +50,11 @@ for (const [locale, theme, width] of [['en','light',1440],['ar','dark',390]] as 
   await page.screenshot({ path: test.info().outputPath('physical-cart.png'),fullPage: true })
  })
  test(`supplier return chooses a reel from its purchase ${locale}`, async ({ page }) => {
+  // This journey includes real two-stage login and two full SSR navigations.
+  // Individual controls retain their normal assertion/action deadlines.
+  test.setTimeout(60000)
+  page.setDefaultTimeout(5000)
+  page.setDefaultNavigationTimeout(30000)
   const ar = locale === 'ar'
   await page.setViewportSize({ width, height: 1000 })
   const purchase = { id: 'purchase-1', vendorId: 'vendor-1', vendorNameSnapshot: 'Cable supplier', invoiceNumber: 'CABLE-BILL', status: 'posted', issuedAt: '2026-10-22T12:00:00Z', totalAmount: 1250, payable: 1250, settlementState: 'unpaid', notes: null, createdAt: '2026-10-22T12:00:00Z', canManagePurchases: true, canRecordPayment: true, canReversePayment: true, canRecordCredit: true, canReturnStock: true, items: [{ id: 'item-1', productId: 'product-1', productName: 'Blue cable', reelTracking: true, quantity: 50, unitCost: 25, totalCost: 1250, availableToReturn: 50, batchId: 'batch-1', measurement: { enteredQuantity: '50', enteredUnitPrice: '25', baseUnitCode: 'm', quantityIncrement: '0.001', unitNameEn: 'Meter', unitNameAr: 'متر' } }], paymentEvents: [], credits: [], returns: [], receiptMovements: [] }

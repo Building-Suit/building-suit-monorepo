@@ -116,7 +116,7 @@ try {
   assert.ok(received.stderr.includes('MEASUREMENT_WORKFLOW_NOT_READY'), 'Concurrent receipt failed for an unexpected reason')
   assert.equal(sql(`select count(*) from public.inventory_batches where product_id='${race.product_id}';`), '0')
   assert.equal(sql(`select count(*) from public.product_measurement_changes where product_id='${race.product_id}';`), '1')
-  console.log('Configuration/stock race: PASS; second session rechecks prepared status after product-lock wait; no stock or partial movement')
+  console.log('Configuration/stock race: PASS; second session rechecks prepared status after ordered write-lock wait; no stock or partial movement')
   await verifyPhysicalReelRace(sql,parallelSql)
   await verifyOrderReservationRaces(sql,parallelSql)
   await verifySupplierOrderRaces(sql, parallelSql)

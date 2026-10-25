@@ -1,3 +1,5 @@
+// Race fixtures execute the real public command before their held-commit pause;
+// they must not acquire business locks ahead of the command authorization gate.
 import { readFile } from 'node:fs/promises'
 import { spawn, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
@@ -63,7 +65,7 @@ try {
     `select public.save_sale_draft('${randomUUID()}','${shopId}',null,'${customerId}',null,'${lines}'::jsonb);`))).stdout)
 
   const countId = randomUUID()
-  const countFirst = runSql(`begin; select 1 from public.products where id='${productId}' for update; select pg_sleep(0.4); set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_stock_count('${countId}','${shopId}','${productId}',3,now(),'Concurrent shelf count','COUNT-RACE-001',null); commit;`, { allowFailure: true })
+  const countFirst = runSql(`begin; set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_stock_count('${countId}','${shopId}','${productId}',3,now(),'Concurrent shelf count','COUNT-RACE-001',null); select pg_sleep(0.4); commit;`, { allowFailure: true })
   await new Promise(resolve => setTimeout(resolve, 50))
   const saleSecond = runSql(authenticated(ownerId,
     `select public.issue_sale('${randomUUID()}','${shopId}','${saleId}');`), { allowFailure: true })

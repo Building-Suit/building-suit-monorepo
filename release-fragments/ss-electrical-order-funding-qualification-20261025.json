@@ -1,0 +1,29 @@
+{
+  "id": "ss-electrical-order-funding-qualification-20261025",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/app",
+    "apps/shop-suit/tests",
+    "apps/shop-suit/supabase/tests",
+    "apps/shop-suit/docs/electrical-supply",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "packages/ui",
+    "packages/ux",
+    "tooling/database",
+    "docs/shared/interactions.md",
+    "release-changes/items.json",
+    ".github/workflows/shop-measurement-disposable.yml",
+    "tooling/control-plane/tests/dot-event-relay.test.mjs"
+  ],
+  "reason": "Generated schema contracts, localized exact decimal transport, order funding/collection security, tax/FIFO/return and concurrency qualification, shared typed panels and owned disposable regression runners. Other shared dependency consumers remain internal; no hosted deployment or activation."
+}

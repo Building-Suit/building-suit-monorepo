@@ -2005,33 +2005,66 @@ export type Database = {
       }
       customer_payment_allocations: {
         Row: {
+          advance_order_id: string | null
+          allocation_reason: string | null
           amount: number
           created_at: string
+          created_by_profile_id: string | null
           id: string
-          invoice_id: string
+          invoice_id: string | null
           location_id: string
           payment_id: string
           shop_id: string
+          source_allocation_id: string | null
         }
         Insert: {
+          advance_order_id?: string | null
+          allocation_reason?: string | null
           amount: number
           created_at?: string
+          created_by_profile_id?: string | null
           id?: string
-          invoice_id: string
+          invoice_id?: string | null
           location_id: string
           payment_id: string
           shop_id: string
+          source_allocation_id?: string | null
         }
         Update: {
+          advance_order_id?: string | null
+          allocation_reason?: string | null
           amount?: number
           created_at?: string
+          created_by_profile_id?: string | null
           id?: string
-          invoice_id?: string
+          invoice_id?: string | null
           location_id?: string
           payment_id?: string
           shop_id?: string
+          source_allocation_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "customer_advance_order_fk"
+            columns: ["advance_order_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "trade_orders"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+          {
+            foreignKeyName: "customer_advance_source_fk"
+            columns: ["source_allocation_id", "shop_id", "payment_id"]
+            isOneToOne: false
+            referencedRelation: "customer_payment_allocations"
+            referencedColumns: ["id", "shop_id", "payment_id"]
+          },
+          {
+            foreignKeyName: "customer_payment_allocations_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "customer_payment_allocations_invoice_id_shop_id_fkey"
             columns: ["invoice_id", "shop_id"]
@@ -10457,6 +10490,164 @@ export type Database = {
           },
         ]
       }
+      trade_order_deliveries: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          id: string
+          invoice_id: string
+          location_id: string
+          order_id: string
+          reason: string
+          shop_id: string
+          tax_snapshot: Json
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          invoice_id: string
+          location_id: string
+          order_id: string
+          reason: string
+          shop_id: string
+          tax_snapshot: Json
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          location_id?: string
+          order_id?: string
+          reason?: string
+          shop_id?: string
+          tax_snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_order_deliveries_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_order_deliveries_invoice_id_shop_id_location_id_fkey"
+            columns: ["invoice_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+          {
+            foreignKeyName: "trade_order_deliveries_order_id_shop_id_location_id_fkey"
+            columns: ["order_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "trade_orders"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+        ]
+      }
+      trade_order_delivery_allocations: {
+        Row: {
+          cutting_loss: number
+          delivery_item_id: string
+          id: string
+          order_line_id: string
+          quantity: number
+          reservation_id: string
+          shop_id: string
+        }
+        Insert: {
+          cutting_loss: number
+          delivery_item_id: string
+          id?: string
+          order_line_id: string
+          quantity: number
+          reservation_id: string
+          shop_id: string
+        }
+        Update: {
+          cutting_loss?: number
+          delivery_item_id?: string
+          id?: string
+          order_line_id?: string
+          quantity?: number
+          reservation_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_order_delivery_allocati_delivery_item_id_shop_id_ord_fkey"
+            columns: ["delivery_item_id", "shop_id", "order_line_id"]
+            isOneToOne: false
+            referencedRelation: "trade_order_delivery_items"
+            referencedColumns: ["id", "shop_id", "order_line_id"]
+          },
+          {
+            foreignKeyName: "trade_order_delivery_allocati_reservation_id_shop_id_order_fkey"
+            columns: ["reservation_id", "shop_id", "order_line_id"]
+            isOneToOne: false
+            referencedRelation: "trade_order_reservations"
+            referencedColumns: ["id", "shop_id", "line_id"]
+          },
+        ]
+      }
+      trade_order_delivery_items: {
+        Row: {
+          delivery_id: string
+          id: string
+          invoice_item_id: string
+          order_id: string
+          order_line_id: string
+          quantity: number
+          shop_id: string
+          tax_snapshot: Json
+        }
+        Insert: {
+          delivery_id: string
+          id?: string
+          invoice_item_id: string
+          order_id: string
+          order_line_id: string
+          quantity: number
+          shop_id: string
+          tax_snapshot: Json
+        }
+        Update: {
+          delivery_id?: string
+          id?: string
+          invoice_item_id?: string
+          order_id?: string
+          order_line_id?: string
+          quantity?: number
+          shop_id?: string
+          tax_snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_order_delivery_items_delivery_id_shop_id_order_id_fkey"
+            columns: ["delivery_id", "shop_id", "order_id"]
+            isOneToOne: false
+            referencedRelation: "trade_order_deliveries"
+            referencedColumns: ["id", "shop_id", "order_id"]
+          },
+          {
+            foreignKeyName: "trade_order_delivery_items_invoice_item_id_shop_id_fkey"
+            columns: ["invoice_item_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_items"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_order_delivery_items_order_line_id_order_id_shop_id_fkey"
+            columns: ["order_line_id", "order_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "trade_order_lines"
+            referencedColumns: ["id", "order_id", "shop_id"]
+          },
+        ]
+      }
       trade_order_events: {
         Row: {
           action: string
@@ -12881,6 +13072,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      fulfill_trade_order: {
+        Args: {
+          p_apply_deposits: boolean
+          p_lines: Json
+          p_location_id: string
+          p_order_id: string
+          p_reason: string
+          p_request_id: string
+          p_revision: number
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       get_customer: {
         Args: { p_customer_id: string; p_shop_id: string }
         Returns: {
@@ -14599,6 +14803,45 @@ export type Database = {
           p_page?: number
           p_quotation_id?: string
           p_search?: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      trade_order_delivery_context: {
+        Args: {
+          p_location_id: string
+          p_order_id: string
+          p_page?: number
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      trade_order_deposit: {
+        Args: {
+          p_action: string
+          p_allocation_id?: string
+          p_amount: string
+          p_at: string
+          p_invoice_id?: string
+          p_location_id: string
+          p_method: Database["public"]["Enums"]["payment_method"]
+          p_order_id: string
+          p_reason?: string
+          p_reference?: string
+          p_request_id: string
+          p_revision: number
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      trade_order_funding_context: {
+        Args: {
+          p_history_page?: number
+          p_invoice_page?: number
+          p_invoice_search?: string
+          p_location_id: string
+          p_order_id: string
+          p_page?: number
           p_shop_id: string
         }
         Returns: Json

@@ -34,6 +34,15 @@ begin
   if exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'shop_private' and (p.proname like '%payment%'
       or p.proname like '%receipt%' or p.proname like '%statement%')
+      -- These exact boolean predicates are the maintained Storage policy
+      -- interface, not callable payment writers. Preserve their existing narrow
+      -- owner/requester boundary and deny every other private payment routine.
+      and not(p.oid=any(array[
+        'shop_private.billing_payment_evidence_upload_allowed(text,jsonb)'::regprocedure,
+        'shop_private.billing_payment_evidence_read_allowed(text)'::regprocedure])
+        and p.prorettype='boolean'::regtype and p.provolatile='s' and p.prosecdef
+        and p.proconfig=array['search_path=""']::text[]
+        and not has_function_privilege('anon',p.oid,'execute'))
       and (has_function_privilege('authenticated', p.oid, 'execute')
         or has_function_privilege('anon', p.oid, 'execute'))) then
     raise exception 'private payment implementation is browser-callable';

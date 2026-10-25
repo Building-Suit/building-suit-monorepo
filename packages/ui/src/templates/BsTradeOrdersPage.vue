@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BsTradeOrderCopy, BsTradeOrderView, BsTradeOrderRow, BsTradeOrderForm, BsOrderQuotationPicker, BsOrderReservationForm } from '../types/tradeOrderPresentation'
+import type { BsTradeOrderCopy, BsTradeOrderView, BsTradeOrderRow, BsTradeOrderForm, BsOrderQuotationPicker, BsOrderReservationForm, BsOrderFundingForm, BsOrderDeliveryForm } from '../types/tradeOrderPresentation'
 const props = defineProps<{ copy: BsTradeOrderCopy; view: BsTradeOrderView; rows: BsTradeOrderRow[]; quotationPicker: BsOrderQuotationPicker }>()
 const search = defineModel<string>('search', { required: true })
 const page = defineModel<number>('page', { required: true })
@@ -12,13 +12,20 @@ const reservationForm = defineModel<BsOrderReservationForm>('reservationForm', {
 const reservationPage = defineModel<number>('reservationPage', { required: true })
 const reservationHistoryPage = defineModel<number>('reservationHistoryPage', { required: true })
 function reservationLine(id: string, key: 'quantity' | 'loss', value: string) { reservationForm.value = { ...reservationForm.value, lines: reservationForm.value.lines.map(line => line.id === id ? { ...line, [key]: value } : line) } }
-const emit = defineEmits<{ reservationAction: [action: 'reserve' | 'release' | 'expire' | 'cancel']; reservationSubmit: []; reservationRetry: []; retry: []; retryDetail: []; retryPreview: []; add: []; open: [id: string]; submit: []; quotationSearch: [query: string]; quotationMore: []; quotationRetry: [] }>()
+const fundingOpen = defineModel<boolean>('fundingOpen', { required: true })
+const fundingForm = defineModel<BsOrderFundingForm>('fundingForm', { required: true })
+const fundingPage = defineModel<number>('fundingPage', { required: true })
+const fundingHistoryPage = defineModel<number>('fundingHistoryPage', { required: true })
+const deliveryOpen = defineModel<boolean>('deliveryOpen', { required: true })
+const deliveryForm = defineModel<BsOrderDeliveryForm>('deliveryForm', { required: true })
+const deliveryPage = defineModel<number>('deliveryPage', { required: true })
+const emit = defineEmits<{ fundingAction: [action: 'receive' | 'apply' | 'refund' | 'reverse', id?: string]; fundingSubmit: []; fundingRetry: []; invoiceSearch: [query: string]; invoiceMore: []; invoiceRetry: []; collect: []; deliverySubmit: []; deliveryRetry: []; reservationAction: [action: 'reserve' | 'release' | 'expire' | 'cancel']; reservationSubmit: []; reservationRetry: []; retry: []; retryDetail: []; retryPreview: []; add: []; open: [id: string]; submit: []; quotationSearch: [query: string]; quotationMore: []; quotationRetry: [] }>()
 function change<K extends keyof BsTradeOrderForm>(key: K, value: BsTradeOrderForm[K]) { form.value = { ...form.value, [key]: value } }
 const columns = computed(() => [{ key: 'number', field: 'number', header: props.copy.number }, { key: 'customer', field: 'customer', header: props.copy.customer }, { key: 'project', field: 'project', header: props.copy.project }, { key: 'status', field: 'status', header: props.copy.status }, { key: 'total', field: 'total', header: props.copy.total }, { key: 'date', field: 'date', header: props.copy.date }, { key: 'actions', header: props.copy.actions }])
 const lineColumns = computed(() => [{ key: 'name', field: 'name', header: props.copy.lines }, { key: 'quantity', field: 'quantity', header: props.copy.quantity }, { key: 'price', field: 'price', header: props.copy.price }, { key: 'total', field: 'total', header: props.copy.total }])
 const stockColumns = computed(() => [{ key: 'name', field: 'name', header: props.copy.lines }, ...(['onHand','reserved','own','available'] as const).map(key => ({ key, field: key, header: props.view.reservation[key] }))])
 const reservationColumns = computed(() => [{ key: 'source', field: 'source', header: props.copy.source }, { key: 'quantity', field: 'quantity', header: props.copy.quantity }, { key: 'status', field: 'status', header: props.copy.status }, { key: 'expires', field: 'expires', header: props.view.reservation.expires }])
-const eventColumns = computed(() => [{ key: 'action', field: 'action', header: props.copy.event }, { key: 'reason', field: 'reason', header: props.copy.reason }, { key: 'actor', field: 'actor', header: props.copy.actor }, { key: 'date', field: 'date', header: props.copy.date }])
+const eventColumns = computed(() => [{ key: 'action', field: 'action', header: props.copy.event }, { key: 'reason', field: 'reason', header: props.view.funding.reason }, { key: 'actor', field: 'actor', header: props.copy.actor }, { key: 'date', field: 'date', header: props.copy.date }])
 </script>
 <template>
  <BsStack gap="lg">
@@ -32,7 +39,7 @@ const eventColumns = computed(() => [{ key: 'action', field: 'action', header: p
    <BsText as="p" tone="muted">{{ copy.agreement }}</BsText>
    <BsField v-slot="field" for="order-conversion-reason" :label="copy.reason"><BsTextarea :id="field.id" :model-value="form.reason" :disabled="view.editor.pending || view.editor.locked" :minlength="3" :maxlength="1000" required @update:model-value="change('reason', String($event))" /></BsField>
   </BsRecordActionDialog>
-  <BsDialog v-model:visible="detailOpen" :title="view.detail.title || copy.title" size="lg" :pending="reservationOpen || view.reservation.locked">
+  <BsDialog v-model:visible="detailOpen" :title="view.detail.title || copy.title" size="lg" :pending="reservationOpen || fundingOpen || deliveryOpen || view.locked">
    <BsText v-if="view.detail.loading" role="status">{{ copy.retry }}</BsText>
    <BsStack v-else-if="view.detail.error"><BsText role="alert">{{ view.detail.error }}</BsText><BsButton @click="emit('retryDetail')">{{ copy.retry }}</BsButton></BsStack>
    <BsStack v-else><BsText as="p">{{ view.detail.subtitle }}</BsText><BsText as="p">{{ view.detail.status }}</BsText><BsText as="p" tone="muted">{{ copy.agreement }}</BsText><BsDataTable :value="view.detail.lines" :label="copy.lines" :columns="lineColumns" data-key="id" /><BsDescriptionList><BsDescriptionItem v-for="total in view.detail.totals" :key="total.label" :term="total.label">{{ total.value }}</BsDescriptionItem></BsDescriptionList><BsDataTable :value="view.detail.events" :label="copy.history" :columns="eventColumns" data-key="id" lazy paginator :rows="20" :first="(historyPage - 1) * 20" :total-records="view.detail.eventCount" @page="historyPage = $event.page + 1" /></BsStack>
@@ -47,7 +54,11 @@ const eventColumns = computed(() => [{ key: 'action', field: 'action', header: p
      <BsDataTable :value="view.reservation.events" :label="view.reservation.history" :columns="eventColumns" data-key="id" lazy paginator :rows="20" :first="(reservationHistoryPage - 1) * 20" :total-records="view.reservation.eventCount" @page="reservationHistoryPage = $event.page + 1" />
     </BsStack>
    </BsStack>
-   <template #footer><BsButton :disabled="reservationOpen || view.reservation.locked" @click="detailOpen = false">{{ copy.close }}</BsButton></template>
+   <BsStack v-if="!view.detail.loading && !view.detail.error" gap="lg">
+    <BsOrderDeliveryPanel v-model:open="deliveryOpen" v-model:form="deliveryForm" v-model:page="deliveryPage" :view="view.delivery" @collect="emit('collect')" @submit="emit('deliverySubmit')" @retry="emit('deliveryRetry')" />
+    <BsOrderFundingPanel v-model:open="fundingOpen" v-model:form="fundingForm" v-model:page="fundingPage" v-model:history-page="fundingHistoryPage" :view="view.funding" @action="(action, id) => emit('fundingAction', action, id)" @submit="emit('fundingSubmit')" @retry="emit('fundingRetry')" @invoice-search="emit('invoiceSearch', $event)" @invoice-more="emit('invoiceMore')" @invoice-retry="emit('invoiceRetry')" />
+   </BsStack>
+   <template #footer><BsButton :disabled="reservationOpen || fundingOpen || deliveryOpen || view.locked" @click="detailOpen = false">{{ copy.close }}</BsButton></template>
   </BsDialog>
   <BsRecordActionDialog v-model:visible="reservationOpen" :title="view.reservation.commandTitle" :dirty="view.reservation.dirty" :pending="view.reservation.pending" :close-blocked="view.reservation.locked" :error="view.reservation.commandError" :submit-label="view.reservation.commandTitle" :cancel-label="copy.cancel" @submit="emit('reservationSubmit')">
    <BsText as="p">{{ view.reservation.explanation }}</BsText>

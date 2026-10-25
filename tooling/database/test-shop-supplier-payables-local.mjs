@@ -1,3 +1,5 @@
+// Race fixtures execute the real public command before their held-commit pause;
+// they must not acquire business locks ahead of the command authorization gate.
 import { readFile } from 'node:fs/promises'
 import { spawn, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
@@ -54,7 +56,7 @@ try {
     `select public.create_supplier_purchase('${randomUUID()}','${shopId}','${vendorId}','PUR-CONCURRENCY',current_date,null,'[{"product_id":"${productId}","quantity":10,"unit_cost":10}]'::jsonb);`))).stdout)
   const itemId = lastLine((await runSql(`select id from public.vendor_invoice_items where vendor_invoice_id='${purchaseId}';`)).stdout)
 
-  const paymentOne = `begin; select 1 from public.vendor_invoices where id='${purchaseId}' for update; select pg_sleep(0.4); set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_supplier_payment('${randomUUID()}','${shopId}','${vendorId}',70,now(),'cash',null,null,'[{"vendor_invoice_id":"${purchaseId}","amount":70}]'::jsonb); commit;`
+  const paymentOne = `begin; set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_supplier_payment('${randomUUID()}','${shopId}','${vendorId}',70,now(),'cash',null,null,'[{"vendor_invoice_id":"${purchaseId}","amount":70}]'::jsonb); select pg_sleep(0.4); commit;`
   const firstPayment = runSql(paymentOne, { allowFailure: true })
   await new Promise(resolve => setTimeout(resolve, 50))
   const secondPayment = runSql(authenticated(ownerId,
@@ -74,7 +76,7 @@ try {
   await runSql(authenticated(ownerId,
     `select public.reverse_supplier_payment('${randomUUID()}','${shopId}','${paymentId}',now(),'Prepare return race',null,'[{"allocation_id":"${allocationId}","amount":70}]'::jsonb);`))
 
-  const returnOne = `begin; select 1 from public.inventory_batches where source_id='${purchaseId}' for update; select pg_sleep(0.4); set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_purchase_return('${randomUUID()}','${shopId}','${purchaseId}',now(),'Concurrent return one',null,'[{"vendor_invoice_item_id":"${itemId}","quantity":6}]'::jsonb); commit;`
+  const returnOne = `begin; set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_purchase_return('${randomUUID()}','${shopId}','${purchaseId}',now(),'Concurrent return one',null,'[{"vendor_invoice_item_id":"${itemId}","quantity":6}]'::jsonb); select pg_sleep(0.4); commit;`
   const firstReturn = runSql(returnOne, { allowFailure: true })
   await new Promise(resolve => setTimeout(resolve, 50))
   const secondReturn = runSql(authenticated(ownerId,
