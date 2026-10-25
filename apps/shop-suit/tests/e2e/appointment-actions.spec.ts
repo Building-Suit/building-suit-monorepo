@@ -76,7 +76,11 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
     expect(item.notes).toBe('Keep original note')
 
     for (const [status, label] of [['cancelled', ar ? 'إلغاء الموعد' : 'Cancel appointment'], ['no_show', ar ? 'لم يحضر' : 'No-show']] as const) {
-      if (status === 'no_show') { item.status = 'booked'; await fixtureGoto(page, '/appointments?from=2026-10-13'); await event.click() }
+      if (status === 'no_show') { item.status = 'booked'; await fixtureGoto(page, '/appointments?from=2026-10-13');
+        // Interact before the parent entrance completes; its late autofocus must
+        // not steal focus restored after the nested confirmation is cancelled.
+        await page.addStyleTag({ content: '.p-dialog-enter-active{transition:opacity 600ms linear!important}.p-dialog-enter-from{opacity:0.2!important}.p-dialog-enter-to{opacity:1!important}' })
+        await event.click() }
       if (!await details.isVisible()) await event.click()
       const action = details.getByRole('button', { name: label, exact: true })
       await action.click()
@@ -85,6 +89,10 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
       await expect(confirmation).toContainText(item.serviceName)
       await confirmation.getByRole('button', { name: ar ? 'إلغاء' : 'Cancel', exact: true }).click()
       expect(calls.filter(call => call.name === 'transition_appointment')).toHaveLength(status === 'cancelled' ? 0 : 1)
+      if (status === 'no_show') await details.evaluate(async element => {
+        await Promise.allSettled(element.getAnimations().map(animation => animation.finished))
+        await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+      })
       await expect(action).toBeFocused()
       await action.click()
       await page.screenshot({ path: test.info().outputPath(`confirmation-${status}.png`), fullPage: true, animations: 'disabled' })

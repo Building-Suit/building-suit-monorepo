@@ -3162,5 +3162,69 @@
     "sources": [
       "ss-electrical-order-funding-qualification-20261025"
     ]
+  },
+  {
+    "id": "ss-electrical-nested-confirmation-focus-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ux/src/composables/useDialogInteraction.ts"
+    ],
+    "reason": "Restore a nested confirmation opener after the finite entrance motion of its containing dialog, preventing late vendor autofocus from stealing the keyboard position. Keep a different active foreground dialog focused.",
+    "notes": {
+      "title": {
+        "en": "Restore focus after nested confirmations",
+        "ar": "إعادة التركيز بعد نوافذ التأكيد المتداخلة"
+      },
+      "summary": {
+        "en": "Keyboard focus returns to the action that opened a confirmation, including while its parent window is still appearing.",
+        "ar": "يعود تركيز لوحة المفاتيح إلى زر الإجراء الذي فتح التأكيد، حتى أثناء ظهور النافذة الأصلية."
+      },
+      "details": {
+        "en": "Cancelling a confirmation no longer lets the parent window move focus to its close button afterward. A different active dialog keeps its focus, while dirty-form protection and pending command locks retain their behavior.",
+        "ar": "لا يؤدي إلغاء التأكيد إلى انتقال التركيز لاحقًا إلى زر إغلاق النافذة الأصلية. تحتفظ النافذة النشطة الأخرى بتركيزها، وتستمر حماية النماذج المعدّلة وقفل الأوامر المعلّقة كما هي."
+      }
+    },
+    "sources": [
+      "ss-electrical-nested-confirmation-focus-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ux/src/composables/useDialogInteraction.ts",
+        "contains": "await Promise.allSettled(animations.map(animation => animation.finished))"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-dialog-focus-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ux/src/composables/useDialogInteraction.ts",
+      "packages/ux/tests/form-dialog.test.mjs",
+      "apps/shop-suit/tests/e2e/appointment-actions.spec.ts",
+      "tooling/database/test-shop-stock-local.mjs",
+      "tooling/database/test-shop-supplier-payables-local.mjs",
+      "docs/shared/interactions.md",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify nested-confirmation focus after the real parent entrance settles, preserve pending and dirty-form policies, and compare exact PostgreSQL stock/return values independently of their newly widened display scale. Other shared consumers remain internal.",
+    "sources": [
+      "ss-electrical-dialog-focus-qualification-20261025"
+    ]
   }
 ]

@@ -86,8 +86,8 @@ try {
     || returnRace.filter(result => result.stderr.includes('PURCHASE_RETURN_STOCK_UNAVAILABLE')).length !== 1) {
     throw new Error(`purchase return race did not serialize safely: ${JSON.stringify(returnRace)}`)
   }
-  const returnEvidence = lastLine((await runSql(`select count(*) || '|' || sum(item.quantity) || '|' || min(batch.remaining_quantity) || '|' || shop_private.purchase_payable('${purchaseId}') from public.purchase_return_items item join public.inventory_batches batch on batch.id=item.inventory_batch_id where item.shop_id='${shopId}' group by item.shop_id;`)).stdout)
-  if (returnEvidence !== '1|6.000|4.00|40.00') throw new Error(`purchase return race reconciliation failed: ${returnEvidence}`)
+  const returnEvidence = lastLine((await runSql(`select count(*) || '|' || trim_scale(sum(item.quantity))::text || '|' || trim_scale(min(batch.remaining_quantity))::text || '|' || trim_scale(shop_private.purchase_payable('${purchaseId}'))::text from public.purchase_return_items item join public.inventory_batches batch on batch.id=item.inventory_batch_id where item.shop_id='${shopId}' group by item.shop_id;`)).stdout)
+  if (returnEvidence !== '1|6|4|40') throw new Error(`purchase return race reconciliation failed: ${returnEvidence}`)
   console.log(`shop_supplier_concurrency: passed; payment ${paymentEvidence}; return ${returnEvidence}`)
 }
 finally {

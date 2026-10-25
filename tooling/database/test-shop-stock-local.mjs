@@ -74,8 +74,8 @@ try {
     || !race[1].stderr.includes('INSUFFICIENT_STOCK')) {
     throw new Error(`count/sale race did not serialize safely: ${JSON.stringify(race)}`)
   }
-  const evidence = lastLine((await runSql(`select (select quantity_on_hand from public.product_stock where product_id='${productId}') || '|' || (select status from public.invoices where id='${saleId}') || '|' || (select count(*) from public.stock_counts where id='${countId}') || '|' || (select inventory_value from public.product_stock where product_id='${productId}');`)).stdout)
-  if (evidence !== '3.00|draft|1|6.0000') {
+  const evidence = lastLine((await runSql(`select trim_scale((select quantity_on_hand from public.product_stock where product_id='${productId}'))::text || '|' || (select status from public.invoices where id='${saleId}') || '|' || (select count(*) from public.stock_counts where id='${countId}') || '|' || trim_scale((select inventory_value from public.product_stock where product_id='${productId}'))::text;`)).stdout)
+  if (evidence !== '3|draft|1|6') {
     throw new Error(`count/sale reconciliation failed: ${evidence}`)
   }
   console.log(`shop_stock_concurrency: passed; count 5 -> 3, sale rejected, reconciliation ${evidence}`)
