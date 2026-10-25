@@ -29,7 +29,7 @@ const historyColumns = computed(() => [{ key: 'at',field: 'at',header: props.cop
 </script>
 <template>
   <BsStack gap="lg">
-    <BsPageHeader :title="copy.title" :subtitle="scopeLabel"><template #actions><BsButton :disabled="pending || loading || refreshing" :pending="loading || refreshing" @click="emit('retry')">{{ copy.retry }}</BsButton><BsButton v-if="canWalkIn && walkInLabel" :disabled="pending || loading || refreshing" @click="emit('walkIn')">{{walkInLabel}}</BsButton><BsButton v-if="canCreate" variant="primary" :disabled="pending || loading || refreshing" @click="emit('create')">{{ copy.create }}</BsButton></template></BsPageHeader>
+    <BsPageHeader :title="copy.title" :subtitle="scopeLabel"><template #actions><BsButton :disabled="pending || loading || refreshing" :pending="loading || refreshing" @click="emit('retry')">{{ copy.retry }}</BsButton><BsButton v-if="canWalkIn && walkInLabel" :disabled="pending || loading" @click="emit('walkIn')">{{walkInLabel}}</BsButton><BsButton v-if="canCreate" variant="primary" :disabled="pending || loading" @click="emit('create')">{{ copy.create }}</BsButton></template></BsPageHeader>
     <BsAlert tone="info" :description="notice" /><BsStatusBadge :status="liveTone" :label="liveLabel" :tone="liveTone" />
     <BsStateSurface v-if="denied" state="permission" :title="denied"><BsButton v-if="accessAction" @click="emit('access')">{{accessAction.label}}</BsButton></BsStateSurface>
     <BsSectionSkeleton v-else-if="loading" :rows="4" />

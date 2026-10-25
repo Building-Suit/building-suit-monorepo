@@ -518,5 +518,38 @@
       "app_and_shared_lint": "passed",
       "workspace": "passed;6 Suits/130 templates/80 historical migrations unchanged"
     }
+  },
+  "executed_refresh_fix": {
+    "source": "da2b14a9f00708a7633e76e80c2f24d7d6f1480b",
+    "run": 40035883829,
+    "actual_m3_passed": 10,
+    "actual_m3_failed": 0,
+    "sql": "passed",
+    "public_passed": 60,
+    "protocol_passed": 74,
+    "protocol_failed": 11,
+    "shared_auth_passed": 48,
+    "shared_settings_passed": 6,
+    "shared_settings_failed": 6,
+    "aggregate_ci": "failed",
+    "qualified_acceptance": false
+  },
+  "protocol_refresh_followup": {
+    "focus_cases": 4,
+    "retained_disclosure_cases": 6,
+    "remaining_unresolved": "AR combined onboarding still at onboarding after double submit; no root cause established",
+    "new_runtime": "pending exact-source CI",
+    "source_validation": {
+      "focused_doctor_units": 38,
+      "evidence_privacy_units": 13,
+      "parent_app_typechecks": "7 passed;6 cached; final Doctor typecheck also passed after template correction",
+      "app_and_changed_shared_lint": "passed; ANSI stripping regex rewritten equivalently to satisfy no-control-regex",
+      "protocol_collection": 85,
+      "m3_collection": 10,
+      "collection_is_execution": false,
+      "workspace": "passed;130 templates/80 unchanged historical migrations",
+      "full_root": "not repeated for focused follow-up; last2201/2124pass/54 inherited Shop failures/23skip retained"
+    },
+    "unresolved_diagnostic": "Failure-only bounded counts of onboarding draft/completion requests and successful acknowledgements; no body, headers, identity, exception or locator data"
   }
 }

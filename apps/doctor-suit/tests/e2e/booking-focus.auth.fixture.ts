@@ -40,6 +40,7 @@ for (const ar of [true, false]) for (const width of [390, 1280]) {
       await tabTo(page, create)
       await expect(create).toBeFocused()
 
+      const originalDate = await boardDate.elementHandle()
       let captured = 0
       const held = new Promise<void>(resolve => { release = resolve })
       await page.route('**/rest/v1/rpc/doctor_appointment_board', async route => {
@@ -50,7 +51,10 @@ for (const ar of [true, false]) for (const width of [390, 1280]) {
       })
       await page.evaluate(() => window.dispatchEvent(new Event('focus')))
       await expect.poll(() => captured).toBeGreaterThan(0)
-      await expect(boardDate).toHaveCount(0)
+      await expect(boardDate).toBeVisible()
+      await expect(boardDate).toBeDisabled()
+      expect(await boardDate.evaluate((element, previous) => element === previous, originalDate)).toBe(true)
+      await expect(create).toBeEnabled()
       // A read must not remove the permitted action between keyboard focus and
       // activation. The real synthetic board response is still deliberately held.
       await expect(create).toBeFocused()
@@ -64,8 +68,8 @@ for (const ar of [true, false]) for (const width of [390, 1280]) {
       expect(response.ok()).toBe(true)
       expect(await response.finished()).toBeNull()
       // Network completion precedes the async adapter/controller/Vue update.
-      // This control returns only after the board loading branch has cleared.
-      await expect(boardDate).toBeVisible()
+      // The retained control is enabled only after the refresh response is applied.
+      await expect(boardDate).toBeEnabled()
       await expect(booking).toBeVisible()
       await page.keyboard.press('Escape')
       await expect(booking).toBeHidden()
