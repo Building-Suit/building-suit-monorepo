@@ -1,0 +1,14 @@
+{
+  "id": "dos-m4-010-a309-evidence",
+  "task": "DOS-M4-010",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m4-010.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-010-device-evidence.json"
+  ],
+  "reason": "Record exact a309 owned5/7/5 native cases on both APIs, same-head SQL job metadata and strict receipt consistency while keeping every physical/domain/task/release acceptance held."
+}
