@@ -13,7 +13,7 @@ function failureLocation(task, result) {
 }
 
 function failureCategory(result) {
-  const message = typeof result?.error?.message === 'string' ? result.error.message.replace(/\u001b\[[0-9;]*m/g, '') : ''
+  const message = typeof result?.error?.message === 'string' ? result.error.message.replace(new RegExp(String.fromCharCode(27) + '\\[[0-9;]*m', 'g'), '') : ''
   for (const [pattern, category] of [
     [/strict mode violation/, 'locator-ambiguous'],
     [/not attached to the DOM|element was detached/i, 'locator-detached'],
