@@ -1,0 +1,16 @@
+{
+  "id": "dos-m6-006",
+  "task": "DOS-M6-006",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m6-006.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-006-verification.json",
+    "docs/work-packages/doctor-suit/implementation/m6-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+  ],
+  "reason": "Synthetic versioned service price and immutable visit-charge engineering, separate from SaaS and live financial/tax authority."
+}
