@@ -1,0 +1,14 @@
+{
+  "id": "doctor-m3-a88-verification",
+  "task": "DOS-M3-010",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci.md",
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci-verification.json"
+  ],
+  "reason": "Record executed all85 protocol/all10 M3/full SQL success with exact owned CI refs; retain shared-settings, inherited Shop and genuine approval holds."
+}

@@ -586,5 +586,29 @@
     "new_child_sql_assertions_executed": 0,
     "correction": "Pinned pnpm; frozen workspace install with scripts disabled after isolation guards and before SQL runner. Preserve every SQL/concurrency/recovery/schema check.",
     "new_runtime": "pending exact-source owned CI"
+  },
+  "executed_complete_protocol_and_bootstrap": {
+    "source": "a88ed83776b6e68dbff5df4b5351c8ed5361a9d1",
+    "workflow_run": 40218283425,
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40218283425",
+    "doctor_browser_job": 121244433612,
+    "doctor_browser_status": "success",
+    "doctor_sql_job": 121244433765,
+    "doctor_sql_status": "success",
+    "actual_m3_passed": 10,
+    "actual_m3_failed": 0,
+    "public_passed": 60,
+    "protocol_passed": 85,
+    "protocol_failed": 0,
+    "delegation_stress_passed": 4,
+    "shared_auth_passed": 48,
+    "shared_settings_passed": 6,
+    "shared_settings_failed": 6,
+    "full_sql_regression_completed": true,
+    "schema_type_generation": "passed",
+    "clinical_qualified_acceptance": false,
+    "aggregate_ci": "failed-shared-settings",
+    "m4_010_child_nine_sql_assertions": "not-present-at-this-parent-source-not-claimed",
+    "raw_private_reports_retained": false
   }
 }
