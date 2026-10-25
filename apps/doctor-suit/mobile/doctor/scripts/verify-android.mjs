@@ -1,3 +1,4 @@
+import {androidShellObservations} from './shell-observations.mjs'
 import {execFileSync} from 'node:child_process'
 import {readFile, writeFile, mkdir} from 'node:fs/promises'
 import {createHash} from 'node:crypto'
@@ -30,7 +31,10 @@ async function foreground(expected){
   }
   throw new Error('Expected owned activity transition unavailable')
 }
+const cueIds=new Map([['You are signed out','signed-out'],['Your practice, on Android','practice-title'],['Your schedule, on Android','schedule-title'],['Access unavailable','access-denied']])
+let lastExpectedCue=null
 async function visibleText(value) {
+  lastExpectedCue=cueIds.get(value)??null
   const deadline = Date.now() + 30000
   while (Date.now() < deadline) {
     try {
@@ -77,7 +81,8 @@ try {
   console.error('Synthetic Android verification failed at ' + stage)
 } finally {
   const diagnosticRead = args => {try {return adb(args)} catch {return null}}
-  const runtime = androidRuntimeDiagnostics(diagnosticRead(['shell', 'dumpsys', 'webviewupdate']), diagnosticRead(['logcat', '-d', '-t', '300', 'chromium:I', 'Capacitor/Console:I', 'Capacitor:I', 'AndroidRuntime:E', '*:S']), diagnosticRead(['shell', 'cat', '/sdcard/doctor-shell.xml']))
+  const hierarchy=diagnosticRead(['shell', 'cat', '/sdcard/doctor-shell.xml'])
+  const runtime = androidRuntimeDiagnostics(diagnosticRead(['shell', 'dumpsys', 'webviewupdate']), diagnosticRead(['logcat', '-d', '-t', '300', 'chromium:I', 'Capacitor/Console:I', 'Capacitor:I', 'AndroidRuntime:E', '*:S']), hierarchy)
   try {
     // Only the synthetic package installed by this run is owned.
     if (installed) {adb(['shell', 'am', 'force-stop', app]); adb(['uninstall', app])}
@@ -88,7 +93,7 @@ try {
   const receipt = {
     version: 1, sourceHead: head, appId: app, apkSha256: metadata.apkSha256, api,
     accepted: stage === 'complete' && cleanup === 'passed' && cases.every(item => item.status === 'passed'),
-    stage, cleanup, runtime, lifecycle, runner: 'owned-disposable-android-emulator', physicalDevice: false, cases,
+    stage, cleanup, runtime, lifecycle, failureCue:stage==='complete'?null:lastExpectedCue,shellObservation:androidShellObservations(hierarchy),runner: 'owned-disposable-android-emulator', physicalDevice: false, cases,
     syntheticOnly: true, clinicalApproval: false, offlineClinicalApproval: false, storeUpload: false,
   }
   await writeFile('test-results/doctor-mobile/device-' + api + '.json', JSON.stringify(receipt, null, 2) + '\n')

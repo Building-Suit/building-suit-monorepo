@@ -4,7 +4,7 @@ const vaultCases=['fresh-install-empty','ciphertext-roundtrip','tamper-denied','
 const sha=(value,length)=>typeof value==='string'&&new RegExp(`^[a-f0-9]{${length}}$`).test(value)
 const record=value=>Boolean(value&&typeof value==='object'&&!Array.isArray(value))
 const keys=(value,allowed)=>record(value)&&Object.keys(value).every(key=>allowed.includes(key))
-const allowedReceipt=['version','task','sourceHead','appId','apkSha256','testApkSha256','api','accepted','stage','cleanup','runtime','lifecycle','runner','physicalDevice','cases','syntheticOnly','clinicalApproval','offlineClinicalApproval','offlineChartApproval','storeUpload','issues','scope','taskAcceptance','physicalDeviceAcceptance','policySubsetAccepted']
+const allowedReceipt=['version','task','sourceHead','appId','apkSha256','testApkSha256','api','accepted','stage','cleanup','runtime','lifecycle','runner','physicalDevice','cases','syntheticOnly','clinicalApproval','offlineClinicalApproval','offlineChartApproval','storeUpload','issues','scope','taskAcceptance','physicalDeviceAcceptance','policySubsetAccepted','failureCue','shellObservation']
 /** Consistency and privacy validation only. Files/summary counters do not prove
  * execution provenance, and this reader never grants physical/domain acceptance. */
 export function inspectNativeCandidate(expected,input){
@@ -28,6 +28,8 @@ export function inspectNativeCandidate(expected,input){
    if((kind==='policy'?receipt.policySubsetAccepted:receipt.accepted)!==true||receipt.stage!=='complete'||receipt.cleanup!=='passed'||(receipt.issues!==undefined&&(!Array.isArray(receipt.issues)||receipt.issues.length!==0)))local.add('receipt-not-passed')
    if(kind==='shell'&&(!keys(receipt.runtime,['webviewMajor','clientIssues','webviewVisible','syntheticPackageVisible'])||receipt.runtime.webviewMajor!==(api===29?74:133)||!Array.isArray(receipt.runtime.clientIssues)||receipt.runtime.clientIssues.length||receipt.runtime.webviewVisible!==true||receipt.runtime.syntheticPackageVisible!==true))local.add('renderer-observation-invalid')
    if(kind==='shell'&&(!keys(receipt.lifecycle,['backgroundObserved','resumeObserved'])||receipt.lifecycle.backgroundObserved!==true||receipt.lifecycle.resumeObserved!==true))local.add('lifecycle-observation-missing')
+   if(receipt.failureCue!==undefined&&receipt.failureCue!==null)local.add('receipt-not-passed')
+   if(receipt.shellObservation!==undefined&&(!keys(receipt.shellObservation,['available','rawSignedOut','rawPracticeTitle','rawScheduleTitle','rawAccessDenied','accessibleSignedOut','accessiblePracticeTitle','accessibleScheduleTitle','accessibleAccessDenied'])||Object.values(receipt.shellObservation).some(value=>typeof value!=='boolean')))local.add('receipt-shape-invalid')
    const population=receipt.cases
    if(!Array.isArray(population)||population.length!==expectedCases.length||population.some(value=>!keys(value,['id','status'])||!expectedCases.includes(value.id)||value.status!=='passed')||new Set(population.map(value=>value?.id)).size!==expectedCases.length)local.add('case-population-not-passed')
    else result[kind+'Passed']=population.length
