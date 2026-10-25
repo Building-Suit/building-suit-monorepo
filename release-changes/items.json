@@ -3118,7 +3118,18 @@
         "path": "apps/shop-suit/app/composables/useOrderFunding.ts",
         "contains": "rpc.rpc('trade_order_deposit', frozen.value)"
       }
-    ]
+    ],
+    "paths": [
+      "apps/shop-suit/app/composables/useOrderFunding.ts",
+      "apps/shop-suit/app/composables/useOrderDelivery.ts",
+      "apps/shop-suit/app/pages/orders.vue",
+      "apps/shop-suit/app/pages/customers/[id].vue",
+      "apps/shop-suit/supabase/migrations/20261025164827_order_deposits_and_partial_fulfillment.sql",
+      "packages/ui/src/organisms/BsOrderFundingPanel.vue",
+      "packages/ui/src/organisms/BsOrderDeliveryPanel.vue",
+      "packages/ui/src/templates/BsTradeOrdersPage.vue"
+    ],
+    "reason": "Record order advances in the existing receipt ledger, transfer them to normal invoices and collect reserved agreed quantities over multiple visits without duplicate stock or funds. Preserve accepted prices/taxes, FIFO sources and remaining holds."
   },
   {
     "id": "ss-electrical-order-funding-qualification-20261025",
