@@ -67,7 +67,13 @@
   "backend_sql": {
     "new_assertions": 9,
     "local_execution": "unrun; owned CI only",
-    "schema_migrations_changed": 0
+    "schema_migrations_changed": 0,
+    "execution_followup": {
+      "run": 40215603459,
+      "job": 121235947962,
+      "result": "failed before SQL runner startup: workspace contracts package missing after extraction; none of the new9 assertions executed",
+      "correction": "owned Doctor CI bootstrap repair on PR442"
+    }
   },
   "candidate_inspection_without_local_runtime": {
     "exit_code": 1,
@@ -85,5 +91,302 @@
     "C02": "partial source/evidence consistency implementation; independent actual exact-source runtime/provenance absent",
     "C03": "debug-only guard implemented; signing/distribution/M7 prerequisites remain open",
     "C04": "existing owned API29/36 command extended without removing cases; exact-source execution and qualified verifier evidence pending"
+  },
+  "executed_source_2a9f3b4c": {
+    "run": 40215603455,
+    "source": "2a9f3b4cdffb6a6e9f78e1facf1c4eae4b59f849",
+    "native_compilation": "passed",
+    "receipts": [
+      {
+        "version": 1,
+        "sourceHead": "2a9f3b4cdffb6a6e9f78e1facf1c4eae4b59f849",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "63305543efb1ab1cd6f27631864417e90c053ca2311da5b2ef3678a8fb7628c8",
+        "api": 29,
+        "accepted": false,
+        "stage": "cold-deep-link-signed-out",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 74,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "lifecycle": {
+          "backgroundObserved": false,
+          "resumeObserved": false
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "failed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "unrun"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "unrun"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "task": "DOS-M4-003",
+        "sourceHead": "2a9f3b4cdffb6a6e9f78e1facf1c4eae4b59f849",
+        "apkSha256": "63305543efb1ab1cd6f27631864417e90c053ca2311da5b2ef3678a8fb7628c8",
+        "testApkSha256": "0cb1de4f67d180b9cbb906affee577acd94d3667497585510ab9e5d205f6d6c5",
+        "api": 29,
+        "cases": [
+          {
+            "id": "fresh-install-empty",
+            "status": "passed"
+          },
+          {
+            "id": "ciphertext-roundtrip",
+            "status": "passed"
+          },
+          {
+            "id": "tamper-denied",
+            "status": "passed"
+          },
+          {
+            "id": "namespace-denied",
+            "status": "passed"
+          },
+          {
+            "id": "purge-marker",
+            "status": "passed"
+          },
+          {
+            "id": "seed-before-reinstall",
+            "status": "passed"
+          },
+          {
+            "id": "fresh-after-reinstall",
+            "status": "passed"
+          }
+        ],
+        "stage": "complete",
+        "cleanup": "passed",
+        "issues": [],
+        "accepted": true,
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineChartApproval": false
+      },
+      {
+        "version": 1,
+        "task": "DOS-M4-010",
+        "sourceHead": "2a9f3b4cdffb6a6e9f78e1facf1c4eae4b59f849",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "63305543efb1ab1cd6f27631864417e90c053ca2311da5b2ef3678a8fb7628c8",
+        "testApkSha256": "0cb1de4f67d180b9cbb906affee577acd94d3667497585510ab9e5d205f6d6c5",
+        "api": 29,
+        "cases": [
+          {
+            "id": "secure-window-enabled",
+            "status": "passed"
+          },
+          {
+            "id": "webview-disk-cache-disabled",
+            "status": "passed"
+          },
+          {
+            "id": "native-response-cache-disabled",
+            "status": "passed"
+          },
+          {
+            "id": "backup-disabled",
+            "status": "passed"
+          },
+          {
+            "id": "background-cache-policy-retained",
+            "status": "passed"
+          }
+        ],
+        "stage": "complete",
+        "cleanup": "passed",
+        "issues": [],
+        "scope": "native-policy-subset",
+        "taskAcceptance": false,
+        "physicalDeviceAcceptance": false,
+        "policySubsetAccepted": true,
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineChartApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "sourceHead": "2a9f3b4cdffb6a6e9f78e1facf1c4eae4b59f849",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "63305543efb1ab1cd6f27631864417e90c053ca2311da5b2ef3678a8fb7628c8",
+        "api": 36,
+        "accepted": false,
+        "stage": "cold-deep-link-signed-out",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 133,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "lifecycle": {
+          "backgroundObserved": false,
+          "resumeObserved": false
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "failed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "unrun"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "unrun"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "task": "DOS-M4-003",
+        "sourceHead": "2a9f3b4cdffb6a6e9f78e1facf1c4eae4b59f849",
+        "apkSha256": "63305543efb1ab1cd6f27631864417e90c053ca2311da5b2ef3678a8fb7628c8",
+        "testApkSha256": "0cb1de4f67d180b9cbb906affee577acd94d3667497585510ab9e5d205f6d6c5",
+        "api": 36,
+        "cases": [
+          {
+            "id": "fresh-install-empty",
+            "status": "passed"
+          },
+          {
+            "id": "ciphertext-roundtrip",
+            "status": "passed"
+          },
+          {
+            "id": "tamper-denied",
+            "status": "passed"
+          },
+          {
+            "id": "namespace-denied",
+            "status": "passed"
+          },
+          {
+            "id": "purge-marker",
+            "status": "passed"
+          },
+          {
+            "id": "seed-before-reinstall",
+            "status": "passed"
+          },
+          {
+            "id": "fresh-after-reinstall",
+            "status": "passed"
+          }
+        ],
+        "stage": "complete",
+        "cleanup": "passed",
+        "issues": [],
+        "accepted": true,
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineChartApproval": false
+      },
+      {
+        "version": 1,
+        "task": "DOS-M4-010",
+        "sourceHead": "2a9f3b4cdffb6a6e9f78e1facf1c4eae4b59f849",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "63305543efb1ab1cd6f27631864417e90c053ca2311da5b2ef3678a8fb7628c8",
+        "testApkSha256": "0cb1de4f67d180b9cbb906affee577acd94d3667497585510ab9e5d205f6d6c5",
+        "api": 36,
+        "cases": [
+          {
+            "id": "secure-window-enabled",
+            "status": "passed"
+          },
+          {
+            "id": "webview-disk-cache-disabled",
+            "status": "passed"
+          },
+          {
+            "id": "native-response-cache-disabled",
+            "status": "passed"
+          },
+          {
+            "id": "backup-disabled",
+            "status": "passed"
+          },
+          {
+            "id": "background-cache-policy-retained",
+            "status": "passed"
+          }
+        ],
+        "stage": "complete",
+        "cleanup": "passed",
+        "issues": [],
+        "scope": "native-policy-subset",
+        "taskAcceptance": false,
+        "physicalDeviceAcceptance": false,
+        "policySubsetAccepted": true,
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineChartApproval": false,
+        "storeUpload": false
+      }
+    ],
+    "actual_per_api": "1 shell passed, next cold schedule deep link failed, later3 unrun; all7 vault and5 policy cases passed; cleanup passed",
+    "qualification": false,
+    "followup": "Keep all5 shell assertions and add a fixed expected-cue/public-cue boolean diagnostic; no raw hierarchy or exceptions retained."
+  },
+  "shell_diagnostic_validation": {
+    "owned_tests_passed": 12,
+    "native_privacy_tests_passed": 144,
+    "mobile_lint": "passed",
+    "script_syntax": "passed",
+    "boundaries": "138 templates/80 historical migrations unchanged",
+    "assertion_matching": "unchanged; diagnostics only",
+    "current_runtime": "requires fresh exact-source CI"
   }
 }
