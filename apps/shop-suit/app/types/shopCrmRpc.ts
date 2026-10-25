@@ -4,6 +4,9 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      inventory_planning_command: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_kind: import('./supplyPlanning').PlanningKind; p_id: string | null; p_revision: number; p_values: import('./supplyPlanning').PlanningValues; p_reason: string }; Returns: { id: string; revision: number; kind: import('./supplyPlanning').PlanningKind } }
+      inventory_planning_context: { Args: { p_shop_id: string; p_location_id: string; p_kind: import('./supplyPlanning').PlanningKind; p_search?: string | null; p_page?: number; p_record_id?: string | null; p_history_page?: number }; Returns: import('./supplyPlanning').PlanningContext }
+      supplier_price_history: { Args: { p_shop_id: string; p_location_id: string; p_product_id?: string | null; p_vendor_id?: string | null; p_page?: number }; Returns: import('./supplyPlanning').SupplierPriceHistory }
       supplier_order_context: { Args: { p_shop_id: string; p_location_id: string; p_order_id?: string | null; p_search?: string | null; p_status?: import('./supplierOrders').SupplierOrderStatus | null; p_page?: number; p_history_page?: number; p_receipt_page?: number }; Returns: import('./supplierOrders').SupplierOrderContext }
       supplier_order_command: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_action: 'save' | 'issue' | 'cancel'; p_order_id: string | null; p_revision: number; p_values: import('./supplierOrders').SupplierOrderValues | Record<string, never>; p_reason: string }; Returns: { id: string; revision: number; status: import('./supplierOrders').SupplierOrderStatus } }
       receive_supplier_order: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_order_id: string; p_revision: number; p_received_on: string; p_invoice_number: string | null; p_items: { lineId: string; quantity: string; reel_barcodes?: string[] }[]; p_reason: string }; Returns: { id: string; revision: number; status: import('./supplierOrders').SupplierOrderStatus; receiptId: string; invoiceId: string } }
@@ -406,7 +409,7 @@ export type ShopRpcDatabase = {
       shop_operational_report: {
         Args: {
           p_shop_id: string
-          p_report: 'sales' | 'collections' | 'receivables' | 'suppliers' | 'expenses' | 'inventory' | 'margin' | 'activity'
+          p_report: import('./reporting').OperationalReportKind
           p_location_id?: string | null
           p_from?: string | null
           p_to?: string | null

@@ -17,7 +17,7 @@ async function fixtureMounted(page: Page) {
   await page.waitForFunction(() => {
     const root = document.getElementById('__nuxt') as HTMLElement & { __vue_app__?: { config?: { globalProperties?: { $nuxt?: { isHydrating?: boolean } } } } }
     return root?.__vue_app__?.config?.globalProperties?.$nuxt?.isHydrating === false
-  })
+  }, undefined, { timeout: 30000 }) // Navigation readiness keeps its own budget; controls may use 5s.
 }
 
 // Both transports execute the same synthetic fixture handlers, including test

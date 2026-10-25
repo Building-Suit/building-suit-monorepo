@@ -2947,6 +2947,145 @@ export type Database = {
           },
         ]
       }
+      inventory_planning_events: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          id: string
+          kind: string
+          location_id: string
+          reason: string
+          record_id: string
+          revision: number
+          shop_id: string
+          snapshot: Json
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          location_id: string
+          reason: string
+          record_id: string
+          revision: number
+          shop_id: string
+          snapshot: Json
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          location_id?: string
+          reason?: string
+          record_id?: string
+          revision?: number
+          shop_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_planning_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_planning_events_location_id_shop_id_fkey"
+            columns: ["location_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_locations"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      inventory_positions: {
+        Row: {
+          active: boolean
+          bin_id: string
+          created_at: string
+          id: string
+          location_id: string
+          notes: string
+          product_id: string
+          reel_id: string | null
+          revision: number
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          bin_id: string
+          created_at?: string
+          id?: string
+          location_id: string
+          notes?: string
+          product_id: string
+          reel_id?: string | null
+          revision?: number
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bin_id?: string
+          created_at?: string
+          id?: string
+          location_id?: string
+          notes?: string
+          product_id?: string
+          reel_id?: string | null
+          revision?: number
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_positions_bin_id_shop_id_location_id_fkey"
+            columns: ["bin_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "storage_bins"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+          {
+            foreignKeyName: "inventory_positions_location_id_shop_id_fkey"
+            columns: ["location_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_locations"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "inventory_positions_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "low_stock_products"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "inventory_positions_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "inventory_positions_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "inventory_positions_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_reels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_reel_cuts: {
         Row: {
           actor_profile_id: string
@@ -9623,6 +9762,63 @@ export type Database = {
           },
         ]
       }
+      storage_bins: {
+        Row: {
+          active: boolean
+          aisle: string
+          code: string
+          created_at: string
+          id: string
+          location_id: string
+          name: string
+          revision: number
+          shelf: string
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          aisle?: string
+          code: string
+          created_at?: string
+          id?: string
+          location_id: string
+          name: string
+          revision?: number
+          shelf?: string
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          aisle?: string
+          code?: string
+          created_at?: string
+          id?: string
+          location_id?: string
+          name?: string
+          revision?: number
+          shelf?: string
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storage_bins_location_id_shop_id_fkey"
+            columns: ["location_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_locations"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "storage_bins_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_commercial_periods: {
         Row: {
           approved_at: string
@@ -10594,6 +10790,119 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "shops"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_product_references: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          item_code: string
+          lead_days: number
+          location_id: string
+          measurement_revision: number
+          package_id: string | null
+          package_version: number | null
+          preferred: boolean
+          product_id: string
+          purchase_snapshot: Json
+          review_days: number
+          revision: number
+          shop_id: string
+          unit_code: string | null
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          item_code: string
+          lead_days: number
+          location_id: string
+          measurement_revision: number
+          package_id?: string | null
+          package_version?: number | null
+          preferred?: boolean
+          product_id: string
+          purchase_snapshot: Json
+          review_days?: number
+          revision?: number
+          shop_id: string
+          unit_code?: string | null
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          item_code?: string
+          lead_days?: number
+          location_id?: string
+          measurement_revision?: number
+          package_id?: string | null
+          package_version?: number | null
+          preferred?: boolean
+          product_id?: string
+          purchase_snapshot?: Json
+          review_days?: number
+          revision?: number
+          shop_id?: string
+          unit_code?: string | null
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_product_references_location_id_shop_id_fkey"
+            columns: ["location_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_locations"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "supplier_product_references_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "product_packagings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_product_references_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "low_stock_products"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "supplier_product_references_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "supplier_product_references_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "supplier_product_references_vendor_id_shop_id_fkey"
+            columns: ["vendor_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_balances"
+            referencedColumns: ["vendor_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "supplier_product_references_vendor_id_shop_id_fkey"
+            columns: ["vendor_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id", "shop_id"]
           },
         ]
       }
@@ -13472,6 +13781,31 @@ export type Database = {
           inventory_enabled: boolean
         }[]
       }
+      inventory_planning_command: {
+        Args: {
+          p_id: string
+          p_kind: string
+          p_location_id: string
+          p_reason: string
+          p_request_id: string
+          p_revision: number
+          p_shop_id: string
+          p_values: Json
+        }
+        Returns: Json
+      }
+      inventory_planning_context: {
+        Args: {
+          p_history_page?: number
+          p_kind: string
+          p_location_id: string
+          p_page?: number
+          p_record_id?: string
+          p_search?: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       inventory_reel_context: {
         Args: {
           p_history_page?: number
@@ -15161,6 +15495,16 @@ export type Database = {
           p_search?: string
           p_shop_id: string
           p_status?: string
+        }
+        Returns: Json
+      }
+      supplier_price_history: {
+        Args: {
+          p_location_id: string
+          p_page?: number
+          p_product_id?: string
+          p_shop_id: string
+          p_vendor_id?: string
         }
         Returns: Json
       }

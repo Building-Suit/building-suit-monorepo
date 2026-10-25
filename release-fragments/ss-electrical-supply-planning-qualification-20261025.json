@@ -1,0 +1,27 @@
+{
+  "id": "ss-electrical-supply-planning-qualification-20261025",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/app",
+    "apps/shop-suit/supabase",
+    "apps/shop-suit/tests",
+    "apps/shop-suit/docs/electrical-supply",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "packages/ui",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "tooling/database/test-shop-measurement-local.mjs",
+    "release-changes/items.json"
+  ],
+  "reason": "Qualify location/role/subscription isolation, immutable position and supplier history, original exact purchase cost, physical placement through existing reel authority, net demand after returns/corrections, package rounding and bounded Cairo-date report/export parity. Generate actual database contracts and register shared presentation; other shared consumers remain internal."
+}

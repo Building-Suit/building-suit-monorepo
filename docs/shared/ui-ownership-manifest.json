@@ -741,6 +741,16 @@
       "adapterBoundary": "Typed supplier-order directory, draft measured/package lines, received and pending quantities, invoice/history pages and immutable command retry state. Shop owns prices, unit resolution, authorization and existing purchase/FIFO/supplier liability.",
       "task": "SS-ELECTRICAL-001",
       "migrationStatus": "implementation qualification in progress"
+    },
+    {
+      "family": "supply-planning",
+      "owner": "packages/ui",
+      "components": [
+        "BsSupplyPlanningPage"
+      ],
+      "adapterBoundary": "Typed storage/bin placements, supplier item/unit/lead-time forms and original purchase-cost history. Shop owns location/role authority, immutable retry identity, stock/source integrity and report-derived reorder calculations.",
+      "task": "SS-ELECTRICAL-001",
+      "migrationStatus": "implementation qualification in progress"
     }
   ]
 }
