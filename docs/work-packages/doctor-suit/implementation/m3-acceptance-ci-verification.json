@@ -551,5 +551,30 @@
       "full_root": "not repeated for focused follow-up; last2201/2124pass/54 inherited Shop failures/23skip retained"
     },
     "unresolved_diagnostic": "Failure-only bounded counts of onboarding draft/completion requests and successful acknowledgements; no body, headers, identity, exception or locator data"
+  },
+  "executed_focus_protocol_followup": {
+    "source": "a0f227c86b47a2a1474dc79519acb45fc0be6b6d",
+    "run": 40212938929,
+    "actual_m3_passed": 10,
+    "actual_m3_failed": 0,
+    "sql": "passed",
+    "public_passed": 60,
+    "protocol_passed": 83,
+    "protocol_failed": 2,
+    "failed_protocol_file": "dos-m1-014.auth.fixture.ts",
+    "failed_location": {
+      "line": 32,
+      "column": 281
+    },
+    "shared_auth_passed": 48,
+    "shared_settings_passed": 6,
+    "shared_settings_failed": 6,
+    "previous_AR_onboarding": "passes in this execution; no root-cause or product fix inferred",
+    "aggregate_ci": "failed"
+  },
+  "remaining_inline_disclosure_correction": {
+    "change": "Open second/booked/moved inline native disclosures only when their open attribute is absent.",
+    "assertions_cases_thresholds": "retained",
+    "runtime": "requires new exact-source CI"
   }
 }
