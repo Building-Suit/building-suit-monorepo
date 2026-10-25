@@ -50,3 +50,13 @@ test('frozen quote comparison cannot be rewritten while an RPC is pending', asyn
   await assert.rejects(stage === 'intent' ? repo.intent(actor, id(3), id(5), signal(), selected) : repo.instructions(actor, id(6), 7, id(7), signal(), selected), /CONTRACT_INVALID/)
  }
 })
+
+test('financial diagnostic reporter emits only whitelisted phase/source metadata and never private error or annotation content', async () => {
+ const { default: Reporter } = await import('../e2e/financial-reporter.mjs'), reporter = new Reporter(), captured = [], original = console.log
+ try {
+  console.log = line => captured.push(line)
+  reporter.onTestEnd({ title: 'DOS-M6-003-C02-EN', annotations: [{ type: 'financial-stage', description: 'quote_identity' }, { type: 'financial-stage', description: 'PRIVATE_ANNOTATION_SENTINEL' }] }, { status: 'failed', error: { message: 'PRIVATE_ERROR_SENTINEL', stack: 'PRIVATE_AUTH_SENTINEL at /owned/source/dos-m6-003.spec.ts:42:7' } })
+  reporter.onEnd({ status: 'failed' })
+ } finally { console.log = original }
+ const text = captured.join(''), receipt = JSON.parse(captured[0]); assert.equal(receipt.cases[0].phase, 'quote_identity'); assert.deepEqual(receipt.cases[0].source_location, { file: 'dos-m6-003.spec.ts', line: 42, column: 7 }); assert(!text.includes('PRIVATE_')); assert.equal(receipt.live_payment_acceptance, false)
+})

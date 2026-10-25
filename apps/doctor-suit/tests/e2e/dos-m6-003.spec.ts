@@ -8,24 +8,33 @@ function fixture(): FinancialFixture {
   return f
 }
 for (const ar of [false, true]) test(`DOS-M6-003-C02-${ar ? 'AR' : 'EN'}`, async ({ browser }) => {
+  const phase = (description: string) => test.info().annotations.push({ type: 'financial-stage', description })
+  phase('fixture')
   const f = fixture(), copy = manualPaymentCopy(ar)
+  phase('source_binding')
   // Source values come from actual owned subscriber RPCs after the existing full quote/receipt/review journey.
   expect(f.notice.quote_id).toBe(f.quote.quote_id); expect(f.notice.amount_minor).toBe(f.quote.amount_minor)
   expect(f.quote.amount_minor).toBe('243984'); expect(f.quote.currency).toBe('EGP'); expect(f.quote.currency_exponent).toBe(2)
   expect(f.quote.payment_route.live_activation).toBe(false); expect(f.quote.payment_route.purchase_available).toBe(false)
+  phase('context')
   const context = await browser.newContext({ storageState: f.storageState, viewport: { width: ar ? 390 : 1280, height: 1000 }, colorScheme: ar ? 'dark' : 'light' })
   try {
     await context.route('**/*', route => [f.origin, f.api].includes(new URL(route.request().url()).origin) ? route.continue() : route.abort())
     await context.addCookies([{ name: 'building-suit-locale', value: ar ? 'ar' : 'en', url: f.origin }])
     await context.addInitScript(({ dark }) => localStorage.setItem('building-suit.theme', dark ? 'dark' : 'light'), { dark: ar })
+    phase('route')
     const page = await context.newPage(); await page.goto(f.origin + '/payment-notices')
     await expect(page.getByRole('heading', { name: copy.title, exact: true })).toBeVisible()
+    phase('notice_row')
     await page.getByRole('row').filter({ hasText: f.reference }).getByRole('button', { name: copy.open, exact: true }).click()
     await expect(page.getByRole('heading', { name: copy.details, exact: true })).toBeVisible()
+    phase('quote_identity')
     await expect(page.getByText(f.quote.quote_id, { exact: true })).toBeVisible()
     await expect(page.getByText(f.notice.intent_id, { exact: true })).toBeVisible()
     await expect(page.getByText(f.quote.terms_id, { exact: true })).toBeVisible()
+    phase('money')
     await expect(page.getByText('2439.84 EGP', { exact: true }).last()).toBeVisible()
+    phase('direction_and_viewport')
     await expect(page.locator('html')).toHaveAttribute('dir', ar ? 'rtl' : 'ltr')
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
   } finally { await context.unrouteAll({ behavior: 'ignoreErrors' }); await context.close() }

@@ -44,5 +44,26 @@ for(const ar of [false,true])test(`DOS-M1-020-C01/C02 ${ar ? 'AR mobile light' :
     stage('revocation and explicit independent reselection');await s.goto('/appointments');await choose(s,'Clinic A1',ar);await a.reload();await a.getByRole('row',{ name: /synthetic-secretary@example.test/ }).getByRole('button',{ name: access.revoke,exact: true }).click();await a.getByRole('dialog',{ name: access.actionTitle,exact: true }).getByRole('button',{ name: access.confirm,exact: true }).click();await s.bringToFront();await s.evaluate(() => window.dispatchEvent(new Event('focus')));await expect(s.locator('.bs-appointment-event').filter({ hasText: 'Synthetic combined A patient' })).toHaveCount(0);await choose(s,'Clinic B1',ar);await s.goto('/patients');await expect(s.getByRole('link',{ name: 'Synthetic combined B patient',exact: true })).toBeVisible()
     await login(o,'synthetic-outsider@example.test',ar);await o.goto('/patients');await expect(o.getByRole('link',{ name: /Synthetic combined [AB] patient/ })).toHaveCount(0);await expect(o.getByRole('button',{ name: doctorPatientsCopy(ar).create,exact: true })).toHaveCount(0)
     const data = (await (await request.get(fixture)).json()).delegation;expect(data.milestoneCompleteCalls).toBe(1);expect(data.patientRows).toHaveLength(2);expect(data.appointmentRows).toHaveLength(1);expect(data.memberships).toHaveLength(2);expect(data.memberships.filter((item: { status: string }) => item.status==='revoked')).toHaveLength(1);expect(Object.values(data.appointmentHistory).flat().filter((item: unknown) => (item as { type: string }).type==='appointment.in_progress')).toHaveLength(1);expect(await s.evaluate(() => document.documentElement.scrollWidth<=innerWidth+1)).toBe(true)
-  } catch(error) {console.info('Doctor M1 setup acknowledgement diagnostic '+JSON.stringify(setupDiagnostic));throw error} finally { await Promise.allSettled(contexts.map(async context => { try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() } })) }
+  } catch(error) {
+    console.info('Doctor M1 setup acknowledgement diagnostic '+JSON.stringify(setupDiagnostic))
+    const page=contexts[0]?.pages()[0]
+    if(page&&!page.isClosed())try{
+      const cue=await page.evaluate(()=>{
+        type Component={parent?:Component|null;props?:Record<string,unknown>}
+        const record=(v:unknown)=>v&&typeof v==='object'&&!Array.isArray(v)?v as Record<string,unknown>:null
+        let node=(document.querySelector('form') as (HTMLElement&{__vueParentComponent?:Component})|null)?.__vueParentComponent
+        let form:Record<string,unknown>|null=null
+        for(let n=0;node&&n<15;n++,node=node.parent??undefined){const candidate=record(node.props?.form);if(candidate){form=candidate;break}}
+        const provided=(key:string)=>typeof form?.[key]==='string'&&String(form[key]).trim().length>0
+        let timezoneValid=false
+        try{timezoneValid=provided('timezone')&&Boolean(new Intl.DateTimeFormat('en',{timeZone:String(form?.timezone)}))}catch{/* Only report fixed validity. */}
+        const root=document.getElementById('__nuxt') as (HTMLElement&{__vue_app__?:{config:{globalProperties:Record<string,unknown>}}})|null
+        const globals=root?.__vue_app__?.config.globalProperties,auth=record(record(globals?.$doctorAuth)?.state),practice=record(record(globals?.$doctorPractice)?.state),setup=record(practice?.setup)
+        const known=(value:unknown,choices:string[],fallback:string|null='unknown')=>typeof value==='string'&&choices.includes(value)?value:fallback
+        return{knownOnboarding:location.pathname==='/onboarding',formModelFound:Boolean(form),nameProvided:provided('name'),practiceProvided:provided('workspaceName'),locationProvided:provided('locationName'),timezoneProvided:provided('timezone'),timezoneValid,invalidControlCount:document.querySelectorAll('form input:invalid,form select:invalid,form textarea:invalid').length,authPhase:known(auth?.phase,['checking','unavailable','signed-out','verification','authenticated']),identityPresent:Boolean(auth?.identity),practicePhase:known(practice?.phase,['idle','loading','ready','denied','error']),pending:Boolean(practice?.pending),setupPresent:Boolean(setup),serverDraftPresent:Boolean(setup?.draft),practiceError:known(practice?.error,['session','unavailable','denied','conflict','invalid','network'],null)}
+      })
+      console.info('Doctor M1 setup validity diagnostic '+JSON.stringify(cue))
+    }catch{console.info('Doctor M1 setup validity diagnostic '+JSON.stringify({unavailable:true}))}
+    throw error
+  } finally { await Promise.allSettled(contexts.map(async context => { try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() } })) }
 })
