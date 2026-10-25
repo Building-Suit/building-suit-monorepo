@@ -563,31 +563,31 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-201.
-- Status: IN_PROGRESS.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Issue supplier purchase orders with measured/package lines; ordering alone never creates stock.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Issue supplier purchase orders with measured/package lines; ordering alone never creates stock. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: The114-migration combined fixture passes20 SQL suites, both merchant journeys and eight real-session races. New supplier cases prove original units/cost, six then four receipts, retry/conflict, closed-period/plan/role/location denial and no stock/debt on ordering. Five distinct built browser cases pass across scoped runs; final pinned-actions build/browser and shared/native qualification remain pending. See PURCHASING.md and VERIFICATION.md.
-- PR / commit: Local child `codex/shop-suit/supplier-orders`, backend checkpointd31c7e3b and parent merge1950ee8d. Review publication follows final combined qualification; parent draft464 is published.
+- Evidence: The114-migration combined fixture passes20 SQL suites, both merchant journeys and eight real-session races. New supplier cases prove original units/cost, six then four receipts, retry/conflict, closed-period/plan/role/location denial and no stock/debt on ordering. All five final built browser cases pass in one run; both strengthened viewport journeys also pass. Shop typecheck/build, scoped lint, strict boundaries and committed release coverage pass; final shared/native qualification remains pending. See PURCHASING.md and VERIFICATION.md.
+- PR / commit: Child `codex/shop-suit/supplier-orders`, backendd31c7e3b, frontend0e3f5fdf and published parent merge4cf7e9fe. Draft review publication follows this recorded local checkpoint; parent draft464 is published.
 - Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Completion notes / release fragment: Local implementation tested; public `ss-electrical-supplier-orders-receiving-20261025`, internal `ss-electrical-supplier-receiving-qualification-20261025`. Native, hosted and merchant/device gates remain separate.
 
 ## SS-ELEC-408 — Partial supplier deliveries
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-407, SS-ELEC-205.
-- Status: IN_PROGRESS.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Receive6 of10 reels, retain4 outstanding; retry does not double receive or duplicate supplier debt.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Receive6 of10 reels, retain4 outstanding; retry does not double receive or duplicate supplier debt. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: The114-migration combined fixture passes20 SQL suites, both merchant journeys and eight real-session races. New supplier cases prove original units/cost, six then four receipts, retry/conflict, closed-period/plan/role/location denial and no stock/debt on ordering. Five distinct built browser cases pass across scoped runs; final pinned-actions build/browser and shared/native qualification remain pending. See PURCHASING.md and VERIFICATION.md.
-- PR / commit: Local child `codex/shop-suit/supplier-orders`, backend checkpointd31c7e3b and parent merge1950ee8d. Review publication follows final combined qualification; parent draft464 is published.
+- Evidence: The114-migration combined fixture passes20 SQL suites, both merchant journeys and eight real-session races. New supplier cases prove original units/cost, six then four receipts, retry/conflict, closed-period/plan/role/location denial and no stock/debt on ordering. All five final built browser cases pass in one run; both strengthened viewport journeys also pass. Shop typecheck/build, scoped lint, strict boundaries and committed release coverage pass; final shared/native qualification remains pending. See PURCHASING.md and VERIFICATION.md.
+- PR / commit: Child `codex/shop-suit/supplier-orders`, backendd31c7e3b, frontend0e3f5fdf and published parent merge4cf7e9fe. Draft review publication follows this recorded local checkpoint; parent draft464 is published.
 - Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Completion notes / release fragment: Local implementation tested; public `ss-electrical-supplier-orders-receiving-20261025`, internal `ss-electrical-supplier-receiving-qualification-20261025`. Native, hosted and merchant/device gates remain separate.
 
 ## SS-ELEC-501 — Bin/shelf location tracking
 
