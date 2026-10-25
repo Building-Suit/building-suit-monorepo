@@ -1,6 +1,6 @@
 {
   "task": "DOS-M4-010",
-  "status": "in progress; physical/qualified acceptance blocked",
+  "status": "synthetic source engineering verified; native/backend execution pending and physical qualification blocked",
   "parent_pr": 467,
   "parent_sha": "10f3c1800b7d8bf625b7326887a2cc0095082a1c",
   "task_acceptance": false,
@@ -29,5 +29,61 @@
     "exact-version-prescription-review",
     "delegated-secretary-schedule"
   ],
-  "evidence_rule": "Existing shell/vault/cache emulators never substitute for physical, signed-in, accessibility, security, accountable or release evidence."
+  "evidence_rule": "Existing shell/vault/cache emulators never substitute for physical, signed-in, accessibility, security, accountable or release evidence.",
+  "source_validation": {
+    "owned_units_passed": 10,
+    "native_privacy_source_phase_passed": 142,
+    "full_root_source_phase": {
+      "tests": 2334,
+      "passed": 2257,
+      "failed": 54,
+      "skipped": 23,
+      "failure_locations": "all Shop"
+    },
+    "mobile_lint": "passed",
+    "mobile_types": "passed",
+    "static_bundle": "passed",
+    "post_build_sync": "passed",
+    "script_syntax": "passed",
+    "boundaries": "138 templates/80 historical migrations unchanged",
+    "canonical_packets": "9 passed/104 unchanged task fingerprints"
+  },
+  "native_runner": {
+    "apis": [
+      29,
+      36
+    ],
+    "stock_webviews": [
+      74,
+      133
+    ],
+    "shell_cases_retained": 5,
+    "vault_cases_retained": 7,
+    "new_policy_cases": 5,
+    "current_source_compiled": false,
+    "current_source_executed": false,
+    "physical_device": false
+  },
+  "backend_sql": {
+    "new_assertions": 9,
+    "local_execution": "unrun; owned CI only",
+    "schema_migrations_changed": 0
+  },
+  "candidate_inspection_without_local_runtime": {
+    "exit_code": 1,
+    "consistentSyntheticSubset": false,
+    "taskAcceptance": false,
+    "physicalDeviceAcceptance": false,
+    "issues": [
+      "build-binding-invalid",
+      "exact-backend-evidence-missing",
+      "receipt-shape-invalid"
+    ]
+  },
+  "criterion_status": {
+    "C01": "blocked: approved physical matrix and six signed-in journeys absent",
+    "C02": "partial source/evidence consistency implementation; independent actual exact-source runtime/provenance absent",
+    "C03": "debug-only guard implemented; signing/distribution/M7 prerequisites remain open",
+    "C04": "existing owned API29/36 command extended without removing cases; exact-source execution and qualified verifier evidence pending"
+  }
 }

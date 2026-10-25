@@ -9,7 +9,8 @@
     "typecheck": "nuxt typecheck",
     "lint": "eslint .",
     "sync": "cap sync android",
-    "android:build": "node scripts/android-build.mjs"
+    "android:build": "node scripts/android-build.mjs",
+    "candidate:inspect": "node scripts/inspect-mobile-candidate.mjs"
   },
   "dependencies": {
     "nuxt": "4.5.2",
