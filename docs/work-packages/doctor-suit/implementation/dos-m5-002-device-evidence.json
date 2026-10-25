@@ -1,0 +1,54 @@
+{
+  "task": "DOS-M5-002",
+  "status": "evidence prepared; scaffold and dependent implementation blocked",
+  "parent_pr": 471,
+  "parent_sha": "be9fc5969a9c99cb37e6d6d00217e6208ef43d47",
+  "task_acceptance": false,
+  "document_sha256": "95c6df2964d48f3a352558fd6bbdb482bfc79d6b5b67cdc5d2fd831c3feeb16a",
+  "owner_mobile_direction": "Android first; separate app inside the monorepo",
+  "identity_approval": null,
+  "patient_platform_approval": null,
+  "accountable_reviewer": null,
+  "approved_at": null,
+  "approved_candidate": null,
+  "framework_or_scaffold_created": false,
+  "patient_provider_enabled": false,
+  "patient_native_journeys_executed": [],
+  "patient_apk": null,
+  "physical_device_receipts": [],
+  "proposed_registration": {
+    "status": "proposed-not-registered",
+    "path": "apps/doctor-suit/mobile/patient",
+    "package": "@building-suit/doctor-patient-mobile",
+    "android_app_id": "com.buildingsuit.doctor.patient.synthetic",
+    "framework": "Capacitor8.5.3/shared Nuxt4.5.2/Vue3.5.42",
+    "source_commands": [
+      "pnpm --filter @building-suit/doctor-patient-mobile prepare",
+      "pnpm --filter @building-suit/doctor-patient-mobile lint",
+      "pnpm --filter @building-suit/doctor-patient-mobile typecheck",
+      "pnpm --filter @building-suit/doctor-patient-mobile build"
+    ],
+    "runtime_commands": "Must be explicitly registered/reviewed before scaffold; existing clinician commands are evidence patterns only."
+  },
+  "consent_defaults": {
+    "app_record_access": false,
+    "medication_reminders": false,
+    "communication_channels": false,
+    "marketing": false
+  },
+  "unclaimed_disputed_revoked_relationship_access": false,
+  "contact_matching_links_records": false,
+  "clinical_authority": false,
+  "offline_chart_approval": false,
+  "distribution_signing_approval": false,
+  "store_upload": false,
+  "blocked_outputs": [
+    "patient source scaffold and secure onboarding implementation",
+    "dos-m5-002 unit/product cases",
+    "dos-m5-002 SQL product cases",
+    "exact-source patient device receipts"
+  ],
+  "supporting_source": "docs/work-packages/doctor-suit/implementation/dos-m4-010-device-evidence.json",
+  "supporting_source_limit": "Clinician-app synthetic subset; no patient identity/platform/native/physical acceptance follows.",
+  "validation": "pending mechanical packet checks; feature and domain acceptance remain blocked"
+}
