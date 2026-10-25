@@ -22,7 +22,8 @@
     "apps/doctor-suit/tests/manual-payments-browser.mjs",
     "apps/doctor-suit/tests/financial-browser-acceptance.mjs",
     "apps/doctor-suit/tests/e2e/playwright.financial.config.ts",
-    "apps/doctor-suit/tests/e2e/financial-reporter.mjs"
+    "apps/doctor-suit/tests/e2e/financial-reporter.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts"
   ],
   "reason": "Reproduced synthetic manual-payment quote/configuration/money response binding gap fixed with immutable stage comparisons; add actual-server/owned-browser verification while real merchant and live-payment approval remain held."
 }
