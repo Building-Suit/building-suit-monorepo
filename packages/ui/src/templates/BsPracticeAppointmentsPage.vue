@@ -9,6 +9,7 @@ const props = defineProps<{
   days: BsAppointmentsView['days']; queue: QueueRow[]; total: number; page: number; queueTotal: number; queuePage: number
   editor: { title: string; dirty: boolean; pending: boolean; error: string | null; disabled: boolean; selectingPatient: boolean;reasonRequired?:boolean; earliestDate: string; latestDate: string; timezone: string; patientLoading: boolean; patientError: string | null; offersLoading: boolean; offersError: string | null }
   patientOptions: { value: string; label: string }[]; clinicOptions: { value: string; label: string }[]; slotOptions: { value: number; label: string }[]
+  accessAction?:{label:string};
   canWalkIn?:boolean;walkInLabel?:string;queuePolicy?:string;
   consultationLabel?:string;consultationOptions?:{value:string;label:string}[]
   reasonOptions?: { value: string; label: string }[]
@@ -21,16 +22,16 @@ const reason = defineModel<string>('reason',{ required: true })
 const editorOpen = defineModel<boolean>('editorOpen',{ required: true })
 const transitionOpen = defineModel<boolean>('transitionOpen',{ required: true })
 const historyOpen = defineModel<boolean>('historyOpen',{ required: true })
-const emit = defineEmits<{ create: [];walkIn: []; reschedule: [id: string]; action: [id: string,action: string]; retry: []; date: []; page: [scope: string | null,page: number]; queuePage: [scope: string | null,page: number]; save: []; confirm: []; patients: [query: string]; offers: []; historyPage: [page: number]; historyRetry: [] }>()
+const emit = defineEmits<{ access: []; create: [];walkIn: []; reschedule: [id: string]; action: [id: string,action: string]; retry: []; date: []; page: [scope: string | null,page: number]; queuePage: [scope: string | null,page: number]; save: []; confirm: []; patients: [query: string]; offers: []; historyPage: [page: number]; historyRetry: [] }>()
 const queueAdapter = computed<BsDataTableQueryAdapter>(() => { const scope = props.scopeKey;return { page: value => emit('queuePage',scope,value.page) } })
 const queueColumns = computed(() => [{ key: 'patient',field: 'patient',header: props.copy.patient },{ key: 'time',field: 'time',header: props.copy.time },{ key: 'status',field: 'status',header: props.copy.status },{ key: 'actions',header: props.copy.calendar.actions || props.copy.history }])
 const historyColumns = computed(() => [{ key: 'at',field: 'at',header: props.copy.time },{ key: 'event',field: 'event',header: props.copy.event },{ key: 'actor',field: 'actor',header: props.copy.actor },{ key: 'reason',field: 'reason',header: props.copy.reason },{ key: 'original',field: 'original',header: props.copy.original },{ key: 'replacement',field: 'replacement',header: props.copy.replacement }])
 </script>
 <template>
   <BsStack gap="lg">
-    <BsPageHeader :title="copy.title" :subtitle="scopeLabel"><template #actions><BsButton :disabled="pending || loading || refreshing" :pending="loading || refreshing" @click="emit('retry')">{{ copy.retry }}</BsButton><BsButton v-if="canWalkIn && walkInLabel" :disabled="pending || loading || refreshing" @click="emit('walkIn')">{{walkInLabel}}</BsButton><BsButton v-if="canCreate" variant="primary" :disabled="pending || loading || refreshing" @click="emit('create')">{{ copy.create }}</BsButton></template></BsPageHeader>
+    <BsPageHeader :title="copy.title" :subtitle="scopeLabel"><template #actions><BsButton :disabled="pending || loading || refreshing" :pending="loading || refreshing" @click="emit('retry')">{{ copy.retry }}</BsButton><BsButton v-if="canWalkIn && walkInLabel" :disabled="pending || loading" @click="emit('walkIn')">{{walkInLabel}}</BsButton><BsButton v-if="canCreate" variant="primary" :disabled="pending || loading" @click="emit('create')">{{ copy.create }}</BsButton></template></BsPageHeader>
     <BsAlert tone="info" :description="notice" /><BsStatusBadge :status="liveTone" :label="liveLabel" :tone="liveTone" />
-    <BsStateSurface v-if="denied" state="permission" :title="denied" />
+    <BsStateSurface v-if="denied" state="permission" :title="denied"><BsButton v-if="accessAction" @click="emit('access')">{{accessAction.label}}</BsButton></BsStateSurface>
     <BsSectionSkeleton v-else-if="loading" :rows="4" />
     <BsStateSurface v-else-if="error" state="error" :title="error"><BsButton @click="emit('retry')">{{ copy.retry }}</BsButton></BsStateSurface>
     <template v-else>

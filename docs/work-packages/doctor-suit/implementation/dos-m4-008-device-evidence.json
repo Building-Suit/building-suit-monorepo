@@ -38,5 +38,212 @@
     "skipped": 23,
     "failure_locations": "all Shop",
     "later_owned_regression": "final destination-revocation case passes in owned14/combined110 command"
+  },
+  "executed_native_followup": {
+    "source": "68e76b372895913b62fcd72b9c961aa363535cd8",
+    "run": 40037410442,
+    "receipts": [
+      {
+        "version": 1,
+        "sourceHead": "68e76b372895913b62fcd72b9c961aa363535cd8",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "1c608ca338b16274951523f970045a925d18ec137bda41f2169ad5be86990ed8",
+        "api": 29,
+        "accepted": false,
+        "stage": "cold-deep-link-signed-out",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 74,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "lifecycle": {
+          "backgroundObserved": false,
+          "resumeObserved": false
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "failed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "unrun"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "unrun"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "task": "DOS-M4-003",
+        "sourceHead": "68e76b372895913b62fcd72b9c961aa363535cd8",
+        "apkSha256": "1c608ca338b16274951523f970045a925d18ec137bda41f2169ad5be86990ed8",
+        "testApkSha256": "7d26a75a34a33507a39e506c19632abfa3d13bc1dfc2d209e00f5957164a5b58",
+        "api": 29,
+        "cases": [
+          {
+            "id": "fresh-install-empty",
+            "status": "passed"
+          },
+          {
+            "id": "ciphertext-roundtrip",
+            "status": "passed"
+          },
+          {
+            "id": "tamper-denied",
+            "status": "passed"
+          },
+          {
+            "id": "namespace-denied",
+            "status": "passed"
+          },
+          {
+            "id": "purge-marker",
+            "status": "passed"
+          },
+          {
+            "id": "seed-before-reinstall",
+            "status": "passed"
+          },
+          {
+            "id": "fresh-after-reinstall",
+            "status": "passed"
+          }
+        ],
+        "stage": "complete",
+        "cleanup": "passed",
+        "issues": [],
+        "accepted": true,
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineChartApproval": false
+      },
+      {
+        "version": 1,
+        "sourceHead": "68e76b372895913b62fcd72b9c961aa363535cd8",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "1c608ca338b16274951523f970045a925d18ec137bda41f2169ad5be86990ed8",
+        "api": 36,
+        "accepted": false,
+        "stage": "cold-deep-link-signed-out",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 133,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "lifecycle": {
+          "backgroundObserved": false,
+          "resumeObserved": false
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "failed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "unrun"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "unrun"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "task": "DOS-M4-003",
+        "sourceHead": "68e76b372895913b62fcd72b9c961aa363535cd8",
+        "apkSha256": "1c608ca338b16274951523f970045a925d18ec137bda41f2169ad5be86990ed8",
+        "testApkSha256": "7d26a75a34a33507a39e506c19632abfa3d13bc1dfc2d209e00f5957164a5b58",
+        "api": 36,
+        "cases": [
+          {
+            "id": "fresh-install-empty",
+            "status": "passed"
+          },
+          {
+            "id": "ciphertext-roundtrip",
+            "status": "passed"
+          },
+          {
+            "id": "tamper-denied",
+            "status": "passed"
+          },
+          {
+            "id": "namespace-denied",
+            "status": "passed"
+          },
+          {
+            "id": "purge-marker",
+            "status": "passed"
+          },
+          {
+            "id": "seed-before-reinstall",
+            "status": "passed"
+          },
+          {
+            "id": "fresh-after-reinstall",
+            "status": "passed"
+          }
+        ],
+        "stage": "complete",
+        "cleanup": "passed",
+        "issues": [],
+        "accepted": true,
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineChartApproval": false
+      }
+    ],
+    "scope": "Both stock APIs pass first shell case and all7 vault cases; cold schedule entry fails before later shell cases. This is a signed-out entry presentation regression, not a qualified native schedule pass.",
+    "correction": "Preserve the existing schedule title/signed-out message in the shared page, with an optional sign-in continuation and tokenless validated next destination. All5 harness cases/assertions remain."
+  },
+  "entry_correction_validation": {
+    "all_app_types": "8 passed serially;0 cached",
+    "mobile_units": 110,
+    "native_and_changed_shared_lint": "passed",
+    "docs_lint": "0errors/5 inherited warnings",
+    "bundle_and_post_build_sync": "passed",
+    "workspace": "138 templates/80 historical migrations unchanged",
+    "new_runtime": "pending exact-source CI; retain all5 existing shell assertions"
   }
 }

@@ -1,18 +1,20 @@
 <script setup lang="ts">
+import{doctorMobileDestination}from'../utils/mobileShell'
 import{createEmailStepController,emailStepState,emailStepDelay,normalizedAuthEmail}from'@building-suit/ux'
 definePageMeta({layout:false})
 const{auth,product,availability,error,t}=useDoctorNativeAuthPresentation()
+const route=useRoute(),destination=computed(()=>doctorMobileDestination(typeof route.query.next==='string'?route.query.next:'/account')??'/account')
 const email=ref(''),password=ref(''),hydrated=ref(false),emailState=reactive(emailStepState())
 let disposed=false
 const emailStep=createEmailStepController(emailState,()=>email.value,(address,signal)=>auth.checkEmail(address,signal),emailStepDelay)
 watch(email,()=>emailStep.reset())
 watch(()=>auth.state.revision,()=>{email.value='';password.value='';emailStep.reset()})
 const emailError=computed(()=>emailState.error?t(emailState.error==='rejected'?'auth.unknownEmail':'auth.emailUnavailable'):null)
-onMounted(()=>{hydrated.value=true;if(auth.state.phase==='ready')void navigateTo('/account',{replace:true})})
+onMounted(()=>{hydrated.value=true;if(auth.state.phase==='ready')void navigateTo(destination.value,{replace:true})})
 async function submit(){
  if(auth.state.phase==='loading'||!emailState.approved||emailState.email!==normalizedAuthEmail(email.value))return
  const address=email.value,secret=password.value;password.value=''
- if(await auth.signIn(address,secret)&&!disposed)await navigateTo('/account',{replace:true})
+ if(await auth.signIn(address,secret)&&!disposed)await navigateTo(destination.value,{replace:true})
 }
 onBeforeUnmount(()=>{disposed=true;email.value='';password.value='';emailStep.reset()})
 </script>
