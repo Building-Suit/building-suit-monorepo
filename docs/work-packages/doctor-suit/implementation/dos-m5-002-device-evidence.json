@@ -4,7 +4,7 @@
   "parent_pr": 471,
   "parent_sha": "be9fc5969a9c99cb37e6d6d00217e6208ef43d47",
   "task_acceptance": false,
-  "document_sha256": "95c6df2964d48f3a352558fd6bbdb482bfc79d6b5b67cdc5d2fd831c3feeb16a",
+  "document_sha256": "4bed7f8589de1d2a77f6b72041bb4d2cfe377846d90cc004c5d5eb33d443d691",
   "owner_mobile_direction": "Android first; separate app inside the monorepo",
   "identity_approval": null,
   "patient_platform_approval": null,
@@ -50,5 +50,34 @@
   ],
   "supporting_source": "docs/work-packages/doctor-suit/implementation/dos-m4-010-device-evidence.json",
   "supporting_source_limit": "Clinician-app synthetic subset; no patient identity/platform/native/physical acceptance follows.",
-  "validation": "pending mechanical packet checks; feature and domain acceptance remain blocked"
+  "validation": {
+    "diff_hygiene": "passed",
+    "boundaries": "138 templates/80 unchanged historical migrations",
+    "canonical_packets": "9 passed/104 unchanged task fingerprints",
+    "document_digest": "verified",
+    "exact_parent_release": "passed at initial source phase; final candidate rechecked before push",
+    "patient_scaffold": "absent; canonical hold preserved",
+    "product_unit_sql_native": "unrun/blocked, not skipped success"
+  },
+  "supporting_actual_native_subset": {
+    "source": "2a9f3b4cdffb6a6e9f78e1facf1c4eae4b59f849",
+    "run": 40215603455,
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40215603455",
+    "per_api": [
+      29,
+      36
+    ],
+    "compiled": true,
+    "vault_cases_passed_per_api": 7,
+    "policy_cases_passed_per_api": 5,
+    "shell": "cold launch passed; cold schedule deep link failed; later3 unrun",
+    "physical_or_patient_acceptance": false
+  },
+  "criterion_status": {
+    "C01": "Android-first direction recorded; patient framework/distribution/registration approval missing",
+    "C02": "secure patient app/onboarding implementation blocked before scaffold",
+    "C03": "denial/consent separation designed; patient product cases unrun",
+    "C04": "exact source/command proposal prepared but not registered or approved",
+    "C05": "review packet prepared; explicit native/provider/live-data hold maintained"
+  }
 }
