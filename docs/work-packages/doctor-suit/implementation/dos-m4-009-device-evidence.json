@@ -41,9 +41,23 @@
     "No claim of remote deletion on an offline lost device",
     "OS/Keystore/physical-device review remains open"
   ],
-  "pending_parent_updates": [
-    "ce31d4a7 native signed-out schedule correction",
-    "a0f227c8 retained booking focus/protocol correction"
-  ],
-  "native_runtime": "Not executed for current policy source; initial parent run has known signed-out entry failure"
+  "pending_parent_updates": [],
+  "native_runtime": "Not executed for current policy source; initial parent run has known signed-out entry failure",
+  "integrated_parent": "3f593c6804b19713b94d405cdb42a28a7e449ab7",
+  "full_root_source_phase": {
+    "source": "a8d20bed",
+    "tests": 2324,
+    "passed": 2247,
+    "failed": 54,
+    "skipped": 23,
+    "failure_locations": "all apps/shop-suit/tests"
+  },
+  "integrated_source_checks": {
+    "native_and_privacy_units_passed": 132,
+    "mobile_types": "passed",
+    "mobile_lint": "passed",
+    "bundle_and_post_build_sync": "passed",
+    "boundaries": "138 templates/80 historical migrations unchanged",
+    "parent_entry_shared_types": "8 apps passed at the recorded parent correction phase"
+  }
 }
