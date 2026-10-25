@@ -1,0 +1,24 @@
+{
+  "id": "dos-m6-003",
+  "task": "DOS-M6-003",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/manualPaymentRepository.ts",
+    "apps/doctor-suit/app/utils/manualPaymentController.ts",
+    "apps/doctor-suit/tests/unit/dos-m6-003.test.mjs",
+    "apps/doctor-suit/tests/unit/manual-payment-controller.test.mjs",
+    "apps/doctor-suit/supabase/tests/dos-m6-003.sql",
+    "apps/doctor-suit/tests/e2e/dos-m6-003.spec.ts",
+    "apps/doctor-suit/tests/e2e/playwright.config.ts",
+    "apps/doctor-suit/tests/e2e/playwright.auth.config.ts",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-003.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-003-payment-packet.json",
+    "docs/work-packages/doctor-suit/implementation/m6-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+  ],
+  "reason": "Reconcile existing selected manual InstaPay route and diagnose/fence frozen quote to instruction binding, preserving absent merchant/legal/live-payment approval."
+}
