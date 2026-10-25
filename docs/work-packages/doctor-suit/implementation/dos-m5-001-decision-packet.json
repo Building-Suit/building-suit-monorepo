@@ -34,15 +34,15 @@
       "fact": "Independent product/environment Auth; contact equality cannot merge accounts."
     },
     {
-      "source": "implementation/dos-m3-005.md",
+      "source": "docs/work-packages/doctor-suit/implementation/dos-m3-005.md",
       "fact": "Synthetic communication consent/guardian review is not Auth, custody or clinical authority."
     },
     {
-      "source": "implementation/dos-m2-009.md",
+      "source": "docs/work-packages/doctor-suit/implementation/dos-m2-009.md",
       "fact": "Scoped synthetic recipient release is not a patient identity claim."
     },
     {
-      "source": "implementation/dos-m4-010.md",
+      "source": "docs/work-packages/doctor-suit/implementation/dos-m4-010.md",
       "fact": "Clinician native source and emulator checks cannot approve patient identity, platform or clinical/offline policy."
     }
   ],
