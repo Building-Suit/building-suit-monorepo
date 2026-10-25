@@ -1,6 +1,6 @@
 # Doctor M3 actual-service CI continuation
 
-Status: CI integration implemented; latest exact-source acceptance remains failing. Review: PR442.
+Status: all ten M3 actual-service tasks, all85 protocol cases and full SQL regression pass at a88ed837; aggregate CI remains failed on shared settings. Qualified domain acceptance stays held. Review: PR442.
 
 The owner authorized continued Doctor implementation. The published M3 tasks already have independent PRs. This follow-up closes a verification gap without selecting a mobile platform or changing the canonical milestone contracts.
 
@@ -59,3 +59,7 @@ Follow-up verification:38 focused Doctor and13 evidence/privacy cases pass; pare
 Sourcea0f227c8/run40212938929 again passes all10 actual-service M3 cases, SQL and public60. Protocol improves to83pass/2fail: both EN/AR M1-014 cases stop at line32/column281 while the inline cancellation helper toggles an already-open disclosure closed. Shared auth48pass; shared settings6pass/6fail. The earlier AR combined onboarding failure does not recur; no root-cause or product fix is inferred. Apply the same closed-state guard to the remaining second/booked/moved inline action openings. Keep all cases, assertions, retries=0 and thresholds. Fresh exact-source execution remains required; full CI/consolidated staging is still blocked.
 
 Child source2a9f3b4c/run40215603459 exposes a bootstrap gap before any SQL execution: the M4 clinical DTO extraction makes a fixture import the workspace contracts package, while the SQL job never installs workspace dependencies. The isolated target guards pass, then the runner fails with ERR_MODULE_NOT_FOUND. Link the frozen workspace with scripts disabled after the target guard and before invoking the SQL runner, using the existing pinned pnpm/Node setup. All SQL/concurrency/recovery/type-generation checks remain mandatory; no hosted target or additional app service is started. The child's new9 SQL assertions are unrun, not passing. Fresh exact-source execution is required.
+
+Latest exact execution: [a88ed837/run40218283425](https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40218283425) passes doctor-browser/job121244433612 and doctor-sql/job121244433765. The full85 protocol cases, all10 M3 actual-service tasks, public60, delegation stress4, inherited actual-provider lifecycle and shared auth48 pass. The full SQL runner completes all task SQL, concurrency/recovery and schema generation checks with no SQL errors. The dependency bootstrap is executed successfully here. M4-010's nine new SQL assertions are absent from this parent source and are not claimed by this receipt.
+
+Shared settings still reports6pass/6fail, so the aggregate workflow and required-CI staging consolidation remain blocked. Preserve the54 inherited Shop unit failures. This exact-source engineering evidence does not grant clinical/legal/provider/physical or release approval. No expensive local suite is repeated for this documentary result update; prior focused and full-source phases remain explicitly dated/source-bound. No raw private report, credential, DOM or arbitrary error body is copied into evidence.
