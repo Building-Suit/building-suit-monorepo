@@ -1,0 +1,108 @@
+{
+  "task_id": "DOS-M6-004",
+  "recorded_at_utc": "2026-10-25T22:02:06.690980+00:00",
+  "parent_pr": 488,
+  "parent_head": "5353b764b1f14df465ba3c3b226ef875dd60bb6f",
+  "parent_merge": "363578b983ee205b8fc48baa9b373ab9e0df4274",
+  "draft_pr": 489,
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "live_payment_acceptance": false,
+  "external_provider_activation": false,
+  "original_regression": {
+    "passed": 1,
+    "failed": 6
+  },
+  "unit": {
+    "argv": [
+      "node",
+      "--experimental-strip-types",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m6-004.test.mjs"
+    ],
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0
+  },
+  "combined_units": {
+    "argv": "node --experimental-strip-types --test apps/doctor-suit/tests/unit/dos-m6-00{3,4}.test.mjs apps/doctor-suit/tests/unit/manual-*.test.mjs",
+    "passed": 34,
+    "failed": 0,
+    "skipped": 0
+  },
+  "changed_file_eslint": "passed",
+  "doctor_typecheck": "passed",
+  "broad_doctor_lint": {
+    "status": "failed",
+    "errors": 12,
+    "locations": "unchanged mobile route component names and dos-m4-006/008 unused variables; no check weakened"
+  },
+  "boundaries": {
+    "passed": true,
+    "templates": 138,
+    "preserved_migrations": 80
+  },
+  "canonical": {
+    "passed": true,
+    "packets": 9,
+    "tasks": 104,
+    "source_fingerprints_unchanged": true
+  },
+  "static_discovery": {
+    "financial": 4,
+    "owned": 2,
+    "auth_protocol": 87,
+    "public": 60,
+    "actual_browser_executed": false
+  },
+  "root_units": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "status": "failed",
+    "exit_code": 1,
+    "total": 2467,
+    "passed": 2390,
+    "failed": 54,
+    "skipped": 23,
+    "failure_location_count": 54,
+    "all_failure_locations_shop": true,
+    "shop_tree_changed": false,
+    "not_full_ci": true
+  },
+  "sql": {
+    "status": "unrun-await-owned-ci",
+    "assertions_static_count": 29,
+    "actual_persisted_rpc": true,
+    "rolled_back_synthetic_only": true
+  },
+  "actual_financial_browser": {
+    "status": "unrun-await-owned-ci",
+    "owned_cases": 2,
+    "actual_service_fixture": true,
+    "no_credential_artifacts": true,
+    "same_source_receipt_required": true
+  },
+  "parent_diagnostic_run": {
+    "id": 40237907912,
+    "head": "5353b764b1f14df465ba3c3b226ef875dd60bb6f",
+    "status": "pending"
+  },
+  "limitations": [
+    "No actual merchant, beneficiary, cost, refund, reviewer/custody, complete lifecycle, legal/tax or live approval",
+    "No provider callback/signature implementation for absent provider route",
+    "No actual independent financial acceptance, process crash or concurrent bank review proof",
+    "No generated database schema changed or hosted operation",
+    "Required CI blocks root401 staging consolidation"
+  ],
+  "file_sha256": {
+    "apps/doctor-suit/app/utils/manualPaymentRepository.ts": "27da1bea490b07197da6dcbc03a0f45a2f0d195da95f0bef8252d78f5ac74256",
+    "apps/doctor-suit/tests/unit/dos-m6-004.test.mjs": "2aa45ad54a3cf09f420597052b771ce4f2f7782d833fcbabb86e6b1de94242ad",
+    "apps/doctor-suit/supabase/tests/dos-m6-004.sql": "10fd71826bc439c901b39c4cffbe22196fbb0eae4b4630739a25a381bebd8feb",
+    "apps/doctor-suit/tests/e2e/dos-m6-004.spec.ts": "55f033d94974209136318a9ad7a022b3fc1686cb443e43e53fb9df96f17a92cb",
+    "apps/doctor-suit/tests/e2e/financial-reporter.mjs": "dd8428d67c01406e21d1e323c45f50ec7752fda65e8dde8e45c66208ff2672fa",
+    "apps/doctor-suit/tests/financial-browser-acceptance.mjs": "69ff11f55b9bc07ef831a0d141063e4f72ff3ef02875130bc9988e2b698b899a",
+    "apps/doctor-suit/tests/manual-payments-browser.mjs": "133e2c67c2730f62477daf83f9c9b1a28fa38897823f5f9910338103efc0b38c"
+  }
+}
