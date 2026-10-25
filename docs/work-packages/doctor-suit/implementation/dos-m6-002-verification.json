@@ -110,7 +110,7 @@
     "apps/doctor-suit/tests/saas-quota-concurrency.mjs": "968f26cc49f2fcb9cabe2ce9081f76650453510b6582f2b6b1426c63e8dcaae3",
     "apps/doctor-suit/supabase/migrations/20261018110853_doctor_manual_payment_activation_evidence.sql": "b542295ebd94022485692833a1c9b7b85f582842d1a5906ad697b64c6d962c8b"
   },
-  "document_sha256": "92cb7d37a1c05f68c7c6be0475e280698706ef8d1bdc19f2fd3e093e27464854",
+  "document_sha256": "bb781efc4f7cd5b8a9bf10932362434ccc12b0e3e2a9391f977e40709ccee9ab",
   "independent_candidate_receipt": "not-claimed-by-this-self-produced-record",
   "limitations": [
     "Complete past-due/cancellation/grace/expiry/export/access approval remains absent",
