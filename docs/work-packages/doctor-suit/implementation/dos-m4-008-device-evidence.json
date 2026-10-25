@@ -245,5 +245,16 @@
     "bundle_and_post_build_sync": "passed",
     "workspace": "138 templates/80 historical migrations unchanged",
     "new_runtime": "pending exact-source CI; retain all5 existing shell assertions"
+  },
+  "entry_action_wiring_followup": {
+    "diagnosis": "Shared BsStateSurface has no default slot; the prior child button is ignored.",
+    "correction": "Use its existing actionLabel/action API for the product-owned sign-in continuation.",
+    "cold_deep_link": "still failing at child2a9f3b4c; separate fixed-cue diagnostics pending; no resolution claimed",
+    "validation": {
+      "mobile_and_changed_shared_lint": "passed",
+      "current_direct_consumers_types": "Doctor web and native passed",
+      "boundaries": "138 templates/80 historical migrations unchanged",
+      "runtime": "pending owned CI; remaining deep-link failure diagnosed separately"
+    }
   }
 }
