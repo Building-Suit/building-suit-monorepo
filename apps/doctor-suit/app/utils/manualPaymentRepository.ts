@@ -18,7 +18,7 @@ const historyBinding=(item:ManualPaymentNotice['history'][number])=>JSON.stringi
 const evidenceBinding=(item:ManualPaymentNotice['evidence'][number])=>JSON.stringify([item.id,item.noticeId,item.filename,item.mime,item.size,item.sha256])
 function noticeSnapshot(notice:ManualPaymentNotice){return Object.freeze({id:notice.id,revision:notice.revision,binding:noticeBinding(notice),history:Object.freeze(notice.history.map(historyBinding)),evidence:Object.freeze(notice.evidence.map(evidenceBinding))})}
 function unchangedNotice(row:ManualPaymentNotice,expected:ReturnType<typeof noticeSnapshot>,actorId:string){
- return noticeBinding(row)===expected.binding&&row.history.at(-1)?.actor===actorId&&expected.history.every((item,index)=>historyBinding(row.history[index]!)===item)&&expected.evidence.every(item=>row.evidence.some(value=>evidenceBinding(value)===item))
+ return noticeBinding(row)===expected.binding&&row.history.at(-1)?.actor===actorId&&row.history.length>=expected.history.length&&expected.history.every((item,index)=>historyBinding(row.history[index]!)===item)&&expected.evidence.every(item=>row.evidence.some(value=>evidenceBinding(value)===item))
 }
 export function doctorManualPaymentRepository(client:SupabaseClient<Database>,url:string,key:string,request:typeof fetch=fetch){
  const quotes=doctorSaasQuoteRepository(client),subscription=doctorSaasRepository(client)

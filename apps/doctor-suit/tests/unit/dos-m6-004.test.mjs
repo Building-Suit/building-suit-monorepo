@@ -56,3 +56,14 @@ test('valid synthetic claim/review/activation chain preserves immutable provenan
  const activation = fixture(activatedRaw), activated = await activation.repo.activate(reviewer, reviewed, id(98), signal()); assert.equal(activated.status, 'activated'); assert.equal(activated.periodId, id(70)); assert.equal(activated.history.length, 2); assert.equal(activated.quoteId, id(5)); assert.equal(activated.amountMinor, '29900')
  assert.deepEqual([submission.calls[0].args.p_key, review.calls[0].args.p_key, activation.calls[0].args.p_key], [id(96), id(97), id(98)]); assert.equal(submission.external() + review.external() + activation.external(), 0)
 })
+
+test('a late original verification acknowledgement cannot overwrite a newer activated history after explicit reconciliation', async () => {
+ const { createManualPaymentController, manualPaymentState } = await import('../../app/utils/manualPaymentController.ts')
+ const first = manualNotice(raw(), reviewer, true), verified = manualNotice(next(raw(), 'funds_verified'), reviewer, true), activated = manualNotice(next(next(raw(), 'funds_verified'), 'activated'), reviewer, true)
+ let current = first, attempts = 0; const keys = []
+ const repo = { capability: async () => true, queue: async () => ({ items: [current], total: 1, page: 1, activationConfigured: true }), review: async (_actor, _notice, _input, key) => { keys.push(key); if (!attempts++) throw Error('Synthetic acknowledgement lost after acceptance'); return verified } }
+ const state = manualPaymentState(), controller = createManualPaymentController(repo, state, () => reviewer, 'local', () => {}, () => id(99))
+ await controller.load(true); controller.select(first.id); state.reason = 'Synthetic independent bank check'; assert.equal(await controller.review('under_review'), false); assert.equal(state.uncertain, true)
+ current = activated; assert.equal(await controller.load(true), true); assert.equal(state.items[0].revision, 2); assert.equal(await controller.retry(), true)
+ assert.equal(state.items[0].status, 'activated'); assert.equal(state.items[0].revision, 2); assert.equal(state.items[0].history.length, 2); assert.equal(state.items[0].periodId, id(70)); assert.equal(keys[0], keys[1])
+})
