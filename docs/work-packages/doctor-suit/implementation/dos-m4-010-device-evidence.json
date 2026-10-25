@@ -1,0 +1,33 @@
+{
+  "task": "DOS-M4-010",
+  "status": "in progress; physical/qualified acceptance blocked",
+  "parent_pr": 467,
+  "parent_sha": "10f3c1800b7d8bf625b7326887a2cc0095082a1c",
+  "task_acceptance": false,
+  "physical_device_matrix_approved": false,
+  "physical_device_receipts": [],
+  "signed_in_native_journeys_executed": [],
+  "qualified_accessibility": false,
+  "qualified_security": false,
+  "clinical_approval": false,
+  "offline_chart_approval": false,
+  "distribution_signing_prerequisites_verified": false,
+  "store_upload": false,
+  "m7_launch_acceptance": false,
+  "planned_native_policy_cases": [
+    "secure-window-enabled",
+    "webview-disk-cache-disabled",
+    "native-response-cache-disabled",
+    "backup-disabled",
+    "background-cache-policy-retained"
+  ],
+  "held_journeys": [
+    "authentication-and-restore",
+    "explicit-doctor-practice-location-context",
+    "patient-chart",
+    "notes-and-web-conflict",
+    "exact-version-prescription-review",
+    "delegated-secretary-schedule"
+  ],
+  "evidence_rule": "Existing shell/vault/cache emulators never substitute for physical, signed-in, accessibility, security, accountable or release evidence."
+}
