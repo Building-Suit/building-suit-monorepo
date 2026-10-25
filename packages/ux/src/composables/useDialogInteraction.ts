@@ -6,14 +6,33 @@ export function useDialogInteraction(props: { readonly pending: boolean; readonl
   const confirmDiscard = ref(false)
   const discardPrompt = ref<HTMLElement | null>(null)
   const opener = shallowRef<HTMLElement | null>(null)
+  let focusGeneration = 0
   function rememberOpener() {
+    focusGeneration++
     const active = document.activeElement
     if (active instanceof HTMLElement) opener.value = active
 }
-function restoreFocus() {
-  const target = opener.value
+async function restoreFocus() {
+  const target = opener.value, generation = focusGeneration
   opener.value = null
-  nextTick(() => { if (target?.isConnected) target.focus() })
+  await nextTick()
+  if (!target?.isConnected) return
+  // A nested confirmation can close before its parent's entrance completes.
+  // Wait for that finite motion and the vendor's final autofocus, then restore
+  // the actual opening control. Do not wait for unrelated/infinite animations.
+  const dialog = target.closest?.('[role="dialog"]')
+  const animations = (dialog?.getAnimations?.() || []).filter(animation => {
+    const end = animation.effect?.getComputedTiming().endTime
+    return (animation.playState === 'running' || animation.playState === 'finished') && typeof end === 'number' && Number.isFinite(end)
+  })
+  if (animations.length) {
+    await Promise.allSettled(animations.map(animation => animation.finished))
+    await nextTick()
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+    const active = document.activeElement
+    if (active instanceof HTMLElement && active.closest?.('[role="dialog"]') && active.closest('[role="dialog"]') !== dialog) return
+  }
+  if (generation === focusGeneration && target.isConnected) target.focus()
 }
 function requestClose(value: boolean) {
   if (value || props.pending || props.closeBlocked) return
