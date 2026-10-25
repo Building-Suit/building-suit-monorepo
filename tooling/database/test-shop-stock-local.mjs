@@ -53,7 +53,7 @@ let shopId
 try {
   await runSql(`insert into auth.users (id,email,encrypted_password,aud,role,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values ('${ownerId}','${ownerId}@stock-concurrency.invalid','x','authenticated','authenticated','{}','{}',now(),now());`)
   shopId = lastLine((await runSql(authenticated(ownerId,
-    `select public.create_owner_shop('Stock count concurrency','pro','product'::public.business_mode);`))).stdout)
+    `select public.create_owner_shop('Stock count concurrency','multi','product'::public.business_mode);`))).stdout)
   const customerId = lastLine((await runSql(authenticated(ownerId,
     `select public.save_customer('${shopId}',null,'Count race customer',null,null,null,null);`))).stdout)
   const productId = lastLine((await runSql(authenticated(ownerId,
