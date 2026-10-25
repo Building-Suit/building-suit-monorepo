@@ -4,6 +4,8 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      reserve_trade_order: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_order_id: string; p_revision: number; p_action: import('./tradeOrders').OrderReservationAction; p_lines: { lineId: string; quantity: string; cuttingLoss: string; reelId?: string }[]; p_expires_at: string | null; p_reason: string }; Returns: { id: string; revision: number; status: import('./tradeOrders').TradeOrderStatus; allocations: number } }
+      trade_order_reservation_context: { Args: { p_shop_id: string; p_location_id: string; p_order_id: string; p_page?: number; p_history_page?: number }; Returns: import('./tradeOrders').OrderReservationContext }
       create_trade_order: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_quotation_id: string; p_revision: number; p_reason: string }; Returns: { id: string; revision: number; status: import('./tradeOrders').TradeOrderStatus; alreadyConverted: boolean } }
       trade_order_context: { Args: { p_shop_id: string; p_location_id: string; p_order_id?: string | null; p_quotation_id?: string | null; p_search?: string | null; p_page?: number; p_history_page?: number; p_kind?: 'orders' | 'quotations' }; Returns: import('./tradeOrders').TradeOrderContext }
 

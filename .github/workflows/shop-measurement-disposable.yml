@@ -6,6 +6,7 @@ on:
       - 'apps/shop-suit/supabase/**'
       - 'tooling/database/test-shop-measurement*.mjs'
       - 'tooling/database/*reel*.mjs'
+      - 'tooling/database/*reservation*.mjs'
 permissions:
   contents: read
 concurrency:
@@ -44,7 +45,7 @@ jobs:
             exit 1
           fi
       - run: node tooling/database/test-shop-measurement-local.mjs
-      - name: Verify physical reel cashier serialization on real Supabase
+      - name: Verify reel sales and order reservation serialization on real Supabase
         env:
           SHOP_REEL_RACE_DISPOSABLE: '1'
         run: node tooling/database/test-shop-reel-concurrency-local.mjs

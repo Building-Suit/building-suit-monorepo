@@ -518,14 +518,14 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-403.
-- Status: IN_PROGRESS.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Convert accepted quote to order retaining agreed prices and preventing duplicate conversion.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Convert accepted quote to order retaining agreed prices and preventing duplicate conversion. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: Forward migration20261023222339, public-command shop_trade_orders.sql and shared order page. Local111-migration replay, quotation/order SQL cases, large exact-money transport and both bilingual conversion/retry browser cases pass. Reservation/fulfillment remain separate open tasks.
-- PR / commit: Local `codex/shop-suit/contractor-orders`, based on published quotation PR463; feature publication pending.
+- PR / commit: draft [#464](https://github.com/Building-Suit/building-suit-monorepo/pull/464); conversion commit `841ed28f`, published checkpoint `e70ec48c`.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -533,14 +533,14 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-404, SS-ELEC-304.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Reserve canonical location/reel stock atomically; release expiry/cancellation; concurrent orders cannot overallocate.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Reserve canonical location/reel stock atomically; release expiry/cancellation; concurrent orders cannot overallocate. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: 112-migration replay and reservation SQL pass, including repeated-SKU replacement, POS availability, expiry and deferred count/scrap capacity checks. Two actual order/stock races pass. Both EN/AR reservation/retry journeys, read-only controls and both inherited conversion cases pass (5/5); all12 existing measured/reel/pricing/quotation cases pass separately. Native combined-head and merchant/device qualification remain open; see VERIFICATION.md.
+- PR / commit: draft [#464](https://github.com/Building-Suit/building-suit-monorepo/pull/464); reservation implementation pending verified commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 

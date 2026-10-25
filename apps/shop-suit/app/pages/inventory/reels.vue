@@ -50,7 +50,7 @@ const quantity = (value: string, unit: string) => `${value} ${unitLabel(unit)}`
 const money = (value: number | null) => value == null ? '—' : new Intl.NumberFormat(locale.value, { style: 'currency', currency: businessCurrency.value, maximumFractionDigits: 12 }).format(value)
 const date = (value: string) => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 function state(value: string) { return ({ empty: words.value.emptyState, scrap: words.value.scrapState, classification: words.value.classificationEvent } as Record<string,string>)[value] || words.value[value as keyof typeof words.value] || value }
-function describe(cause: { message?: string } | null) { const message = cause?.message ?? ''; if (message.includes('CONTEXT_CHANGED')) return words.value.changed; if (message.includes('PERMISSION') || message.includes('SUBSCRIPTION') || message.includes('INVENTORY_NOT_IN_PLAN')) return words.value.loadError; return words.value.failed }
+function describe(cause: { message?: string } | null) { const message = cause?.message ?? ''; if (/STOCK_RESERVED_FOR_ORDER|REEL_RESERVED_FOR_ORDER/.test(message)) return ar.value ? 'حرّر حجز الأمر أو خفّضه قبل تقليل المخزون المحجوز.' : 'Release or reduce the order hold before reducing reserved stock.'; if (message.includes('CONTEXT_CHANGED')) return words.value.changed; if (message.includes('PERMISSION') || message.includes('SUBSCRIPTION') || message.includes('INVENTORY_NOT_IN_PLAN')) return words.value.loadError; return words.value.failed }
 function open(id: string, action: 'count'|'classify'|'archive') {
  if (frozen.value) { editorOpen.value = true; return }
  const reel = data.value.items.find(item => item.id === id)

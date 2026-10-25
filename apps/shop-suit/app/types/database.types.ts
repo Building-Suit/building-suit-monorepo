@@ -10598,6 +10598,190 @@ export type Database = {
           },
         ]
       }
+      trade_order_reservation_events: {
+        Row: {
+          action: string
+          actor_profile_id: string
+          created_at: string
+          id: string
+          order_id: string
+          quantity_change: number
+          reason: string
+          reservation_id: string
+          sale_quantity_change: number
+          shop_id: string
+        }
+        Insert: {
+          action: string
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          order_id: string
+          quantity_change: number
+          reason: string
+          reservation_id: string
+          sale_quantity_change: number
+          shop_id: string
+        }
+        Update: {
+          action?: string
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          quantity_change?: number
+          reason?: string
+          reservation_id?: string
+          sale_quantity_change?: number
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_order_reservation_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_order_reservation_events_order_id_shop_id_fkey"
+            columns: ["order_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "trade_orders"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_order_reservation_events_reservation_id_shop_id_fkey"
+            columns: ["reservation_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "trade_order_reservations"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      trade_order_reservations: {
+        Row: {
+          batch_id: string
+          created_at: string
+          created_by_profile_id: string
+          expires_at: string
+          id: string
+          line_id: string
+          location_id: string
+          order_id: string
+          product_id: string
+          quantity: number
+          reel_id: string | null
+          release_reason: string | null
+          released_at: string | null
+          released_by_profile_id: string | null
+          remaining_quantity: number
+          remaining_sale_quantity: number
+          sale_quantity: number
+          shop_id: string
+          status: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          created_by_profile_id: string
+          expires_at: string
+          id?: string
+          line_id: string
+          location_id: string
+          order_id: string
+          product_id: string
+          quantity: number
+          reel_id?: string | null
+          release_reason?: string | null
+          released_at?: string | null
+          released_by_profile_id?: string | null
+          remaining_quantity: number
+          remaining_sale_quantity: number
+          sale_quantity: number
+          shop_id: string
+          status?: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          created_by_profile_id?: string
+          expires_at?: string
+          id?: string
+          line_id?: string
+          location_id?: string
+          order_id?: string
+          product_id?: string
+          quantity?: number
+          reel_id?: string | null
+          release_reason?: string | null
+          released_at?: string | null
+          released_by_profile_id?: string | null
+          remaining_quantity?: number
+          remaining_sale_quantity?: number
+          sale_quantity?: number
+          shop_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_order_reservations_batch_id_shop_id_location_id_fkey"
+            columns: ["batch_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_batches"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+          {
+            foreignKeyName: "trade_order_reservations_batch_id_shop_id_product_id_fkey"
+            columns: ["batch_id", "shop_id", "product_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_batches"
+            referencedColumns: ["id", "shop_id", "product_id"]
+          },
+          {
+            foreignKeyName: "trade_order_reservations_batch_id_shop_id_product_id_fkey"
+            columns: ["batch_id", "shop_id", "product_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_stock_batches"
+            referencedColumns: ["batch_id", "shop_id", "product_id"]
+          },
+          {
+            foreignKeyName: "trade_order_reservations_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_order_reservations_line_id_order_id_shop_id_fkey"
+            columns: ["line_id", "order_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "trade_order_lines"
+            referencedColumns: ["id", "order_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "trade_order_reservations_order_id_shop_id_location_id_fkey"
+            columns: ["order_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "trade_orders"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+          {
+            foreignKeyName: "trade_order_reservations_reel_id_batch_id_shop_id_location_fkey"
+            columns: ["reel_id", "batch_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_reels"
+            referencedColumns: ["id", "batch_id", "shop_id", "location_id"]
+          },
+          {
+            foreignKeyName: "trade_order_reservations_released_by_profile_id_fkey"
+            columns: ["released_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trade_orders: {
         Row: {
           agreed_snapshot: Json
@@ -13443,6 +13627,20 @@ export type Database = {
         }
         Returns: Json
       }
+      reserve_trade_order: {
+        Args: {
+          p_action: string
+          p_expires_at: string
+          p_lines: Json
+          p_location_id: string
+          p_order_id: string
+          p_reason: string
+          p_request_id: string
+          p_revision: number
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       resolve_product_measurement: {
         Args: {
           p_product_id: string
@@ -14401,6 +14599,16 @@ export type Database = {
           p_page?: number
           p_quotation_id?: string
           p_search?: string
+          p_shop_id: string
+        }
+        Returns: Json
+      }
+      trade_order_reservation_context: {
+        Args: {
+          p_history_page?: number
+          p_location_id: string
+          p_order_id: string
+          p_page?: number
           p_shop_id: string
         }
         Returns: Json

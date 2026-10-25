@@ -2940,5 +2940,84 @@
     "sources": [
       "ss-electrical-public-website-link-qualification-20261023"
     ]
+  },
+  {
+    "id": "ss-electrical-order-stock-reservations-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables/useOrderReservations.ts",
+      "apps/shop-suit/app/pages/orders.vue",
+      "apps/shop-suit/app/pages/pos.vue",
+      "apps/shop-suit/app/pages/inventory/reels.vue",
+      "apps/shop-suit/app/types",
+      "apps/shop-suit/supabase/migrations/20261023224938_location_and_reel_order_reservations.sql",
+      "packages/ui/src/templates/BsTradeOrdersPage.vue",
+      "packages/ui/src/types/tradeOrderPresentation.ts",
+      "apps/shop-suit/app/composables/useShopClient.ts"
+    ],
+    "reason": "Location-scoped customer orders reserve actual FIFO stock and physical source reels until an explicit expiry. Ordinary sales, counts and supplier withdrawals cannot consume held capacity; authorized replacement, release, expiry and cancellation retain immutable history.",
+    "notes": {
+      "title": {
+        "en": "Reserve stock for contractor orders",
+        "ar": "حجز المخزون لأوامر المقاولين"
+      },
+      "summary": {
+        "en": "Protect agreed material quantities and physical cable sources while showing on-hand, reserved and available stock.",
+        "ar": "احفظ كميات المواد ومصادر الكابلات الفعلية المتفق عليها مع عرض الموجود والمحجوز والمتاح."
+      },
+      "details": {
+        "en": "Replace or release order holds with a reason and deadline. Expired or cancelled holds return stock to availability. Cashier availability excludes active holds, and competing reservations cannot claim the same stock. Reservations create no invoice or payment.",
+        "ar": "استبدل حجوزات الأمر أو حرّرها مع تسجيل السبب والموعد. تعيد الحجوزات المنتهية أو الملغاة الكمية إلى المتاح. يستبعد المتاح للكاشير الحجوزات النشطة، ولا تستطيع الأوامر المتنافسة حجز المخزون نفسه. لا ينشئ الحجز فاتورة أو دفعة."
+      }
+    },
+    "sources": [
+      "ss-electrical-order-stock-reservations-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useOrderReservations.ts",
+        "contains": "rpc.rpc('reserve_trade_order', frozen.value)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261023224938_location_and_reel_order_reservations.sql",
+        "contains": "create table public.trade_order_reservations"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-reservation-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/shop-suit/app/types/database.types.ts",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/supabase/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "tooling/database",
+      "docs/shared/interactions.md",
+      "release-changes/items.json",
+      ".github/workflows/shop-measurement-disposable.yml"
+    ],
+    "reason": "Reservation schema contracts, actual two-session capacity races, bilingual order/POS projections and shared optional dismissal blocking for uncertain retryable commands. Other shared dependency consumers remain internal; no hosted deployment or operational activation.",
+    "sources": [
+      "ss-electrical-reservation-qualification-20261025"
+    ]
   }
 ]
