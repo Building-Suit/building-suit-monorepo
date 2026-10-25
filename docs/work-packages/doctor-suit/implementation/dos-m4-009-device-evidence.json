@@ -1,6 +1,6 @@
 {
   "task": "DOS-M4-009",
-  "status": "in progress; accountable offline policy blocked",
+  "status": "synthetic online-only source implementation verified; accountable policy/device acceptance blocked",
   "parent_pr": 465,
   "parent_sha": "68e76b372895913b62fcd72b9c961aa363535cd8",
   "task_acceptance": false,
@@ -11,5 +11,39 @@
   "reconnect_command_upload_allowed": false,
   "native_auth_exception": "Existing fixed Doctor Keystore/no-backup ciphertext namespace only; fresh server verification required",
   "physical_device": false,
-  "executed_native_connectivity_cases": []
+  "executed_native_connectivity_cases": [],
+  "owned_units_passed": 9,
+  "combined_mobile_units_passed": 119,
+  "source_checks": {
+    "mobile_lint": "passed",
+    "mobile_types": "passed",
+    "static_bundle": "passed",
+    "post_build_sync": "passed",
+    "boundaries": "passed;138 templates"
+  },
+  "memory_admission": {
+    "milliseconds": 40000,
+    "clock": "monotonic",
+    "background_or_offline": "invalidate and clear protected memory",
+    "reconnect": "no admission or command replay without fresh server verification"
+  },
+  "proposed_policy": {
+    "private_chart_persistence": false,
+    "offline_drafts": false,
+    "offline_signing": false,
+    "queued_business_writes": false,
+    "accountable_reviewer": null,
+    "approved_at": null,
+    "approved_candidate": null
+  },
+  "device_loss_limits": [
+    "Server revocation must be checked on next admission",
+    "No claim of remote deletion on an offline lost device",
+    "OS/Keystore/physical-device review remains open"
+  ],
+  "pending_parent_updates": [
+    "ce31d4a7 native signed-out schedule correction",
+    "a0f227c8 retained booking focus/protocol correction"
+  ],
+  "native_runtime": "Not executed for current policy source; initial parent run has known signed-out entry failure"
 }

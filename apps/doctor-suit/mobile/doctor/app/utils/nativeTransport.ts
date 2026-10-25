@@ -10,7 +10,7 @@ export const nativeAuthTransport:NativeAuthTransport=async request=>{
  try{
   // Native transport is bounded and refuses redirects. Underlying Android I/O
   // has its own eight-second timeouts; stale replies cannot restore authority.
-  const result=await Promise.race([CapacitorHttp.request({url:request.url,method:request.method,headers:request.headers,data:request.body,responseType:'json',connectTimeout:8000,readTimeout:8000,disableRedirects:true}),interrupted])
+  const result=await Promise.race([CapacitorHttp.request({url:request.url,method:request.method,headers:{...request.headers,'Cache-Control':'no-store, no-cache','Pragma':'no-cache'},data:request.body,responseType:'json',connectTimeout:8000,readTimeout:8000,disableRedirects:true}),interrupted])
   if(request.signal.aborted)throw new Error('Connection unavailable')
   return{status:result.status,data:result.data}
  }finally{request.signal.removeEventListener('abort',cancel);if(timer!==undefined)clearTimeout(timer)}
