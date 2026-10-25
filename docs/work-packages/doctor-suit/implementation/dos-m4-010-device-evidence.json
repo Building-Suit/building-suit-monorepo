@@ -769,5 +769,37 @@
     "inspection_scope": "Pure consistency checker with actual owned stdout receipts and GitHub job metadata. No local APK/build-metadata artifact download/rehash or package candidate:inspect success claimed.",
     "task_acceptance": false,
     "physical_qualification": false
+  },
+  "completed_data_source_a309fedc": {
+    "source_head": "a309fedcefc086c7b74515b8c4be834ec94333e1",
+    "run_id": 40221837613,
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40221837613",
+    "doctor_browser_job": 121254984058,
+    "doctor_browser": "success",
+    "doctor_sql_job": 121254984202,
+    "doctor_sql": "success",
+    "public_cases_passed": 60,
+    "protocol_cases_passed": 85,
+    "delegation_stress_passed": 4,
+    "actual_m3_tasks_passed": [
+      "DOS-M3-001",
+      "DOS-M3-002",
+      "DOS-M3-003",
+      "DOS-M3-004",
+      "DOS-M3-005",
+      "DOS-M3-006",
+      "DOS-M3-007",
+      "DOS-M3-008",
+      "DOS-M3-009",
+      "DOS-M3-010"
+    ],
+    "actual_m3_task_count": 10,
+    "m4_010_sql_assertions_passed": 9,
+    "full_sql_regression_completed": true,
+    "shared_auth_cases_passed": 48,
+    "shared_settings_passed": 6,
+    "shared_settings_failed": 6,
+    "aggregate_workflow": "failure-shared-settings",
+    "qualified_task_acceptance": false
   }
 }
