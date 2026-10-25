@@ -1,0 +1,15 @@
+{
+  "task": "DOS-M4-009",
+  "status": "in progress; accountable offline policy blocked",
+  "parent_pr": 465,
+  "parent_sha": "68e76b372895913b62fcd72b9c961aa363535cd8",
+  "task_acceptance": false,
+  "accountable_offline_review": null,
+  "private_chart_cache_allowed": false,
+  "offline_drafts_allowed": false,
+  "offline_signing_allowed": false,
+  "reconnect_command_upload_allowed": false,
+  "native_auth_exception": "Existing fixed Doctor Keystore/no-backup ciphertext namespace only; fresh server verification required",
+  "physical_device": false,
+  "executed_native_connectivity_cases": []
+}
