@@ -4,9 +4,47 @@ import {doctorAppointmentBoard,doctorReceptionTransitions} from '@building-suit/
 import {createNativeAppointments,nativeAppointmentsState} from '../../mobile/doctor/app/utils/nativeAppointments.ts'
 import {createNativeAppointmentsRepository} from '../../mobile/doctor/app/utils/nativeAppointmentsRepository.ts'
 import {nativeContextChoice} from '../../mobile/doctor/app/utils/nativeContext.ts'
+import {createDoctorMobileLinks} from '../../mobile/doctor/app/utils/nativeLinks.ts'
+import {createDoctorMobileShell,doctorMobileDestination} from '../../mobile/doctor/app/utils/mobileShell.ts'
 const id=n=>'d4080000-0000-4000-8000-'+String(n).padStart(12,'0')
 const query={date:'2026-10-23',page:0,queuePage:0}
 const scope={contractVersion:1,product:'doctor-suit',dataMode:'synthetic',environment:'local',portal:'secretary',userId:id(1),sessionId:id(2),doctorId:id(3),practiceId:id(4),locationId:id(5),grantsVersion:1,locationVersion:1,timezone:'Africa/Cairo',capabilities:['appointments.read','appointments.write','queue.manage','patients.read']}
+test('cold native schedule handoff runs after the initial workspace watcher and retains the signed-out destination',async()=>{
+ const shell=createDoctorMobileShell({identity:()=>null,selection:()=>null,load:async()=>{throw Error('must not query')}}),routes=[]
+ const links=createDoctorMobileLinks(async url=>{await shell.navigate(url);routes.push(doctorMobileDestination(url)??'/unavailable')},()=>assert.fail('unexpected handoff failure'))
+ await links.launch('doctor-suit-synthetic://schedule');assert.deepEqual(routes,[])
+ await shell.navigate('/workspace');await links.mount()
+ assert.deepEqual(routes,['/schedule']);assert.equal(shell.state.route,'/schedule');assert.equal(shell.state.phase,'signed-out')
+})
+test('an early app URL event wins over an older launch URL and mount consumes it once',async()=>{
+ const opened=[],links=createDoctorMobileLinks(async url=>{opened.push(url)},()=>assert.fail('unexpected failure'))
+ await links.event('doctor-suit-synthetic://patients');await links.launch('doctor-suit-synthetic://schedule');await links.mount();await links.mount()
+ assert.deepEqual(opened,['doctor-suit-synthetic://patients'])
+})
+test('warm URL processing is serialized and newer queued navigation replaces the older pending destination',async()=>{
+ let release;const held=new Promise(resolve=>{release=resolve}),opened=[]
+ const links=createDoctorMobileLinks(async url=>{opened.push(url);if(opened.length===1)await held},()=>assert.fail('unexpected failure'))
+ await links.mount();const first=links.event('/schedule');void links.event('/patients');void links.event('/encounters');release();await first
+ assert.deepEqual(opened,['/schedule','/encounters'])
+})
+test('disposing the link lifecycle discards buffered and in-flight successor URLs',async()=>{
+ const opened=[],links=createDoctorMobileLinks(async url=>{opened.push(url)},()=>assert.fail('unexpected failure'))
+ await links.launch('/schedule');links.dispose();await links.mount();await links.event('/patients');assert.deepEqual(opened,[])
+ let release;const held=new Promise(resolve=>{release=resolve}),running=createDoctorMobileLinks(async url=>{opened.push(url);await held},()=>assert.fail('unexpected failure'))
+ await running.mount();const first=running.event('/schedule');void running.event('/patients');running.dispose();release();await first;assert.deepEqual(opened,['/schedule'])
+})
+test('a URL arriving between drain completion and cleanup is not lost',async()=>{
+ const opened=[],links=createDoctorMobileLinks(async url=>{opened.push(url)},()=>assert.fail('unexpected failure'))
+ await links.mount();const first=links.event('/schedule')
+ const queued=Promise.resolve().then(()=>links.event('/patients'))
+ await first;await queued;assert.deepEqual(opened,['/schedule','/patients'])
+})
+test('a failed handoff clears state once without retry or exposing the native URL; oversized input is denied',async()=>{
+ let attempts=0,failures=0;const opened=[]
+ const links=createDoctorMobileLinks(async url=>{attempts++;opened.push(url);if(attempts===1)throw Error('private native failure')},()=>{failures++})
+ await links.launch('/schedule');await links.mount();assert.equal(attempts,1);assert.equal(failures,1)
+ await links.event('x'.repeat(201));assert.deepEqual(opened,['/schedule','/unavailable']);assert.equal(failures,1)
+})
 function raw(){return{practice_id:id(4),location_id:id(5),date:query.date,timezone:'Africa/Cairo',location_version:1,items:[{id:id(6),practice_id:id(4),location_id:id(5),patient_id:id(7),patient_name:'Synthetic patient',starts_at:'2026-10-23T09:00:00Z',ends_at:'2026-10-23T09:20:00Z',timezone:'Africa/Cairo',location_name:'Synthetic clinic',state:'booked',version:1,checked_in_at:null,started_at:null,completed_at:null}],queue:[],page:0,total:1,queue_page:0,queue_total:0,revision:1,can_write:true,can_queue:true,can_read_patients:true,external_notifications:'disabled'}}
 const board=()=>doctorAppointmentBoard(raw(),id(4),id(5),query)
 const book=()=>({kind:'book',patientId:id(7),destinationId:id(5),date:query.date,minute:540,scheduleVersion:1,locationVersion:1})
