@@ -18,7 +18,11 @@
     "docs/work-packages/doctor-suit/implementation/dos-m6-003.md",
     "docs/work-packages/doctor-suit/implementation/dos-m6-003-payment-packet.json",
     "docs/work-packages/doctor-suit/implementation/m6-continuation.md",
-    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md",
+    "apps/doctor-suit/tests/manual-payments-browser.mjs",
+    "apps/doctor-suit/tests/financial-browser-acceptance.mjs",
+    "apps/doctor-suit/tests/e2e/playwright.financial.config.ts",
+    "apps/doctor-suit/tests/e2e/financial-reporter.mjs"
   ],
-  "reason": "Reconcile existing selected manual InstaPay route and diagnose/fence frozen quote to instruction binding, preserving absent merchant/legal/live-payment approval."
+  "reason": "Reproduced synthetic manual-payment quote/configuration/money response binding gap fixed with immutable stage comparisons; add actual-server/owned-browser verification while real merchant and live-payment approval remain held."
 }

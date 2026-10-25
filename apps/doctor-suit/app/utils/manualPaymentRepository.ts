@@ -2,9 +2,15 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../types/database.types'
 import type { DoctorIdentity } from './authController'
 import { manualCatalog,manualConfiguration,manualInstructions,manualNotice,manualQueue,manualEvidence,manualRecord,type ManualInstructions,type ManualPaymentNotice } from './manualPayments.ts'
-import { doctorSaasQuoteRepository } from './saasQuoteRepository.ts'
+import { doctorSaasQuoteRepository, type DoctorSaasQuote } from './saasQuoteRepository.ts'
 import { doctorSaasRepository } from './saasRepository.ts'
 export interface ManualReviewInput{action:'under_review'|'rejected'|'funds_verified';reason:string;reference:string|null;amount:string|null;currency:string|null;at:string|null;verification:string|null;independent:boolean}
+function quoteBinding(quote: DoctorSaasQuote) {
+ return JSON.stringify([quote.id,quote.subscriberUserId,quote.practiceId,quote.termsId,quote.configurationRevision,quote.accountRevision,quote.accountState,quote.currentPeriodId,quote.interval,quote.currency,quote.currencyExponent,quote.amountMinor,quote.documentRef,quote.createdAt,quote.paymentRoute,quote.purchaseAvailable,quote.liveActivation])
+}
+function requireQuote(quote: DoctorSaasQuote,actor: DoctorIdentity,id: string) {
+ if(!manualRecord(quote)||quote.id!==id||quote.subscriberUserId!==actor.userId||quote.practiceId!==actor.practiceId||quote.paymentRoute!=='unconfigured'||quote.purchaseAvailable!==false||quote.liveActivation!==false)throw Error('DOCTOR_MANUAL_PAYMENT_CONTRACT_INVALID')
+}
 export function doctorManualPaymentRepository(client:SupabaseClient<Database>,url:string,key:string,request:typeof fetch=fetch){
  const quotes=doctorSaasQuoteRepository(client),subscription=doctorSaasRepository(client)
  async function fileRequest(notice:string,operation:'upload'|'download',commandKey:string,signal:AbortSignal,file?:File,evidence?:string){
@@ -20,8 +26,9 @@ export function doctorManualPaymentRepository(client:SupabaseClient<Database>,ur
   async configuration(actor:DoctorIdentity,signal:AbortSignal){const{data,error}=await client.rpc('doctor_manual_payment_configuration').abortSignal(signal);if(error)throw error;return manualConfiguration(data,actor)},
   async queue(actor:DoctorIdentity,review:boolean,page:number,signal:AbortSignal){const{data,error}=await client.rpc('doctor_manual_payments',{p_review_queue:review,p_page:page}).abortSignal(signal);if(error)throw error;return manualQueue(data,actor,review)},
   async read(actor:DoctorIdentity,review:boolean,id:string,signal:AbortSignal){const{data,error}=await client.rpc('doctor_manual_payments',{p_notice:id,p_review_queue:review}).abortSignal(signal);if(error)throw error;const row=manualNotice(data,actor,review);if(row.id!==id)throw Error('DOCTOR_MANUAL_PAYMENT_CONTRACT_INVALID');return row},
-  quote:quotes.create,intent:quotes.prepare,
-  async instructions(actor:DoctorIdentity,intent:string,revision:number,commandKey:string,signal:AbortSignal){const{data,error}=await client.rpc('doctor_prepare_manual_payment',{p_intent:intent,p_configuration_revision:revision,p_key:commandKey}).abortSignal(signal);if(error)throw error;return manualInstructions(data,actor,intent)},
+  quote:quotes.create,
+  async intent(actor:DoctorIdentity,id:string,commandKey:string,signal:AbortSignal,quote:DoctorSaasQuote){requireQuote(quote,actor,id);const expected=Object.freeze({...quote});const intent=await quotes.prepare(actor,id,commandKey,signal);if(quoteBinding(intent.quote)!==quoteBinding(expected))throw Error('DOCTOR_MANUAL_PAYMENT_CONTRACT_INVALID');return intent},
+  async instructions(actor:DoctorIdentity,intent:string,revision:number,commandKey:string,signal:AbortSignal,quote:DoctorSaasQuote){requireQuote(quote,actor,quote?.id);const expected=Object.freeze({...quote});const{data,error}=await client.rpc('doctor_prepare_manual_payment',{p_intent:intent,p_configuration_revision:revision,p_key:commandKey}).abortSignal(signal);if(error)throw error;const result=manualInstructions(data,actor,intent);if(result.configurationRevision!==revision||result.quoteId!==expected.id||result.amountMinor!==expected.amountMinor||result.currency!==expected.currency||result.exponent!==expected.currencyExponent)throw Error('DOCTOR_MANUAL_PAYMENT_CONTRACT_INVALID');return result},
   async submit(actor:DoctorIdentity,instructions:ManualInstructions,reference:string,at:string,commandKey:string,signal:AbortSignal){const{data,error}=await client.rpc('doctor_submit_manual_payment',{p_intent:instructions.intentId,p_reference:reference,p_transferred_at:at,p_configuration_revision:instructions.configurationRevision,p_key:commandKey}).abortSignal(signal);if(error)throw error;const row=manualNotice(data,actor);if(row.intentId!==instructions.intentId||row.quoteId!==instructions.quoteId||row.amountMinor!==instructions.amountMinor||row.currency!==instructions.currency)throw Error('DOCTOR_MANUAL_PAYMENT_CONTRACT_INVALID');return row},
   async review(actor:DoctorIdentity,notice:ManualPaymentNotice,input:ManualReviewInput,commandKey:string,signal:AbortSignal){// PostgreSQL text/timestamptz input arguments accept NULL; generated Meta types omit argument nullability.
    const args={p_notice:notice.id,p_revision:notice.revision,p_action:input.action,p_reason:input.reason,p_received_reference:input.reference,p_received_minor:input.amount,p_currency:input.currency,p_received_at:input.at,p_verification_ref:input.verification,p_independently_verified:input.independent,p_key:commandKey}

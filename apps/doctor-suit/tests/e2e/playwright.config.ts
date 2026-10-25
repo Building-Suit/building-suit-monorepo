@@ -6,7 +6,7 @@ assertLocalFixtureEnvironment(process.env)
 const root = fileURLToPath(new URL('../../../../', import.meta.url))
 export default defineConfig({
   testDir: fileURLToPath(new URL('.', import.meta.url)),
-  testMatch: '*.spec.ts', testIgnore:['**/dos-m2-*.spec.ts','**/dos-m3-*.spec.ts','**/dos-m6-002.spec.ts'], workers: 1, retries: 0,
+  testMatch: '*.spec.ts', testIgnore:['**/dos-m2-*.spec.ts','**/dos-m3-*.spec.ts','**/dos-m6-002.spec.ts','**/dos-m6-003.spec.ts'], workers: 1, retries: 0,
   outputDir: fileURLToPath(new URL('../../../../test-results/doctor', import.meta.url)),
   reporter: 'list',
   use: { baseURL: 'http://127.0.0.1:4336', browserName: 'chromium', trace: 'retain-on-failure', screenshot: 'only-on-failure' },

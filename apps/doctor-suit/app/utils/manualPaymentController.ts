@@ -70,7 +70,7 @@ export function createManualPaymentController(repo:ManualPaymentRepository|null,
    const plan=state.catalog!.plans.find(p=>p.key===state.plan)!,terms=plan.terms!,config=state.configuration!,catalog=state.catalog!,account=state.account!
    const input:DoctorSaasQuoteRequest={termsId:terms.id,configurationRevision:catalog.revision,accountRevision:account.revision,interval:state.interval,documentRef:terms.termsDocumentRef}
    const qKey=key(),iKey=key(),pKey=key(),g=generation,s=scope()
-   return async(actor,signal)=>{const quote=await repo!.quote(actor,input,qKey,signal);if(!active(g,s))throw{code:'42501'};signal.throwIfAborted();const intent=await repo!.intent(actor,quote.id,iKey,signal);if(!active(g,s))throw{code:'42501'};signal.throwIfAborted();const instructions=await repo!.instructions(actor,intent.id,config.revision,pKey,signal);if(active(g,s))state.instructions=instructions}
+   return async(actor,signal)=>{const quote=await repo!.quote(actor,input,qKey,signal);if(!active(g,s))throw{code:'42501'};signal.throwIfAborted();const intent=await repo!.intent(actor,quote.id,iKey,signal,quote);if(!active(g,s))throw{code:'42501'};signal.throwIfAborted();const instructions=await repo!.instructions(actor,intent.id,config.revision,pKey,signal,quote);if(active(g,s))state.instructions=instructions}
   })
  }
  async function submit(){
