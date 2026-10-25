@@ -7,6 +7,7 @@ on:
       - 'tooling/database/test-shop-measurement*.mjs'
       - 'tooling/database/*reel*.mjs'
       - 'tooling/database/*reservation*.mjs'
+      - 'tooling/database/*supplier*.mjs'
 permissions:
   contents: read
 concurrency:

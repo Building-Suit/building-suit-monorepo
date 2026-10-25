@@ -1,3 +1,4 @@
+import { verifySupplierOrderRaces } from './shop-supplier-order-concurrency.mjs'
 import { verifyOrderReservationRaces } from './shop-order-reservation-concurrency.mjs'
 import assert from 'node:assert/strict'
 import { spawn, spawnSync } from 'node:child_process'
@@ -20,3 +21,4 @@ const parallel = statement => new Promise((resolve,reject) => {
 await verifyPhysicalReelRace(sql,parallel)
 
 await verifyOrderReservationRaces(sql,parallel)
+await verifySupplierOrderRaces(sql,parallel)

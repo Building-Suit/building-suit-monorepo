@@ -1,3 +1,4 @@
+import { verifySupplierOrderRaces } from './shop-supplier-order-concurrency.mjs'
 import { verifyOrderReservationRaces } from './shop-order-reservation-concurrency.mjs'
 import { verifyPhysicalReelRace } from './shop-reel-concurrency.mjs'
 import assert from 'node:assert/strict'
@@ -118,6 +119,7 @@ try {
   console.log('Configuration/stock race: PASS; second session rechecks prepared status after product-lock wait; no stock or partial movement')
   await verifyPhysicalReelRace(sql,parallelSql)
   await verifyOrderReservationRaces(sql,parallelSql)
+  await verifySupplierOrderRaces(sql, parallelSql)
   const registry = JSON.parse(sql("select jsonb_agg(jsonb_build_object('code',code,'factor',case when canonical_conversion_factor is null then null else trim_scale(canonical_conversion_factor)::text end,'precision',allowed_precision,'nameEn',name_en,'nameAr',name_ar,'symbol',symbol,'dimension',dimension,'isActive',is_active) order by code) from public.units_of_measure;"))
   assert.deepEqual(registry, measurementUnits.map(unit => ({ code: unit.code, factor: unit.factor, precision: unit.allowedPrecision, nameEn: unit.nameEn, nameAr: unit.nameAr, symbol: unit.symbol, dimension: unit.dimension, isActive: unit.isActive })).sort((a, b) => a.code.localeCompare(b.code, 'en')))
   if (outputs.has('--schema')) {
