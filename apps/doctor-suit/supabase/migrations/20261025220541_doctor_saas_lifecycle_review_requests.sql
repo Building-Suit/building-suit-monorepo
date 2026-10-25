@@ -14,6 +14,7 @@ create table public.doctor_saas_lifecycle_requests(
 );
 alter table public.doctor_saas_lifecycle_requests enable row level security;
 alter table public.doctor_saas_lifecycle_requests force row level security;
+create policy doctor_saas_lifecycle_requests_owner on public.doctor_saas_lifecycle_requests for all to postgres using(true)with check(true);
 revoke all on public.doctor_saas_lifecycle_requests from public,anon,authenticated,service_role;
 create trigger doctor_saas_lifecycle_requests_immutable before update or delete on public.doctor_saas_lifecycle_requests
  for each row execute function doctor_private.saas_history_immutable();
