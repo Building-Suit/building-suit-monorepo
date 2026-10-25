@@ -576,5 +576,15 @@
     "change": "Open second/booked/moved inline native disclosures only when their open attribute is absent.",
     "assertions_cases_thresholds": "retained",
     "runtime": "requires new exact-source CI"
+  },
+  "shared_contract_sql_bootstrap_followup": {
+    "observed_child_source": "2a9f3b4cdffb6a6e9f78e1facf1c4eae4b59f849",
+    "workflow_run": 40215603459,
+    "sql_job": 121235947962,
+    "failure": "ERR_MODULE_NOT_FOUND for workspace contracts before SQL startup",
+    "isolated_target_units_passed": 2,
+    "new_child_sql_assertions_executed": 0,
+    "correction": "Pinned pnpm; frozen workspace install with scripts disabled after isolation guards and before SQL runner. Preserve every SQL/concurrency/recovery/schema check.",
+    "new_runtime": "pending exact-source owned CI"
   }
 }

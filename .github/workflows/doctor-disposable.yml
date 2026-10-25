@@ -30,11 +30,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
+          cache: pnpm
       - name: Verify isolated local target and lifecycle guards
         run: node --test apps/doctor-suit/tests/unit/dos-m1-003.test.mjs
+      - name: Link frozen workspace dependencies for shared SQL fixture contracts
+        run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Apply actual migrations and assert SQL/RLS authorization with synthetic fixtures
         # A minimal provider Auth contract is scaffolding, not full Supabase service acceptance.
         run: node apps/doctor-suit/tests/disposable-postgres.mjs --types
