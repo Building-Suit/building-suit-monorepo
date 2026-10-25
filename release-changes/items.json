@@ -2793,5 +2793,69 @@
     "sources": [
       "ss-electrical-public-website-link-qualification-20261023"
     ]
+  },
+  {
+    "id": "ss-electrical-public-loader-state-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsLandingPage.vue"
+    ],
+    "reason": "Keep the landing loader HTML attribute explicit when asynchronous public changelog content arrives. The previous undefined removal could leave the loader hidden while headings and consent controls inherited hidden visibility.",
+    "notes": {
+      "title": {
+        "en": "Keep the public landing page visible after loading",
+        "ar": "بقاء صفحة المتجر الرئيسية ظاهرة بعد التحميل"
+      },
+      "summary": {
+        "en": "Landing headings and privacy controls remain visible when the changelog loads asynchronously.",
+        "ar": "تبقى عناوين الصفحة الرئيسية وخيارات الخصوصية ظاهرة عند تحميل سجل التحديثات بشكل غير متزامن."
+      },
+      "details": {
+        "en": "The loading marker now has an explicit completed state, and loading styles apply only while it is active. Release history, upcoming notes and consent choices keep their existing behavior.",
+        "ar": "أصبحت علامة التحميل تحدد اكتماله صراحة، وتُطبّق أنماط التحميل أثناء نشاطها فقط. يحتفظ سجل الإصدارات والتحديثات القادمة وخيارات الموافقة بسلوكها الحالي."
+      }
+    },
+    "sources": [
+      "ss-electrical-public-loader-state-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsLandingPage.vue",
+        "contains": "'data-shop-landing-loading': props.journey ? String(isLoading.value) : undefined"
+      },
+      {
+        "path": "packages/ui/src/templates/BsLandingPage.vue",
+        "contains": "html[data-shop-landing-loading=\"true\"] body>*"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-public-settings-browser-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/tests/e2e",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md",
+      "packages/ui/src/templates/BsLandingPage.vue",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify current section routes, intentional duplicate storefront links, current Arabic booking labels, explicit public map links and archived-location navigation while preserving guest access, privacy, permission denial, host isolation and publication assertions. Changelog qualification uses real disposable public feeds and asserts that the loader releases visibility; other dependency consumers remain internal.",
+    "sources": [
+      "ss-electrical-public-settings-browser-qualification-20261025"
+    ]
   }
 ]
