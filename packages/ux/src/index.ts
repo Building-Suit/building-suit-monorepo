@@ -263,3 +263,5 @@ export { useElementPrint } from './composables/useElementPrint.ts'
 export { useNavigationChamber } from './composables/useNavigationChamber.ts'
 
 export { readWebsiteImage } from './utils/readWebsiteImage.ts'
+
+export { normalizeDecimalText } from './utils/decimalText.js'

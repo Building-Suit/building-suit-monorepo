@@ -548,16 +548,16 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-405, SS-ELEC-208.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Reconcile deposits and partial deliveries with existing payment/invoice ledgers and no duplicate stock deduction.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Reconcile deposits and partial deliveries with existing payment/invoice ledgers and no duplicate stock deduction. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Evidence: Migration20261025164827 extends existing receipts/allocations and issues ordinary invoices for partial collections. Local113-migration replay,19 SQL suites, both merchant journeys, six real-session races, cash-drawer reconciliation and all22 distinct order/measured browser cases pass across recorded scoped runs. Root2032/2055 pass, zero fail,23 skip. See VERIFICATION.md for final label/consumer and native gates.
+- PR / commit: draft [#464](https://github.com/Building-Suit/building-suit-monorepo/pull/464), targeting formal quotations #463; deposit/collection checkpoint pending publication.
+- Blocker: Exact-head native Supabase and final shared-consumer qualification remain pending; hosted release reconciliation, real merchant/device and native-speaker acceptance are final initiative gates.
+- Completion notes / release fragment: Local implementation tested. Public fragment `ss-electrical-order-deposits-collections-20261025`; internal support `ss-electrical-order-funding-qualification-20261025`. No production availability claim.
 
 ## SS-ELEC-407 — Supplier purchase orders
 

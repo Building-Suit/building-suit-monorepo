@@ -1,3 +1,5 @@
+// Race fixtures execute the real public command before their held-commit pause;
+// they must not acquire business locks ahead of the command authorization gate.
 import { readFile } from 'node:fs/promises'
 import { spawn, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
@@ -61,7 +63,7 @@ try {
   const draftTwo = lastLine((await runSql(authenticated(ownerId,
     `select public.save_sale_draft('${randomUUID()}','${shopId}',null,'${customerId}',null,'${productLines}'::jsonb);`))).stdout)
 
-  const issueOne = `begin; select 1 from public.products where id='${productId}' for update; select pg_sleep(0.4); set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.issue_sale('${randomUUID()}','${shopId}','${draftOne}'); commit;`
+  const issueOne = `begin; set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.issue_sale('${randomUUID()}','${shopId}','${draftOne}'); select pg_sleep(0.4); commit;`
   const first = runSql(issueOne, { allowFailure: true })
   await new Promise(resolve => setTimeout(resolve, 50))
   const second = runSql(authenticated(ownerId,

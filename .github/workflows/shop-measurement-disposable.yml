@@ -7,6 +7,10 @@ on:
       - 'tooling/database/test-shop-measurement*.mjs'
       - 'tooling/database/*reel*.mjs'
       - 'tooling/database/*reservation*.mjs'
+      - 'tooling/database/test-shop-sale*.mjs'
+      - 'tooling/database/test-shop-payment-local.mjs'
+      - 'tooling/database/test-shop-stock-local.mjs'
+      - 'tooling/database/test-shop-supplier-payables-local.mjs'
 permissions:
   contents: read
 concurrency:
@@ -49,6 +53,14 @@ jobs:
         env:
           SHOP_REEL_RACE_DISPOSABLE: '1'
         run: node tooling/database/test-shop-reel-concurrency-local.mjs
+      - name: Verify existing sale, receipt, count and supplier races
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          node tooling/database/test-shop-sale-local.mjs
+          node tooling/database/test-shop-payment-local.mjs
+          node tooling/database/test-shop-stock-local.mjs
+          node tooling/database/test-shop-supplier-payables-local.mjs
+          node tooling/database/test-shop-sale-correction-local.mjs
       - name: Stop owned disposable backend
         if: always()
         env:

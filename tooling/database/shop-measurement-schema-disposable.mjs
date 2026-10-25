@@ -115,7 +115,7 @@ try {
   assert.ok(received.stderr.includes('MEASUREMENT_WORKFLOW_NOT_READY'), 'Concurrent receipt failed for an unexpected reason')
   assert.equal(sql(`select count(*) from public.inventory_batches where product_id='${race.product_id}';`), '0')
   assert.equal(sql(`select count(*) from public.product_measurement_changes where product_id='${race.product_id}';`), '1')
-  console.log('Configuration/stock race: PASS; second session rechecks prepared status after product-lock wait; no stock or partial movement')
+  console.log('Configuration/stock race: PASS; second session rechecks prepared status after ordered write-lock wait; no stock or partial movement')
   await verifyPhysicalReelRace(sql,parallelSql)
   await verifyOrderReservationRaces(sql,parallelSql)
   const registry = JSON.parse(sql("select jsonb_agg(jsonb_build_object('code',code,'factor',case when canonical_conversion_factor is null then null else trim_scale(canonical_conversion_factor)::text end,'precision',allowed_precision,'nameEn',name_en,'nameAr',name_ar,'symbol',symbol,'dimension',dimension,'isActive',is_active) order by code) from public.units_of_measure;"))
