@@ -24,7 +24,7 @@
     "@fontsource/ibm-plex-sans-arabic": "5.3.0",
     "@hugeicons/core-free-icons": "4.2.1",
     "@hugeicons/vue": "1.0.6",
-    "zod": "3.25.76",
+    "zod": "4.6.7",
     "@building-suit/nuxt-layer": "workspace:*",
     "@building-suit/contracts": "workspace:*",
     "@building-suit/ui": "workspace:*",
