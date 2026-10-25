@@ -1,0 +1,59 @@
+{
+  "task": "DOS-M5-001",
+  "status": "proposed; accountable identity approval missing",
+  "parent_pr": 470,
+  "parent_sha": "2a9f3b4cdffb6a6e9f78e1facf1c4eae4b59f849",
+  "task_acceptance": false,
+  "decision_id": "DOS-M5-GATE-IDENTITY",
+  "decision_status": "open",
+  "document_sha256": "2b0fba8332c912a41d8e27b685be860518e4f6de585707f2b2998203f5c0d598",
+  "accountable_review": {
+    "reviewer": null,
+    "authority_basis": null,
+    "decision_date": null,
+    "approved_candidate": null,
+    "selected_assurance_method": null,
+    "supporting_references": []
+  },
+  "approved_patient_claim": false,
+  "approved_caregiver_authority": false,
+  "approved_native_patient_platform": false,
+  "provider_evidence": [],
+  "contact_equality_grants_authority": false,
+  "reciprocal_doctor_chart_access": false,
+  "proposed_technical_bounds": {
+    "deployed": false,
+    "entropy_bits": 256,
+    "challenge_ttl_minutes": 10,
+    "failed_attempt_limit": 5
+  },
+  "implementation_hold": "No provider/native/live-data dependent patient implementation until the accountable relevant decision is approved.",
+  "existing_evidence_limits": [
+    {
+      "source": "docs/architecture/identity.md",
+      "fact": "Independent product/environment Auth; contact equality cannot merge accounts."
+    },
+    {
+      "source": "implementation/dos-m3-005.md",
+      "fact": "Synthetic communication consent/guardian review is not Auth, custody or clinical authority."
+    },
+    {
+      "source": "implementation/dos-m2-009.md",
+      "fact": "Scoped synthetic recipient release is not a patient identity claim."
+    },
+    {
+      "source": "implementation/dos-m4-010.md",
+      "fact": "Clinician native source and emulator checks cannot approve patient identity, platform or clinical/offline policy."
+    }
+  ],
+  "genuine_gaps": [
+    "patient identity assurance method",
+    "accountable reviewer authority",
+    "purpose consent/withdrawal/recovery review",
+    "caregiver capacity/legal basis",
+    "retention/privacy policy",
+    "patient platform/distribution and command mapping",
+    "clinician-reviewed reminder interpretation"
+  ],
+  "validation": "pending packet source checks; domain acceptance remains blocked"
+}
