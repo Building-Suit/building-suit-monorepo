@@ -59,5 +59,20 @@
     "bundle_and_post_build_sync": "passed",
     "boundaries": "138 templates/80 historical migrations unchanged",
     "parent_entry_shared_types": "8 apps passed at the recorded parent correction phase"
+  },
+  "launch_handoff_integration": {
+    "parent_pr": 465,
+    "parent_source": "7570c95affbeb4eecef73c9b26f12c059d09df3d",
+    "combined_native_units_passed": 125,
+    "source_checks": "native lint/types/static build/post-build sync/138-template boundaries passed",
+    "preserved": [
+      "onlinePolicy.setActive",
+      "onlinePolicy.dispose",
+      "links.event",
+      "links.launch",
+      "links.dispose"
+    ],
+    "new_device_execution": "pending-exact-source-owned-CI",
+    "task_acceptance": false
   }
 }

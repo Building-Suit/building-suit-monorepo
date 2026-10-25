@@ -256,5 +256,27 @@
       "boundaries": "138 templates/80 historical migrations unchanged",
       "runtime": "pending owned CI; remaining deep-link failure diagnosed separately"
     }
+  },
+  "cold_launch_handoff_followup": {
+    "executed_source": "cd050b4031d77df921ac9b8729c8af540c02ce60",
+    "run": 40219145721,
+    "api_matrix": [
+      29,
+      36
+    ],
+    "failure_cue": "schedule-title",
+    "practice_title_present": true,
+    "schedule_title_present": false,
+    "cold_launch_passed": true,
+    "cold_schedule_failed": true,
+    "later_shell_cases": "unrun",
+    "vault_cases_passed_per_api": 7,
+    "native_policy_cases_passed_per_api": 5,
+    "correction": "Defer native URL handling until Nuxt mount; serialize navigation, keep latest pending, reject stale launch after event, clear pending on dispose; use captured app router and existing denied catch-all.",
+    "owned_units": 20,
+    "combined_native_units": 116,
+    "source_checks": "native lint/types/static bundle/post-build sync/138-template boundaries passed",
+    "new_device_execution": "pending-exact-source-owned-CI",
+    "task_acceptance": false
   }
 }

@@ -15,6 +15,7 @@ import{createNativeSessionBackend,nativeSessionConfiguration}from'../utils/nativ
 import{nativeSessionVault}from'../utils/nativeSessionVault'
 import{nativeAuthTransport}from'../utils/nativeTransport'
 import {createDoctorMobileShell,doctorMobileDestination,doctorMobileBackDestination,type MobileShellState} from '../utils/mobileShell'
+import {createDoctorMobileLinks} from '../utils/nativeLinks'
 export default defineNuxtPlugin(async app=>{
   const state=reactive<MobileShellState>({phase:'signed-out',route:'/workspace',context:null})
   const configured=nativeSessionConfiguration(useRuntimeConfig().public.doctorNativeAuth)
@@ -79,12 +80,17 @@ export default defineNuxtPlugin(async app=>{
   window.addEventListener('offline',offline);window.addEventListener('online',online)
   if (!navigator.onLine) offline()
   const subscriptions: {remove:()=>Promise<void>}[]=[]
-  async function open(url:string){const destination=doctorMobileDestination(url);await shell.navigate(url);if(destination)await navigateTo(destination,{replace:true})}
+  const links=createDoctorMobileLinks(async url=>{
+    const destination=doctorMobileDestination(url)
+    await shell.navigate(url)
+    if(!disposed)await app.$router.replace(destination??'/unavailable')
+  },()=>{shell.sessionChanged()})
+  app.hook('app:mounted',()=>links.mount())
   if (Capacitor.isNativePlatform()) {
-    subscriptions.push(await App.addListener('appUrlOpen',event=>{void open(event.url)}))
-    subscriptions.push(await App.addListener('backButton',()=>{const destination=doctorMobileBackDestination(app.$router.currentRoute.value.path);if(destination)void navigateTo(destination);else {auth.lock();shell.sessionChanged();void App.exitApp()}}))
+    subscriptions.push(await App.addListener('appUrlOpen',event=>{void links.event(event.url)}))
+    subscriptions.push(await App.addListener('backButton',()=>{const destination=doctorMobileBackDestination(app.$router.currentRoute.value.path);if(destination)void app.$router.push(destination);else {auth.lock();shell.sessionChanged();void App.exitApp()}}))
     subscriptions.push(await App.addListener('appStateChange',event=>{active=event.isActive;onlinePolicy.setActive(active);if(active&&onlinePolicy.state.online){void admit();if(!backend)void shell.retry()}}))
-    const launch=await App.getLaunchUrl();if(launch)await open(launch.url)
+    const launch=await App.getLaunchUrl();if(launch)await links.launch(launch.url)
   }
-  app.vueApp.onUnmount(()=>{disposed=true;admission++;stopMonitor();onlinePolicy.dispose();auth.dispose();shell.dispose();window.removeEventListener('offline',offline);window.removeEventListener('online',online);for(const subscription of subscriptions)void subscription.remove()})
+  app.vueApp.onUnmount(()=>{disposed=true;links.dispose();admission++;stopMonitor();onlinePolicy.dispose();auth.dispose();shell.dispose();window.removeEventListener('offline',offline);window.removeEventListener('online',online);for(const subscription of subscriptions)void subscription.remove()})
 })
