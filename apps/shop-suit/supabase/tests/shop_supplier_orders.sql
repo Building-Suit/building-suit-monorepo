@@ -70,7 +70,7 @@ do $$declare shop uuid:=current_setting('supplier_order_test.shop')::uuid;locati
  product uuid;order_id uuid;line_id uuid;r jsonb;values jsonb;context jsonb;begin
  product:=public.save_product(shop,null,'Ordered copper mass','PO-COPPER',null,150);
  perform public.configure_product_measurement(shop,product,'kg','0.001','["kg","g"]','Supplier copper purchase unit');
- values:=jsonb_build_object('vendorId',vendor,'lines',jsonb_build_array(jsonb_build_object('product_id',product,'quantity','0.75','unit_code','kg','unit_cost','120.123456','measurement_revision',1)));
+ values:=jsonb_build_object('vendorId',vendor,'lines',jsonb_build_array(jsonb_build_object('product_id',product,'quantity',0.75,'unit_code','kg','unit_cost',120.123456,'measurement_revision',1)));
  r:=public.supplier_order_command(gen_random_uuid(),shop,location,'save',null,0,values,'Plan copper mass delivery');order_id:=(r->>'id')::uuid;
  r:=public.supplier_order_command(gen_random_uuid(),shop,location,'save',order_id,1,values||jsonb_build_object('notes','Corrected delivery note'),'Review draft delivery note');
  perform public.supplier_order_command(gen_random_uuid(),shop,location,'issue',order_id,2,'{}','Issue exact copper mass order');
@@ -78,7 +78,7 @@ do $$declare shop uuid:=current_setting('supplier_order_test.shop')::uuid;locati
  r:=public.receive_supplier_order(gen_random_uuid(),shop,location,order_id,3,current_date,'PO-COPPER-PART',jsonb_build_array(jsonb_build_object('lineId',line_id,'quantity','0.275')),'Accept exact copper mass');
  context:=public.supplier_order_context(shop,location,order_id);
  if context#>>'{detail,lines,0,received_entered_quantity}'<>'0.275' or context#>>'{detail,lines,0,remaining_entered_quantity}'<>'0.475'
- or context#>>'{detail,lines,0,unit_cost}'<>'120.123456' or (select total_amount from public.vendor_invoices where id=(r->>'invoiceId')::uuid)<>33.03 then raise exception 'Fractional supplier receipt rounded quantity/cost or lost debt: %',context;end if;
+ or context#>>'{detail,lines,0,unit_cost}'<>'120.123456' or jsonb_typeof(context#>'{detail,lines,0,original_input,unit_cost}')<>'string' or (select total_amount from public.vendor_invoices where id=(r->>'invoiceId')::uuid)<>33.03 then raise exception 'Fractional supplier receipt rounded quantity/cost or lost debt: %',context;end if;
  perform public.supplier_order_command(gen_random_uuid(),shop,location,'cancel',order_id,4,'{}','Stop undelivered copper remainder');
  begin perform public.receive_supplier_order(gen_random_uuid(),shop,location,order_id,5,current_date,'PO-CANCELLED',jsonb_build_array(jsonb_build_object('lineId',line_id,'quantity','0.475')),'Attempt cancelled balance delivery');raise exception 'Cancelled supplier order received stock';exception when sqlstate '55000' then if sqlerrm<>'SUPPLIER_ORDER_STATE_DENIED' then raise;end if;end;
  if (select sum(remaining_quantity) from public.inventory_batches where product_id=product)<>0.275 then raise exception 'Cancellation changed physically received mass';end if;
@@ -111,3 +111,49 @@ do $$declare item text;begin
  begin update public.supplier_order_lines set unit_cost=1 where order_id=current_setting('supplier_order_test.order')::uuid;raise exception 'Issued supplier cost mutable';exception when sqlstate '55000' then if sqlerrm<>'ISSUED_SUPPLIER_ORDER_IMMUTABLE' then raise;end if;end;
  begin update public.supplier_order_receipts set reason='Altered delivery evidence' where order_id=current_setting('supplier_order_test.order')::uuid;raise exception 'Supplier receipt history mutable';exception when sqlstate '55000' then null;end;
 end;$$;
+
+-- Closed receipt dates roll back the entire receipt and its private plan.
+set local role authenticated;
+do $$declare shop uuid:=current_setting('supplier_order_test.shop')::uuid;location uuid:=current_setting('supplier_order_test.location')::uuid;vendor uuid:=current_setting('supplier_order_test.vendor')::uuid;
+ product uuid;r jsonb;begin
+ product:=public.save_product(shop,null,'Period-controlled piece','PO-PERIOD',null,10);
+ r:=public.supplier_order_command(gen_random_uuid(),shop,location,'save',null,0,jsonb_build_object('vendorId',vendor,'lines',jsonb_build_array(jsonb_build_object('product_id',product,'quantity','3','unit_cost','2'))),'Plan dated receipt');
+ perform public.supplier_order_command(gen_random_uuid(),shop,location,'issue',(r->>'id')::uuid,1,'{}','Issue dated receipt order');
+ perform set_config('supplier_order_test.period_order',r->>'id',true);
+ perform set_config('supplier_order_test.period_product',product::text,true);
+ perform set_config('supplier_order_test.period_line',public.supplier_order_context(shop,location,(r->>'id')::uuid)#>>'{detail,lines,0,id}',true);
+end;$$;
+reset role;
+insert into public.accounting_periods(shop_id,period_start,period_end,is_closed) values(current_setting('supplier_order_test.shop')::uuid,current_date-30,current_date-20,true);
+set local role authenticated;
+do $$declare shop uuid:=current_setting('supplier_order_test.shop')::uuid;location uuid:=current_setting('supplier_order_test.location')::uuid;order_id uuid:=current_setting('supplier_order_test.period_order')::uuid;context jsonb;begin
+ begin perform public.receive_supplier_order(gen_random_uuid(),shop,location,order_id,2,current_date-25,'PO-CLOSED',jsonb_build_array(jsonb_build_object('lineId',current_setting('supplier_order_test.period_line'),'quantity','3')),'Reject closed-period stock receipt');raise exception 'Closed-period supplier receipt accepted';exception when others then if sqlerrm<>'ACCOUNTING_PERIOD_CLOSED' then raise;end if;end;
+ context:=public.supplier_order_context(shop,location,order_id);
+ if context#>>'{detail,record,revision}'<>'2' or context#>>'{detail,receiptTotal}'<>'0' or exists(select 1 from public.inventory_batches where product_id=current_setting('supplier_order_test.period_product')::uuid) then raise exception 'Closed date left partial stock or receipt history';end if;
+end;$$;
+-- Current Solo retail retains its ordinary piece/cost and supplier debt path.
+do $$declare shop uuid;location uuid;vendor uuid;product uuid;order_id uuid;line_id uuid;r jsonb;begin
+ perform set_config('request.jwt.claim.sub',(select outsider::text from supplier_order_actors),true);
+ shop:=public.create_owner_shop('Solo ordinary retail purchasing','solo','product');
+ select id into location from public.shop_locations where shop_id=shop and is_default;
+ vendor:=public.save_vendor(shop,null,'Solo piece supplier',null,null,null,null,null,null);
+ product:=public.save_product(shop,null,'Ordinary legacy piece','PO-SOLO-PIECE',null,10);
+ r:=public.supplier_order_command(gen_random_uuid(),shop,location,'save',null,0,jsonb_build_object('vendorId',vendor,'lines',jsonb_build_array(jsonb_build_object('product_id',product,'quantity','2','unit_cost','3.25'))),'Plan ordinary pieces');order_id:=(r->>'id')::uuid;
+ perform public.supplier_order_command(gen_random_uuid(),shop,location,'issue',order_id,1,'{}','Issue ordinary pieces order');
+ line_id:=(public.supplier_order_context(shop,location,order_id)#>>'{detail,lines,0,id}')::uuid;
+ r:=public.receive_supplier_order(gen_random_uuid(),shop,location,order_id,2,current_date,'PO-SOLO-RECEIPT',jsonb_build_array(jsonb_build_object('lineId',line_id,'quantity','2')),'Accept two ordinary pieces');
+ if (select total_amount from public.vendor_invoices where id=(r->>'invoiceId')::uuid)<>6.50
+ or (select sum(remaining_quantity) from public.inventory_batches where product_id=product)<>2
+ or exists(select 1 from public.vendor_invoice_items where vendor_invoice_id=(r->>'invoiceId')::uuid and measurement_snapshot is not null) then raise exception 'Solo legacy piece purchasing changed its cost/measurement contract';end if;
+ perform set_config('request.jwt.claim.sub',(select owner::text from supplier_order_actors),true);
+end;$$;
+reset role;
+update public.subscriptions set trial_end_at=now()-interval '1 second' where profile_id in(select profile_id from public.shop_memberships where shop_id=current_setting('supplier_order_test.shop')::uuid and role='owner');
+set local role authenticated;
+do $$declare shop uuid:=current_setting('supplier_order_test.shop')::uuid;location uuid:=current_setting('supplier_order_test.location')::uuid;begin
+ perform public.supplier_order_context(shop,location,current_setting('supplier_order_test.order')::uuid);
+ begin perform public.supplier_order_command(gen_random_uuid(),shop,location,'save',null,0,'{}','Expired subscription attempt');raise exception 'Inactive subscription ordered stock';exception when insufficient_privilege then if sqlerrm<>'SHOP_SUBSCRIPTION_INACTIVE' then raise;end if;end;
+ begin perform public.receive_supplier_order(gen_random_uuid(),shop,location,current_setting('supplier_order_test.period_order')::uuid,2,current_date,null,'[]','Expired subscription receiving');raise exception 'Inactive subscription received stock';exception when insufficient_privilege then if sqlerrm<>'SHOP_SUBSCRIPTION_INACTIVE' then raise;end if;end;
+end;$$;
+set constraints supplier_received_capacity immediate;
+reset role;

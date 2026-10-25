@@ -13,7 +13,8 @@ export function businessModeSupportsServices(mode: BusinessMode) {
 export function businessAreaForPath(path: string): 'product' | 'service' | null {
   if (path === '/products' || path.startsWith('/products/')
     || path === '/inventory' || path.startsWith('/inventory/')
-    || path === '/purchases' || path.startsWith('/purchases/')) return 'product'
+    || path === '/purchases' || path.startsWith('/purchases/')
+    || path === '/purchase-orders' || path.startsWith('/purchase-orders/')) return 'product'
   if (path === '/services' || path.startsWith('/services/')
     || path === '/appointments' || path.startsWith('/appointments/')) return 'service'
   return null

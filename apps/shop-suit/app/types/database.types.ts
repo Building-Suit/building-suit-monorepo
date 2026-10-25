@@ -10111,6 +10111,337 @@ export type Database = {
           },
         ]
       }
+      supplier_order_events: {
+        Row: {
+          action: string
+          actor_profile_id: string
+          created_at: string
+          id: string
+          order_id: string
+          previous_status: string | null
+          reason: string
+          revision: number
+          shop_id: string
+          status: string
+        }
+        Insert: {
+          action: string
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          order_id: string
+          previous_status?: string | null
+          reason: string
+          revision: number
+          shop_id: string
+          status: string
+        }
+        Update: {
+          action?: string
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          previous_status?: string | null
+          reason?: string
+          revision?: number
+          shop_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_order_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_order_events_order_id_shop_id_fkey"
+            columns: ["order_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_orders"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      supplier_order_lines: {
+        Row: {
+          entered_quantity: number
+          estimated_total: number
+          id: string
+          line_order: number
+          measurement_snapshot: Json | null
+          order_id: string
+          original_input: Json
+          product_id: string
+          product_name: string
+          quantity: number
+          shop_id: string
+          unit_cost: number
+        }
+        Insert: {
+          entered_quantity: number
+          estimated_total: number
+          id?: string
+          line_order: number
+          measurement_snapshot?: Json | null
+          order_id: string
+          original_input: Json
+          product_id: string
+          product_name: string
+          quantity: number
+          shop_id: string
+          unit_cost: number
+        }
+        Update: {
+          entered_quantity?: number
+          estimated_total?: number
+          id?: string
+          line_order?: number
+          measurement_snapshot?: Json | null
+          order_id?: string
+          original_input?: Json
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          shop_id?: string
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_order_lines_order_id_shop_id_fkey"
+            columns: ["order_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_orders"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "supplier_order_lines_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "low_stock_products"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "supplier_order_lines_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "supplier_order_lines_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      supplier_order_receipt_items: {
+        Row: {
+          entered_quantity: number
+          id: string
+          invoice_id: string
+          invoice_item_id: string
+          order_id: string
+          order_line_id: string
+          quantity: number
+          receipt_id: string
+          shop_id: string
+        }
+        Insert: {
+          entered_quantity: number
+          id?: string
+          invoice_id: string
+          invoice_item_id: string
+          order_id: string
+          order_line_id: string
+          quantity: number
+          receipt_id: string
+          shop_id: string
+        }
+        Update: {
+          entered_quantity?: number
+          id?: string
+          invoice_id?: string
+          invoice_item_id?: string
+          order_id?: string
+          order_line_id?: string
+          quantity?: number
+          receipt_id?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_order_receipt_items_invoice_item_id_invoice_id_fkey"
+            columns: ["invoice_item_id", "invoice_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_invoice_items"
+            referencedColumns: ["id", "vendor_invoice_id"]
+          },
+          {
+            foreignKeyName: "supplier_order_receipt_items_order_line_id_order_id_shop_i_fkey"
+            columns: ["order_line_id", "order_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_order_lines"
+            referencedColumns: ["id", "order_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "supplier_order_receipt_items_receipt_id_shop_id_order_id_i_fkey"
+            columns: ["receipt_id", "shop_id", "order_id", "invoice_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_order_receipts"
+            referencedColumns: ["id", "shop_id", "order_id", "invoice_id"]
+          },
+        ]
+      }
+      supplier_order_receipts: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          id: string
+          invoice_id: string
+          location_id: string
+          order_id: string
+          reason: string
+          shop_id: string
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          invoice_id: string
+          location_id: string
+          order_id: string
+          reason: string
+          shop_id: string
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          location_id?: string
+          order_id?: string
+          reason?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_order_receipts_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_order_receipts_invoice_id_shop_id_location_id_fkey"
+            columns: ["invoice_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_invoices"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+          {
+            foreignKeyName: "supplier_order_receipts_order_id_shop_id_location_id_fkey"
+            columns: ["order_id", "shop_id", "location_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_orders"
+            referencedColumns: ["id", "shop_id", "location_id"]
+          },
+        ]
+      }
+      supplier_orders: {
+        Row: {
+          created_at: string
+          created_by_profile_id: string
+          currency: string
+          estimated_total: number
+          expected_on: string | null
+          id: string
+          location_id: string
+          notes: string | null
+          order_number: string
+          revision: number
+          shop_id: string
+          status: string
+          updated_at: string
+          vendor_id: string
+          vendor_name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_profile_id: string
+          currency: string
+          estimated_total: number
+          expected_on?: string | null
+          id?: string
+          location_id: string
+          notes?: string | null
+          order_number: string
+          revision?: number
+          shop_id: string
+          status?: string
+          updated_at?: string
+          vendor_id: string
+          vendor_name: string
+        }
+        Update: {
+          created_at?: string
+          created_by_profile_id?: string
+          currency?: string
+          estimated_total?: number
+          expected_on?: string | null
+          id?: string
+          location_id?: string
+          notes?: string | null
+          order_number?: string
+          revision?: number
+          shop_id?: string
+          status?: string
+          updated_at?: string
+          vendor_id?: string
+          vendor_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_orders_created_by_profile_id_fkey"
+            columns: ["created_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_orders_location_id_shop_id_fkey"
+            columns: ["location_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "shop_locations"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "supplier_orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_orders_vendor_id_shop_id_fkey"
+            columns: ["vendor_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_balances"
+            referencedColumns: ["vendor_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "supplier_orders_vendor_id_shop_id_fkey"
+            columns: ["vendor_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
       supplier_payment_allocations: {
         Row: {
           amount: number
@@ -13606,6 +13937,20 @@ export type Database = {
         Returns: Json
       }
       receipt_settings: { Args: { p_shop_id: string }; Returns: Json }
+      receive_supplier_order: {
+        Args: {
+          p_invoice_number: string
+          p_items: Json
+          p_location_id: string
+          p_order_id: string
+          p_reason: string
+          p_received_on: string
+          p_request_id: string
+          p_revision: number
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       reconcile_offline_cash_command: {
         Args: {
           p_args: Json
@@ -14792,6 +15137,32 @@ export type Database = {
           can_reverse_payment: boolean
           can_view: boolean
         }[]
+      }
+      supplier_order_command: {
+        Args: {
+          p_action: string
+          p_location_id: string
+          p_order_id: string
+          p_reason: string
+          p_request_id: string
+          p_revision: number
+          p_shop_id: string
+          p_values: Json
+        }
+        Returns: Json
+      }
+      supplier_order_context: {
+        Args: {
+          p_history_page?: number
+          p_location_id: string
+          p_order_id?: string
+          p_page?: number
+          p_receipt_page?: number
+          p_search?: string
+          p_shop_id: string
+          p_status?: string
+        }
+        Returns: Json
       }
       tax_settings: { Args: { p_shop_id: string }; Returns: Json }
       trade_order_context: {

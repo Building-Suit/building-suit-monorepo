@@ -731,6 +731,16 @@
       "adapterBoundary": "Typed accepted-quotation picker, agreed order rows/details/history and frozen conversion retry state. Shop owns quotation authority, agreed prices, quantities and subsequent inventory/payment commands.",
       "task": "SS-ELECTRICAL-001",
       "migrationStatus": "implementation qualification in progress"
+    },
+    {
+      "family": "supplier-orders",
+      "owner": "packages/ui",
+      "components": [
+        "BsSupplierOrdersPage"
+      ],
+      "adapterBoundary": "Typed supplier-order directory, draft measured/package lines, received and pending quantities, invoice/history pages and immutable command retry state. Shop owns prices, unit resolution, authorization and existing purchase/FIFO/supplier liability.",
+      "task": "SS-ELECTRICAL-001",
+      "migrationStatus": "implementation qualification in progress"
     }
   ]
 }

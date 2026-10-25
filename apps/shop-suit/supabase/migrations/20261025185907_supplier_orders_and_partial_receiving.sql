@@ -121,6 +121,7 @@ declare actor uuid;request shop_private.supplier_order_requests%rowtype;o public
   for input in select value from jsonb_array_elements(p_values->'lines') loop
    if jsonb_typeof(input) is distinct from 'object' or coalesce(input->>'quantity','') !~ '^[0-9]{1,7}(\.[0-9]{1,6})?$'
    or coalesce(input->>'unit_cost','') !~ '^[0-9]{1,9}(\.[0-9]{1,6})?$' then raise exception 'INVALID_SUPPLIER_ORDER_LINE' using errcode='22023';end if;
+   input:=input||jsonb_build_object('quantity',trim_scale((input->>'quantity')::numeric)::text,'unit_cost',trim_scale((input->>'unit_cost')::numeric)::text);
    select * into product from public.products where id=(input->>'product_id')::uuid and shop_id=p_shop_id and is_active;
    if not found then raise exception 'PRODUCT_NOT_FOUND' using errcode='P0002';end if;
    resolved:=shop_private.resolve_measured_line(p_shop_id,product.id,input,true);

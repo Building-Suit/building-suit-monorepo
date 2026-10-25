@@ -555,7 +555,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Reconcile deposits and partial deliveries with existing payment/invoice ledgers and no duplicate stock deduction. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: Migration20261025164827 extends existing receipts/allocations and issues ordinary invoices for partial collections. Local113-migration replay,19 SQL suites, both merchant journeys, six real-session races, cash-drawer reconciliation and all22 distinct order/measured browser cases pass across recorded scoped runs. Root2032/2055 pass, zero fail,23 skip. See VERIFICATION.md for final label/consumer and native gates.
-- PR / commit: draft [#464](https://github.com/Building-Suit/building-suit-monorepo/pull/464), targeting formal quotations #463; deposit/collection checkpoint pending publication.
+- PR / commit: draft [#464](https://github.com/Building-Suit/building-suit-monorepo/pull/464), targeting formal quotations #463; deposit/collection source7f532d73 published; final local consumer/browser checks pass.
 - Blocker: Exact-head native Supabase and final shared-consumer qualification remain pending; hosted release reconciliation, real merchant/device and native-speaker acceptance are final initiative gates.
 - Completion notes / release fragment: Local implementation tested. Public fragment `ss-electrical-order-deposits-collections-20261025`; internal support `ss-electrical-order-funding-qualification-20261025`. No production availability claim.
 
@@ -569,8 +569,8 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Issue supplier purchase orders with measured/package lines; ordering alone never creates stock. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: Supplier ordering/receiving implementation has started from verified parent3f9fb8f8. See PURCHASING.md; no completion or receiving evidence is claimed yet.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: The114-migration combined fixture passes20 SQL suites, both merchant journeys and eight real-session races. New supplier cases prove original units/cost, six then four receipts, retry/conflict, closed-period/plan/role/location denial and no stock/debt on ordering. Five distinct built browser cases pass across scoped runs; final pinned-actions build/browser and shared/native qualification remain pending. See PURCHASING.md and VERIFICATION.md.
+- PR / commit: Local child `codex/shop-suit/supplier-orders`, backend checkpointd31c7e3b and parent merge1950ee8d. Review publication follows final combined qualification; parent draft464 is published.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -584,8 +584,8 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Receive6 of10 reels, retain4 outstanding; retry does not double receive or duplicate supplier debt. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: Supplier ordering/receiving implementation has started from verified parent3f9fb8f8. See PURCHASING.md; no completion or receiving evidence is claimed yet.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: The114-migration combined fixture passes20 SQL suites, both merchant journeys and eight real-session races. New supplier cases prove original units/cost, six then four receipts, retry/conflict, closed-period/plan/role/location denial and no stock/debt on ordering. Five distinct built browser cases pass across scoped runs; final pinned-actions build/browser and shared/native qualification remain pending. See PURCHASING.md and VERIFICATION.md.
+- PR / commit: Local child `codex/shop-suit/supplier-orders`, backend checkpointd31c7e3b and parent merge1950ee8d. Review publication follows final combined qualification; parent draft464 is published.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 

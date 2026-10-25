@@ -400,7 +400,9 @@
     "./templates/BsTradeOrdersPage": "./src/templates/BsTradeOrdersPage.vue",
     "./types/tradeOrderPresentation": "./src/types/tradeOrderPresentation.ts",
     "./organisms/BsOrderFundingPanel": "./src/organisms/BsOrderFundingPanel.vue",
-    "./organisms/BsOrderDeliveryPanel": "./src/organisms/BsOrderDeliveryPanel.vue"
+    "./organisms/BsOrderDeliveryPanel": "./src/organisms/BsOrderDeliveryPanel.vue",
+    "./templates/BsSupplierOrdersPage": "./src/templates/BsSupplierOrdersPage.vue",
+    "./types/supplierOrderPresentation": "./src/types/supplierOrderPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

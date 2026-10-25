@@ -95,7 +95,8 @@
     "BsPhysicalStockPage": "packages/ui/src/templates/BsPhysicalStockPage.vue",
     "BsTradePricingPage": "packages/ui/src/templates/BsTradePricingPage.vue",
     "BsTradeQuotationsPage": "packages/ui/src/templates/BsTradeQuotationsPage.vue",
-    "BsTradeOrdersPage": "packages/ui/src/templates/BsTradeOrdersPage.vue"
+    "BsTradeOrdersPage": "packages/ui/src/templates/BsTradeOrdersPage.vue",
+    "BsSupplierOrdersPage": "packages/ui/src/templates/BsSupplierOrdersPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -3055,6 +3056,27 @@
       ],
       "verification": "Implementation qualification in progress; see electrical-supply/VERIFICATION.md.",
       "purpose": "shop-contractor-orders"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/purchase-orders.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSupplierOrdersPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSupplierOrdersPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSupplierOrdersPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/composables/useSupplierOrders.ts",
+      "dependencies": [
+        "@building-suit/ui/types/supplierOrderPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/supplierOrders",
+        "~/types/measurement"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/PURCHASING.md.",
+      "purpose": "shop-supplier-orders"
     }
   ],
   "verifiedSharedHeads": [
@@ -3198,6 +3220,7 @@
     "BsPhysicalStockPage",
     "BsTradePricingPage",
     "BsTradeQuotationsPage",
-    "BsTradeOrdersPage"
+    "BsTradeOrdersPage",
+    "BsSupplierOrdersPage"
   ]
 }
