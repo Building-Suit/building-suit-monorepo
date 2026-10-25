@@ -1,0 +1,18 @@
+{
+  "id": "dos-m5-013",
+  "task": "DOS-M5-013",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/patientAccessiblePreview.ts",
+    "apps/doctor-suit/tests/unit/dos-m5-013.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-013.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-013-device-evidence.json",
+    "docs/work-packages/doctor-suit/implementation/m5-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+  ],
+  "reason": "Independent synthetic complete-instruction/limited-connectivity projection and concrete unqualified accessibility matrix; no patient native activation."
+}
