@@ -1,0 +1,16 @@
+{
+  "id": "dos-m5-007",
+  "task": "DOS-M5-007",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m5-007.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m5-007-device-evidence.json",
+    "docs/work-packages/doctor-suit/implementation/m5-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+  ],
+  "reason": "Prepare concrete patient notification permission/channel/privacy evidence while genuine identity/platform/reminder decisions and native/provider activation remain held."
+}
