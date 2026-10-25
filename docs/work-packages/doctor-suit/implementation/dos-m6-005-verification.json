@@ -1,0 +1,97 @@
+{
+  "task_id": "DOS-M6-005",
+  "recorded_at_utc": "2026-10-25T22:12:06.786088+00:00",
+  "parent_pr": 489,
+  "parent_head": "4b42ce041a40ea855bac3f9187094623e3a1fa5b",
+  "draft_pr": 491,
+  "scope": "persisted-synthetic-review-intake-not-lifecycle-execution",
+  "task_acceptance": false,
+  "commercial_lifecycle_approval": null,
+  "actual_provider_confirmation": null,
+  "clinical_approval": false,
+  "live_activation": false,
+  "unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m6-005.test.mjs"
+    ],
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0
+  },
+  "focused": {
+    "argv": "node --test apps/doctor-suit/tests/unit/dos-m6-005.test.mjs apps/doctor-suit/tests/unit/saas-status.test.mjs apps/doctor-suit/tests/unit/saas-terms.test.mjs",
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0
+  },
+  "root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "total": 2474,
+    "passed": 2397,
+    "failed": 54,
+    "skipped": 23,
+    "exit_code": 1,
+    "all_failures": "unchanged apps/shop-suit/tests",
+    "phase": "request-model-before-type-declaration-and-CI-harness-only-updates"
+  },
+  "changed_file_lint": "passed",
+  "doctor_types": "passed-after-initial-narrowing-error-correction",
+  "boundaries": {
+    "templates": 138,
+    "preserved_migrations": 80,
+    "status": "passed"
+  },
+  "canonical": {
+    "packets": 9,
+    "tasks": 104,
+    "status": "passed",
+    "fingerprints_unchanged": true
+  },
+  "sql": {
+    "status": "unrun-await-owned-ci",
+    "assertions_static_count": 37,
+    "actual_persisted_rpc": true,
+    "rolled_back_synthetic_fixture": true
+  },
+  "transactions": {
+    "status": "unrun-await-owned-ci",
+    "cases": 6,
+    "source": "apps/doctor-suit/tests/saas-lifecycle-request-concurrency.mjs"
+  },
+  "actual_provider": {
+    "status": "unrun-await-owned-ci",
+    "source": "apps/doctor-suit/tests/saas-lifecycle-requests-actual-provider.mjs",
+    "transport": "actual owned Auth/PostgREST, not approved payment-provider confirmation"
+  },
+  "browser": {
+    "status": "blocked-approved-execution-settings-not-implemented",
+    "expected_file_absent": "apps/doctor-suit/tests/e2e/dos-m6-005.spec.ts",
+    "no_placeholder": true
+  },
+  "generated_types": {
+    "status": "await-owned-migrated-schema-generation-and-acquisition",
+    "handwritten": false,
+    "local_schema_byte_comparison_claimed": false
+  },
+  "gates": [
+    "No complete versioned cancellation/renewal/reactivation/grace/refund/downgrade/effective-date approval",
+    "No actual merchant, recipient, reviewer/custody, legal/tax or live-payment approval",
+    "No independent financial acceptance or exact-candidate release go/no-go",
+    "Required CI blocks root401 consolidation"
+  ],
+  "file_sha256": {
+    "apps/doctor-suit/app/utils/subscriptionLifecycleRequest.ts": "f4887766cbb91213dfa818f47f94b2604fef414d605b3d61ebac214862878dbf",
+    "apps/doctor-suit/tests/unit/dos-m6-005.test.mjs": "77862ad58ad82b6daa0b1d1ba24de484e24f17db5d8657fa046a59cf2dbf0023",
+    "apps/doctor-suit/supabase/migrations/20261025220541_doctor_saas_lifecycle_review_requests.sql": "14fd8cd43bca51faed0bb3bb4ef9141836f341913f3caaf1037f479b71ba4a74",
+    "apps/doctor-suit/supabase/tests/dos-m6-005.sql": "1a06268a8d5bbf77f18a94cb371f15d56e72ba2d63ef19ebcf96337dd0780f7c",
+    "apps/doctor-suit/tests/saas-lifecycle-request-concurrency.mjs": "c9b22fcf465b38d438f8da4dcec363a24e3a082d51f398c7763a75bb3421a47f",
+    "apps/doctor-suit/tests/saas-lifecycle-requests-actual-provider.mjs": "d9c145c9e32e96acf72e29083111d61b531cdd0e8218679a9577c67e54ce487f",
+    "apps/doctor-suit/tests/disposable-postgres.mjs": "e804d410034b0d854a662d21efa24a85cad2363e8cc7ebff4e48ff1f96060b18",
+    "apps/doctor-suit/tests/disposable-provider.mjs": "d12adb0200be3c0514894dba36a5973cc2d39064f1b0eb9460c42df2553caac1"
+  }
+}

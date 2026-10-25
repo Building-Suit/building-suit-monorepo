@@ -1,3 +1,4 @@
+import { verifySaasLifecycleRequestsProvider } from './saas-lifecycle-requests-actual-provider.mjs'
 import {verifyDoctorClinicalProvider} from './clinical-actual-provider.mjs'
 import{verifyDoctorManualPaymentProvider}from'./manual-payments-actual-provider.mjs'
 import{verifyDoctorAdministrativeCandidateProvider}from'./administrative-candidate-actual-provider.mjs'
@@ -172,6 +173,7 @@ try {
   expect(personalAudit.total===1 && personalAudit.items[0].actor_user_id===a.user.id && (await rpc(b.client,'doctor_personal_account_audit')).total===0,'Actual personal audit was not account-local');
   console.log('Actual audit: attributed document requests, safe projection, cross-practice/mutation denial and independent personal account history passed');
   await verifyDoctorManualPaymentProvider({root,api,origin,key:status.ANON_KEY,serviceKey:status.SERVICE_ROLE_KEY,a,b,rpc,sql:ownedCandidateSql,expect,setStage:value=>{stage=value}})
+  await verifySaasLifecycleRequestsProvider({a,b,rpc,expect,setStage:value=>{stage=value}})
   stage = 'actual session revocation'; const frozen = { ...a,session: { ...a.session } }; expect(!(await a.client.auth.signOut({ scope: 'local' })).error,'Actual local session signout failed')
   const revoked = await endpoint(frozen,'download',{ documentId: outcome.documentId }); expect([401,403].includes(revoked.status),'Revoked JWT was admitted by document endpoint')
   expect((await endpoint(b,'status')).status===200,'Independent Doctor B was changed by A signout')
