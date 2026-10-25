@@ -1,12 +1,12 @@
 {
   "task": "DOS-M5-001",
-  "status": "proposed; accountable identity approval missing",
+  "status": "ready for accountable review; identity approval missing",
   "parent_pr": 470,
   "parent_sha": "2a9f3b4cdffb6a6e9f78e1facf1c4eae4b59f849",
   "task_acceptance": false,
   "decision_id": "DOS-M5-GATE-IDENTITY",
   "decision_status": "open",
-  "document_sha256": "2b0fba8332c912a41d8e27b685be860518e4f6de585707f2b2998203f5c0d598",
+  "document_sha256": "002f9d6ccb0dc0a5223a9249e82353fd37cb8a874344d3543396b485b33e73b6",
   "accountable_review": {
     "reviewer": null,
     "authority_basis": null,
@@ -55,5 +55,14 @@
     "patient platform/distribution and command mapping",
     "clinician-reviewed reminder interpretation"
   ],
-  "validation": "pending packet source checks; domain acceptance remains blocked"
+  "validation": {
+    "diff_hygiene": "passed",
+    "workspace": "138 templates/80 historical migrations unchanged",
+    "canonical_packets": "9 passed/104 unchanged task fingerprints",
+    "release_provenance": "passed against parent2a9f3b4c at the source validation phase; final candidate rechecked before push",
+    "document_digest": "verified",
+    "repository_source_references": "verified",
+    "runtime": "not executed; documentation-only task",
+    "domain_acceptance": "blocked; reviewer/authority/date/candidate/evidence absent"
+  }
 }
