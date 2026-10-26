@@ -1,4 +1,5 @@
-import { test, expect, type BrowserContext } from '@playwright/test'
+import { financialBillingDiagnostic } from './financial-notice-diagnostics'
+import { test, expect, type BrowserContext, type Page } from '@playwright/test'
 import { practiceBillingCopy } from '../../app/utils/practiceBillingPresentation'
 type Storage = Awaited<ReturnType<BrowserContext['storageState']>>
 interface VisitFixture { visit_id: string; patient_id: string; version: number; starts_at: string; patient_name: string }
@@ -17,18 +18,20 @@ for (const ar of [false, true]) test(`DOS-M6-006-C02-${ar ? 'AR' : 'EN'}`, async
   await c.addInitScript(({ dark }) => localStorage.setItem('building-suit.theme', dark ? 'dark' : 'light'), { dark: ar })
   return c
  }
+ let diagnosticPage:Page|undefined
  const owner = await context(f.storageState); let readonly: BrowserContext | undefined
  try {
   phase('route')
-  const page = await owner.newPage(); await page.goto(f.origin + '/practice-billing')
+  const page = await owner.newPage(); diagnosticPage=page; await page.goto(f.origin + '/practice-billing')
   await expect(page.getByRole('heading', { name: copy.title, exact: true })).toBeVisible()
-  phase('price_create')
+  phase('price_button')
   await page.getByRole('button', { name: copy.createPrice, exact: true }).click()
+  phase('price_form')
   let dialog = page.getByRole('dialog', { name: copy.createPrice, exact: true })
   await dialog.getByLabel(copy.label, { exact: true }).fill(service); await dialog.getByLabel(copy.amount, { exact: true }).fill('125.55'); await dialog.getByLabel(copy.currency, { exact: true }).fill('EGP')
   await dialog.getByRole('combobox', { name: copy.exponent, exact: true }).click(); await page.getByRole('option', { name: '2', exact: true }).click()
-  await dialog.getByRole('button', { name: copy.save, exact: true }).click(); await expect(dialog).toBeHidden()
-  await expect(page.getByRole('row').filter({ hasText: service })).toContainText('125.55 EGP')
+  phase('price_save'); await dialog.getByRole('button', { name: copy.save, exact: true }).click(); await expect(dialog).toBeHidden()
+  phase('price_saved'); await expect(page.getByRole('row').filter({ hasText: service })).toContainText('125.55 EGP')
   phase('charge_create')
   let lost = false
   const commands: { p_key: string; p_visit: string; p_visit_version: number; p_patient: string; p_price: string; p_quantity: number }[] = []
@@ -70,5 +73,5 @@ for (const ar of [false, true]) test(`DOS-M6-006-C02-${ar ? 'AR' : 'EN'}`, async
   await expect(blocked.getByRole('button', { name: copy.createPrice, exact: true })).toHaveCount(0); await expect(blocked.getByRole('button', { name: copy.createCharge, exact: true })).toHaveCount(0); await expect(blocked.getByRole('row').filter({ hasText: service })).toHaveCount(0)
   await blocked.getByRole('row').filter({ hasText: f.billing.readonlyServiceLabel }).getByRole('button', { name: copy.history, exact: true }).click(); await expect(blocked.getByRole('dialog', { name: copy.history, exact: true }).getByText('123.45 EGP', { exact: true })).toBeVisible()
   await expect(blocked.locator('html')).toHaveAttribute('dir', ar ? 'rtl' : 'ltr')
- } finally { for (const c of [owner, readonly]) if (c) { await c.unrouteAll({ behavior: 'ignoreErrors' }); await c.close() } }
+ } catch(error) { await financialBillingDiagnostic(diagnosticPage,test.info(),'billing');throw error } finally { for (const c of [owner, readonly]) if (c) { await c.unrouteAll({ behavior: 'ignoreErrors' }); await c.close() } }
 })

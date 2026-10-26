@@ -1,3 +1,4 @@
+import { financialBillingDiagnostic } from './financial-notice-diagnostics'
 import { test, expect, type BrowserContext, type Page } from '@playwright/test'
 import { practiceMoneyCopy } from '../../app/utils/practiceMoneyPresentation'
 import { practiceBillingCopy } from '../../app/utils/practiceBillingPresentation'
@@ -18,9 +19,10 @@ for (const ar of [false, true]) test(`DOS-M6-007-C03-${ar ? 'AR' : 'EN'}`, async
  async function openMoney(page: Page, label: string) { await page.goto(f.origin + '/practice-billing'); await page.getByRole('row').filter({ hasText: label }).getByRole('link', { name: billingCopy.payments, exact: true }).click(); await expect(page.getByRole('heading', { name: copy.title, exact: true })).toBeVisible() }
  async function confirm(page: Page, title: string) { const dialog = page.getByRole('dialog', { name: title, exact: true }); await dialog.getByRole('button', { name: copy.confirm, exact: true }).click(); await expect(dialog).toBeHidden() }
  async function prepare(page: Page, kind: 'collection' | 'refund', reason: string, amount: string) { const dialog = page.getByRole('dialog', { name: kind === 'collection' ? copy.prepareCollection : copy.prepareRefund, exact: true }); await dialog.getByLabel(copy.amount, { exact: true }).fill(amount); await dialog.getByLabel(copy.reason, { exact: true }).fill(reason); await dialog.getByRole('button', { name: copy.save, exact: true }).click(); await expect(dialog).toBeHidden() }
+ let diagnosticPage:Page|undefined
  const owner = await context(f.storageState); let readonly: BrowserContext | undefined
  try {
-  phase('route'); const page = await owner.newPage(); await openMoney(page, service)
+  phase('route'); const page = await owner.newPage(); diagnosticPage=page; await openMoney(page, service)
   phase('collection_prepare'); await page.getByRole('button', { name: copy.prepareCollection, exact: true }).click(); await prepare(page, 'collection', 'SYNTHETIC_COLLECTION_' + locale, '100.00')
   const collection = page.getByRole('row').filter({ hasText: 'SYNTHETIC_COLLECTION_' + locale })
   let lost = false
@@ -44,5 +46,5 @@ for (const ar of [false, true]) test(`DOS-M6-007-C03-${ar ? 'AR' : 'EN'}`, async
   phase('money_read_only'); readonly = await context(f.billing.readonlyStorageState); const blocked = await readonly.newPage(); await openMoney(blocked, f.billing.readonlyServiceLabel)
   await expect(blocked.getByText(copy.readonly, { exact: true })).toBeVisible(); await expect(blocked.getByRole('button', { name: copy.prepareCollection, exact: true })).toHaveCount(0); await expect(blocked.getByRole('button', { name: copy.refund, exact: true })).toHaveCount(0)
   const original = blocked.getByRole('row').filter({ hasText: 'SYNTHETIC_READONLY_COLLECTION_HISTORY' }); await expect(original).toContainText('50.00 EGP'); await expect(original).toContainText('SYN-00000001'); await expect(blocked.getByRole('row').filter({ hasText: 'SYNTHETIC_COLLECTION_' + locale })).toHaveCount(0); await expect(blocked.locator('html')).toHaveAttribute('dir', ar ? 'rtl' : 'ltr')
- } finally { for (const c of [owner, readonly]) if (c) { await c.unrouteAll({ behavior: 'ignoreErrors' }); await c.close() } }
+ } catch(error) { await financialBillingDiagnostic(diagnosticPage,test.info(),'money');throw error } finally { for (const c of [owner, readonly]) if (c) { await c.unrouteAll({ behavior: 'ignoreErrors' }); await c.close() } }
 })
