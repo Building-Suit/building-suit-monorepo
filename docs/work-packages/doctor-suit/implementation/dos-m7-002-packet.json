@@ -2,7 +2,7 @@
   "schema": "doctor-hosting-evidence/v1",
   "task_id": "DOS-M7-002",
   "parent_pr": 502,
-  "parent_head": "e62415f79b4d5a1b150024f7e8609df8e8ca7a07",
+  "parent_head": "2ac85c8a8c3d2266e59c9e484b4860fafcaa5a74",
   "decision_id": "DOS-M7-GATE-HOSTING",
   "candidate_binding": "evaluated-committed-head",
   "gate_state": "OPEN",
