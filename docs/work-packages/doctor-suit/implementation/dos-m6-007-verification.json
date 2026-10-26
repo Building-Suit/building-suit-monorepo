@@ -1,11 +1,11 @@
 {
   "task_id": "DOS-M6-007",
-  "recorded_at_utc": "2026-10-26T12:29:52.793479+00:00",
+  "recorded_at_utc": "2026-10-26T13:22:57.407694+00:00",
   "parent_pr": 492,
   "draft_pr": 495,
   "cut_parent": "8c1cd3fbd200cfd4af130f60aa798f1aefc93347",
-  "incorporated_parent": "be47b3ede24041f88efac4b18c766323c0df6140",
-  "parent_merge": "e5161cf1e923ff08bc3d890be586eaf9cce6c25f",
+  "incorporated_parent": "c8c7650b0d13e389b23e74023534e7322c3eebcf",
+  "parent_merge": "c6b3897685c02b32353606192d3ba58ac958bc3e",
   "phase": "persisted-synthetic-finance-workspace-and-owned-runtime-journeys",
   "task_acceptance": false,
   "clinical_approval": false,
@@ -31,7 +31,7 @@
       "DOS-M6-006",
       "DOS-M6-007"
     ],
-    "passed": 64,
+    "passed": 65,
     "failed": 0,
     "skipped": 0
   },
@@ -67,14 +67,14 @@
       "test"
     ],
     "exit_code": 1,
-    "total": 2516,
-    "passed": 2439,
+    "total": 2517,
+    "passed": 2440,
     "failed": 54,
     "skipped": 23,
     "failure_locations": 54,
     "all_failure_locations_shop": true,
-    "phase": "final-after-parent-fixture-mode-repair-and-child-fixture-protocol-extension",
-    "duration_ms": 103267.025638
+    "phase": "final-after-parent-one-based-billing-to-zero-based-directory-repair",
+    "duration_ms": 102449.943655
   },
   "static_sql": {
     "parser": "pglast7.21-outside-repository",
@@ -85,16 +85,16 @@
     "database_execution": false
   },
   "actual_sql": {
-    "status": "unrun-await-owned-CI",
+    "status": "passed62-at259be/run40323046338",
     "assertions": 62
   },
   "actual_transactions": {
-    "status": "unrun-await-owned-CI",
+    "status": "passed8-at259be/run40323046338",
     "cases": 8,
     "source": "apps/doctor-suit/tests/practice-money-concurrency.mjs"
   },
   "browser": {
-    "status": "new-journeys-unrun-await-owned-CI",
+    "status": "executed-at259be; both-own-cases-timedOut-at-route-because-parent006-prices-not-created; new-repair-unrun",
     "owned_cases": [
       "DOS-M6-007-C03-EN",
       "DOS-M6-007-C03-AR"
@@ -106,7 +106,7 @@
     "placeholder": false
   },
   "generated_types": {
-    "status": "await-migrated-CI-generation-and-authorized-acquisition",
+    "status": "generated-at259be-in-owned-CI; authorized-acquisition-and-local-comparison-unqualified",
     "handwritten": false
   },
   "local_environment": {
@@ -139,7 +139,7 @@
     "apps/doctor-suit/tests/practice-billing-actual-provider.mjs": "b3ec1fce241b3e85d7bee2c6354eddd0b66c95d165e0e6e823247a1089c6dfd5",
     "apps/doctor-suit/tests/practice-money-actual-provider.mjs": "192f5452131b9151bebc70d68d7d962495302d1110f07ff04b8bddaec7d6e997",
     "apps/doctor-suit/tests/practice-money-concurrency.mjs": "8029f60263e6971e5222742e978ef411ceb67a8c39643db4542b23c71ac01e3c",
-    "apps/doctor-suit/tests/unit/dos-m6-006.test.mjs": "7dacb71de6ff4726a5aac2e9a5967967aa406cbc1f8a589bf8daf35fed634b41",
+    "apps/doctor-suit/tests/unit/dos-m6-006.test.mjs": "fd388a64ef2163b9fa3927815690d47b9eaf4f6e20fd267dec464a5ac9598e41",
     "apps/doctor-suit/tests/unit/dos-m6-007.test.mjs": "48b889be02eef39ac05f26fc12608db9aef826f33269115a4b6b82fdfdbcd049",
     "packages/ui/package.json": "976a964eb603b06583b201a79f9325e5a816c407095f7b2fa0d733ec70d5602f",
     "packages/ui/src/templates/BsPracticeBillingPage.vue": "52d790da655484530d6544784acb04c134f262e83c19f1e3782b6e9a71a2ba7e",
@@ -169,5 +169,141 @@
     "scoped_changed_fixture_lint": "passed",
     "scope": "owned candidate mode/admission lifecycle; no product entitlement rule change",
     "new_runtime_results": "pending-owned-CI"
+  },
+  "prior_root_before_clinic_page_repair": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2516,
+    "passed": 2439,
+    "failed": 54,
+    "skipped": 23,
+    "failure_locations": 54,
+    "all_failure_locations_shop": true,
+    "phase": "final-after-parent-fixture-mode-repair-and-child-fixture-protocol-extension",
+    "duration_ms": 103267.025638
+  },
+  "actual_runtime_259_checkpoint": {
+    "head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+    "run_id": 40323046338,
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40323046338",
+    "completed_at": "2026-10-26T13:00:59Z",
+    "aggregate": "failure",
+    "sql_job": 121572593826,
+    "sql_status": "success",
+    "own_sql_passed": 62,
+    "full_assertions": 2120,
+    "full_suites": 66,
+    "own_money_transactions_passed": 8,
+    "inherited_billing_transactions_passed": 7,
+    "isolated_recovery_table_fingerprints": 95,
+    "exact_schema_acl_rls_history": "passed",
+    "public_schema_generation": "passed-acquisition-unqualified",
+    "browser_job": 121572594259,
+    "public_passed": 60,
+    "protocol_passed": 87,
+    "stress_passed": 4,
+    "actual_m3_accepted_tasks": 10,
+    "financial_receipts": [
+      {
+        "task": "DOS-M6-003",
+        "source_head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+        "status": "failed",
+        "cases": [
+          {
+            "id": "DOS-M6-003-C02-EN",
+            "status": "failed",
+            "phase": "notice_row",
+            "source_location": {
+              "file": "dos-m6-003.spec.ts",
+              "line": 30,
+              "column": 82
+            }
+          },
+          {
+            "id": "DOS-M6-003-C02-AR",
+            "status": "passed",
+            "phase": "direction_and_viewport"
+          }
+        ]
+      },
+      {
+        "task": "DOS-M6-004",
+        "source_head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+        "status": "failed",
+        "cases": [
+          {
+            "id": "DOS-M6-004-C01-EN",
+            "status": "failed",
+            "phase": "notice_row",
+            "source_location": {
+              "file": "dos-m6-004.spec.ts",
+              "line": 34,
+              "column": 82
+            }
+          },
+          {
+            "id": "DOS-M6-004-C01-AR",
+            "status": "failed",
+            "phase": "notice_row",
+            "source_location": {
+              "file": "dos-m6-004.spec.ts",
+              "line": 34,
+              "column": 82
+            }
+          }
+        ]
+      },
+      {
+        "task": "DOS-M6-006",
+        "source_head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+        "status": "failed",
+        "cases": [
+          {
+            "id": "DOS-M6-006-C02-EN",
+            "status": "timedOut",
+            "phase": "price_create"
+          },
+          {
+            "id": "DOS-M6-006-C02-AR",
+            "status": "timedOut",
+            "phase": "price_create"
+          }
+        ]
+      },
+      {
+        "task": "DOS-M6-007",
+        "source_head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+        "status": "failed",
+        "cases": [
+          {
+            "id": "DOS-M6-007-C03-EN",
+            "status": "timedOut",
+            "phase": "route"
+          },
+          {
+            "id": "DOS-M6-007-C03-AR",
+            "status": "timedOut",
+            "phase": "route"
+          }
+        ]
+      }
+    ],
+    "provider_failure_stage": "actual M6 financial subprocess assertions",
+    "later_lifecycle_actual_hook": "unreached",
+    "shared_job": 121572594275,
+    "shared_auth_passed": 48,
+    "shared_settings_passed": 6,
+    "shared_settings_failed": 6
+  },
+  "clinic_page_follow_up": {
+    "parent_owned": 25,
+    "own_money_units": 18,
+    "combined_M6": 65,
+    "source_bug": "billing one-based UI skipped zero-based directory first25 clinics",
+    "repair": "parent006/c8c7650b translated only the billing adapter and validated page completeness",
+    "new_GUI_runtime": "unrun-await-exact-new-CI"
   }
 }
