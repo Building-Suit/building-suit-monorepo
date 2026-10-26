@@ -1,3 +1,4 @@
+import { verifyCommodityPricingRaces } from './shop-commodity-pricing-concurrency.mjs'
 import { verifyScaleCaptureRaces } from './shop-scale-capture-concurrency.mjs'
 import { verifySupplierOrderRaces } from './shop-supplier-order-concurrency.mjs'
 import { verifyOrderReservationRaces } from './shop-order-reservation-concurrency.mjs'
@@ -24,3 +25,4 @@ await verifyPhysicalReelRace(sql,parallel)
 await verifyOrderReservationRaces(sql,parallel)
 await verifySupplierOrderRaces(sql,parallel)
 await verifyScaleCaptureRaces(sql,parallel)
+await verifyCommodityPricingRaces(sql,parallel)

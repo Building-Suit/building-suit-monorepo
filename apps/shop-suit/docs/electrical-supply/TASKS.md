@@ -659,9 +659,9 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Use an optional supported scale adapter with stable/tare/net readings, units, failures and staff confirmation. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: SCALES.md and VERIFICATION.md. Focused protocol/transport/conversion/malformed-reader units pass16/16; expanded117-migration scoped SQL and three new capture races pass with both merchant journeys and inherited races. All19 combined EN/AR scale/setup and inherited measured/reel/trade/GS1 browsers pass. Full117-migration replay,21 named regression suites plus foundation/both journeys and11 races pass; actual types match. Shop build/typecheck, scoped lint and121-template boundaries pass. Final root/release/native/consumer gates remain in progress; physical hardware acceptance is separate.
-- PR / commit: Child `codex/shop-suit/scale-and-mass-length` starts from published [#493](https://github.com/Building-Suit/building-suit-monorepo/pull/493) atb0e467f1; source uncommitted.
-- Blocker: Final repository/consumer/committed-release/native qualification and actual device/model/settings, merchant, native-speaker and hosted acceptance remain separate gates.
+- Evidence: SCALES.md and VERIFICATION.md. Focused protocol/transport/conversion/malformed-reader units pass16/16; expanded117-migration scoped SQL and three new capture races pass with both merchant journeys and inherited races. All19 combined EN/AR scale/setup and inherited measured/reel/trade/GS1 browsers pass. Full117-migration replay,21 named regression suites plus foundation/both journeys and11 races pass; actual types match. Shop build/typecheck, scoped lint and121-template boundaries pass. Final root2054/2077 (zero fail,23 skip), Shop/Docs typechecks, committed release and separate final6-case built run pass. All three critical exact-source native jobs pass; physical hardware acceptance is separate.
+- PR / commit: Child `codex/shop-suit/scale-and-mass-length` starts from published [#493](https://github.com/Building-Suit/building-suit-monorepo/pull/493) atb0e467f1; published [#496](https://github.com/Building-Suit/building-suit-monorepo/pull/496), sourceb02f38f6. Native review121554177623, measured121554177774 and website121554178377 pass.
+- Blocker: Final combined E6 qualification and actual device/model/settings, merchant, native-speaker and hosted acceptance remain separate gates.
 - Completion notes / release fragment: Locally tested implementation. Public `ss-electrical-approved-scale-sales-20261026`; internal `ss-electrical-scale-qualification-20261026`. No physical-hardware or commercial completion claim.
 
 ## SS-ELEC-506 — Optional weight-to-length conversions
@@ -674,9 +674,9 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Require approved versioned product-specific mass/length relationship; reject universal cross-dimensional conversion. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: SCALES.md and VERIFICATION.md. Focused protocol/transport/conversion/malformed-reader units pass16/16; expanded117-migration scoped SQL and three new capture races pass with both merchant journeys and inherited races. All19 combined EN/AR scale/setup and inherited measured/reel/trade/GS1 browsers pass. Full117-migration replay,21 named regression suites plus foundation/both journeys and11 races pass; actual types match. Shop build/typecheck, scoped lint and121-template boundaries pass. Final root/release/native/consumer gates remain in progress; physical hardware acceptance is separate.
-- PR / commit: Child `codex/shop-suit/scale-and-mass-length` starts from published [#493](https://github.com/Building-Suit/building-suit-monorepo/pull/493) atb0e467f1; source uncommitted.
-- Blocker: Final repository/consumer/committed-release/native qualification and actual device/model/settings, merchant, native-speaker and hosted acceptance remain separate gates.
+- Evidence: SCALES.md and VERIFICATION.md. Focused protocol/transport/conversion/malformed-reader units pass16/16; expanded117-migration scoped SQL and three new capture races pass with both merchant journeys and inherited races. All19 combined EN/AR scale/setup and inherited measured/reel/trade/GS1 browsers pass. Full117-migration replay,21 named regression suites plus foundation/both journeys and11 races pass; actual types match. Shop build/typecheck, scoped lint and121-template boundaries pass. Final root2054/2077 (zero fail,23 skip), Shop/Docs typechecks, committed release and separate final6-case built run pass. All three critical exact-source native jobs pass; physical hardware acceptance is separate.
+- PR / commit: Child `codex/shop-suit/scale-and-mass-length` starts from published [#493](https://github.com/Building-Suit/building-suit-monorepo/pull/493) atb0e467f1; published [#496](https://github.com/Building-Suit/building-suit-monorepo/pull/496), sourceb02f38f6. Native review121554177623, measured121554177774 and website121554178377 pass.
+- Blocker: Final combined E6 qualification and actual device/model/settings, merchant, native-speaker and hosted acceptance remain separate gates.
 - Completion notes / release fragment: Locally tested implementation. Public `ss-electrical-approved-scale-sales-20261026`; internal `ss-electrical-scale-qualification-20261026`. No physical-hardware or commercial completion claim.
 
 ## SS-ELEC-507 — Demand and reorder forecasting
@@ -698,16 +698,16 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E5 / P2 / Shop feature.
 - Dependencies: SS-ELEC-402, SS-ELEC-503.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Introduce commodity rules only with justified source, currency, effective time and frozen authoritative pricing.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Introduce commodity rules only with justified source, currency, effective time and frozen authoritative pricing. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Evidence: COMMODITY-PRICING.md and VERIFICATION.md. Full118-migration replay passes22 named regression suites, foundation, both merchant journeys and15 races. Fresh scoped replay passes source shape/time/expiry guards, original return cost and accepted frozen collection; actual types match. All23 combined browsers plus two extra recovery/blocking cases pass, including same-payload payment retry at quoted25 rather than catalog35. Root2054/2077 passes with zero failures/23 skips; final build, scoped lint and122-template boundaries pass. Final current Shop/Docs typechecks pass; committed release/native qualification remains pending.
+- PR / commit: Uncommitted child `codex/shop-suit/commodity-pricing` of published [#496](https://github.com/Building-Suit/building-suit-monorepo/pull/496) atb02f38f6.
+- Blocker: Final consumer/release/native qualification, E6 checkout hardening and genuine integration, real source/merchant/native-speaker and hosted acceptance remain separate gates.
+- Completion notes / release fragment: Locally tested implementation. Public `ss-electrical-approved-commodity-pricing-20261026`; internal `ss-electrical-commodity-qualification-20261026`. No commercial or hosted completion claim.
 
 ## SS-ELEC-601 — Product limit and plan suitability review
 

@@ -26,6 +26,7 @@ export function shopNavigation(mode: BusinessMode, locale: string, t: (key: stri
     ...(businessModeSupportsProducts(mode) ? [{ key: 'stock', label: copy.inventory, links: [
       { to: '/products', label: copy.products, icon: 'ledger' },
       { to: '/inventory', label: copy.inventory, icon: 'wallet' },
+      { to: '/commodity-pricing', label: locale === 'ar' ? 'أسعار المواد المرجعية' : 'Commodity reference prices', icon: 'settings' },
       { to: '/weighing-setup', label: locale === 'ar' ? 'الموازين ومعاملات الوزن' : 'Scales & weight conversions', icon: 'settings' },
       { to: '/supply-planning', label: locale === 'ar' ? 'المواقع الداخلية وتخطيط التوريد' : 'Storage & supply planning', icon: 'store' },
       { to: '/purchase-orders', label: locale === 'ar' ? 'أوامر شراء الموردين' : 'Supplier purchase orders', icon: 'invoice' },

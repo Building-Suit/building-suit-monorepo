@@ -4,6 +4,8 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      commodity_pricing_command: { Args: { p_request_id:string;p_shop_id:string;p_kind:import('./commodityPricing').CommodityKind;p_id:string|null;p_revision:number;p_values:import('./commodityPricing').CommodityValues;p_reason:string }; Returns:{id:string;kind:import('./commodityPricing').CommodityKind;revision:number} }
+      commodity_pricing_context: { Args: { p_shop_id:string;p_kind?:import('./commodityPricing').CommodityKind|'quote_options';p_search?:string|null;p_page?:number;p_id?:string|null;p_history_page?:number }; Returns:import('./commodityPricing').CommodityContext }
       weighing_setup_command: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_kind: import('./scales').WeighingSetupKind; p_id: string | null; p_revision: number; p_values: import('./scales').WeighingSetupValues; p_reason: string }; Returns: { id: string; kind: import('./scales').WeighingSetupKind; revision: number } }
       weighing_setup_context: { Args: { p_shop_id: string; p_location_id: string; p_kind?: import('./scales').WeighingSetupKind; p_search?: string | null; p_page?: number; p_id?: string | null; p_history_page?: number }; Returns: import('./scales').WeighingSetupContext }
       scale_counter_context: { Args: { p_shop_id: string; p_location_id: string; p_search?: string | null; p_page?: number; p_product_id?: string | null }; Returns: import('./scales').ScaleCounterContext }

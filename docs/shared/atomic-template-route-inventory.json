@@ -98,7 +98,8 @@
     "BsTradeOrdersPage": "packages/ui/src/templates/BsTradeOrdersPage.vue",
     "BsSupplierOrdersPage": "packages/ui/src/templates/BsSupplierOrdersPage.vue",
     "BsSupplyPlanningPage": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
-    "BsWeighingSetupPage": "packages/ui/src/templates/BsWeighingSetupPage.vue"
+    "BsWeighingSetupPage": "packages/ui/src/templates/BsWeighingSetupPage.vue",
+    "BsCommodityPricingPage": "packages/ui/src/templates/BsCommodityPricingPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -3119,6 +3120,26 @@
       ],
       "verification": "Implementation qualification in progress; see electrical-supply/SCALES.md.",
       "purpose": "shop-weighing-setup"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/commodity-pricing.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCommodityPricingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsCommodityPricingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCommodityPricingPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/composables/useCommodityPricing.ts",
+      "dependencies": [
+        "@building-suit/ui/types/commodityPricingPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/commodityPricing"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/COMMODITY-PRICING.md.",
+      "purpose": "shop-commodity-pricing"
     }
   ],
   "verifiedSharedHeads": [
@@ -3265,6 +3286,7 @@
     "BsTradeOrdersPage",
     "BsSupplierOrdersPage",
     "BsSupplyPlanningPage",
-    "BsWeighingSetupPage"
+    "BsWeighingSetupPage",
+    "BsCommodityPricingPage"
   ]
 }

@@ -761,6 +761,15 @@
       ],
       "interactionOwner": "packages/ux",
       "notes": "Shared approval setup and optional counter-scale capture presentation; product owns permissions, device/factor approval, exact conversion and atomic capture/sale commands."
+    },
+    {
+      "family": "commodity-pricing",
+      "owner": "packages/ui",
+      "components": [
+        "BsCommodityPricingPage"
+      ],
+      "interactionOwner": "packages/ux",
+      "notes": "Shared source-quote and product-rule approval presentation. Product owns permissions, exact source/currency/validity validation and authoritative financial pricing."
     }
   ]
 }

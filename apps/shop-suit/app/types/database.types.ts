@@ -1787,6 +1787,120 @@ export type Database = {
           },
         ]
       }
+      commodity_pricing_events: {
+        Row: {
+          actor_profile_id: string
+          created_at: string
+          id: string
+          kind: string
+          reason: string
+          record_id: string
+          revision: number
+          shop_id: string
+          snapshot: Json
+        }
+        Insert: {
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          reason: string
+          record_id: string
+          revision: number
+          shop_id: string
+          snapshot: Json
+        }
+        Update: {
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          reason?: string
+          record_id?: string
+          revision?: number
+          shop_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commodity_pricing_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commodity_pricing_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commodity_quotes: {
+        Row: {
+          active: boolean
+          approved_at: string
+          approved_by: string
+          commodity: string
+          currency_code: string
+          effective_at: string
+          evidence_reference: string
+          expires_at: string
+          id: string
+          price_per_kg: number
+          revision: number
+          shop_id: string
+          source_name: string
+        }
+        Insert: {
+          active?: boolean
+          approved_at?: string
+          approved_by: string
+          commodity: string
+          currency_code: string
+          effective_at: string
+          evidence_reference: string
+          expires_at: string
+          id?: string
+          price_per_kg: number
+          revision?: number
+          shop_id: string
+          source_name: string
+        }
+        Update: {
+          active?: boolean
+          approved_at?: string
+          approved_by?: string
+          commodity?: string
+          currency_code?: string
+          effective_at?: string
+          evidence_reference?: string
+          expires_at?: string
+          id?: string
+          price_per_kg?: number
+          revision?: number
+          shop_id?: string
+          source_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commodity_quotes_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commodity_quotes_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_group_assignments: {
         Row: {
           customer_id: string
@@ -4763,6 +4877,100 @@ export type Database = {
             columns: ["product_id", "shop_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+        ]
+      }
+      product_commodity_rules: {
+        Row: {
+          active: boolean
+          approved_at: string
+          approved_by: string
+          base_unit_code: string
+          currency_code: string
+          evidence_reference: string
+          id: string
+          kg_per_base_unit: number
+          measurement_revision: number
+          premium_per_base_unit: number
+          product_id: string
+          quote_id: string
+          revision: number
+          shop_id: string
+        }
+        Insert: {
+          active?: boolean
+          approved_at?: string
+          approved_by: string
+          base_unit_code: string
+          currency_code: string
+          evidence_reference: string
+          id?: string
+          kg_per_base_unit: number
+          measurement_revision: number
+          premium_per_base_unit: number
+          product_id: string
+          quote_id: string
+          revision?: number
+          shop_id: string
+        }
+        Update: {
+          active?: boolean
+          approved_at?: string
+          approved_by?: string
+          base_unit_code?: string
+          currency_code?: string
+          evidence_reference?: string
+          id?: string
+          kg_per_base_unit?: number
+          measurement_revision?: number
+          premium_per_base_unit?: number
+          product_id?: string
+          quote_id?: string
+          revision?: number
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_commodity_rules_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_commodity_rules_base_unit_code_fkey"
+            columns: ["base_unit_code"]
+            isOneToOne: false
+            referencedRelation: "units_of_measure"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "product_commodity_rules_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "low_stock_products"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "product_commodity_rules_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "product_stock"
+            referencedColumns: ["product_id", "shop_id"]
+          },
+          {
+            foreignKeyName: "product_commodity_rules_product_id_shop_id_fkey"
+            columns: ["product_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "shop_id"]
+          },
+          {
+            foreignKeyName: "product_commodity_rules_quote_id_shop_id_fkey"
+            columns: ["quote_id", "shop_id"]
+            isOneToOne: false
+            referencedRelation: "commodity_quotes"
             referencedColumns: ["id", "shop_id"]
           },
         ]
@@ -13836,6 +14044,29 @@ export type Database = {
       }
       commission_history: {
         Args: { p_invoice_id?: string; p_offset?: number; p_shop_id: string }
+        Returns: Json
+      }
+      commodity_pricing_command: {
+        Args: {
+          p_id: string
+          p_kind: string
+          p_reason: string
+          p_request_id: string
+          p_revision: number
+          p_shop_id: string
+          p_values: Json
+        }
+        Returns: Json
+      }
+      commodity_pricing_context: {
+        Args: {
+          p_history_page?: number
+          p_id?: string
+          p_kind?: string
+          p_page?: number
+          p_search?: string
+          p_shop_id: string
+        }
         Returns: Json
       }
       complete_service: {

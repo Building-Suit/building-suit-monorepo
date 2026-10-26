@@ -14,6 +14,7 @@ export function businessAreaForPath(path: string): 'product' | 'service' | null 
   if (path === '/products' || path.startsWith('/products/')
     || path === '/inventory' || path.startsWith('/inventory/')
     || path === '/purchases' || path.startsWith('/purchases/')
+    || path === '/commodity-pricing' || path.startsWith('/commodity-pricing/')
     || path === '/weighing-setup' || path.startsWith('/weighing-setup/')
     || path === '/supply-planning' || path.startsWith('/supply-planning/')
     || path === '/purchase-orders' || path.startsWith('/purchase-orders/')) return 'product'

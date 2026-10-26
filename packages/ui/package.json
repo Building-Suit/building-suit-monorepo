@@ -408,7 +408,9 @@
     "./types/scaleCapturePresentation": "./src/types/scaleCapturePresentation.ts",
     "./organisms/BsScaleCaptureDialog": "./src/organisms/BsScaleCaptureDialog.vue",
     "./types/weighingSetupPresentation": "./src/types/weighingSetupPresentation.ts",
-    "./templates/BsWeighingSetupPage": "./src/templates/BsWeighingSetupPage.vue"
+    "./templates/BsWeighingSetupPage": "./src/templates/BsWeighingSetupPage.vue",
+    "./templates/BsCommodityPricingPage.vue": "./src/templates/BsCommodityPricingPage.vue",
+    "./types/commodityPricingPresentation": "./src/types/commodityPricingPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

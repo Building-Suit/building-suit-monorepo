@@ -20,7 +20,7 @@ function component(file, globals) {
   const localRequire = name => {
     if (name.startsWith('#shared/')) return require(new URL(`../../shared/${name.slice(8)}.ts`, import.meta.url).pathname)
     if (!name.startsWith('~/')) return require(name)
-    const extension = /\/(businessMode|shopCommandErrorMessage|tradePricing|scaleCaptureCopy)$/.test(name) ? '.ts' : /\/(pos|posCustomer|saleCopy)$/.test(name) ? '.js' : ''
+    const extension = /\/(businessMode|shopCommandErrorMessage|tradePricing|scaleCaptureCopy|commodityPricingCopy)$/.test(name) ? '.ts' : /\/(pos|posCustomer|saleCopy)$/.test(name) ? '.js' : ''
     return require(new URL(`../../app/${name.slice(2)}${extension}`, import.meta.url).pathname)
   }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(localRequire, module, module.exports, ...Object.values(globals))

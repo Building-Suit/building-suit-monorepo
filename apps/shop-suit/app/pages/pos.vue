@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { parseGs1WeightBarcode, capturedWeightQuantity, cartQuantityFromDecimal, assertCapturedStock } from '~/utils/weightBarcodes.js'
+import { commodityFailure } from '~/utils/commodityPricingCopy'
 import { scaleFailure } from '~/utils/scaleCaptureCopy'
 import type { ScaleCaptureInput, ScaleCaptureResolution, ScaleCaptureSnapshot } from '~/types/scales'
 import type { Gs1WeightCapture, WeightBarcodeResolution } from '~/types/weightBarcodes'
@@ -83,6 +84,8 @@ const issueRequestId = ref<string | null>(null)
 const paymentRequestId = ref<string | null>(null)
 const appointmentRequestId = ref<string | null>(null)
 const checkoutPaidAt = ref<string | null>(null)
+// Retain the quoted amount across draft-save invalidation and uncertain retries.
+const checkoutAmount = ref<number | null>(null)
 useDebouncedChange(catalogSearch, value => { debouncedSearch.value = value.trim(); catalogPage.value = 1 }, 250)
 const customerSearchInteraction = useDebouncedChange(customerSearch, value => { debouncedCustomerSearch.value = value.trim() }, 250)
 watch(itemType, () => { catalogPage.value = 1 })
@@ -242,7 +245,7 @@ function lockLocation() {
 }
 function invalidateRequests() {
   saveRequestId.value = null; saveInvoiceInput.value = null; checkoutRequestId.value = null; issueRequestId.value = null
-  paymentRequestId.value = null; appointmentRequestId.value = null; checkoutPaidAt.value = null
+  paymentRequestId.value = null; appointmentRequestId.value = null; checkoutPaidAt.value = null; checkoutAmount.value = null
 }
 function addItem(item: CatalogItem) {
   if (checkingOut.value || confirmingCheckout.value || locationChanged.value) return
@@ -295,9 +298,10 @@ function resetSale(focus = true) {
   if (focus) nextTick(() => posPage.value?.focusCatalog())
 }
 function readableError(message?: string) {
+  if (message?.includes('COMMODITY_')) return commodityFailure(new Error(message), locale.value === 'ar')
   if (message?.includes('SCALE_') || message?.includes('APPROVED_MASS_LENGTH')) return scaleFailure(new Error(message), locale.value === 'ar')
   if (message?.includes('WEIGHT_') || message?.includes('FIXED_BARCODE_USE_NORMAL_SCAN')) return locale.value === 'ar' ? 'تعذّر اعتماد وزن الملصق. راجع باركود الصنف ووحدة المخزون أو أعد المسح.' : 'Could not verify the label weight. Review the product barcode and stock unit, or scan again.'
-  if (message?.includes('TRADE_OFFLINE_QUOTE_REQUIRED')) return locale.value === 'ar' ? 'يلزم الاتصال للتحقق من أسعار التعاقد والكميات قبل إتمام البيع.' : 'Connect to verify customer and quantity prices before checkout.'
+  if (message?.includes('TRADE_OFFLINE_QUOTE_REQUIRED')) return locale.value === 'ar' ? 'يلزم الاتصال للتحقق من أسعار التعاقد والكميات والمواد المرجعية قبل إتمام البيع.' : 'Connect to verify customer, quantity and commodity prices before checkout.'
   if (message?.includes('PRICE_OVERRIDE_PERMISSION_DENIED') || message?.includes('PRICE_APPROVAL_CONTEXT_CHANGED')) return locale.value === 'ar' ? 'يلزم اعتماد مدير لهذا السعر بعد تغيير العميل أو الكمية أو الوحدة.' : 'A manager must approve this price after changing the customer, quantity or unit.'
   if (message?.includes('INVALID_PRICE_OVERRIDE')) return locale.value === 'ar' ? 'أدخل سعرًا صالحًا وسببًا واضحًا للتعديل.' : 'Enter a valid price and a clear adjustment reason.'
 
@@ -392,6 +396,7 @@ async function checkout() {
   checkoutRequestId.value ??= crypto.randomUUID(); issueRequestId.value ??= crypto.randomUUID(); paymentRequestId.value ??= crypto.randomUUID()
   if (appointmentId.value) appointmentRequestId.value ??= crypto.randomUUID()
   checkoutPaidAt.value ??= new Date().toISOString()
+  const attemptAmount = checkoutAmount.value ??= total.value
   try {
     const shift = counter.ready.value ? await counter.cached<{ active: { id: string } | null }>('shift') : null
     if (!inScope()) return
@@ -407,7 +412,7 @@ async function checkout() {
         p_staff_membership_id: staffId.value, p_appointment_id: appointmentId.value || null,
         p_customer_id: customerId.value || null, p_notes: notes.value.trim() || null,
         p_lines: lines.value.map(saleLineInput),
-        p_amount: total.value, p_paid_at: checkoutPaidAt.value, p_method: paymentMethod.value,
+        p_amount: attemptAmount, p_paid_at: checkoutPaidAt.value, p_method: paymentMethod.value,
         p_reference: paymentReference.value.trim() || null,
       } }, checkoutRequestId.value)
       if (!inScope()) return
@@ -427,7 +432,7 @@ async function checkout() {
     if (!inScope()) return
     if (saved.error) throw saved.error
     invoiceId.value = saved.data
-    const completed = await rpc.rpc('checkout_pos_sale', { p_request_id: checkoutRequestId.value, p_issue_request_id: issueRequestId.value, p_payment_request_id: paymentRequestId.value, p_appointment_request_id: appointmentRequestId.value, p_shop_id: currentId.value, p_location_id: transactionLocationId.value, p_invoice_id: invoiceId.value!, p_amount: total.value, p_paid_at: checkoutPaidAt.value, p_method: paymentMethod.value, p_reference: paymentReference.value.trim() || null })
+    const completed = await rpc.rpc('checkout_pos_sale', { p_request_id: checkoutRequestId.value, p_issue_request_id: issueRequestId.value, p_payment_request_id: paymentRequestId.value, p_appointment_request_id: appointmentRequestId.value, p_shop_id: currentId.value, p_location_id: transactionLocationId.value, p_invoice_id: invoiceId.value!, p_amount: attemptAmount, p_paid_at: checkoutPaidAt.value, p_method: paymentMethod.value, p_reference: paymentReference.value.trim() || null })
     if (!inScope()) return
     if (completed.error) throw completed.error
     const completedId = completed.data
