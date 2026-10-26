@@ -212,3 +212,8 @@ test('one-based billing clinic pages retain the first clinic and translate the e
   const before=calls.length;for(const page of[0,-1,1.5,1000001])await assert.rejects(()=>repo.locations(scope.practiceId,page,new AbortController().signal),/BILLING_QUERY_INVALID/);assert.equal(calls.length,before)
  }
 })
+
+test('read-only history remains pending until browser interaction and current Auth are ready',async()=>{
+ const {practiceBillingView}=await import('../../app/utils/practiceBillingPresentation.ts'),f=await controllerFixture();await f.controller.initialize();f.state.board.canWrite=false
+ for(const ar of[false,true]){const inert=practiceBillingView(f.controller,ar,false);assert.equal(inert.pending,true);assert.equal(inert.canWrite,false);assert.equal(inert.chargeRows.length,1);const ready=practiceBillingView(f.controller,ar,true);assert.equal(ready.pending,false);assert.equal(ready.canWrite,false);assert.equal(ready.readOnly,true)}
+})

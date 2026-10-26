@@ -30,7 +30,7 @@ function readiness(p){
 }
 try{
  check('candidate-is-current-head',git('rev-parse','HEAD')===head)
- check('exact-published-parent',base==='e62415f79b4d5a1b150024f7e8609df8e8ca7a07'&&git('merge-base',base,head)===base)
+ check('exact-published-parent',base==='2ac85c8a8c3d2266e59c9e484b4860fafcaa5a74'&&git('merge-base',base,head)===base)
  bound(folder+'dos-m7-002-verify.mjs');bound(folder+'dos-m7-002.md')
  const p=JSON.parse(bound(folder+'dos-m7-002-packet.json'))
  check('canonical-task-parent-and-gate',p.task_id==='DOS-M7-002'&&p.parent_pr===502&&p.parent_head===base&&p.decision_id==='DOS-M7-GATE-HOSTING'&&p.candidate_binding==='evaluated-committed-head')
