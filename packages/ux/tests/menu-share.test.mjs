@@ -58,6 +58,40 @@ test('open side navigation traps Tab in both directions and ignores keys when cl
   finally { scope.stop(); globalThis.document = previous }
 })
 
+test('side navigation focuses after browser paint and cancels focus when closed before paint', async () => {
+  const previousFrame = globalThis.requestAnimationFrame
+  const previousStyle = globalThis.getComputedStyle
+  const scope = effectScope(), open = ref(false), frames = []
+  let focused = 0
+  let visibility = 'hidden'
+  globalThis.requestAnimationFrame = callback => { frames.push(callback); return frames.length }
+  globalThis.getComputedStyle = () => ({ visibility })
+  try {
+    const menu = scope.run(() => useSideNavigation(() => open.value, () => '/customers', () => {}))
+    menu.panel.value = { querySelector: () => ({ getClientRects: () => [{}], focus() { focused++ } }) }
+    open.value = true; await nextTick(); await nextTick()
+    assert.equal(focused, 0, 'CSS visibility must reach a browser frame before focus')
+    frames.shift()(); assert.equal(focused, 0)
+    visibility = 'visible'
+    frames.shift()(); assert.equal(focused, 1)
+    open.value = false; await nextTick()
+    open.value = true; await nextTick(); await nextTick()
+    open.value = false; await nextTick()
+    while (frames.length) frames.shift()()
+    assert.equal(focused, 1, 'A closed drawer must not steal focus later')
+    open.value = true; await nextTick(); await nextTick()
+    scope.stop()
+    while (frames.length) frames.shift()()
+    assert.equal(focused, 1, 'A disposed drawer must not steal focus later')
+  } finally {
+    scope.stop()
+    if (previousFrame === undefined) delete globalThis.requestAnimationFrame
+    else globalThis.requestAnimationFrame = previousFrame
+    if (previousStyle === undefined) delete globalThis.getComputedStyle
+    else globalThis.getComputedStyle = previousStyle
+  }
+})
+
 test('sharing excludes duplicate requests, treats native cancellation quietly and falls back to clipboard', async () => {
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
   const state = useBrowserShare()

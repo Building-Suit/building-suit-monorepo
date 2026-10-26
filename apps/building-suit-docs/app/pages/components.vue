@@ -110,9 +110,9 @@ const exampleCalendarDays = computed<BsAppointmentsView['days']>(() => calendarW
   blocks: calendarDateKey(day) === '2026-10-12' ? [{ id: 'illustrative-break', startMinute: 720, endMinute: 780, kindLabel: isArabic.value ? 'استراحة' : 'Break', staff: isArabic.value ? 'الموظف' : 'Staff', time: '12:00–13:00', starts: '12:00', ends: '13:00', note: null }] : [],
 })))
 const rows = ref([
-  { id: '1', name: 'Ledger Suit', category: 'Finance', amount: 120, status: 'active' },
-  { id: '2', name: 'Shop Suit', category: 'Commerce', amount: 240, status: 'pending' },
-  { id: '3', name: 'Building Suit', category: 'Platform', amount: 360, status: 'completed' },
+  { id: '1', name: 'Ledger Suit', metadata: { category: 'Finance' }, amount: 120, status: 'active' },
+  { id: '2', name: 'Shop Suit', metadata: { category: 'Commerce' }, amount: 240, status: 'pending' },
+  { id: '3', name: 'Building Suit', metadata: { category: 'Platform' }, amount: 360, status: 'completed' },
 ])
 const selected = ref([])
 const choice = ref<string | number | null>('1')
@@ -158,7 +158,7 @@ const historyEntries = [
 ]
 const tableColumns = computed(() => [
   { key: 'name', field: 'name', header: isArabic.value ? 'الاسم' : 'Name', sortable: true, footer: isArabic.value ? 'الإجمالي' : 'Total' },
-  { key: 'category', field: 'category', header: isArabic.value ? 'التصنيف' : 'Category', sortable: true },
+  { key: 'category', field: 'metadata.category', sortField: 'metadata.category', header: isArabic.value ? 'التصنيف' : 'Category', sortable: true },
   { key: 'status', field: 'status', header: isArabic.value ? 'الحالة' : 'Status' },
   { key: 'amount', field: 'amount', header: isArabic.value ? 'القيمة' : 'Value', sortable: true, align: 'end' as const, width: 'sm' as const },
 ])
@@ -200,7 +200,7 @@ async function save() {
       const row = rows.value.find(item => item.id === editingId.value)
       if (row) row.name = name.value.trim()
     }
-    else rows.value.push({ id: String(rows.value.length + 1), name: name.value.trim(), category: 'Example', amount: 0, status: 'draft' })
+    else rows.value.push({ id: String(rows.value.length + 1), name: name.value.trim(), metadata: { category: 'Example' }, amount: 0, status: 'draft' })
   }, () => isArabic.value ? 'أدخل اسماً قبل الحفظ.' : 'Enter a name before saving.')
 }
 const shellSuits = computed(() => shellState.value === 'empty' ? [] : Array.from({ length: shellState.value === 'overflow' ? 24 : 3 }, (_, index) => ({
@@ -414,7 +414,7 @@ const invitationPreviewCopy={
       <div class="px-5 pb-3"><BsTableDensity v-model="density" :label="isArabic ? 'كثافة الجدول' : 'Table density'" :compact-label="isArabic ? 'مضغوط' : 'Compact'" :comfortable-label="isArabic ? 'مريح' : 'Comfortable'" /></div>
       <BsDataTable
         v-model:selection="selected" v-model:filters="filters" :value="tableState === 'empty' ? [] : rows" row-key="id" :columns="tableColumns"
-        :search-fields="['name', 'category']" searchable exportable paginator :page-size="2" :page-sizes="[2, 5, 10]"
+        :search-fields="['name', 'metadata.category']" searchable exportable paginator :page-size="2" :page-sizes="[2, 5, 10]"
         sort-mode="multiple" removable-sort resizable-columns reorderable-columns striped-rows selection-mode="multiple"
         :meta-key-selection="false" :density="density" :loading="tableState === 'loading'"
         :error="tableState === 'error' ? (isArabic ? 'تعذر تحميل المثال.' : 'The example could not be loaded.') : null"

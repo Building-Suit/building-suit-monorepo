@@ -1,0 +1,24 @@
+{
+  "id": "ls-browser-001-verification-support",
+  "task": "LS-BROWSER-001",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/ledger-suit",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/data-table.md",
+    "docs/shared/interactions.md",
+    "packages/ui/src/organisms/BsAdminResourceWorkspace.vue",
+    "release-changes/items.json",
+    "packages/ui/tests/receipt-browser.test.mjs"
+  ],
+  "reason": "Maintain current Ledger browser fixtures and owned native runtime, demonstrate nested field bindings in the shared catalogue, document interaction contracts and curate bilingual release notes. Ledger is the active administrative resource consumer; other products retain their existing commerce branch or do not render this organism."
+}

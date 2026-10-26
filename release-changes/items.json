@@ -2167,5 +2167,119 @@
     "sources": [
       "ls-bill-native-001-release-support"
     ]
+  },
+  {
+    "id": "ls-browser-001-mobile-focus",
+    "task": "LS-BROWSER-001",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ux/src/composables/useSideNavigation.ts",
+      "packages/ux/tests/menu-share.test.mjs"
+    ],
+    "reason": "Focus the visible mobile navigation close control after its CSS transition permits focus, and cancel pending focus after closing or disposal.",
+    "notes": {
+      "title": {
+        "en": "Reliable keyboard focus in mobile navigation",
+        "ar": "تركيز موثوق للوحة المفاتيح في قائمة الهاتف"
+      },
+      "summary": {
+        "en": "Opening mobile navigation moves keyboard focus into the drawer so Escape can close it.",
+        "ar": "ينقل فتح قائمة الهاتف تركيز لوحة المفاتيح إلى داخلها كي يغلقها زر Escape."
+      },
+      "details": {
+        "en": "Focus waits for the control to become visible and is cancelled if the drawer closes or is removed.",
+        "ar": "ينتظر التركيز ظهور عنصر التحكم ويُلغى إذا أُغلقت القائمة أو أُزيلت."
+      }
+    },
+    "sources": [
+      "ls-browser-001-mobile-focus"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ux/src/composables/useSideNavigation.ts",
+        "contains": "getComputedStyle(target).visibility !== 'visible'"
+      },
+      {
+        "path": "packages/ux/src/composables/useSideNavigation.ts",
+        "contains": "if (cancelled || !open()) return"
+      }
+    ]
+  },
+  {
+    "id": "ls-browser-001-admin-sorting",
+    "task": "LS-BROWSER-001",
+    "suits": [
+      "ledger-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsAdminResourceWorkspace.vue",
+      "apps/ledger-suit/tests/e2e/shared-ui-foundation.spec.ts"
+    ],
+    "reason": "Bind administrative table sorting to its displayed nested values while retaining existing resource scope and authorization.",
+    "notes": {
+      "title": {
+        "en": "Correct sorting in administration tables",
+        "ar": "ترتيب صحيح في جداول الإدارة"
+      },
+      "summary": {
+        "en": "Administrators can sort displayed resource rows in both directions.",
+        "ar": "يمكن للمشرفين ترتيب صفوف الموارد المعروضة في الاتجاهين."
+      },
+      "details": {
+        "en": "Mouse and keyboard sorting use the displayed values within the currently loaded result scope.",
+        "ar": "يستخدم ترتيب الفأرة ولوحة المفاتيح القيم المعروضة ضمن نطاق النتائج المحملة حاليًا."
+      }
+    },
+    "sources": [
+      "ls-browser-001-admin-sorting"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsAdminResourceWorkspace.vue",
+        "contains": "field: `values.${column.key}`"
+      },
+      {
+        "path": "packages/ui/src/organisms/BsAdminResourceWorkspace.vue",
+        "contains": "sortField: `values.${column.key}`"
+      }
+    ]
+  },
+  {
+    "id": "ls-browser-001-verification-support",
+    "task": "LS-BROWSER-001",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/ledger-suit",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/data-table.md",
+      "docs/shared/interactions.md",
+      "packages/ui/src/organisms/BsAdminResourceWorkspace.vue",
+      "release-changes/items.json",
+      "packages/ui/tests/receipt-browser.test.mjs"
+    ],
+    "reason": "Maintain current Ledger browser fixtures and owned native runtime, demonstrate nested field bindings in the shared catalogue, document interaction contracts and curate bilingual release notes. Ledger is the active administrative resource consumer; other products retain their existing commerce branch or do not render this organism.",
+    "sources": [
+      "ls-browser-001-verification-support"
+    ]
   }
 ]

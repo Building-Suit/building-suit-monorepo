@@ -1,0 +1,89 @@
+{
+  "task": "LS-BROWSER-001",
+  "date": "2026-10-26",
+  "parent_pr": 497,
+  "parent_sha": "ee127c66685af69b053cd161d8b20aa79eb2acb7",
+  "state": "targeted_verification_passed_full_atomic_matrix_in_progress",
+  "checks": {
+    "foundation_browser": {
+      "tests": 11,
+      "passed": 11,
+      "retry": 0,
+      "backend": "synthetic intercepted API"
+    },
+    "native_core_browser": {
+      "tests": 8,
+      "passed": 8,
+      "retry": 0,
+      "backend": "actual local Auth/PostgREST; one specifically intercepted custom-role-limit RPC error"
+    },
+    "atomic_matrix": {
+      "collected": 311,
+      "files": 17,
+      "state": "running; incomplete results do not count as acceptance"
+    },
+    "ledger_units": {
+      "tests": 130,
+      "passed": 130
+    },
+    "shared_units": {
+      "tests": 127,
+      "passed": 125,
+      "receipt_browser": "2 initially unavailable without bundled executable; explicit system Chromium run fails unchanged visual baselines by 0.028560558743396525 EN and 0.026984375851098755 AR; not passing"
+    },
+    "mobile_focus_regression": {
+      "tests": 5,
+      "passed": 5,
+      "old_source": "new hidden-frame assertion fails",
+      "browser": "actual focus, Escape, return and theme pass"
+    },
+    "applications_typechecked": 7,
+    "applications_built": 7,
+    "ledger_lint": "pass",
+    "scoped_shared_lint": "pass",
+    "docs_lint": "0 errors, 5 inherited warnings",
+    "workspace": "pass",
+    "release": "pass",
+    "actual_privileged_values_in_264_built_public_files": 0
+  },
+  "native_final_state": {
+    "project": "ledger-browser-20261026",
+    "migrations": 107,
+    "public_app_tables": 122,
+    "final_sha256": "977ad041cc474da67e0d7c2a7ec34d172f0749ce218245f2852166ce43aad7f4",
+    "state": {
+      "users": 4,
+      "organizations": 2,
+      "members": 4,
+      "accounts": 4,
+      "posted_journals": 0,
+      "posted_entries": 0
+    },
+    "retained": true
+  },
+  "browser": {
+    "playwright": "1.62.1",
+    "executable": "explicit /usr/bin/chromium",
+    "version": "154.0.8037.57",
+    "impersonated_bundled_version": false
+  },
+  "source_sha256": {
+    "packages/ui/src/organisms/BsAdminResourceWorkspace.vue": "73d09d6be786be0840e2e74e7db9a7d69789407f577337e5074811b5aa01405f",
+    "packages/ux/src/composables/useSideNavigation.ts": "f87bdbf17847c512a1a246e135dbf908a15b032fe5ea9f1b66e1f094fc153d2f",
+    "packages/ux/tests/menu-share.test.mjs": "f6ce05f9b69c5d4fd61b04229bb06badac78ecb573291801c36e163d8625afbc",
+    "apps/ledger-suit/scripts/native-browser-runtime.mjs": "33c9dc482498236756136c4647684582e18b8a4a4fb7b86ca792938b43ebfee8",
+    "apps/ledger-suit/tests/e2e/password-sign-in.ts": "3d0cd2c920a252bd6886135343be68f32e46757aa03024b6458aef5f0600bd03",
+    "apps/ledger-suit/tests/e2e/foundation-fixture.ts": "3e02c6cba4a7070e67a04f61ad9fae0f0534804f63a7c4edaf524585a992ce00",
+    "apps/ledger-suit/tests/e2e/core-finance.spec.ts": "4e53997dc274352dadd3efdc2b3154a378258eb66091a2f86aef696ab4c04a10",
+    "apps/ledger-suit/tests/e2e/shared-ui-foundation.spec.ts": "f1c7e2c5f1d0cbd6ff010a13117e48c4012464826e17ba4bc186d242a4784b75",
+    "apps/ledger-suit/playwright.acceptance.config.ts": "c9289014618323d77b8e5e1530d5ad394dcf4eea014ae045c87f0745cd8b7bd4",
+    "apps/ledger-suit/playwright.native-core.config.ts": "7a573fdb88e2ad63da3c7b06e1f4914bb77f10ebd98bf633a0f6e6521d49fd13"
+  },
+  "limits": [
+    "No hosted/Automation mutation, accountant acceptance or production release inferred.",
+    "Native core uses preconfirmed development seed; signup confirmation and actual financial cycles have separate dated evidence.",
+    "Parent GitHub CI receipt comparisons pass with exact baseline error zero; its review fails 54 inherited Shop tests.",
+    "Prior overlapping/partial matrix and interrupted builds are not accepted; stale owned locks/orphan preview processes were verified before cleanup."
+  ],
+  "volumes": "Owned native backend stopped and all financial volumes retained."
+}

@@ -12,10 +12,25 @@ export function useSideNavigation(open: () => boolean, path: () => string, close
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
   }
-  watch(open, async value => {
+  watch(open, async (value, _previous, onCleanup) => {
     if (!value) return
+    let cancelled = false
+    onCleanup(() => { cancelled = true })
     await nextTick()
-    panel.value?.querySelector<HTMLElement>('[data-side-menu-close]')?.focus()
+    const focusClose = () => {
+      if (cancelled || !open()) return
+      const target = panel.value?.querySelector<HTMLElement>('[data-side-menu-close]')
+      // The responsive desktop close control has no box and must not be focused.
+      if (!target || !target.getClientRects().length) return
+      if (typeof getComputedStyle === 'function' && getComputedStyle(target).visibility !== 'visible') {
+        if (typeof requestAnimationFrame === 'function') requestAnimationFrame(focusClose)
+        return
+      }
+      target.focus()
+    }
+    // A DOM update can precede CSS visibility; focus only once it is visible.
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(focusClose)
+    else focusClose()
   })
   return { panel, isActive, onKeydown }
 }
