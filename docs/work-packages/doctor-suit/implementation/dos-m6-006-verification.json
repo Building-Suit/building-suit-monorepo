@@ -73,5 +73,7 @@
     "apps/doctor-suit/tests/practice-billing-concurrency.mjs": "0bb6602e139f3d5268aebc0924cc07f7888a29f4d3beae2489b59ed2d38d4be8",
     "apps/doctor-suit/tests/disposable-postgres.mjs": "3fcdffb3b99c52021d2135d18960670616e44ac7869064e7e214df703e84b60d"
   },
-  "unknown_acceptance_guard": "one first revision per visit/service; subsequent explicit correction appends revision"
+  "unknown_acceptance_guard": "one first revision per visit/service; subsequent explicit correction appends revision",
+  "incorporated_parent_evidence_head": "9d005aabb00a3f292920c9700fc40a863f8430d7",
+  "parent_merge": "ddbd450dbe7c941d644edcf784b0aaa90630a9b5"
 }
