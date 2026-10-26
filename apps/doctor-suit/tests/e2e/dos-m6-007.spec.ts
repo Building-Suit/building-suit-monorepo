@@ -18,7 +18,7 @@ for (const ar of [false, true]) test(`DOS-M6-007-C03-${ar ? 'AR' : 'EN'}`, async
  }
  async function openMoney(page: Page, label: string) { await page.goto(f.origin + '/practice-billing'); await page.getByRole('row').filter({ hasText: label }).getByRole('link', { name: billingCopy.payments, exact: true }).click(); await expect(page.getByRole('heading', { name: copy.title, exact: true })).toBeVisible() }
  async function confirm(page: Page, title: string) { const dialog = page.getByRole('dialog', { name: title, exact: true }); await dialog.getByRole('button', { name: copy.confirm, exact: true }).click(); await expect(dialog).toBeHidden() }
- async function prepare(page: Page, kind: 'collection' | 'refund', reason: string, amount: string) { const dialog = page.getByRole('dialog', { name: kind === 'collection' ? copy.prepareCollection : copy.prepareRefund, exact: true }); await dialog.getByLabel(copy.amount, { exact: true }).fill(amount); await dialog.getByLabel(copy.reason, { exact: true }).fill(reason); await dialog.getByRole('button', { name: copy.save, exact: true }).click(); await expect(dialog).toBeHidden() }
+ async function prepare(page: Page, kind: 'collection' | 'refund', reason: string, amount: string) { const dialog = page.getByRole('dialog', { name: kind === 'collection' ? copy.prepareCollection : copy.prepareRefund, exact: true }); await dialog.getByRole('textbox', { name: copy.amount, exact: true }).fill(amount); await dialog.getByRole('textbox', { name: copy.reason, exact: true }).fill(reason); await dialog.getByRole('button', { name: copy.save, exact: true }).click(); await expect(dialog).toBeHidden() }
  let diagnosticPage:Page|undefined
  const owner = await context(f.storageState); let readonly: BrowserContext | undefined
  try {
