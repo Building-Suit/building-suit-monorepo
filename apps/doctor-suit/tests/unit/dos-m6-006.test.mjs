@@ -202,3 +202,13 @@ test('owned readonly fixture selects candidate authority and restores mode/accou
   assert.equal(mode,'synthetic_preview');assert.equal(held,false);assert.equal(admitted,false)
  }
 })
+test('one-based billing clinic pages retain the first clinic and translate the existing zero-based directory RPC boundary',async()=>{
+ const {practiceBillingRepository}=await import('../../app/utils/practiceBillingRepository.ts')
+ for(const count of[1,26]){
+  const rows=Array.from({length:count},(_,n)=>({id:id(1000+n),practice_id:scope.practiceId,name:'Synthetic clinic '+n,timezone:'Etc/UTC',contact_phone:'',contact_address:'',archived_at:null,version:1,can_manage:true,can_edit:true})),calls=[]
+  const repo=practiceBillingRepository({rpc:(name,args)=>{calls.push({name,args});return{abortSignal:async()=>({error:null,data:{practice_name:'Synthetic directory',can_create:true,total:count,rows:rows.slice(args.p_page*args.p_size,(args.p_page+1)*args.p_size)}})}}})
+  const first=await repo.locations(scope.practiceId,1,new AbortController().signal);assert.equal(first.rows.length,Math.min(25,count));assert.equal(first.rows[0].id,rows[0].id);assert.equal(calls[0].args.p_page,0)
+  const second=await repo.locations(scope.practiceId,2,new AbortController().signal);assert.equal(second.rows.length,Math.max(count-25,0));assert.equal(calls[1].args.p_page,1)
+  const before=calls.length;for(const page of[0,-1,1.5,1000001])await assert.rejects(()=>repo.locations(scope.practiceId,page,new AbortController().signal),/BILLING_QUERY_INVALID/);assert.equal(calls.length,before)
+ }
+})
