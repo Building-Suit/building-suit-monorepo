@@ -1,0 +1,274 @@
+{
+  "task_id": "DOS-M7-002",
+  "pr": 503,
+  "parent_pr": 502,
+  "parent_head": "e62415f79b4d5a1b150024f7e8609df8e8ca7a07",
+  "scope": "Documentation readiness; accountable approval unavailable",
+  "exact_source_readiness": {
+    "schema": "doctor-hosting-readiness/v1",
+    "execution_id": "16d7d951-8c4b-4e00-8af0-0ae37694f536",
+    "task_id": "DOS-M7-002",
+    "exact_base": "e62415f79b4d5a1b150024f7e8609df8e8ca7a07",
+    "exact_candidate": "8ccb713c3717ece84c79d149a5c47b09e6142c61",
+    "started_at_utc": "2026-10-26T15:49:24.815Z",
+    "ended_at_utc": "2026-10-26T15:49:25.011Z",
+    "argv": [
+      "node",
+      "/workspace/doctor-m7-002/docs/work-packages/doctor-suit/implementation/dos-m7-002-verify.mjs",
+      "--base",
+      "e62415f79b4d5a1b150024f7e8609df8e8ca7a07",
+      "--head",
+      "8ccb713c3717ece84c79d149a5c47b09e6142c61"
+    ],
+    "node": "26.8.1",
+    "evaluated_input_sha256": {
+      "docs/work-packages/doctor-suit/implementation/dos-m7-002-verify.mjs": "aa9bed3466bae6493fb987d974405c844cffd74131e63bbbdec781546fe55ce9",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-002.md": "37a44919d04786e1a13d44da7f8c59623d7f55b7c69923e12e9cf5ab7f32b146",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-002-packet.json": "b1b2abddd09284ceb7c032e41674ec749ddd57d6b49ee4ac4bf9b1c44d81afb9",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json": "8881c8b68172d75bc9827e910864c3fdd6c056119b0575e24bd49c5a87755a23",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json": "b442acff9a25ecbadbcf7d5f21f6fd672ae7ac10e6a5d186013cd253856f1125",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json": "7caf1851066eb8b2c4741be514ce4f7ee612a2570e76f94b8db3538815cf606f",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json": "041145f78b703fda51a0185744c7f6b2e900fbca7c7ff5dc129ad2170ed5634d",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json": "6ddb7b1ec6310bf2dfbbf562028c47ad1300eb6eb8e01f4cf94a54ed2b280e2b",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json": "eea1e06584bcd599fa13ea8a65400344e660055a7b75e4d817a0f04fe0a09240",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json": "9d937de32c9062852f228f79ea6f89887f39c15b20e7dc7cb485b17a273c1a0c",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json": "24dc2b7d993036671e2958751410e491fad1623910b08ce6418f1b702eca62a6",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json": "fde4ee5825fa131a2bd61a565e7c6a746a8a4e3ec74c6f53f878dbe818b8f418",
+      "docs/architecture/environments.json": "02bdd1787747093cb8563142005bf385c957273072206ba4f8514a9472aaf8e2"
+    },
+    "assertions": [
+      {
+        "id": "candidate-is-current-head",
+        "status": "passed"
+      },
+      {
+        "id": "exact-published-parent",
+        "status": "passed"
+      },
+      {
+        "id": "working-input:docs/work-packages/doctor-suit/implementation/dos-m7-002-verify.mjs",
+        "status": "passed"
+      },
+      {
+        "id": "working-input:docs/work-packages/doctor-suit/implementation/dos-m7-002.md",
+        "status": "passed"
+      },
+      {
+        "id": "working-input:docs/work-packages/doctor-suit/implementation/dos-m7-002-packet.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-task-parent-and-gate",
+        "status": "passed"
+      },
+      {
+        "id": "all-accountable-criteria-unavailable",
+        "status": "passed"
+      },
+      {
+        "id": "approval-and-dependent-actions-held",
+        "status": "passed"
+      },
+      {
+        "id": "complete-unique-component-inventory",
+        "status": "passed"
+      },
+      {
+        "id": "actual-account-contract-region-authority-not-invented",
+        "status": "passed"
+      },
+      {
+        "id": "six-digest-bound-flows",
+        "status": "passed"
+      },
+      {
+        "id": "document-includes-all-side-destinations",
+        "status": "passed"
+      },
+      {
+        "id": "reminder-includes-all-side-destinations",
+        "status": "passed"
+      },
+      {
+        "id": "separate-account-mobile-money-and-ci-traces",
+        "status": "passed"
+      },
+      {
+        "id": "public-provider-pages-are-not-customer-evidence",
+        "status": "passed"
+      },
+      {
+        "id": "required-accountable-receipt-scope-enumerated",
+        "status": "passed"
+      },
+      {
+        "id": "actual-incomplete-packet-remains-unavailable",
+        "status": "passed"
+      },
+      {
+        "id": "reject-unknown-subprocessor-and-changed-scope",
+        "status": "passed"
+      },
+      {
+        "id": "reject-unexpected-sensitive-analytics",
+        "status": "passed"
+      },
+      {
+        "id": "well-shaped-generated-claim-is-not-authority",
+        "status": "passed"
+      },
+      {
+        "id": "working-input:docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:1",
+        "status": "passed"
+      },
+      {
+        "id": "working-input:docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:2",
+        "status": "passed"
+      },
+      {
+        "id": "working-input:docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:3",
+        "status": "passed"
+      },
+      {
+        "id": "working-input:docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:4",
+        "status": "passed"
+      },
+      {
+        "id": "working-input:docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:5",
+        "status": "passed"
+      },
+      {
+        "id": "working-input:docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:6",
+        "status": "passed"
+      },
+      {
+        "id": "working-input:docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:7",
+        "status": "passed"
+      },
+      {
+        "id": "working-input:docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:8",
+        "status": "passed"
+      },
+      {
+        "id": "working-input:docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:9",
+        "status": "passed"
+      },
+      {
+        "id": "nine-packets-104-tasks",
+        "status": "passed"
+      },
+      {
+        "id": "working-input:docs/architecture/environments.json",
+        "status": "passed"
+      },
+      {
+        "id": "environment-map-parent-identical",
+        "status": "passed"
+      },
+      {
+        "id": "only-authorized-document-and-fragment-diff",
+        "status": "passed"
+      }
+    ],
+    "control_passes": 42,
+    "control_failures": 0,
+    "disposition": {
+      "status": "unavailable",
+      "reasons": [
+        "missing-qualified-legal-review",
+        "missing-accountable-hosting-decision",
+        "unknown-region:browser",
+        "unapproved-processor:browser",
+        "incomplete-evidence:browser",
+        "unknown-region:android",
+        "unapproved-processor:android",
+        "incomplete-evidence:android",
+        "unknown-region:ssr",
+        "unapproved-processor:ssr",
+        "incomplete-evidence:ssr",
+        "unknown-region:auth-db",
+        "unapproved-processor:auth-db",
+        "incomplete-evidence:auth-db",
+        "unknown-region:documents",
+        "unapproved-processor:documents",
+        "incomplete-evidence:documents",
+        "unknown-region:account-mail",
+        "unapproved-processor:account-mail",
+        "incomplete-evidence:account-mail",
+        "unknown-region:outbox",
+        "unapproved-processor:outbox",
+        "incomplete-evidence:outbox",
+        "unknown-region:financial",
+        "unapproved-processor:financial",
+        "incomplete-evidence:financial",
+        "unknown-region:observability",
+        "unapproved-processor:observability",
+        "incomplete-evidence:observability",
+        "unknown-region:ci",
+        "unapproved-processor:ci",
+        "incomplete-evidence:ci",
+        "unknown-region:backups",
+        "unapproved-processor:backups",
+        "incomplete-evidence:backups",
+        "unknown-region:support",
+        "unapproved-processor:support",
+        "incomplete-evidence:support",
+        "unknown-region:partner",
+        "unapproved-processor:partner",
+        "incomplete-evidence:partner"
+      ]
+    },
+    "criterion_status": {
+      "DOS-M7-002-C01": "unavailable-accountable-hosting-review",
+      "DOS-M7-002-C02": "unavailable-accountable-hosting-review",
+      "DOS-M7-002-C03": "unavailable-accountable-hosting-review",
+      "DOS-M7-002-C04": "unavailable-accountable-hosting-review"
+    },
+    "domain_approval": false,
+    "full_task_acceptance": false,
+    "exit_code": 2
+  },
+  "checks": {
+    "pnpm check": "passed:141 complete routes,80 historical migrations,zero debt",
+    "git diff --check": "passed",
+    "root_unit": "not rerun; no product changes. Parent source-specific2548total/2471pass/54 inherited Shop failures/23skip retained",
+    "product_runtime": "not run; no dummy human-review test"
+  },
+  "required_ci": "blocked; no staging/main promotion"
+}

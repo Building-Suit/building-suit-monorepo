@@ -7,3 +7,7 @@ Each task receives an early separate correctly stacked draft, verified pushes, s
 ## DOS-M7-001 — PR502, parent501/88252710
 
 Prepared7 participant scopes/8 technical flows/9 proposed policy questions and a source-bound unavailable-review verifier. Exact sourcece01 passes67 control assertions with exit2/C02 unavailable; actual current qualified review, approved policies and DOS-M7-GATE-LEGAL approval remain absent. Wrong-real-parent control fails. No product bytes or legal/native/provider/live action changed. Read task001 MD/packet/verification; do not infer legal certification or complete milestone acceptance. Continue task002 hosting/data-flow evidence next, then remaining independent M7–9 tasks under their canonical contracts.
+
+## DOS-M7-002 — PR503, parent502/e62415f7
+
+Prepared13 components/6 digest-bound traces including separate account mail, synthetic patient outbox, Android Auth, financial ledgers, logs/backups/support. Exact8ccb source passes42 readiness controls, exit2/all4 accountable-review criteria unavailable. Actual accounts/regions/subprocessors/contracts/transfers and LEGAL/HOSTING approvals remain absent. No product or provider changes. Continue independent003 clinical-governance proposal, then004 onward.
