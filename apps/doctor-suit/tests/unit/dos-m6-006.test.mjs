@@ -189,3 +189,16 @@ test('changed patient lineage or currency remains readable but requires review b
  }
  function practiceBillingCopyForReview() { return 'Visit or price details changed. Review this charge before correction; its patient and currency cannot be replaced.' }
 })
+test('owned readonly fixture selects candidate authority and restores mode/account/admission on success and preparation failure',async()=>{
+ const {preparePracticeBillingBrowser}=await import('../practice-billing-actual-provider.mjs')
+ for(const failBoard of[false,true]){
+  let mode='synthetic_preview',held=false,admitted=false
+  const a={user:{id:id(1)},sessionId:id(11),client:'a',scope:{practiceId:id(21),locationId:id(31),patientId:id(42)}},b={user:{id:id(2)},sessionId:id(12),client:'b',scope:{practiceId:id(22),locationId:id(32),patientId:id(43)}}
+  const sql=input=>{if(input.includes('select mode from public.doctor_edition_policy'))return mode;if(input.includes('insert into public.doctor_candidate_admissions'))admitted=true;if(input.includes("mode='administrative_candidate'"))mode='administrative_candidate';if(input.includes("mode='synthetic_preview'"))mode='synthetic_preview';if(input.includes("state='suspended'"))held=true;if(input.includes("state='enabled'"))held=false;if(input.includes('insert into public.doctor_candidate_revocations'))admitted=false;if(input.startsWith('select json_build_object'))return JSON.stringify({timezone:'Etc/UTC'});return''}
+  const rpc=async(_client,name)=>{if(name==='doctor_saas_status')return{state:'unconfigured'};if(name==='doctor_write_service_price')return{id:id(51)};if(name==='doctor_write_visit_charge')return{id:id(61)};if(name==='doctor_practice_billing_board'){if(failBoard)throw Error('Owned board unavailable');return{edition:mode,can_write:mode==='synthetic_preview'||!held,charge_total:1,charges:[{charge:{amount_minor:'12345'}}]}}throw Error('Unexpected fixture protocol')}
+  const run=()=>preparePracticeBillingBrowser({sql,a,b,rpc,expect:(ok,message)=>assert.ok(ok,message),setStage:()=>{}})
+  if(failBoard)await assert.rejects(run,/Owned board unavailable/)
+  else{const prepared=await run();assert.equal(mode,'administrative_candidate');assert.equal(held,true);assert.equal(admitted,true);prepared.cleanup()}
+  assert.equal(mode,'synthetic_preview');assert.equal(held,false);assert.equal(admitted,false)
+ }
+})
