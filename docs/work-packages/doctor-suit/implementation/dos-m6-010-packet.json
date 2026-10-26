@@ -30,6 +30,11 @@
       "source_head": "6855d821ee4958f4b36f1f19fec40b36b5f105e5",
       "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40335045291",
       "disposition": "Completed failure:009 setup overlaps day-one commitments at009.sql:77; no009/fullSQL/recovery/schema-generation acceptance. Public60/protocol87/stress4/M3actual10 pass; financial10 fail; shared Auth48/settings6pass6fail."
+    },
+    {
+      "source_head": "c724915b37bae9a54891dbfa490823dab2c36c8d",
+      "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40345633850",
+      "disposition": "SQL job121651685000 completed success after fixture repair; detailed counts/artifact acquisition not yet parsed, browser jobs still pending when observed. Does not qualify own010 exact-candidate journey/review."
     }
   ],
   "review_requirements": [

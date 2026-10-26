@@ -377,5 +377,306 @@
       "source_status": "Focused009 fixture/readiness/accessible-role fixes included; new actual runtime unqualified",
       "full_local_validation": "pending new combined source; historical5283 results retained below"
     }
-  ]
+  ],
+  "refreshed_candidate_validation": {
+    "implementation_source": "c698f9382176cbb991e27154ffa8c2c94a449bac",
+    "parent_head": "c724915b37bae9a54891dbfa490823dab2c36c8d",
+    "own_units_passed": 12,
+    "focused_cases_passed": 96,
+    "root": {
+      "command": "pnpm test",
+      "tests": 2548,
+      "passed": 2471,
+      "failed": 54,
+      "skipped": 23,
+      "all_failure_locations": "apps/shop-suit/",
+      "exit_code": 1,
+      "duration_ms": 148053.074235
+    },
+    "typecheck": {
+      "command": "pnpm exec turbo run typecheck --concurrency=2",
+      "exit_code": 0,
+      "successful": 8,
+      "cached": 7,
+      "time": "54.466s"
+    },
+    "build": {
+      "command": "pnpm build --concurrency=2",
+      "exit_code": 0,
+      "successful": 8,
+      "cached": 7,
+      "time": "1m9.235s",
+      "scope": "Static assets only; no service/SDK/device/deployment."
+    },
+    "lint": {
+      "command": "pnpm exec turbo run lint --concurrency=2 --continue",
+      "exit_code": 1,
+      "successful_targets": 6,
+      "targets": 8,
+      "doctor_inherited_errors": 12,
+      "shop_untouched_errors": 2,
+      "shop_warnings": 25,
+      "catalogue_warnings": 5,
+      "root_packages_tooling_exit": 0,
+      "root_packages_tooling_warnings": 31,
+      "scoped_changed_files": "passed; no broad lint pass claimed"
+    },
+    "workspace": {
+      "complete_route_entries": 141,
+      "preserved_historical_migrations": 80,
+      "local_components": 0,
+      "debt": 0
+    },
+    "independent_C03_receipt": {
+      "schema": "doctor-financial-independent-verifier/v1",
+      "execution_id": "f14c3f10-4fa9-4099-b96b-351e0f27b422",
+      "task_id": "DOS-M6-010",
+      "case_id": "DOS-M6-010-C03",
+      "exact_base": "c724915b37bae9a54891dbfa490823dab2c36c8d",
+      "exact_candidate": "c698f9382176cbb991e27154ffa8c2c94a449bac",
+      "started_at_utc": "2026-10-26T15:08:07.719Z",
+      "ended_at_utc": "2026-10-26T15:08:08.061Z",
+      "argv": [
+        "node",
+        "docs/work-packages/doctor-suit/implementation/dos-m6-010-verify.mjs",
+        "--base",
+        "c724915b37bae9a54891dbfa490823dab2c36c8d",
+        "--head",
+        "c698f9382176cbb991e27154ffa8c2c94a449bac"
+      ],
+      "node": "26.8.1",
+      "evaluated_input_sha256": {
+        "docs/work-packages/doctor-suit/implementation/dos-m6-010-verify.mjs": "dc19fd1bd3367a891786ab8c9270ccb1d7d0058bc24325984ea7c0fea468cacf",
+        "docs/work-packages/doctor-suit/implementation/dos-m6-010.md": "608e118d7dce15477f02b464ef1fade166c639326f496d1d059fb434aeafef35",
+        "docs/work-packages/doctor-suit/implementation/dos-m6-010-packet.json": "24cd0fe276c036485f5bbbda684062c775dc472578612e97c77c48133c6b19b0",
+        "apps/doctor-suit/tests/financial-acceptance-review.mjs": "a54a661ef3a8fa5cf220bb0f52da81ffdcb7e58effa3786249f22bfc623d3566",
+        "docs/work-packages/doctor-suit/implementation/dos-m6-008-packet.json": "41febaf11c60503c6a982888cde7d7b7d8324415ba9c4e406800a036bb66129d",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json": "8881c8b68172d75bc9827e910864c3fdd6c056119b0575e24bd49c5a87755a23",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json": "b442acff9a25ecbadbcf7d5f21f6fd672ae7ac10e6a5d186013cd253856f1125",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json": "7caf1851066eb8b2c4741be514ce4f7ee612a2570e76f94b8db3538815cf606f",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json": "041145f78b703fda51a0185744c7f6b2e900fbca7c7ff5dc129ad2170ed5634d",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json": "6ddb7b1ec6310bf2dfbbf562028c47ad1300eb6eb8e01f4cf94a54ed2b280e2b",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json": "eea1e06584bcd599fa13ea8a65400344e660055a7b75e4d817a0f04fe0a09240",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json": "9d937de32c9062852f228f79ea6f89887f39c15b20e7dc7cb485b17a273c1a0c",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json": "24dc2b7d993036671e2958751410e491fad1623910b08ce6418f1b702eca62a6",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json": "fde4ee5825fa131a2bd61a565e7c6a746a8a4e3ec74c6f53f878dbe818b8f418",
+        "apps/doctor-suit/app/utils/practiceFinancialReport.ts": "e4744bb2d05717c9bafa8c748ea6c97e0b746892ee8b71d11c57b230b185bc18",
+        "apps/doctor-suit/app/utils/practiceMoney.ts": "c1f1b972d44ded62adcb405a0462bd49a1af634018810a1c641a9f39f9a5f33a",
+        "apps/doctor-suit/app/utils/practiceBilling.ts": "86e467cdc91324d06811fe4b9adb0051c993ff2b09589dc7d76ccc65ed603f20",
+        "apps/doctor-suit/app/utils/locationContext.ts": "75f5e4981decc38f40772a9cd185a999a5ef72c0b8bfabcd25f04749d6d05587",
+        "apps/doctor-suit/app/utils/administrativeEdition.ts": "f7cf04a7b6db73e22bef8b180e32d5dfe7e1ff9879d7ac9585633533d3ffd54c",
+        "apps/doctor-suit/app/utils/entitlement.ts": "9b00e532191f9ff95635d1c471e32b54ff15afbbaf66decd15f200725521b028"
+      },
+      "assertions": [
+        {
+          "id": "executing-exact-candidate",
+          "status": "passed"
+        },
+        {
+          "id": "parent-is-ancestor",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m6-010-verify.mjs",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m6-010.md",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m6-010-packet.json",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/tests/financial-acceptance-review.mjs",
+          "status": "passed"
+        },
+        {
+          "id": "correct-task-and-reviewed-parent",
+          "status": "passed"
+        },
+        {
+          "id": "no-invented-domain-authority",
+          "status": "passed"
+        },
+        {
+          "id": "commercial-launch-stays-unapproved",
+          "status": "passed"
+        },
+        {
+          "id": "current-unavailable-obligations-not-fabricated",
+          "status": "passed"
+        },
+        {
+          "id": "actual-journey-and-review-limits-explicit",
+          "status": "passed"
+        },
+        {
+          "id": "historical-runs-are-only-source-specific",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m6-008-packet.json",
+          "status": "passed"
+        },
+        {
+          "id": "tax-profile-and-dependent-adapter-remain-held",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-1-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-2-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-3-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-4-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-5-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-6-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-7-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-8-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-9-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-task-retains-accountable-review",
+          "status": "passed"
+        },
+        {
+          "id": "only-task-allowed-paths",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/practiceFinancialReport.ts",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/practiceMoney.ts",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/practiceBilling.ts",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/locationContext.ts",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/administrativeEdition.ts",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/entitlement.ts",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-contract-baseline",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-boundary-rejects:external_transport",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-boundary-rejects:live_money",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-boundary-rejects:tax_invoice",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-boundary-rejects:tax_exempt",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-boundary-rejects:provider_payout",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-boundary-rejects:saas_netting",
+          "status": "passed"
+        }
+      ],
+      "exit_code": 0,
+      "result": "passed-blocked-disposition-and-pure-contract-only",
+      "runtime_journey_acceptance": "unrun-for-exact-candidate",
+      "accountable_financial_review": "unavailable",
+      "commercial_launch": "unapproved",
+      "legal_or_provider_authority_granted": false,
+      "full_task_acceptance": false
+    },
+    "own_actual_SQL_browser_acceptance": "unrun for this source",
+    "accountable_financial_review": "unavailable",
+    "full_task_acceptance": false
+  },
+  "parent_c724_runtime_observation": {
+    "observed_at_utc": "2026-10-26T15:16:13.365576+00:00",
+    "source_head": "c724915b37bae9a54891dbfa490823dab2c36c8d",
+    "run_id": 40345633850,
+    "sql_job": 121651685000,
+    "sql_job_status": "completed-success",
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40345633850/job/121651685000",
+    "detailed_counts_and_artifact_acquisition": "not yet parsed; await completed whole run archive",
+    "doctor_and_shared_browser": "in progress when observed; no GUI/full-CI qualification"
+  }
 }
