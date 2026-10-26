@@ -2,7 +2,7 @@
   "schema": "doctor-clinical-governance-evidence/v1",
   "task_id": "DOS-M7-003",
   "parent_pr": 503,
-  "parent_head": "70a38324c72a6365aafe4b9163f4ed180a465654",
+  "parent_head": "5f2e63372a0efba75f7d0708e9b270bdddbfda3a",
   "candidate_binding": "evaluated-committed-head",
   "decision_id": "DOS-M7-GATE-REAL-DATA",
   "gate_state": "OPEN",
