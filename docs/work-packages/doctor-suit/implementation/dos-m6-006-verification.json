@@ -1,6 +1,6 @@
 {
   "task_id": "DOS-M6-006",
-  "recorded_at_utc": "2026-10-26T12:24:00.248543+00:00",
+  "recorded_at_utc": "2026-10-26T13:14:44.176940+00:00",
   "parent_pr": 491,
   "cut_parent": "256e868912cb2e488d82b84722b41a27e1f81b47",
   "draft_pr": 492,
@@ -16,7 +16,7 @@
       "--test",
       "apps/doctor-suit/tests/unit/dos-m6-006.test.mjs"
     ],
-    "passed": 24,
+    "passed": 25,
     "failed": 0,
     "skipped": 0
   },
@@ -81,7 +81,7 @@
   },
   "source_sha256": {
     "apps/doctor-suit/app/utils/practiceBilling.ts": "86e467cdc91324d06811fe4b9adb0051c993ff2b09589dc7d76ccc65ed603f20",
-    "apps/doctor-suit/tests/unit/dos-m6-006.test.mjs": "f2c316e80e8873055f68228bf62a6ca5aaec144e2528e8a86e1d00d6540f0b71",
+    "apps/doctor-suit/tests/unit/dos-m6-006.test.mjs": "896b569a53316433203cd19f0c1c2c55bb53472f21d37d267b743b14d918c97e",
     "apps/doctor-suit/supabase/migrations/20261025221605_doctor_practice_price_charge_snapshots.sql": "5729c46b299ebad9564f148916080f688a06fd4a94df0f2964a09cac280cd707",
     "apps/doctor-suit/supabase/tests/dos-m6-006.sql": "74de370b078b6e7ec7866ee7b804109bfbed1ab297261161ad13c748b61ce264",
     "apps/doctor-suit/tests/disposable-postgres.mjs": "3fcdffb3b99c52021d2135d18960670616e44ac7869064e7e214df703e84b60d",
@@ -89,7 +89,7 @@
     "apps/doctor-suit/supabase/migrations/20261026101913_doctor_practice_billing_board.sql": "748292349221f5104388bb4f2b12e27247f4d968e143ea851c8b1e2b73b4eb7a",
     "apps/doctor-suit/app/utils/practiceBillingBoard.ts": "74a89504fa46b31bb09df741efe69d5117b4bc34034d3ef7adddc94f06c7720c",
     "apps/doctor-suit/app/utils/practiceBillingController.ts": "936692e3dba1606c5fcf1015a1fe8b1e7309cdbc87bd806a51077babfa6210c1",
-    "apps/doctor-suit/app/utils/practiceBillingRepository.ts": "01f5b1908f1de7cf2e51108878f2240469b773dbcee7bd11ed6eab15719a347b",
+    "apps/doctor-suit/app/utils/practiceBillingRepository.ts": "e9177fd96c20f4f578cdc3a426a5feb9fd9ab61e30a7a083a41b491dd8409332",
     "apps/doctor-suit/app/utils/practiceBillingPresentation.ts": "9783adb757dddf2760bc1e53f6f16e4e129acfc9c17da502135fb0a8561f1b33",
     "apps/doctor-suit/app/composables/useDoctorPracticeBilling.ts": "718eeff13cfe819a09cb9cf49dd10561fa458b9b8771d21520d9c0ca72c8de43",
     "apps/doctor-suit/app/pages/practice-billing.vue": "2e4cfff8247ca71fb6cb16f03a122c84032388fb5bec1bb86af82cbac04fe0e1",
@@ -122,7 +122,7 @@
       "DOS-M6-005",
       "DOS-M6-006"
     ],
-    "passed": 46,
+    "passed": 47,
     "failed": 0,
     "skipped": 0
   },
@@ -242,5 +242,50 @@
     "cleanup": "audited account resume, edition restoration and admission revocation in one owned SQL transaction",
     "runtime_acceptance": "unrun-at-new-source-await-owned-CI",
     "root": "prior2497/2420/54/23 at8c1 retained; diagnostic/fixture-only focused follow-up, not a new full-root pass"
+  },
+  "clinic_page_repair": {
+    "before": {
+      "owned_passed": 24,
+      "owned_failed": 1
+    },
+    "after": {
+      "owned_passed": 25,
+      "combined_003_004_005_006_passed": 47,
+      "scoped_lint": "passed",
+      "doctor_types": "passed"
+    },
+    "defect": "one-based UI page sent unchanged to existing zero-based doctor_locations RPC; page1 skipped first25 clinics and hid billing creation controls",
+    "repair": "validate UI page; translate page-1 only in billing adapter; enforce full returned-page count",
+    "regression": "one-clinic and26-clinic fixtures, both page boundaries and no invalid-page RPC",
+    "runtime_after_repair": "unrun-await-new-owned-CI",
+    "other_directory_consumers": "unchanged"
+  },
+  "descendant_259_runtime_reference": {
+    "run_id": 40323046338,
+    "head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+    "completed_at": "2026-10-26T13:00:59Z",
+    "sql_job": 121572593826,
+    "full_suites": 66,
+    "full_assertions": 2120,
+    "own006_sql_passed": 57,
+    "billing_transactions": 7,
+    "money_transactions": 8,
+    "recovery_fingerprints": 95,
+    "generated_schema": "success; acquisition unqualified",
+    "browser_job": 121572594259,
+    "public": 60,
+    "protocol": 87,
+    "stress": 4,
+    "financial003_AR": "passed",
+    "financial003_EN_004_EN_AR": "failed-notice_row-detail-heading",
+    "financial006_EN_AR": "timedOut-price_create",
+    "financial007_EN_AR": "timedOut-route-dependent-source-missing",
+    "provider_failure_stage": "actual M6 financial subprocess assertions",
+    "later_lifecycle_hook": "unreached",
+    "shared_job": 121572594275,
+    "shared_auth_passed": 48,
+    "settings_passed": 6,
+    "settings_failed": 6,
+    "aggregate": "failure"
   }
 }

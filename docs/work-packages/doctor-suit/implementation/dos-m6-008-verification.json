@@ -2,7 +2,7 @@
   "task_id": "DOS-M6-008",
   "pr": 498,
   "parent_pr": 495,
-  "parent_head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+  "parent_head": "622a1f523aa0b9bfeb7beadbcedd22647ac4d2d4",
   "scope": "exact-candidate-document-and-pure-contract-boundary-only",
   "independent_receipt": {
     "schema": "doctor-tax-independent-verifier/v1",
@@ -224,9 +224,9 @@
   },
   "root": {
     "status": "inherited-product-identical-parent-baseline-not-repeated-for-evidence-only-task",
-    "source": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
-    "total": 2516,
-    "passed": 2439,
+    "source": "622a1f523aa0b9bfeb7beadbcedd22647ac4d2d4",
+    "total": 2517,
+    "passed": 2440,
     "failed": 54,
     "skipped": 23,
     "failure_locations": "unchanged-Shop"
@@ -237,5 +237,7 @@
   "tax_submission": "disabled",
   "compliance_badge": "disabled",
   "task_acceptance": false,
-  "final_candidate_rule": "Re-run verifier on each committed publication head; preserve its execution ID/base/head/result in PR description. This stored receipt belongs only to f60f777a."
+  "final_candidate_rule": "Re-run verifier on each committed publication head; preserve its execution ID/base/head/result in PR description. This stored receipt belongs only to f60f777a.",
+  "prior_parent_head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+  "parent_refresh": "Published495 includes actual ledger SQL acceptance and tested clinic-page repair; no tax authority gained. Earlier f60 and8b receipts remain exact-source only; final refreshed candidate must run verifier again."
 }
