@@ -71,10 +71,11 @@ select is(pg_temp.report('charges',1,'all',null,null,(select(value->>'created_at
 select is(pg_temp.report()->'items'->0->>'source_revision','3','trace names exact current revision, not historical time ordering');
 reset role;
 -- Thirty additional synthetic charges across three separate currency/scale groups.
+-- Keep their visit windows clear of the earlier day-one appointments; exclusion constraints remain enabled.
 insert into public.doctor_service_price_versions(id,service_id,revision,practice_id,location_id,doctor_user_id,label,unit_minor,currency,currency_exponent,actor_user_id)
 select pg_temp.id(800+n),pg_temp.id(810+n),1,pg_temp.id(21),pg_temp.id(31),pg_temp.id(1),'Synthetic paged service',100,case when n=2 then'USD'else'EGP'end,case when n=3 then 0 else 2 end,pg_temp.id(1)from generate_series(1,3)n;
 insert into public.appointments(id,practice_id,doctor_user_id,location_id,patient_id,starts_at,ends_at,timezone,location_name,created_by)
-select pg_temp.id(900+n),pg_temp.id(21),pg_temp.id(1),pg_temp.id(31),pg_temp.id(51),now()+n*interval'1 hour',now()+n*interval'1 hour'+interval'20 minutes','Etc/UTC','Synthetic clinic A',pg_temp.id(1)from generate_series(1,30)n;
+select pg_temp.id(900+n),pg_temp.id(21),pg_temp.id(1),pg_temp.id(31),pg_temp.id(51),now()+interval'60 days'+n*interval'1 hour',now()+interval'60 days'+n*interval'1 hour'+interval'20 minutes','Etc/UTC','Synthetic clinic A',pg_temp.id(1)from generate_series(1,30)n;
 insert into public.doctor_visit_charge_versions(id,charge_id,revision,previous_id,practice_id,location_id,doctor_user_id,visit_id,visit_version,patient_id,price_id,service_id,label,unit_minor,quantity,amount_minor,currency,currency_exponent,reason,created_at,actor_user_id)
 select pg_temp.id(1000+n),pg_temp.id(1100+n),1,null,pg_temp.id(21),pg_temp.id(31),pg_temp.id(1),pg_temp.id(900+n),1,pg_temp.id(51),pg_temp.id(800+(n-1)/10+1),pg_temp.id(810+(n-1)/10+1),'Synthetic paged service',100,1,100,case when n between 11 and 20 then'USD'else'EGP'end,case when n>20 then 0 else 2 end,'Synthetic reporting cohort','2026-10-15T00:00:00Z',pg_temp.id(1)from generate_series(1,30)n;
 set local role authenticated;select pg_temp.claim(1);
