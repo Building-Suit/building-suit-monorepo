@@ -1,0 +1,368 @@
+{
+  "schema": "doctor-hosting-evidence/v1",
+  "task_id": "DOS-M7-002",
+  "parent_pr": 502,
+  "parent_head": "e62415f79b4d5a1b150024f7e8609df8e8ca7a07",
+  "decision_id": "DOS-M7-GATE-HOSTING",
+  "candidate_binding": "evaluated-committed-head",
+  "gate_state": "OPEN",
+  "full_task_acceptance": false,
+  "legal_review_receipt": null,
+  "hosting_decision": null,
+  "inventory": [
+    {
+      "id": "browser",
+      "title": "Doctor web browser",
+      "proposed": "Proposed Vercel delivery/SSR and browser device",
+      "payload_boundary": "Account/session and authorized synthetic practice/document responses; no clinical data in URL",
+      "limitation": "No hosted deployment inspected",
+      "actual_supplier_entity": null,
+      "actual_account": null,
+      "actual_region": null,
+      "verified_subprocessors": null,
+      "executed_contract": null,
+      "approved_transfer_basis": null,
+      "approved_retention": null,
+      "support_authority": null,
+      "accountable_approval": null
+    },
+    {
+      "id": "android",
+      "title": "Existing separate synthetic Android clinician shell",
+      "proposed": "Device OS plus proposed Doctor backend",
+      "payload_boundary": "Encrypted native Auth storage only; no clinical chart cache, offline write queue or autonomous sync",
+      "limitation": "No new native integration or distribution",
+      "actual_supplier_entity": null,
+      "actual_account": null,
+      "actual_region": null,
+      "verified_subprocessors": null,
+      "executed_contract": null,
+      "approved_transfer_basis": null,
+      "approved_retention": null,
+      "support_authority": null,
+      "accountable_approval": null
+    },
+    {
+      "id": "ssr",
+      "title": "Doctor SSR/application",
+      "proposed": "Proposed Vercel; no approved account or execution/edge regions",
+      "payload_boundary": "Request-scoped identity; authorized view projections; query/token/access-log handling needs review",
+      "limitation": "Global edge distribution does not prove data residency",
+      "actual_supplier_entity": null,
+      "actual_account": null,
+      "actual_region": null,
+      "verified_subprocessors": null,
+      "executed_contract": null,
+      "approved_transfer_basis": null,
+      "approved_retention": null,
+      "support_authority": null,
+      "accountable_approval": null
+    },
+    {
+      "id": "auth-db",
+      "title": "Doctor Auth and private application database",
+      "proposed": "Proposed independent Supabase production/staging pair",
+      "payload_boundary": "Product/environment-scoped sessions; separate patient identity, doctor relationship, encounter and independent staff grants",
+      "limitation": "Repository Doctor hosted refs blank; user-managed live state unverified",
+      "actual_supplier_entity": null,
+      "actual_account": null,
+      "actual_region": null,
+      "verified_subprocessors": null,
+      "executed_contract": null,
+      "approved_transfer_basis": null,
+      "approved_retention": null,
+      "support_authority": null,
+      "accountable_approval": null
+    },
+    {
+      "id": "documents",
+      "title": "Guarded document function and private Storage",
+      "proposed": "Proposed Doctor Supabase Functions/Storage",
+      "payload_boundary": "Version-bound synthetic document bytes; fresh authorization and released-document checks; no public chart bucket",
+      "limitation": "Storage location, function region and download/support telemetry unapproved",
+      "actual_supplier_entity": null,
+      "actual_account": null,
+      "actual_region": null,
+      "verified_subprocessors": null,
+      "executed_contract": null,
+      "approved_transfer_basis": null,
+      "approved_retention": null,
+      "support_authority": null,
+      "accountable_approval": null
+    },
+    {
+      "id": "account-mail",
+      "title": "Account verification mail",
+      "proposed": "Unselected SMTP/mail processors",
+      "payload_boundary": "Account verification purpose only; no patient reminder or clinical content",
+      "limitation": "No approved account/region/subprocessor/DPA",
+      "actual_supplier_entity": null,
+      "actual_account": null,
+      "actual_region": null,
+      "verified_subprocessors": null,
+      "executed_contract": null,
+      "approved_transfer_basis": null,
+      "approved_retention": null,
+      "support_authority": null,
+      "accountable_approval": null
+    },
+    {
+      "id": "outbox",
+      "title": "Persisted neutral patient reminder outbox",
+      "proposed": "Doctor database plus synthetic-only transport",
+      "payload_boundary": "Purpose-specific contact/guardian checks at dispatch; queued/claimed/sent/delivered/failed/unknown; acceptance separate from acknowledgement",
+      "limitation": "No approved external provider/account/channel; M3-007 held",
+      "actual_supplier_entity": null,
+      "actual_account": null,
+      "actual_region": null,
+      "verified_subprocessors": null,
+      "executed_contract": null,
+      "approved_transfer_basis": null,
+      "approved_retention": null,
+      "support_authority": null,
+      "accountable_approval": null
+    },
+    {
+      "id": "financial",
+      "title": "Separate SaaS and practice synthetic financial ledgers",
+      "proposed": "Doctor database; no real transfer provider",
+      "payload_boundary": "Subscription settlement independent from patient collections/refunds; no clinical payload in payment reference",
+      "limitation": "Real beneficiary, provider, financial/legal/tax approvals held",
+      "actual_supplier_entity": null,
+      "actual_account": null,
+      "actual_region": null,
+      "verified_subprocessors": null,
+      "executed_contract": null,
+      "approved_transfer_basis": null,
+      "approved_retention": null,
+      "support_authority": null,
+      "accountable_approval": null
+    },
+    {
+      "id": "observability",
+      "title": "Logs, metrics, error reporting and analytics",
+      "proposed": "No Doctor hosted destination/subprocessor approved",
+      "payload_boundary": "Owned CI reporter permits fixed task/case/status/phase/count/boolean coordinates only; production request/access/error telemetry unverified",
+      "limitation": "No approval for sensitive analytics, session replay, token/query or document-body capture",
+      "actual_supplier_entity": null,
+      "actual_account": null,
+      "actual_region": null,
+      "verified_subprocessors": null,
+      "executed_contract": null,
+      "approved_transfer_basis": null,
+      "approved_retention": null,
+      "support_authority": null,
+      "accountable_approval": null
+    },
+    {
+      "id": "ci",
+      "title": "Owned disposable synthetic CI",
+      "proposed": "GitHub Actions and owned ephemeral services",
+      "payload_boundary": "Synthetic fixtures, bounded redacted receipts and generated schema; no real patient database",
+      "limitation": "CI region, artifact retention/access and transfer contracts need accountable review before real data",
+      "actual_supplier_entity": null,
+      "actual_account": null,
+      "actual_region": null,
+      "verified_subprocessors": null,
+      "executed_contract": null,
+      "approved_transfer_basis": null,
+      "approved_retention": null,
+      "support_authority": null,
+      "accountable_approval": null
+    },
+    {
+      "id": "backups",
+      "title": "Database/Storage backups and recovery",
+      "proposed": "No Doctor hosted backup/replica account or region approved",
+      "payload_boundary": "Encrypted isolated database restore evidence is synthetic; Storage-byte recovery, schedules, RPO/RTO and retention unapproved",
+      "limitation": "A successful synthetic restore does not approve production disaster recovery",
+      "actual_supplier_entity": null,
+      "actual_account": null,
+      "actual_region": null,
+      "verified_subprocessors": null,
+      "executed_contract": null,
+      "approved_transfer_basis": null,
+      "approved_retention": null,
+      "support_authority": null,
+      "accountable_approval": null
+    },
+    {
+      "id": "support",
+      "title": "Operator/provider support and break-glass",
+      "proposed": "No approved support personnel, territories or subprocessors",
+      "payload_boundary": "Purpose, scoped authority, time limit, audit and revocation required; privileged key possession grants no clinical purpose",
+      "limitation": "No operator clinical access is authorized by this packet",
+      "actual_supplier_entity": null,
+      "actual_account": null,
+      "actual_region": null,
+      "verified_subprocessors": null,
+      "executed_contract": null,
+      "approved_transfer_basis": null,
+      "approved_retention": null,
+      "support_authority": null,
+      "accountable_approval": null
+    },
+    {
+      "id": "partner",
+      "title": "Future healthcare/external processors",
+      "proposed": "Unselected; no approved integration",
+      "payload_boundary": "Any future referral, patient/caregiver endpoint or healthcare transfer requires new exact-scope review",
+      "limitation": "Synthetic caregiver preview is memory-only; no actual patient access inferred",
+      "actual_supplier_entity": null,
+      "actual_account": null,
+      "actual_region": null,
+      "verified_subprocessors": null,
+      "executed_contract": null,
+      "approved_transfer_basis": null,
+      "approved_retention": null,
+      "support_authority": null,
+      "accountable_approval": null
+    }
+  ],
+  "flows": [
+    {
+      "id": "document",
+      "steps": [
+        "browser",
+        "ssr",
+        "auth-db",
+        "documents",
+        "browser"
+      ],
+      "side_destinations": [
+        "observability",
+        "backups",
+        "support"
+      ],
+      "boundary": "Synthetic relationship and released document only; fresh owner/staff authorization and exact version on download. Native/patient/caregiver release needs independent authority."
+    },
+    {
+      "id": "reminder",
+      "steps": [
+        "browser",
+        "ssr",
+        "auth-db",
+        "outbox",
+        "auth-db"
+      ],
+      "side_destinations": [
+        "observability",
+        "backups",
+        "support"
+      ],
+      "boundary": "Persist queue, recheck current purpose consent and guardian at dispatch, suppress after withdrawal; persist synthetic acceptance separately from acknowledgement; unknown never implies delivered or blind resend. External delivery disabled."
+    },
+    {
+      "id": "account-verification",
+      "steps": [
+        "browser",
+        "ssr",
+        "auth-db",
+        "account-mail",
+        "browser"
+      ],
+      "side_destinations": [
+        "observability",
+        "support"
+      ],
+      "boundary": "Auth-only purpose; no reuse of account verification as patient contact consent or staff/clinical authority."
+    },
+    {
+      "id": "android-auth",
+      "steps": [
+        "android",
+        "auth-db",
+        "android"
+      ],
+      "side_destinations": [
+        "observability",
+        "support"
+      ],
+      "boundary": "Existing shell/Auth scope only; no clinical cache/offline replay or new SDK/provider action."
+    },
+    {
+      "id": "synthetic-money",
+      "steps": [
+        "browser",
+        "ssr",
+        "auth-db",
+        "financial",
+        "auth-db"
+      ],
+      "side_destinations": [
+        "observability",
+        "backups",
+        "support"
+      ],
+      "boundary": "SaaS and practice ledgers separate; only synthetic transport/receipts. No financial/tax or provider approval."
+    },
+    {
+      "id": "ci-recovery",
+      "steps": [
+        "ci",
+        "auth-db",
+        "backups",
+        "ci"
+      ],
+      "side_destinations": [
+        "observability"
+      ],
+      "boundary": "Owned disposable synthetic database only; no production map or Storage byte recovery claim."
+    }
+  ],
+  "data_flow_sha256": "4adf988816e705dcf931278524d777775faaef6d6d1e170a414697c7e58b83fe",
+  "environment_evidence": {
+    "repository_refs": "blank Doctor hosted refs",
+    "actual_hosted_state": "unverified",
+    "other_product_refs_reused": false
+  },
+  "dependent_actions": {
+    "provisioning": false,
+    "region_selection": false,
+    "provider_purchase": false,
+    "real_patient_processing": false,
+    "external_delivery": false,
+    "native_clinical_integration": false,
+    "production_backup": false,
+    "support_clinical_access": false
+  },
+  "cases": {
+    "DOS-M7-002-C01": "unavailable-accountable-hosting-review",
+    "DOS-M7-002-C02": "unavailable-accountable-hosting-review",
+    "DOS-M7-002-C03": "unavailable-accountable-hosting-review",
+    "DOS-M7-002-C04": "unavailable-accountable-hosting-review"
+  },
+  "public_references": [
+    {
+      "url": "https://supabase.com/docs/guides/platform/regions",
+      "observed_at": "2026-10-26",
+      "scope": "Public region options; no Doctor location assertion",
+      "customer_specific_evidence": false
+    },
+    {
+      "url": "https://supabase.com/legal/customer-resources/data-processing-addendum",
+      "observed_at": "2026-10-26",
+      "scope": "Public DPA version 1 dated August 1 2026; no verified Doctor executed contract",
+      "customer_specific_evidence": false
+    },
+    {
+      "url": "https://vercel.com/docs/regions",
+      "observed_at": "2026-10-26",
+      "scope": "Public global network/regions information; no account-specific routing/location evidence",
+      "customer_specific_evidence": false
+    },
+    {
+      "url": "https://vercel.com/legal/dpa",
+      "observed_at": "2026-10-26",
+      "scope": "Public DPA last updated March 17 2026/effective March 31 2026; no Doctor executed agreement",
+      "customer_specific_evidence": false
+    }
+  ],
+  "approval_evidence_required": [
+    "Authenticated accountable reviewer identity/role/date and genuine legal prerequisite",
+    "Exact candidate and flow digest; enumerated component accounts/regions including logs, CDN, support, backup and subprocessors",
+    "Executed customer-specific contracts, processor/subprocessor and transfer reviews with authoritative applicable legal references",
+    "Approved minimization/retention/access/deletion/support controls and explicit accept/reject decision",
+    "Scope expiry/change triggers and independent verification before dependent actions"
+  ]
+}
