@@ -8,7 +8,13 @@ export interface ChargeWrite { visitId: string; visitVersion: number; patientId:
 export function practiceBillingRepository(client: PracticeBillingClient) {
  async function rpc(name: Parameters<PracticeBillingClient['rpc']>[0], args: Record<string, unknown>, signal: AbortSignal) { const { data, error } = await client.rpc(name, args).abortSignal(signal); if (error) throw error; return data }
  return {
-  async locations(practiceId: string, page: number, signal: AbortSignal) { return doctorLocationDirectory(await rpc('doctor_locations', { p_practice: practiceId, p_page: page, p_size: 25, p_search: '' }, signal), practiceId) },
+  async locations(practiceId: string, page: number, signal: AbortSignal) {
+   if (!Number.isSafeInteger(page) || page < 1 || page > 1000000) throw Error('DOCTOR_BILLING_QUERY_INVALID')
+   // The billing view is one-based; the established directory RPC is zero-based.
+   const result = doctorLocationDirectory(await rpc('doctor_locations', { p_practice: practiceId, p_page: page - 1, p_size: 25, p_search: '' }, signal), practiceId)
+   if (result.rows.length !== Math.min(25, Math.max(result.total - (page - 1) * 25, 0))) throw Error('DOCTOR_BILLING_QUERY_INVALID')
+   return result
+  },
   async board(scope: PracticeBillingScope, pages: BillingPages, signal: AbortSignal) { const owner = Object.freeze({ ...scope }), selected = Object.freeze({ ...pages }); const data = await rpc('doctor_practice_billing_board', { p_practice: owner.practiceId, p_location: owner.locationId, p_price_page: selected.prices, p_charge_page: selected.charges, p_visit_page: selected.visits }, signal); return practiceBillingBoard(data, owner, selected) },
   async history(scope: PracticeBillingScope, selected: VisitChargeVersion, before: number | null, signal: AbortSignal) { const owner = Object.freeze({ ...scope }), charge = Object.freeze({ ...selected }); const data = await rpc('doctor_visit_charge_history', { p_practice: owner.practiceId, p_location: owner.locationId, p_charge: charge.chargeId, p_before_revision: before }, signal); return chargeHistory(data, owner, charge, before) },
   async price(scope: PracticeBillingScope, input: PriceWrite, key: string, signal: AbortSignal) {
