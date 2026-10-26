@@ -1,3 +1,4 @@
+import{verifyPracticeMoneyConcurrency}from'./practice-money-concurrency.mjs'
 import { verifyPracticeBillingConcurrency } from './practice-billing-concurrency.mjs'
 import { verifySaasLifecycleRequestConcurrency } from './saas-lifecycle-request-concurrency.mjs'
 import{verifyReportsConcurrency}from'./reports-concurrency.mjs'
@@ -152,6 +153,7 @@ try {
   await verifyManualPaymentConcurrency(container)
   await verifySaasLifecycleRequestConcurrency(container)
   await verifyPracticeBillingConcurrency(container)
+  await verifyPracticeMoneyConcurrency(container)
   await verifyDoctorIsolatedRecovery(container)
   }
   if (generate.length) {

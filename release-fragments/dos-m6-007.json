@@ -2,12 +2,50 @@
   "id": "dos-m6-007",
   "task": "DOS-M6-007",
   "suits": [
-    "doctor-suit"
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
   ],
   "classification": "internal",
   "disposition": "internal",
   "paths": [
-    "docs/work-packages/doctor-suit/implementation/dos-m6-007.md"
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/doctor-suit/app/composables/useDoctorPracticeMoney.ts",
+    "apps/doctor-suit/app/pages/practice-payments.vue",
+    "apps/doctor-suit/app/plugins/doctor-auth.ts",
+    "apps/doctor-suit/app/types/doctorAuth.d.ts",
+    "apps/doctor-suit/app/utils/practiceBillingPresentation.ts",
+    "apps/doctor-suit/app/utils/practiceMoney.ts",
+    "apps/doctor-suit/app/utils/practiceMoneyController.ts",
+    "apps/doctor-suit/app/utils/practiceMoneyPresentation.ts",
+    "apps/doctor-suit/app/utils/practiceMoneyRepository.ts",
+    "apps/doctor-suit/supabase/migrations/20261026113807_doctor_practice_collections_refunds.sql",
+    "apps/doctor-suit/supabase/tests/dos-m6-007.sql",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m6-007.spec.ts",
+    "apps/doctor-suit/tests/e2e/financial-reporter.mjs",
+    "apps/doctor-suit/tests/e2e/playwright.config.ts",
+    "apps/doctor-suit/tests/e2e/playwright.financial.config.ts",
+    "apps/doctor-suit/tests/financial-browser-acceptance.mjs",
+    "apps/doctor-suit/tests/manual-payments-browser.mjs",
+    "apps/doctor-suit/tests/practice-billing-actual-provider.mjs",
+    "apps/doctor-suit/tests/practice-money-actual-provider.mjs",
+    "apps/doctor-suit/tests/practice-money-concurrency.mjs",
+    "apps/doctor-suit/tests/unit/dos-m6-007.test.mjs",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-007-verification.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-007.md",
+    "docs/work-packages/doctor-suit/implementation/m6-continuation.md",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsPracticeBillingPage.vue",
+    "packages/ui/src/templates/BsPracticeMoneyPage.vue",
+    "packages/ui/src/utils/practiceBillingPresentation.ts",
+    "packages/ui/src/utils/practiceMoneyPresentation.ts"
   ],
-  "reason": "Doctor-only synthetic collections/refunds implementation scope and evidence; no operational registration, real money or financial authority."
+  "reason": "Doctor-only synthetic collection/refund ledger and shared complete page/catalogue contract; affected shared consumers classified, no visible operational-consumer change or Doctor activation, real funds or tax authority."
 }

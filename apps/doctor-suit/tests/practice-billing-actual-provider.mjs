@@ -1,3 +1,4 @@
+import { preparePracticeMoneyReadonly } from './practice-money-actual-provider.mjs'
 // Only called inside the owned actual-provider lifecycle. Credentials and financial fixtures stay in memory.
 import { randomUUID } from 'node:crypto'
 export async function preparePracticeBillingBrowser({ sql, a, b, rpc, expect, setStage }) {
@@ -20,7 +21,8 @@ export async function preparePracticeBillingBrowser({ sql, a, b, rpc, expect, se
  setStage('actual billing fixture readonly service price');
  const price = await rpc(b.client, 'doctor_write_service_price', { p_practice: b.scope.practiceId, p_location: b.scope.locationId, p_service: null, p_revision: 0, p_label: reference + '-READONLY', p_minor: '12345', p_currency: 'EGP', p_exponent: 2, p_key: randomUUID() })
  setStage('actual billing fixture readonly charge');
- await rpc(b.client, 'doctor_write_visit_charge', { p_practice: b.scope.practiceId, p_location: b.scope.locationId, p_visit: readonlyVisit, p_visit_version: 1, p_patient: b.scope.patientId, p_price: price.id, p_quantity: 1, p_charge: null, p_revision: 0, p_reason: 'SYNTHETIC_READONLY_HISTORY_FIXTURE', p_key: randomUUID() })
+ const readonlyCharge = await rpc(b.client, 'doctor_write_visit_charge', { p_practice: b.scope.practiceId, p_location: b.scope.locationId, p_visit: readonlyVisit, p_visit_version: 1, p_patient: b.scope.patientId, p_price: price.id, p_quantity: 1, p_charge: null, p_revision: 0, p_reason: 'SYNTHETIC_READONLY_HISTORY_FIXTURE', p_key: randomUUID() })
+ await preparePracticeMoneyReadonly({b,charge:readonlyCharge,rpc,expect,setStage})
  setStage('actual billing fixture readonly account hold');
  sql(`update public.doctor_saas_accounts set state='suspended',revision=revision+1,reason_code='operator_hold'where subscriber_user_id='${b.user.id}';`)
  setStage('actual billing fixture inactive history board');

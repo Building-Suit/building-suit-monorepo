@@ -821,6 +821,16 @@
       "adapterBoundary": "Controlled price/charge fields, typed read-only rows, current ownership/entitlement projections, cursor history and semantic commands. Doctor owns authorization, exact money, immutable versions, source binding and request receipts. No collection, clinical or tax authority.",
       "task": "DOS-M6-006",
       "migrationStatus": "implemented-source; actual acceptance in progress"
+    },
+    {
+      "family": "practice-synthetic-collections-and-refund-reconciliation",
+      "owner": "packages/ui",
+      "components": [
+        "BsPracticeMoneyPage"
+      ],
+      "adapterBoundary": "Typed monetary/source/status rows, explicit same-request recovery and semantic financial actions. Doctor owns fresh owner authority, source/version binding, exact money, persisted reservations, immutable receipts and acceptance-based reconciliation. No external money movement or tax authority.",
+      "task": "DOS-M6-007",
+      "migrationStatus": "implemented-source; actual acceptance in progress"
     }
   ]
 }
