@@ -7,16 +7,16 @@ const emit = defineEmits<{ priceOverride: [id: string, value: string]; priceReas
 const root = ref<HTMLElement | null>(null)
 const heading = ref<{ $el: HTMLElement } | null>(null)
 const customer = ref<{ focus: () => void } | null>(null)
-const { available, update } = useViewportSpace(() => root.value, 24, () => document.querySelector<HTMLElement>('[data-viewport-bottom]'))
+const { available, reveal } = useViewportSpace(() => root.value, 24, () => document.querySelector<HTMLElement>('[data-viewport-bottom]'))
 const locked = computed(() => props.view.checkingOut || props.view.confirming || props.view.locationChanged)
 function remove(id: string) { if (locked.value) return; const ids = props.cartLines.map(line => line.id); emit('remove', id); void focusAfterRecordRemoval(() => root.value, ids, id, () => heading.value?.$el.focus()) }
 function quantity(id: string, value: number) { if (locked.value) return; if (value <= 0) remove(id); else emit('quantity', id, value) }
 const optionalDetailsOpen = ref(false)
 watch(() => !props.cartLines.length, empty => { if (empty) optionalDetailsOpen.value = false })
 const wizard = usePointOfSaleCheckout(() => !props.cartLines.length, () => locked.value, () => heading.value?.$el.focus())
-async function focusCustomer() { optionalDetailsOpen.value = true; await wizard.select(2); await nextTick(); update(); customer.value?.focus() }
+async function focusCustomer() { optionalDetailsOpen.value = true; await wizard.select(2); await nextTick(); if (await reveal()) customer.value?.focus() }
 function checkout() { if (locked.value) return; if (wizard.step.value === 1) void wizard.select(2); else if (!props.view.checkoutDisabled) emit('checkout') }
-defineExpose({ checkout, focus: () => { update(); heading.value?.$el.focus() }, focusCustomer })
+defineExpose({ checkout, focus: async () => { if (await reveal()) heading.value?.$el.focus({ preventScroll: true }) }, focusCustomer })
 </script>
 <template>
   <section ref="root" class="bs-pos-cart" :style="available ? { '--bs-viewport-space': `${available}px` } : undefined" aria-labelledby="pos-cart-title">

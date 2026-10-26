@@ -19,7 +19,8 @@
     "packages/ui",
     "tooling/database/test-shop-measurement-local.mjs",
     "release-changes/items.json",
-    "apps/building-suit-docs/app/pages/components.vue"
+    "apps/building-suit-docs/app/pages/components.vue",
+    "packages/ux"
   ],
-  "reason": "Qualify exact GS1 parsing and canonical stock capacity, private capture authority, ordinary issuance revalidation and immutable original measurement evidence; generate actual database contracts and retain shared consumer qualification as a separate gate."
+  "reason": "Qualify exact GS1 parsing and canonical stock capacity, private capture authority, ordinary issuance revalidation and immutable original measurement evidence; generate actual database contracts and retain shared consumer qualification as a separate gate. Reveal the selected POS cart before measuring viewport space so tall offer content cannot clip mobile payment controls."
 }

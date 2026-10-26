@@ -3399,7 +3399,8 @@
       "apps/shop-suit/app/utils/pos.js",
       "apps/shop-suit/supabase/migrations/20261025214414_verified_gs1_weight_barcodes.sql",
       "packages/ui/src/organisms/BsPointOfSaleCart.vue",
-      "packages/ui/src/templates/BsPointOfSalePage.vue"
+      "packages/ui/src/templates/BsPointOfSalePage.vue",
+      "packages/ux/src/composables/useViewportSpace.ts"
     ],
     "reason": "Scan verified GS1 net-weight labels into separate measured sale lines while preserving literal barcode lookup and the existing authoritative sale, stock and return paths.",
     "notes": {
@@ -3412,8 +3413,8 @@
         "ar": "امسح ملصقات الكيلوغرام المدعومة وفق GS1 مع التحقق من هوية الصنف وحفظ الوزن الأصلي حتى إتمام البيع."
       },
       "details": {
-        "en": "Online scanning verifies the GTIN checksum and exact kilogram or gram quantity. Each captured label keeps its own line and original evidence; staff remove and rescan to change its weight. Existing fixed barcodes retain their meaning, and unsupported national or price-encoded formats require ordinary manual entry.",
-        "ar": "يتحقق المسح أثناء الاتصال من رقم تحقق GTIN والكمية الدقيقة بالكيلوغرام أو الغرام. يحتفظ كل ملصق ببند مستقل ودليله الأصلي؛ يُحذف البند ويُعاد المسح لتغيير الوزن. تحتفظ الباركودات الثابتة بمعناها، وتُدخل الكمية يدويًا للتنسيقات المحلية أو المشفّرة بالسعر غير المدعومة."
+        "en": "Online scanning verifies the GTIN checksum and exact kilogram or gram quantity. Each captured label keeps its own line and original evidence; staff remove and rescan to change its weight. Existing fixed barcodes retain their meaning, and unsupported national or price-encoded formats require ordinary manual entry. Selecting the cart reveals enough space for payment controls when offers appear above it.",
+        "ar": "يتحقق المسح أثناء الاتصال من رقم تحقق GTIN والكمية الدقيقة بالكيلوغرام أو الغرام. يحتفظ كل ملصق ببند مستقل ودليله الأصلي؛ يُحذف البند ويُعاد المسح لتغيير الوزن. تحتفظ الباركودات الثابتة بمعناها، وتُدخل الكمية يدويًا للتنسيقات المحلية أو المشفّرة بالسعر غير المدعومة. يُظهر اختيار السلة مساحة كافية لأزرار وحقول الدفع عند وجود عروض فوقها."
       }
     },
     "sources": [
@@ -3451,9 +3452,10 @@
       "packages/ui",
       "tooling/database/test-shop-measurement-local.mjs",
       "release-changes/items.json",
-      "apps/building-suit-docs/app/pages/components.vue"
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ux"
     ],
-    "reason": "Qualify exact GS1 parsing and canonical stock capacity, private capture authority, ordinary issuance revalidation and immutable original measurement evidence; generate actual database contracts and retain shared consumer qualification as a separate gate.",
+    "reason": "Qualify exact GS1 parsing and canonical stock capacity, private capture authority, ordinary issuance revalidation and immutable original measurement evidence; generate actual database contracts and retain shared consumer qualification as a separate gate. Reveal the selected POS cart before measuring viewport space so tall offer content cannot clip mobile payment controls.",
     "sources": [
       "ss-electrical-weight-barcode-qualification-20261025"
     ]
