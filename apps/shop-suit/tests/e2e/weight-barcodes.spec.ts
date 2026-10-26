@@ -75,6 +75,8 @@ for (const locale of ['en', 'ar']) test(`verified weight labels, fixed precedenc
   await page.keyboard.press('F4')
   await page.getByRole('button', { name: ar ? 'بدون عميل — بيع كاونتر مسدد بالكامل' : 'No customer — fully paid counter sale', exact: true }).click()
   await expect(cart.getByRole('button', { name: ar ? /^حصّل / : /^Pay / })).toBeEnabled()
+  await expectNoPageOverflow(page)
+  await page.screenshot({ path: test.info().outputPath('verified-weight-payment.png'), fullPage: true })
   await page.keyboard.press('F8')
   await expect.poll(() => attempts).toBe(1)
   await expect(page.getByRole('dialog')).toHaveCount(0)

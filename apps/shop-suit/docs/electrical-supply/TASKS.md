@@ -638,16 +638,16 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E5 / P2 / Shop feature.
 - Dependencies: SS-ELEC-204, SS-ELEC-209.
-- Status: IN_PROGRESS.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Support only verified GS1/market variable-measure formats with checksums and bounded values; normal barcodes unchanged.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Support only verified GS1/market variable-measure formats with checksums and bounded values; normal barcodes unchanged. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: BARCODES.md. Full116-migration replay passes22 selected SQL suites, both merchant journeys and eight inherited races. Eight POS/barcode unit cases and Shop typecheck/build pass; final browser, root and release qualification in progress.
-- PR / commit: Child `codex/shop-suit/weight-barcodes` starts from published #490 atc7bc466b; source not yet published.
-- Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Evidence: BARCODES.md. Full116-migration replay passes22 selected SQL suites, both merchant journeys and eight inherited races. Eight POS/barcode units, root2038/2061 (zero failures,23 skips), Shop build/typecheck, Docs typecheck, app/shared lint, strict120-template ownership and committed release coverage pass. All13 final built EN/AR barcode/retail/reel/trade cases pass, including stock shared with offers/manual lines and reachable mobile payment controls. Native/final consumer and external acceptance remain separate.
+- PR / commit: Child `codex/shop-suit/weight-barcodes` starts from published #490 atc7bc466b; implementatione14f4ab6 and mobile viewport fix8ebebaff; final evidence prepared for draft publication.
+- Blocker: Native exact-source qualification and final merchant/device/native-speaker/provider acceptance remain pending.
+- Completion notes / release fragment: Local implementation tested. Public `ss-electrical-verified-weight-barcodes-20261025`; internal `ss-electrical-weight-barcode-qualification-20261025`. No hosted or merchant/device completion claim.
 
 ## SS-ELEC-505 — Electronic scale integration
 
