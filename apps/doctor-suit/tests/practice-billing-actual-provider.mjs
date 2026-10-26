@@ -6,6 +6,19 @@ export async function preparePracticeBillingBrowser({ sql, a, b, rpc, expect, se
  const ids = [a, b].flatMap(actor => [actor.user.id, actor.scope.practiceId, actor.scope.locationId, actor.scope.patientId, actor.sessionId])
  expect(ids.every(value => /^[a-f0-9-]{36}$/.test(value)), 'Owned billing fixture scope required')
  const en = randomUUID(), ar = randomUUID(), readonlyVisit = randomUUID(), terms = randomUUID(), period = randomUUID(), reference = 'SYNTHETIC-BILLING-' + randomUUID()
+ setStage('actual billing fixture initial edition');
+ expect(sql('select mode from public.doctor_edition_policy where singleton;') === 'synthetic_preview', 'Owned billing fixture requires the prior preview edition')
+ let cleaned = false
+ const cleanup = () => {
+  if (cleaned) return
+  sql(`begin;
+   update public.doctor_edition_policy set mode='synthetic_preview',revision=revision+1,change_reason='Owned billing fixture edition restoration'where singleton and mode<>'synthetic_preview';
+   update public.doctor_saas_accounts set state='enabled',revision=revision+1,reason_code='operator_resume'where subscriber_user_id='${b.user.id}'and state='suspended';
+   insert into public.doctor_candidate_revocations(admission_id,reason)select a.id,'fixture_complete'from public.doctor_candidate_admissions a where a.evidence_ref='${reference}'and not exists(select 1 from public.doctor_candidate_revocations r where r.admission_id=a.id);
+  commit;`)
+  cleaned = true
+ }
+ try {
  setStage('actual billing fixture independent readonly state');
  const before = await rpc(b.client, 'doctor_saas_status'); expect(before.state === 'unconfigured', 'Independent readonly fixture must begin unconfigured')
  function appointment(actor, id, days, hours) { return `('${id}','${actor.scope.practiceId}','${actor.user.id}','${actor.scope.locationId}','${actor.scope.patientId}',clock_timestamp()-interval'${days} days'+interval'${hours} hours',clock_timestamp()-interval'${days} days'+interval'${hours} hours 20 minutes',(select timezone from public.locations where id='${actor.scope.locationId}'),(select name from public.locations where id='${actor.scope.locationId}'),'completed','${actor.user.id}',clock_timestamp()-interval'${days} days'+interval'${hours} hours',clock_timestamp()-interval'${days} days'+interval'${hours} hours',clock_timestamp()-interval'${days} days'+interval'${hours} hours 20 minutes')` }
@@ -25,12 +38,18 @@ export async function preparePracticeBillingBrowser({ sql, a, b, rpc, expect, se
  await preparePracticeMoneyReadonly({b,charge:readonlyCharge,rpc,expect,setStage})
  setStage('actual billing fixture readonly account hold');
  sql(`update public.doctor_saas_accounts set state='suspended',revision=revision+1,reason_code='operator_hold'where subscriber_user_id='${b.user.id}';`)
+ setStage('actual billing fixture candidate edition and bounded admissions');
+ sql(`begin;
+  insert into public.doctor_candidate_admissions(user_id,purpose,evidence_ref,valid_until)values('${a.user.id}','synthetic_fixture','${reference}',clock_timestamp()+interval'2 hours'),('${b.user.id}','synthetic_fixture','${reference}',clock_timestamp()+interval'2 hours');
+  update public.doctor_edition_policy set mode='administrative_candidate',revision=revision+1,change_reason='Owned synthetic billing entitlement acceptance'where singleton;
+ commit;`)
  setStage('actual billing fixture inactive history board');
  const readonly = await rpc(b.client, 'doctor_practice_billing_board', { p_practice: b.scope.practiceId, p_location: b.scope.locationId })
- expect(readonly.can_write === false && readonly.charge_total === 1 && readonly.charges[0].charge.amount_minor === '12345', 'Inactive fixture must retain owned history without write authority')
+ expect(readonly.edition === 'administrative_candidate' && readonly.can_write === false && readonly.charge_total === 1 && readonly.charges[0].charge.amount_minor === '12345', 'Inactive fixture must retain owned history without write authority')
  setStage('actual billing fixture browser source metadata');
  const metadata = JSON.parse(sql(`select json_build_object('timezone',(select timezone from public.locations where id='${a.scope.locationId}'),'EN',json_build_object('visit_id','${en}','patient_id','${a.scope.patientId}','version',1,'starts_at',(select starts_at from public.appointments where id='${en}'),'patient_name',(select display_name from public.practice_patients where id='${a.scope.patientId}')),'AR',json_build_object('visit_id','${ar}','patient_id','${a.scope.patientId}','version',1,'starts_at',(select starts_at from public.appointments where id='${ar}'),'patient_name',(select display_name from public.practice_patients where id='${a.scope.patientId}')));`))
- return { fixture: { reference, ...metadata, readonlyServiceLabel: reference + '-READONLY' }, cleanup: () => sql(`update public.doctor_saas_accounts set state='enabled',revision=revision+1,reason_code='operator_resume'where subscriber_user_id='${b.user.id}';`) }
+ return { fixture: { reference, ...metadata, readonlyServiceLabel: reference + '-READONLY' }, cleanup }
+ } catch (error) { cleanup(); throw error }
 }
 export async function verifyPracticeBillingBrowserRecords({ a, b, rpc, expect, fixture, originalPeriod }) {
  const board = await rpc(a.client, 'doctor_practice_billing_board', { p_practice: a.scope.practiceId, p_location: a.scope.locationId })
