@@ -1,0 +1,13 @@
+{
+  "id": "dos-m6-009",
+  "task": "DOS-M6-009",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m6-009.md"
+  ],
+  "reason": "Doctor synthetic practice/SaaS ledger-report implementation scope; no official tax/revenue/provider acceptance or operational registration."
+}
