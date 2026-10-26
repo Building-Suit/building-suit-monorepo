@@ -8,7 +8,8 @@
   "disposition": "internal",
   "paths": [
     "docs/work-packages/doctor-suit/implementation/dos-m6-008.md",
-    "docs/work-packages/doctor-suit/implementation/dos-m6-008-packet.json"
+    "docs/work-packages/doctor-suit/implementation/dos-m6-008-packet.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-008-verify.mjs"
   ],
   "reason": "Doctor-only qualified tax applicability evidence packet; no tax determination, adapter, submission, operational registration or compliance authority."
 }
