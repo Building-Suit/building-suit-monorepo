@@ -53,18 +53,18 @@
     "fingerprints_unchanged": true
   },
   "sql": {
-    "status": "unrun-await-owned-ci",
+    "status": "passed-on-source256e-in-owned-CI",
     "assertions_static_count": 37,
     "actual_persisted_rpc": true,
     "rolled_back_synthetic_fixture": true
   },
   "transactions": {
-    "status": "unrun-await-owned-ci",
+    "status": "six-passed-on-source256e-in-owned-CI",
     "cases": 6,
     "source": "apps/doctor-suit/tests/saas-lifecycle-request-concurrency.mjs"
   },
   "actual_provider": {
-    "status": "unrun-await-owned-ci",
+    "status": "passed-on-source256e-in-owned-CI",
     "source": "apps/doctor-suit/tests/saas-lifecycle-requests-actual-provider.mjs",
     "transport": "actual owned Auth/PostgREST, not approved payment-provider confirmation"
   },
@@ -74,9 +74,15 @@
     "no_placeholder": true
   },
   "generated_types": {
-    "status": "await-owned-migrated-schema-generation-and-acquisition",
+    "status": "CI-generation-passed-local-acquisition-blocked",
+    "artifact_id": 12616067113,
+    "artifact_name": "doctor-public-schema-256e868912cb2e488d82b84722b41a27e1f81b47",
+    "size_in_bytes": 21498,
+    "workflow_source_matches": true,
+    "standard_cli_download": "denied-Forbidden-at-artifact-storage-redirect",
+    "bypass_attempted": false,
     "handwritten": false,
-    "local_schema_byte_comparison_claimed": false
+    "local_file_hash_or_schema_byte_comparison_claimed": false
   },
   "gates": [
     "No complete versioned cancellation/renewal/reactivation/grace/refund/downgrade/effective-date approval",
@@ -95,5 +101,45 @@
     "apps/doctor-suit/tests/disposable-provider.mjs": "d12adb0200be3c0514894dba36a5973cc2d39064f1b0eb9460c42df2553caac1"
   },
   "release_check_initial": "failed-unclassified-migration-directory-probe-fixed-to-exact-path",
-  "security_review": "Explicit postgres-only owner policy supports forced RLS under managed non-BYPASSRLS owner; API roles remain revoked"
+  "security_review": "Explicit postgres-only owner policy supports forced RLS under managed non-BYPASSRLS owner; API roles remain revoked",
+  "actual_ci": {
+    "run_id": 40239235131,
+    "source_head": "256e868912cb2e488d82b84722b41a27e1f81b47",
+    "run_started_at": "2026-10-25T22:14:14Z",
+    "updated_at": "2026-10-25T22:33:05Z",
+    "aggregate_conclusion": "failure",
+    "doctor_sql": {
+      "job_id": 121307271440,
+      "conclusion": "success",
+      "own_assertions": 37,
+      "full_assertions": 2001,
+      "suites": 64,
+      "own_real_transactions": 6,
+      "producer_transaction_marker": true,
+      "public_schema_generation": "passed-CI-producer"
+    },
+    "doctor_browser": {
+      "job_id": 121307271636,
+      "conclusion": "success",
+      "public": 60,
+      "protocol": 87,
+      "stress": 4,
+      "m3_actual_tasks": 10,
+      "m3_accepted": true,
+      "financial_003": 2,
+      "financial_004": 2,
+      "lifecycle_actual_provider_marker": true,
+      "full_actual_provider_final_marker": true
+    },
+    "settings": {
+      "job_id": 121307271675,
+      "conclusion": "failure",
+      "shared_auth_passed": 48,
+      "settings_passed": 6,
+      "settings_failed": 6
+    },
+    "clinical_approval": false,
+    "live_payment_acceptance": false,
+    "task_acceptance": false
+  }
 }
