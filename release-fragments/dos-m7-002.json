@@ -1,9 +1,17 @@
 {
   "id": "dos-m7-002",
   "task": "DOS-M7-002",
-  "suits": ["doctor-suit"],
+  "suits": [
+    "doctor-suit"
+  ],
   "classification": "internal",
   "disposition": "internal",
-  "paths": ["docs/work-packages/doctor-suit/implementation/dos-m7-002.md"],
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m7-002.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-002-packet.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-002-verify.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-002-verification.json",
+    "docs/work-packages/doctor-suit/implementation/m7-continuation.md"
+  ],
   "reason": "Doctor hosting, transfer and subprocessor review evidence scope. Actual contracts/regions/approval remain unavailable; no provisioning, live data or operational activation."
 }

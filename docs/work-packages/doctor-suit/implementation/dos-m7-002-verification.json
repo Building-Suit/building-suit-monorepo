@@ -270,5 +270,11 @@
     "root_unit": "not rerun; no product changes. Parent source-specific2548total/2471pass/54 inherited Shop failures/23skip retained",
     "product_runtime": "not run; no dummy human-review test"
   },
-  "required_ci": "blocked; no staging/main promotion"
+  "required_ci": "blocked; no staging/main promotion",
+  "provenance_correction": {
+    "prior_candidate": "95a9092efb1a73c0c301ca7cd9a9b07957a0a179",
+    "prior_release_check": "failed: unclassified task packet path; previous shell sequence failed to stop; prior pass claim corrected",
+    "change": "Complete this open/unreviewed task fragment coverage for own evidence and continuation files. Ancestor accepted fragments preserved.",
+    "new_release_check": "must pass on corrected exact candidate before publication"
+  }
 }
