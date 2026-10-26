@@ -209,5 +209,44 @@
     "assertions_retries_timeouts_unchanged": true,
     "next_runtime_status": "pending-new-exact-source-CI"
   },
-  "source_files_phase": "post-e382-static-diagnostic-checkpoint-not-runtime-qualified"
+  "source_files_phase": "post-e382-static-diagnostic-checkpoint-not-runtime-qualified",
+  "diagnostic_actual_followup": {
+    "run_id": 40237907912,
+    "source_head": "5353b764b1f14df465ba3c3b226ef875dd60bb6f",
+    "aggregate_conclusion": "failure",
+    "doctor_sql_job": {
+      "id": 121303334724,
+      "conclusion": "success",
+      "own_assertions": 24,
+      "full_assertions": 1935,
+      "suites": 62,
+      "public_schema_generation": "CI producer success; local artifact acquisition/byte comparison not claimed"
+    },
+    "doctor_browser_job": {
+      "id": 121303334484,
+      "conclusion": "success",
+      "public_passed": 60,
+      "protocol_passed": 87,
+      "delegation_stress_passed": 4,
+      "own_financial_actual_service_cases_passed": 2,
+      "own_case_ids": [
+        "DOS-M6-003-C02-EN",
+        "DOS-M6-003-C02-AR"
+      ],
+      "m3_actual_tasks_passed": 10,
+      "m3_accepted": true,
+      "full_actual_provider_final_marker": true
+    },
+    "settings_job": {
+      "id": 121303334767,
+      "conclusion": "failure",
+      "shared_auth_passed": 48,
+      "settings_passed": 6,
+      "settings_failed": 6
+    },
+    "interpretation": "Exact-source Doctor technical subset passes; prior e382 runtime failures remain recorded. Diagnostic-only change does not identify or claim a repaired intermittent onboarding/financial root cause.",
+    "clinical_approval": false,
+    "live_payment_acceptance": false,
+    "task_acceptance": false
+  }
 }
