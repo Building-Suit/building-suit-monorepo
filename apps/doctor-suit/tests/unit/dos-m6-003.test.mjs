@@ -60,3 +60,10 @@ test('financial diagnostic reporter emits only whitelisted phase/source metadata
  } finally { console.log = original }
  const text = captured.join(''), receipt = JSON.parse(captured[0]); assert.equal(receipt.cases[0].phase, 'quote_identity'); assert.deepEqual(receipt.cases[0].source_location, { file: 'dos-m6-003.spec.ts', line: 42, column: 7 }); assert(!text.includes('PRIVATE_')); assert.equal(receipt.live_payment_acceptance, false)
 })
+
+test('server-ready payment reads cannot expose interactive actions before client hydration and session verification',async()=>{
+ const {manualPaymentView}=await import('../../app/utils/manualPaymentPresentation.ts'),state=manualPaymentState();state.ready=true
+ const controller={state,selected:()=>null,canPrepare:()=>true}
+ for(const ar of[false,true]){const server=manualPaymentView(controller,ar,false);assert.equal(server.ready,true);assert.equal(server.pending,true);assert.equal(server.canPrepare,false);assert.equal(server.canSubmit,false);assert.equal(server.canUpload,false);const mounted=manualPaymentView(controller,ar,true);assert.equal(mounted.pending,false);assert.equal(mounted.canPrepare,true)}
+ state.pending=true;assert.equal(manualPaymentView(controller,false,true).pending,true)
+})

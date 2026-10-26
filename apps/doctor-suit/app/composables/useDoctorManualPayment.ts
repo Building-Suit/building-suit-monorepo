@@ -5,8 +5,9 @@ import{watchManualPaymentSession}from'../utils/manualPaymentSession'
 export async function useDoctorManualPayment(review:boolean){
  const controller=useNuxtApp().$doctorManualPayment,{locale}=useI18n()
  const auth=useDoctorAuth(),page=controller.claimPage()
- const route=useRoute()
- const view=computed(()=>manualPaymentView(controller,locale.value==='ar'))
+ const route=useRoute(),hydrated=ref(false)
+ onMounted(()=>{hydrated.value=true})
+ const view=computed(()=>manualPaymentView(controller,locale.value==='ar',hydrated.value&&!auth.state.pending&&auth.state.phase==='authenticated'))
  const values=computed(()=>manualPaymentValues(controller))
  function update(value:BsManualPaymentValues){if(controller.state.pending||controller.state.uncertain)return;Object.assign(controller.state,{...value,interval:value.interval==='yearly'?'yearly':'monthly'})}
  async function refresh(number=controller.state.page){if(page.active()&&await controller.load(review,number)&&page.active()){await controller.choose();const notice=route.query.notice;if(typeof notice==='string'&&page.active())await controller.open(notice)}}
