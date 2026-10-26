@@ -87,7 +87,7 @@
   "parent_diagnostic_run": {
     "id": 40237907912,
     "head": "5353b764b1f14df465ba3c3b226ef875dd60bb6f",
-    "status": "pending"
+    "status": "completed-Doctor-SQL-and-browser-success-settings-failure"
   },
   "limitations": [
     "No actual merchant, beneficiary, cost, refund, reviewer/custody, complete lifecycle, legal/tax or live approval",
@@ -104,5 +104,61 @@
     "apps/doctor-suit/tests/e2e/financial-reporter.mjs": "dd8428d67c01406e21d1e323c45f50ec7752fda65e8dde8e45c66208ff2672fa",
     "apps/doctor-suit/tests/financial-browser-acceptance.mjs": "69ff11f55b9bc07ef831a0d141063e4f72ff3ef02875130bc9988e2b698b899a",
     "apps/doctor-suit/tests/manual-payments-browser.mjs": "133e2c67c2730f62477daf83f9c9b1a28fa38897823f5f9910338103efc0b38c"
+  },
+  "actual_own_source": {
+    "run_id": 40238378450,
+    "head": "4b42ce041a40ea855bac3f9187094623e3a1fa5b",
+    "aggregate": "failure",
+    "sql": {
+      "status": "success",
+      "own": 29,
+      "total": 1964,
+      "suites": 63
+    },
+    "browser": {
+      "status": "failure",
+      "public": 60,
+      "protocol": 87,
+      "stress": 4,
+      "m3_actual": 10,
+      "financial_003_passed": 0,
+      "financial_004_passed": 0,
+      "financial_failed_total": 4,
+      "failure_stage": "notice_row",
+      "coordinates": [
+        "dos-m6-003.spec.ts:30:82",
+        "dos-m6-004.spec.ts:34:82"
+      ],
+      "interpretation": "detail heading absent after row click; intermittent cause remains unknown; assertions/timeouts unchanged"
+    },
+    "shared_auth": {
+      "passed": 47,
+      "failed": 1,
+      "failed_case_coordinates": [
+        "atomic-signup-parity.spec.ts:7:3"
+      ]
+    },
+    "settings": "skipped-after-shared-auth-failure"
+  },
+  "actual_descendant_source": {
+    "run_id": 40239235131,
+    "head": "256e868912cb2e488d82b84722b41a27e1f81b47",
+    "doctor_sql": "success",
+    "own_sql": 29,
+    "full_sql": 2001,
+    "sql_suites": 64,
+    "doctor_browser": "success",
+    "financial_003_passed": 2,
+    "financial_004_passed": 2,
+    "public": 60,
+    "protocol": 87,
+    "stress": 4,
+    "m3_actual": 10,
+    "full_actual_provider_marker": true,
+    "shared_auth": 48,
+    "settings_passed": 6,
+    "settings_failed": 6,
+    "aggregate": "failure",
+    "does_not_erase_own_source_failure": true
   }
 }
