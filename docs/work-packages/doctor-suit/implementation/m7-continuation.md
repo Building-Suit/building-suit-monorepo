@@ -11,3 +11,8 @@ Prepared7 participant scopes/8 technical flows/9 proposed policy questions and a
 ## DOS-M7-002 — PR503, parent502/e62415f7
 
 Prepared13 components/6 digest-bound traces including separate account mail, synthetic patient outbox, Android Auth, financial ledgers, logs/backups/support. Exact8ccb source passes42 readiness controls, exit2/all4 accountable-review criteria unavailable. Actual accounts/regions/subprocessors/contracts/transfers and LEGAL/HOSTING approvals remain absent. No product or provider changes. Continue independent003 clinical-governance proposal, then004 onward.
+
+
+## DOS-M7-003 — PR504, initial parent503/70a38324
+
+Prepared7 proposed accountable roles/16 required pilot evidence fields/6 stop conditions/6 version-bound workflow states. Actual identities/qualifications/mandates, clinical scope/emergency wording, population/consent/supervision and explicit owner+qualified pilot authorization remain absent. Source99852342 passes62 C03 restriction/document/pure-clinical contract comparisons; no professional/clinical/legal/pilot acceptance. Continue independent004 onward after source-bound checks/publication; REAL-DATA remainsOPEN.
