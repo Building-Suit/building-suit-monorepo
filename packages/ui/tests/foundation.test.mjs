@@ -686,3 +686,19 @@ test('shared permission occurrences have distinct row identities and preserve th
   assert.deepEqual(toggles, [{ key: 'shared.manage', checked: false }])
   assert.ok(items.every(item => !('rowId' in item)))
 })
+
+test('practice ledger report rows expose the exact source and financial amount through the canonical table contract', async () => {
+  const row = { id: 'synthetic-ledger-1', source: 'Synthetic charge · version 2', amount: '100.00 EGP (2)', recorded: '26 Oct 2026 UTC', issued: '25 Oct 2026 UTC', state: 'Posted', to: '/financial-reports?source=synthetic' }
+  const view = { ready: true, loading: false, denied: false, error: false, totals: [], rows: [row], clinics: [], statuses: [], metrics: [], groups: [], source: { visible: false, items: [] } }
+  const copy = { title: 'Synthetic report', source: 'Source', amount: 'Amount', recorded: 'Recorded', issued: 'Issued', state: 'State' }
+  let tableKey
+  const app = vue.createSSRApp({ render: () => vue.h(component('organisms/BsPracticeLedgerReportsWorkspace.vue'), { view, copy, filters: { location: '', from: '', until: '', status: 'all', metric: 'collections', group: '' } }) })
+  for (const name of ['BsStack', 'BsGrid', 'BsFilterBar', 'BsText', 'BsPanel', 'BsHeading', 'BsInline', 'BsMetricGrid', 'BsButton', 'BsLink']) app.component(name, { setup: (_, { slots }) => () => vue.h('div', slots.default?.()) })
+  for (const name of ['BsPageHeader', 'BsSelect', 'BsInput', 'BsDetailDialog']) app.component(name, { render: () => null })
+  app.component('BsField', { setup: (_, { slots }) => () => vue.h('div', slots.default?.({ id: 'synthetic-field', describedby: undefined })) })
+  // Preserve BsDataTable's explicit field/value contract and custom source slot; no implicit key-to-field fallback.
+  app.component('BsDataTable', { props: ['value', 'columns', 'rowKey'], setup(props, { slots }) { tableKey = props.rowKey; return () => vue.h('section', props.value.flatMap(item => props.columns.map(column => slots['cell-' + column.key]?.({ row: item }) ?? vue.h('span', column.value ? column.value(item) : column.field ? item[column.field] : undefined)))) } })
+  const html = await renderToString(app)
+  for (const value of [row.source, row.amount, row.recorded, row.issued, row.state]) assert.ok(html.includes(value), 'Report must expose its source and monetary evidence')
+  assert.equal(tableKey, 'id')
+})

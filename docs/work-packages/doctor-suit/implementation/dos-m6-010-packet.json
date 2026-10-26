@@ -1,7 +1,7 @@
 {
   "task_id": "DOS-M6-010",
   "parent_pr": 499,
-  "parent_head": "c724915b37bae9a54891dbfa490823dab2c36c8d",
+  "parent_head": "0648206b2df8a57369165d1a1ba6781b74f4e2b6",
   "candidate_binding": "evaluated-committed-head",
   "synthetic_only": true,
   "commercial_launch_approved": false,
@@ -35,6 +35,11 @@
       "source_head": "c724915b37bae9a54891dbfa490823dab2c36c8d",
       "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40345633850",
       "disposition": "SQL job121651685000 completed success after fixture repair; detailed counts/artifact acquisition not yet parsed, browser jobs still pending when observed. Does not qualify own010 exact-candidate journey/review."
+    },
+    {
+      "source_head": "88252710f83e888b51e6f5ec5498bd5e320cfa37",
+      "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40347994499",
+      "disposition": "Own SQL aborted before assertions at fixture clinic creation/current_actor: DOCTOR_AUTH_REQUIRED; existing66 SQL suites2143assertions passed. Financial003/004/007 ENAR pass;006 readonly history/009 monetary cells/010 dependent report assertions fail. Full CI failed; no approval."
     }
   ],
   "review_requirements": [

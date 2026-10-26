@@ -28,7 +28,7 @@ function update(key:keyof BsPracticeReportFilters,value:unknown){filters.value={
    <BsText as="p" tone="muted">{{copy.observed}}: {{view.observed}}</BsText>
    <BsMetricGrid><BsKpiCard v-for="item in view.totals" :key="item.id" :title="item.label" :value="item.value" :to="item.to" :hint="copy.sources"/></BsMetricGrid>
    <BsPanel padding="md"><BsHeading :level="2">{{copy.sources}}</BsHeading>
-    <BsDataTable :value="view.rows" data-key="id" :columns="[{key:'source',header:copy.source},{key:'amount',header:copy.amount},{key:'recorded',header:copy.recorded},{key:'issued',header:copy.issued},{key:'state',header:copy.state}]">
+    <BsDataTable :value="view.rows" row-key="id" :columns="[{key:'source',field:'source',header:copy.source},{key:'amount',field:'amount',header:copy.amount},{key:'recorded',field:'recorded',header:copy.recorded},{key:'issued',field:'issued',header:copy.issued},{key:'state',field:'state',header:copy.state}]">
      <template #cell-source="{row}"><BsLink :to="row.to">{{row.source}}</BsLink></template>
      <template #empty><BsText>{{copy.empty}}</BsText></template>
     </BsDataTable>
