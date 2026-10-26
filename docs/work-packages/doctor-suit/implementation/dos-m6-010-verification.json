@@ -369,5 +369,13 @@
     "automation_mutation": false,
     "staging_or_main_promotion": false,
     "full_milestone_acceptance": false
-  }
+  },
+  "parent_refreshes": [
+    {
+      "parent_head": "c724915b37bae9a54891dbfa490823dab2c36c8d",
+      "preserving_merge": "42bfa652b960679581d346615cbb8c145568a39e",
+      "source_status": "Focused009 fixture/readiness/accessible-role fixes included; new actual runtime unqualified",
+      "full_local_validation": "pending new combined source; historical5283 results retained below"
+    }
+  ]
 }

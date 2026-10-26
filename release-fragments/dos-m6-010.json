@@ -17,10 +17,12 @@
     "apps/doctor-suit/tests/financial-browser-acceptance.mjs",
     "apps/doctor-suit/tests/manual-payments-browser.mjs",
     "apps/doctor-suit/tests/unit/dos-m6-010.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md",
     "docs/work-packages/doctor-suit/implementation/dos-m6-010-packet.json",
     "docs/work-packages/doctor-suit/implementation/dos-m6-010-verification.json",
     "docs/work-packages/doctor-suit/implementation/dos-m6-010-verify.mjs",
-    "docs/work-packages/doctor-suit/implementation/dos-m6-010.md"
+    "docs/work-packages/doctor-suit/implementation/dos-m6-010.md",
+    "docs/work-packages/doctor-suit/implementation/m6-continuation.md"
   ],
   "reason": "Doctor synthetic full-population source reconciliation and owned acceptance scenarios; exact-candidate runtime and accountable commercial/financial/tax review remain separately unqualified. No operational activation or live funds."
 }

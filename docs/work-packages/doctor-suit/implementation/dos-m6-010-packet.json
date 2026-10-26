@@ -1,7 +1,7 @@
 {
   "task_id": "DOS-M6-010",
   "parent_pr": 499,
-  "parent_head": "6855d821ee4958f4b36f1f19fec40b36b5f105e5",
+  "parent_head": "c724915b37bae9a54891dbfa490823dab2c36c8d",
   "candidate_binding": "evaluated-committed-head",
   "synthetic_only": true,
   "commercial_launch_approved": false,
@@ -29,7 +29,7 @@
     {
       "source_head": "6855d821ee4958f4b36f1f19fec40b36b5f105e5",
       "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40335045291",
-      "disposition": "SQL job121614227760 failed, run still in progress when recorded; no task009 runtime acceptance. Await completed whole archive for safe focused diagnostics."
+      "disposition": "Completed failure:009 setup overlaps day-one commitments at009.sql:77; no009/fullSQL/recovery/schema-generation acceptance. Public60/protocol87/stress4/M3actual10 pass; financial10 fail; shared Auth48/settings6pass6fail."
     }
   ],
   "review_requirements": [
@@ -45,5 +45,11 @@
     "Shared settings/54 inherited Shop regression failures and required CI remain unresolved.",
     "Actual generated-schema acquisition and qualified independent financial review are unavailable."
   ],
-  "claim_boundary": "Machine comparison validates the held disposition and enumerated synthetic contracts. It cannot prove unavailable real-world reviews or turn a proposed receipt into runtime acceptance."
+  "claim_boundary": "Machine comparison validates the held disposition and enumerated synthetic contracts. It cannot prove unavailable real-world reviews or turn a proposed receipt into runtime acceptance.",
+  "verified_parent_review": {
+    "pr": 499,
+    "source_head": "c724915b37bae9a54891dbfa490823dab2c36c8d",
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/pull/499",
+    "qualification": "84 focused cases/Doctor types/static checks; no repaired runtime acceptance."
+  }
 }
