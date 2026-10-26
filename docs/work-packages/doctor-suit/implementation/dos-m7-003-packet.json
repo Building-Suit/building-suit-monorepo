@@ -1,0 +1,189 @@
+{
+  "schema": "doctor-clinical-governance-evidence/v1",
+  "task_id": "DOS-M7-003",
+  "parent_pr": 503,
+  "parent_head": "70a38324c72a6365aafe4b9163f4ed180a465654",
+  "candidate_binding": "evaluated-committed-head",
+  "decision_id": "DOS-M7-GATE-REAL-DATA",
+  "gate_state": "OPEN",
+  "clinical_review": null,
+  "approved_clinical_scope": null,
+  "approved_delegation_policy": null,
+  "approved_emergency_wording": null,
+  "qualified_reviewer": null,
+  "owner_pilot_authorization": null,
+  "qualified_pilot_authorization": null,
+  "actual_pilot_participants": [],
+  "actual_pilot_results": [],
+  "full_task_acceptance": false,
+  "governance_roles": [
+    {
+      "id": "responsible-clinician",
+      "responsibility": "Clinical scope, entered content review, release and amendment oversight; ownership/email/subscription is not professional authority",
+      "actual_identity": null,
+      "qualification": null,
+      "mandate": null,
+      "accepted_scope": null
+    },
+    {
+      "id": "clinical-governance-reviewer",
+      "responsibility": "Qualified independent review of prescribing/delegation, scope changes, incident learning and emergency wording",
+      "actual_identity": null,
+      "qualification": null,
+      "mandate": null,
+      "accepted_scope": null
+    },
+    {
+      "id": "delegated-intake-staff",
+      "responsibility": "Independently scoped doctor/location grants; approved intake only, never inherited signing or clinical advice",
+      "actual_identity": null,
+      "qualification": null,
+      "mandate": null,
+      "accepted_scope": null
+    },
+    {
+      "id": "legal-privacy-reviewer",
+      "responsibility": "Patient/minor/caregiver authority, approved purposes, policies and rights conflicts",
+      "actual_identity": null,
+      "qualification": null,
+      "mandate": null,
+      "accepted_scope": null
+    },
+    {
+      "id": "pilot-supervisor",
+      "responsibility": "Separately authorized population, consent, observation, escalation and stop decision",
+      "actual_identity": null,
+      "qualification": null,
+      "mandate": null,
+      "accepted_scope": null
+    },
+    {
+      "id": "security-recovery-owner",
+      "responsibility": "Independent assessment, recovery custody/objectives and technical incident containment",
+      "actual_identity": null,
+      "qualification": null,
+      "mandate": null,
+      "accepted_scope": null
+    },
+    {
+      "id": "support-communications-owner",
+      "responsibility": "Minimum necessary support and approved communications; no operator chart purpose or breach deadline inferred",
+      "actual_identity": null,
+      "qualification": null,
+      "mandate": null,
+      "accepted_scope": null
+    }
+  ],
+  "pilot_required_evidence": {
+    "selected_population_and_exclusions": null,
+    "qualified_responsible_clinician": null,
+    "approved_pilot_purpose": null,
+    "patient_identity_and_relationship_method": null,
+    "consent_and_minors_caregiver_policy": null,
+    "approved_clinical_and_delegated_scope": null,
+    "hosting_and_transfer_approval": null,
+    "security_and_recovery_acceptance": null,
+    "supervision_and_contact_arrangements": null,
+    "emergency_escalation_wording": null,
+    "incident_and_adverse_event_review": null,
+    "versioned_training_and_support": null,
+    "start_stop_restart_authority": null,
+    "monitoring_thresholds_and_observation_period": null,
+    "exact_candidate_and_surface_selection": null,
+    "explicit_owner_and_qualified_reviewer_pilot_authorization": null
+  },
+  "proposed_stop_conditions": [
+    {
+      "id": "authority",
+      "trigger": "Missing/expired clinical, patient, caregiver or supervisor authority",
+      "approved_threshold": null,
+      "accountable_decision_owner": null
+    },
+    {
+      "id": "scope",
+      "trigger": "Wrong doctor/location/patient/encounter or unapproved surface/provider",
+      "approved_threshold": null,
+      "accountable_decision_owner": null
+    },
+    {
+      "id": "integrity",
+      "trigger": "Uncertain source/version/signature/release or duplicate/unreconciled clinical or financial movement",
+      "approved_threshold": null,
+      "accountable_decision_owner": null
+    },
+    {
+      "id": "confidentiality",
+      "trigger": "Suspected unauthorized access, unexpected sensitive logging/transfer or account/session change",
+      "approved_threshold": null,
+      "accountable_decision_owner": null
+    },
+    {
+      "id": "clinical-safety",
+      "trigger": "Clinician-reported harm, unsafe content, workflow ambiguity or inability to supervise",
+      "approved_threshold": null,
+      "accountable_decision_owner": null
+    },
+    {
+      "id": "operability",
+      "trigger": "Unavailable containment/recovery/support or exceeded reviewer-approved operational threshold",
+      "approved_threshold": null,
+      "accountable_decision_owner": null
+    }
+  ],
+  "proposed_workflow": [
+    {
+      "state": "proposal",
+      "transition_requirement": "Evidence prepared; no live entry"
+    },
+    {
+      "state": "reviewed_scope",
+      "transition_requirement": "Genuine qualified clinical/legal/hosting/security/recovery reviews on exact scope"
+    },
+    {
+      "state": "separately_authorized_pilot",
+      "transition_requirement": "Explicit owner and qualified reviewer authorization, chosen population/consent/supervision"
+    },
+    {
+      "state": "supervised_observation",
+      "transition_requirement": "Approved pilot only; independent stop/incident authority available"
+    },
+    {
+      "state": "stopped",
+      "transition_requirement": "Suspend entry/release/dispatch as authorized; preserve originals and evidence"
+    },
+    {
+      "state": "restart_or_exit",
+      "transition_requirement": "Independent scoped review of incidents, repairs and retest; no automatic restart"
+    }
+  ],
+  "workflow_sha256": "8a227e4b4aebe166cc1c04f71d96327a2714cc7f74a02cc63b5106ac986d8c8c",
+  "technical_restrictions": {
+    "data_mode": "synthetic",
+    "clinical_approval": false,
+    "professional_signature": false,
+    "live_prescribing": false,
+    "automatic_diagnosis": false,
+    "automatic_prescribing": false,
+    "dose_advice": false,
+    "medication_substitution": false,
+    "clinical_efficacy_claims": false,
+    "guaranteed_notifications": false,
+    "real_patient_entry": false,
+    "patient_mobile_release": false,
+    "new_native_integration": false,
+    "external_clinical_delivery": false
+  },
+  "cases": {
+    "DOS-M7-003-C01": "unavailable-accountable-clinical-governance-review",
+    "DOS-M7-003-C02": "unavailable-approved-pilot-and-explicit-owner-qualified-authorization",
+    "DOS-M7-003-C03": "pending-independent-exact-source-restriction-comparison",
+    "DOS-M7-003-C04": "unavailable-real-data-gate-approval"
+  },
+  "source_limits": [
+    "Existing M2 synthetic fixture amendment is engineering authorization only, not qualified review",
+    "Existing Android Auth/synthetic shell and emulators do not authorize real clinical entry or distribution",
+    "Caregiver preview is memory-only with legalApproval false; contact equality never links charts",
+    "M7 legal/hosting packets have null genuine receipts; public references are not approvals",
+    "No real pilot population, participants, adverse-event outcomes, competence or efficacy evidence exists"
+  ]
+}
