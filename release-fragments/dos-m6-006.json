@@ -10,7 +10,13 @@
     "docs/work-packages/doctor-suit/implementation/dos-m6-006.md",
     "docs/work-packages/doctor-suit/implementation/dos-m6-006-verification.json",
     "docs/work-packages/doctor-suit/implementation/m6-continuation.md",
-    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md",
+    "apps/doctor-suit/app/utils/practiceBilling.ts",
+    "apps/doctor-suit/tests/unit/dos-m6-006.test.mjs",
+    "apps/doctor-suit/supabase/migrations/20261025221605_doctor_practice_price_charge_snapshots.sql",
+    "apps/doctor-suit/supabase/tests/dos-m6-006.sql",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/practice-billing-concurrency.mjs"
   ],
   "reason": "Synthetic versioned service price and immutable visit-charge engineering, separate from SaaS and live financial/tax authority."
 }

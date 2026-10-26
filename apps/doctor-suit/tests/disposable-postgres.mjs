@@ -1,3 +1,4 @@
+import { verifyPracticeBillingConcurrency } from './practice-billing-concurrency.mjs'
 import { verifySaasLifecycleRequestConcurrency } from './saas-lifecycle-request-concurrency.mjs'
 import{verifyReportsConcurrency}from'./reports-concurrency.mjs'
 import{pullPinnedDoctorMetaImage}from'./pinned-meta-image.mjs'
@@ -150,6 +151,7 @@ try {
   await verifyDoctorAdministrationProtocol(container)
   await verifyManualPaymentConcurrency(container)
   await verifySaasLifecycleRequestConcurrency(container)
+  await verifyPracticeBillingConcurrency(container)
   await verifyDoctorIsolatedRecovery(container)
   }
   if (generate.length) {
