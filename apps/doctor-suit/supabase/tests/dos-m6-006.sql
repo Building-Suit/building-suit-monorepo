@@ -16,6 +16,7 @@ insert into public.membership_locations(practice_id,membership_id,location_id)va
 insert into public.patient_identities(id)values(pg_temp.id(41)),(pg_temp.id(42));
 insert into public.practice_patients(id,practice_id,patient_identity_id,display_name,created_location_id,created_by)values(pg_temp.id(51),pg_temp.id(21),pg_temp.id(41),'Synthetic billing patient A',pg_temp.id(31),pg_temp.id(1)),(pg_temp.id(52),pg_temp.id(22),pg_temp.id(42),'Synthetic billing patient B',pg_temp.id(32),pg_temp.id(2));
 insert into public.appointments(id,practice_id,doctor_user_id,location_id,patient_id,starts_at,ends_at,timezone,location_name,created_by)values(pg_temp.id(61),pg_temp.id(21),pg_temp.id(1),pg_temp.id(31),pg_temp.id(51),now()+interval'1 day',now()+interval'1 day 20 minutes','Etc/UTC','Synthetic clinic A',pg_temp.id(1)),(pg_temp.id(62),pg_temp.id(22),pg_temp.id(2),pg_temp.id(32),pg_temp.id(52),now()+interval'1 day',now()+interval'1 day 20 minutes','Etc/UTC','Synthetic clinic B',pg_temp.id(2));
+insert into public.appointments(id,practice_id,doctor_user_id,location_id,patient_id,starts_at,ends_at,timezone,location_name,created_by)values(pg_temp.id(63),pg_temp.id(21),pg_temp.id(1),pg_temp.id(31),pg_temp.id(51),now()+interval'1 day 1 hour',now()+interval'1 day 1 hour 20 minutes','Etc/UTC','Synthetic clinic A',pg_temp.id(1));
 set constraints all immediate;set constraints all deferred;
 create temporary table results(name text primary key,value jsonb);grant all on results to authenticated;
 create function pg_temp.value(k text,field text)returns uuid language sql as $$select(value->>field)::uuid from results where name=k$$;
@@ -40,7 +41,8 @@ select is(public.doctor_practice_billing_record(pg_temp.id(21),pg_temp.id(31),'c
 select is(public.doctor_practice_billing_record(pg_temp.id(21),pg_temp.id(31),'price',pg_temp.value('price1','id'))->>'unit_minor','29900','original price version remains available');
 select throws_ok($$select pg_temp.charge(pg_temp.value('price1','id'),1,75)$$,'40001','DOCTOR_BILLING_VERSION_CONFLICT','new charge rejects stale selected price');
 select throws_ok($$select pg_temp.price(pg_temp.value('price1','service_id'),1,'50000',76)$$,'40001','DOCTOR_BILLING_VERSION_CONFLICT','stale price edit cannot append over latest version');
-insert into results values('charge2',pg_temp.charge(pg_temp.value('price2','id'),1,77));
+select throws_ok($$select pg_temp.charge(pg_temp.value('price2','id'),1,88)$$,'23505',null,'fresh key after unknown acceptance cannot duplicate a service line for the same visit');
+insert into results values('charge2',public.doctor_write_visit_charge(pg_temp.id(21),pg_temp.id(31),pg_temp.id(63),pg_temp.value('price2','id'),1,null,0,'Synthetic second visit charge',pg_temp.id(77)));
 insert into results values('correction',pg_temp.charge(pg_temp.value('price2','id'),1,78,pg_temp.value('charge1','charge_id'),1));
 select is((select value->>'previous_id'from results where name='correction'),pg_temp.value('charge1','id')::text,'reasoned correction links immutable prior snapshot');
 select is((select value->>'revision'from results where name='correction'),'2','correction appends one version');
@@ -73,5 +75,5 @@ set local role authenticated;select pg_temp.claim(1);
 select throws_ok($$select pg_temp.price(pg_temp.value('price1','service_id'),4,'40000',87)$$,'DS006','DOCTOR_SAAS_PERIOD_INACTIVE','unconfigured entitlement cannot create new billing writes');
 select is(public.doctor_practice_billing_record(pg_temp.id(21),pg_temp.id(31),'charge',pg_temp.value('charge1','id'))->>'amount_minor','59800','expiry/unconfigured write denial preserves allowed history read');
 reset role;
-select ok(not exists(select 1 from doctor_private.command_receipts where command_key in(pg_temp.id(72),pg_temp.id(75),pg_temp.id(76),pg_temp.id(79),pg_temp.id(80),pg_temp.id(81),pg_temp.id(82),pg_temp.id(84),pg_temp.id(86),pg_temp.id(87))),'denied commands leave no success receipt');
+select ok(not exists(select 1 from doctor_private.command_receipts where command_key in(pg_temp.id(72),pg_temp.id(75),pg_temp.id(76),pg_temp.id(79),pg_temp.id(80),pg_temp.id(81),pg_temp.id(82),pg_temp.id(84),pg_temp.id(86),pg_temp.id(87),pg_temp.id(88))),'denied commands leave no success receipt');
 select * from finish();rollback;

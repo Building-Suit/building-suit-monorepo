@@ -27,6 +27,8 @@ create table public.doctor_visit_charge_versions(
  foreign key(practice_id,patient_id)references public.practice_patients(practice_id,id),
  foreign key(practice_id,location_id,price_id)references public.doctor_service_price_versions(practice_id,location_id,id)
 );
+-- Quantity/corrections belong to one logical service line per visit, including after an acknowledgement is lost.
+create unique index doctor_visit_service_charge_once on public.doctor_visit_charge_versions(practice_id,location_id,visit_id,service_id)where revision=1;
 alter table public.doctor_service_price_versions enable row level security;
 alter table public.doctor_service_price_versions force row level security;
 alter table public.doctor_visit_charge_versions enable row level security;

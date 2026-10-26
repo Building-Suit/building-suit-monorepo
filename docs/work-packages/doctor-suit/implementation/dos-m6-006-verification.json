@@ -48,7 +48,7 @@
   },
   "actual_sql": {
     "status": "unrun-await-owned-CI",
-    "assertions_static_count": 38,
+    "assertions_static_count": 39,
     "rolled_back_synthetic_fixture": true
   },
   "actual_transactions": {
@@ -68,9 +68,10 @@
   "source_sha256": {
     "apps/doctor-suit/app/utils/practiceBilling.ts": "92d1643119fae0d357d9790f1091675422097fc9db6bc90a1539d4cdad20b70d",
     "apps/doctor-suit/tests/unit/dos-m6-006.test.mjs": "5c3053506c3dc4a53caf6b373388128512d00d5d5827f7889f79d668dd405a5f",
-    "apps/doctor-suit/supabase/migrations/20261025221605_doctor_practice_price_charge_snapshots.sql": "e3c46c96f4008f0371cb5c7a8d7725bc6cc8fd5479a29943d872bde1211c007f",
-    "apps/doctor-suit/supabase/tests/dos-m6-006.sql": "bf526b1dcb276452d262f3868aeeae7e006a54c111a93074f0a835c7bfff7124",
+    "apps/doctor-suit/supabase/migrations/20261025221605_doctor_practice_price_charge_snapshots.sql": "5729c46b299ebad9564f148916080f688a06fd4a94df0f2964a09cac280cd707",
+    "apps/doctor-suit/supabase/tests/dos-m6-006.sql": "3001d779e092d143a69f9e88cddf5bd015c63c29e35d0b334c5a95689b386146",
     "apps/doctor-suit/tests/practice-billing-concurrency.mjs": "0bb6602e139f3d5268aebc0924cc07f7888a29f4d3beae2489b59ed2d38d4be8",
     "apps/doctor-suit/tests/disposable-postgres.mjs": "3fcdffb3b99c52021d2135d18960670616e44ac7869064e7e214df703e84b60d"
-  }
+  },
+  "unknown_acceptance_guard": "one first revision per visit/service; subsequent explicit correction appends revision"
 }
