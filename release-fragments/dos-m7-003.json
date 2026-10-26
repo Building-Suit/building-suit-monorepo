@@ -1,1 +1,17 @@
-{"id":"dos-m7-003","task":"DOS-M7-003","suits":["doctor-suit"],"classification":"internal","disposition":"internal","paths":["docs/work-packages/doctor-suit/implementation/dos-m7-003.md"],"reason":"Clinical governance and real-patient entry evidence preparation; qualified clinical/pilot approval absent, synthetic restrictions retained."}
+{
+  "id": "dos-m7-003",
+  "task": "DOS-M7-003",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m7-003.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-003-packet.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-003-verify.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-003-verification.json",
+    "docs/work-packages/doctor-suit/implementation/m7-continuation.md"
+  ],
+  "reason": "Clinical governance and real-patient entry evidence preparation; qualified clinical/pilot approval absent, synthetic restrictions retained."
+}
