@@ -1,0 +1,9 @@
+{
+  "id": "dos-m6-010",
+  "task": "DOS-M6-010",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["docs/work-packages/doctor-suit/implementation/dos-m6-010.md"],
+  "reason": "Doctor synthetic financial acceptance scope; actual financial/commercial/tax review and full runtime acceptance remain unavailable. No operational product activation."
+}
