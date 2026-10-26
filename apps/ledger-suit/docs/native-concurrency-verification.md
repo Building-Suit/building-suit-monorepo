@@ -45,4 +45,6 @@ The [dated evidence record](accountant-system/v2-acceptance/native-concurrency-v
 
 ## Remaining acceptance
 
+The later [public source-versus-close matrix](native-period-close-verification.md) supplies 20 actual close/post cases across ten sources and a separate annual-close retry.
+
 These module retries and overlapping allocations supplement the native SQL period-close/posting, quota and sequence races. They do not establish a separate close-versus-post race for every module, a pre/post migration preservation pair, real Auth/Storage HTTP journeys, backup restoration, live provider configuration, full browser acceptance or accountant UAT. Those release gates remain explicit in [LS-READY-001](accountant-system/work-packages/LS-READY-001.md).

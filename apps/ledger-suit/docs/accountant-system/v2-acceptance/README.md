@@ -1,5 +1,7 @@
 # V2-IMP-015 — cross-module acceptance review
 
+2026-10-26 follow-up: [LS-REL-CLOSE-001](../work-packages/LS-REL-CLOSE-001.md) now supplies the combined-source close/post evidence requested below: 20 observed-lock cases across ten sources, plus annual-close retry. The new dated record supersedes only the historical missing-concurrency statement; the per-source authorization/reversal matrix and external acceptance gates remain independently evidenced.
+
 Native follow-up, 2026-10-22: [LS-REL-001 native verification](../../native-financial-verification.md) now passes 63 SQL files / 1,927 assertions and the separate 22-check accounting probe on the unchanged 105-migration chain. [Exact evidence](native-sql-verification-2026-10-22.json) preserves the environment and fixture repairs. Historical blocked attempts below remain retained. Whole release, provider API/Storage, recovery and accountant acceptance are still incomplete.
 
 Current follow-up (2026-10-22): [LS-READY-001](../work-packages/LS-READY-001.md) records the new readiness review, acceptance-register repair and actual current checks. The September attempts below remain historical; they do not establish the current execution environment or live Automation task status. Release/accountant acceptance remains incomplete.
