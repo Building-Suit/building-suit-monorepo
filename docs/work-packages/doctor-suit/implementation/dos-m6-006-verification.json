@@ -1,6 +1,6 @@
 {
   "task_id": "DOS-M6-006",
-  "recorded_at_utc": "2026-10-26T11:33:17.366466+00:00",
+  "recorded_at_utc": "2026-10-26T12:02:24.396399+00:00",
   "parent_pr": 491,
   "cut_parent": "256e868912cb2e488d82b84722b41a27e1f81b47",
   "draft_pr": 492,
@@ -53,17 +53,17 @@
     "phase": "final-billing-workspace-visit-binding-and-CI-harness-source"
   },
   "actual_sql": {
-    "status": "new-candidate-unrun-await-owned-CI",
+    "status": "passed57-at-8c1c/run40316151266",
     "assertions_static_count": 57,
     "rolled_back_synthetic_fixture": true
   },
   "actual_transactions": {
-    "status": "new-candidate-unrun-await-owned-CI",
+    "status": "passed7-at-8c1c/run40316151266",
     "cases": 7,
     "source": "apps/doctor-suit/tests/practice-billing-concurrency.mjs"
   },
   "browser_and_UI": {
-    "status": "implemented-and-statically-verified; actual-new-journeys-unrun-await-owned-CI",
+    "status": "implemented-statically-verified; actual-journeys-unrun-after-owned-fixture-stage-failure",
     "browser_file": "apps/doctor-suit/tests/e2e/dos-m6-006.spec.ts",
     "owned_cases": [
       "DOS-M6-006-C02-EN",
@@ -76,7 +76,7 @@
     "artifacts_containing_credentials": false
   },
   "generated_types": {
-    "status": "backend830-generation-skipped-recovery-failure; new-migrated-generation-and-authorized-acquisition-pending; ancestor005-artifact-download-Forbidden",
+    "status": "8c1c-generation-success; artifact acquisition pending; generated files never handwritten",
     "handwritten": false
   },
   "source_sha256": {
@@ -108,9 +108,9 @@
     "apps/doctor-suit/tests/e2e/playwright.financial.config.ts": "8bc6f160d4ecce8db0a9132ac09bfcb9da71da720f7d97dca2ccac29db089e06",
     "apps/doctor-suit/tests/e2e/financial-reporter.mjs": "9a4753fc0cf3c6a3db9bd4a683ec78764e5335c2dcc5e3dfb48f43d9985adff1",
     "apps/doctor-suit/tests/financial-browser-acceptance.mjs": "d5562b0d05de6cbb8df510d8b1ae734fa181f24e2eb70930ebc90b11640cff13",
-    "apps/doctor-suit/tests/manual-payments-browser.mjs": "5d7a49c22fa1cae1987712b836f61165a699c9f0493b2f51a5edb140d79c6a9e",
+    "apps/doctor-suit/tests/manual-payments-browser.mjs": "5d70fa8310007630d54ebb751589af54cee39e80fc0c2ffd69cb712c15922a02",
     "apps/doctor-suit/tests/manual-payments-actual-provider.mjs": "f47aa3b80e614f93edc71870f4a2e42a4df45a01f9265d45fb5e225975f9ddc3",
-    "apps/doctor-suit/tests/practice-billing-actual-provider.mjs": "b6f04238f841e7e16205c5e75fe622ea95ef1f39c61afc12dd6b17e1b89f7e83"
+    "apps/doctor-suit/tests/practice-billing-actual-provider.mjs": "5636dab0b728b588c83fa580bfdd40122ae0ee1050d4b80ab9da556f67107b8e"
   },
   "unknown_acceptance_guard": "one first revision per visit/service; subsequent explicit correction appends revision",
   "incorporated_parent_evidence_head": "9d005aabb00a3f292920c9700fc40a863f8430d7",
@@ -183,5 +183,44 @@
     "legacy_visit_version": "null-retained-no-invented-backfill",
     "existing_hosted_deployment": false,
     "unknown_old_overload_command": "requires-review-not-unbound-retry"
+  },
+  "actual_workspace_checkpoint": {
+    "source_head": "8c1cd3fbd200cfd4af130f60aa798f1aefc93347",
+    "run_id": 40316151266,
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40316151266",
+    "completed_at": "2026-10-26T11:54:33Z",
+    "aggregate": "failure",
+    "doctor_sql_job": 121549138285,
+    "doctor_sql": "success",
+    "own_sql_passed": 57,
+    "full_sql_suites_passed": 65,
+    "full_sql_assertions_passed": 2058,
+    "own_actual_transactions_passed": 7,
+    "isolated_recovery_table_fingerprints": 89,
+    "isolated_recovery_exact_schema_acl_rls_history": "passed",
+    "generated_public_schema": "generated-in-CI; acquisition-not-qualified",
+    "doctor_browser_job": 121549138229,
+    "public_passed": 60,
+    "auth_protocol_passed": 86,
+    "auth_protocol_failed": 1,
+    "protocol_failure": "M1-020 AR mobile/light; queue confirmation dialog absent; ready authenticated secretary canQueue=true/canWrite=false, no transition request",
+    "stress": "skipped",
+    "actual_m3_tasks_accepted": 10,
+    "actual_provider": "failure before financial subprocess at actual M6-003/004 frozen quote and reviewed notice browser assertions",
+    "financial_receipts": "absent; all6 cases unrun/unaccepted at this source",
+    "predecessor_lifecycle_actual_hook": "unreached",
+    "shared_job": 121549137989,
+    "shared_auth_passed": 47,
+    "shared_auth_failed": 1,
+    "shared_settings": "skipped"
+  },
+  "diagnostic_update": {
+    "scope": "fixed allowlisted stages before each owned billing fixture operation and subprocess, no values/IDs/errors/DOM/Auth output",
+    "root_cause": "not-established",
+    "product_fix_claimed": false,
+    "assertions_retries_timeouts_changed": false,
+    "focused_units_passed": 30,
+    "scoped_changed_file_lint": "passed",
+    "expensive_root_repeat": "not-repeated-for-diagnostic-only-update;2497/2420/54/23-source8c1c-retained"
   }
 }
