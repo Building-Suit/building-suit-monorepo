@@ -1,3 +1,4 @@
+import { verifyFinancialAcceptanceSources } from './financial-acceptance-actual-provider.mjs'
 import { verifyPracticeMoneyBrowserRecords } from './practice-money-actual-provider.mjs'
 import{preparePracticeBillingBrowser,verifyPracticeBillingBrowserRecords}from'./practice-billing-actual-provider.mjs'
 // CI only: actual Auth/PostgREST/Functions; synthetic users and bytes; no credential artifacts.
@@ -64,6 +65,7 @@ export async function verifyManualPaymentBrowser({root,api,origin,key,serviceKey
    setStage('actual M6 financial subprocess assertions')
    await verifyM6FinancialBrowser({root,fixture:{origin,api,storageState:await owner.context.storageState(),reference,notice:claimed[0],quote:frozenQuote,currentNotice:await rpc(a.client,'doctor_manual_payments',{p_notice:claimed[0].id}),period:paid.period,reviewerId:b.user.id,billing:{...billing.fixture,readonlyStorageState:await reviewer.context.storageState()}}})
    setStage('actual billing persisted GUI source records')
+   await verifyFinancialAcceptanceSources({root,a,rpc,originalPeriod:paid.period,setStage})
    await verifyPracticeBillingBrowserRecords({a,b,rpc,expect,fixture:billing.fixture,originalPeriod:paid.period})
    await verifyPracticeMoneyBrowserRecords({a,b,rpc,sql,expect,fixture:billing.fixture,originalPeriod:paid.period,setStage})
   }finally{billing.cleanup()}
