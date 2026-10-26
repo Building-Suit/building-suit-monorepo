@@ -483,5 +483,29 @@
     "scoped_changed_file_lint": "passed",
     "current_full_root": "pending combined final task010 candidate; source-specific earlier2535/2458/54/23 retained without invented new count",
     "new_actual_sql_browser_acceptance": "pending; no closure inferred from local fix"
+  },
+  "c724_actual_ci": {
+    "head": "c724915b37bae9a54891dbfa490823dab2c36c8d",
+    "run_id": 40345633850,
+    "sql_suites": 67,
+    "sql_assertions": 2177,
+    "own_sql": 57,
+    "encrypted_synthetic_restore_table_fingerprints": 95,
+    "full_ci": "failed",
+    "financial_browser": {
+      "003": "2/2 pass",
+      "004": "2/2 pass",
+      "006": "2/2 fail readonly history visibility",
+      "007": "2/2 pass",
+      "009": "2/2 fail missing monetary cells"
+    },
+    "limitations": "Synthetic only; no clinical/legal/financial/tax approval. Full provider acceptance hooks not reached."
+  },
+  "table_mapping_followup": {
+    "local_reproduction": "New isolated shared-UI render comparison fails missing monetary cells before fix; passes after explicit BsDataTable field mappings/rowKey. Existing table behavior unchanged.",
+    "scoped_lint": "passed",
+    "Doctor_typecheck": "passed",
+    "repaired_actual_browser": "pending owned CI",
+    "focused_comparison": "119/119 pass across financial003\u2013007/009 and shared foundation; final merged-parent total will include new ancestor readiness case"
   }
 }
