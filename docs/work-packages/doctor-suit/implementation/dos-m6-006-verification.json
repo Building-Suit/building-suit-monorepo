@@ -287,5 +287,14 @@
     "settings_passed": 6,
     "settings_failed": 6,
     "aggregate": "failure"
+  },
+  "readonly_interaction_followup": {
+    "observed_candidate": "c724915b37bae9a54891dbfa490823dab2c36c8d",
+    "run_id": 40345633850,
+    "observation": "Both locales complete price/correction/history/direction assertions then fail readonly history visibility. Previous diagnostic captured owner; now captures blocked context. No full browser pass claimed.",
+    "local_reproduction": "25 prior cases pass / one new read-only pending assertion fails before change;26/26 pass after. SSR read-only history controls must be pending until hydration/current Auth ready.",
+    "typecheck": "passed",
+    "scoped_lint": "passed",
+    "runtime_acceptance": "pending owned disposable CI; no local runtime"
   }
 }

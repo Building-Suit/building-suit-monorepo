@@ -1,7 +1,7 @@
 import { practiceBillingCopy, practiceBillingView } from '../utils/practiceBillingPresentation'
 export async function useDoctorPracticeBilling() {
  const controller = useNuxtApp().$doctorPracticeBilling, auth = useDoctorAuth(), { locale } = useI18n(), hydrated = ref(false)
- const copy = computed(() => practiceBillingCopy(locale.value === 'ar')), view = computed(() => practiceBillingView(controller, locale.value === 'ar', hydrated.value))
+ const copy = computed(() => practiceBillingCopy(locale.value === 'ar')), view = computed(() => practiceBillingView(controller, locale.value === 'ar', hydrated.value && !auth.state.pending && auth.state.phase === 'authenticated'))
  const priceFields = computed({ get: () => controller.state.priceForm, set: value => { if (!controller.state.pending && !controller.state.uncertain) controller.state.priceForm = { ...value } } })
  const chargeFields = computed({ get: () => controller.state.chargeForm, set: value => { if (!controller.state.pending && !controller.state.uncertain) controller.state.chargeForm = { ...value } } })
  const locationId = computed({ get: () => controller.state.locationId, set: value => { if (value) void controller.selectLocation(value) } })

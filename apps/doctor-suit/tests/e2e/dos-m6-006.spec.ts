@@ -64,7 +64,7 @@ for (const ar of [false, true]) test(`DOS-M6-006-C02-${ar ? 'AR' : 'EN'}`, async
   phase('direction_and_viewport')
   await expect(page.locator('html')).toHaveAttribute('dir', ar ? 'rtl' : 'ltr'); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
   phase('read_only')
-  readonly = await context(f.billing.readonlyStorageState); const blocked = await readonly.newPage(); await blocked.goto(f.origin + '/practice-billing')
+  readonly = await context(f.billing.readonlyStorageState); const blocked = await readonly.newPage(); diagnosticPage=blocked; await blocked.goto(f.origin + '/practice-billing')
   await expect(blocked.getByRole('heading', { name: copy.title, exact: true })).toBeVisible(); await expect(blocked.getByText(copy.readOnly, { exact: true })).toBeVisible()
   await expect(blocked.getByRole('row').filter({ hasText: f.billing.readonlyServiceLabel }).filter({ hasText: '123.45 EGP' })).toHaveCount(2)
   await expect(blocked.getByRole('button', { name: copy.createPrice, exact: true })).toHaveCount(0); await expect(blocked.getByRole('button', { name: copy.createCharge, exact: true })).toHaveCount(0); await expect(blocked.getByRole('row').filter({ hasText: service })).toHaveCount(0)
