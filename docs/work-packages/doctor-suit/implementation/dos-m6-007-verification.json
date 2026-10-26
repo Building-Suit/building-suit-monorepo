@@ -1,11 +1,11 @@
 {
   "task_id": "DOS-M6-007",
-  "recorded_at_utc": "2026-10-26T12:16:21.408019+00:00",
+  "recorded_at_utc": "2026-10-26T12:29:52.793479+00:00",
   "parent_pr": 492,
   "draft_pr": 495,
   "cut_parent": "8c1cd3fbd200cfd4af130f60aa798f1aefc93347",
-  "incorporated_parent": "cc7893fc7d76163e198f7799ce4e5af2e387fe2e",
-  "parent_merge": "db712efea52b33a697d13f12867b2972ae548eea",
+  "incorporated_parent": "be47b3ede24041f88efac4b18c766323c0df6140",
+  "parent_merge": "e5161cf1e923ff08bc3d890be586eaf9cce6c25f",
   "phase": "persisted-synthetic-finance-workspace-and-owned-runtime-journeys",
   "task_acceptance": false,
   "clinical_approval": false,
@@ -31,7 +31,7 @@
       "DOS-M6-006",
       "DOS-M6-007"
     ],
-    "passed": 63,
+    "passed": 64,
     "failed": 0,
     "skipped": 0
   },
@@ -66,15 +66,15 @@
       "pnpm",
       "test"
     ],
-    "total": 2515,
-    "passed": 2438,
+    "exit_code": 1,
+    "total": 2516,
+    "passed": 2439,
     "failed": 54,
     "skipped": 23,
     "failure_locations": 54,
     "all_failure_locations_shop": true,
-    "status": "failed-inherited-Shop-baseline",
-    "phase": "financial-core-and-workspace; final-route-read-guard-followed-up-with-lint-and-types",
-    "duration_ms": 246582.980763
+    "phase": "final-after-parent-fixture-mode-repair-and-child-fixture-protocol-extension",
+    "duration_ms": 103267.025638
   },
   "static_sql": {
     "parser": "pglast7.21-outside-repository",
@@ -136,14 +136,38 @@
     "apps/doctor-suit/tests/e2e/playwright.financial.config.ts": "913ec66c0cd263093f1662362f206b1f36b9e8abc7fec523cea6f4b4638f1471",
     "apps/doctor-suit/tests/financial-browser-acceptance.mjs": "bc7fe3bf506fbae8737cf66fdb1141f66dc8fec6142a2a05ccb8a3bc2f6609aa",
     "apps/doctor-suit/tests/manual-payments-browser.mjs": "6fe450eb7dd82e8846fcbc86d58eb5972a7fb866c819a826696c4a74dddab91a",
-    "apps/doctor-suit/tests/practice-billing-actual-provider.mjs": "7832b7411f5914ddca7cf9da4df14f96323d494f0f5b7c0851219c4dbfa0706a",
+    "apps/doctor-suit/tests/practice-billing-actual-provider.mjs": "b3ec1fce241b3e85d7bee2c6354eddd0b66c95d165e0e6e823247a1089c6dfd5",
     "apps/doctor-suit/tests/practice-money-actual-provider.mjs": "192f5452131b9151bebc70d68d7d962495302d1110f07ff04b8bddaec7d6e997",
     "apps/doctor-suit/tests/practice-money-concurrency.mjs": "8029f60263e6971e5222742e978ef411ceb67a8c39643db4542b23c71ac01e3c",
+    "apps/doctor-suit/tests/unit/dos-m6-006.test.mjs": "7dacb71de6ff4726a5aac2e9a5967967aa406cbc1f8a589bf8daf35fed634b41",
     "apps/doctor-suit/tests/unit/dos-m6-007.test.mjs": "48b889be02eef39ac05f26fc12608db9aef826f33269115a4b6b82fdfdbcd049",
     "packages/ui/package.json": "976a964eb603b06583b201a79f9325e5a816c407095f7b2fa0d733ec70d5602f",
     "packages/ui/src/templates/BsPracticeBillingPage.vue": "52d790da655484530d6544784acb04c134f262e83c19f1e3782b6e9a71a2ba7e",
     "packages/ui/src/templates/BsPracticeMoneyPage.vue": "3e763bbf1e271df17c347776d3974298c8b9b02f1a4279896e05836f5785983f",
     "packages/ui/src/utils/practiceBillingPresentation.ts": "aa8fe3e88694e7352abdc4ccc009f1afb360abf26645961c4eb64649de50adfe",
     "packages/ui/src/utils/practiceMoneyPresentation.ts": "51865693c5157c8668e854989e08cf221726f839f0036fbe436a9ea8f422de20"
+  },
+  "earlier_parent_merge": "db712efea52b33a697d13f12867b2972ae548eea",
+  "prior_root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "total": 2515,
+    "passed": 2438,
+    "failed": 54,
+    "skipped": 23,
+    "failure_locations": 54,
+    "all_failure_locations_shop": true,
+    "status": "failed-inherited-Shop-baseline",
+    "phase": "financial-core-and-workspace; final-route-read-guard-followed-up-with-lint-and-types",
+    "duration_ms": 246582.980763
+  },
+  "fixture_mode_follow_up": {
+    "parent_owned_unit": 24,
+    "combined_M6_003_through_007": 64,
+    "scoped_changed_fixture_lint": "passed",
+    "scope": "owned candidate mode/admission lifecycle; no product entitlement rule change",
+    "new_runtime_results": "pending-owned-CI"
   }
 }
