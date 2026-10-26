@@ -14533,6 +14533,10 @@ export type Database = {
         }
         Returns: Json
       }
+      resolve_weight_barcode: {
+        Args: { p_barcode: string; p_location_id: string; p_shop_id: string }
+        Returns: Json
+      }
       restore_shop_location: {
         Args: { p_location_id: string; p_shop_id: string }
         Returns: undefined

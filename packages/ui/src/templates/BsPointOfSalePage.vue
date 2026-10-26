@@ -109,11 +109,11 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
             <BsLineItemsEditor v-else :items="cartLines" :label="copy.cart" :add-label="copy.catalog" :remove-label="copy.remove" :row-label="item => item.name" :show-add="false" :pending="view.checkingOut" @remove="emit('remove', $event.id)">
               <template #default="{ item: line }">
                 <BsInline justify="between">
-                  <BsText as="strong">{{ line.name }}</BsText>
+                  <BsText as="strong">{{ line.name }}</BsText><BsText v-if="line.quantityNotice" size="sm" tone="muted">{{ line.quantityNotice }}</BsText>
                 </BsInline>
                 <BsInline justify="between">
                   <BsField v-slot="field" :label="(copy.quantity)">
-                    <BsQuantityInput :id="field.id" :aria-describedby="field.describedby" :model-value="line.quantity" :label="copy.quantity"  :min="0.001" :max="1000000" :step="line.quantityStep ?? 1" @update:model-value="value => emit('quantity', line.id, Number(value))"/>
+                    <BsQuantityInput :id="field.id" :aria-describedby="field.describedby" :model-value="line.quantity" :label="copy.quantity" :disabled="line.quantityLocked || view.checkingOut || view.confirming" :min="0.001" :max="1000000" :step="line.quantityStep ?? 1" @update:model-value="value => emit('quantity', line.id, Number(value))"/>
                   </BsField>
                   <BsText as="span" emphasis="semibold">{{ line.total }}</BsText>
                 </BsInline>

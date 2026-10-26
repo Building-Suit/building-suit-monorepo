@@ -18,3 +18,5 @@ Local qualification now passes the new scoped115-migration SQL suite plus both m
 
 
 Final local combined qualification:115 migrations,21 selected SQL suites, both merchant journeys and eight inherited races pass in one replay; actual generated types match the successful current scoped replay. Shop typecheck/build, all10 final built browser cases, scoped lint, strict boundaries and full atomic ownership (120 templates) pass. Root2034/2057 pass, zero failures,23 skips. Source is ready for its committed release check and draft review. Native and final combined consumer/merchant/provider acceptance remain separate.
+
+Published checkpoint: draft[#490](https://github.com/Building-Suit/building-suit-monorepo/pull/490), sourcec7bc466b, targets#487. Its committed release check and stack check pass. Exact-source native review121298422779, measured121298422313 and website121298422198 all pass. The measured job's actual logs confirm all11 core suites including supply planning, the physical reel race, order reservation/funding races and supplier receiving races. Final combined consumer, hosted and merchant/device/native-speaker acceptance remain separate.

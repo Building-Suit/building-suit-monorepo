@@ -241,3 +241,10 @@ The reorder query aggregates reservations, stock, original receipt links and ope
 
 
 The final combined replay passes115 business migrations, all21 selected SQL suites, both measured/physical merchant journeys and all eight inherited real-session races in one execution. The separate successful scoped replay exports actual schema/types with the physical-bin guard and unlinked legacy supplier case; the checked-in types match that output. Final Shop typecheck passes after regeneration; the final production build, ten-case built browser run, app/shared/test lint and120-route architecture/strict boundaries pass. The full repository run passes2034/2057 tests, zero failures,23 skips. Committed release coverage and native/current combined consumer qualification remain the next publication/final readiness gates. Parent487 now has no failing or running native checks at1bcdcf22. No hosted or merchant/device/native-speaker acceptance is inferred.
+# Verified weight-barcode qualification checkpoint —2026-10-25
+
+Source: uncommitted `codex/shop-suit/weight-barcodes`, child of published#490 atc7bc466b. No dirty parent files were inherited. See BARCODES.md for verified format boundaries and offline behavior.
+
+- Full schema fixture:116 migrations,22 selected SQL suites, both measured/physical merchant journeys and eight inherited races pass together. Actual generated types copied from this replay. A subsequent scoped replay passes new real invited-role and cross-location capture checks plus both journeys and all inherited races. Provider stand-ins remain explicit.
+- Root tests:2061 total,2038 pass, zero failures,23 skips. Eight focused POS/barcode unit cases pass. Shop typecheck/build and product/shared scoped lint pass; strict atomic ownership passes120 routes.
+- Built browser qualification remains in progress. Initial runs identified test selectors and obsolete confirmation/navigation assumptions; the current POS pays directly from its payment step and opens its receipt overlay. Assertions follow that current implementation. Synthetic transport is explicit; no merchant/device acceptance is inferred.

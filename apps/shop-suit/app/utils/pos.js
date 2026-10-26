@@ -37,7 +37,7 @@ export function nextCartQuantity(current, item) {
 
 
 export function selectedMeasurement(item) { return item.unitSelection || (item.measurement ? `unit:${item.measurement.baseUnitCode}` : '') }
-export function cartLineKey(item) { const selection = selectedMeasurement(item); return `${item.itemType}:${item.sourceId || item.id}${selection ? ':' + selection : ''}${item.reelId ? ':reel:' + item.reelId : ''}` }
+export function cartLineKey(item) { const selection = selectedMeasurement(item); return `${item.itemType}:${item.sourceId || item.id}${selection ? ':' + selection : ''}${item.reelId ? ':reel:' + item.reelId : ''}${item.measurementCapture ? ':capture:' + item.measurementCapture.id : ''}` }
 export function selectedPackaging(item) { return item.measurement?.packages?.find(pack => `package:${pack.id}` === selectedMeasurement(item)) }
 export function measurementFactor(item) {
   const m = item.measurement
@@ -73,7 +73,7 @@ export function cartQuantityStep(item) {
   return Number(required / gcd(required, quantum) * quantum) / 1000000
 }
 export function saleLineInput(line) {
-  const input = { item_type: line.itemType, source_id: line.sourceId || line.id, quantity: line.measurement ? String(line.quantity) : Number(line.quantity), ...(line.itemType === 'product' && line.overridePrice !== undefined && line.overridePrice !== '' ? { override_price: line.overridePrice, override_reason: line.overrideReason ?? '' } : {}) }
+  const input = { ...(line.measurementCapture ? { measurement_capture: line.measurementCapture } : {}), item_type: line.itemType, source_id: line.sourceId || line.id, quantity: line.measurement ? String(line.quantity) : Number(line.quantity), ...(line.itemType === 'product' && line.overridePrice !== undefined && line.overridePrice !== '' ? { override_price: line.overridePrice, override_reason: line.overrideReason ?? '' } : {}) }
   if (!line.measurement) return input
   const pack = selectedPackaging(line)
   return { ...input, measurement_revision: line.measurement.revision, ...(line.measurement.reelTracking ? { allow_split: line.allowSplit ?? false, cutting_loss: line.cuttingLoss || '0', ...(line.reelId ? { reel_id: line.reelId } : {}) } : {}), ...(pack ? { package_id: pack.id, package_version: pack.version } : { unit_code: selectedMeasurement(line).slice(5) }) }

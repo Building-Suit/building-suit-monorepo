@@ -4,6 +4,7 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      resolve_weight_barcode: { Args: { p_shop_id: string; p_location_id: string; p_barcode: string }; Returns: import('./weightBarcodes').WeightBarcodeResolution }
       inventory_planning_command: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_kind: import('./supplyPlanning').PlanningKind; p_id: string | null; p_revision: number; p_values: import('./supplyPlanning').PlanningValues; p_reason: string }; Returns: { id: string; revision: number; kind: import('./supplyPlanning').PlanningKind } }
       inventory_planning_context: { Args: { p_shop_id: string; p_location_id: string; p_kind: import('./supplyPlanning').PlanningKind; p_search?: string | null; p_page?: number; p_record_id?: string | null; p_history_page?: number }; Returns: import('./supplyPlanning').PlanningContext }
       supplier_price_history: { Args: { p_shop_id: string; p_location_id: string; p_product_id?: string | null; p_vendor_id?: string | null; p_page?: number }; Returns: import('./supplyPlanning').SupplierPriceHistory }

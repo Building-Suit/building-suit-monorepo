@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { parseGs1WeightBarcode, capturedWeightQuantity, cartQuantityFromDecimal, assertCapturedStock } from '~/utils/weightBarcodes.js'
+import type { Gs1WeightCapture, WeightBarcodeResolution } from '~/types/weightBarcodes'
 import { tradePricePresentation } from '~/utils/tradePricing'
 import { measurementUnits } from '~/utils/measurement'
 import type { PosReelOptions, PosReel, ReelAvailability } from '~/types/electrical'
@@ -19,7 +21,7 @@ const { businessCurrency } = useShop()
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
 type CatalogItem = { stockOnHand?: string; stockReserved?: string; reelId?: string; reelBarcode?: string; reelRemaining?: string; reelPrice?: number | null; reelStatus?: string; reelSummary?: ReelAvailability; catalogStock?: number; allowSplit?: boolean; cuttingLoss?: string; measurement?: PosMeasurement | null; unitSelection?: string; id: string; itemType: 'product' | 'service'; name: string; imageUrl?: string | null; sku: string | null; barcode: string | null; unitPrice: number; discount: number; stock: number | null }
-type CartLine = CatalogItem & { overridePrice?: string; overrideReason?: string; key: string; sourceId: string; quantity: number }
+type CartLine = CatalogItem & { measurementCapture?: Gs1WeightCapture; overridePrice?: string; overrideReason?: string; key: string; sourceId: string; quantity: number }
 type Appointment = { id: string; staffId: string; customerId: string | null; customerName: string; startsAt: string; status: string; service: CatalogItem }
 type Customer = { id: string; name: string; phone: string | null }
 type PosContext = { customerQuery?: string; staff: Array<{ id: string; name: string }>; appointments: Appointment[]; customers: Array<{ id: string; name: string; phone: string | null }> }
@@ -129,6 +131,12 @@ function selectOffer(id: string) {
  const next = lines.value.map(line => ({ ...line }))
  for (const addition of additions) { const line = next.find(l => l.key === addition.key); if (line) line.quantity = Math.round((line.quantity + addition.quantity) * 1000) / 1000; else next.push(addition) }
  if (next.length > 100) { errorMessage.value = t('pos.invalid'); return }
+ try {
+  const checked = new Set<string>()
+  for (const captured of lines.value) if (captured.measurementCapture && !checked.has(captured.sourceId)) {
+   checked.add(captured.sourceId); assertCapturedStock(next, { id: captured.sourceId }, '0', String(captured.stock ?? 0))
+  }
+ } catch (cause) { errorMessage.value = readableError((cause as Error).message); return }
  lines.value = next; errorMessage.value = ''; invalidateRequests(); scanMessage.value = offer.name
 }
 
@@ -238,13 +246,21 @@ function addItem(item: CatalogItem) {
   const existing = lines.value.find(line => line.key === cartLineKey(item))
   const nextQuantity = nextCartQuantity(existing?.quantity ?? 0, item)
   if (nextQuantity === null) { errorMessage.value = readableError('INSUFFICIENT_STOCK'); return }
+  if (item.measurement && lines.value.some(line => line.sourceId === item.id && line.measurementCapture)) {
+    try { assertCapturedStock(lines.value.filter(line => line !== existing), item, measuredBaseQuantity({ ...item, quantity: nextQuantity }), String(item.stock ?? 0)) }
+    catch (cause) { errorMessage.value = readableError((cause as Error).message); return }
+  }
   lockLocation(); lines.value = addOrIncrementCartLine(lines.value, item) as CartLine[]
   const added = lines.value.find(line => line.key === cartLineKey(item))
   if (added) { added.quantity = nextQuantity; added.imageUrl = item.imageUrl; if (added.measurement?.reelTracking) void loadPhysical(added.key) }
   errorMessage.value = ''; invalidateRequests(); scanMessage.value = t('pos.scanAdded', { name: item.name })
 }
 function setQuantity(line: CartLine, value: number) {
-  if (checkingOut.value || confirmingCheckout.value || locationChanged.value) return
+  if (line.measurementCapture || checkingOut.value || confirmingCheckout.value || locationChanged.value) return
+  if (line.measurement && lines.value.some(other => other.sourceId === line.sourceId && other.measurementCapture)) {
+    try { assertCapturedStock(lines.value.filter(other => other !== line), { id: line.sourceId }, measuredBaseQuantity({ ...line, quantity: value }), String(line.stock ?? 0)) }
+    catch (cause) { errorMessage.value = readableError((cause as Error).message); return }
+  }
   line.quantity = Number(value); invalidateRequests()
 }
 function removeLine(index: number) { if (checkingOut.value || confirmingCheckout.value || locationChanged.value) return; lines.value.splice(index, 1); invalidateRequests() }
@@ -276,6 +292,7 @@ function resetSale(focus = true) {
   if (focus) nextTick(() => posPage.value?.focusCatalog())
 }
 function readableError(message?: string) {
+  if (message?.includes('WEIGHT_') || message?.includes('FIXED_BARCODE_USE_NORMAL_SCAN')) return locale.value === 'ar' ? 'تعذّر اعتماد وزن الملصق. راجع باركود الصنف ووحدة المخزون أو أعد المسح.' : 'Could not verify the label weight. Review the product barcode and stock unit, or scan again.'
   if (message?.includes('TRADE_OFFLINE_QUOTE_REQUIRED')) return locale.value === 'ar' ? 'يلزم الاتصال للتحقق من أسعار التعاقد والكميات قبل إتمام البيع.' : 'Connect to verify customer and quantity prices before checkout.'
   if (message?.includes('PRICE_OVERRIDE_PERMISSION_DENIED') || message?.includes('PRICE_APPROVAL_CONTEXT_CHANGED')) return locale.value === 'ar' ? 'يلزم اعتماد مدير لهذا السعر بعد تغيير العميل أو الكمية أو الوحدة.' : 'A manager must approve this price after changing the customer, quantity or unit.'
   if (message?.includes('INVALID_PRICE_OVERRIDE')) return locale.value === 'ar' ? 'أدخل سعرًا صالحًا وسببًا واضحًا للتعديل.' : 'Enter a valid price and a clear adjustment reason.'
@@ -295,6 +312,19 @@ function readableError(message?: string) {
   if (message?.includes('FULL_PAYMENT') || message?.includes('OVERPAYMENT')) return t('sales.fullPaymentRequired')
   return t('pos.checkoutError')
 }
+function addCapturedWeight(result: WeightBarcodeResolution) {
+  if (checkingOut.value || confirmingCheckout.value || locationChanged.value) return
+  if (lines.value.length >= 100) { errorMessage.value = t('pos.invalid'); return }
+  const parsed = parseGs1WeightBarcode(result.raw)
+  if (!parsed || result.gtin !== parsed.gtin || result.weightUnitCode !== 'kg' || result.netQuantity !== parsed.netQuantity
+    || result.unitCode !== result.item.measurement?.baseUnitCode || capturedWeightQuantity(parsed, result.item) !== result.quantity
+    || typeof result.availableQuantity !== 'string') throw new Error('INVALID_WEIGHT_BARCODE_RESPONSE')
+  assertCapturedStock(lines.value, result.item, result.quantity, result.availableQuantity)
+  const measurementCapture: Gs1WeightCapture = { kind: 'gs1', id: crypto.randomUUID(), raw: parsed.raw }
+  const selected = { ...result.item, unitSelection: `unit:${result.unitCode}`, measurementCapture }
+  const line: CartLine = { ...selected, sourceId: selected.id, key: cartLineKey(selected), quantity: cartQuantityFromDecimal(result.quantity), unitPrice: selectedUnitPrice(selected) }
+  lockLocation(); lines.value = [...lines.value, line]; invalidateRequests(); errorMessage.value = ''; scanMessage.value = t('pos.scanAdded', { name: line.name })
+}
 async function scanBarcode(code: string) {
   if (!currentId.value || !currentLocationId.value || locationChanged.value) return
   const scanScope = captureScope()
@@ -310,7 +340,11 @@ async function scanBarcode(code: string) {
     if (!scanScope()) return
     matches.push(...physical.filter(item => item !== null) as CatalogItem[])
     if (matches.length === 1) addItem(matches[0]!)
-    else scanMessage.value = t(matches.length ? 'pos.ambiguousBarcode' : 'pos.unknownBarcode', { code })
+    else if (matches.length) scanMessage.value = t('pos.ambiguousBarcode', { code })
+    else {
+      try { scanMessage.value = parseGs1WeightBarcode(code) ? locale.value === 'ar' ? 'اتصل للتحقق من ملصق الوزن، أو أدخل الكمية المقاسة يدويًا.' : 'Connect to verify the weight label, or enter the measured quantity manually.' : t('pos.unknownBarcode', { code }) }
+      catch { errorMessage.value = readableError('INVALID_WEIGHT_BARCODE') }
+    }
     return
   }
   const { data, error } = await rpc.rpc('pos_catalog_search', { p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_barcode: code, p_page: 1, p_page_size: 2 })
@@ -319,7 +353,18 @@ async function scanBarcode(code: string) {
   const result = data as CatalogResult
   if (result.ambiguousBarcode) scanMessage.value = t('pos.ambiguousBarcode')
   else if (result.items.length === 1) addItem(result.items[0]!)
-  else scanMessage.value = t('pos.unknownBarcode', { code })
+  else {
+    try {
+      if (!parseGs1WeightBarcode(code)) scanMessage.value = t('pos.unknownBarcode', { code })
+      else {
+        const captured = await rpc.rpc('resolve_weight_barcode', { p_shop_id: currentId.value, p_location_id: currentLocationId.value, p_barcode: code })
+        if (!scanScope()) return
+        if (captured.error) throw captured.error
+        if (!captured.data || typeof captured.data.raw !== 'string') throw new Error('INVALID_WEIGHT_BARCODE_RESPONSE')
+        addCapturedWeight(captured.data)
+      }
+    } catch (cause) { if (scanScope()) errorMessage.value = readableError((cause as Error)?.message || 'INVALID_WEIGHT_BARCODE') }
+  }
   await nextTick(); posPage.value?.focusCatalog()
 }
 
@@ -404,7 +449,7 @@ function setPriceApproval(id: string, value: string, reason = false) {
  lines.value = lines.value.map(line => line.key === id && line.itemType === 'product' ? { ...line, ...(reason ? { overrideReason: value } : { overridePrice: value }) } : line)
  invalidateRequests()
 }
-const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map((line, index) => ({ id: line.key, pricing: line.itemType === 'product' ? tradePricePresentation(line, counter.online.value ? taxQuote.value?.lines[index]?.pricing?.source : undefined, pricePermission.value && counter.online.value, locale.value === 'ar', businessCurrency.value) : undefined, physical: physicalView(line), quantityStep: line.measurement ? cartQuantityStep(line) : 1, unitValue: selectedMeasurement(line), unitChoices: line.measurement ? [...line.measurement.saleUnits.map(unit => ({ value: `unit:${unit}`, label: unitLabel(unit) })), ...line.measurement.packages.filter(pack => pack.canSell).map(pack => ({ value: `package:${pack.id}`, label: `${pack.name} (${pack.baseQuantity} ${unitLabel(line.measurement!.baseUnitCode)})` }))] : undefined, baseEquivalent: baseEquivalent(line), imageUrl: line.imageUrl, name: line.name, quantity: line.quantity, maximumQuantity: cartQuantityLimit(line), total: money(counter.online.value ? taxQuote.value?.lines[index]?.total ?? (line.unitPrice - line.discount) * line.quantity : (line.unitPrice - line.discount) * line.quantity) })))
+const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map((line, index) => ({ id: line.key, quantityLocked: !!line.measurementCapture, quantityNotice: line.measurementCapture ? (locale.value === 'ar' ? 'وزن محفوظ من الملصق. احذف البند وأعد المسح لتغيير الوزن.' : 'Weight retained from the label. Remove the line and scan again to change it.') : undefined, pricing: line.itemType === 'product' ? tradePricePresentation(line, counter.online.value ? taxQuote.value?.lines[index]?.pricing?.source : undefined, pricePermission.value && counter.online.value, locale.value === 'ar', businessCurrency.value) : undefined, physical: physicalView(line), quantityStep: line.measurement ? cartQuantityStep(line) : 1, unitValue: selectedMeasurement(line), unitChoices: line.measurement ? [...line.measurement.saleUnits.map(unit => ({ value: `unit:${unit}`, label: unitLabel(unit) })), ...line.measurement.packages.filter(pack => pack.canSell).map(pack => ({ value: `package:${pack.id}`, label: `${pack.name} (${pack.baseQuantity} ${unitLabel(line.measurement!.baseUnitCode)})` }))] : undefined, baseEquivalent: baseEquivalent(line), imageUrl: line.imageUrl, name: line.name, quantity: line.quantity, maximumQuantity: cartQuantityLimit(line), total: money(counter.online.value ? taxQuote.value?.lines[index]?.total ?? (line.unitPrice - line.discount) * line.quantity : (line.unitPrice - line.discount) * line.quantity) })))
 const posView = computed<BsPointOfSaleView>(() => ({ cartCount: locale.value === 'ar' ? `${lines.value.length} أصناف` : `${lines.value.length} ${lines.value.length === 1 ? 'item' : 'items'}`, available: !!current.value, loadingContext: shopLoading.value, location: transactionLocationName.value || currentLocation.value?.name || '—', staff: selectedStaff.value?.name || t('pos.selectStaff'), locationChanged: locationChanged.value, error: errorMessage.value || (offlinePhysicalError.value ? readableError(offlinePhysicalError.value) : '') || (taxError.value ? readableError(taxError.value.message) : ''), scanMessage: scanMessage.value, checkingOut: checkingOut.value, confirming: confirmingCheckout.value, shortcutBlocked: posReceipt.visible.value || checkingOut.value || confirmingCheckout.value || !!confirmation.current.value, catalogLoading: catalogPending.value, catalogError: catalogError.value ? t(catalogError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', catalogTotal: catalog.value.total, catalogPageSize: catalog.value.pageSize, contextLoading: contextPending.value, contextError: contextError.value ? t(contextError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', appointmentLocked: !!appointmentId.value, customerDisabled: !counter.online.value || !!appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value, customerBusy: customerBusy.value, customerDisplay: customerId.value ? [customerName.value, customerPhone.value].filter(Boolean).join(' · ') : (appointmentId.value ? customerName.value || t('pos.noCustomer') : t('pos.noCustomer')), customerEmpty: customerBusy.value ? t('pos.loading') : t('pos.customerSearch'), customerEmptyFilter: customerBusy.value ? t('pos.loading') : (customerSearch.value.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')), hasCustomer: !!customerId.value, checkoutDisabled: Boolean(offlinePhysicalError.value) || taxPending.value || Boolean(taxError.value) || counter.shiftClosing.value || checkingOut.value || confirmingCheckout.value || contextPending.value || !!contextError.value || locationChanged.value || !lines.value.length || !staffId.value, total: money(total.value), reviewLabel: t('pos.reviewSale', { count: lines.value.length }), payLabel: t('pos.pay', { amount: money(total.value) }) }))
 function addPosItem(key: string) { const item = catalog.value.items.find(item => cartLineKey(item) === key); if (item) addItem(item) }
 function removePosLine(id: string) { const index = lines.value.findIndex(line => line.key === id); if (index >= 0) removeLine(index) }
@@ -418,13 +463,17 @@ function baseEquivalent(line: CartLine) {
 function setPosUnit(id: string, value: string) {
   if (checkingOut.value || confirmingCheckout.value || locationChanged.value) return
   const line = lines.value.find(line => line.key === id)
-  if (!line?.measurement || !value.startsWith('unit:') && !value.startsWith('package:')) return
+  if (line?.measurementCapture || !line?.measurement || !value.startsWith('unit:') && !value.startsWith('package:')) return
   const next = { ...line, unitSelection: value }
   if (value.startsWith('unit:') ? !line.measurement.saleUnits.includes(value.slice(5)) : !line.measurement.packages.some(pack => pack.canSell && pack.id === value.slice(8))) return
   next.key = cartLineKey(next)
   if (lines.value.some(other => other !== line && other.key === next.key)) { errorMessage.value = locale.value === 'ar' ? 'هذه الوحدة موجودة بالفعل في السلة.' : 'This unit is already in the cart.'; return }
   next.overridePrice = undefined; next.overrideReason = undefined
   next.unitPrice = selectedUnitPrice(next)
+  if (lines.value.some(other => other.sourceId === line.sourceId && other.measurementCapture)) {
+    try { assertCapturedStock(lines.value.filter(other => other !== line), { id: line.sourceId }, measuredBaseQuantity(next), String(line.stock ?? 0)) }
+    catch (cause) { errorMessage.value = readableError((cause as Error).message); return }
+  }
   lines.value = lines.value.map(other => other === line ? next : other); invalidateRequests()
 }
 async function loadPhysical(id: string, query?: string, more = false) {

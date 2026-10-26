@@ -600,7 +600,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Track tenant/location bin and shelf positions without disconnected inventory balances. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: Final115-migration replay passes21 selected SQL suites, both merchant journeys and eight inherited races. All10 final planning/recovery/report-export and inherited reel browsers pass. Actual types, Shop typecheck/build, scoped lint,120-template boundaries/architecture and root2034/2057 (zero fail,23 skip) pass. See SUPPLY-PLANNING.md and VERIFICATION.md for scoped evidence and open native/final gates.
-- PR / commit: Child `codex/shop-suit/supply-planning` targets published supplier ordering #487 at1bcdcf22, inherited by mergecea065e5; source prepared for draft review after the recorded local checkpoint.
+- PR / commit: Draft [#490](https://github.com/Building-Suit/building-suit-monorepo/pull/490), sourcec7bc466b, targets #487 at1bcdcf22. Exact-source native review, measured and website checks pass.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: Local implementation tested. Public `ss-electrical-storage-supplier-planning-20261025`; internal `ss-electrical-supply-planning-qualification-20261025`. No hosted or merchant/device completion claim.
 
@@ -615,7 +615,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Maintain supplier-specific item references, package choices and lead times with scoped access. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: Final115-migration replay passes21 selected SQL suites, both merchant journeys and eight inherited races. All10 final planning/recovery/report-export and inherited reel browsers pass. Actual types, Shop typecheck/build, scoped lint,120-template boundaries/architecture and root2034/2057 (zero fail,23 skip) pass. See SUPPLY-PLANNING.md and VERIFICATION.md for scoped evidence and open native/final gates.
-- PR / commit: Child `codex/shop-suit/supply-planning` targets published supplier ordering #487 at1bcdcf22, inherited by mergecea065e5; source prepared for draft review after the recorded local checkpoint.
+- PR / commit: Draft [#490](https://github.com/Building-Suit/building-suit-monorepo/pull/490), sourcec7bc466b, targets #487 at1bcdcf22. Exact-source native review, measured and website checks pass.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: Local implementation tested. Public `ss-electrical-storage-supplier-planning-20261025`; internal `ss-electrical-supply-planning-qualification-20261025`. No hosted or merchant/device completion claim.
 
@@ -630,7 +630,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Preserve historical supplier purchase unit/price/currency snapshots and paginated comparisons. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: Final115-migration replay passes21 selected SQL suites, both merchant journeys and eight inherited races. All10 final planning/recovery/report-export and inherited reel browsers pass. Actual types, Shop typecheck/build, scoped lint,120-template boundaries/architecture and root2034/2057 (zero fail,23 skip) pass. See SUPPLY-PLANNING.md and VERIFICATION.md for scoped evidence and open native/final gates.
-- PR / commit: Child `codex/shop-suit/supply-planning` targets published supplier ordering #487 at1bcdcf22, inherited by mergecea065e5; source prepared for draft review after the recorded local checkpoint.
+- PR / commit: Draft [#490](https://github.com/Building-Suit/building-suit-monorepo/pull/490), sourcec7bc466b, targets #487 at1bcdcf22. Exact-source native review, measured and website checks pass.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: Local implementation tested. Public `ss-electrical-storage-supplier-planning-20261025`; internal `ss-electrical-supply-planning-qualification-20261025`. No hosted or merchant/device completion claim.
 
@@ -638,14 +638,14 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E5 / P2 / Shop feature.
 - Dependencies: SS-ELEC-204, SS-ELEC-209.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Support only verified GS1/market variable-measure formats with checksums and bounded values; normal barcodes unchanged.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Support only verified GS1/market variable-measure formats with checksums and bounded values; normal barcodes unchanged. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: BARCODES.md. Full116-migration replay passes22 selected SQL suites, both merchant journeys and eight inherited races. Eight POS/barcode unit cases and Shop typecheck/build pass; final browser, root and release qualification in progress.
+- PR / commit: Child `codex/shop-suit/weight-barcodes` starts from published #490 atc7bc466b; source not yet published.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -690,7 +690,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Derive explainable canonical reorder suggestions from scoped demand/lead times; no automatic stock writes. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: Final115-migration replay passes21 selected SQL suites, both merchant journeys and eight inherited races. All10 final planning/recovery/report-export and inherited reel browsers pass. Actual types, Shop typecheck/build, scoped lint,120-template boundaries/architecture and root2034/2057 (zero fail,23 skip) pass. See SUPPLY-PLANNING.md and VERIFICATION.md for scoped evidence and open native/final gates.
-- PR / commit: Child `codex/shop-suit/supply-planning` targets published supplier ordering #487 at1bcdcf22, inherited by mergecea065e5; source prepared for draft review after the recorded local checkpoint.
+- PR / commit: Draft [#490](https://github.com/Building-Suit/building-suit-monorepo/pull/490), sourcec7bc466b, targets #487 at1bcdcf22. Exact-source native review, measured and website checks pass.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: Local implementation tested. Public `ss-electrical-storage-supplier-planning-20261025`; internal `ss-electrical-supply-planning-qualification-20261025`. No hosted or merchant/device completion claim.
 
