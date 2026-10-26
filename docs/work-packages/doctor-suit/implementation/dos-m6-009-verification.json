@@ -12,9 +12,10 @@
       "failed": 0
     },
     "combined_focused_cases": {
-      "previous_run_passed": 82,
-      "final_added_case_passed": 1,
-      "note": "final combined rerun pending; no fabricated aggregate command result"
+      "command": "node --test apps/doctor-suit/tests/unit/dos-m6-00{3,4,5,6,7,9}.test.mjs",
+      "passed": 83,
+      "failed": 0,
+      "own_cases": 18
     },
     "doctor_types": "passed",
     "scoped_doctor_and_shared_lint": "passed",
@@ -45,8 +46,42 @@
       "files": 5,
       "executed": false
     },
-    "root_regression": "in progress; preserve54 inheritedShop failures/23skips",
-    "affected_consumer_types": "in progress"
+    "root_regression": {
+      "command": "pnpm test",
+      "implementation_source": "aae1a082d2cee29b70c6ee5da21989b3f2a8a18d",
+      "tests": 2535,
+      "passed": 2458,
+      "failed": 54,
+      "skipped": 23,
+      "exit_code": 1,
+      "all_failure_locations": "apps/shop-suit/",
+      "duration_ms": 138611.909763,
+      "qualification": "Product/unit inputs from implementation source; later provenance/E2E-only diagnostics changed during execution. Actual local baseline evidence, not immutable exact-final-head or full-CI acceptance.",
+      "previous_worktree_run": {
+        "tests": 2534,
+        "passed": 2457,
+        "failed": 54,
+        "skipped": 23,
+        "duration_ms": 208023.387614,
+        "note": "Before final exact reconciliation invariant/unit assertion."
+      }
+    },
+    "affected_consumer_types": {
+      "passed": [
+        "doctor-suit",
+        "shop-suit",
+        "ledger-suit",
+        "inventory-suit",
+        "super-admin-suit",
+        "@building-suit/docs",
+        "doctor-mobile"
+      ],
+      "limitation": "Static types only; missing hosted environment configuration warnings expected. Unmatched docs filter corrected to actual @building-suit/docs and executed."
+    },
+    "exact_parent_release": {
+      "first_implementation": "failed: fragment paths had trailing slashes; corrected to exact paths, then passed at5944857f",
+      "diagnostics_update": "failed: two diagnostic test paths unclassified; exact paths added, final recheck pending"
+    }
   },
   "owned_ci": {
     "task_sql_assertions": {
@@ -73,5 +108,138 @@
     "hosted_migration": false,
     "staging_or_main_promotion": false,
     "full_task_or_milestone_acceptance": false
+  },
+  "inherited_622_followup": {
+    "source_head": "622a1f523aa0b9bfeb7beadbcedd22647ac4d2d4",
+    "run_id": 40330279377,
+    "url": "https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40330279377",
+    "aggregate": "cancelled; SQL succeeded, Doctor browser failed, shared browser cancelled",
+    "sql": {
+      "job": 121597553814,
+      "status": "success",
+      "assertions": 2120,
+      "suites": 66,
+      "task006": 57,
+      "task007": 62,
+      "billing_transactions": 7,
+      "money_transactions": 8,
+      "exact_recovery_table_fingerprints": 95,
+      "schema_generation": "passed",
+      "generated_schema_acquisition": "unqualified"
+    },
+    "browser": {
+      "job": 121597553311,
+      "public_cases_passed": 60,
+      "protocol_cases_passed": 87,
+      "stress_cases_passed": 4,
+      "financial_receipts": [
+        {
+          "kind": "doctor-financial-browser/v1",
+          "task": "DOS-M6-003",
+          "source_head": "622a1f523aa0b9bfeb7beadbcedd22647ac4d2d4",
+          "status": "failed",
+          "cases": [
+            {
+              "id": "DOS-M6-003-C02-EN",
+              "status": "passed",
+              "phase": "direction_and_viewport"
+            },
+            {
+              "id": "DOS-M6-003-C02-AR",
+              "status": "failed",
+              "phase": "notice_row",
+              "source_location": {
+                "file": "dos-m6-003.spec.ts",
+                "line": 30,
+                "column": 82
+              }
+            }
+          ],
+          "actual_service": true,
+          "synthetic_only": true,
+          "clinical_approval": false,
+          "live_payment_acceptance": false
+        },
+        {
+          "kind": "doctor-financial-browser/v1",
+          "task": "DOS-M6-004",
+          "source_head": "622a1f523aa0b9bfeb7beadbcedd22647ac4d2d4",
+          "status": "failed",
+          "cases": [
+            {
+              "id": "DOS-M6-004-C01-EN",
+              "status": "failed",
+              "phase": "notice_row",
+              "source_location": {
+                "file": "dos-m6-004.spec.ts",
+                "line": 34,
+                "column": 82
+              }
+            },
+            {
+              "id": "DOS-M6-004-C01-AR",
+              "status": "passed",
+              "phase": "direction_and_viewport"
+            }
+          ],
+          "actual_service": true,
+          "synthetic_only": true,
+          "clinical_approval": false,
+          "live_payment_acceptance": false
+        },
+        {
+          "kind": "doctor-financial-browser/v1",
+          "task": "DOS-M6-006",
+          "source_head": "622a1f523aa0b9bfeb7beadbcedd22647ac4d2d4",
+          "status": "failed",
+          "cases": [
+            {
+              "id": "DOS-M6-006-C02-EN",
+              "status": "timedOut",
+              "phase": "price_create"
+            },
+            {
+              "id": "DOS-M6-006-C02-AR",
+              "status": "timedOut",
+              "phase": "price_create"
+            }
+          ],
+          "actual_service": true,
+          "synthetic_only": true,
+          "clinical_approval": false,
+          "live_payment_acceptance": false
+        },
+        {
+          "kind": "doctor-financial-browser/v1",
+          "task": "DOS-M6-007",
+          "source_head": "622a1f523aa0b9bfeb7beadbcedd22647ac4d2d4",
+          "status": "failed",
+          "cases": [
+            {
+              "id": "DOS-M6-007-C03-EN",
+              "status": "timedOut",
+              "phase": "route"
+            },
+            {
+              "id": "DOS-M6-007-C03-AR",
+              "status": "timedOut",
+              "phase": "route"
+            }
+          ],
+          "actual_service": true,
+          "synthetic_only": true,
+          "clinical_approval": false,
+          "live_payment_acceptance": false
+        }
+      ],
+      "full_provider_lifecycle_hook": "unreached after financial subprocess failure"
+    },
+    "shared": {
+      "job": 121597553723,
+      "status": "cancelled",
+      "auth_cases_passed_before_cancellation": 48,
+      "settings": "unqualified"
+    },
+    "conclusion": "Directory page repair does not establish cause/resolution of remaining billing price_create timeouts. Added fine phases/bounded controller diagnostics; no speculative product fix/assertion relaxation."
   }
 }

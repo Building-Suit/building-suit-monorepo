@@ -49,3 +49,5 @@ Task008/PR498 branches from published495/head259be. Separate SaaS/practice taxpa
 ## DOS-M6-009 implementation checkpoint — PR499
 
 Owner-scoped synthetic financial report/source RPCs, additive complete shared report workspace and exact money/date/status/source tests are implemented. Parent498 atab4e71cf is preserved.18 owned units and Doctor/static checks pass;57 SQL assertions/three real interleavings/two actual EN/AR GUI cases are wired only in disposable CI, with actual acceptance pending. Read dos-m6-009.md / verification JSON for exact limitations, unchanged54 Shop baseline and distinct tax/SaaS/provider gates. Continue this open task PR through actual receipts, then010 and independent M7–9; do not stop at a checkpoint or infer approval from a pending run.
+
+009 local follow-up:83 focused/18 owned pass; all affected app types pass; root2535/2458pass/54 unchanged Shop failures/23skip. Source622/run40330279377 confirms2120SQL/66suites+95-table recovery but remaining financial GUI failures despite directory-page repair. Full provider hooks remain unreached.009 adds finer safe diagnostics; no resolved runtime cause or final financial/tax acceptance.

@@ -31,6 +31,8 @@
     "apps/doctor-suit/tests/disposable-postgres.mjs",
     "apps/doctor-suit/tests/e2e/dos-m6-003.spec.ts",
     "apps/doctor-suit/tests/e2e/dos-m6-004.spec.ts",
+    "apps/doctor-suit/tests/e2e/dos-m6-006.spec.ts",
+    "apps/doctor-suit/tests/e2e/dos-m6-007.spec.ts",
     "apps/doctor-suit/tests/e2e/dos-m6-009.spec.ts",
     "apps/doctor-suit/tests/e2e/financial-notice-diagnostics.ts",
     "apps/doctor-suit/tests/e2e/financial-reporter.mjs",
