@@ -20,7 +20,7 @@ function component(file, globals) {
   const localRequire = name => {
     if (name.startsWith('#shared/')) return require(new URL(`../../shared/${name.slice(8)}.ts`, import.meta.url).pathname)
     if (!name.startsWith('~/')) return require(name)
-    const extension = /\/(businessMode|shopCommandErrorMessage|tradePricing)$/.test(name) ? '.ts' : /\/(pos|posCustomer|saleCopy)$/.test(name) ? '.js' : ''
+    const extension = /\/(businessMode|shopCommandErrorMessage|tradePricing|scaleCaptureCopy)$/.test(name) ? '.ts' : /\/(pos|posCustomer|saleCopy)$/.test(name) ? '.js' : ''
     return require(new URL(`../../app/${name.slice(2)}${extension}`, import.meta.url).pathname)
   }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(localRequire, module, module.exports, ...Object.values(globals))
@@ -42,6 +42,9 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
     preloadRouteComponents: async () => {},
     useOfflineCounter: () => ({ online: vue.ref(true), ready: vue.ref(false), scope: vue.ref(''), busy: vue.ref(false), records: vue.ref([]), shiftClosing: vue.ref(false), cached: async () => null, cache: async () => {}, retry: async () => {} }),
     useOfflineCounterView: () => vue.ref(undefined),
+    // This appointment fixture isolates the service-only POS projection. The
+    // optional hardware adapter remains closed and unavailable in that mode.
+    useScaleCounter: () => ({ open:vue.ref(false),form:vue.ref({profileId:'',productId:''}),view:vue.ref({available:false}),copy:vue.ref({}),...Object.fromEntries(['show','profile','product','query','more','retry','connect','disconnect','read','tare','submit'].map(name=>[name,()=>{}])) }),
     useSaleTaxQuote: () => ({ data: vue.ref({ total: 100, tax: 0, net: 100, calculationEnabled: false, lines: [] }), pending: vue.ref(false), error: vue.ref(null) }),
     useCatalogMedia: () => ({ request: (_action, _args, fallback) => fallback() }),
     useI18n: () => ({ locale: vue.ref('en'), t: key => key }),
@@ -76,6 +79,7 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
   app.component('NuxtLink', { setup: (_, { slots }) => () => vue.h('a', {}, slots.default?.()) })
   app.config.globalProperties.$primevue = { config: { unstyled: true } }
   const html = await renderToString(app)
+  assert.equal(projection.scale.available, false)
   assert.equal(projection.view.appointmentLocked, true)
   assert.equal(projection.view.customerDisabled, true)
   assert.equal(projection.view.customerDisplay, 'Booked customer')

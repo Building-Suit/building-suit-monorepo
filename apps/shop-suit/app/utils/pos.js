@@ -37,7 +37,7 @@ export function nextCartQuantity(current, item) {
 
 
 export function selectedMeasurement(item) { return item.unitSelection || (item.measurement ? `unit:${item.measurement.baseUnitCode}` : '') }
-export function cartLineKey(item) { const selection = selectedMeasurement(item); return `${item.itemType}:${item.sourceId || item.id}${selection ? ':' + selection : ''}${item.reelId ? ':reel:' + item.reelId : ''}${item.measurementCapture ? ':capture:' + item.measurementCapture.id : ''}` }
+export function cartLineKey(item) { const selection = selectedMeasurement(item); return `${item.itemType}:${item.sourceId || item.id}${selection ? ':' + selection : ''}${item.reelId ? ':reel:' + item.reelId : ''}${item.measurementCapture ? ':capture:' + item.measurementCapture.kind + ':' + item.measurementCapture.id : ''}` }
 export function selectedPackaging(item) { return item.measurement?.packages?.find(pack => `package:${pack.id}` === selectedMeasurement(item)) }
 export function measurementFactor(item) {
   const m = item.measurement

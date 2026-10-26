@@ -4,6 +4,11 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      weighing_setup_command: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_kind: import('./scales').WeighingSetupKind; p_id: string | null; p_revision: number; p_values: import('./scales').WeighingSetupValues; p_reason: string }; Returns: { id: string; kind: import('./scales').WeighingSetupKind; revision: number } }
+      weighing_setup_context: { Args: { p_shop_id: string; p_location_id: string; p_kind?: import('./scales').WeighingSetupKind; p_search?: string | null; p_page?: number; p_id?: string | null; p_history_page?: number }; Returns: import('./scales').WeighingSetupContext }
+      scale_counter_context: { Args: { p_shop_id: string; p_location_id: string; p_search?: string | null; p_page?: number; p_product_id?: string | null }; Returns: import('./scales').ScaleCounterContext }
+      record_scale_capture: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_product_id: string; p_device_id: string; p_device_revision: number; p_reading: import('./scales').ScaleCaptureSnapshot['reading']; p_factor_id?: string | null; p_factor_revision?: number | null }; Returns: import('./scales').ScaleCaptureResult }
+      get_scale_capture: { Args: { p_shop_id: string; p_location_id: string; p_capture_id: string }; Returns: import('./scales').ScaleCaptureResolution }
       resolve_weight_barcode: { Args: { p_shop_id: string; p_location_id: string; p_barcode: string }; Returns: import('./weightBarcodes').WeightBarcodeResolution }
       inventory_planning_command: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_kind: import('./supplyPlanning').PlanningKind; p_id: string | null; p_revision: number; p_values: import('./supplyPlanning').PlanningValues; p_reason: string }; Returns: { id: string; revision: number; kind: import('./supplyPlanning').PlanningKind } }
       inventory_planning_context: { Args: { p_shop_id: string; p_location_id: string; p_kind: import('./supplyPlanning').PlanningKind; p_search?: string | null; p_page?: number; p_record_id?: string | null; p_history_page?: number }; Returns: import('./supplyPlanning').PlanningContext }

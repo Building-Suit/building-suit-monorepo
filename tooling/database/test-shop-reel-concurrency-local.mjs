@@ -1,3 +1,4 @@
+import { verifyScaleCaptureRaces } from './shop-scale-capture-concurrency.mjs'
 import { verifySupplierOrderRaces } from './shop-supplier-order-concurrency.mjs'
 import { verifyOrderReservationRaces } from './shop-order-reservation-concurrency.mjs'
 import assert from 'node:assert/strict'
@@ -22,3 +23,4 @@ await verifyPhysicalReelRace(sql,parallel)
 
 await verifyOrderReservationRaces(sql,parallel)
 await verifySupplierOrderRaces(sql,parallel)
+await verifyScaleCaptureRaces(sql,parallel)

@@ -97,7 +97,8 @@
     "BsTradeQuotationsPage": "packages/ui/src/templates/BsTradeQuotationsPage.vue",
     "BsTradeOrdersPage": "packages/ui/src/templates/BsTradeOrdersPage.vue",
     "BsSupplierOrdersPage": "packages/ui/src/templates/BsSupplierOrdersPage.vue",
-    "BsSupplyPlanningPage": "packages/ui/src/templates/BsSupplyPlanningPage.vue"
+    "BsSupplyPlanningPage": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
+    "BsWeighingSetupPage": "packages/ui/src/templates/BsWeighingSetupPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -3098,6 +3099,26 @@
       ],
       "verification": "Implementation qualification in progress; see electrical-supply/SUPPLY-PLANNING.md.",
       "purpose": "shop-supply-planning"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/weighing-setup.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsWeighingSetupPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsWeighingSetupPage"
+      ],
+      "destination": "packages/ui/src/templates/BsWeighingSetupPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/composables/useWeighingSetup.ts",
+      "dependencies": [
+        "@building-suit/ui/types/weighingSetupPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/scales"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/SCALES.md.",
+      "purpose": "shop-weighing-setup"
     }
   ],
   "verifiedSharedHeads": [
@@ -3243,6 +3264,7 @@
     "BsTradeQuotationsPage",
     "BsTradeOrdersPage",
     "BsSupplierOrdersPage",
-    "BsSupplyPlanningPage"
+    "BsSupplyPlanningPage",
+    "BsWeighingSetupPage"
   ]
 }

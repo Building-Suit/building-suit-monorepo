@@ -404,7 +404,11 @@
     "./templates/BsSupplierOrdersPage": "./src/templates/BsSupplierOrdersPage.vue",
     "./types/supplierOrderPresentation": "./src/types/supplierOrderPresentation.ts",
     "./templates/BsSupplyPlanningPage": "./src/templates/BsSupplyPlanningPage.vue",
-    "./types/supplyPlanningPresentation": "./src/types/supplyPlanningPresentation.ts"
+    "./types/supplyPlanningPresentation": "./src/types/supplyPlanningPresentation.ts",
+    "./types/scaleCapturePresentation": "./src/types/scaleCapturePresentation.ts",
+    "./organisms/BsScaleCaptureDialog": "./src/organisms/BsScaleCaptureDialog.vue",
+    "./types/weighingSetupPresentation": "./src/types/weighingSetupPresentation.ts",
+    "./templates/BsWeighingSetupPage": "./src/templates/BsWeighingSetupPage.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

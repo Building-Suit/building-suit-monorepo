@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { parseGs1WeightBarcode, capturedWeightQuantity, cartQuantityFromDecimal, assertCapturedStock } from '~/utils/weightBarcodes.js'
+import { scaleFailure } from '~/utils/scaleCaptureCopy'
+import type { ScaleCaptureInput, ScaleCaptureResolution, ScaleCaptureSnapshot } from '~/types/scales'
 import type { Gs1WeightCapture, WeightBarcodeResolution } from '~/types/weightBarcodes'
 import { tradePricePresentation } from '~/utils/tradePricing'
 import { measurementUnits } from '~/utils/measurement'
@@ -21,7 +23,7 @@ const { businessCurrency } = useShop()
 definePageMeta({ layout: 'default', middleware: ['auth', 'business-mode'] })
 type PaymentMethod = 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
 type CatalogItem = { stockOnHand?: string; stockReserved?: string; reelId?: string; reelBarcode?: string; reelRemaining?: string; reelPrice?: number | null; reelStatus?: string; reelSummary?: ReelAvailability; catalogStock?: number; allowSplit?: boolean; cuttingLoss?: string; measurement?: PosMeasurement | null; unitSelection?: string; id: string; itemType: 'product' | 'service'; name: string; imageUrl?: string | null; sku: string | null; barcode: string | null; unitPrice: number; discount: number; stock: number | null }
-type CartLine = CatalogItem & { measurementCapture?: Gs1WeightCapture; overridePrice?: string; overrideReason?: string; key: string; sourceId: string; quantity: number }
+type CartLine = CatalogItem & { measurementCapture?: Gs1WeightCapture | ScaleCaptureInput; scaleSnapshot?: ScaleCaptureSnapshot; overridePrice?: string; overrideReason?: string; key: string; sourceId: string; quantity: number }
 type Appointment = { id: string; staffId: string; customerId: string | null; customerName: string; startsAt: string; status: string; service: CatalogItem }
 type Customer = { id: string; name: string; phone: string | null }
 type PosContext = { customerQuery?: string; staff: Array<{ id: string; name: string }>; appointments: Appointment[]; customers: Array<{ id: string; name: string; phone: string | null }> }
@@ -88,6 +90,7 @@ watch(categoryFilter, () => { catalogPage.value = 1 })
 
 const offlinePhysicalError = computed(() => counter.online.value ? null : lines.value.map(physicalCartError).find(Boolean) ?? null)
 const locationChanged = computed(() => Boolean(transactionLocationId.value && currentLocationId.value !== transactionLocationId.value))
+const {open:scaleOpen,form:scaleForm,view:scaleView,copy:scaleCopy,show:openScale,profile:scaleProfile,product:scaleProduct,query:scaleSearch,more:scaleMore,retry:scaleRetry,connect:scaleConnect,disconnect:scaleDisconnect,read:scaleRead,tare:scaleTare,submit:scaleSubmit}=useScaleCounter(counter.online,()=>checkingOut.value||confirmingCheckout.value||locationChanged.value,addScaleCapture)
 const taxLines = computed(() => lines.value.map(saleLineInput))
 const { data: pricePermission } = useShopQuery('shop-data:price-approval-access', async () => {
  if (!currentId.value) return false
@@ -292,6 +295,7 @@ function resetSale(focus = true) {
   if (focus) nextTick(() => posPage.value?.focusCatalog())
 }
 function readableError(message?: string) {
+  if (message?.includes('SCALE_') || message?.includes('APPROVED_MASS_LENGTH')) return scaleFailure(new Error(message), locale.value === 'ar')
   if (message?.includes('WEIGHT_') || message?.includes('FIXED_BARCODE_USE_NORMAL_SCAN')) return locale.value === 'ar' ? 'تعذّر اعتماد وزن الملصق. راجع باركود الصنف ووحدة المخزون أو أعد المسح.' : 'Could not verify the label weight. Review the product barcode and stock unit, or scan again.'
   if (message?.includes('TRADE_OFFLINE_QUOTE_REQUIRED')) return locale.value === 'ar' ? 'يلزم الاتصال للتحقق من أسعار التعاقد والكميات قبل إتمام البيع.' : 'Connect to verify customer and quantity prices before checkout.'
   if (message?.includes('PRICE_OVERRIDE_PERMISSION_DENIED') || message?.includes('PRICE_APPROVAL_CONTEXT_CHANGED')) return locale.value === 'ar' ? 'يلزم اعتماد مدير لهذا السعر بعد تغيير العميل أو الكمية أو الوحدة.' : 'A manager must approve this price after changing the customer, quantity or unit.'
@@ -311,6 +315,16 @@ function readableError(message?: string) {
   if (message?.includes('POS_CHECKOUT_REQUIRES_FULL_PAYMENT') || message?.includes('TAX_QUOTE_CHANGED')) return locale.value === 'ar' ? 'تغير السعر أو العرض. راجع الإجمالي المحدّث قبل الدفع.' : 'A price or offer changed. Review the refreshed total before paying.'
   if (message?.includes('FULL_PAYMENT') || message?.includes('OVERPAYMENT')) return t('sales.fullPaymentRequired')
   return t('pos.checkoutError')
+}
+function addScaleCapture(result: ScaleCaptureResolution) {
+  if (checkingOut.value || confirmingCheckout.value || locationChanged.value) throw new Error('SCALE_CONTEXT_CHANGED')
+  if (lines.value.length >= 100) throw new Error('SCALE_CART_LIMIT')
+  if (lines.value.some(line => line.measurementCapture?.kind === 'scale' && line.measurementCapture.id === result.id)) throw new Error('SCALE_CAPTURE_ALREADY_ASSIGNED')
+  assertCapturedStock(lines.value, result.item, result.quantity, result.availableQuantity)
+  const measurementCapture: ScaleCaptureInput = { kind: 'scale', id: result.id }
+  const selected = { ...result.item, unitSelection: `unit:${result.unitCode}`, measurementCapture, scaleSnapshot: result.snapshot }
+  const line: CartLine = { ...selected, sourceId: selected.id, key: cartLineKey(selected), quantity: cartQuantityFromDecimal(result.quantity), unitPrice: selectedUnitPrice(selected) }
+  lockLocation(); lines.value = [...lines.value, line]; invalidateRequests(); errorMessage.value = ''; scanMessage.value = t('pos.scanAdded', { name: line.name })
 }
 function addCapturedWeight(result: WeightBarcodeResolution) {
   if (checkingOut.value || confirmingCheckout.value || locationChanged.value) return
@@ -449,8 +463,8 @@ function setPriceApproval(id: string, value: string, reason = false) {
  lines.value = lines.value.map(line => line.key === id && line.itemType === 'product' ? { ...line, ...(reason ? { overrideReason: value } : { overridePrice: value }) } : line)
  invalidateRequests()
 }
-const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map((line, index) => ({ id: line.key, quantityLocked: !!line.measurementCapture, quantityNotice: line.measurementCapture ? (locale.value === 'ar' ? 'وزن محفوظ من الملصق. احذف البند وأعد المسح لتغيير الوزن.' : 'Weight retained from the label. Remove the line and scan again to change it.') : undefined, pricing: line.itemType === 'product' ? tradePricePresentation(line, counter.online.value ? taxQuote.value?.lines[index]?.pricing?.source : undefined, pricePermission.value && counter.online.value, locale.value === 'ar', businessCurrency.value) : undefined, physical: physicalView(line), quantityStep: line.measurement ? cartQuantityStep(line) : 1, unitValue: selectedMeasurement(line), unitChoices: line.measurement ? [...line.measurement.saleUnits.map(unit => ({ value: `unit:${unit}`, label: unitLabel(unit) })), ...line.measurement.packages.filter(pack => pack.canSell).map(pack => ({ value: `package:${pack.id}`, label: `${pack.name} (${pack.baseQuantity} ${unitLabel(line.measurement!.baseUnitCode)})` }))] : undefined, baseEquivalent: baseEquivalent(line), imageUrl: line.imageUrl, name: line.name, quantity: line.quantity, maximumQuantity: cartQuantityLimit(line), total: money(counter.online.value ? taxQuote.value?.lines[index]?.total ?? (line.unitPrice - line.discount) * line.quantity : (line.unitPrice - line.discount) * line.quantity) })))
-const posView = computed<BsPointOfSaleView>(() => ({ cartCount: locale.value === 'ar' ? `${lines.value.length} أصناف` : `${lines.value.length} ${lines.value.length === 1 ? 'item' : 'items'}`, available: !!current.value, loadingContext: shopLoading.value, location: transactionLocationName.value || currentLocation.value?.name || '—', staff: selectedStaff.value?.name || t('pos.selectStaff'), locationChanged: locationChanged.value, error: errorMessage.value || (offlinePhysicalError.value ? readableError(offlinePhysicalError.value) : '') || (taxError.value ? readableError(taxError.value.message) : ''), scanMessage: scanMessage.value, checkingOut: checkingOut.value, confirming: confirmingCheckout.value, shortcutBlocked: posReceipt.visible.value || checkingOut.value || confirmingCheckout.value || !!confirmation.current.value, catalogLoading: catalogPending.value, catalogError: catalogError.value ? t(catalogError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', catalogTotal: catalog.value.total, catalogPageSize: catalog.value.pageSize, contextLoading: contextPending.value, contextError: contextError.value ? t(contextError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', appointmentLocked: !!appointmentId.value, customerDisabled: !counter.online.value || !!appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value, customerBusy: customerBusy.value, customerDisplay: customerId.value ? [customerName.value, customerPhone.value].filter(Boolean).join(' · ') : (appointmentId.value ? customerName.value || t('pos.noCustomer') : t('pos.noCustomer')), customerEmpty: customerBusy.value ? t('pos.loading') : t('pos.customerSearch'), customerEmptyFilter: customerBusy.value ? t('pos.loading') : (customerSearch.value.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')), hasCustomer: !!customerId.value, checkoutDisabled: Boolean(offlinePhysicalError.value) || taxPending.value || Boolean(taxError.value) || counter.shiftClosing.value || checkingOut.value || confirmingCheckout.value || contextPending.value || !!contextError.value || locationChanged.value || !lines.value.length || !staffId.value, total: money(total.value), reviewLabel: t('pos.reviewSale', { count: lines.value.length }), payLabel: t('pos.pay', { amount: money(total.value) }) }))
+const posCartLines = computed<BsPointOfSaleCartLine[]>(() => lines.value.map((line, index) => ({ id: line.key, quantityLocked: !!line.measurementCapture, quantityNotice: line.measurementCapture?.kind === 'scale' ? (locale.value === 'ar' ? `وزن مؤكد: ${line.scaleSnapshot?.netQuantity} ${unitLabel(line.scaleSnapshot?.unitCode || '')}. احذف البند وأعد الوزن لتغيير الكمية.` : `Confirmed weight: ${line.scaleSnapshot?.netQuantity} ${unitLabel(line.scaleSnapshot?.unitCode || '')}. Remove the line and weigh again to change its quantity.`) : line.measurementCapture ? (locale.value === 'ar' ? 'وزن محفوظ من الملصق. احذف البند وأعد المسح لتغيير الوزن.' : 'Weight retained from the label. Remove the line and scan again to change it.') : undefined, pricing: line.itemType === 'product' ? tradePricePresentation(line, counter.online.value ? taxQuote.value?.lines[index]?.pricing?.source : undefined, pricePermission.value && counter.online.value, locale.value === 'ar', businessCurrency.value) : undefined, physical: physicalView(line), quantityStep: line.measurement ? cartQuantityStep(line) : 1, unitValue: selectedMeasurement(line), unitChoices: line.measurement ? [...line.measurement.saleUnits.map(unit => ({ value: `unit:${unit}`, label: unitLabel(unit) })), ...line.measurement.packages.filter(pack => pack.canSell).map(pack => ({ value: `package:${pack.id}`, label: `${pack.name} (${pack.baseQuantity} ${unitLabel(line.measurement!.baseUnitCode)})` }))] : undefined, baseEquivalent: baseEquivalent(line), imageUrl: line.imageUrl, name: line.name, quantity: line.quantity, maximumQuantity: cartQuantityLimit(line), total: money(counter.online.value ? taxQuote.value?.lines[index]?.total ?? (line.unitPrice - line.discount) * line.quantity : (line.unitPrice - line.discount) * line.quantity) })))
+const posView = computed<BsPointOfSaleView>(() => ({ cartCount: locale.value === 'ar' ? `${lines.value.length} أصناف` : `${lines.value.length} ${lines.value.length === 1 ? 'item' : 'items'}`, available: !!current.value, loadingContext: shopLoading.value, location: transactionLocationName.value || currentLocation.value?.name || '—', staff: selectedStaff.value?.name || t('pos.selectStaff'), locationChanged: locationChanged.value, error: errorMessage.value || (offlinePhysicalError.value ? readableError(offlinePhysicalError.value) : '') || (taxError.value ? readableError(taxError.value.message) : ''), scanMessage: scanMessage.value, checkingOut: checkingOut.value, confirming: confirmingCheckout.value, shortcutBlocked: scaleOpen.value || posReceipt.visible.value || checkingOut.value || confirmingCheckout.value || !!confirmation.current.value, catalogLoading: catalogPending.value, catalogError: catalogError.value ? t(catalogError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', catalogTotal: catalog.value.total, catalogPageSize: catalog.value.pageSize, contextLoading: contextPending.value, contextError: contextError.value ? t(contextError.value.message?.includes('SHOP_PERMISSION_DENIED') ? 'pos.permissionDenied' : 'pos.loadError') : '', appointmentLocked: !!appointmentId.value, customerDisabled: !counter.online.value || !!appointmentId.value || checkingOut.value || confirmingCheckout.value || locationChanged.value, customerBusy: customerBusy.value, customerDisplay: customerId.value ? [customerName.value, customerPhone.value].filter(Boolean).join(' · ') : (appointmentId.value ? customerName.value || t('pos.noCustomer') : t('pos.noCustomer')), customerEmpty: customerBusy.value ? t('pos.loading') : t('pos.customerSearch'), customerEmptyFilter: customerBusy.value ? t('pos.loading') : (customerSearch.value.trim().length < 2 ? t('pos.customerSearch') : t('pos.customerNoResults')), hasCustomer: !!customerId.value, checkoutDisabled: Boolean(offlinePhysicalError.value) || taxPending.value || Boolean(taxError.value) || counter.shiftClosing.value || checkingOut.value || confirmingCheckout.value || contextPending.value || !!contextError.value || locationChanged.value || !lines.value.length || !staffId.value, total: money(total.value), reviewLabel: t('pos.reviewSale', { count: lines.value.length }), payLabel: t('pos.pay', { amount: money(total.value) }) }))
 function addPosItem(key: string) { const item = catalog.value.items.find(item => cartLineKey(item) === key); if (item) addItem(item) }
 function removePosLine(id: string) { const index = lines.value.findIndex(line => line.key === id); if (index >= 0) removeLine(index) }
 function setPosQuantity(id: string, value: number) { const line = lines.value.find(line => line.key === id); if (line) setQuantity(line, value) }
@@ -585,12 +599,16 @@ const posPaymentOptions = computed(() => ['cash','card','bank_transfer','wallet'
 <template>
   <BsPointOfSalePage
     ref="posPage"
+    v-model:scale-visible="scaleOpen"
     v-model:receipt-visible="posReceipt.visible.value"
     v-model:catalog-search="catalogSearch"
     v-model:category-filter="categoryFilter"
     v-model:item-type="posItemType"
     v-model:catalog-page="catalogPage"
     v-model:payment-form="posPaymentForm"
+    :scale="scaleView"
+    :scale-copy="scaleCopy"
+    :scale-form="scaleForm"
     :receipt-preview="posReceipt.view.value"
     :offers="offerCards"
     :offers-title="locale === 'ar' ? 'العروض والباقات' : 'Promos & offers'"
@@ -620,6 +638,17 @@ const posPaymentOptions = computed(() => ['cash','card','bank_transfer','wallet'
     @share-receipt="posReceipt.share"
     @download-receipt="posReceipt.download"
     @printed-receipt="posReceipt.printed"
+    @scale-open="openScale"
+    @scale-profile="scaleProfile"
+    @scale-product="scaleProduct"
+    @scale-search="scaleSearch"
+    @scale-more="scaleMore"
+    @scale-retry="scaleRetry"
+    @scale-connect="scaleConnect"
+    @scale-disconnect="scaleDisconnect"
+    @scale-read="scaleRead"
+    @scale-tare="scaleTare"
+    @scale-submit="scaleSubmit"
     @select-offer="selectOffer"
     @retry-offers="offerQuery.refresh()"
     @retry-offline="counter.retry($event)"

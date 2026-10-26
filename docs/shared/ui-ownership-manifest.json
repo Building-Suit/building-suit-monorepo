@@ -751,6 +751,16 @@
       "adapterBoundary": "Typed storage/bin placements, supplier item/unit/lead-time forms and original purchase-cost history. Shop owns location/role authority, immutable retry identity, stock/source integrity and report-derived reorder calculations.",
       "task": "SS-ELECTRICAL-001",
       "migrationStatus": "implementation qualification in progress"
+    },
+    {
+      "family": "weighing-setup",
+      "owner": "packages/ui",
+      "components": [
+        "BsWeighingSetupPage",
+        "BsScaleCaptureDialog"
+      ],
+      "interactionOwner": "packages/ux",
+      "notes": "Shared approval setup and optional counter-scale capture presentation; product owns permissions, device/factor approval, exact conversion and atomic capture/sale commands."
     }
   ]
 }

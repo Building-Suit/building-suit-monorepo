@@ -8,6 +8,7 @@ on:
       - 'tooling/database/*reel*.mjs'
       - 'tooling/database/*reservation*.mjs'
       - 'tooling/database/*supplier*.mjs'
+      - 'tooling/database/*scale*.mjs'
       - 'tooling/database/test-shop-sale*.mjs'
       - 'tooling/database/test-shop-payment-local.mjs'
       - 'tooling/database/test-shop-stock-local.mjs'
@@ -50,7 +51,7 @@ jobs:
             exit 1
           fi
       - run: node tooling/database/test-shop-measurement-local.mjs
-      - name: Verify reel sales and order reservation serialization on real Supabase
+      - name: Verify reel, order and scale capture serialization on real Supabase
         env:
           SHOP_REEL_RACE_DISPOSABLE: '1'
         run: node tooling/database/test-shop-reel-concurrency-local.mjs

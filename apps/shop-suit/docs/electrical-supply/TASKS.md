@@ -645,7 +645,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Automated tests: Support only verified GS1/market variable-measure formats with checksums and bounded values; normal barcodes unchanged. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
 - Evidence: BARCODES.md. Full116-migration replay passes22 selected SQL suites, both merchant journeys and eight inherited races. Eight POS/barcode units, root2038/2061 (zero failures,23 skips), Shop build/typecheck, Docs typecheck, app/shared lint, strict120-template ownership and committed release coverage pass. All13 final built EN/AR barcode/retail/reel/trade cases pass, including stock shared with offers/manual lines and reachable mobile payment controls. Native/final consumer and external acceptance remain separate.
-- PR / commit: Child `codex/shop-suit/weight-barcodes` starts from published #490 atc7bc466b; implementatione14f4ab6 and mobile viewport fix8ebebaff; final evidence prepared for draft publication.
+- PR / commit: Child `codex/shop-suit/weight-barcodes` starts from published #490 atc7bc466b; published [#493](https://github.com/Building-Suit/building-suit-monorepo/pull/493), sourceb0e467f1, includes implementatione14f4ab6 and mobile viewport fix8ebebaff. Stack and committed release checks pass; native review and measured checks pass, website qualification still running at this checkpoint.
 - Blocker: Native exact-source qualification and final merchant/device/native-speaker/provider acceptance remain pending.
 - Completion notes / release fragment: Local implementation tested. Public `ss-electrical-verified-weight-barcodes-20261025`; internal `ss-electrical-weight-barcode-qualification-20261025`. No hosted or merchant/device completion claim.
 
@@ -653,31 +653,31 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E5 / P2 / Shop feature.
 - Dependencies: SS-ELEC-504.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Use an optional supported scale adapter with stable/tare/net readings, units, failures and staff confirmation.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Use an optional supported scale adapter with stable/tare/net readings, units, failures and staff confirmation. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Evidence: SCALES.md and VERIFICATION.md. Focused protocol/transport/conversion/malformed-reader units pass16/16; expanded117-migration scoped SQL and three new capture races pass with both merchant journeys and inherited races. All19 combined EN/AR scale/setup and inherited measured/reel/trade/GS1 browsers pass. Full117-migration replay,21 named regression suites plus foundation/both journeys and11 races pass; actual types match. Shop build/typecheck, scoped lint and121-template boundaries pass. Final root/release/native/consumer gates remain in progress; physical hardware acceptance is separate.
+- PR / commit: Child `codex/shop-suit/scale-and-mass-length` starts from published [#493](https://github.com/Building-Suit/building-suit-monorepo/pull/493) atb0e467f1; source uncommitted.
+- Blocker: Final repository/consumer/committed-release/native qualification and actual device/model/settings, merchant, native-speaker and hosted acceptance remain separate gates.
+- Completion notes / release fragment: Locally tested implementation. Public `ss-electrical-approved-scale-sales-20261026`; internal `ss-electrical-scale-qualification-20261026`. No physical-hardware or commercial completion claim.
 
 ## SS-ELEC-506 — Optional weight-to-length conversions
 
 - Epic / priority / owner: E5 / P2 / Shop feature.
 - Dependencies: SS-ELEC-104, SS-ELEC-505.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Require approved versioned product-specific mass/length relationship; reject universal cross-dimensional conversion.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Require approved versioned product-specific mass/length relationship; reject universal cross-dimensional conversion. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Evidence: SCALES.md and VERIFICATION.md. Focused protocol/transport/conversion/malformed-reader units pass16/16; expanded117-migration scoped SQL and three new capture races pass with both merchant journeys and inherited races. All19 combined EN/AR scale/setup and inherited measured/reel/trade/GS1 browsers pass. Full117-migration replay,21 named regression suites plus foundation/both journeys and11 races pass; actual types match. Shop build/typecheck, scoped lint and121-template boundaries pass. Final root/release/native/consumer gates remain in progress; physical hardware acceptance is separate.
+- PR / commit: Child `codex/shop-suit/scale-and-mass-length` starts from published [#493](https://github.com/Building-Suit/building-suit-monorepo/pull/493) atb0e467f1; source uncommitted.
+- Blocker: Final repository/consumer/committed-release/native qualification and actual device/model/settings, merchant, native-speaker and hosted acceptance remain separate gates.
+- Completion notes / release fragment: Locally tested implementation. Public `ss-electrical-approved-scale-sales-20261026`; internal `ss-electrical-scale-qualification-20261026`. No physical-hardware or commercial completion claim.
 
 ## SS-ELEC-507 — Demand and reorder forecasting
 
