@@ -11,7 +11,7 @@ export function reconcileSyntheticPracticeFinancials(groups,charges,expected){
   const key=m.currency+':'+m.exponent,g=computed.get(key)??Object.fromEntries(metrics.map(k=>[k,0n]));computed.set(key,g)
   const gross={collection:0n,refund:0n},reserved={collection:0n,refund:0n}
   for(const i of m.items){
-   if(intentIds.has(i.id)||!['collection','refund'].includes(i.kind)||i.currency!==m.currency||i.exponent!==m.exponent)invalid();intentIds.add(i.id);const amount=minor(i.amountMinor);if(amount===0n)invalid()
+   if(intentIds.has(i.id)||!['collection','refund'].includes(i.kind)||i.currency!==m.currency||i.exponent!==m.exponent)invalid();intentIds.add(i.id);const amount=minor(i.amountMinor);if(amount===0n||amount>9007199254740991n)invalid()
    if(i.state==='posted'){
     const e=i.entry;if(!e||entryIds.has(e.id)||e.intentId!==i.id||e.kind!==i.kind||e.amountMinor!==i.amountMinor||e.currency!==m.currency||e.exponent!==m.exponent||e.originalEntryId!==i.originalEntryId)invalid();entryIds.add(e.id);entries.set(e.id,{...e,chargeId:scope.chargeId,locationId:scope.locationId});gross[i.kind]+=amount
     if(i.kind==='refund'){if(!i.originalEntryId)invalid();refunds.set(i.originalEntryId,(refunds.get(i.originalEntryId)??0n)+amount)}else if(i.originalEntryId!==null)invalid()
