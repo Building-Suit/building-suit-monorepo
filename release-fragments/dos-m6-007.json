@@ -1,0 +1,13 @@
+{
+  "id": "dos-m6-007",
+  "task": "DOS-M6-007",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m6-007.md"
+  ],
+  "reason": "Doctor-only synthetic collections/refunds implementation scope and evidence; no operational registration, real money or financial authority."
+}
