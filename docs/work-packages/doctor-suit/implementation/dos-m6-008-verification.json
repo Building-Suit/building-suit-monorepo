@@ -1,0 +1,241 @@
+{
+  "task_id": "DOS-M6-008",
+  "pr": 498,
+  "parent_pr": 495,
+  "parent_head": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+  "scope": "exact-candidate-document-and-pure-contract-boundary-only",
+  "independent_receipt": {
+    "schema": "doctor-tax-independent-verifier/v1",
+    "execution_id": "71c5fc61-a598-4a08-89cd-11497eb5f62a",
+    "task_id": "DOS-M6-008",
+    "case_id": "DOS-M6-008-C03",
+    "exact_base": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+    "exact_candidate": "f60f777ae6edb0651e4cb2089cee87180732413a",
+    "started_at_utc": "2026-10-26T12:37:29.700Z",
+    "ended_at_utc": "2026-10-26T12:37:29.897Z",
+    "argv": [
+      "node",
+      "docs/work-packages/doctor-suit/implementation/dos-m6-008-verify.mjs",
+      "--base",
+      "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+      "--head",
+      "f60f777ae6edb0651e4cb2089cee87180732413a"
+    ],
+    "node": "26.8.1",
+    "evaluated_input_sha256": {
+      "docs/work-packages/doctor-suit/implementation/dos-m6-008-verify.mjs": "4cba37fe99b4490186070e82f47084490cbda91baa5842e47fee7a781162dc4f",
+      "docs/work-packages/doctor-suit/implementation/dos-m6-008-packet.json": "177ab47bd2b90e6738b6772bd3d8554d557b885ef42ef1c3dfc97ce2bc3be5b4",
+      "docs/work-packages/doctor-suit/implementation/dos-m6-008.md": "6fca11ebd62ce4bc54e898bebc959629c7547b609315c457d2da010f3d74614e",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json": "8881c8b68172d75bc9827e910864c3fdd6c056119b0575e24bd49c5a87755a23",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json": "b442acff9a25ecbadbcf7d5f21f6fd672ae7ac10e6a5d186013cd253856f1125",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json": "7caf1851066eb8b2c4741be514ce4f7ee612a2570e76f94b8db3538815cf606f",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json": "041145f78b703fda51a0185744c7f6b2e900fbca7c7ff5dc129ad2170ed5634d",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json": "6ddb7b1ec6310bf2dfbbf562028c47ad1300eb6eb8e01f4cf94a54ed2b280e2b",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json": "eea1e06584bcd599fa13ea8a65400344e660055a7b75e4d817a0f04fe0a09240",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json": "9d937de32c9062852f228f79ea6f89887f39c15b20e7dc7cb485b17a273c1a0c",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json": "24dc2b7d993036671e2958751410e491fad1623910b08ce6418f1b702eca62a6",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json": "fde4ee5825fa131a2bd61a565e7c6a746a8a4e3ec74c6f53f878dbe818b8f418",
+      "apps/doctor-suit/app/utils/practiceMoney.ts": "c1f1b972d44ded62adcb405a0462bd49a1af634018810a1c641a9f39f9a5f33a",
+      "apps/doctor-suit/app/utils/locationContext.ts": "75f5e4981decc38f40772a9cd185a999a5ef72c0b8bfabcd25f04749d6d05587",
+      "apps/doctor-suit/app/utils/administrativeEdition.ts": "f7cf04a7b6db73e22bef8b180e32d5dfe7e1ff9879d7ac9585633533d3ffd54c",
+      "apps/doctor-suit/app/utils/entitlement.ts": "9b00e532191f9ff95635d1c471e32b54ff15afbbaf66decd15f200725521b028"
+    },
+    "existing_decision_approval": null,
+    "assertions": [
+      {
+        "id": "executing-exact-candidate",
+        "status": "passed"
+      },
+      {
+        "id": "parent-is-ancestor",
+        "status": "passed"
+      },
+      {
+        "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m6-008-verify.mjs",
+        "status": "passed"
+      },
+      {
+        "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m6-008-packet.json",
+        "status": "passed"
+      },
+      {
+        "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m6-008.md",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-task-decision-and-parent",
+        "status": "passed"
+      },
+      {
+        "id": "genuine-approval-not-invented",
+        "status": "passed"
+      },
+      {
+        "id": "separate-taxpayer-ledgers",
+        "status": "passed"
+      },
+      {
+        "id": "entity-and-service-applicability-unavailable",
+        "status": "passed"
+      },
+      {
+        "id": "no-unverified-official-profile",
+        "status": "passed"
+      },
+      {
+        "id": "dependent-tax-actions-disabled",
+        "status": "passed"
+      },
+      {
+        "id": "synthetic-records-never-official-documents",
+        "status": "passed"
+      },
+      {
+        "id": "qualified-review-cases-remain-unavailable",
+        "status": "passed"
+      },
+      {
+        "id": "public-sources-are-references-only",
+        "status": "passed"
+      },
+      {
+        "id": "no-product-provider-native-or-live-implementation-introduced",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-1-unchanged",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-2-unchanged",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-3-unchanged",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-4-unchanged",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-5-unchanged",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-6-unchanged",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-7-unchanged",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-8-unchanged",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-9-unchanged",
+        "status": "passed"
+      },
+      {
+        "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/practiceMoney.ts",
+        "status": "passed"
+      },
+      {
+        "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/locationContext.ts",
+        "status": "passed"
+      },
+      {
+        "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/administrativeEdition.ts",
+        "status": "passed"
+      },
+      {
+        "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/entitlement.ts",
+        "status": "passed"
+      },
+      {
+        "id": "financial-boundary-unchanged-from-parent",
+        "status": "passed"
+      },
+      {
+        "id": "pure-current-contract-drops-unsupported-compliance-claim",
+        "status": "passed"
+      },
+      {
+        "id": "pure-current-contract-rejects:tax-invoice",
+        "status": "passed"
+      },
+      {
+        "id": "pure-current-contract-rejects:exemption",
+        "status": "passed"
+      },
+      {
+        "id": "pure-current-contract-rejects:compliant",
+        "status": "passed"
+      },
+      {
+        "id": "pure-current-contract-rejects:live-funds",
+        "status": "passed"
+      },
+      {
+        "id": "pure-current-contract-rejects:external-transport",
+        "status": "passed"
+      }
+    ],
+    "result": "passed-blocked-disposition-and-pure-contract-only",
+    "qualified_review_cases": {
+      "C01": "unavailable",
+      "C02": "unavailable",
+      "C04": "unavailable"
+    },
+    "government_api_validation": "unrun",
+    "database_acceptance": "unrun",
+    "legal_or_provider_authority_granted": false,
+    "task_acceptance": false
+  },
+  "positive_exit_code": 0,
+  "negative_control": {
+    "execution_id": "c646de9a-fe52-4774-8b77-d83c2af49a56",
+    "argv": [
+      "node",
+      "docs/work-packages/doctor-suit/implementation/dos-m6-008-verify.mjs",
+      "--base",
+      "d7de1f0890d886fc124ae0149507437aecff8e18",
+      "--head",
+      "f60f777ae6edb0651e4cb2089cee87180732413a"
+    ],
+    "result": "failed",
+    "exit_code": 1,
+    "failed_assertions": [
+      "canonical-task-decision-and-parent"
+    ]
+  },
+  "workspace": {
+    "status": "passed",
+    "templates": 140,
+    "preserved_migrations": 80
+  },
+  "canonical": {
+    "status": "passed",
+    "packets": 9,
+    "tasks": 104,
+    "source_bytes": "verified"
+  },
+  "root": {
+    "status": "inherited-product-identical-parent-baseline-not-repeated-for-evidence-only-task",
+    "source": "259be0f4980b7e5a1bb67b1c19624595af4decbd",
+    "total": 2516,
+    "passed": 2439,
+    "failed": 54,
+    "skipped": 23,
+    "failure_locations": "unchanged-Shop"
+  },
+  "qualified_current_tax_review": false,
+  "official_api_acceptance": "unrun-no-approved-profile-or-access",
+  "tax_adapter_implementation": "blocked",
+  "tax_submission": "disabled",
+  "compliance_badge": "disabled",
+  "task_acceptance": false,
+  "final_candidate_rule": "Re-run verifier on each committed publication head; preserve its execution ID/base/head/result in PR description. This stored receipt belongs only to f60f777a."
+}

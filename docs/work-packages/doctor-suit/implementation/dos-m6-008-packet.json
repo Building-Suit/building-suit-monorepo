@@ -113,7 +113,8 @@
   "case_dispositions": {
     "DOS-M6-008-C01": "unavailable-qualified-current-entity-review-missing",
     "DOS-M6-008-C02": "unavailable-required-profile-enrollment-custody-and-fields-not-selected",
-    "DOS-M6-008-C03": "pending-independent-exact-candidate-document-and-disabled-boundary-comparison",
+    "DOS-M6-008-C03": "verified-source-specific-blocked-disposition-and-pure-contract-only; re-evaluate-current-publication-head",
     "DOS-M6-008-C04": "unavailable-accountable-DOS-M6-GATE-TAX-approval-missing"
-  }
+  },
+  "independent_comparison_record": "docs/work-packages/doctor-suit/implementation/dos-m6-008-verification.json"
 }

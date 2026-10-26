@@ -7,9 +7,12 @@
   "classification": "internal",
   "disposition": "internal",
   "paths": [
-    "docs/work-packages/doctor-suit/implementation/dos-m6-008.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md",
     "docs/work-packages/doctor-suit/implementation/dos-m6-008-packet.json",
-    "docs/work-packages/doctor-suit/implementation/dos-m6-008-verify.mjs"
+    "docs/work-packages/doctor-suit/implementation/dos-m6-008-verification.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-008-verify.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-008.md",
+    "docs/work-packages/doctor-suit/implementation/m6-continuation.md"
   ],
   "reason": "Doctor-only qualified tax applicability evidence packet; no tax determination, adapter, submission, operational registration or compliance authority."
 }
