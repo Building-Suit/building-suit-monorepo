@@ -26,6 +26,7 @@ create function pg_temp.notice(n integer)returns jsonb language plpgsql security
  return public.doctor_submit_manual_payment((i->>'intent_id')::uuid,'SYNTHETIC-M6-CLAIM-'||n,(select value from moment),2,pg_temp.id(500+n));end $$;
 create function pg_temp.confirm(p_notice_name text,command integer,minor text default'29900',unit text default'EGP',independent boolean default true,bank text default'SYNTHETIC-BANK-ENTRY')returns jsonb language sql security invoker as $$select public.doctor_review_manual_payment((select(value->>'id')::uuid from results where results.name=p_notice_name),0,'funds_verified','Synthetic independent bank check',bank,minor,unit,(select value from moment),'SYNTHETIC_BANK_RECORD_NOT_REAL_EVIDENCE',independent,pg_temp.id(command))$$;
 -- Actual cross-ledger commands inside this rollback; fixture approval markers grant no live authority.
+select pg_temp.claim(1); -- Actual owner session required by existing clinic-scope trigger.
 insert into public.locations(id,practice_id,name,timezone)values(pg_temp.id(31),pg_temp.id(21),'Synthetic acceptance clinic','Etc/UTC');
 insert into public.patient_identities(id)values(pg_temp.id(41));
 insert into public.practice_patients(id,practice_id,patient_identity_id,display_name,created_location_id,created_by)values(pg_temp.id(42),pg_temp.id(21),pg_temp.id(41),'Synthetic acceptance patient',pg_temp.id(31),pg_temp.id(1));
