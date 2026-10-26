@@ -1,4 +1,5 @@
-import { test, expect, type BrowserContext } from '@playwright/test'
+import { financialNoticeDiagnostic } from './financial-notice-diagnostics'
+import { test, expect, type BrowserContext, type Page } from '@playwright/test'
 import { manualPaymentCopy } from '../../app/utils/manualPaymentPresentation'
 interface FinancialFixture { origin: string; api: string; storageState: Awaited<ReturnType<BrowserContext['storageState']>>; reference: string; notice: { id: string; quote_id: string; intent_id: string; amount_minor: string; currency: string }; quote: { quote_id: string; terms_id: string; amount_minor: string; currency: string; currency_exponent: number; payment_route: { live_activation: boolean; purchase_available: boolean } } }
 function fixture(): FinancialFixture {
@@ -18,15 +19,17 @@ for (const ar of [false, true]) test(`DOS-M6-003-C02-${ar ? 'AR' : 'EN'}`, async
   expect(f.quote.payment_route.live_activation).toBe(false); expect(f.quote.payment_route.purchase_available).toBe(false)
   phase('context')
   const context = await browser.newContext({ storageState: f.storageState, viewport: { width: ar ? 390 : 1280, height: 1000 }, colorScheme: ar ? 'dark' : 'light' })
+  let diagnosticPage:Page|undefined
   try {
     await context.route('**/*', route => [f.origin, f.api].includes(new URL(route.request().url()).origin) ? route.continue() : route.abort())
     await context.addCookies([{ name: 'building-suit-locale', value: ar ? 'ar' : 'en', url: f.origin }])
     await context.addInitScript(({ dark }) => localStorage.setItem('building-suit.theme', dark ? 'dark' : 'light'), { dark: ar })
     phase('route')
-    const page = await context.newPage(); await page.goto(f.origin + '/payment-notices')
+    const page = await context.newPage(); diagnosticPage=page; await page.goto(f.origin + '/payment-notices')
     await expect(page.getByRole('heading', { name: copy.title, exact: true })).toBeVisible()
     phase('notice_row')
     await page.getByRole('row').filter({ hasText: f.reference }).getByRole('button', { name: copy.open, exact: true }).click()
+    phase('notice_detail')
     await expect(page.getByRole('heading', { name: copy.details, exact: true })).toBeVisible()
     phase('quote_identity')
     await expect(page.getByText(f.quote.quote_id, { exact: true })).toBeVisible()
@@ -37,5 +40,5 @@ for (const ar of [false, true]) test(`DOS-M6-003-C02-${ar ? 'AR' : 'EN'}`, async
     phase('direction_and_viewport')
     await expect(page.locator('html')).toHaveAttribute('dir', ar ? 'rtl' : 'ltr')
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
-  } finally { await context.unrouteAll({ behavior: 'ignoreErrors' }); await context.close() }
+  } catch(error) { await financialNoticeDiagnostic(diagnosticPage,test.info());throw error } finally { await context.unrouteAll({ behavior: 'ignoreErrors' }); await context.close() }
 })

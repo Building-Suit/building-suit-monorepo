@@ -1,3 +1,4 @@
+import { financialReadReturn } from './practiceFinancialReportNavigation.ts'
 export interface DoctorProviderConfiguration {
   enabled: boolean
   environment: 'local' | 'staging' | 'production'
@@ -43,6 +44,7 @@ export function doctorReturnPath(value: unknown): string {
     || Array.from(decoded).some(character => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127)) return doctorHomePath
   const url = new URL(decoded, 'https://doctor.invalid')
   if (url.origin !== 'https://doctor.invalid') return doctorHomePath
+  if(['/financial-reports','/practice-billing','/practice-payments'].includes(url.pathname))return financialReadReturn(url)??doctorHomePath
   if (['/operational-reports','/import-preview','/fulfillment','/messages','/contact-preferences','/worklists','/waitlist','/appointment-types','/clinical','/privacy','/subscription','/payment-notices','/payment-review','/payment-reconciliation','/payment-review-reconciliation','/account', '/account-activity', '/team', '/invitations/accept', '/onboarding', '/workspace', '/patients', '/availability','/appointments', '/appointments', '/locations', '/settings', '/audit'].includes(url.pathname)
     || /^\/clinical-releases\/[0-9a-f-]{36}$/i.test(url.pathname)
     || /^\/patients\/[0-9a-f-]{36}$/i.test(url.pathname)) return url.pathname

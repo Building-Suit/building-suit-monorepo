@@ -3277,6 +3277,16 @@
       "status": "implemented-source; SQL/browser acceptance in progress",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/financial-reports.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsReportsPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/financial-reports.vue",
+      "purpose": "owner-synthetic-practice-ledger-reports",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [

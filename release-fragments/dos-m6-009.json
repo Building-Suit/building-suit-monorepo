@@ -7,7 +7,17 @@
   "classification": "internal",
   "disposition": "internal",
   "paths": [
-    "docs/work-packages/doctor-suit/implementation/dos-m6-009.md"
+    "apps/doctor-suit/app/",
+    "apps/doctor-suit/supabase/",
+    "apps/doctor-suit/tests/",
+    "packages/ui/src/templates/BsReportsPage.vue",
+    "packages/ui/src/organisms/BsPracticeLedgerReportsWorkspace.vue",
+    "packages/ui/src/utils/practiceLedgerReportPresentation.ts",
+    "packages/ui/package.json",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/doctor-suit/"
   ],
   "reason": "Doctor synthetic practice/SaaS ledger-report implementation scope; no official tax/revenue/provider acceptance or operational registration."
 }

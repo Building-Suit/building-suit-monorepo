@@ -1,3 +1,4 @@
+import type { createPracticeFinancialReportController } from '../utils/practiceFinancialReportController'
 import type { createPracticeMoneyController } from '../utils/practiceMoneyController'
 import type { createPracticeBillingController } from '../utils/practiceBillingController'
 import type{createOperationalReportReader}from'../utils/operationalReports'
@@ -29,6 +30,7 @@ declare module '#app' {
     $doctorOperationalReports:ReturnType<typeof createOperationalReportReader>
     $doctorImportPreview:ReturnType<typeof createImportController>
     $doctorFulfillment:ReturnType<typeof createFulfillmentController>
+    $doctorFinancialReport: ReturnType<typeof createPracticeFinancialReportController>
     $doctorPracticeMoney: ReturnType<typeof createPracticeMoneyController>
     $doctorPracticeBilling: ReturnType<typeof createPracticeBillingController>
     $doctorOutbox: ReturnType<typeof createMessageOutboxReader>

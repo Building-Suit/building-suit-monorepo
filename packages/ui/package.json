@@ -410,7 +410,9 @@
     "./templates/BsPracticeBillingPage": "./src/templates/BsPracticeBillingPage.vue",
     "./utils/practiceBillingPresentation": "./src/utils/practiceBillingPresentation.ts",
     "./templates/BsPracticeMoneyPage": "./src/templates/BsPracticeMoneyPage.vue",
-    "./utils/practiceMoneyPresentation": "./src/utils/practiceMoneyPresentation.ts"
+    "./utils/practiceMoneyPresentation": "./src/utils/practiceMoneyPresentation.ts",
+    "./organisms/BsPracticeLedgerReportsWorkspace": "./src/organisms/BsPracticeLedgerReportsWorkspace.vue",
+    "./utils/practiceLedgerReportPresentation": "./src/utils/practiceLedgerReportPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

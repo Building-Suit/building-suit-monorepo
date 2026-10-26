@@ -1,0 +1,77 @@
+{
+  "task_id": "DOS-M6-009",
+  "parent_pr": 498,
+  "parent_head": "ab4e71cfd773eeacb095d70188a874c1fd5a32e6",
+  "initial_draft_head": "a80009ac2413cb9cf4dbaa1d8351de94918ce625",
+  "preserving_parent_merge": "e7859fa4069a76c931a3279e9f115465b716262c",
+  "recorded_at_utc": "2026-10-26T13:50:20.087781+00:00",
+  "source_status": "implemented; actual owned runtime acceptance pending",
+  "local": {
+    "own_node_cases": {
+      "passed": 18,
+      "failed": 0
+    },
+    "combined_focused_cases": {
+      "previous_run_passed": 82,
+      "final_added_case_passed": 1,
+      "note": "final combined rerun pending; no fabricated aggregate command result"
+    },
+    "doctor_types": "passed",
+    "scoped_doctor_and_shared_lint": "passed",
+    "catalogue_lint": {
+      "errors": 0,
+      "inherited_warnings": 5
+    },
+    "workspace": {
+      "complete_route_entries": 141,
+      "historical_migrations_preserved": 80,
+      "local_components": 0,
+      "migration_debt": 0
+    },
+    "canonical": {
+      "packets": 9,
+      "tasks": 104,
+      "source_bytes": "verified"
+    },
+    "static_sql": {
+      "parser": "pglast7.21",
+      "migration_statements": 9,
+      "plpgsql_bodies": 2,
+      "test_statements": 128,
+      "database_execution": false
+    },
+    "financial_browser_discovery": {
+      "cases": 10,
+      "files": 5,
+      "executed": false
+    },
+    "root_regression": "in progress; preserve54 inheritedShop failures/23skips",
+    "affected_consumer_types": "in progress"
+  },
+  "owned_ci": {
+    "task_sql_assertions": {
+      "implemented": 57,
+      "executed": false
+    },
+    "real_transaction_scenarios": {
+      "implemented": 3,
+      "executed": false
+    },
+    "en_ar_browser_cases": {
+      "implemented": 2,
+      "executed": false
+    },
+    "runtime_acceptance": "unrun for this source",
+    "generated_schema": "generation/acquisition acceptance unqualified for this source"
+  },
+  "held": {
+    "commercial_payment_tax_qualified_acceptance": false,
+    "government_tax_adapter": false,
+    "external_money_transport": false,
+    "real_patient_data": false,
+    "automation_mutation": false,
+    "hosted_migration": false,
+    "staging_or_main_promotion": false,
+    "full_task_or_milestone_acceptance": false
+  }
+}

@@ -831,6 +831,17 @@
       "adapterBoundary": "Typed monetary/source/status rows, explicit same-request recovery and semantic financial actions. Doctor owns fresh owner authority, source/version binding, exact money, persisted reservations, immutable receipts and acceptance-based reconciliation. No external money movement or tax authority.",
       "task": "DOS-M6-007",
       "migrationStatus": "implemented-source; actual acceptance in progress"
+    },
+    {
+      "family": "practice-financial-report-contribution-trace",
+      "owner": "packages/ui",
+      "components": [
+        "BsReportsPage",
+        "BsPracticeLedgerReportsWorkspace"
+      ],
+      "adapterBoundary": "Optional typed ledger workspace preserves existing report branches. Doctor owns immutable source reads, exact per-currency totals, issue-date cohort filters and owner authority; the UI grants no financial/provider/tax authority.",
+      "task": "DOS-M6-009",
+      "migrationStatus": "implemented source; owned acceptance in progress"
     }
   ]
 }
