@@ -1,0 +1,9 @@
+{
+  "id": "dos-m7-002",
+  "task": "DOS-M7-002",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["docs/work-packages/doctor-suit/implementation/dos-m7-002.md"],
+  "reason": "Doctor hosting, transfer and subprocessor review evidence scope. Actual contracts/regions/approval remain unavailable; no provisioning, live data or operational activation."
+}
