@@ -101,7 +101,8 @@
     "BsMessageOutboxPage": "packages/ui/src/templates/BsMessageOutboxPage.vue",
     "BsFulfillmentTrackingPage": "packages/ui/src/templates/BsFulfillmentTrackingPage.vue",
     "BsSyntheticImportPreviewPage": "packages/ui/src/templates/BsSyntheticImportPreviewPage.vue",
-    "BsMobileAccessPage": "packages/ui/src/templates/BsMobileAccessPage.vue"
+    "BsMobileAccessPage": "packages/ui/src/templates/BsMobileAccessPage.vue",
+    "BsPracticeBillingPage": "packages/ui/src/templates/BsPracticeBillingPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -3255,6 +3256,16 @@
       "status": "implemented synthetic native adapter; qualified device acceptance pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/practice-billing.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPracticeBillingPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/practice-billing.vue",
+      "purpose": "synthetic-owner-practice-prices-and-immutable-visit-charge-history",
+      "status": "implemented-source; SQL/browser acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -3404,6 +3415,7 @@
     "BsMessageOutboxPage",
     "BsFulfillmentTrackingPage",
     "BsSyntheticImportPreviewPage",
-    "BsMobileAccessPage"
+    "BsMobileAccessPage",
+    "BsPracticeBillingPage"
   ]
 }

@@ -406,7 +406,9 @@
     "./utils/fulfillmentPresentation": "./src/utils/fulfillmentPresentation.ts",
     "./templates/BsSyntheticImportPreviewPage": "./src/templates/BsSyntheticImportPreviewPage.vue",
     "./utils/syntheticImportPresentation": "./src/utils/syntheticImportPresentation.ts",
-    "./templates/BsMobileAccessPage": "./src/templates/BsMobileAccessPage.vue"
+    "./templates/BsMobileAccessPage": "./src/templates/BsMobileAccessPage.vue",
+    "./templates/BsPracticeBillingPage": "./src/templates/BsPracticeBillingPage.vue",
+    "./utils/practiceBillingPresentation": "./src/utils/practiceBillingPresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

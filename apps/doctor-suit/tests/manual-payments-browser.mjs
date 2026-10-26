@@ -1,10 +1,11 @@
+import{preparePracticeBillingBrowser,verifyPracticeBillingBrowserRecords}from'./practice-billing-actual-provider.mjs'
 // CI only: actual Auth/PostgREST/Functions; synthetic users and bytes; no credential artifacts.
 import{chromium,expect as browserExpect}from'@playwright/test'
 import{spawn}from'node:child_process'
 import{randomUUID}from'node:crypto'
 import{doctorPasswordStep}from'./helpers/password-step.mjs'
 import{verifyM6FinancialBrowser}from'./financial-browser-acceptance.mjs'
-export async function verifyManualPaymentBrowser({root,api,origin,key,serviceKey,a,b,expect,rpc,setStage}){
+export async function verifyManualPaymentBrowser({root,api,origin,key,serviceKey,a,b,expect,rpc,sql,setStage}){
  let server,browser,owner,reviewer
  const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms)),reference='SYNTHETIC-WEB-'+randomUUID()
  try{
@@ -57,7 +58,11 @@ export async function verifyManualPaymentBrowser({root,api,origin,key,serviceKey
   setStage('actual Arabic mobile reconciliation and source reload');await page.getByRole('link',{name:'مطابقة التحويلات',exact:true}).click();await page.getByRole('heading',{name:'مطابقة التحويلات اليدوية',exact:true}).waitFor();await page.reload();await page.getByRole('heading',{name:'مطابقة التحويلات اليدوية',exact:true}).waitFor();await browserExpect(page.locator('html')).toHaveAttribute('dir','rtl');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Reconciliation mobile surface overflows');await page.getByRole('row').filter({hasText:claimed[0].id}).getByRole('link',{name:'عرض الإشعار المصدر',exact:true}).click();await page.getByRole('button',{name:'synthetic-browser.pdf',exact:true}).waitFor()
   setStage('actual M6-003/004 frozen quote and reviewed notice browser assertions')
   const frozenQuote=await rpc(a.client,'doctor_saas_quote',{p_quote:claimed[0].quote_id})
-  await verifyM6FinancialBrowser({root,fixture:{origin,api,storageState:await owner.context.storageState(),reference,notice:claimed[0],quote:frozenQuote,currentNotice:await rpc(a.client,'doctor_manual_payments',{p_notice:claimed[0].id}),period:paid.period,reviewerId:b.user.id}})
+  const billing=await preparePracticeBillingBrowser({sql,a,b,rpc,expect})
+  try{
+   await verifyM6FinancialBrowser({root,fixture:{origin,api,storageState:await owner.context.storageState(),reference,notice:claimed[0],quote:frozenQuote,currentNotice:await rpc(a.client,'doctor_manual_payments',{p_notice:claimed[0].id}),period:paid.period,reviewerId:b.user.id,billing:{...billing.fixture,readonlyStorageState:await reviewer.context.storageState()}}})
+   await verifyPracticeBillingBrowserRecords({a,b,rpc,expect,fixture:billing.fixture,originalPeriod:paid.period})
+  }finally{billing.cleanup()}
   console.log('Actual manual-payment browser: owner annual quote/acceptance, bound instructions, submitted notice/private receipt, independent reviewer verification, separate twelve-month paid activation and Arabic RTL mobile dark reload/history passed.')
  }catch(error){
   // Fixed booleans/enums only: never emit credentials, IDs, form values or DOM text.

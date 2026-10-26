@@ -2,7 +2,12 @@
   "id": "dos-m6-006",
   "task": "DOS-M6-006",
   "suits": [
-    "doctor-suit"
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
   ],
   "classification": "internal",
   "disposition": "internal",
@@ -16,7 +21,34 @@
     "apps/doctor-suit/supabase/migrations/20261025221605_doctor_practice_price_charge_snapshots.sql",
     "apps/doctor-suit/supabase/tests/dos-m6-006.sql",
     "apps/doctor-suit/tests/disposable-postgres.mjs",
-    "apps/doctor-suit/tests/practice-billing-concurrency.mjs"
+    "apps/doctor-suit/tests/practice-billing-concurrency.mjs",
+    "apps/doctor-suit/supabase/migrations/20261026101913_doctor_practice_billing_board.sql",
+    "apps/doctor-suit/app/utils/practiceBillingBoard.ts",
+    "apps/doctor-suit/app/utils/practiceBillingController.ts",
+    "apps/doctor-suit/app/utils/practiceBillingRepository.ts",
+    "apps/doctor-suit/app/utils/practiceBillingPresentation.ts",
+    "apps/doctor-suit/app/composables/useDoctorPracticeBilling.ts",
+    "apps/doctor-suit/app/pages/practice-billing.vue",
+    "apps/doctor-suit/app/pages/account.vue",
+    "apps/doctor-suit/app/layouts/practice.vue",
+    "apps/doctor-suit/app/plugins/doctor-auth.ts",
+    "apps/doctor-suit/app/types/doctorAuth.d.ts",
+    "apps/doctor-suit/app/utils/workspaceNavigation.ts",
+    "packages/ui/package.json",
+    "packages/ui/src/utils/practiceBillingPresentation.ts",
+    "packages/ui/src/templates/BsPracticeBillingPage.vue",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m6-006.spec.ts",
+    "apps/doctor-suit/tests/e2e/playwright.config.ts",
+    "apps/doctor-suit/tests/e2e/playwright.financial.config.ts",
+    "apps/doctor-suit/tests/e2e/financial-reporter.mjs",
+    "apps/doctor-suit/tests/financial-browser-acceptance.mjs",
+    "apps/doctor-suit/tests/manual-payments-browser.mjs",
+    "apps/doctor-suit/tests/manual-payments-actual-provider.mjs",
+    "apps/doctor-suit/tests/practice-billing-actual-provider.mjs"
   ],
-  "reason": "Synthetic versioned service price and immutable visit-charge engineering, separate from SaaS and live financial/tax authority."
+  "reason": "Doctor synthetic practice billing and new shared complete-page contract/catalogue provenance; all shared consumers classified, no operational Doctor registration, live collection or tax authority."
 }

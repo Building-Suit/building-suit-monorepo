@@ -811,6 +811,16 @@
       "adapterBoundary": "One canonical clinical workspace template supports optional editor sections and read-only uncertain/conflicted drafts. Native Doctor owns current server scope, versioned synthetic commands and no-replay outcome state. Shared UX retains dialog, dirty-close and navigation confirmation. Existing web defaults retain all sections.",
       "task": "DOS-M4-006",
       "migrationStatus": "synthetic native notes route; qualified/native actual-service acceptance pending"
+    },
+    {
+      "family": "practice-service-price-and-visit-charge-records",
+      "owner": "packages/ui",
+      "components": [
+        "BsPracticeBillingPage"
+      ],
+      "adapterBoundary": "Controlled price/charge fields, typed read-only rows, current ownership/entitlement projections, cursor history and semantic commands. Doctor owns authorization, exact money, immutable versions, source binding and request receipts. No collection, clinical or tax authority.",
+      "task": "DOS-M6-006",
+      "migrationStatus": "implemented-source; actual acceptance in progress"
     }
   ]
 }

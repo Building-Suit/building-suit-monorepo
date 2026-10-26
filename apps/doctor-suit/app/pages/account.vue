@@ -9,7 +9,7 @@ const { view: accountView,form: accountForm,editorOpen: accountEditorOpen } = pe
 const context = useDoctorContext()
 await context.refresh()
 if (!context.state.options.length && !auth.state.identity?.practiceId) await practice.load()
-const practiceLinks = computed(() => auth.state.identity?.practiceId || context.state.options.length ? [{ label: practiceCopy.value.workspace, to: '/workspace' }, ...(auth.state.identity?.practiceId ? [{ label: scopeCopy.value.title, to: '/locations' }] : [])] : practice.state.setup?.enrollment === 'owner' ? [{ label: practiceCopy.value.setupLink, to: '/onboarding' }] : [])
+const practiceLinks = computed(() => auth.state.identity?.practiceId || context.state.options.length ? [{ label: practiceCopy.value.workspace, to: '/workspace' }, ...(auth.state.identity?.practiceId ? [{ label: scopeCopy.value.title, to: '/locations' },{label:locale.value==='ar'?'رسوم ممارستي':'Your practice charges',to:'/practice-billing'}] : [])] : practice.state.setup?.enrollment === 'owner' ? [{ label: practiceCopy.value.setupLink, to: '/onboarding' }] : [])
 const { locale } = useI18n()
 const scopeCopy = computed(() => doctorLocationsCopy(locale.value === 'ar'))
 const teamCopy = computed(() => doctorDelegationCopy(locale.value === 'ar'))

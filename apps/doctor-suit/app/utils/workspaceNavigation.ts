@@ -2,7 +2,7 @@ import type { NavigationGroup,NavigationLink } from '@building-suit/contracts'
 export interface DoctorNavigationAccess {
   capabilities: readonly string[]; portal?: 'doctor'|'secretary'; ownsPractice: boolean; hasCurrent: boolean; hasOptions: boolean; choosing: boolean
 }
-export interface DoctorNavigationLabels { workspace:string; patients:string; appointments:string; availability:string; audit:string; locations:string; practice:string; team:string; account:string;clinical?:string;appointmentTypes?:string;waitlist?:string;worklists?:string;operationalReports?:string;importPreview?:string;fulfillment?:string;messages?:string;contactPreferences?:string }
+export interface DoctorNavigationLabels { workspace:string; patients:string; appointments:string; availability:string; audit:string; locations:string; practice:string; team:string; account:string;billing?:string;clinical?:string;appointmentTypes?:string;waitlist?:string;worklists?:string;operationalReports?:string;importPreview?:string;fulfillment?:string;messages?:string;contactPreferences?:string }
 /** Presentation routes reflect existing role grants; this grants no authority. */
 export function doctorWorkspaceNavigation(access:DoctorNavigationAccess,copy:DoctorNavigationLabels):{groups:NavigationGroup[];mobileLinks:NavigationLink[]} {
   const can=(...caps:string[])=>caps.some(cap=>access.capabilities.includes(cap))
@@ -21,6 +21,7 @@ export function doctorWorkspaceNavigation(access:DoctorNavigationAccess,copy:Doc
     ...(can('appointments.read')&&copy.appointmentTypes?[{to:'/appointment-types',label:copy.appointmentTypes,icon:'repeat'}]:[]),
     ...(can('availability.manage','appointments.read')?[{to:'/availability',label:copy.availability,icon:'repeat'}]:[])]
   const practice:NavigationLink[]=[
+    ...(access.ownsPractice && (!access.hasCurrent || access.portal==='doctor') && copy.billing ? [{to:'/practice-billing',label:copy.billing,icon:'invoice'}] : []),
     ...(can('locations.read','locations.manage')||(!access.hasCurrent&&access.ownsPractice)?[{to:'/locations',label:copy.locations,icon:'store'}]:[]),
     ...(access.ownsPractice&&(!access.hasCurrent||access.portal==='doctor')?[{to:'/onboarding',label:copy.practice,icon:'settings'}]:[]),
     ...(access.portal==='doctor'||ownerWithoutClinics?[{to:'/team',label:copy.team,icon:'team'}]:[]),

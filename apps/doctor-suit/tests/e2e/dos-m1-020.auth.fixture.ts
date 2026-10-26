@@ -21,10 +21,13 @@ async function accept(page: Page,credential: string,ar: boolean) { const copy = 
 for(const ar of [false,true])test(`DOS-M1-020-C01/C02 ${ar ? 'AR mobile light' : 'EN desktop dark'}: doctor-alone setup through two-doctor secretary revocation`,async ({ browser,request }) => {
   test.setTimeout(150000);await request.post(fixture,{ data: { reset: true } });await request.post(fixture,{ data: { delegation: true,milestone: true,patients: true,documents: true,availability: true,appointments: true } })
   const setupDiagnostic={saveRequests:0,saveAcknowledged:0,completeRequests:0,completeAcknowledged:0}
+  const secretaryRpc:{rpc:string;status:number}[]=[]
   const contexts: BrowserContext[] = [];const stage = (value: string) => console.info(`Doctor M1 combined stage: ${value}`)
   try {
     for(let n=0;n<4;n++) { const context = await browser.newContext({ viewport: { width: ar ? 390 : 1280,height: 1000 },reducedMotion: 'reduce' });contexts.push(context);await prepare(context,ar) }
     const [a,b,s,o] = await Promise.all(contexts.map(context => context.newPage()));
+    const rpcNames={doctor_identity:'identity',doctor_contexts:'contexts',doctor_appointment_board:'appointment_board',doctor_transition_appointment:'appointment_transition'} as const
+    s.on('response',response=>{const name=Object.keys(rpcNames).find(name=>response.url().endsWith('/rpc/'+name));if(name)secretaryRpc.push({rpc:rpcNames[name as keyof typeof rpcNames],status:response.status()});if(secretaryRpc.length>16)secretaryRpc.shift()})
     a.on('request',request=>{if(request.method()!=='POST')return;const target=request.url().endsWith('/rpc/doctor_save_onboarding_draft')?'saveRequests':request.url().endsWith('/rpc/doctor_complete_onboarding')?'completeRequests':null;if(target)setupDiagnostic[target]=Math.min(5,setupDiagnostic[target]+1)})
     a.on('response',response=>{if(!response.ok()||response.request().method()!=='POST')return;const target=response.url().endsWith('/rpc/doctor_save_onboarding_draft')?'saveAcknowledged':response.url().endsWith('/rpc/doctor_complete_onboarding')?'completeAcknowledged':null;if(target)setupDiagnostic[target]=Math.min(5,setupDiagnostic[target]+1)})
     for(const page of [a,b,s,o])await localRealtimeProtocol(page)
@@ -64,6 +67,18 @@ for(const ar of [false,true])test(`DOS-M1-020-C01/C02 ${ar ? 'AR mobile light' :
       })
       console.info('Doctor M1 setup validity diagnostic '+JSON.stringify(cue))
     }catch{console.info('Doctor M1 setup validity diagnostic '+JSON.stringify({unavailable:true}))}
+    console.info('Doctor M1 secretary fixed RPC diagnostic '+JSON.stringify(secretaryRpc))
+    const secretary=contexts[2]?.pages()[0]
+    if(secretary&&!secretary.isClosed())try{
+      const cue=await secretary.evaluate(()=>{
+        const record=(v:unknown)=>v&&typeof v==='object'&&!Array.isArray(v)?v as Record<string,unknown>:null
+        const root=document.getElementById('__nuxt') as(HTMLElement&{__vue_app__?:{config:{globalProperties:Record<string,unknown>}}})|null
+        const globals=root?.__vue_app__?.config.globalProperties,auth=record(record(globals?.$doctorAuth)?.state),context=record(record(globals?.$doctorContext)?.state),selected=record(context?.current),appointment=record(record(globals?.$doctorAppointments)?.state),board=record(appointment?.board)
+        const known=(v:unknown,values:string[])=>typeof v==='string'&&values.includes(v)?v:'unknown'
+        return{knownAppointmentsRoute:location.pathname==='/appointments',authPhase:known(auth?.phase,['checking','unavailable','signed-out','verification','authenticated']),authPending:Boolean(auth?.pending),identityPresent:Boolean(auth?.identity),contextPhase:known(context?.phase,['idle','loading','choosing','switching','ready','denied','error','expired']),selectedPresent:Boolean(selected),secretaryPortal:selected?.portal==='secretary',queueGranted:Array.isArray(selected?.capabilities)&&selected.capabilities.includes('queue.manage'),loading:Boolean(appointment?.loading),refreshing:Boolean(appointment?.refreshing),pending:Boolean(appointment?.pending),boardPresent:Boolean(board),canQueue:board?.canQueue===true,canWrite:board?.canWrite===true,error:known(appointment?.error,['denied','invalid','conflict','network','unavailable']),actionError:known(appointment?.actionError,['denied','invalid','conflict','network','unavailable']),dialogCount:Math.min(5,document.querySelectorAll('[role=dialog]').length)}
+      })
+      console.info('Doctor M1 secretary readiness diagnostic '+JSON.stringify(cue))
+    }catch{console.info('Doctor M1 secretary readiness diagnostic '+JSON.stringify({unavailable:true}))}
     throw error
   } finally { await Promise.allSettled(contexts.map(async context => { try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() } })) }
 })

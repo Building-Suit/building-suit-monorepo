@@ -1,3 +1,4 @@
+import type { createPracticeBillingController } from '../utils/practiceBillingController'
 import type{createOperationalReportReader}from'../utils/operationalReports'
 import type{createImportController}from'../utils/syntheticImport'
 import type{createFulfillmentController}from'../utils/operationalFulfillment'
@@ -27,6 +28,7 @@ declare module '#app' {
     $doctorOperationalReports:ReturnType<typeof createOperationalReportReader>
     $doctorImportPreview:ReturnType<typeof createImportController>
     $doctorFulfillment:ReturnType<typeof createFulfillmentController>
+    $doctorPracticeBilling: ReturnType<typeof createPracticeBillingController>
     $doctorOutbox: ReturnType<typeof createMessageOutboxReader>
     $doctorContactPreferences:ReturnType<typeof createContactPreferencesController>
     $doctorWorklists:ReturnType<typeof createWorklistsController>
