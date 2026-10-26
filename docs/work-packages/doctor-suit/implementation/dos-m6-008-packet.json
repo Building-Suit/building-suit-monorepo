@@ -3,7 +3,7 @@
   "task_id": "DOS-M6-008",
   "decision_id": "DOS-M6-GATE-TAX",
   "parent_pr": 495,
-  "parent_head": "460c3d13f603723d6cd782c42c6fa65712601a04",
+  "parent_head": "2349c0de0e267ee806100e906315634ef5b89ade",
   "scope": "synthetic-evidence-preparation-only",
   "recorded_at_utc": "2026-10-26T12:34:14.933445+00:00",
   "qualified_applicability_review": null,
@@ -84,7 +84,7 @@
   "public_document_sources": [
     {
       "url": "https://sdk.invoicing.eta.gov.eg/start/",
-      "title": "Egyptian eInvoicing & eReceipt SDK — Getting started",
+      "title": "Egyptian eInvoicing & eReceipt SDK \u2014 Getting started",
       "verified_public_observation": "Separates taxpayer enrollment, ERP/POS registration, API access credentials and eSeal prerequisites; these are not evidence Doctor is enrolled or subject to a particular obligation."
     },
     {
