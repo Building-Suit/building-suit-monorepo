@@ -2,7 +2,7 @@
   "task": "V2-IMP-015",
   "reviewed_head": "78cbf947e1a308d44c3b8e955ee7b38727d2605b",
   "status": "blocked",
-  "note": "Prior assessment is historical, not current verification. Current code states are conservative: unverified means this review has not established the entire requirement. Unit results alone do not pass a requirement. LS-REL-001 attempted the missing native suites at candidate 26c8abd7fd3cb4eca1da0c2877027f8b809f0ea1, but SQL and browser collection were blocked by unavailable native dependencies and Docker access, and hosted deployment/schema identity could not be reached. LS-OPS-001 added locally tested restore evidence/comparison and tenant portability tooling, but the native second-instance backup/restore did not start because Docker is denied and no local PostgreSQL server exists. Accountant acceptance has no sign-off. See README.md and ../../restore-retention-portability.md for exact execution evidence and blockers.",
+  "note": "Historical assessments and the September blocked-candidate record are preserved. Later dated evidence now proves native SQL, source concurrency, exact transport, Storage, independent recovery and billing locally. The current per-ID disposition review links every original criterion to a primary repository task and actual evidence; authoritative Automation IDs/statuses remain unverified. Conservative code/test machine states are preserved except explicitly documented criterion-level updates. Deployment remains unverified and accountant acceptance pending; local evidence never implies a hosted or sellable release.",
   "release_candidate_review": {
     "task": "LS-REL-001",
     "date": "2026-09-27",
@@ -906,10 +906,12 @@
       "criterion": "8/8 two-session barrier evidence proves post-first and close-first outcomes",
       "prior_assessment": "implemented and verified locally",
       "prior_evidence": "organization_settings row lock in posting and transition operations; test 36",
-      "code_implemented": "unverified",
-      "tests_passed": "unverified",
+      "code_implemented": "implemented",
+      "tests_passed": "passed",
       "deployed": "unverified",
-      "accountant_accepted": "pending"
+      "accountant_accepted": "pending",
+      "code_evidence": "Current public posting and period-transition commands serialize through organization_settings; ten sources are exercised in both orders by LS-REL-CLOSE-001.",
+      "test_evidence": "period-close-verification-2026-10-26.json: 20 observed-lock close/post cases plus one annual retry, explicit hard-closed rejection and unchanged tenant source/number/ledger snapshots. This exceeds the original 8/8 barrier criterion; no hosted/UAT verdict."
     },
     {
       "id": "BANK-01",
@@ -1554,5 +1556,13 @@
     "result": "PASS",
     "requirement_states_promoted": false,
     "whole_release_acceptance": "pending"
+  },
+  "current_disposition_review": {
+    "task": "LS-READY-REVIEW-001",
+    "date": "2026-10-26",
+    "source": "a154d0c43f97eb59631943fc7fc2a5c7f7f3a328",
+    "artifact": "requirement-dispositions-2026-10-26.json",
+    "requirements": 138,
+    "authoritative_automation_state": "unverified"
   }
 }
