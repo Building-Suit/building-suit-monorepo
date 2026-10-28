@@ -3,7 +3,6 @@
   "task": "LS-BROWSER-001",
   "suits": [
     "automation-suit",
-    "doctor-suit",
     "inventory-suit",
     "ledger-suit",
     "shop-suit",
@@ -19,15 +18,15 @@
   "notes": {
     "title": {
       "en": "Reliable keyboard focus in mobile navigation",
-      "ar": "\u062a\u0631\u0643\u064a\u0632 \u0645\u0648\u062b\u0648\u0642 \u0644\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0641\u064a \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0647\u0627\u062a\u0641"
+      "ar": "تركيز موثوق للوحة المفاتيح في قائمة الهاتف"
     },
     "summary": {
       "en": "Opening mobile navigation moves keyboard focus into the drawer so Escape can close it.",
-      "ar": "\u064a\u0646\u0642\u0644 \u0641\u062a\u062d \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0647\u0627\u062a\u0641 \u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0625\u0644\u0649 \u062f\u0627\u062e\u0644\u0647\u0627 \u0643\u064a \u064a\u063a\u0644\u0642\u0647\u0627 \u0632\u0631 Escape."
+      "ar": "ينقل فتح قائمة الهاتف تركيز لوحة المفاتيح إلى داخلها كي يغلقها زر Escape."
     },
     "details": {
       "en": "Focus waits for the control to become visible and is cancelled if the drawer closes or is removed.",
-      "ar": "\u064a\u0646\u062a\u0638\u0631 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0638\u0647\u0648\u0631 \u0639\u0646\u0635\u0631 \u0627\u0644\u062a\u062d\u0643\u0645 \u0648\u064a\u064f\u0644\u063a\u0649 \u0625\u0630\u0627 \u0623\u064f\u063a\u0644\u0642\u062a \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0623\u0648 \u0623\u064f\u0632\u064a\u0644\u062a."
+      "ar": "ينتظر التركيز ظهور عنصر التحكم ويُلغى إذا أُغلقت القائمة أو أُزيلت."
     }
   }
 }

@@ -2173,7 +2173,6 @@
     "task": "LS-BROWSER-001",
     "suits": [
       "automation-suit",
-      "doctor-suit",
       "inventory-suit",
       "ledger-suit",
       "shop-suit",
