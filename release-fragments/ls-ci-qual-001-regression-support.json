@@ -17,7 +17,8 @@
     "packages/testing",
     "apps/ledger-suit/docs/accountant-system",
     "release-changes/items.json",
-    "docs/shared/interactions.md"
+    "docs/shared/interactions.md",
+    "apps/building-suit-docs/app/pages/components.vue"
   ],
   "reason": "Repair inherited Shop module harnesses against current Pinia/Colada contracts and current navigation selectors while preserving behavior, geometry, privacy and keyboard assertions; document source provenance and combined staging qualification."
 }

@@ -6,7 +6,7 @@ for (const app of [
   { name: 'Docs', port: 4322, path: '/components' },
   { name: 'Inventory', port: 4323, path: '/' },
   { name: 'Automation', port: 4324, path: '/' },
-  { name: 'Super Admin', port: 4325, path: '/auth/login' },
+  { name: 'Super Admin', port: 4325, path: '/' },
 ]) for (const width of [390, 1280]) {
   test(`${app.name} ${width}px: settings keyboard focus and locale/theme transitions`, async ({ page, context, browser }, info) => {
     const railSettings = ['Docs', 'Inventory', 'Automation'].includes(app.name)
@@ -30,7 +30,7 @@ for (const app of [
         await staticPage.goto(`http://127.0.0.1:${app.port}${app.path}`)
         const staticRoot = app.name === 'Docs' ? staticPage.getByRole('banner') : staticPage
         if (railSettings) {
-          const controls = staticPage.locator('.bs-side-navigation .bs-settings-menu__icon-trigger')
+          const controls = staticPage.locator('.bs-side-navigation').first().locator('.bs-settings-menu__icon-trigger')
           await expect(controls).toHaveCount(2)
           for (const control of await controls.all()) await expect(control).toBeDisabled()
         } else await expect(staticRoot.getByRole('button', { name: 'Language · Theme', exact: true }).first()).toBeDisabled()
@@ -43,8 +43,8 @@ for (const app of [
     await page.goto(`http://127.0.0.1:${app.port}${app.path}`)
     if (railSettings) {
       await expect.poll(() => page.locator('#__nuxt').evaluate(root => Boolean((root as HTMLElement & { __vue_app__?: unknown }).__vue_app__))).toBe(true)
-      const navigation = page.locator('.bs-side-navigation')
-      const trigger = page.locator('.bs-app-shell__mobile-trigger')
+      const navigation = page.locator('.bs-side-navigation').first()
+      const trigger = page.locator('.bs-app-shell__mobile-trigger').first()
       if (width === 390) {
         await trigger.click()
         await expect(trigger).toHaveAttribute('aria-expanded', 'true')

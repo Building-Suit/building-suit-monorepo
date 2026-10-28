@@ -35,6 +35,8 @@ for (const app of [
   { name: 'Docs', port: 4322, path: '/components', product: false },
 ]) {
   test(`${app.name}: shared Ledger palette reaches rendered UI and theme changes`, async ({ page, context }) => {
+    // The full catalogue paints two screenshots and restores three theme states.
+    if (app.name === 'Docs') test.setTimeout(60000)
     await context.addCookies([{ name: 'building-suit-locale', value: 'en', domain: '127.0.0.1', path: '/' }])
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
     await page.goto(`http://127.0.0.1:${app.port}${app.path}`)

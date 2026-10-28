@@ -266,7 +266,9 @@ test('Shop appointment calendar supports keyboard day/week, walk-ins and queue a
   await dialog.getByRole('textbox', { name: 'Name', exact: true }).fill('New walk-in')
   await dialog.locator('button[type="submit"]').click()
   await expect(dialog).toHaveCount(0)
-  await expect(page.getByText('New walk-in', { exact: true })).toBeVisible()
+  const createdAppointment = page.getByRole('button', { name: /New walk-in/ })
+  await expect(createdAppointment).toBeVisible()
+  await expect(createdAppointment).toHaveAttribute('title', /New walk-in/)
   expect(calls.some(call => call.name === 'save_appointment' && call.args.p_identity_kind === 'walk_in')).toBe(true)
 })
 

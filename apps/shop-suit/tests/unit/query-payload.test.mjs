@@ -5,8 +5,9 @@ import { createPinia } from 'pinia'
 import { PiniaColada, serializeQueryCache, useQueryCache } from '@pinia/colada'
 import { createRequire } from 'node:module'
 import { pathToFileURL } from 'node:url'
-const { stringify, parse } = await import(pathToFileURL(createRequire(import.meta.resolve('nuxt/package.json')).resolve('devalue')).href)
 import { shopQueryPayload } from '../../app/utils/shopQueryPayload.ts'
+
+const { stringify, parse } = await import(pathToFileURL(createRequire(import.meta.resolve('nuxt/package.json')).resolve('devalue')).href)
 
 test('actual Colada failed-read payload hydrates without provider instances or private causes', () => {
   const app = createApp({}); app.use(createPinia()); app.use(PiniaColada)

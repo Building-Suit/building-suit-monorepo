@@ -459,8 +459,8 @@ const invitationPreviewCopy={
         <div class="flex flex-wrap gap-2"><BsButton variant="chip" :aria-pressed="formPending" @click="formPending = !formPending">{{ ui('loading') }}</BsButton><BsButton @click="toastSuccess(isArabic ? 'تم الحفظ' : 'Saved')">{{ isArabic ? 'إظهار إشعار' : 'Show notification' }}</BsButton></div>
         <BsDivider />
         <BsHeading :level="3">{{ isArabic ? 'إعدادات مباشرة في الصفحة' : 'On-page settings' }}</BsHeading>
-        <BsText size="sm" tone="muted">{{ isArabic ? 'مثال توضيحي فقط: محرر مباشر دون نافذة، مع مسودة مستقلة وحفظ وإلغاء وحالات التعطيل والخطأ.' : 'Synthetic example only: an inline editor with an independent draft, Save and Cancel, and pending, disabled and error states.' }}</BsText>
-        <BsSettingsForm :pending="formPending" :error="formError" :dirty="inlineSettingsDraft.dirty.value" :submit-disabled="inlineSettingsName.trim().length < 2" :submit-label="ui('save')" :cancel-label="ui('cancel')" :success="inlineSettingsSaved ? (isArabic ? 'تم حفظ المثال.' : 'Example saved.') : ''" @submit="saveInlineSettingsExample" @cancel="inlineSettingsDraft.reset(); inlineSettingsSaved = false">
+        <BsText size="sm" tone="muted">{{ isArabic ? 'مثال توضيحي فقط: محرر مباشر دون نافذة، مع مسودة مستقلة وحفظ وإلغاء وحالات التحميل والتعطيل.' : 'Synthetic example only: an inline editor with an independent draft, Save and Cancel, and pending and disabled states.' }}</BsText>
+        <BsSettingsForm :pending="formPending" :dirty="inlineSettingsDraft.dirty.value" :submit-disabled="inlineSettingsName.trim().length < 2" :submit-label="ui('save')" :cancel-label="ui('cancel')" :success="inlineSettingsSaved ? (isArabic ? 'تم حفظ المثال.' : 'Example saved.') : ''" @submit="saveInlineSettingsExample" @cancel="inlineSettingsDraft.reset(); inlineSettingsSaved = false">
           <BsField v-slot="field" :label="isArabic ? 'اسم المتجر' : 'Shop name'" required>
             <BsInput :id="field.id" v-model="inlineSettingsName" :aria-describedby="field.describedby" required :minlength="2" :maxlength="120" />
           </BsField>

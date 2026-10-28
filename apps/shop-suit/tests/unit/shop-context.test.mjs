@@ -19,6 +19,7 @@ async function fixture() {
   const responses = []
   const locations = []
   const calls = []
+  const hooks = new Map()
   const clear = []
   const client = {
     from(table) {
@@ -51,14 +52,14 @@ async function fixture() {
   }
   const app = createSSRApp({});const pinia = createPinia();app.use(pinia);app.use(PiniaColada);fixtures.push({ pinia, cache: app.runWithContext(() => useQueryCache()) })
   const load = shopModuleLoader(env)
-  app.runWithContext(() => load('plugins/query-scope.ts').default.setup())
+  app.runWithContext(() => load('plugins/query-scope.ts').default.setup({ hook: (name, callback) => hooks.set(name, callback) }))
   const shop = app.runWithContext(() => load('composables/useShop.ts').useShop())
   function membership(shopIds = ['shop-a', 'shop-b']) {
     for (const data of [{ id: 'portal' }, { id: 'profile', status: 'active' }, shopIds.map(id => ({ id, shop_id: id, role: 'owner' })), shopIds.map(id => ({ id, name: id, status: 'active' }))]) responses.push(Promise.resolve({ data }))
     user.value = { id: 'account-a' }
   }
   function location(id) { return { data: [{ id, status: 'active', is_default: true }] } }
-  return { shop, user, membership, responses, locations, location, calls, clear, state }
+  return { shop, user, membership, responses, locations, location, calls, clear, state, hooks }
 }
 
 test('account replacement hides tenant data before membership resolves and ignores the old account location response', { timeout: 5000 }, async () => {
@@ -124,4 +125,16 @@ test('sign-out invalidates in-flight membership reads', { timeout: 5000 }, async
   assert.equal(f.shop.loading.value, false)
   assert.equal(f.shop.currentId.value, null)
   assert.equal(f.shop.currentLocationId.value, null)
+})
+
+test('SSR scope hook projects the actual pinned Colada hydration field without changing other payloads', async () => {
+  const f = await fixture()
+  const failure = new Error('SYNTHETIC-PRIVATE-PROVIDER')
+  const original = [undefined, failure, 12, { shopResource: 'plans' }]
+  const payload = { pinia_colada: { query: original }, unrelated: 'retained' }
+  assert.equal(typeof f.hooks.get('app:rendered'), 'function')
+  f.hooks.get('app:rendered')({ ssrContext: { payload } })
+  assert.deepEqual(payload.pinia_colada.query, [undefined, { message: 'Shop query failed' }, 12, { shopResource: 'plans' }])
+  assert.equal(original[1], failure)
+  assert.equal(payload.unrelated, 'retained')
 })
