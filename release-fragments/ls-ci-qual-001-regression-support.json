@@ -18,7 +18,9 @@
     "apps/ledger-suit/docs/accountant-system",
     "release-changes/items.json",
     "docs/shared/interactions.md",
-    "apps/building-suit-docs/app/pages/components.vue"
+    "apps/building-suit-docs/app/pages/components.vue",
+    "tooling/releases/docker-harness.mjs",
+    "tooling/releases/docker-harness.test.mjs"
   ],
   "reason": "Repair inherited Shop module harnesses against current Pinia/Colada contracts and current navigation selectors while preserving behavior, geometry, privacy and keyboard assertions; document source provenance and combined staging qualification."
 }
