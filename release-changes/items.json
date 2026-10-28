@@ -2281,5 +2281,58 @@
     "sources": [
       "ls-browser-001-verification-support"
     ]
-  }
+  },
+{
+  "id": "ls-ci-qual-001-shop-boundaries",
+  "task": "LS-CI-QUAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/composables/useShopMutation.ts",
+    "apps/shop-suit/app/composables/useShopQueryCache.ts",
+    "apps/shop-suit/app/plugins/query-scope.ts",
+    "apps/shop-suit/app/stores/shop.ts",
+    "apps/shop-suit/app/utils/shopQueryCleanup.ts",
+    "apps/shop-suit/app/utils/shopPermissionMenu.ts"
+  ],
+  "reason": "Qualify existing shared CI blockers with bounded current-cache lifecycle and permission mappings; preserve command error redaction. No unrelated Shop feature stack is integrated.",
+  "notes": {
+    "title": {
+      "en": "Safer session changes and menu access",
+      "ar": "تبديل أكثر أمانًا للجلسات وصلاحيات القوائم"
+    },
+    "summary": {
+      "en": "Shop clears previous account and location snapshots during scope changes and respects permissions for offers and website settings.",
+      "ar": "تمسح حزمة المتجر بيانات الحساب والموقع السابقين عند تبديل النطاق وتحترم صلاحيات العروض وإعدادات الموقع."
+    },
+    "details": {
+      "en": "Public pages avoid initializing private counter state. Cancelled queries hide old results immediately, and command failures keep provider details out of cached state.",
+      "ar": "تتجنب الصفحات العامة تهيئة حالة نقطة البيع الخاصة. تخفي الاستعلامات الملغاة النتائج القديمة فورًا وتبقي أخطاء الأوامر تفاصيل الموفّر خارج الحالة المخزنة مؤقتًا."
+    }
+  },
+  "sources": [
+    "ls-ci-qual-001-shop-boundaries"
+  ],
+  "evidence": [
+    {
+      "path": "apps/shop-suit/app/utils/shopQueryCleanup.ts",
+      "contains": "cache.setEntryState(entry, { status: 'pending', data: undefined, error: null })"
+    },
+    {
+      "path": "apps/shop-suit/app/plugins/query-scope.ts",
+      "contains": "if (scope.actorId || posReceipt)"
+    },
+    {
+      "path": "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+      "contains": "'/offers': ['sales.manage', 'settings.manage']"
+    },
+    {
+      "path": "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+      "contains": "'/website-builder': ['settings.manage']"
+    }
+  ]
+}
 ]
