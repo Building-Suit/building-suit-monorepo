@@ -24,3 +24,5 @@ Run from the repository root with `LEDGER_BROWSER_DISPOSABLE_TEST=1` and an expl
 The old 66-suite/1996-assertion financial record applies to its dated 107-migration candidate; this task supplies focused native preservation/HTTP/browser evidence for the added read-only adapter without claiming that historic count was rerun at 108. All 138 requirement criteria, primary tasks and pending deployment/accountant/Automation states remain unchanged.
 
 Hosted/Automation reconciliation, operating backups, accountant acceptance and staging provider recovery remain separate gates. No hosted deployment, professional acceptance or unrestricted sale readiness is inferred.
+
+The initial parent-aware post-commit release check identified missing shared-consumer classification for the common curated inventory. The new task inventory support fragment explicitly covers its six readers, while the public product fix remains Ledger-only. The first draft push preceded this check result; the correction is made on the same task PR before root integration, without changing application behavior or accepted fragments.
