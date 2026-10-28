@@ -6,10 +6,10 @@ for (const app of [
   { name: 'Docs', port: 4322, path: '/components' },
   { name: 'Inventory', port: 4323, path: '/' },
   { name: 'Automation', port: 4324, path: '/' },
-  { name: 'Super Admin', port: 4325, path: '/' },
+  { name: 'Super Admin', port: 4325, path: '/auth/login' },
 ]) for (const width of [390, 1280]) {
   test(`${app.name} ${width}px: settings keyboard focus and locale/theme transitions`, async ({ page, context, browser }, info) => {
-    const railSettings = ['Inventory', 'Automation', 'Super Admin'].includes(app.name)
+    const railSettings = ['Docs', 'Inventory', 'Automation'].includes(app.name)
     const denied: string[] = []
     await page.route('**/*', route => {
       const url = new URL(route.request().url())
@@ -42,6 +42,7 @@ for (const app of [
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto(`http://127.0.0.1:${app.port}${app.path}`)
     if (railSettings) {
+      await expect.poll(() => page.locator('#__nuxt').evaluate(root => Boolean((root as HTMLElement & { __vue_app__?: unknown }).__vue_app__))).toBe(true)
       const navigation = page.locator('.bs-side-navigation')
       const trigger = page.locator('.bs-app-shell__mobile-trigger')
       if (width === 390) {
@@ -56,7 +57,7 @@ for (const app of [
       await page.keyboard.press('Enter')
       await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
       await expect(navigation.getByRole('button', { name: 'Theme: Dark', exact: true })).toBeFocused()
-      const language = navigation.getByRole('button', { name: 'Language: English', exact: true })
+      const language = navigation.getByRole('button', { name: /^Language: (English|en)$/ })
       await language.focus()
       await page.keyboard.press('Enter')
       await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')

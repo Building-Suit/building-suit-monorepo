@@ -40,7 +40,26 @@ for (const app of [
     await page.goto(`http://127.0.0.1:${app.port}${app.path}`)
     // Catalogue examples may include their own settings control. Exercise the
     // Docs site's header control; standalone product auth pages have no banner.
-    const settings = (app.product ? page : page.getByRole('banner')).getByRole('button', { name: 'Language · Theme', exact: true })
+    const settings = app.product
+      ? page.getByRole('button', { name: 'Language · Theme', exact: true })
+      : page.locator('.bs-side-navigation').first().getByRole('button', { name: /^Theme:/ })
+    async function selectTheme(value: 'Light' | 'Dark' | 'System') {
+      if (app.product) {
+        await settings.click()
+        await page.getByRole('menuitemradio', { name: value, exact: true }).click()
+        await settings.click()
+        return
+      }
+      const next: Record<string, string> = { 'Theme: System': 'Theme: Light', 'Theme: Light': 'Theme: Dark', 'Theme: Dark': 'Theme: System' }
+      for (let step = 0; step < 3; step++) {
+        const current = await settings.getAttribute('aria-label')
+        if (current === `Theme: ${value}`) return
+        expect(current).toBeTruthy()
+        await settings.click()
+        await expect(settings).toHaveAttribute('aria-label', next[current!]!)
+      }
+      await expect(settings).toHaveAttribute('aria-label', `Theme: ${value}`)
+    }
     const primary = page.locator('.ls-btn-primary').first()
     const input = page.locator('.ls-input').first()
     await expect(primary).toBeVisible()
@@ -60,9 +79,7 @@ for (const app of [
     await page.mouse.up()
     await page.screenshot({ path: `.local/screenshots/${app.name.toLowerCase()}-palette-light.png`, fullPage: true })
 
-    await settings.click()
-    await page.getByRole('menuitemradio', { name: 'Dark', exact: true }).click()
-    await settings.click()
+    await selectTheme('Dark')
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(11, 11, 13)')
     await expect(page.locator('body')).toHaveCSS('color', 'rgb(250, 250, 250)')
     // Approved glass identity fields mix 88% raised #27272A and 12% #141416;
@@ -79,9 +96,7 @@ for (const app of [
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(11, 11, 13)')
     await page.screenshot({ path: `.local/screenshots/${app.name.toLowerCase()}-palette-dark.png`, fullPage: true })
 
-    await settings.click()
-    await page.getByRole('menuitemradio', { name: 'System', exact: true }).click()
-    await settings.click()
+    await selectTheme('System')
     await page.emulateMedia({ colorScheme: 'dark' })
     await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.+/)
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(11, 11, 13)')
@@ -90,9 +105,15 @@ for (const app of [
 
     if (app.product) {
       await page.goto(`http://127.0.0.1:${app.port}/`)
-      // Landing previews intentionally stay charcoal, including on light pages.
-      await expect(page.locator('.ls-hero-preview').first()).toHaveCSS('background-color', 'rgb(20, 20, 22)')
-      await expect(page.locator('.ls-hero-preview .bg-surface-muted, .ls-hero-preview .bs-box--surface-muted, .ls-hero-preview .ls-card-flat').first()).toHaveCSS('background-color', 'rgb(28, 28, 31)')
+      if (app.name === 'Shop') {
+        // The current cinematic set uses the approved midnight brand backdrop;
+        // its real product-screen surface still follows the dark theme.
+        await expect(page.locator('[data-journey-stage]')).toHaveCSS('background-color', 'rgb(10, 17, 26)')
+        await expect(page.locator('.bs-film__app')).toHaveCSS('background-color', 'rgb(11, 11, 13)')
+      } else {
+        await expect(page.locator('.ls-hero-preview').first()).toHaveCSS('background-color', 'rgb(20, 20, 22)')
+        await expect(page.locator('.ls-hero-preview .bg-surface-muted, .ls-hero-preview .bs-box--surface-muted, .ls-hero-preview .ls-card-flat').first()).toHaveCSS('background-color', 'rgb(28, 28, 31)')
+      }
 
       // Preserve the ordinary primary palette assertions on actual product
       // landing actions, alongside the explicitly branded glass auth arrow.

@@ -44,7 +44,8 @@ async function cycleLanguage() {
 </script>
 
 <template>
-  <button v-if="cycle" type="button" class="bs-settings-menu__icon-trigger" :disabled="!hydrated || (cycle === 'language' && (available.length < 2 || languagePending))"
+  <button v-if="cycle" type="button" class="bs-settings-menu__icon-trigger" :disabled="!hydrated || (cycle === 'language' && available.length < 2)"
+    :aria-disabled="cycle === 'language' && languagePending ? true : undefined" :aria-busy="cycle === 'language' && languagePending ? true : undefined"
     :aria-label="cycle === 'theme' ? `${ui('theme')}: ${themeLabel}` : `${ui('language')}: ${languageLabel}`"
     :title="cycle === 'theme' ? `${ui('theme')}: ${themeLabel}` : `${ui('language')}: ${languageLabel}`"
     @click="cycle === 'theme' ? cycleTheme() : cycleLanguage()">

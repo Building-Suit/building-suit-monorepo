@@ -2296,9 +2296,10 @@
     "apps/shop-suit/app/plugins/query-scope.ts",
     "apps/shop-suit/app/stores/shop.ts",
     "apps/shop-suit/app/utils/shopQueryCleanup.ts",
-    "apps/shop-suit/app/utils/shopPermissionMenu.ts"
+    "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+    "apps/shop-suit/app/utils/shopQueryPayload.ts"
   ],
-  "reason": "Qualify existing shared CI blockers with bounded current-cache lifecycle and permission mappings; preserve command error redaction. No unrelated Shop feature stack is integrated.",
+  "reason": "Qualify existing shared CI blockers with bounded current-cache lifecycle and permission mappings; preserve command error redaction. No unrelated Shop feature stack is integrated. Serialize failed-read hydration safely so an unavailable pricing backend does not turn the public page into a server error.",
   "notes": {
     "title": {
       "en": "Safer session changes and menu access",
@@ -2309,8 +2310,8 @@
       "ar": "تمسح حزمة المتجر بيانات الحساب والموقع السابقين عند تبديل النطاق وتحترم صلاحيات العروض وإعدادات الموقع."
     },
     "details": {
-      "en": "Public pages avoid initializing private counter state. Cancelled queries hide old results immediately, and command failures keep provider details out of cached state.",
-      "ar": "تتجنب الصفحات العامة تهيئة حالة نقطة البيع الخاصة. تخفي الاستعلامات الملغاة النتائج القديمة فورًا وتبقي أخطاء الأوامر تفاصيل الموفّر خارج الحالة المخزنة مؤقتًا."
+      "en": "Public pages avoid initializing private counter state. Cancelled queries hide old results immediately, and command failures keep provider details out of cached state. Public pages remain usable when plan prices cannot be loaded.",
+      "ar": "تتجنب الصفحات العامة تهيئة حالة نقطة البيع الخاصة. تخفي الاستعلامات الملغاة النتائج القديمة فورًا وتبقي أخطاء الأوامر تفاصيل الموفّر خارج الحالة المخزنة مؤقتًا. تبقى الصفحات العامة قابلة للاستخدام عند تعذر تحميل أسعار الخطط."
     }
   },
   "sources": [
@@ -2332,6 +2333,55 @@
     {
       "path": "apps/shop-suit/app/utils/shopPermissionMenu.ts",
       "contains": "'/website-builder': ['settings.manage']"
+    },
+    {
+      "path": "apps/shop-suit/app/utils/shopQueryPayload.ts",
+      "contains": "entry[1] == null ? entry[1] : { message: 'Shop query failed' }"
+    }
+  ]
+},
+{
+  "id": "ls-ci-qual-001-language-focus",
+  "task": "LS-CI-QUAL-001",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/organisms/BsSettingsMenu.vue"
+  ],
+  "reason": "Keep keyboard focus on the language cycle control while the locale update is pending; aria-disabled/busy and the existing pending guard prevent duplicate activation without disabling the focused native button.",
+  "notes": {
+    "title": {
+      "en": "Keep focus when changing language",
+      "ar": "الحفاظ على التركيز عند تغيير اللغة"
+    },
+    "summary": {
+      "en": "Keyboard users keep their position when switching the navigation language.",
+      "ar": "يحتفظ مستخدمو لوحة المفاتيح بموضعهم عند تبديل لغة قائمة التنقل."
+    },
+    "details": {
+      "en": "The language control announces pending work and ignores repeated activation while the update completes.",
+      "ar": "يعلن عنصر تبديل اللغة أن التحديث جارٍ ويتجاهل التفعيل المتكرر حتى يكتمل."
+    }
+  },
+  "sources": [
+    "ls-ci-qual-001-language-focus"
+  ],
+  "evidence": [
+    {
+      "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "contains": ":aria-disabled=\"cycle === 'language' && languagePending ? true : undefined\""
+    },
+    {
+      "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "contains": ":disabled=\"!hydrated || (cycle === 'language' && available.length < 2)\""
     }
   ]
 }

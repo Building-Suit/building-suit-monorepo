@@ -1,0 +1,32 @@
+{
+  "id": "ls-ci-qual-001-language-focus",
+  "task": "LS-CI-QUAL-001",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/organisms/BsSettingsMenu.vue"
+  ],
+  "reason": "Keep keyboard focus on the language cycle control while the locale update is pending; aria-disabled/busy and the existing pending guard prevent duplicate activation without disabling the focused native button.",
+  "notes": {
+    "title": {
+      "en": "Keep focus when changing language",
+      "ar": "الحفاظ على التركيز عند تغيير اللغة"
+    },
+    "summary": {
+      "en": "Keyboard users keep their position when switching the navigation language.",
+      "ar": "يحتفظ مستخدمو لوحة المفاتيح بموضعهم عند تبديل لغة قائمة التنقل."
+    },
+    "details": {
+      "en": "The language control announces pending work and ignores repeated activation while the update completes.",
+      "ar": "يعلن عنصر تبديل اللغة أن التحديث جارٍ ويتجاهل التفعيل المتكرر حتى يكتمل."
+    }
+  }
+}
