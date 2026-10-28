@@ -1,6 +1,6 @@
 # LS-BROWSER-001 — current browser acceptance and discovered interface defects
 
-2026-10-26. Parent PR #497 at `ee127c66685af69b053cd161d8b20aa79eb2acb7`; branch `codex/ledger-suit/current-browser-acceptance`. In progress under AS-E03 and LS-READY-001 orders 2/8.
+2026-10-26. Parent PR #497 at `ee127c66685af69b053cd161d8b20aa79eb2acb7`; branch `codex/ledger-suit/current-browser-acceptance`. Locally verified under AS-E03 and LS-READY-001 orders 2/8.
 
 Reconcile current shared sign-in and shell contracts with the remaining foundation/core finance scenarios, run the complete 17-file atomic matrix, and repair actual defects discovered by those checks. Preserve business-command assertions and distinguish synthetic API fixtures from real Auth/database acceptance. Do not convert an unrun or obsolete historical browser result into a current pass.
 
@@ -20,6 +20,6 @@ The native core config requires the explicit owned-project opt-in and reads only
 
 ## Verification record
 
-Pending final complete results. Initial source checks exposed and corrected a catalogue creation-path type mismatch when demonstrating nested categories; an interrupted compilation is not counted as a passing build. The historical 305-case count is obsolete: the current atomic selection collects **311 cases in 17 files**. Full CI, hosted candidate/configuration, offsite operating backups and named accountant UAT remain independent release gates.
+Final complete atomic results: **311/311 pass**, zero failures, retries disabled, 17 files in 24.6 minutes. Initial source checks exposed and corrected a catalogue creation-path type mismatch when demonstrating nested categories; an interrupted compilation is not counted as a passing build. The historical 305-case count is obsolete: the current atomic selection collects **311 cases in 17 files**. Full CI, hosted candidate/configuration, offsite operating backups and named accountant UAT remain independent release gates.
 
-Verified checkpoint: 11/11 foundation browsers, 8/8 native core browsers, 130 Ledger units, all seven application typechecks and production builds, Ledger/scoped lint, workspace and release checks pass. Full 311-case matrix is running and is not yet accepted. Shared receipt visual tests remain a separately recorded system-browser limitation; thresholds/baselines are unchanged. [Dated evidence](../v2-acceptance/current-browser-verification-2026-10-26.json) and [runbook](../../current-browser-acceptance.md).
+Verified checkpoint: 11/11 foundation browsers, 8/8 native core browsers, 130 Ledger units, all seven application typechecks and production builds, Ledger/scoped lint, workspace and release checks pass. The full 311-case matrix now passes with zero failures and retries disabled. Shared receipt visual tests remain a separately recorded system-browser limitation; thresholds/baselines are unchanged. [Dated evidence](../v2-acceptance/current-browser-verification-2026-10-26.json) and [runbook](../../current-browser-acceptance.md).
