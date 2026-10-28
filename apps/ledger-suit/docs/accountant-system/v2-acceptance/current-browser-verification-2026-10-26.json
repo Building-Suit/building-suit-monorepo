@@ -3,7 +3,7 @@
   "date": "2026-10-26",
   "parent_pr": 497,
   "parent_sha": "ee127c66685af69b053cd161d8b20aa79eb2acb7",
-  "state": "targeted_verification_passed_full_atomic_matrix_in_progress",
+  "state": "local_browser_acceptance_complete_external_release_gates_pending",
   "checks": {
     "foundation_browser": {
       "tests": 11,
@@ -20,7 +20,11 @@
     "atomic_matrix": {
       "collected": 311,
       "files": 17,
-      "state": "running; incomplete results do not count as acceptance"
+      "passed": 311,
+      "failed": 0,
+      "retry": 0,
+      "duration_minutes": 24.6,
+      "backend": "synthetic intercepted API"
     },
     "ledger_units": {
       "tests": 130,
@@ -85,5 +89,6 @@
     "Parent GitHub CI receipt comparisons pass with exact baseline error zero; its review fails 54 inherited Shop tests.",
     "Prior overlapping/partial matrix and interrupted builds are not accepted; stale owned locks/orphan preview processes were verified before cleanup."
   ],
-  "volumes": "Owned native backend stopped and all financial volumes retained."
+  "volumes": "Owned native backend stopped and all financial volumes retained.",
+  "results_finalized_on": "2026-10-28"
 }
