@@ -29,10 +29,10 @@ const { isLoading, loaderMounted, continueWithoutMotion } = useLandingMotion(lan
 // Critical presentation is in the initial HTML head. The page cannot paint ahead of
 // its loader while Vue, fonts or the motion chunk are still downloading.
 const { deepStructureNavy, premiumGold, pearlWhite, cloudGray } = designTokens.color.brand
-const loaderCss = `html[data-shop-landing-loading] { background:var(--bs-color-brand-deep-structure-navy,${deepStructureNavy.value}); overflow:hidden; scrollbar-gutter:stable; }
-html[data-shop-landing-loading] body { overflow:hidden; }
-html[data-shop-landing-loading] body>* { visibility:hidden; }
-html[data-shop-landing-loading] .bs-landing-loader, html[data-shop-landing-loading] .bs-landing-loader * { visibility:visible; }
+const loaderCss = `html[data-shop-landing-loading="true"] { background:var(--bs-color-brand-deep-structure-navy,${deepStructureNavy.value}); overflow:hidden; scrollbar-gutter:stable; }
+html[data-shop-landing-loading="true"] body { overflow:hidden; }
+html[data-shop-landing-loading="true"] body>* { visibility:hidden; }
+html[data-shop-landing-loading="true"] .bs-landing-loader, html[data-shop-landing-loading="true"] .bs-landing-loader * { visibility:visible; }
 .bs-landing-loader { position:fixed; inset:0; z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px; color:var(--bs-color-brand-pearl-white,${pearlWhite.value}); background:var(--bs-color-brand-deep-structure-navy,${deepStructureNavy.value}); outline:none; }
 .bs-landing-loader__logo { width:240px; max-width:70vw; }
 .bs-landing-loader__track { width:240px; max-width:60vw; height:2px; overflow:hidden; margin-top:34px; background:color-mix(in srgb,var(--bs-color-brand-premium-gold,${premiumGold.value}) 20%,transparent); }
@@ -46,12 +46,12 @@ html[data-shop-landing-loading] .bs-landing-loader, html[data-shop-landing-loadi
 @keyframes bs-landing-loading { from { transform:translateX(-110%); } to { transform:translateX(385%); } }
 @media (prefers-reduced-motion:reduce) { .bs-landing-loader__track>span { animation:none; width:100%; opacity:.7; } .bs-landing-loader-leave-active { transition:none; } }`
 const noScriptCss = `
-html[data-shop-landing-loading], html[data-shop-landing-loading] body { overflow:auto!important; background:var(--bs-bg)!important; }
-html[data-shop-landing-loading] body>* { visibility:visible!important; }
-html[data-shop-landing-loading] .bs-landing-loader { display:none!important; }
+html[data-shop-landing-loading="true"], html[data-shop-landing-loading="true"] body { overflow:auto!important; background:var(--bs-bg)!important; }
+html[data-shop-landing-loading="true"] body>* { visibility:visible!important; }
+html[data-shop-landing-loading="true"] .bs-landing-loader { display:none!important; }
 `
 useHead(() => ({
-  htmlAttrs: { 'data-shop-landing-loading': props.journey && isLoading.value ? 'true' : undefined },
+  htmlAttrs: { 'data-shop-landing-loading': props.journey && isLoading.value ? 'true' : 'false' },
   style: props.journey ? [{ key: 'shop-landing-loader-critical', innerHTML: loaderCss, tagPriority: 'critical' }] : [],
   link: props.journey ? [{ key: 'shop-landing-loader-logo', rel: 'preload', as: 'image', href: '/brand/shop-suit-wordmark-light.svg', fetchpriority: 'high' }] : [],
   noscript: props.journey ? [{ key: 'shop-landing-loader-no-script', innerHTML: `<style>${noScriptCss}</style>`, tagPosition: 'head' }] : [],

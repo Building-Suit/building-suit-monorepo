@@ -2345,7 +2345,6 @@
   "task": "LS-CI-QUAL-001",
   "suits": [
     "automation-suit",
-    "doctor-suit",
     "inventory-suit",
     "ledger-suit",
     "shop-suit",
@@ -2382,6 +2381,96 @@
     {
       "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
       "contains": ":disabled=\"!hydrated || (cycle === 'language' && available.length < 2)\""
+    }
+  ]
+},
+{
+  "id": "ls-ci-qual-001-auth-field-labels",
+  "task": "LS-CI-QUAL-001",
+  "suits": [
+    "ledger-suit",
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/templates/BsSignInPage.vue",
+    "packages/ui/src/organisms/BsSignupEnrollment.vue"
+  ],
+  "reason": "Give the sole canonical auth forms stable, distinct field IDs so native labels remain associated after SSR hydration and form updates. Account and verified-identity stages use separate IDs.",
+  "notes": {
+    "title": {
+      "en": "Keep account fields accessible after loading",
+      "ar": "إبقاء حقول الحساب متاحة بعد تحميل الصفحة"
+    },
+    "summary": {
+      "en": "Email, password and signup identity fields keep their labels when account pages become interactive.",
+      "ar": "تحتفظ حقول البريد وكلمة المرور وبيانات التسجيل بتسمياتها عند اكتمال تفاعل صفحات الحساب."
+    },
+    "details": {
+      "en": "Screen readers and label-based navigation can identify the fields consistently in English and Arabic.",
+      "ar": "تتعرف قارئات الشاشة والتنقل عبر التسميات على الحقول بصورة متسقة بالعربية والإنجليزية."
+    }
+  },
+  "sources": [
+    "ls-ci-qual-001-auth-field-labels"
+  ],
+  "evidence": [
+    {
+      "path": "packages/ui/src/templates/BsSignInPage.vue",
+      "contains": "for=\"bs-sign-in-email\""
+    },
+    {
+      "path": "packages/ui/src/templates/BsSignInPage.vue",
+      "contains": "for=\"bs-sign-in-password\""
+    },
+    {
+      "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+      "contains": "for=\"bs-signup-account-email\""
+    },
+    {
+      "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+      "contains": "for=\"bs-signup-verified-email\""
+    }
+  ]
+},
+{
+  "id": "ls-ci-qual-001-landing-visibility",
+  "task": "LS-CI-QUAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/templates/BsLandingPage.vue"
+  ],
+  "reason": "Write an explicit inactive loading attribute and select only its true value, so a stale SSR-only attribute cannot hide the interactive page after the loader and inert state have ended.",
+  "notes": {
+    "title": {
+      "en": "Keep public pages usable after loading",
+      "ar": "إبقاء الصفحات العامة متاحة بعد التحميل"
+    },
+    "summary": {
+      "en": "Headings and privacy choices stay available when the landing loader closes.",
+      "ar": "تبقى العناوين وخيارات الخصوصية متاحة بعد إغلاق شاشة التحميل."
+    },
+    "details": {
+      "en": "The loading state clears reliably when the page becomes interactive, including with reduced motion.",
+      "ar": "تنتهي حالة التحميل بصورة موثوقة عند تفاعل الصفحة، بما في ذلك عند تقليل الحركة."
+    }
+  },
+  "sources": [
+    "ls-ci-qual-001-landing-visibility"
+  ],
+  "evidence": [
+    {
+      "path": "packages/ui/src/templates/BsLandingPage.vue",
+      "contains": "'data-shop-landing-loading': props.journey && isLoading.value ? 'true' : 'false'"
+    },
+    {
+      "path": "packages/ui/src/templates/BsLandingPage.vue",
+      "contains": "html[data-shop-landing-loading=\"true\"] body>* { visibility:hidden; }"
     }
   ]
 }

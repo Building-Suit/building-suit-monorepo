@@ -29,3 +29,5 @@ Messages sent to `useToasts` are already translated. Display safe product/domain
 On mobile open, side navigation waits for the visibility transition to reach a browser paint before focusing its close control. Closing or disposing the drawer cancels pending focus, preventing a delayed callback from taking focus back. Escape and Tab then operate inside the open navigation and close restores the opener.
 
 Navigation language cycle buttons keep keyboard focus during locale updates. Their pending state is announced with `aria-disabled` and `aria-busy`, and the existing pending guard rejects repeated activation. Native disabled state remains appropriate before hydration or when no alternate language exists.
+
+Canonical sign-in and signup routes contain one page-level auth form. Keep their field IDs stable across SSR/hydration and distinct across account and verified-identity steps; use the same ID for the native control and its visible label. Browser checks must assert the accessible name and native label association after hydration and form updates. An SSR-visible label alone does not prove that relationship.
