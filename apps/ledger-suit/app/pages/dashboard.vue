@@ -3,12 +3,15 @@ import type { BsDashboardCopy, BsDashboardFilters, BsDashboardSetupForm, BsDashb
 
 import type { Database } from '~~/types/database.types'
 import type { DashboardRpcDatabase } from '~~/types/dashboard-rpc.types'
+import type { ExactReportRpcDatabase } from '~~/types/exact-report-rpc.types'
+import { JOURNAL_SEARCH_COLUMNS } from '../utils/journalTransport'
 import type { LedgerSeriesPoint as SeriesPoint } from '~/composables/useLedgerPresentation'
 
 definePageMeta({ layout: 'default' }) // Authenticated workspace route.
 
 const supabase = useSupabaseClient<Database>()
 const dashboardRpc = useSupabaseClient<DashboardRpcDatabase>()
+const exactRpc = useSupabaseClient<ExactReportRpcDatabase>()
 const { currentId, can, baseCurrency } = useTenant()
 const { start } = useAddTransaction()
 const { show: showOperations } = useOperationsCenter()
@@ -29,25 +32,25 @@ const seriesMonths = computed(() => {
 
 interface Summary {
   base_currency: string
-  total_assets_minor: number
-  total_liabilities_minor: number
-  net_worth_minor: number
-  cash_and_bank_minor: number
-  accounts_receivable_minor: number
-  accounts_payable_minor: number
-  revenue_this_month_minor: number
-  expenses_this_month_minor: number
-  net_profit_this_month_minor: number
-  revenue_previous_month_minor: number
-  expenses_previous_month_minor: number
-  net_profit_previous_month_minor: number
+  total_assets_minor: string
+  total_liabilities_minor: string
+  net_worth_minor: string
+  cash_and_bank_minor: string
+  accounts_receivable_minor: string
+  accounts_payable_minor: string
+  revenue_this_month_minor: string
+  expenses_this_month_minor: string
+  net_profit_this_month_minor: string
+  revenue_previous_month_minor: string
+  expenses_previous_month_minor: string
+  net_profit_previous_month_minor: string
 }
 
 // Every figure below is computed by the database. Nothing on this page
 // recalculates a total from rows it fetched.
 const { data: summary, pending: summaryPending, error: summaryError, refresh: refreshSummary } = useLazyAsyncData<Summary | null>('org:dashboard', async () => {
   if (!currentId.value) return null
-  const { data, error } = await supabase.rpc('dashboard_summary', {
+  const { data, error } = await exactRpc.rpc('read_exact_dashboard_summary', {
     p_organization_id: currentId.value,
   })
   if (error) throw error
@@ -60,7 +63,7 @@ const { data: series, pending: seriesPending, error: seriesError, refresh: refre
     p_organization_id: currentId.value,
     p_months: seriesMonths.value,
     p_as_of_date: customRange.value ? customTo.value : undefined,
-  })
+  }).select('month,revenue_minor::text,expense_minor::text,net_minor::text')
   if (error) throw error
   return (data ?? []) as unknown as SeriesPoint[]
 }, { watch: [currentId, months, customRange, customFrom, customTo], default: () => [] })
@@ -80,7 +83,7 @@ const { data: recent, pending: recentPending, error: recentError, refresh: refre
   const { data, error } = await supabase.rpc('search_transactions', {
     p_organization_id: currentId.value,
     p_limit: 8,
-  })
+  }).select(JOURNAL_SEARCH_COLUMNS)
   if (error) throw error
   return data ?? []
 }, { watch: [currentId], default: () => [] })
@@ -89,13 +92,13 @@ const hasActivity = computed(() => (recent.value?.length ?? 0) > 0)
 
 const { data: commitments, pending: commitmentsPending, error: commitmentsError, refresh: refreshCommitments } = useLazyAsyncData('org:dashboard-commitments', async () => {
   if (!currentId.value || !can('commitments.read')) return []
-  const { data, error } = await supabase.from('commitment_states').select('id,title,due_date,display_status,outstanding_minor,currency_code').eq('organization_id', currentId.value).in('display_status', ['due', 'due_soon', 'overdue', 'partially_paid']).order('due_date').limit(8)
+  const { data, error } = await supabase.from('commitment_states').select('id,title,due_date,display_status,outstanding_minor::text,currency_code').eq('organization_id', currentId.value).in('display_status', ['due', 'due_soon', 'overdue', 'partially_paid']).order('due_date').limit(8)
   if (error) throw error
   return data ?? []
 }, { watch: [currentId], default: () => [] })
 
-const upcomingCommitments = computed(() => commitments.value.filter(c => c.display_status !== 'overdue').reduce((sum, c) => sum + Number(c.outstanding_minor ?? 0), 0))
-const overdueCommitments = computed(() => commitments.value.filter(c => c.display_status === 'overdue').reduce((sum, c) => sum + Number(c.outstanding_minor ?? 0), 0))
+const upcomingCommitments = computed(() => commitments.value.filter(c => c.display_status !== 'overdue').reduce((sum, c) => sum + BigInt(c.outstanding_minor ?? 0), 0n).toString())
+const overdueCommitments = computed(() => commitments.value.filter(c => c.display_status === 'overdue').reduce((sum, c) => sum + BigInt(c.outstanding_minor ?? 0), 0n).toString())
 
 const payableHint = computed(() =>
   t('dashboard.payableHint', {
@@ -112,7 +115,7 @@ const dashboardMonths = computed(() => [3, 6, 12].map(value => ({ value, label: 
 const dashboardCopy = computed<BsDashboardCopy>(() => ({ retry: t('common.retry'), cancel: t('common.cancel'), create: '', name: '', mode: '', plan: '', filters: '', location: '', date: '', range: t('dashboard.chartRange'), custom: t('dashboard.custom'), from: t('reports.from'), to: t('reports.to'), source: t('dashboard.viewAll'), manage: t('dashboard.manage'), start: t('dashboard.emptyAction') }))
 const dashboardView = computed<BsDashboardView>(() => {
  const value = summary.value
- const metric = (id: string, title: string, amount: number | null | undefined, previous: number | null | undefined = null, direction: 'neutral' | 'up' | 'down' = 'neutral', hint = ''): BsDashboardMetric => ({ id, title, value: formatMoney(amount || 0, baseCurrency.value, locale.value), hint, changeLabel: ledgerPresentation.kpi(amount, previous, direction).label || '', tone: ledgerPresentation.kpi(amount, previous, direction).tone, to: '', source: null })
+ const metric = (id: string, title: string, amount: number | string | null | undefined, previous: number | string | null | undefined = null, direction: 'neutral' | 'up' | 'down' = 'neutral', hint = ''): BsDashboardMetric => ({ id, title, value: formatMoney(amount || 0, baseCurrency.value, locale.value), hint, changeLabel: ledgerPresentation.kpi(amount, previous, direction).label || '', tone: ledgerPresentation.kpi(amount, previous, direction).tone, to: '', source: null })
  const row = (id: string, name: string, cells: Record<string, string>, status = ''): BsDashboardRow => ({ id, name, cells, status, to: '', source: null })
  const table = (title: string, empty: string, rows: BsDashboardRow[], columns: BsDashboardTable['columns'], loading: boolean, error: string, to = '', action = false): BsDashboardTable => ({ title, empty, rows, columns, loading, error, to, action })
  return {
@@ -123,7 +126,7 @@ const dashboardView = computed<BsDashboardView>(() => {
   reportLink: { visible: false, title: '', description: '', to: '' }, chart: { visible: true, loading: seriesPending.value, error: seriesError.value ? t('dashboard.seriesLoadError') : '', title: t('dashboard.revenueVsExpenses'), pointLabel: t('dashboard.month'), tableLabel: t('common.showAsTable'), empty: t('dashboard.noLiquidAccounts'), points: ledgerPresentation.chartPoints(series.value || []), series: ledgerPresentation.chartSeries, tableSeries: ledgerPresentation.chartTableSeries },
   cashPosition: table(t('dashboard.cashPosition'), t('dashboard.noLiquidAccounts'), (liquid.value || []).map(account => row(String(account.account_id), account.name, { amount: formatMoney(account.net_debit_minor, baseCurrency.value, locale.value) })), [{ key: 'name', header: '' }, { key: 'amount', header: '', align: 'end' }], liquidPending.value, liquidError.value ? t('dashboard.liquidLoadError') : ''),
   commitments: can('commitments.read') ? table(t('dashboard.commitments'), t('dashboard.noCommitments'), commitments.value.map(item => row(String(item.id), item.title || '', { date: formatDate(item.due_date, locale.value), amount: formatMoney(item.outstanding_minor || 0, item.currency_code || baseCurrency.value, locale.value) }, item.display_status || 'unknown')), [{ key: 'name', header: '' }, { key: 'date', header: '' }, { key: 'status', header: '' }, { key: 'amount', header: '', align: 'end' }], commitmentsPending.value, commitmentsError.value ? t('dashboard.commitmentsLoadError') : '', '', true) : null,
-  recent: table(t('dashboard.recent'), t('common.dash'), (recent.value || []).map(item => row(String(item.id), '', { date: formatDate(item.transaction_date, locale.value), description: item.description || t('common.dash'), category: item.category_name || t('common.dash'), account: `${item.from_account_name || ''} → ${item.to_account_name || ''}`, amount: formatMoney(Math.max(item.debit_minor, item.credit_minor), item.currency_code || baseCurrency.value, locale.value) }, item.status)), [{ key: 'date', header: t('transactions.date') }, { key: 'description', header: t('transactions.description') }, { key: 'category', header: t('transactions.category') }, { key: 'account', header: t('transactions.account') }, { key: 'status', header: t('transactions.status') }, { key: 'amount', header: t('transactions.amount'), align: 'end' }], false, '', '/transactions'),
+  recent: table(t('dashboard.recent'), t('common.dash'), (recent.value || []).map(item => row(String(item.id), '', { date: formatDate(item.transaction_date, locale.value), description: item.description || t('common.dash'), category: item.category_name || t('common.dash'), account: `${item.from_account_name || ''} → ${item.to_account_name || ''}`, amount: formatMoney(BigInt(item.debit_minor) >= BigInt(item.credit_minor) ? item.debit_minor : item.credit_minor, item.currency_code || baseCurrency.value, locale.value) }, item.status)), [{ key: 'date', header: t('transactions.date') }, { key: 'description', header: t('transactions.description') }, { key: 'category', header: t('transactions.category') }, { key: 'account', header: t('transactions.account') }, { key: 'status', header: t('transactions.status') }, { key: 'amount', header: t('transactions.amount'), align: 'end' }], false, '', '/transactions'),
   salesMix: { visible: false, title: '', empty: '', rows: [] }, paymentMix: { visible: false, title: '', empty: '', rows: [] }, appointments: { visible: false, title: '', empty: '', source: null, metrics: [], busiestTitle: '', busiest: [] }, cash: { visible: false, title: '', source: null, metrics: [] }, customers: null, staff: null, locations: null,
  }
 })
