@@ -19,19 +19,19 @@ function updateText(key: Exclude<keyof BsSignupForm, 'fiscalMonth'>, value: stri
   <BsAuthForm v-else-if="view.stage !== 'verification'" :eyebrow="copy.eyebrow || undefined" :title="copy.title" :description="copy.description" :pending="view.pending" :data-hydrated="view.hydrated" @submit="emit('submit')">
     <BsSignupWizard :step="view.step" :steps="copy.steps" :pending="view.pending" :error="view.error" :notice="view.notice" :back-label="copy.back || undefined" :submit-label="view.submitLabel" :pending-label="view.pendingLabel" :submit-disabled="view.submitDisabled" @back="emit('back')">
       <BsGrid v-if="view.stage === 'account'" :columns="2">
-        <BsField v-slot="field" :label="copy.name" required><BsInput :id="field.id" :model-value="form.name" :readonly="view.nameLocked ?? (view.existingAccount && Boolean(form.name.trim()))" autocomplete="name" required @update:model-value="updateText('name', $event)" /></BsField>
-        <BsField v-if="features.phone" v-slot="field" :label="copy.phone" required><BsInput :id="field.id" :model-value="form.phone" type="tel" autocomplete="tel" dir="ltr" required @update:model-value="updateText('phone', $event)" /></BsField>
-        <BsField v-if="features.jobTitle" v-slot="field" :label="copy.jobTitle" required><BsInput :id="field.id" :model-value="form.jobTitle" required @update:model-value="updateText('jobTitle', $event)" /></BsField>
-        <BsField v-slot="field" :label="copy.email" required><BsInput :id="field.id" :model-value="form.email" type="email" autocomplete="email" dir="ltr" :readonly="view.existingAccount" required @update:model-value="updateText('email', $event)" /></BsField>
-        <BsField v-if="!view.existingAccount" v-slot="field" :label="copy.password" :hint="copy.passwordHint || undefined" required><BsInput :id="field.id" :model-value="form.password" type="password" autocomplete="new-password" dir="ltr" :minlength="features.passwordMinLength" required @update:model-value="updateText('password', $event)" /></BsField>
+        <BsField v-slot="field" for="bs-signup-account-name" :label="copy.name" required><BsInput :id="field.id" :model-value="form.name" :readonly="view.nameLocked ?? (view.existingAccount && Boolean(form.name.trim()))" autocomplete="name" required @update:model-value="updateText('name', $event)" /></BsField>
+        <BsField v-if="features.phone" v-slot="field" for="bs-signup-account-phone" :label="copy.phone" required><BsInput :id="field.id" :model-value="form.phone" type="tel" autocomplete="tel" dir="ltr" required @update:model-value="updateText('phone', $event)" /></BsField>
+        <BsField v-if="features.jobTitle" v-slot="field" for="bs-signup-account-job-title" :label="copy.jobTitle" required><BsInput :id="field.id" :model-value="form.jobTitle" required @update:model-value="updateText('jobTitle', $event)" /></BsField>
+        <BsField v-slot="field" for="bs-signup-account-email" :label="copy.email" required><BsInput :id="field.id" :model-value="form.email" type="email" autocomplete="email" dir="ltr" :readonly="view.existingAccount" required @update:model-value="updateText('email', $event)" /></BsField>
+        <BsField v-if="!view.existingAccount" v-slot="field" for="bs-signup-account-password" :label="copy.password" :hint="copy.passwordHint || undefined" required><BsInput :id="field.id" :model-value="form.password" type="password" autocomplete="new-password" dir="ltr" :minlength="features.passwordMinLength" required @update:model-value="updateText('password', $event)" /></BsField>
       </BsGrid>
       <BsStack v-else>
         <!-- Verified Supabase identity is not editable. Google supplies only
              name/email; shop details still require normal owner onboarding. -->
         <section v-if="view.existingAccount && view.showVerifiedIdentity !== false" class="bs-signup-verified-identity">
           <BsGrid :columns="2">
-            <BsField v-slot="field" :label="copy.name"><BsInput :id="field.id" :model-value="form.name" type="text" readonly aria-readonly="true" autocomplete="off" tabindex="-1" /></BsField>
-            <BsField v-slot="field" :label="copy.email"><BsInput :id="field.id" :model-value="form.email" type="email" readonly aria-readonly="true" dir="ltr" autocomplete="off" tabindex="-1" /></BsField>
+            <BsField v-slot="field" for="bs-signup-verified-name" :label="copy.name"><BsInput :id="field.id" :model-value="form.name" type="text" readonly aria-readonly="true" autocomplete="off" tabindex="-1" /></BsField>
+            <BsField v-slot="field" for="bs-signup-verified-email" :label="copy.email"><BsInput :id="field.id" :model-value="form.email" type="email" readonly aria-readonly="true" dir="ltr" autocomplete="off" tabindex="-1" /></BsField>
           </BsGrid>
         </section>
         <BsGrid :columns="2">

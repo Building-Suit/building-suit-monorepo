@@ -9,8 +9,8 @@ function fixture({ online = true, cached = false, delayed = false } = {}) {
  const calls = [], writes = []
  let resolve
  const response = delayed ? new Promise(done => { resolve = done }) : Promise.resolve({ data: { total: 114, net: 100, tax: 14, calculationEnabled: true }, error: null })
- const factory = new Function('useSupabaseUser', 'useSupabaseClient', 'computed', 'useAsyncData', `${source}; return useSaleTaxQuote`)
- const composable = factory(() => user, () => ({ schema: () => ({ rpc: async (name, args) => { calls.push({ name, args }); return response } }) }), computed, (key, run) => ({ key, run }))
+ const factory = new Function('useSupabaseUser', 'useShopClient', 'computed', 'useShopQuery', `${source}; return useSaleTaxQuote`)
+ const composable = factory(() => user, () => ({ schema: () => ({ rpc: async (name, args) => { calls.push({ name, args }); return response } }) }), computed, (key, run) => ({ key, run, pending: ref(false), isLoading: ref(false) }))
  const offline = { online: ref(online), cached: async () => cached, cache: async (...args) => { writes.push(args) } }
  const api = composable(shop, location, computed(() => [{ item_type: 'product', source_id: 'product-1', quantity: 1 }]), offline)
  return { api, calls, writes, shop, location, user, resolve }

@@ -156,7 +156,19 @@ assert.ok(!Object.hasOwn(inventory.relation,'production_sha'))
 assert.equal(sql('select row_to_json(b) from public.release_candidate_baseline b;'),inventoryBefore)
 assert.equal(sql("select to_regclass('super_admin_private.release_candidate_baseline_before_relation_repair') is null;"),'t')
 console.log('Read-only metadata inventory passed: scalar BEGIN ATOMIC table dependency, external policy, publication membership and unchanged baseline')
-const snapshot={...buildCandidate('origin/main','HEAD'),baseVersions:state.baseVersions}
+const repositorySnapshot={...buildCandidate('origin/main','HEAD'),baseVersions:state.baseVersions}
+const registeredFixtureSuits=new Set(sql("select stable_key from public.suit_registry where status='active' order by stable_key;").split('\n').filter(Boolean))
+// This isolated database registers Shop. A shared-runtime branch can also have
+// real changes for other products, whose operating registration/baselines are
+// deliberately absent here. Prove their denial before exercising the existing
+// baseline-pin fixture; never register them merely to make this test pass.
+if(repositorySnapshot.changes.some(change=>change.disposition==='public'&&change.suits.some(suit=>!registeredFixtureSuits.has(suit)))) {
+  await assert.rejects(catalog('release_candidate_trace',{p_snapshot:repositorySnapshot}),/UNREGISTERED_SUIT/)
+  assert.deepEqual(await catalog('release_candidate_state'),state,'Unregistered repository consumers cannot allocate public versions')
+}
+const snapshot={...repositorySnapshot,changes:repositorySnapshot.changes.map(change=>({...change,
+  suits:change.suits.filter(suit=>registeredFixtureSuits.has(suit)||(change.disposition==='internal'&&suit==='doctor-suit')),
+})).filter(change=>change.suits.length)}
 const publicDoctor={id:'fixture-public-doctor',task:'DOS-M1-002',suits:['doctor-suit'],classification:'minor',disposition:'public',paths:['apps/doctor-suit'],reason:'Attempt public allocation for an internal-only consumer',notes:{title:{en:'Doctor preview',ar:'معاينة الطبيب'},summary:{en:'Doctor preview',ar:'معاينة الطبيب'},details:{en:'Doctor preview',ar:'معاينة الطبيب'}}}
 await assert.rejects(catalog('release_candidate_trace',{p_snapshot:{...snapshot,changes:[publicDoctor]}}),/UNREGISTERED_SUIT/,'Private recognition never grants Doctor public release authority')
 assert.deepEqual(await catalog('release_candidate_state'),state,'Rejected Doctor public allocation preserves release state')

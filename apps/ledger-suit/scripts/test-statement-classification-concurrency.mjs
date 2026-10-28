@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync, spawn } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import { readFileSync, readdirSync, realpathSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
@@ -18,8 +19,10 @@ const source = root + 'apps/ledger-suit/supabase/migrations/'
 const files = readdirSync(source).filter(n => n.endsWith('.sql')).sort()
 assert.deepEqual(sql('select version from supabase_migrations.schema_migrations order by version').split('\n'), files.map(n => n.split('_')[0]))
 for (const name of files) assert.deepEqual(readFileSync(source + name), readFileSync(root + workdir + '/supabase/migrations/' + name))
-const identity = `select set_config('request.jwt.claims','{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}',false);`
-const org = sql("select id from public.organizations where name='Alpha Trading'")
+const actor = randomUUID()
+sql(`insert into auth.users(id,email,raw_user_meta_data,raw_app_meta_data) values('${actor}','${actor}@classification.test','{}','{}');`)
+const identity = `set request.jwt.claims='{"sub":"${actor}","role":"authenticated"}'; set role authenticated;`
+const org = sql(`${identity} select public.create_organization('Classification race ${actor}','EGP');`)
 const accounts = [1, 2, 3].map(i => sql(`${identity} select public.create_account('${org}','Concurrency classification ${i}','asset','other_asset');`).split('\n').at(-1))
 function session(name, query) {
   const child = spawn('docker', baseArgs, { cwd: root, stdio: ['pipe', 'pipe', 'pipe'] })
@@ -41,12 +44,12 @@ const call = (id, request, reason = 'Concurrent classification') => `select publ
 const sessions = []
 try {
   for (const [i, sameRequest] of [[0, false], [1, true]]) {
-    const request = `34000000-0000-4000-8000-00000000000${i + 1}`
+    const request = randomUUID()
     const winner = session(`classification-winner-${i}`, `begin; ${call(accounts[i], request)} select 'winner-ready';`)
     sessions.push(winner)
     await until(() => winner.output.includes('winner-ready') || winner.exited, 'winner did not acquire account')
     assert.equal(winner.exited, false, winner.error)
-    const otherRequest = sameRequest ? request : '34000000-0000-4000-8000-000000000099'
+    const otherRequest = sameRequest ? request : randomUUID()
     const loser = session(`classification-loser-${i}`, call(accounts[i], otherRequest))
     sessions.push(loser)
     loser.child.stdin.end('\\q\n')
@@ -64,11 +67,13 @@ try {
     }
     assert.equal(sql(`select count(*) from public.account_statement_classifications where account_id='${accounts[i]}'`), '1')
   }
-  const locker = session('classification-locker', `begin; update public.organization_settings set books_locked_until=current_date+5 where organization_id='${org}'; select 'lock-ready';`)
+  // The competing administrative row lock is fixture setup. Classification
+  // commands themselves run as the authenticated organization member.
+  const locker = session('classification-locker', `reset role; begin; update public.organization_settings set books_locked_until=current_date+5 where organization_id='${org}'; select 'lock-ready';`)
   sessions.push(locker)
   await until(() => locker.output.includes('lock-ready') || locker.exited, 'settings writer did not acquire lock')
   assert.equal(locker.exited, false, locker.error)
-  const writer = session('classification-writer', call(accounts[2], '34000000-0000-4000-8000-000000000098'))
+  const writer = session('classification-writer', call(accounts[2], randomUUID()))
   sessions.push(writer)
   writer.child.stdin.end('\\q\n')
   await until(() => sql("select count(*) from pg_stat_activity where application_name='classification-writer' and wait_event_type='Lock'") === '1', 'classification did not wait for books lock')
@@ -82,5 +87,5 @@ try {
 finally {
   for (const state of sessions) if (!state.exited) state.child.kill('SIGTERM')
 }
-run('pnpm', ['exec', 'supabase', '--workdir', workdir, 'db', 'reset', '--local', '--yes'])
-console.log('PASS: restored pristine seeds in the owned disposable classification-review backend')
+// Preserve committed evidence. Each run owns a fresh organization/request IDs;
+// neither seed restoration nor financial deletion is required for repeat runs.

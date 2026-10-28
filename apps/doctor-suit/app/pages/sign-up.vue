@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { navigateTo } from '#app'
 import { doctorHomePath } from '../utils/authConfiguration'
 definePageMeta({ layout: false })
 const { auth, copy, product, availability, error } = useDoctorAuthPresentation()

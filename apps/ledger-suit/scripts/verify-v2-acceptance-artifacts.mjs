@@ -1,6 +1,7 @@
 // Offline evidence validation only. Does not execute or certify the application.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 const root = new URL('../docs/accountant-system/', import.meta.url)
 const read = path => readFileSync(new URL(path, root), 'utf8')
 const matrix = JSON.parse(read('v2-acceptance/requirements.json'))
@@ -17,6 +18,33 @@ for (const row of matrix.requirements) {
   assert.equal(row.deployed, 'unverified')
   assert.equal(row.accountant_accepted, 'pending')
 }
+const review = JSON.parse(read(`v2-acceptance/${matrix.current_disposition_review.artifact}`))
+assert.equal(review.rows.length, requirements.length, 'Every requirement needs one current disposition')
+assert.deepEqual(review.rows.map(row => row.id).sort(), requirements)
+const repository = new URL('../../../', import.meta.url)
+const allowedDispositions = ['retain', 'extend', 'introduce', 'investigate']
+for (const row of review.rows) {
+  assert.ok(allowedDispositions.includes(row.primary_disposition), `${row.id}: invalid primary disposition`)
+  assert.match(row.primary_repository_task, /^[A-Z][A-Z0-9-]+$/, `${row.id}: missing primary task`)
+  assert.ok(row.finding.trim() && row.remaining_gate.trim() && row.review_scope.trim(), `${row.id}: incomplete review`)
+  const criterion = matrix.requirements.find(requirement => requirement.id === row.id).criterion
+  assert.equal(row.criterion_sha256, createHash('sha256').update(criterion).digest('hex'), `${row.id}: criterion changed since review`)
+  assert.equal(row.authoritative_automation_state, 'unverified', `${row.id}: no live Automation snapshot is available`)
+  assert.ok(row.evidence_refs.length > 0, `${row.id}: evidence references required`)
+  for (const key of row.evidence_refs) {
+    const evidence = review.evidence_index[key]
+    assert.ok(evidence?.paths.length, `${row.id}: unknown evidence reference ${key}`)
+    for (const path of evidence.paths) {
+      assert.match(path, /^(?:apps\/ledger-suit\/|docs\/)/)
+      assert.ok(!path.split('/').includes('..'), 'Evidence must stay inside the repository')
+      readFileSync(new URL(path, repository))
+    }
+  }
+}
+assert.deepEqual(review.disposition_counts, review.rows.reduce((counts, row) => {
+  counts[row.primary_disposition] = (counts[row.primary_disposition] ?? 0) + 1
+  return counts
+}, {}), 'Disposition summary must match the actual rows')
 const fixture = JSON.parse(read('v2-acceptance/expected-balances.json'))
 const expected = fixture.expected
 const balances = {}
@@ -62,4 +90,4 @@ assert.equal(BigInt(expected.opening_cash_minor) + Object.values(cashFlows).redu
 assert.equal(balances.bank.toString(), expected.closing_cash_minor)
 assert.equal(fixture.accountant.verdict, 'pending')
 assert.equal(fixture.accountant.signed_artifact, null)
-console.log('PASS: 138 distinct requirement states; independent 8-journal worksheet reconciles exactly. Database, browser, migration, and accountant acceptance remain unverified.')
+console.log('PASS: 138 distinct requirement states and current dispositions; independent 8-journal worksheet reconciles exactly. This artifact check executes no database/browser workflow and certifies no deployment or accountant acceptance.')

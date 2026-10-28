@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { navigateTo } from '#app'
 import { approvalBlocked } from '../utils/payment-review'
 definePageMeta({ layout: false })
 const { t, locale, messages } = useI18n()

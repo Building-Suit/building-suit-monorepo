@@ -1,0 +1,14 @@
+{
+  "id": "ls-browser-001-private-doctor-focus",
+  "task": "LS-BROWSER-001",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ux/src/composables/useSideNavigation.ts",
+    "packages/ux/tests/menu-share.test.mjs"
+  ],
+  "reason": "Retain shared navigation focus support for the synthetic Doctor preview as private provenance. No operational registration, public release allocation, baseline or clinical/legal readiness is granted."
+}

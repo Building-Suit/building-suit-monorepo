@@ -4,7 +4,7 @@ import { recordShellGeometry, expectNoPageOverflow, trackRouteCoverage } from '.
 
 for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (const width of [390, 768, 1440]) {
  test(`independent Inventory and Super Admin entry states: ${locale}, ${theme}, ${width}`, async ({ browser }, info) => {
-  const headerGeometry = []
+  const navigationGeometry = []
   for (const product of [{ name: 'inventory', port: 4323 }, { name: 'super-admin', port: 4325 }]) {
    const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce' })
    await context.addCookies([{ name: 'building-suit-locale', value: locale, domain: '127.0.0.1', path: '/' }])
@@ -29,15 +29,19 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
    await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr')
    await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
    await expectNoPageOverflow(page)
-   await recordShellGeometry(page)
-   headerGeometry.push(await page.locator('header').first().evaluate(element => {
+   const navigation = page.locator('.bs-side-navigation')
+   const trigger = page.locator('.bs-app-shell__mobile-trigger')
+   if (width < 1024) {
+    await trigger.click()
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+   }
+   await expect(navigation).toBeVisible()
+   await recordShellGeometry(page, navigation)
+   navigationGeometry.push(await navigation.evaluate(element => {
     const box = element.getBoundingClientRect(), style = getComputedStyle(element)
     return { width: Math.round(box.width), height: Math.round(box.height), background: style.backgroundColor, border: style.borderColor, radius: style.borderRadius }
    }))
-   if (width === 390) {
-    const trigger = page.locator('[data-navigation-trigger]')
-    await trigger.click()
-    await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+   if (width < 1024) {
     await page.keyboard.press('Escape')
     await expect(trigger).toHaveAttribute('aria-expanded', 'false')
     await expect(trigger).toBeFocused()
@@ -49,6 +53,6 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
    expect(errors).toEqual([])
    await context.close()
   }
-  expect(headerGeometry[0]).toEqual(headerGeometry[1])
+  expect(navigationGeometry[0]).toEqual(navigationGeometry[1])
  })
 }

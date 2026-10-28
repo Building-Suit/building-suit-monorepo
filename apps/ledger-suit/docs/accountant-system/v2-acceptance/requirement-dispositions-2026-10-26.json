@@ -1,0 +1,2442 @@
+{
+  "task": "LS-READY-REVIEW-001",
+  "date": "2026-10-26",
+  "parent_pr": 506,
+  "reviewed_source": "a154d0c43f97eb59631943fc7fc2a5c7f7f3a328",
+  "state": "repository_disposition_complete_external_reconciliation_pending",
+  "task_reference_kind": "Repository labels, not verified Automation database row IDs.",
+  "rules": [
+    "One primary disposition and primary task per original ID.",
+    "Evidence references identify actual source, tests and dated outcomes; test presence is not execution.",
+    "The full 311-case atomic matrix passes; native core and synthetic API evidence remain distinct.",
+    "Historical planning rows apply to their original phase; founder implementation authority is separate from UAT.",
+    "No deployment or accountant verdict is inferred."
+  ],
+  "disposition_counts": {
+    "retain": 130,
+    "investigate": 8
+  },
+  "evidence_index": {
+    "SCOPE": {
+      "primary_task": "LS-READY-001",
+      "scope": "baseline_governance",
+      "paths": [
+        "docs/agent-workflows.md",
+        "apps/ledger-suit/docs/accountant-system/DECISIONS_AR.md"
+      ]
+    },
+    "CORE": {
+      "primary_task": "LS-REL-001",
+      "scope": "runtime",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260923134857_posting_idempotency_integrity.sql",
+        "apps/ledger-suit/supabase/tests/01_accounting_integrity_test.sql",
+        "apps/ledger-suit/supabase/tests/32_posting_idempotency_integrity_test.sql",
+        "apps/ledger-suit/supabase/tests/53_integrated_financial_cycle_test.sql"
+      ]
+    },
+    "COA": {
+      "primary_task": "V2-IMP-005",
+      "scope": "runtime",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260923183124_control_account_contract.sql",
+        "apps/ledger-suit/supabase/tests/37_control_accounts_test.sql",
+        "apps/ledger-suit/tests/e2e/atomic-accounts.spec.ts"
+      ]
+    },
+    "OPEN": {
+      "primary_task": "V2-IMP-006",
+      "scope": "runtime",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260923203000_opening_balance_migrations.sql",
+        "apps/ledger-suit/supabase/tests/39_opening_balance_migrations_test.sql",
+        "apps/ledger-suit/tests/e2e/atomic-opening-balances.spec.ts"
+      ]
+    },
+    "JRN": {
+      "primary_task": "V2-IMP-003",
+      "scope": "runtime",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260923161002_journal_center.sql",
+        "apps/ledger-suit/supabase/tests/47_posted_journal_sequences_test.sql",
+        "apps/ledger-suit/tests/e2e/atomic-journal-workspace.spec.ts"
+      ]
+    },
+    "TB": {
+      "primary_task": "V2-IMP-002",
+      "scope": "runtime",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260923144500_six_column_trial_balance.sql",
+        "apps/ledger-suit/supabase/tests/33_six_column_trial_balance_test.sql",
+        "apps/ledger-suit/tests/e2e/atomic-reports.spec.ts"
+      ]
+    },
+    "FS": {
+      "primary_task": "V2-IMP-007",
+      "scope": "runtime",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260924070000_financial_statement_mappings.sql",
+        "apps/ledger-suit/supabase/tests/41_financial_statement_mappings_test.sql",
+        "apps/ledger-suit/supabase/tests/49_historical_account_labels_test.sql",
+        "apps/ledger-suit/tests/e2e/atomic-reports.spec.ts"
+      ]
+    },
+    "AR": {
+      "primary_task": "V2-IMP-008",
+      "scope": "runtime",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260925113812_accrual_customer_subledger.sql",
+        "apps/ledger-suit/supabase/tests/40_customer_subledger_test.sql",
+        "apps/ledger-suit/tests/e2e/atomic-subledger.spec.ts"
+      ]
+    },
+    "AP": {
+      "primary_task": "V2-IMP-009",
+      "scope": "runtime",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260925143000_accrual_supplier_subledger.sql",
+        "apps/ledger-suit/supabase/tests/42_supplier_subledger_test.sql",
+        "apps/ledger-suit/tests/e2e/atomic-subledger.spec.ts"
+      ]
+    },
+    "PER": {
+      "primary_task": "V2-IMP-004",
+      "scope": "runtime",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260923165711_accounting_periods_and_closing.sql",
+        "apps/ledger-suit/supabase/tests/35_accounting_periods_test.sql",
+        "apps/ledger-suit/scripts/test-period-close-concurrency.mjs",
+        "apps/ledger-suit/tests/e2e/atomic-periods.spec.ts"
+      ]
+    },
+    "BANK": {
+      "primary_task": "V2-IMP-010",
+      "scope": "runtime",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260925160000_bank_reconciliation.sql",
+        "apps/ledger-suit/supabase/tests/42_bank_reconciliation_test.sql",
+        "apps/ledger-suit/tests/e2e/atomic-bank-reconciliation.spec.ts"
+      ]
+    },
+    "FA": {
+      "primary_task": "V2-IMP-011",
+      "scope": "runtime",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260925173000_fixed_assets.sql",
+        "apps/ledger-suit/supabase/tests/43_fixed_assets_test.sql",
+        "apps/ledger-suit/tests/e2e/atomic-assets.spec.ts"
+      ]
+    },
+    "DIM": {
+      "primary_task": "V2-IMP-012",
+      "scope": "runtime",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260925190000_accounting_dimensions.sql",
+        "apps/ledger-suit/supabase/tests/44_accounting_dimensions_test.sql",
+        "apps/ledger-suit/tests/e2e/atomic-supporting-workspaces.spec.ts"
+      ]
+    },
+    "TAX": {
+      "primary_task": "V2-IMP-013",
+      "scope": "approved_limited_scope",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260926100000_approved_egypt_vat.sql",
+        "apps/ledger-suit/supabase/tests/45_approved_egypt_vat_test.sql",
+        "apps/ledger-suit/docs/eta-b2b-einvoice-adapter.md",
+        "apps/ledger-suit/docs/eta-b2c-ereceipt-adapter.md"
+      ]
+    },
+    "INV": {
+      "primary_task": "V2-IMP-014",
+      "scope": "approved_limited_scope",
+      "paths": [
+        "apps/ledger-suit/supabase/migrations/20260926110100_approved_inventory_accounting.sql",
+        "apps/ledger-suit/supabase/tests/46_inventory_accounting_test.sql",
+        "apps/ledger-suit/tests/e2e/atomic-inventory-accounting.spec.ts"
+      ]
+    },
+    "VAL": {
+      "primary_task": "V2-IMP-015",
+      "scope": "acceptance",
+      "paths": [
+        "apps/ledger-suit/docs/accountant-system/work-packages/LS-READY-001.md",
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/README.md"
+      ]
+    },
+    "PLAN": {
+      "primary_task": "LS-V2-BASELINE-001",
+      "scope": "baseline_governance",
+      "paths": [
+        "apps/ledger-suit/docs/accountant-system/v2-baseline/BASELINE.md",
+        "apps/ledger-suit/docs/accountant-system/DECISIONS_AR.md"
+      ]
+    },
+    "native_sql": {
+      "paths": [
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/native-sql-verification-2026-10-22.json"
+      ]
+    },
+    "integrated_cycle": {
+      "paths": [
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/integrated-financial-cycle-2026-10-23.json"
+      ]
+    },
+    "module_races": {
+      "paths": [
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/native-concurrency-verification-2026-10-22.json"
+      ]
+    },
+    "source_close_races": {
+      "paths": [
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/period-close-verification-2026-10-26.json"
+      ]
+    },
+    "exact_transport": {
+      "paths": [
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/exact-report-transport-2026-10-23.json"
+      ]
+    },
+    "storage": {
+      "paths": [
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/storage-upload-admission-2026-10-23.json"
+      ]
+    },
+    "recovery": {
+      "paths": [
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/native-recovery-verification-2026-10-23.json"
+      ]
+    },
+    "billing": {
+      "paths": [
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/native-billing-verification-2026-10-26.json"
+      ]
+    },
+    "browser_checkpoint": {
+      "paths": [
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/current-browser-verification-2026-10-26.json"
+      ]
+    },
+    "native_journal": {
+      "primary_task": "LS-JRN-VERIFY-001",
+      "scope": "runtime_native_acceptance",
+      "paths": [
+        "apps/ledger-suit/tests/e2e/journal-center.spec.ts",
+        "apps/ledger-suit/scripts/verify-native-journal-evidence.mjs",
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/native-journal-verification-2026-10-28.json",
+        "apps/ledger-suit/docs/accountant-system/work-packages/LS-JRN-VERIFY-001.md"
+      ]
+    }
+  },
+  "rows": [
+    {
+      "id": "SCOPE-01",
+      "criterion_sha256": "91bfbbd9f8b791ae4443aa3ef1fd5a6f7c95f380b3fad1223a5e5cac6818de2e",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-READY-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "SCOPE"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "SCOPE-02",
+      "criterion_sha256": "fed0442c6354b487b04fa2a1f1448e053b17a0960585162f10f88cad702efb4c",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-READY-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "SCOPE"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "SCOPE-03",
+      "criterion_sha256": "907c018bad00aeb9660be9274ac158c5fdd7cd48127a73780fb6631b382c0a8f",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-READY-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "SCOPE"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "SCOPE-04",
+      "criterion_sha256": "530b1761811805b506f46d5772e2c7bd5ef37744804259c0b988e5332bd3670c",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-READY-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "SCOPE"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "SCOPE-05",
+      "criterion_sha256": "8cbac1c537932d82c7b0bd4e766e434cf464707533f0e5ddf47b1bb45943ba1b",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-READY-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "SCOPE"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "SCOPE-06",
+      "criterion_sha256": "32e4b691a0d2e0747810c0927454dfedc8826865210ffd5f36b00cf77ca795e4",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-READY-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "SCOPE"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "SCOPE-07",
+      "criterion_sha256": "457a7c1c7b502c11d24ef9df97c954802cdbcdc3f1cba88069f5b16532ef2959",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-READY-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "SCOPE"
+      ],
+      "finding": "Implementation authority is recorded in AS-E03. It does not substitute for named accountant acceptance or specific external provider evidence.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "CORE-01",
+      "criterion_sha256": "ba988e71f52ab33550fe8ab6537d399e96afe189c514314960b267bed62fe0e1",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-REL-001",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "CORE",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "CORE-02",
+      "criterion_sha256": "844481e211c3b0269b2c9de8edd4781cb76a950e57046b6f6bb7b13c22de5e7d",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-REL-001",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "CORE",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "CORE-03",
+      "criterion_sha256": "c1d32883e362d5846bc0ae1c41dce4c9bcda5e29f31dbeb11ab06281c97216e7",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-REL-001",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "CORE",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "CORE-04",
+      "criterion_sha256": "b81f81a136eb7b7a4610297158cbfcb956c17cb13f75d87810648d54a223810a",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-REL-001",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "CORE",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "CORE-05",
+      "criterion_sha256": "2b1adf40e04084b39047a69c8875ce90a90c7b317564a213a70fdc9ffa3a7148",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-REL-001",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "CORE",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "CORE-06",
+      "criterion_sha256": "e7ec3ed58d292d908b53194cb7a40e7faed30e3868d5bd0ca91cec0316cac85f",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-REL-001",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "CORE",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "CORE-07",
+      "criterion_sha256": "ad37de348907c0a6ccc68b0e5fade9db0aa802a5f73770e865b7656943a70226",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-REL-001",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "CORE",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "CORE-08",
+      "criterion_sha256": "6bb02fba5702fe047fbbc724855e5c76ee28cfc28e790e3be2bcd8042daed4ee",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-REL-001",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "CORE",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the forward-only preservation contract. Actual exact pre/post fingerprints exist for report transport and Storage admission; each future data task must attach its own pair.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "COA-01",
+      "criterion_sha256": "d1a8c742f3384f6df3906da34ecea8bdc0f682a7acc7d83033606127cb0d59ed",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-005",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "COA",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "COA-02",
+      "criterion_sha256": "e98114383c8f9232921eef7e889605e4b5d4f8c67a667a63008ffb833ccf1c41",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-005",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "COA",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "COA-03",
+      "criterion_sha256": "4f37da66157fa993227386eabd9eca8eb5cf0fb41e73e2e85c720d61bcb8e921",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-005",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "COA",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "COA-04",
+      "criterion_sha256": "2f7003b5cfb3fde9e8ec84c6eb0a71746a6efc6e73544fb7ae607ec2ed00ee26",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-005",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "COA",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "COA-05",
+      "criterion_sha256": "f20d8f109bc04cec2697f99b03223f9a1b33fdfef42aaf324d5893936df2479d",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-005",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "COA",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "COA-06",
+      "criterion_sha256": "4bf2f74063e619fdaed1fcd86cf5c7e11216842c2c223538e6b089ace98e3335",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-005",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "COA",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "COA-07",
+      "criterion_sha256": "36177b855224060bef882b84f91e4bc569ce956128ad1832e21bdb9a6e94e5ee",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-005",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "COA",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "COA-08",
+      "criterion_sha256": "4f4225124188c49e8211bdb2474fa8eb0668babd1e0a862a1f0cc176a41eebd8",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-005",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "COA",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "COA-09",
+      "criterion_sha256": "3ed4d0ed229f25c32d1edd9b8cf0b54c7b8134d8e5badd640feac253757ff893",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-005",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "COA",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "OPEN-01",
+      "criterion_sha256": "e7ee2e415bc7cdc19e5de806ede4fd04825d7d7c276ae474b75620040ad5482a",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-006",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "OPEN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "OPEN-02",
+      "criterion_sha256": "d4190413e9ea673f5f746c9b898f2636a6c70286adb2bd205784d07110e379ce",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-006",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "OPEN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "OPEN-03",
+      "criterion_sha256": "8d6480fc0d84c9c0d69a8092a2085d6e5e1dd0a902b4caa568ad7092d003d99b",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-006",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "OPEN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "OPEN-04",
+      "criterion_sha256": "84ba41294c4d9d0656b2fa552ecf41ed6cbead8db321109d0aa2f41ffe16484a",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-006",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "OPEN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "OPEN-05",
+      "criterion_sha256": "b634c0833f49b159d5b5b228c2f07d22f85d8c7a517d7ab3ecdaad8d90f6072e",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-006",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "OPEN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "OPEN-06",
+      "criterion_sha256": "36bcd0d669d6e22835a09f2fdcac9e9be354b7739e314a84ecfa498d1b49d609",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-006",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "OPEN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "OPEN-07",
+      "criterion_sha256": "972bf7e89dd04638bffa5dfce7cd0c7e2fac501820558281ada567a4e5c95cbe",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-006",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "OPEN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "OPEN-08",
+      "criterion_sha256": "81e3bb349f5cb4018e84601b02e0f5ad26041ac0d1c39d9fe3070c2f38d9b202",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-006",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "OPEN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "JRN-01",
+      "criterion_sha256": "1937d50aa06c438cfe77a9cf19163a53e95b38fa8f11dbeab5e4b1497a57c68f",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-003",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "JRN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "JRN-02",
+      "criterion_sha256": "cbe9be94e4ed673b1b990b4a907d216b647688614a1e4308aae2f548ffd1bf83",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-003",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "JRN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Professional numbering is now implemented and natively verified; legacy references remain. Do not replay the historical missing-number repair.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "JRN-03",
+      "criterion_sha256": "ae2bf8ad56e2c938a3da2f8f152c729eb6744a2dae4652099c52119fd3a29bc2",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-003",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "JRN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain LS-FIX-001 and native sequence/concurrency evidence, including fail-closed range and rollback behavior.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "JRN-04",
+      "criterion_sha256": "7a9bcef08991cc6765bf1a715ad565079651c212d338da0a2ce1184f07ce83bb",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-003",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "JRN",
+        "native_sql",
+        "browser_checkpoint",
+        "native_journal"
+      ],
+      "finding": "Actual native EN/AR journals prove date/account/source/status/amount/search filters, reference sorting, route reload and desktop/mobile visibility; SQL independently reconciles the selected six journals.",
+      "remaining_gate": "Exact hosted candidate/provider verification and named accountant pilot remain separate.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "JRN-05",
+      "criterion_sha256": "0922ff4dcaed49b2be2e59e429c01adb5348522c434c254d88418258394f66b3",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-003",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "JRN",
+        "native_sql",
+        "browser_checkpoint",
+        "native_journal"
+      ],
+      "finding": "Actual native EN/AR browser creates, reloads and applies a private saved view; its structured persisted state is checked. Another authenticated accountant in the same organization cannot read or overwrite it; focused native SQL separately proves validation.",
+      "remaining_gate": "Exact hosted candidate/provider verification and named accountant pilot remain separate.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "JRN-06",
+      "criterion_sha256": "08182fce91dae3b85fb2d3fd0740ec78c154b0a4267bf80bbc82e111853ff721",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-003",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "JRN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "JRN-07",
+      "criterion_sha256": "3eaceb06f4ed80e40c92cf58cbc87d88f77cff03a6d229a241c3f9039fce564b",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-003",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "JRN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "JRN-08",
+      "criterion_sha256": "01b155b09a6256ddb120f47338ed0885a4a22e48b1c7679ebe53845965461018",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-003",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "JRN",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TB-01",
+      "criterion_sha256": "5dee029924f9b0d3a984df7ca092f874189619392a1f47a04de990cff8c049da",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-002",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "TB",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TB-02",
+      "criterion_sha256": "43314ab21c726d1ad16ee9299c21e712986c9bd8d700524c5db0ee6d3120e740",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-002",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "TB",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TB-03",
+      "criterion_sha256": "c8b085d346f7bf71a7b19eb9de1d4e394da451fc4de3707b0cb295d309b21912",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-002",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "TB",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TB-04",
+      "criterion_sha256": "72593600016dc5e4fe9937ddf1a72ee656d3bcbf2b1841c9ead0c076f680f0ab",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-002",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "TB",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TB-05",
+      "criterion_sha256": "7fff0f968308ebe5337535e28af9e973e3bc149652ff20b4e74342fe74cc3777",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-002",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "TB",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TB-06",
+      "criterion_sha256": "e69e9091f27ef90216b13f2065da642e6b63050e002b45c59e1e695057f9ac67",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-002",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "TB",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TB-07",
+      "criterion_sha256": "e81516da059ea2a303f1af89d722ca5d6a8c149e3073b7a575ff18b57efdfeed",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-002",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "TB",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FS-01",
+      "criterion_sha256": "b5ab3b7c5f8d2ffd6bbbe6b91982bcad7175d137fb1db4d9d325077517b95875",
+      "primary_disposition": "investigate",
+      "primary_repository_task": "V2-IMP-007",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FS",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Local reconciliation does not satisfy the criterion requiring accountant sign-off of actual statement layouts and balances.",
+      "remaining_gate": "Explicit named/actual acceptance evidence described above.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FS-02",
+      "criterion_sha256": "e2f016924b28dff8653fc9f60170c036326f3d7f96b6765230af7559d132cb2c",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-007",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FS",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FS-03",
+      "criterion_sha256": "66a25f10153d9d219ec04b76c00554be285b539b84a4a8d172b67c15dfdf308d",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-007",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FS",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FS-04",
+      "criterion_sha256": "c6524086c4431f61045413bfb8d1c648440fb21158233f8df8b22b6a382bf5a0",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-007",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FS",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FS-05",
+      "criterion_sha256": "cf79429d8ec0e1d5b6a5bb7c779496cce94a5da9aa9677017ee1a9c01383529a",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-007",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FS",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FS-06",
+      "criterion_sha256": "7aef7cc20094abdb0a0d5c3e3a2bb8f3c4690c89968730b10f4394e154c5de5f",
+      "primary_disposition": "investigate",
+      "primary_repository_task": "V2-IMP-007",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FS",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint",
+        "native_journal"
+      ],
+      "finding": "Actual native EN/AR report movement→journal→back and dialog close preserve date range, overview tab and keyboard focus. The criterion explicitly retains broader saved-filter/focus UAT.",
+      "remaining_gate": "Broader accountant saved-filter/focus UAT and exact hosted candidate verification remain pending.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FS-07",
+      "criterion_sha256": "a4a4bfb9a420c6645dae0e01ce823bb02444448bc44f1af73f288e8c1cb2b125",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-007",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FS",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FS-08",
+      "criterion_sha256": "f08d20f486a6010bb2d3f0e67904bc3c90734928c5b058890a4e914e3f8a4525",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-007",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FS",
+        "native_sql",
+        "integrated_cycle",
+        "exact_transport",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain forward historical-name repair and exact report transport; SQL 49 and preservation fingerprints replace the old rename-gap assumption.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AR-01",
+      "criterion_sha256": "53358b2095800862487075889b1b3abb7cdbbb9fedab77687c9248558cda6659",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-008",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AR",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AR-02",
+      "criterion_sha256": "d5e0fd0ba92a294b6d0545307e90bafdb993c766b4559e1d9f3e02394dd1a7a7",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-008",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AR",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AR-03",
+      "criterion_sha256": "88a66a45771ebd939972c1478ea29f07136d9f9c4b190c974e354107ce892447",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-008",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AR",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AR-04",
+      "criterion_sha256": "7d006e0ab9e4475e4747be84d6f733ded4a83f0855a133f96922281dba3b4de0",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-008",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AR",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AR-05",
+      "criterion_sha256": "ecf8aaa684900f0fc87fff54f722b63cf49f17f02fb8246f9140174800ff2c9c",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-008",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AR",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AR-06",
+      "criterion_sha256": "27361e986cacac77d1a32b9b024fb404200ae4bab9d608af6a2f17876a20b12e",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-008",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AR",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AR-07",
+      "criterion_sha256": "89f104f808266697e5c60c1aa6785466efe6a00564ac9c09ebd3abd7f7a91602",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-008",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AR",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AR-08",
+      "criterion_sha256": "7fecbe03ca8ef439d26c782571711dd16e5a44e96f9e20f3e49220c44cfd48c2",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-008",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AR",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AR-09",
+      "criterion_sha256": "0441630d93838ad5e1f0d40760006d3da134cf74bde59f1e58c5c8a619156ddf",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-008",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AR",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AP-01",
+      "criterion_sha256": "bd9f565392ce7afede5d15e3f43c93d2caa21acc934707093bc3187b07e98cb3",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-009",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AP",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AP-02",
+      "criterion_sha256": "e27414e75a4edd9ae486d8f6ee249d760db90d2c549fc56868bc4101675b2350",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-009",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AP",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AP-03",
+      "criterion_sha256": "4a181281f112918bf063c2a8267fe1ca3589ac9d3ca0d6135ae4c2f4fcba9a9f",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-009",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AP",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AP-04",
+      "criterion_sha256": "8ecd7218eab77dfea2712db97cc74c3c7fc6c4699d0c891224a936894ee64508",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-009",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AP",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AP-05",
+      "criterion_sha256": "2b2f1792aea68fb9fedb22c41df37f863ffd719ed45a95cf52edb95b9c77929a",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-009",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AP",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AP-06",
+      "criterion_sha256": "1faef3529443fdc129bede176cb147f64a1235bbc0566e986a31dfa7c93f0e33",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-009",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AP",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AP-07",
+      "criterion_sha256": "822a3884ca73b0a3c21297b029fafb561cc41fcc6e8f336e2521e0c1fb740c1b",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-009",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AP",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AP-08",
+      "criterion_sha256": "0c7f76150cf99f2f181c5d7e7f9b935d8379a004fb56a7e978799640b23e4b93",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-009",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AP",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "AP-09",
+      "criterion_sha256": "a01b17ebdebe975a6a95daef68fc1f4ae116e2366e37f528ec7c1b3a914fe7db",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-009",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "AP",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PER-01",
+      "criterion_sha256": "05586d1d07f1d787b2cefb8ccfd5e208659065ab6d8faa4ce003ba284beee086",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-004",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "PER",
+        "native_sql",
+        "integrated_cycle",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PER-02",
+      "criterion_sha256": "46ac475f7bd258b89d6d8254bd6194648fcd579f85c268f821b34c63caa2662c",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-004",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "PER",
+        "native_sql",
+        "integrated_cycle",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PER-03",
+      "criterion_sha256": "2241390fc271a011b4c43d75bcbb1c8499ba567c187dec63fe079a121676d858",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-004",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "PER",
+        "native_sql",
+        "integrated_cycle",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PER-04",
+      "criterion_sha256": "a7d1fd1731d293b4f5bef62189f74e66296dba662639e1f7eed9f87e40c46186",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-004",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "PER",
+        "native_sql",
+        "integrated_cycle",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PER-05",
+      "criterion_sha256": "08f5efcfda8207ab505921e7227fc587a912fa9b47257ed3982be3469f612155",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-004",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "PER",
+        "native_sql",
+        "integrated_cycle",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PER-06",
+      "criterion_sha256": "196af73bff9595f8b8434dc1d3fa1e0e9693f7a5bbad30e7a734def9ed8f09a0",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-004",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "PER",
+        "native_sql",
+        "integrated_cycle",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PER-07",
+      "criterion_sha256": "0f516ed1c2681e7abe83f4bebd2e8adc3501399f45f545598a8e3fc2bc003c90",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-004",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "PER",
+        "native_sql",
+        "integrated_cycle",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PER-08",
+      "criterion_sha256": "708a976ca181492cb956d7fa76e03c5fba1308a529da8d53bc2325b188fb4244",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-004",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "PER",
+        "native_sql",
+        "integrated_cycle",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "PR497 supplies 20 actual source-versus-close cases plus annual retry, with observed Lock waits and unchanged restricted source/ledger/numbering rows.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "BANK-01",
+      "criterion_sha256": "57aae80db20186524ab68d7a6974875b8acacc171e47f93ced2e55c9313e2d95",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-010",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "BANK",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "BANK-02",
+      "criterion_sha256": "f97ca3c935641bc44f4f6f305de988f66d47d8d4b057d7c6022846ef84e1f3b2",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-010",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "BANK",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "BANK-03",
+      "criterion_sha256": "a0b31b19562aa564df94b7b26854770c13efbc233c26def1987ff9b5835f6698",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-010",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "BANK",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "BANK-04",
+      "criterion_sha256": "5b2b272895dcec1ff7bd97b1a5f2117009ae2f1994dc08b17a5579fbb439f5ad",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-010",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "BANK",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "BANK-05",
+      "criterion_sha256": "29d8835d13efdf91c90077c83865e072eeb1b4706ccb56932ddf73c781cfda6f",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-010",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "BANK",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "BANK-06",
+      "criterion_sha256": "ff2acf299e30681d6bc564dfa766ee94cd17b5f087d897c6d4976d23466de2e3",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-010",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "BANK",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "BANK-07",
+      "criterion_sha256": "ded8170c0903a10f6620014b1dabbb8e9caebfe934a9338376a4653a82bfe24d",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-010",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "BANK",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "BANK-08",
+      "criterion_sha256": "4a7a7ab754acff4b6a26764825ead03fe910e18a77bb9c4c16bc4f854f1da617",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-010",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "BANK",
+        "native_sql",
+        "integrated_cycle",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FA-01",
+      "criterion_sha256": "e499150494a8cb0462356547a9d76d4db15f8aceea335fa818ca2832af51a2c8",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-011",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FA",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FA-02",
+      "criterion_sha256": "e9e51d7976b681b8091e22919ffa4c6daf27f66deed5ae1ffcf99a60d533525a",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-011",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FA",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FA-03",
+      "criterion_sha256": "0f5740c85d31487e5691d93dcbbf947fcd05efbbb2a6f582491d2e91812758f8",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-011",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FA",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FA-04",
+      "criterion_sha256": "0a22898ed5dba37eef906a0ff44698648d6678c1c6629d54849d62b7154ab030",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-011",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FA",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FA-05",
+      "criterion_sha256": "73dfd65cde7a04ef1e43c6ec670a185ca7c44867e182fa8b7f0d275b1b8f1533",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-011",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FA",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FA-06",
+      "criterion_sha256": "82993f6d4a4dce4a6dca0a1c551e9e9266eb412c1a914f12ed1a55546d8c4a82",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-011",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FA",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FA-07",
+      "criterion_sha256": "8ed9cf43df643e4a4faf3bb06ca35a6dbb9e1621ef0a38e04db438a6714bceea",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-011",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FA",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FA-08",
+      "criterion_sha256": "87ce79b64c9fc34a78b25cfa069fa3d591c0f9194334f4c4a5373febb3863ad4",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-011",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FA",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "FA-09",
+      "criterion_sha256": "1ab0cd9ffad5ff4b64985e08033da9e2682291b1eee4afa7798b106af371f257",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-011",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "FA",
+        "native_sql",
+        "integrated_cycle",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "DIM-01",
+      "criterion_sha256": "7d0f5631a81c5c1b06220a21a90c9c7d0ca20ab688972debfb95e37cab746de1",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-012",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "DIM",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "DIM-02",
+      "criterion_sha256": "15acb2adeead9a0adaf9e91026c14b60b0ff654829fc726b14d462356acb956c",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-012",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "DIM",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "DIM-03",
+      "criterion_sha256": "79ecd86eb4911cc8ac57694c80168447faffa7e681803d1ba60eba6781b5a434",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-012",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "DIM",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "DIM-04",
+      "criterion_sha256": "e5a97b63b86d001804ce839064d0280b3c8896a10ce65989e1efbc6bff8f48af",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-012",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "DIM",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "DIM-05",
+      "criterion_sha256": "0839e88b1ea35dd20de22f355d1599d0af272ca646d36247baa21cabe552c059",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-012",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "DIM",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "DIM-06",
+      "criterion_sha256": "3e2732596397d926f92fc297d58ad0cd1a67b2558dc012a747cdef23450ec8f8",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-012",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "DIM",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "DIM-07",
+      "criterion_sha256": "c3596e1e318ac25df26a8f96bd5f21879f833e0b998bbdae038822d256d51888",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-012",
+      "review_scope": "runtime",
+      "evidence_refs": [
+        "DIM",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TAX-01",
+      "criterion_sha256": "08b4746e566790f505db4df64655251d270a6c54f0d035dc1d85c4f6fcd57c8a",
+      "primary_disposition": "investigate",
+      "primary_repository_task": "V2-IMP-013",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "TAX",
+        "native_sql"
+      ],
+      "finding": "Founder-approved engineering scope is present. Current authoritative regulation for the actual client profile and named accountant approval remain required; no general compliance verdict.",
+      "remaining_gate": "Explicit named/actual acceptance evidence described above.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TAX-02",
+      "criterion_sha256": "b9c2ff52a4d957d94ee9e28e8eacbe9f35bc2fdda986d8014b5f5f3a04308389",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-013",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "TAX",
+        "native_sql"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TAX-03",
+      "criterion_sha256": "b3d24d763735991d2bd5ad609e21bb2cad302bcf63133f2042dc330a71b292e7",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-013",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "TAX",
+        "native_sql"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TAX-04",
+      "criterion_sha256": "4b45e9b5eb4560d624ea3987d326543a61d7b5c859ab1ac9ca2da0e8aaeabe92",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-013",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "TAX",
+        "native_sql"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TAX-05",
+      "criterion_sha256": "cdcdcc476573db848cfd94023beac61ef58c562a1215a8fb51fdd171fb97fccf",
+      "primary_disposition": "investigate",
+      "primary_repository_task": "V2-IMP-013",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "TAX",
+        "native_sql"
+      ],
+      "finding": "Dated research is not accountant acceptance. Client/jurisdiction-specific approval remains external evidence.",
+      "remaining_gate": "Explicit named/actual acceptance evidence described above.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TAX-06",
+      "criterion_sha256": "40acefa8c2420bf8d71812e5849ff4b9f7b04f757801ab400e084edab4503460",
+      "primary_disposition": "investigate",
+      "primary_repository_task": "V2-IMP-013",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "TAX",
+        "native_sql"
+      ],
+      "finding": "ETA B2B/B2C adapters are explicitly limited to approved preproduction scope; real source/POS identity, signing/security and actual ETA preproduction outcomes remain pending.",
+      "remaining_gate": "Explicit named/actual acceptance evidence described above.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "TAX-07",
+      "criterion_sha256": "18f7b95a0624a479f49bbefd924a6ff5d5f8cd12482f066296e68946fc73b588",
+      "primary_disposition": "investigate",
+      "primary_repository_task": "V2-IMP-013",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "TAX",
+        "native_sql"
+      ],
+      "finding": "Keep jurisdiction-specific claims limited to verified scope. No production ETA or general Egyptian tax-compliance claim is established.",
+      "remaining_gate": "Explicit named/actual acceptance evidence described above.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "INV-01",
+      "criterion_sha256": "ebce534859ff586aa33b7a130189a07021f25ee009d24777bfbb9ce7c199c11b",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-014",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "INV",
+        "native_sql",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "INV-02",
+      "criterion_sha256": "e54dd505882b77a2eb04048a204e47f87e3fdf6338357413b97f754799cc22e3",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-014",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "INV",
+        "native_sql",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the documented source-approved accounting-fact boundary; Ledger does not invent a costing engine or warehouse source of truth.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "INV-03",
+      "criterion_sha256": "59fe1eba9646a9a5dc2aea013f47aea1258b06ecee587dc1b6c3f2c17176190d",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-014",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "INV",
+        "native_sql",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "INV-04",
+      "criterion_sha256": "7614dc93e67e2a37c374f6ca5974e903fb6a97e28340cb083bf35840257ad46c",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-014",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "INV",
+        "native_sql",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "INV-05",
+      "criterion_sha256": "a51a60f984d1e4158e9425f9539e761fc6c332d6109103a0840c5d1364eeab2e",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-014",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "INV",
+        "native_sql",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "INV-06",
+      "criterion_sha256": "fa34072de343313a83eddd8017192a93102149ba4e94e689db80ecca62800af2",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-014",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "INV",
+        "native_sql",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "INV-07",
+      "criterion_sha256": "8472cc14b758e093f16472d9c5ed8a63ed8cc54987404889e9eb697fcf4b1ab5",
+      "primary_disposition": "investigate",
+      "primary_repository_task": "V2-IMP-014",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "INV",
+        "native_sql",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "Recorded implementation policy does not establish named accountant approval of the actual customer costing/backdating/correction case.",
+      "remaining_gate": "Explicit named/actual acceptance evidence described above.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "INV-08",
+      "criterion_sha256": "b388fa7756b4f80110c8aa13e91448610e0d48d8e479a781f8dabdd6e266f89b",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-014",
+      "review_scope": "approved_limited_scope",
+      "evidence_refs": [
+        "INV",
+        "native_sql",
+        "module_races",
+        "source_close_races",
+        "browser_checkpoint"
+      ],
+      "finding": "The optional ETA retail-source contract adds no Ledger POS/WMS/ERP implementation; scope and genuine upstream source remain explicit.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "VAL-01",
+      "criterion_sha256": "92b7906c11526ea65c068f947e05de23134d449844cbb1b945096f6efad4d496",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-015",
+      "review_scope": "acceptance",
+      "evidence_refs": [
+        "VAL",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "VAL-02",
+      "criterion_sha256": "ebcb63df40f11abe8bb7607c1c7d0355ea919cf5cfdc3e0cc43af95e55410e29",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-015",
+      "review_scope": "acceptance",
+      "evidence_refs": [
+        "VAL",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "VAL-03",
+      "criterion_sha256": "d4777a3db74fb7a5bd83ac21c65ffe0a51cdcc3716cdb4e55a75c6665d0b2166",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-015",
+      "review_scope": "acceptance",
+      "evidence_refs": [
+        "VAL",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Current native SQL and synthetic UI are separately documented. Do not label every legacy seeded-browser file as passed by the atomic selection.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "VAL-04",
+      "criterion_sha256": "66f016e337cc1606e20b6e8fedaa46ef13daa51184039967ea99ed977279300c",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-015",
+      "review_scope": "acceptance",
+      "evidence_refs": [
+        "VAL",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "VAL-05",
+      "criterion_sha256": "e9f94063b3f4454faacf07059d28e3a6dacdf54b3630a7e1c9a87a67a239a663",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-015",
+      "review_scope": "acceptance",
+      "evidence_refs": [
+        "VAL",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Use each module SQL, negative checks, native races and atomic UI results; do not substitute one successful module for all module acceptance.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "VAL-06",
+      "criterion_sha256": "6d4ac55ba2da83c86b09026eea2a1d89a5424daa1f79f1ec87d0fc4479db8c03",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-015",
+      "review_scope": "acceptance",
+      "evidence_refs": [
+        "VAL",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "The integrated cycle, independent manual worksheet and actual source-close matrix have distinct inputs and expected depreciation; do not merge their expected totals.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "VAL-07",
+      "criterion_sha256": "bfe9a95c82cdba557404f29e6106cbad662b4e3a88110011a9460b8a437143a2",
+      "primary_disposition": "investigate",
+      "primary_repository_task": "V2-IMP-015",
+      "review_scope": "acceptance",
+      "evidence_refs": [
+        "VAL",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Named accountant sign-off is absent. Preserve pending acceptance; implementation permission is not UAT.",
+      "remaining_gate": "Explicit named/actual acceptance evidence described above.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "VAL-08",
+      "criterion_sha256": "eed785cedd525ca11dfccf780b0a5e95da34f6864c3b34a769232e94f947780f",
+      "primary_disposition": "retain",
+      "primary_repository_task": "V2-IMP-015",
+      "review_scope": "acceptance",
+      "evidence_refs": [
+        "VAL",
+        "native_sql",
+        "browser_checkpoint"
+      ],
+      "finding": "Deployment and accountant state stay independent; all requirement deployed fields remain unverified and acceptance pending.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PLAN-01",
+      "criterion_sha256": "ac7f9700ee312ec263612128c432ea05e3db61324fa4e082655565fad75d8054",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-V2-BASELINE-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "PLAN"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PLAN-02",
+      "criterion_sha256": "0c6350ab83bd82a4b287faca55d74bc79556aa2bafd4916387106af979fca68e",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-V2-BASELINE-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "PLAN"
+      ],
+      "finding": "Retain/Extend/Introduce/Investigate is the baseline disposition vocabulary; this review assigns exactly one current primary disposition to each ID.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PLAN-03",
+      "criterion_sha256": "3a65067d707c35a5950a9b0aed3d37ee27c50a0473dc9a4f636a83ae4228429f",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-V2-BASELINE-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "PLAN"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PLAN-04",
+      "criterion_sha256": "5916f2322dc5618a71fb1f44839bf25b2b0a2754039e9116cf43d572df49f3e3",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-V2-BASELINE-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "PLAN"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PLAN-05",
+      "criterion_sha256": "e8a08fc0009c7832cc7ca6a14322bca355f8747865ba8be8c092f353e9f3707b",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-V2-BASELINE-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "PLAN"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PLAN-06",
+      "criterion_sha256": "a4d25244381b36c9614e917b3d4e07c95383c0adb115c390f7448330502a9efe",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-V2-BASELINE-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "PLAN"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PLAN-07",
+      "criterion_sha256": "59fd8fd1cc2c1fc522876274f8fc37b271f6e75bbf96dc157bd24089c3aaaefa",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-V2-BASELINE-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "PLAN"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PLAN-08",
+      "criterion_sha256": "0259e239f713fccb32da1f4f6e72a4c6627ec1a8ae8b267985bc85543d2333c6",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-V2-BASELINE-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "PLAN"
+      ],
+      "finding": "Every requirement needs a primary repository task and explicit evidence. Authoritative Automation row IDs/statuses remain unverified until the read-only audit can run.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PLAN-09",
+      "criterion_sha256": "333c5e4b0110f77fb0fcb8d0ce3bbc99661c8c4b3152edf8b65818c8b8ad1873",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-V2-BASELINE-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "PLAN"
+      ],
+      "finding": "Retain the existing implementation and its explicit module contracts. Evaluate the original measurable criterion using the linked source/test evidence; deployment and accountant acceptance are independent.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    },
+    {
+      "id": "PLAN-10",
+      "criterion_sha256": "1311474b6dfd22fc2c05810b733f509cb80c58e3a39372a683228dc88f786d6b",
+      "primary_disposition": "retain",
+      "primary_repository_task": "LS-V2-BASELINE-001",
+      "review_scope": "baseline_governance",
+      "evidence_refs": [
+        "PLAN"
+      ],
+      "finding": "This is the historical documentation-baseline phase restriction, not a prohibition on the later authorized implementation stream. Do not apply it as a current runtime feature gate.",
+      "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
+      "authoritative_automation_state": "unverified"
+    }
+  ],
+  "native_journal_followup": {
+    "task": "LS-JRN-VERIFY-001",
+    "date": "2026-10-28",
+    "promoted_primary_dispositions": [
+      "JRN-04",
+      "JRN-05"
+    ],
+    "partial_only": "FS-06",
+    "original_criteria_and_primary_tasks_unchanged": true
+  }
+}

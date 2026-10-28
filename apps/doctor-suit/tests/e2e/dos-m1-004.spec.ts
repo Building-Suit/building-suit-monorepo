@@ -17,17 +17,29 @@ for (const locale of ['en', 'ar']) for (const width of [390, 1280]) for (const t
     await page.keyboard.press('Enter')
     await expect(page.getByRole('status').filter({ hasText: locale === 'en' ? 'Preview scope:' : 'نطاق المعاينة:' })).toContainText(locale === 'en' ? 'remain unavailable' : 'غير متاحة')
     await expect(page.getByText(locale === 'en' ? 'Synthetic preview · no active account, practice or location' : 'معاينة تجريبية · لا يوجد حساب أو ممارسة أو موقع نشط')).toBeVisible()
-    const settings = page.getByRole('button', { name: locale === 'en' ? 'Language · Theme' : 'اللغة · المظهر', exact: true })
-    await settings.focus()
+    const navigation = page.locator('.bs-side-navigation')
+    const trigger = page.locator('.bs-app-shell__mobile-trigger')
+    if (width === 390) {
+      await trigger.click()
+      await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+    }
+    const themeControl = navigation.getByRole('button', { name: new RegExp(`^${locale === 'en' ? 'Theme' : 'المظهر'}:`) })
+    await expect(themeControl).toBeEnabled()
+    await themeControl.focus()
     await page.keyboard.press('Enter')
-    await expect(page.getByRole('menu')).toBeVisible()
-    const nextTheme = theme === 'light' ? 'dark' : 'light'
-    const themeName = locale === 'en' ? (nextTheme === 'dark' ? 'Dark' : 'Light') : (nextTheme === 'dark' ? 'داكن' : 'فاتح')
-    await page.getByRole('menuitemradio', { name: themeName, exact: true }).click()
-    await expect(page.locator('html')).toHaveAttribute('data-theme', nextTheme)
-    await page.keyboard.press('Escape')
+    if (theme === 'dark') {
+      await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.+/)
+      await expect(themeControl).toBeFocused()
+      await page.keyboard.press('Enter')
+    }
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme === 'light' ? 'dark' : 'light')
+    await expect(themeControl).toBeFocused()
     await expect(page.getByRole('menu')).toHaveCount(0)
-    await expect(settings).toBeFocused()
+    if (width === 390) {
+      await page.keyboard.press('Escape')
+      await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+      await expect(trigger).toBeFocused()
+    }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
   })
 }

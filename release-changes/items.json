@@ -1957,5 +1957,520 @@
     "sources": [
       "shop-plan-website-release-support-20261022"
     ]
-  }
+  },
+  {
+    "id": "critical-toolchain-command-security",
+    "task": "LS-SEC-DEP-001",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "pnpm-workspace.yaml",
+      "pnpm-lock.yaml",
+      "patches/@nuxt__devtools@3.4.2.patch",
+      "tooling/checks/toolchain-command-security.test.mjs"
+    ],
+    "reason": "Patch reproduced critical command-execution flaws in shared Nuxt development tooling and verify consumer compatibility. No customer-facing behavior or operational activation changes.",
+    "sources": [
+      "ls-sec-dep-001-critical-toolchain",
+      "ls-sec-dep-001-shared-consumers"
+    ]
+  },
+  {
+    "id": "ls-fin-precision-001-exact-report-transport",
+    "task": "LS-FIN-PRECISION-001",
+    "suits": [
+      "ledger-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/ledger-suit"
+    ],
+    "reason": "Preserve financial minor units across the real PostgREST/JavaScript report and allocation boundary.",
+    "notes": {
+      "title": {
+        "en": "Exact amounts in financial reports",
+        "ar": "مبالغ دقيقة في التقارير المالية"
+      },
+      "summary": {
+        "en": "Large financial amounts retain their exact minor units in reports and cash-flow allocations.",
+        "ar": "تحتفظ المبالغ المالية الكبيرة بوحداتها الصغرى الدقيقة في التقارير وتوزيعات التدفقات النقدية."
+      },
+      "details": {
+        "en": "Profit and loss, General Ledger, financial overview and cash-flow reports preserve exact decimal digits. Cash-flow allocation saves and retries preserve the same exact amounts.",
+        "ar": "تحفظ قائمة الدخل والأستاذ العام والملخص المالي وتقارير التدفقات النقدية الأرقام العشرية الدقيقة، وتحافظ عمليات حفظ توزيعات التدفقات وإعادة محاولتها على المبالغ نفسها."
+      }
+    },
+    "sources": [
+      "ls-fin-precision-001-exact-report-transport"
+    ],
+    "evidence": [
+      {
+        "path": "apps/ledger-suit/app/pages/reports.vue",
+        "contains": ".select('section,account_id,code,name,amount_minor::text')"
+      },
+      {
+        "path": "apps/ledger-suit/app/composables/useLedgerCashFlowAllocationDialogView.ts",
+        "contains": "supabase.rpc('classify_cash_flow_entry_exact'"
+      }
+    ]
+  },
+  {
+    "id": "ls-fin-precision-001-release-support",
+    "task": "LS-FIN-PRECISION-001",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "release-changes/items.json"
+    ],
+    "reason": "Maintain private bilingual release inventory for the Ledger financial precision correction; no other product behavior changes.",
+    "sources": [
+      "ls-fin-precision-001-release-support"
+    ]
+  },
+  {
+    "id": "ls-attach-001-native-upload-admission",
+    "task": "LS-ATTACH-001",
+    "suits": [
+      "ledger-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/ledger-suit"
+    ],
+    "reason": "Repair actual Storage admission metadata and browser File multipart overhead while preserving exact owned reservations and final commit validation.",
+    "notes": {
+      "title": {
+        "en": "Reliable private document uploads",
+        "ar": "رفع موثوق للمستندات الخاصة"
+      },
+      "summary": {
+        "en": "Upload transaction attachments and import source documents with their exact file size and type.",
+        "ar": "رفع مرفقات المعاملات ومستندات الاستيراد بحجم الملف ونوعه الدقيقين."
+      },
+      "details": {
+        "en": "Private document uploads preserve their original bytes while tenant permissions, file-type validation and storage quotas remain enforced.",
+        "ar": "تحفظ عمليات رفع المستندات الخاصة بايتات الملف الأصلية مع تطبيق صلاحيات المنشأة والتحقق من نوع الملف وحصص التخزين."
+      }
+    },
+    "sources": [
+      "ls-attach-001-native-upload-admission"
+    ],
+    "evidence": [
+      {
+        "path": "apps/ledger-suit/app/composables/useLedgerTransactionDetailDialogView.ts",
+        "contains": "supabase.storage.from('attachments').upload(key, bytes, {"
+      },
+      {
+        "path": "apps/ledger-suit/app/composables/useLedgerCsvImportDialogView.ts",
+        "contains": "supabase.storage.from('attachments').upload(key, bytes, {"
+      }
+    ]
+  },
+  {
+    "id": "ls-attach-001-release-support",
+    "task": "LS-ATTACH-001",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "release-changes/items.json"
+    ],
+    "reason": "Maintain private bilingual release inventory for Ledger document-upload correction; no other Suit behavior changes.",
+    "sources": [
+      "ls-attach-001-release-support"
+    ]
+  },
+  {
+    "id": "ls-bill-native-001-receipt-links",
+    "task": "LS-BILL-NATIVE-001",
+    "suits": [
+      "ledger-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/ledger-suit/app/composables/usePlatformAdmin.ts",
+      "apps/ledger-suit/app/utils/platformReceiptUrl.ts",
+      "apps/ledger-suit/tests/unit/platform-receipt-url.test.mjs"
+    ],
+    "reason": "Fix authorized private receipt navigation when the signing service uses an internal gateway; retain the signed path, configured project boundary and existing expiry.",
+    "notes": {
+      "title": {
+        "en": "Reliable payment receipt links",
+        "ar": "\u0631\u0648\u0627\u0628\u0637 \u0645\u0648\u062b\u0648\u0642\u0629 \u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0627\u0644\u062f\u0641\u0639"
+      },
+      "summary": {
+        "en": "Authorized reviewers can reliably open private payment receipts.",
+        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u0631\u0627\u062c\u0639\u064a\u0646 \u0627\u0644\u0645\u0635\u0631\u062d \u0644\u0647\u0645 \u0641\u062a\u062d \u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0627\u0644\u062f\u0641\u0639 \u0627\u0644\u062e\u0627\u0635\u0629 \u0628\u0634\u0643\u0644 \u0645\u0648\u062b\u0648\u0642."
+      },
+      "details": {
+        "en": "Receipt links use the configured service address while retaining their short expiry and existing access checks.",
+        "ar": "\u062a\u0633\u062a\u062e\u062f\u0645 \u0631\u0648\u0627\u0628\u0637 \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u062e\u062f\u0645\u0629 \u0627\u0644\u0645\u0647\u064a\u0623 \u0645\u0639 \u0627\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u0645\u062f\u0629 \u0635\u0644\u0627\u062d\u064a\u062a\u0647\u0627 \u0627\u0644\u0642\u0635\u064a\u0631\u0629 \u0648\u0641\u062d\u0648\u0635 \u0627\u0644\u0648\u0635\u0648\u0644 \u0627\u0644\u062d\u0627\u0644\u064a\u0629."
+      }
+    },
+    "sources": [
+      "ls-bill-native-001-receipt-links"
+    ],
+    "evidence": [
+      {
+        "path": "apps/ledger-suit/app/utils/platformReceiptUrl.ts",
+        "contains": "return new URL(signed.pathname + signed.search, project.origin).href"
+      },
+      {
+        "path": "apps/ledger-suit/app/composables/usePlatformAdmin.ts",
+        "contains": "return platformReceiptUrl(result.data.url, config.public.supabase.url)"
+      }
+    ]
+  },
+  {
+    "id": "ls-bill-native-001-release-support",
+    "task": "LS-BILL-NATIVE-001",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "release-changes/items.json"
+    ],
+    "reason": "Maintain private bilingual release inventory for the Ledger receipt-link correction; no other Suit behavior changes.",
+    "sources": [
+      "ls-bill-native-001-release-support"
+    ]
+  },
+  {
+    "id": "ls-browser-001-mobile-focus",
+    "task": "LS-BROWSER-001",
+    "suits": [
+      "automation-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ux/src/composables/useSideNavigation.ts",
+      "packages/ux/tests/menu-share.test.mjs"
+    ],
+    "reason": "Focus the visible mobile navigation close control after its CSS transition permits focus, and cancel pending focus after closing or disposal.",
+    "notes": {
+      "title": {
+        "en": "Reliable keyboard focus in mobile navigation",
+        "ar": "تركيز موثوق للوحة المفاتيح في قائمة الهاتف"
+      },
+      "summary": {
+        "en": "Opening mobile navigation moves keyboard focus into the drawer so Escape can close it.",
+        "ar": "ينقل فتح قائمة الهاتف تركيز لوحة المفاتيح إلى داخلها كي يغلقها زر Escape."
+      },
+      "details": {
+        "en": "Focus waits for the control to become visible and is cancelled if the drawer closes or is removed.",
+        "ar": "ينتظر التركيز ظهور عنصر التحكم ويُلغى إذا أُغلقت القائمة أو أُزيلت."
+      }
+    },
+    "sources": [
+      "ls-browser-001-mobile-focus"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ux/src/composables/useSideNavigation.ts",
+        "contains": "getComputedStyle(target).visibility !== 'visible'"
+      },
+      {
+        "path": "packages/ux/src/composables/useSideNavigation.ts",
+        "contains": "if (cancelled || !open()) return"
+      }
+    ]
+  },
+  {
+    "id": "ls-browser-001-admin-sorting",
+    "task": "LS-BROWSER-001",
+    "suits": [
+      "ledger-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsAdminResourceWorkspace.vue",
+      "apps/ledger-suit/tests/e2e/shared-ui-foundation.spec.ts"
+    ],
+    "reason": "Bind administrative table sorting to its displayed nested values while retaining existing resource scope and authorization.",
+    "notes": {
+      "title": {
+        "en": "Correct sorting in administration tables",
+        "ar": "ترتيب صحيح في جداول الإدارة"
+      },
+      "summary": {
+        "en": "Administrators can sort displayed resource rows in both directions.",
+        "ar": "يمكن للمشرفين ترتيب صفوف الموارد المعروضة في الاتجاهين."
+      },
+      "details": {
+        "en": "Mouse and keyboard sorting use the displayed values within the currently loaded result scope.",
+        "ar": "يستخدم ترتيب الفأرة ولوحة المفاتيح القيم المعروضة ضمن نطاق النتائج المحملة حاليًا."
+      }
+    },
+    "sources": [
+      "ls-browser-001-admin-sorting"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsAdminResourceWorkspace.vue",
+        "contains": "field: `values.${column.key}`"
+      },
+      {
+        "path": "packages/ui/src/organisms/BsAdminResourceWorkspace.vue",
+        "contains": "sortField: `values.${column.key}`"
+      }
+    ]
+  },
+  {
+    "id": "ls-browser-001-verification-support",
+    "task": "LS-BROWSER-001",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/ledger-suit",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/data-table.md",
+      "docs/shared/interactions.md",
+      "packages/ui/src/organisms/BsAdminResourceWorkspace.vue",
+      "release-changes/items.json",
+      "packages/ui/tests/receipt-browser.test.mjs"
+    ],
+    "reason": "Maintain current Ledger browser fixtures and owned native runtime, demonstrate nested field bindings in the shared catalogue, document interaction contracts and curate bilingual release notes. Ledger is the active administrative resource consumer; other products retain their existing commerce branch or do not render this organism.",
+    "sources": [
+      "ls-browser-001-verification-support"
+    ]
+  },
+{
+  "id": "ls-ci-qual-001-shop-boundaries",
+  "task": "LS-CI-QUAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/composables/useShopMutation.ts",
+    "apps/shop-suit/app/composables/useShopQueryCache.ts",
+    "apps/shop-suit/app/plugins/query-scope.ts",
+    "apps/shop-suit/app/stores/shop.ts",
+    "apps/shop-suit/app/utils/shopQueryCleanup.ts",
+    "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+    "apps/shop-suit/app/utils/shopQueryPayload.ts"
+  ],
+  "reason": "Qualify existing shared CI blockers with bounded current-cache lifecycle and permission mappings; preserve command error redaction. No unrelated Shop feature stack is integrated. Serialize failed-read hydration safely so an unavailable pricing backend does not turn the public page into a server error.",
+  "notes": {
+    "title": {
+      "en": "Safer session changes and menu access",
+      "ar": "تبديل أكثر أمانًا للجلسات وصلاحيات القوائم"
+    },
+    "summary": {
+      "en": "Shop clears previous account and location snapshots during scope changes and respects permissions for offers and website settings.",
+      "ar": "تمسح حزمة المتجر بيانات الحساب والموقع السابقين عند تبديل النطاق وتحترم صلاحيات العروض وإعدادات الموقع."
+    },
+    "details": {
+      "en": "Public pages avoid initializing private counter state. Cancelled queries hide old results immediately, and command failures keep provider details out of cached state. Public pages remain usable when plan prices cannot be loaded.",
+      "ar": "تتجنب الصفحات العامة تهيئة حالة نقطة البيع الخاصة. تخفي الاستعلامات الملغاة النتائج القديمة فورًا وتبقي أخطاء الأوامر تفاصيل الموفّر خارج الحالة المخزنة مؤقتًا. تبقى الصفحات العامة قابلة للاستخدام عند تعذر تحميل أسعار الخطط."
+    }
+  },
+  "sources": [
+    "ls-ci-qual-001-shop-boundaries"
+  ],
+  "evidence": [
+    {
+      "path": "apps/shop-suit/app/utils/shopQueryCleanup.ts",
+      "contains": "cache.setEntryState(entry, { status: 'pending', data: undefined, error: null })"
+    },
+    {
+      "path": "apps/shop-suit/app/plugins/query-scope.ts",
+      "contains": "if (scope.actorId || posReceipt)"
+    },
+    {
+      "path": "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+      "contains": "'/offers': ['sales.manage', 'settings.manage']"
+    },
+    {
+      "path": "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+      "contains": "'/website-builder': ['settings.manage']"
+    },
+    {
+      "path": "apps/shop-suit/app/utils/shopQueryPayload.ts",
+      "contains": "entry[1] == null ? entry[1] : { message: 'Shop query failed' }"
+    }
+  ]
+},
+{
+  "id": "ls-ci-qual-001-language-focus",
+  "task": "LS-CI-QUAL-001",
+  "suits": [
+    "automation-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/organisms/BsSettingsMenu.vue"
+  ],
+  "reason": "Keep keyboard focus on the language cycle control while the locale update is pending; aria-disabled/busy and the existing pending guard prevent duplicate activation without disabling the focused native button.",
+  "notes": {
+    "title": {
+      "en": "Keep focus when changing language",
+      "ar": "الحفاظ على التركيز عند تغيير اللغة"
+    },
+    "summary": {
+      "en": "Keyboard users keep their position when switching the navigation language.",
+      "ar": "يحتفظ مستخدمو لوحة المفاتيح بموضعهم عند تبديل لغة قائمة التنقل."
+    },
+    "details": {
+      "en": "The language control announces pending work and ignores repeated activation while the update completes.",
+      "ar": "يعلن عنصر تبديل اللغة أن التحديث جارٍ ويتجاهل التفعيل المتكرر حتى يكتمل."
+    }
+  },
+  "sources": [
+    "ls-ci-qual-001-language-focus"
+  ],
+  "evidence": [
+    {
+      "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "contains": ":aria-disabled=\"cycle === 'language' && languagePending ? true : undefined\""
+    },
+    {
+      "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "contains": ":disabled=\"!hydrated || (cycle === 'language' && available.length < 2)\""
+    }
+  ]
+},
+{
+  "id": "ls-ci-qual-001-auth-field-labels",
+  "task": "LS-CI-QUAL-001",
+  "suits": [
+    "ledger-suit",
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/templates/BsSignInPage.vue",
+    "packages/ui/src/organisms/BsSignupEnrollment.vue"
+  ],
+  "reason": "Give the sole canonical auth forms stable, distinct field IDs so native labels remain associated after SSR hydration and form updates. Account and verified-identity stages use separate IDs.",
+  "notes": {
+    "title": {
+      "en": "Keep account fields accessible after loading",
+      "ar": "إبقاء حقول الحساب متاحة بعد تحميل الصفحة"
+    },
+    "summary": {
+      "en": "Email, password and signup identity fields keep their labels when account pages become interactive.",
+      "ar": "تحتفظ حقول البريد وكلمة المرور وبيانات التسجيل بتسمياتها عند اكتمال تفاعل صفحات الحساب."
+    },
+    "details": {
+      "en": "Screen readers and label-based navigation can identify the fields consistently in English and Arabic.",
+      "ar": "تتعرف قارئات الشاشة والتنقل عبر التسميات على الحقول بصورة متسقة بالعربية والإنجليزية."
+    }
+  },
+  "sources": [
+    "ls-ci-qual-001-auth-field-labels"
+  ],
+  "evidence": [
+    {
+      "path": "packages/ui/src/templates/BsSignInPage.vue",
+      "contains": "for=\"bs-sign-in-email\""
+    },
+    {
+      "path": "packages/ui/src/templates/BsSignInPage.vue",
+      "contains": "for=\"bs-sign-in-password\""
+    },
+    {
+      "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+      "contains": "for=\"bs-signup-account-email\""
+    },
+    {
+      "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+      "contains": "for=\"bs-signup-verified-email\""
+    }
+  ]
+},
+{
+  "id": "ls-ci-qual-001-landing-visibility",
+  "task": "LS-CI-QUAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/templates/BsLandingPage.vue"
+  ],
+  "reason": "Write an explicit inactive loading attribute and select only its true value, so a stale SSR-only attribute cannot hide the interactive page after the loader and inert state have ended.",
+  "notes": {
+    "title": {
+      "en": "Keep public pages usable after loading",
+      "ar": "إبقاء الصفحات العامة متاحة بعد التحميل"
+    },
+    "summary": {
+      "en": "Headings and privacy choices stay available when the landing loader closes.",
+      "ar": "تبقى العناوين وخيارات الخصوصية متاحة بعد إغلاق شاشة التحميل."
+    },
+    "details": {
+      "en": "The loading state clears reliably when the page becomes interactive, including with reduced motion.",
+      "ar": "تنتهي حالة التحميل بصورة موثوقة عند تفاعل الصفحة، بما في ذلك عند تقليل الحركة."
+    }
+  },
+  "sources": [
+    "ls-ci-qual-001-landing-visibility"
+  ],
+  "evidence": [
+    {
+      "path": "packages/ui/src/templates/BsLandingPage.vue",
+      "contains": "'data-shop-landing-loading': props.journey && isLoading.value ? 'true' : 'false'"
+    },
+    {
+      "path": "packages/ui/src/templates/BsLandingPage.vue",
+      "contains": "html[data-shop-landing-loading=\"true\"] body>* { visibility:hidden; }"
+    }
+  ]
+}
 ]

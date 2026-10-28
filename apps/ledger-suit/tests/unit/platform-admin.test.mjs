@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import vm from 'node:vm'
 import ts from 'typescript'
+import { platformReceiptUrl } from '../../app/utils/platformReceiptUrl.ts'
 import { ref, shallowRef, watch } from 'vue'
 
 const source = await readFile(new URL('../../app/composables/usePlatformAdmin.ts', import.meta.url), 'utf8')
@@ -13,6 +14,8 @@ function harness(rpc) {
   let dispose
   const sandbox = {
     exports: {}, ref, shallowRef,
+    require(specifier) { assert.equal(specifier, '~/utils/platformReceiptUrl'); return { platformReceiptUrl } },
+    useRuntimeConfig: () => ({ public: { supabase: { url: 'https://project.supabase.co' } } }),
     watch(...args) { stops.push(watch(...args)) },
     onBeforeUnmount(fn) { dispose = fn },
     useSupabaseClient: () => ({ rpc }), useSupabaseUser: () => user,

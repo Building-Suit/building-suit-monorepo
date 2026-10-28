@@ -11,9 +11,10 @@ export function useShopMutation() {
       try { result = await operation() }
       catch (cause) {
         failed = true; failure = cause
-        // Provider errors can retain request bodies or one-time access codes.
-        throw new Error('Shop command failed')
       }
+      // Provider errors can retain request bodies or one-time access codes.
+      // Keep that cause out of Colada; the owning caller receives it below.
+      if (failed) throw new Error('Shop command failed')
     }
     const entry = cache.ensure(cache.create({ mutation: (command: () => Promise<void>) => command(), gcTime: 0, meta: { shopMutation: true } }), run)
     try {
