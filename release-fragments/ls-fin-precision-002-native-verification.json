@@ -1,0 +1,18 @@
+{
+  "id": "ls-fin-precision-002-native-verification",
+  "task": "LS-FIN-PRECISION-002",
+  "suits": [
+    "ledger-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/ledger-suit/scripts",
+    "apps/ledger-suit/tests",
+    "apps/ledger-suit/playwright.native-journal-precision.config.ts",
+    "apps/ledger-suit/docs/accountant-system",
+    "release-changes/items.json",
+    "apps/ledger-suit/playwright.journal-money-compat.config.ts"
+  ],
+  "reason": "Reproduce actual unsafe-number HTTP/browser behavior, verify the forward migration preserves all business tables, reconcile raw stored amounts, and qualify English/Arabic native and ordinary-size regressions without replacing accountant or hosted acceptance."
+}

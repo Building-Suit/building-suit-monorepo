@@ -2472,5 +2472,55 @@
       "contains": "html[data-shop-landing-loading=\"true\"] body>* { visibility:hidden; }"
     }
   ]
+},
+{
+  "id": "ls-fin-precision-002-journal-dashboard",
+  "task": "LS-FIN-PRECISION-002",
+  "suits": [
+    "ledger-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/ledger-suit/app",
+    "apps/ledger-suit/types",
+    "apps/ledger-suit/supabase/migrations/20261028195440_exact_dashboard_summary_transport.sql"
+  ],
+  "reason": "Keep large journal, entry, dashboard and amount-filter values exact before JSON parsing; preserve the existing authorized SQL providers and financial history.",
+  "notes": {
+    "title": {
+      "en": "Exact large amounts in journals and the dashboard",
+      "ar": "مبالغ كبيرة دقيقة في اليومية ولوحة المتابعة"
+    },
+    "summary": {
+      "en": "Large journals open reliably and retain their exact digits in details, dashboard totals and amount filters.",
+      "ar": "تُفتح القيود الكبيرة بصورة موثوقة وتحتفظ بأرقامها الدقيقة في التفاصيل وإجماليات لوحة المتابعة وفلاتر المبالغ."
+    },
+    "details": {
+      "en": "Journal lines, recent transactions, dashboard balances and commitment totals preserve exact minor units, including when filtering by a one-cent difference.",
+      "ar": "تحفظ بنود القيود وآخر المعاملات وأرصدة لوحة المتابعة وإجماليات الالتزامات وحداتها الصغرى الدقيقة، بما في ذلك عند التصفية بفارق قرش واحد."
+    }
+  },
+  "sources": [
+    "ls-fin-precision-002-journal-dashboard"
+  ],
+  "evidence": [
+    {
+      "path": "apps/ledger-suit/app/composables/useTransactionWorkspace.ts",
+      "contains": "}).select(JOURNAL_SEARCH_COLUMNS).abortSignal(signal)"
+    },
+    {
+      "path": "apps/ledger-suit/app/composables/useLedgerTransactionDetailDialogView.ts",
+      "contains": ".select(JOURNAL_SUMMARY_COLUMNS)"
+    },
+    {
+      "path": "apps/ledger-suit/app/pages/dashboard.vue",
+      "contains": "exactRpc.rpc('read_exact_dashboard_summary'"
+    },
+    {
+      "path": "apps/ledger-suit/supabase/migrations/20261028195440_exact_dashboard_summary_transport.sql",
+      "contains": "select app.exact_minor_json(public.dashboard_summary(p_organization_id));"
+    }
+  ]
 }
 ]

@@ -8,6 +8,10 @@ export type ExactReportRpcDatabase = {
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
     Functions: {
+      read_exact_dashboard_summary: {
+        Args: { p_organization_id: string }
+        Returns: Json
+      }
       read_exact_financial_report: {
         Args: {
           p_report: 'overview' | 'cash_flow' | 'cash_allocation'
