@@ -13,8 +13,8 @@
     "No deployment or accountant verdict is inferred."
   ],
   "disposition_counts": {
-    "retain": 128,
-    "investigate": 10
+    "retain": 130,
+    "investigate": 8
   },
   "evidence_index": {
     "SCOPE": {
@@ -214,6 +214,16 @@
     "browser_checkpoint": {
       "paths": [
         "apps/ledger-suit/docs/accountant-system/v2-acceptance/current-browser-verification-2026-10-26.json"
+      ]
+    },
+    "native_journal": {
+      "primary_task": "LS-JRN-VERIFY-001",
+      "scope": "runtime_native_acceptance",
+      "paths": [
+        "apps/ledger-suit/tests/e2e/journal-center.spec.ts",
+        "apps/ledger-suit/scripts/verify-native-journal-evidence.mjs",
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/native-journal-verification-2026-10-28.json",
+        "apps/ledger-suit/docs/accountant-system/work-packages/LS-JRN-VERIFY-001.md"
       ]
     }
   },
@@ -749,31 +759,33 @@
     {
       "id": "JRN-04",
       "criterion_sha256": "7a9bcef08991cc6765bf1a715ad565079651c212d338da0a2ce1184f07ce83bb",
-      "primary_disposition": "investigate",
+      "primary_disposition": "retain",
       "primary_repository_task": "V2-IMP-003",
       "review_scope": "runtime",
       "evidence_refs": [
         "JRN",
         "native_sql",
-        "browser_checkpoint"
+        "browser_checkpoint",
+        "native_journal"
       ],
-      "finding": "Native filter SQL and synthetic atomic UI evidence are separate. A complete real-journal browser filter/return workflow still requires its own native journey evidence.",
-      "remaining_gate": "Explicit named/actual acceptance evidence described above.",
+      "finding": "Actual native EN/AR journals prove date/account/source/status/amount/search filters, reference sorting, route reload and desktop/mobile visibility; SQL independently reconciles the selected six journals.",
+      "remaining_gate": "Exact hosted candidate/provider verification and named accountant pilot remain separate.",
       "authoritative_automation_state": "unverified"
     },
     {
       "id": "JRN-05",
       "criterion_sha256": "0922ff4dcaed49b2be2e59e429c01adb5348522c434c254d88418258394f66b3",
-      "primary_disposition": "investigate",
+      "primary_disposition": "retain",
       "primary_repository_task": "V2-IMP-003",
       "review_scope": "runtime",
       "evidence_refs": [
         "JRN",
         "native_sql",
-        "browser_checkpoint"
+        "browser_checkpoint",
+        "native_journal"
       ],
-      "finding": "Saved-filter persistence and cross-user denial need the exact focused SQL plus browser scope; do not infer hosted behavior from source.",
-      "remaining_gate": "Explicit named/actual acceptance evidence described above.",
+      "finding": "Actual native EN/AR browser creates, reloads and applies a private saved view; its structured persisted state is checked. Another authenticated accountant in the same organization cannot read or overwrite it; focused native SQL separately proves validation.",
+      "remaining_gate": "Exact hosted candidate/provider verification and named accountant pilot remain separate.",
       "authoritative_automation_state": "unverified"
     },
     {
@@ -1036,10 +1048,11 @@
         "native_sql",
         "integrated_cycle",
         "exact_transport",
-        "browser_checkpoint"
+        "browser_checkpoint",
+        "native_journal"
       ],
-      "finding": "Keep broader saved-filter/focus UAT pending as the criterion explicitly requires; synthetic route restoration is narrower.",
-      "remaining_gate": "Explicit named/actual acceptance evidence described above.",
+      "finding": "Actual native EN/AR report movement→journal→back and dialog close preserve date range, overview tab and keyboard focus. The criterion explicitly retains broader saved-filter/focus UAT.",
+      "remaining_gate": "Broader accountant saved-filter/focus UAT and exact hosted candidate verification remain pending.",
       "authoritative_automation_state": "unverified"
     },
     {
@@ -2415,5 +2428,15 @@
       "remaining_gate": "Retain existing source; deployment and accountant acceptance remain independent. Complete narrower criterion-specific checks where current machine states remain unverified.",
       "authoritative_automation_state": "unverified"
     }
-  ]
+  ],
+  "native_journal_followup": {
+    "task": "LS-JRN-VERIFY-001",
+    "date": "2026-10-28",
+    "promoted_primary_dispositions": [
+      "JRN-04",
+      "JRN-05"
+    ],
+    "partial_only": "FS-06",
+    "original_criteria_and_primary_tasks_unchanged": true
+  }
 }

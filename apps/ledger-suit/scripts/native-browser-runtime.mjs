@@ -6,7 +6,9 @@ import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync,
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 export const root = realpathSync(fileURLToPath(new URL('../../../', import.meta.url)))
-export const directory = path.join(root, '.local/verification/browser')
+// Reuse only an explicitly selected, already owned fixture; never copy/reset its data.
+const retainedDirectory = process.env.LEDGER_BROWSER_FIXTURE_DIRECTORY
+export const directory = retainedDirectory ? realpathSync(retainedDirectory) : path.join(root, '.local/verification/browser')
 export const project = 'ledger-browser-20261026'
 const source = path.join(root, 'apps/ledger-suit/supabase')
 const read = name => JSON.parse(readFileSync(path.join(directory, name), 'utf8'))
@@ -40,6 +42,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
   assert.equal(process.env.LEDGER_BROWSER_DISPOSABLE_TEST, '1')
   assert.equal(process.argv.length, 3)
   const action = process.argv[2]; assert.ok(['prepare', 'start', 'stop'].includes(action))
+  assert.ok(!retainedDirectory || action !== 'prepare', 'Retained fixtures may only be started/stopped')
   if (action === 'prepare') {
     const config = readFileSync(path.join(source, 'config.toml'), 'utf8').replace('project_id = "building-suit-ledger"', `project_id = "${project}"`)
       .replace(/\b603(\d\d)\b/g, (_match, suffix) => '610' + suffix)
@@ -74,7 +77,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
     const args = ['exec', 'supabase', '--workdir', directory, action]
     if (action === 'start') args.push('--ignore-health-check', '-x', 'realtime,storage-api,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor')
     const result = spawnSync('pnpm', args, { cwd: root, env: c.env, encoding: 'utf8', timeout: 240000, maxBuffer: 8 * 1024 * 1024 })
-    privateResult(action + '.log', (result.stdout || '') + (result.stderr || ''))
+    privateResult(retainedDirectory ? `${action}-${Date.now()}-${process.pid}.log` : action + '.log', (result.stdout || '') + (result.stderr || ''))
     assert.equal(result.status, 0, 'Inspect owned private runtime log')
     if (action === 'start') {
       browserContext()

@@ -411,10 +411,11 @@
       "criterion": "Focused SQL and browser evidence execute filters against actual journals and restore route state",
       "prior_assessment": "implemented locally — route-backed date/account/source/status/type/search and journal-reference sorting/filtering",
       "prior_evidence": "UI-JRN; DB-JRN; T-JRN",
-      "code_implemented": "unverified",
-      "tests_passed": "unverified",
+      "code_implemented": "implemented",
+      "tests_passed": "passed",
       "deployed": "unverified",
-      "accountant_accepted": "pending"
+      "accountant_accepted": "pending",
+      "native_evidence": "LS-JRN-VERIFY-001; native-journal-verification-2026-10-28.json; actual local Auth/PostgREST EN/AR browser journey and existing focused native SQL evidence"
     },
     {
       "id": "JRN-05",
@@ -422,10 +423,11 @@
       "criterion": "SQL proves validation and cross-user denial; browser proves save/reload/apply in EN/AR",
       "prior_assessment": "implemented locally — private user/organization-scoped create/apply/delete flow with validated structured state",
       "prior_evidence": "DB-JRN; UI-JRN; T-JRN",
-      "code_implemented": "unverified",
-      "tests_passed": "unverified",
+      "code_implemented": "implemented",
+      "tests_passed": "passed",
       "deployed": "unverified",
-      "accountant_accepted": "pending"
+      "accountant_accepted": "pending",
+      "native_evidence": "LS-JRN-VERIFY-001; native-journal-verification-2026-10-28.json; actual local Auth/PostgREST EN/AR browser journey and existing focused native SQL evidence"
     },
     {
       "id": "JRN-06",
@@ -598,10 +600,11 @@
       "criterion": "Browser verifies dates/tab survive movement→journal→back and dialog close; broader saved-filter/focus UAT pending",
       "prior_assessment": "implemented locally for route-backed tab/dates and dialog back navigation",
       "prior_evidence": "UI-REPORT; DB-ACTIVITY; V2-IMP-007; T-FS",
-      "code_implemented": "unverified",
-      "tests_passed": "unverified",
+      "code_implemented": "implemented",
+      "tests_passed": "partial",
       "deployed": "unverified",
-      "accountant_accepted": "pending"
+      "accountant_accepted": "pending",
+      "native_evidence": "LS-JRN-VERIFY-001 proves actual report movement→journal→back/close with dates/tab/focus retained in EN/AR; broader saved-filter/focus accountant UAT remains pending"
     },
     {
       "id": "FS-07",
@@ -1564,5 +1567,17 @@
     "artifact": "requirement-dispositions-2026-10-26.json",
     "requirements": 138,
     "authoritative_automation_state": "unverified"
+  },
+  "native_journal_followup": {
+    "task": "LS-JRN-VERIFY-001",
+    "date": "2026-10-28",
+    "artifact": "native-journal-verification-2026-10-28.json",
+    "verified_requirements": [
+      "JRN-04",
+      "JRN-05"
+    ],
+    "partial_requirement": "FS-06",
+    "deployed": "unverified",
+    "accountant_accepted": "pending"
   }
 }
