@@ -225,6 +225,16 @@
         "apps/ledger-suit/docs/accountant-system/v2-acceptance/native-journal-verification-2026-10-28.json",
         "apps/ledger-suit/docs/accountant-system/work-packages/LS-JRN-VERIFY-001.md"
       ]
+    },
+    "native_journal_precision": {
+      "primary_task": "LS-FIN-PRECISION-002",
+      "scope": "runtime_native_precision",
+      "paths": [
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/journal-precision-verification-2026-10-28.json",
+        "apps/ledger-suit/docs/accountant-system/work-packages/LS-FIN-PRECISION-002.md",
+        "apps/ledger-suit/app/utils/journalTransport.ts",
+        "apps/ledger-suit/tests/e2e/journal-precision.spec.ts"
+      ]
     }
   },
   "rows": [
@@ -766,7 +776,8 @@
         "JRN",
         "native_sql",
         "browser_checkpoint",
-        "native_journal"
+        "native_journal",
+        "native_journal_precision"
       ],
       "finding": "Actual native EN/AR journals prove date/account/source/status/amount/search filters, reference sorting, route reload and desktop/mobile visibility; SQL independently reconciles the selected six journals.",
       "remaining_gate": "Exact hosted candidate/provider verification and named accountant pilot remain separate.",
@@ -782,7 +793,8 @@
         "JRN",
         "native_sql",
         "browser_checkpoint",
-        "native_journal"
+        "native_journal",
+        "native_journal_precision"
       ],
       "finding": "Actual native EN/AR browser creates, reloads and applies a private saved view; its structured persisted state is checked. Another authenticated accountant in the same organization cannot read or overwrite it; focused native SQL separately proves validation.",
       "remaining_gate": "Exact hosted candidate/provider verification and named accountant pilot remain separate.",
