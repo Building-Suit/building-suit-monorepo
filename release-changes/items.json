@@ -4106,11 +4106,7 @@
     "evidence": [
       {
         "path": "packages/ux/src/composables/useSideNavigation.ts",
-        "contains": "getComputedStyle(target).visibility !== 'visible'"
-      },
-      {
-        "path": "packages/ux/src/composables/useSideNavigation.ts",
-        "contains": "if (cancelled || !open()) return"
+        "contains": "await Promise.allSettled(animations.map(animation => animation.finished))\n    if (!cancelled && open()) panel.value?.querySelector<HTMLElement>('[data-side-menu-close]')?.focus()"
       }
     ]
   },
@@ -4751,7 +4747,8 @@
       "tooling/releases/candidate.mjs",
       "tooling/releases/historical-fragment-scope.test.mjs",
       "docs/work-packages/ledger-historical-release-provenance.md",
-      "release-changes/items.json"
+      "release-changes/items.json",
+      "tooling/releases/mobile-focus-evidence.test.mjs"
     ],
     "reason": "Verify immutable historical fragment consumers against their exact original Git source when a later net revert removes a shared path, preserving current path coverage, unknown-consumer rejection and publication gates. No operational product activation or hosted change.",
     "sources": [
