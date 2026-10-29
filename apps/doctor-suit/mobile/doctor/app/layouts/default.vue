@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {nativeContextId} from '../utils/nativeContext'
+defineOptions({name:'DoctorNativeDefaultLayout'})
 const {t}=useI18n(),ui=useUiCopy(),context=useDoctorNativeContext(),{auth}=useDoctorNativeAuth(),confirmation=useConfirmation()
 const scope=computed(()=>context.state.current)
 const scopeText=computed(()=>scope.value?`${scope.value.doctorName} · ${scope.value.practiceName} · ${scope.value.locationName}`:t('context.choose'))

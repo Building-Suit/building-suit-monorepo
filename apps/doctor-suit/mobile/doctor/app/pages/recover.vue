@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({name:'DoctorNativeRecoverPage'})
 definePageMeta({layout:'auth'})
 const{auth,availability,error,t}=useDoctorNativeAuthPresentation()
 const email=ref(''),password=ref(''),confirmation=ref(''),code=ref(''),mode=ref<'request'|'reset'>('request'),complete=ref(false),validation=ref(false)

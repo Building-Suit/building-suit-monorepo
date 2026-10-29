@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({name:'DoctorNativeUnavailablePage'})
 const context=useDoctorNativeContext(),route=useRoute(),shell=useDoctorMobile(),{t}=useI18n(),{auth,readiness}=useDoctorNativeAuth()
 watch(()=>route.path,path=>{void shell.navigate(path)},{immediate:true})
 const copy=computed(()=>({title:t('product.name'),description:t(`destination.${shell.state.route.slice(1)}`),notice:t('notice'),retry:t('retry')}))

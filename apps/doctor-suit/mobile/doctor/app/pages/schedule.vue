@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({name:'DoctorNativeSchedulePage'})
 const { accessAction,reloading,canWalkIn,openWalkIn,context,state,copy,consultationOptions,consultationLabel,scopeKey,hydrated,date,form,reason,historyOpen,editorOpen,transitionOpen,canCreate,clinicOptions,days,queue,editorView,transitionView,historyView,patientOptions,slotOptions,liveLabel,liveTone,error,denied,reload,open,action,save,submitTransition,patients,offers,changeDate,changePage,historyPage } = useDoctorNativeAppointmentsPage()
 const scopeLabel = computed(() => context.state.current ? `${context.state.current.doctorName} · ${context.state.current.locationName} · ${context.state.current.timezone}` : '')
 </script>

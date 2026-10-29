@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {nativePatientScopeKey} from '../../utils/nativePatients'
 import {nativePatientProfileCopy} from '../../utils/nativePatientsPresentation'
+defineOptions({name:'DoctorNativePatientPage'})
 const patients=useDoctorNativePatients(),context=useDoctorNativeContext(),shell=useDoctorMobile(),{auth}=useDoctorNativeAuth(),route=useRoute(),{locale}=useI18n()
 const copy=computed(()=>nativePatientProfileCopy(locale.value==='ar'))
 const scope=computed(()=>auth.identity()&&context.state.phase==='ready'?context.state.current:null)

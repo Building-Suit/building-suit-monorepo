@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineOptions({name:'DoctorNativeAccountPage'})
 definePageMeta({layout:false})
 const{auth,product,availability:connection,error,t}=useDoctorNativeAuthPresentation()
 const availability=computed(()=>connection.value??(auth.state.phase==='ready'?undefined:{state:auth.state.phase==='loading'?'loading' as const:'permission' as const,title:t('phase.signed-out.title'),description:t('phase.signed-out.body')}))

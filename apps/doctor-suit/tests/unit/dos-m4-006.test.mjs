@@ -35,7 +35,7 @@ test('fresh reads reject foreign doctor/scope and delayed prior-session details'
  const d=deferred();f.port.detail=async()=>d.promise;const reading=f.controller.load(id(10));f.controller.clear();f.context={...context,sessionId:id(50)};d.resolve(record());assert.equal(await reading,false);assert.equal(f.controller.state.detail,null)
 })
 test('new native encounters require a fresh server patient relationship and an acknowledged create',async()=>{
- const f=fixture();let calls=0;f.port.directory=async()=>({available:true,capabilities:['read','draft'],rows:[],patients:[{id:id(60),name:'Synthetic patient'}],total:0,data_mode:'synthetic',clinical_approval:false,live_prescribing:false});f.port.create=async(_context,patientId,_snapshot,_key)=>{calls++;assert.equal(patientId,id(60));return{...receipt(),version:1}}
+ const f=fixture();let calls=0;f.port.directory=async()=>({available:true,capabilities:['read','draft'],rows:[],patients:[{id:id(60),name:'Synthetic patient'}],total:0,data_mode:'synthetic',clinical_approval:false,live_prescribing:false});f.port.create=async(_context,patientId)=>{calls++;assert.equal(patientId,id(60));return{...receipt(),version:1}}
  await f.controller.directory();assert.equal(f.controller.create(),true);assert.equal(await f.controller.save(),false);assert.equal(f.controller.patient(id(61)),false);assert.equal(f.controller.patient(id(60)),true);assert.equal(await f.controller.save(),true);assert.equal(calls,1);assert.equal(f.controller.state.acknowledgedId,id(10))
 })
 test('unknown create is never retried and old-scope patient choices cannot grant a new scope',async()=>{
