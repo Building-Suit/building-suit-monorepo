@@ -1,0 +1,14 @@
+[intlify] Potentially dangerous srcdoc attribute detected in translation. Consider removing srcdoc from your translation messages.
+[intlify] Potentially dangerous srcdoc attribute detected in translation. Consider removing srcdoc from your translation messages.
+✔ translation escaping protects both named values and list values in one call (5.820301ms)
+✔ translation escaping preserves caller values and identical repeated output (0.923628ms)
+✔ translated HTML cannot retain an executable iframe srcdoc attribute (1.795217ms)
+✔ ordinary English and Arabic interpolation, fallback and currency formatting remain usable (15.298642ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 147.256645
