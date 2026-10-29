@@ -39,7 +39,29 @@
       "warnings": 12,
       "note": "Includes ignored unit files; unit files executed independently."
     },
-    "native_browser_selector_syntax": "pass"
+    "native_browser_selector_syntax": "pass",
+    "legacy_crypto_and_receipt_deno": {
+      "pass": 10,
+      "fail": 0,
+      "checks": [
+        "receipt signatures/MIME and streamed byte limit",
+        "legacy 30/360-day cadence and server-only mapping",
+        "signed metadata tamper denial",
+        "transaction HMAC tamper denial",
+        "subscription HMAC identity tamper denial"
+      ],
+      "runtime_network_permission": false,
+      "environment_permissions": [
+        "PAYMOB_HMAC_SECRET",
+        "PAYMOB_STARTER_YEARLY_PLAN_ID"
+      ],
+      "persistent_environment_changes": false
+    },
+    "exact_committed_release_policy": {
+      "head": "744732b27fb3624694085113ba88e00d004264f4",
+      "base": "81cdcc608519f538a2dec85c3d6d6c2bd4e4687d",
+      "result": "pass"
+    }
   },
   "unchanged_security_blobs": {
     "apps/ledger-suit/supabase/functions/paymob-webhook/index.ts": "4df5d0859dceba831bcc37fedf952a3537a9413b",
@@ -58,6 +80,12 @@
   "native_full_service_rerun": "not performed; no owned billing fixture instantiated here",
   "legacy_browser_files": "expectations adapted, not selected by maintained suite",
   "publication": "must bind fresh exact committed head to valid same-stack PR and fresh combined checks after Doctor coordination; no competing CI queued",
-  "minimum_input": "Verified public recipient name/address and approved InstaPay instructions (optional link/QR only if used), supplied by parent. No synthetic alias is a valid live recipient.",
-  "production": "held; parent owns denied SAS baseline evidence; no retry, acknowledgment or release history mutation"
+  "minimum_input": "Exact bank-displayed recipient name remains pending from parent. IPA building-suit@instapay is user-approved; no need to ask again for the address. Do not configure an incomplete instruction block.",
+  "production": "held; parent owns denied SAS baseline evidence; no retry, acknowledgment or release history mutation",
+  "approved_public_destination": {
+    "ipa": "building-suit@instapay",
+    "authority": "Explicit user reply forwarded by parent, 2026-10-29 17:00:36; not inferred from test fixtures",
+    "recipient_name": null,
+    "instructions_configured": false
+  }
 }

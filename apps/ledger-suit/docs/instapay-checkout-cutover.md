@@ -14,11 +14,12 @@ Applied local edits: primary plan choice opens the existing manual flow; new bro
 - 141 Ledger/security unit cases pass, including fresh-auth/tenant retirement denials and stale-instruction handling.
 - Maintained billing browser suite: 30 pass, covering EN/AR, themes/viewports, annual quote identity, private evidence UI, missing instructions, billing-viewer denial and zero online-checkout calls.
 - Actual Deno 2.5.6 SDK/type checking passes against the existing npm:@supabase/supabase-js@2 import (resolved2.118.0). The first attempt failed on the managed certificate chain; command-scoped DENO_TLS_CA_STORE=system fixed trust without disabling verification or changing persistent settings.
-- Legacy pricing/trial test adaptations are saved but have not been separately qualified. Full combined follow-up CI remains pending.
+- Ten existing Deno receipt/legacy HMAC tests pass with no runtime network permission and only two synthetic process-local environment keys. Historical callback, security configuration and SQL migration files are unchanged.
+- Exact committed release classification/provenance check passes on744732b2 against staging81cdcc60. Legacy pricing/trial test adaptations are saved but have not been separately qualified. Full combined follow-up CI remains pending.
 
 ## Exact remaining input and holds
 
-No verified live beneficiary is available in source. Existing examples are placeholders/synthetic aliases, not authority to receive money. Parent will supply the verified public InstaPay recipient name/address and approved public instructions (link/QR only if used). Never infer or seed a recipient. Missing configuration fails closed. No hosted beneficiary, operator role, credential, security setting, acknowledgment or release-history mutation has been performed.
+The user explicitly supplied the approved public IPA `building-suit@instapay` at 2026-10-29 17:00:36, as forwarded by the parent. This new user evidence, rather than any synthetic test alias, authorizes that exact address. The exact bank-displayed recipient name remains pending. Do not infer Building Suit or any personal name, seed incomplete instructions, or execute a test transfer. The existing contract stores one public instruction block; no separate link/QR field is required. Missing configuration fails closed. No hosted beneficiary, operator role, credential, security setting, acknowledgment or release-history mutation has been performed.
 
 SAS staging catalog baseline read for lwecnmsosfwovlzxauml was denied. Parent owns the minimum requested evidence; do not retry or work around that denial. Production/catalog publication remains held. Do not promote broad PR408. Existing isolated-main snapshot is an unpublished historical review artifact and does not include this cutover.
 
@@ -33,6 +34,6 @@ This worktree branches from local security reconciliation 50d0ca37e20af745bbda5f
 1. Preserve recovery archive Library ID libfile_386d388123fc8191959e6a8b9003d7ac and checkpoint5ccc0734b94849e7bc4498263f3d301ce1aac130; restore only to a new worktree if needed.
 2. Deno, Ledger units/type/build and maintained billing browser qualification pass locally. Native full-service browser rerun remains unperformed; its primary-action selector has been adapted without changing financial assertions. Historical webhook and SQL sources are unchanged.
 3. Curated public/internal fragments and semantic release evidence are prepared; validate the committed exact candidate against current staging before publication.
-4. Obtain the parent's authoritative public instructions; verify the existing operator/configuration through authorized interfaces only.
+4. Obtain the pending bank-displayed recipient name from parent, retain the approved IPA exactly, then prepare the complete public instruction block for an authorized configuration path. Verify existing operator/configuration readiness only through authorized interfaces.
 5. Publish a coherent same-stack follow-up after Doctor queue coordination; retain security and checkout histories and perform fresh combined checks.
 6. Integrate to staging, verify exact provider/frontend/CI outcomes, then revisit only an authorized isolated Ledger production path after baseline gates clear. Marketing follows verified release.
