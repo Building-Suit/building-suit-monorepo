@@ -602,6 +602,7 @@ const invitationPreviewCopy={
     </BsRecordActionDialog>
   <BsContentSection title="Privacy consent / خيارات الخصوصية">
     <BsButton @click="privacyExampleOpen = true">Privacy settings / إعدادات الخصوصية</BsButton>
+    <BsLandingFooter :legal-links="[]" footer="Privacy controls / إعدادات الخصوصية" navigation-label="Footer / التذييل" :privacy-settings-label="privacyExample.copy.settings" @privacy-settings="privacyExample.open" />
     <BsPrivacyConsent :model="privacyExample" />
   </BsContentSection>
   </div>

@@ -2572,5 +2572,41 @@
     "sources": [
       "ledger-applied-access-source-restoration-20261029"
     ]
+  },
+  {
+    "id": "ls-ci-qual-002-public-consent-wiring",
+    "task": "LS-CI-QUAL-002",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/layouts/landing.vue",
+      "apps/shop-suit/app/pages/index.vue",
+      "apps/shop-suit/tests/e2e/appointment-access.spec.ts",
+      "packages/ui/src/organisms/BsLandingFooter.vue",
+      "packages/ui/src/templates/BsMarketingLayout.vue",
+      "packages/ui/src/templates/BsLandingPage.vue",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/ledger-suit/docs/integration-check-recovery-20261029.md",
+      "release-changes/items.json",
+      "apps/shop-suit/app/composables/useShopPrivacy.ts"
+    ],
+    "reason": "Repair public footer consent access and forward the existing consent-gated pricing analytics event; retain existing sensitive-data exclusion and withdrawal behavior. Update appointment access regression interaction to the current calendar details dialog without changing credential or permission assertions. Shared components add opt-in props/events only.",
+    "notes": {
+      "title": {
+        "en": "Keep privacy settings available",
+        "ar": "\u0625\u0628\u0642\u0627\u0621 \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0645\u062a\u0627\u062d\u0629"
+      },
+      "summary": {
+        "en": "Reopen optional analytics choices from the public footer.",
+        "ar": "\u0623\u0639\u062f \u0641\u062a\u062d \u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0645\u0646 \u062a\u0630\u064a\u064a\u0644 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0639\u0627\u0645\u0629."
+      },
+      "details": {
+        "en": "Optional analytics remains consent-gated, and its existing pricing event follows the selected link without including business data.",
+        "ar": "\u062a\u0628\u0642\u0649 \u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0645\u0634\u0631\u0648\u0637\u0629 \u0628\u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0648\u0644\u0627 \u062a\u062a\u0636\u0645\u0646 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0639\u0645\u0644."
+      }
+    }
   }
 ]
