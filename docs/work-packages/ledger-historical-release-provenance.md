@@ -1,6 +1,6 @@
 # Historical task scope during production release review
 
-Current local source split retains staging `c4497c3d` and original PR437 without PR440 access changes. See [the current split record](brand-provenance-source-split.md). The sections below record earlier diagnosis and qualification at their named historical heads. Accepted Doctor staging subsequently retired the three obsolete focus inventory rows; the active supersession list is now empty, and current public scopes follow that accepted inventory. Strict verification code/tests remain with no active mapping or new public claim. Hosted IPA/catalog gates are unchanged.
+Current local source split retains staging `7527791c` (including prior `c4497c3d`) and original PR437 without PR440 access changes. See [the current split record](brand-provenance-source-split.md). The sections below record earlier diagnosis and qualification at their named historical heads. Accepted Doctor staging subsequently retired the three obsolete focus inventory rows; the active supersession list is now empty, and current public scopes follow that accepted inventory. Strict verification code/tests remain with no active mapping or new public claim. Hosted IPA/catalog gates are unchanged.
 
 
 LS-REL-PROV-001. Unpublished local candidate based on staged6a662776; no competing CI, provider access retry, hosted configuration or main mutation.
