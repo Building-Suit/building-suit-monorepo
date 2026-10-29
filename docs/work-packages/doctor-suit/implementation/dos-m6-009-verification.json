@@ -569,6 +569,13 @@
     "initial_broad_typecheck": "failed missing generated docs catalogue; corrected by documented pnpm run setup, then all8 passed",
     "actual_repaired_browser": "pending-owned-CI",
     "no_local_doctor_runtime": true,
-    "full_task_acceptance": false
+    "full_task_acceptance": false,
+    "broader_lint": {
+      "exit_code": 1,
+      "doctor_inherited_errors": 12,
+      "shop_untouched_errors": 2,
+      "docs_warnings": 5,
+      "shop_warnings": 25
+    }
   }
 }
