@@ -33,7 +33,7 @@ const billing = useLedgerBillingPresentation(reactive({ get surface() { return p
 const billingView = computed(() => ({ ...billing.view.value,
   summary: [{ id: 'plan', label: t('billing.currentPlan'), value: currentPlanName.value, note: t(`billing.states.${accessState.value}`), status: accessState.value }],
   details: [{ label: t('billing.billingCycle'), value: subscription.value?.billing_interval ? t(`billing.${subscription.value.billing_interval}`) : '—' }, { label: t('billing.nextDate'), value: displayDate(renewalDate.value) }],
-  providerNotice: subscription.value?.provider === 'paymob' ? t('billing.managedByPaymob') : subscription.value?.provider === 'manual' ? t('billing.manual.managed') : '',
+  providerNotice: subscription.value?.provider === 'paymob' ? t('billing.legacyPaymentNotice') : subscription.value?.provider === 'manual' ? t('billing.manual.managed') : '',
 }))
 </script>
 <template>
