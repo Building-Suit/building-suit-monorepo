@@ -1,0 +1,18 @@
+{
+  "id": "dos-m7-004-queued-reconciliation-20261029",
+  "task": "DOS-M7-004",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004-packet.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004-verify.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004-verification.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004-reconciliation-20261029.json",
+    "docs/work-packages/doctor-suit/implementation/m7-continuation.md"
+  ],
+  "reason": "Reconcile the saved privacy proposal with its current legal evidence parent, preserving historical receipts, all source ancestry and actual authority gates. The policy matrix and case contract remain proposals; no approved policy, privacy fulfillment, retention period, erasure or domain acceptance is created."
+}

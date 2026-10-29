@@ -1,0 +1,16 @@
+{
+  "id": "dos-m7-004-ledger514-binding-20261029",
+  "task": "DOS-M7-004",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004-packet.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004-verify.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-004-ledger514-verification.json"
+  ],
+  "reason": "Preserve the privacy proposal and historical receipts while rebinding to the Ledger-reconciled legal parent. Actual approved privacy policies and fulfillment remain unavailable; no product or authority change."
+}

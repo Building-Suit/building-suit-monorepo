@@ -1,8 +1,8 @@
 {
   "task_id": "DOS-M7-001",
   "decision_id": "DOS-M7-GATE-LEGAL",
-  "parent_pr": 501,
-  "parent_head": "c76560503713ee27f6a7b82359abda97afdce954",
+  "parent_pr": 401,
+  "parent_head": "2884e18aec448ae81555a0fb9431884abc0aa5dd",
   "candidate_binding": "evaluated-committed-head",
   "prepared_at_utc": "2026-10-26T15:24:04.213427+00:00",
   "intended_review_jurisdiction": "Egypt; actual entity/residence and applicable law require qualified determination",
