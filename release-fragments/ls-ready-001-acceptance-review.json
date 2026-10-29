@@ -1,0 +1,9 @@
+{
+  "id": "ls-ready-001-acceptance-review",
+  "task": "LS-READY-001",
+  "suits": ["ledger-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/ledger-suit", "packages/testing"],
+  "reason": "Repair acceptance-register status values without changing their evidence or granting acceptance; include the independent artifact validator in the normal test suite and record bounded release-readiness follow-ups plus a read-only Automation audit. No runtime product behavior changes."
+}

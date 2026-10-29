@@ -1,0 +1,18 @@
+{
+  "id": "ledger-applied-access-release-support-20261029",
+  "task": "LEDGER-HISTORY-20261029",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "release-changes/items.json"
+  ],
+  "reason": "Record private Ledger source-history restoration provenance in the shared release inventory; no other product behavior or public release is introduced."
+}

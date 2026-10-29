@@ -1,0 +1,9 @@
+{
+  "id": "ls-rel-001-native-verification",
+  "task": "LS-REL-001",
+  "suits": ["ledger-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/ledger-suit"],
+  "reason": "Execute cumulative native financial verification, repair obsolete quota/CSV/sequence/admin fixtures without changing runtime financial rules, and preserve a reproducible pinned native database image preparation path for constrained Docker storage."
+}

@@ -6,6 +6,8 @@ Every product table uses `BsDataTable` backed internally by PrimeVue 4.5.5 DataT
 
 Lazy products may provide `BsDataTableQueryAdapter` callbacks for shared search, page, sort and filter changes. The adapter remains product-owned and performs the actual query; `BsDataTable` never imports product data access. Native events continue to emit for existing controlled consumers.
 
+A cell slot supplies presentation; it does not supply a sort value. Bind `field` and, where needed, `sortField` to the actual row path, including nested paths such as `values.name`. The administrative resource workspace maps its displayed value records this way, and the component catalogue demonstrates nested category fields. Local sorting applies to the loaded rows; server pagination still bounds their scope.
+
 Safe native DataTable behavior and model events continue to be forwarded during migration, but class/style/`pt` escape hatches are filtered. The public column contract is Bs-owned. Domain cells use `cell-{key}` slots whose content must also remain Bs-only. The unnamed slot is migration-only compatibility for debt already recorded in the boundary manifest; new and migrated consumers must use the schema. Empty/loading/error and retry states remain shared and overridable through Bs-only slots.
 
 | Capability | Configuration |

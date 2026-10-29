@@ -1,0 +1,18 @@
+{
+  "id": "ls-fin-precision-001-release-support",
+  "task": "LS-FIN-PRECISION-001",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "release-changes/items.json"
+  ],
+  "reason": "Maintain private bilingual release inventory for the Ledger financial precision correction; no other product behavior changes."
+}

@@ -1,0 +1,29 @@
+{
+  "id": "ls-bill-native-001-receipt-links",
+  "task": "LS-BILL-NATIVE-001",
+  "suits": [
+    "ledger-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/ledger-suit/app/composables/usePlatformAdmin.ts",
+    "apps/ledger-suit/app/utils/platformReceiptUrl.ts",
+    "apps/ledger-suit/tests/unit/platform-receipt-url.test.mjs"
+  ],
+  "reason": "Fix authorized private receipt navigation when the signing service uses an internal gateway; retain the signed path, configured project boundary and existing expiry.",
+  "notes": {
+    "title": {
+      "en": "Reliable payment receipt links",
+      "ar": "\u0631\u0648\u0627\u0628\u0637 \u0645\u0648\u062b\u0648\u0642\u0629 \u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0627\u0644\u062f\u0641\u0639"
+    },
+    "summary": {
+      "en": "Authorized reviewers can reliably open private payment receipts.",
+      "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u0631\u0627\u062c\u0639\u064a\u0646 \u0627\u0644\u0645\u0635\u0631\u062d \u0644\u0647\u0645 \u0641\u062a\u062d \u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0627\u0644\u062f\u0641\u0639 \u0627\u0644\u062e\u0627\u0635\u0629 \u0628\u0634\u0643\u0644 \u0645\u0648\u062b\u0648\u0642."
+    },
+    "details": {
+      "en": "Receipt links use the configured service address while retaining their short expiry and existing access checks.",
+      "ar": "\u062a\u0633\u062a\u062e\u062f\u0645 \u0631\u0648\u0627\u0628\u0637 \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u062e\u062f\u0645\u0629 \u0627\u0644\u0645\u0647\u064a\u0623 \u0645\u0639 \u0627\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u0645\u062f\u0629 \u0635\u0644\u0627\u062d\u064a\u062a\u0647\u0627 \u0627\u0644\u0642\u0635\u064a\u0631\u0629 \u0648\u0641\u062d\u0648\u0635 \u0627\u0644\u0648\u0635\u0648\u0644 \u0627\u0644\u062d\u0627\u0644\u064a\u0629."
+    }
+  }
+}

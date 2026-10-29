@@ -37,6 +37,10 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
       const email = page.locator('input[type=email]')
       const password = page.locator('input[type=password]')
+      await expect(email).toHaveAccessibleName(locale === 'ar' ? 'البريد الإلكتروني' : 'Email')
+      await expect(password).toHaveAccessibleName(locale === 'ar' ? 'كلمة المرور' : 'Password')
+      expect(await email.evaluate(input => (input as HTMLInputElement).labels?.length)).toBe(1)
+      expect(await password.evaluate(input => (input as HTMLInputElement).labels?.length)).toBe(1)
       await email.focus(); await page.keyboard.press('Tab'); await expect(password).toBeFocused()
       await email.evaluate(async element => { await Promise.all(element.getAnimations().map(animation => animation.finished.catch(() => {}))) })
       controls.push(await email.evaluate(element => {

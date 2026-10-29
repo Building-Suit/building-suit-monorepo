@@ -1,9 +1,9 @@
 /** Ledger-owned formatting and context mapping for shared presentation. */
 export interface LedgerSeriesPoint {
   month: string
-  revenue_minor: number
-  expense_minor: number
-  net_minor: number
+  revenue_minor: number | string
+  expense_minor: number | string
+  net_minor: number | string
 }
 
 export function useLedgerPresentation() {
@@ -24,9 +24,11 @@ export function useLedgerPresentation() {
       ...(period ? [{ label: t('pageContext.reportingPeriod'), value: period }] : []),
     ]
   }
-  function kpi(amount: number | string | null | undefined, previous: number | null | undefined = null, direction: 'up' | 'down' | 'neutral' = 'up') {
-    if (previous === null || previous === undefined || previous === 0) return { label: undefined, tone: 'neutral' }
-    const change = ((Number(amount ?? 0) - previous) / Math.abs(previous)) * 100
+  function kpi(amount: number | string | null | undefined, previous: number | string | null | undefined = null, direction: 'up' | 'down' | 'neutral' = 'up') {
+    if (previous === null || previous === undefined || BigInt(previous) === 0n) return { label: undefined, tone: 'neutral' }
+    const delta = BigInt(amount ?? 0) - BigInt(previous)
+    // Percentage/plot geometry is approximate; displayed monetary labels stay exact.
+    const change = (Number(delta) / Math.abs(Number(previous))) * 100
     const improving = direction === 'up' ? change > 0 : change < 0
     return {
       label: t('dashboard.changeVsLastMonth', { change: formatPercent(change, locale.value) }),

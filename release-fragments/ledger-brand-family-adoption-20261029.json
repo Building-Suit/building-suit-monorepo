@@ -1,0 +1,27 @@
+{
+  "id": "ledger-brand-family-adoption-20261029",
+  "task": "LEDGER-BRAND-20261029",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/brand/README.md",
+    "packages/brand/assets/ledger-suit-app-icon.png",
+    "packages/brand/assets/ledger-suit-app-icon.svg",
+    "packages/brand/assets/ledger-suit-logo-mark.svg",
+    "packages/brand/assets/ledger-suit-mark-dark.svg",
+    "packages/brand/assets/ledger-suit-mark-light.svg",
+    "packages/brand/assets/ledger-suit-wordmark-dark.svg",
+    "packages/brand/assets/ledger-suit-wordmark-light.svg",
+    "docs/work-packages/ledger-brand-release",
+    "release-changes/items.json"
+  ],
+  "reason": "Adopt generated Ledger family artwork at stable canonical URLs. Ledger remains an internal release consumer; no operational registration, release baseline, sale readiness or marketing activation is inferred. All shared brand package dependents are classified as internal consumers by the repository dependency graph; only Ledger artwork changes."
+}
