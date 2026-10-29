@@ -113,3 +113,22 @@ Both wordmark tones are outlined vectors without external font or image dependen
 All existing Ledger public URLs remain stable, including app-icon/logo-mark aliases
 and the 512 × 512 PNG fallback. The generated artwork is adopted from shared PR
 #437 at `613177246eb05eda4e7458fd5d5d212062e03f5e`; Shop and Doctor assets are unchanged.
+
+## Product family artwork, October 2026
+
+Shop wordmarks retain the exact existing drawing payload. Their SVG viewport is
+now `48 44 772 232`, removing unused canvas at the right and around the logo.
+This is a crop of the SVG canvas; no path, text, transform, color or gradient
+was redrawn. The Shop mark and email PNG are unchanged.
+
+Ledger now uses a white open ledger/L with gold ruled rows inside the same
+charcoal/gold tile family as Shop and Doctor. Both wordmark tones are outlined
+vectors without font/raster dependencies. The shared contrast-safe tile supplies
+both mark variants, `ledger-suit-app-icon.svg`, `ledger-suit-logo-mark.svg` and the
+512 × 512 PNG app-icon fallback. Existing public paths remain stable. The
+artwork was generated with image generation and converted to spline SVG paths
+with VTracer 0.6.15; the PNG is a raster of that canonical mark. No app logic,
+financial behavior, hosted email configuration or operational registration changed.
+
+See [the task record](../../docs/work-packages/brand-family/README.md) for
+canvas payload hashes, production asset checks and rendered states.

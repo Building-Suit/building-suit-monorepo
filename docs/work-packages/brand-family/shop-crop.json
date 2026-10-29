@@ -1,0 +1,36 @@
+[
+  {
+    "file": "shop-suit-wordmark-light.svg",
+    "old_canvas": [
+      0,
+      0,
+      1200,
+      320
+    ],
+    "new_canvas": [
+      48,
+      44,
+      772,
+      232
+    ],
+    "drawing_sha256": "a424359c56d8fe95355486678c8ac33ca83f0a6edfddafdc89357f4981873b58",
+    "drawing_unchanged": true
+  },
+  {
+    "file": "shop-suit-wordmark-dark.svg",
+    "old_canvas": [
+      0,
+      0,
+      1200,
+      320
+    ],
+    "new_canvas": [
+      48,
+      44,
+      772,
+      232
+    ],
+    "drawing_sha256": "24147bd804c6f21fb06a8a7352e6488691bc2c601021c1a3cac89f527a621be9",
+    "drawing_unchanged": true
+  }
+]
