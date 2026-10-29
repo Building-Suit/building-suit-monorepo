@@ -13,4 +13,3 @@
 
 
  WARN  Duplicated imports "PublicPlan", the one from "/workspace/shop-suit-electrical-capacity-audit/apps/shop-suit/app/composables/usePlans.ts" has been ignored and "/workspace/shop-suit-electrical-capacity-audit/apps/shop-suit/app/types/plans.ts" is used
-

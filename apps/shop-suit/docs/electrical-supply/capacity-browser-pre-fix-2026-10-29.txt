@@ -10,7 +10,7 @@ Running 1 test using 1 worker
   ✘  1 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 250 active, en (9.6s)
 
 
-  1) apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 250 active, en 
+  1) apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 250 active, en
 
     Error: expect(locator).toHaveCount(expected) failed
 
@@ -50,4 +50,4 @@ Running 1 test using 1 worker
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
   1 failed
-    apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 250 active, en 
+    apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 250 active, en
