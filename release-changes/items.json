@@ -3839,5 +3839,24 @@
     "sources": [
       "shop-staging-applied-access-source-reconciliation-20261029"
     ]
+  },
+  {
+    "id": "shop-staging-historical-payment-fixture-access-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/database/shop-xpay-disposable.mjs",
+      "tooling/database/test-shop-local.mjs",
+      "tooling/database/shop-proration-disposable.mjs",
+      "apps/shop-suit/docs/electrical-supply/STAGING-INTEGRATION-2026-10-29.md"
+    ],
+    "reason": "Explicit authenticated execution for existing rollback-only historical order/quote fixture aliases after restoration of applied secure defaults. Keep anonymous/service actors denied, preserve production constructors and owner/financial assertions, and retain fixed disposable targets and GitHub-hosted guards. Native payment/accounts/website failures share this helper dependency; full Vault-backed native verification remains mandatory.",
+    "sources": [
+      "shop-staging-historical-payment-fixture-access-20261029"
+    ]
   }
 ]
