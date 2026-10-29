@@ -93,3 +93,26 @@ test('printing awaits render and invokes only the local browser print interface'
   }
   finally { globalThis.window = previous }
 })
+
+for (const cancelled of [false, true]) test(`side navigation settles finite entrance motion and cancels stale focus: ${cancelled}`, async () => {
+  const scope = effectScope(), open = ref(false)
+  let focused = 0, settle
+  const finite = new Promise(resolve => { settle = resolve })
+  try {
+    const menu = scope.run(() => useSideNavigation(() => open.value, () => '/', () => {}))
+    menu.panel.value = {
+      getAnimations: () => [
+        { effect: { getComputedTiming: () => ({ endTime: 320 }) }, finished: finite },
+        { effect: { getComputedTiming: () => ({ endTime: Infinity }) }, finished: new Promise(() => {}) },
+      ],
+      querySelector: () => ({ focus() { focused++ } }),
+    }
+    open.value = true
+    await nextTick(); await nextTick()
+    assert.equal(focused, 0, 'Focus waits for the actual entrance, not an arbitrary delay')
+    if (cancelled) { open.value = false; await nextTick() }
+    settle()
+    await nextTick(); await nextTick(); await nextTick()
+    assert.equal(focused, cancelled ? 0 : 1, 'Infinite motion is ignored; a closed menu never steals focus')
+  } finally { scope.stop() }
+})

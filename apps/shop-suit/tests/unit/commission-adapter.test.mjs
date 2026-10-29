@@ -33,12 +33,12 @@ test('commission draft loader uses the two-argument RPC and retains attribution 
     useShop: () => ({ currentId: shop, businessCurrency: { value: 'EGP' } }),
     useI18n: () => ({ locale: { value: 'en' } }),
     useRoute: () => route,
-    useSupabaseClient: () => ({ schema: () => rpc }),
+    useShopClient: () => ({ schema: () => rpc }),
     ref: value => ({ value }),
     computed: get => ({ get value() { return get() } }),
     watch() {},
     useRecordAction: () => ({ visible: { value: false }, dirty: { value: false }, complete() {} }),
-    useAsyncData(key, load) {
+    useShopQuery(key, load) {
       loader = load
       return { data: { value: null }, pending: { value: false }, error: { value: null }, refresh() {} }
     },

@@ -91,7 +91,15 @@
     "BsManualPaymentPage": "packages/ui/src/templates/BsManualPaymentPage.vue",
     "BsPaymentReconciliationPage": "packages/ui/src/templates/BsPaymentReconciliationPage.vue",
     "BsStorefrontBuilderPage": "packages/ui/src/templates/BsStorefrontBuilderPage.vue",
-    "BsCatalogOffersPage": "packages/ui/src/templates/BsCatalogOffersPage.vue"
+    "BsCatalogOffersPage": "packages/ui/src/templates/BsCatalogOffersPage.vue",
+    "BsPhysicalStockPage": "packages/ui/src/templates/BsPhysicalStockPage.vue",
+    "BsTradePricingPage": "packages/ui/src/templates/BsTradePricingPage.vue",
+    "BsTradeQuotationsPage": "packages/ui/src/templates/BsTradeQuotationsPage.vue",
+    "BsTradeOrdersPage": "packages/ui/src/templates/BsTradeOrdersPage.vue",
+    "BsSupplierOrdersPage": "packages/ui/src/templates/BsSupplierOrdersPage.vue",
+    "BsSupplyPlanningPage": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
+    "BsWeighingSetupPage": "packages/ui/src/templates/BsWeighingSetupPage.vue",
+    "BsCommodityPricingPage": "packages/ui/src/templates/BsCommodityPricingPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -99,9 +107,9 @@
     "routes": 74
   },
   "currentInventory": {
-    "suitVueFiles": 96,
+    "suitVueFiles": 98,
     "localComponents": 0,
-    "routes": 80,
+    "routes": 82,
     "layouts": 10,
     "roots": 6
   },
@@ -2968,6 +2976,170 @@
       ],
       "verification": "Static validation pending; browser/database tests unrun at user instruction.",
       "purpose": "shop-catalog-offers"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/inventory/reels.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPhysicalStockPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPhysicalStockPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPhysicalStockPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/pages/inventory/reels.vue",
+      "dependencies": [
+        "@building-suit/ui/types/physicalInventoryPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/electrical"
+      ],
+      "verification": "SS-ELEC-303/305/306/308: local schema107 and two-session cashier race PASS; EN desktop/light and AR mobile/dark browser count/history/cut scenarios PASS; native-provider CI and merchant hardware acceptance pending",
+      "purpose": "physical-reel-inventory"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/trade-pricing.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsTradePricingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsTradePricingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsTradePricingPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/pages/trade-pricing.vue",
+      "dependencies": [
+        "@building-suit/ui/types/tradePricingPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/tradePricing",
+        "~/types/measurement"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/VERIFICATION.md.",
+      "purpose": "shop-trade-pricing"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/quotations.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsTradeQuotationsPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsTradeQuotationsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsTradeQuotationsPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/pages/quotations.vue",
+      "dependencies": [
+        "@building-suit/ui/types/tradePricingPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/tradePricing",
+        "~/types/measurement"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/VERIFICATION.md.",
+      "purpose": "shop-formal-quotations"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/orders.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsTradeOrdersPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsTradeOrdersPage"
+      ],
+      "destination": "packages/ui/src/templates/BsTradeOrdersPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/pages/orders.vue",
+      "dependencies": [
+        "@building-suit/ui/types/tradePricingPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/tradePricing",
+        "~/types/measurement"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/VERIFICATION.md.",
+      "purpose": "shop-contractor-orders"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/purchase-orders.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSupplierOrdersPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSupplierOrdersPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSupplierOrdersPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/composables/useSupplierOrders.ts",
+      "dependencies": [
+        "@building-suit/ui/types/supplierOrderPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/supplierOrders",
+        "~/types/measurement"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/PURCHASING.md.",
+      "purpose": "shop-supplier-orders"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/supply-planning.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSupplyPlanningPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSupplyPlanningPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/composables/useSupplyPlanning.ts",
+      "dependencies": [
+        "@building-suit/ui/types/supplyPlanningPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/supplyPlanning"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/SUPPLY-PLANNING.md.",
+      "purpose": "shop-supply-planning"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/weighing-setup.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsWeighingSetupPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsWeighingSetupPage"
+      ],
+      "destination": "packages/ui/src/templates/BsWeighingSetupPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/composables/useWeighingSetup.ts",
+      "dependencies": [
+        "@building-suit/ui/types/weighingSetupPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/scales"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/SCALES.md.",
+      "purpose": "shop-weighing-setup"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/commodity-pricing.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCommodityPricingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsCommodityPricingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCommodityPricingPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/composables/useCommodityPricing.ts",
+      "dependencies": [
+        "@building-suit/ui/types/commodityPricingPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/commodityPricing"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/COMMODITY-PRICING.md.",
+      "purpose": "shop-commodity-pricing"
     }
   ],
   "verifiedSharedHeads": [
@@ -3107,6 +3279,14 @@
     "BsManualPaymentPage",
     "BsPaymentReconciliationPage",
     "BsStorefrontBuilderPage",
-    "BsCatalogOffersPage"
+    "BsCatalogOffersPage",
+    "BsPhysicalStockPage",
+    "BsTradePricingPage",
+    "BsTradeQuotationsPage",
+    "BsTradeOrdersPage",
+    "BsSupplierOrdersPage",
+    "BsSupplyPlanningPage",
+    "BsWeighingSetupPage",
+    "BsCommodityPricingPage"
   ]
 }

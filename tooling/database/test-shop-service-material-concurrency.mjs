@@ -52,7 +52,7 @@ try {
  const results=await Promise.all(work)
  assert.equal(results.filter(r=>r.value).length,1)
  assert.equal(results.filter(r=>r.error?.message==='INSUFFICIENT_SERVICE_MATERIAL_STOCK').length,1)
- assert.equal((await admin.query('select sum(remaining_quantity)::text qty from public.inventory_batches where product_id=$1',[product])).rows[0].qty,'10.00')
+ assert.equal((await admin.query('select trim_scale(sum(remaining_quantity))::text qty from public.inventory_batches where product_id=$1',[product])).rows[0].qty,'10')
  assert.equal((await admin.query('select count(*)::int n from public.service_fulfillments where request_id=any($1::uuid[])',[requests])).rows[0].n,1)
  const winner=results.findIndex(r=>r.value)
  await admin.query('BEGIN');await admin.query("select set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role','authenticated',true)",[info.owner]);await admin.query('SET LOCAL ROLE authenticated')

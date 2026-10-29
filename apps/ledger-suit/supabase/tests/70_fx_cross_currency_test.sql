@@ -8,6 +8,8 @@ end $$;
 create temp sequence fx_test_number;
 create function pg_temp.fx_ok(ok boolean,label text) returns text language plpgsql as $$ begin if ok is distinct from true then raise exception 'FAIL: %',label; end if; return 'ok '||nextval('fx_test_number')||' - '||label; end $$;
 create function pg_temp.fx_reject(sql text,code text,label text) returns text language plpgsql as $$ declare actual text; begin begin execute sql; exception when others then actual:=sqlstate; end; return pg_temp.fx_ok(actual=code,label||' (SQLSTATE '||coalesce(actual,'none')||')'); end $$;
+-- Role-switched temporary helpers need explicit execution under secure defaults.
+grant execute on function pg_temp.fx_ok(boolean,text), pg_temp.fx_reject(text,text,text) to authenticated;
 create temp table fx_ids(key text primary key,id uuid); grant all on fx_ids to authenticated; grant all on sequence fx_test_number to authenticated;
 insert into auth.users(id,email,raw_user_meta_data,raw_app_meta_data) values
  ('70000000-0000-4000-8000-000000000001','fx-owner@test.local','{}','{}'),

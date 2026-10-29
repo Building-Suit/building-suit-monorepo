@@ -1,3 +1,5 @@
+// Race fixtures execute the real public command before their held-commit pause;
+// they must not acquire business locks ahead of the command authorization gate.
 import { readFile } from 'node:fs/promises'
 import { spawn, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
@@ -51,7 +53,7 @@ let shopId
 try {
   await runSql(`insert into auth.users (id,email,encrypted_password,aud,role,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values ('${ownerId}','${ownerId}@stock-concurrency.invalid','x','authenticated','authenticated','{}','{}',now(),now());`)
   shopId = lastLine((await runSql(authenticated(ownerId,
-    `select public.create_owner_shop('Stock count concurrency','pro','product'::public.business_mode);`))).stdout)
+    `select public.create_owner_shop('Stock count concurrency','multi','product'::public.business_mode);`))).stdout)
   const customerId = lastLine((await runSql(authenticated(ownerId,
     `select public.save_customer('${shopId}',null,'Count race customer',null,null,null,null);`))).stdout)
   const productId = lastLine((await runSql(authenticated(ownerId,
@@ -63,7 +65,7 @@ try {
     `select public.save_sale_draft('${randomUUID()}','${shopId}',null,'${customerId}',null,'${lines}'::jsonb);`))).stdout)
 
   const countId = randomUUID()
-  const countFirst = runSql(`begin; select 1 from public.products where id='${productId}' for update; select pg_sleep(0.4); set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_stock_count('${countId}','${shopId}','${productId}',3,now(),'Concurrent shelf count','COUNT-RACE-001',null); commit;`, { allowFailure: true })
+  const countFirst = runSql(`begin; set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_stock_count('${countId}','${shopId}','${productId}',3,now(),'Concurrent shelf count','COUNT-RACE-001',null); select pg_sleep(0.4); commit;`, { allowFailure: true })
   await new Promise(resolve => setTimeout(resolve, 50))
   const saleSecond = runSql(authenticated(ownerId,
     `select public.issue_sale('${randomUUID()}','${shopId}','${saleId}');`), { allowFailure: true })
@@ -72,8 +74,8 @@ try {
     || !race[1].stderr.includes('INSUFFICIENT_STOCK')) {
     throw new Error(`count/sale race did not serialize safely: ${JSON.stringify(race)}`)
   }
-  const evidence = lastLine((await runSql(`select (select quantity_on_hand from public.product_stock where product_id='${productId}') || '|' || (select status from public.invoices where id='${saleId}') || '|' || (select count(*) from public.stock_counts where id='${countId}') || '|' || (select inventory_value from public.product_stock where product_id='${productId}');`)).stdout)
-  if (evidence !== '3.00|draft|1|6.0000') {
+  const evidence = lastLine((await runSql(`select trim_scale((select quantity_on_hand from public.product_stock where product_id='${productId}'))::text || '|' || (select status from public.invoices where id='${saleId}') || '|' || (select count(*) from public.stock_counts where id='${countId}') || '|' || trim_scale((select inventory_value from public.product_stock where product_id='${productId}'))::text;`)).stdout)
+  if (evidence !== '3|draft|1|6') {
     throw new Error(`count/sale reconciliation failed: ${evidence}`)
   }
   console.log(`shop_stock_concurrency: passed; count 5 -> 3, sale rejected, reconciliation ${evidence}`)

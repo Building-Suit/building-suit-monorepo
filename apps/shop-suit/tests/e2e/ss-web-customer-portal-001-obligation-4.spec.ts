@@ -15,7 +15,9 @@ test.beforeEach(async({request})=>{await request.post('http://127.0.0.1:46923/co
 for(const locale of ['en','ar'])for(const width of [390,820,1440])for(const theme of ['light','dark'])test(`scoped portal ${locale} ${width} ${theme}`,async({page,context})=>{
  const ar=locale==='ar';await page.setViewportSize({width,height:1000});await page.addInitScript(v=>localStorage.setItem('building-suit.theme',v),theme);await transport(page)
  await page.goto(`https://alpha-tools.shops.building-suit.com/${ar?'':'?lang=en'}`);await mounted(page)
- await expect(page.getByRole('link',{name:ar?'مواعيدي':'My appointments',exact:true})).toHaveAttribute('href',`https://alpha-tools.shops.building-suit.com/my-appointments${ar?'':'?lang=en'}`)
+ const portalLinks=page.getByRole('link',{name:ar?'مواعيدي':'My appointments',exact:true})
+ await expect(portalLinks.first()).toBeVisible()
+ for(const link of await portalLinks.all())await expect(link).toHaveAttribute('href',`https://alpha-tools.shops.building-suit.com/my-appointments${ar?'':'?lang=en'}`)
  const response=await page.goto(`https://alpha-tools.shops.building-suit.com/my-appointments${ar?'':'?lang=en'}`);await mounted(page)
  expect(response?.headers()['cache-control']).toBe('private, no-store');expect(await response?.text()).not.toContain('Alpha haircut')
  await expect(page.locator('html')).toHaveAttribute('dir',ar?'rtl':'ltr');await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content','noindex, nofollow')

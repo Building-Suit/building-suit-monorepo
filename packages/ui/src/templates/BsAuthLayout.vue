@@ -816,4 +816,14 @@ useTheme()
   .bs-auth-route-enter-active, .bs-auth-route-leave-active { animation: none; transition: none; }
 }
 
+/* Access/loading states have no padded auth card. Keep their logo in flow
+   so it cannot cover retry, sign-out or status controls at narrow widths. */
+.bs-auth-layout[data-presentation='glass']:not(:has(.bs-auth-form)) .bs-auth-layout__mobile-logo {
+  position: static;
+  width: auto;
+  height: auto;
+  align-self: center;
+  margin-block-end: var(--bs-space-9);
+  transform: none;
+}
 </style>
