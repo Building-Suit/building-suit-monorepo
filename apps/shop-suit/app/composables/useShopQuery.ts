@@ -1,3 +1,4 @@
+import { shopQueryError } from '~/utils/shopQueryError'
 import { useQuery } from '@pinia/colada'
 import { computed, ref, toValue, onMounted, getCurrentInstance, type MaybeRefOrGetter, type WatchSource } from 'vue'
 import { useShopQueryCache, type ShopQueryScope } from './useShopQueryCache'
@@ -26,7 +27,7 @@ function createShopQuery<T, D>(resource: MaybeRefOrGetter<string>, load: () => P
   const key = computed(() => [...scopeKey(options.scope ?? (toValue(resource).startsWith('platform-admin:') ? 'account' : 'location')), toValue(resource), JSON.stringify(options.watch ? options.watch.map(source => toValue(source)) : [])])
   const enabled = computed(() => options.immediate !== false && toValue(options.enabled ?? true) && (options.server !== false || mounted.value))
   const query = useQuery<T>({
-    key, enabled, query: () => app.runWithContext(load), staleTime: options.staleTime ?? 30_000,
+    key, enabled, query: async () => { try { return await app.runWithContext(load) } catch (cause) { throw shopQueryError(cause) } }, staleTime: options.staleTime ?? 30_000,
     meta: () => ({ shopResource: toValue(resource) }),
   })
   if (instance) onMounted(() => { mounted.value = true })

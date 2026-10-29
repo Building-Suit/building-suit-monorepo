@@ -15,6 +15,8 @@ export interface SaleReceiptSnapshot {
   staffName: string | null
   customer: { name: string | null; phone: string | null }
   lines: Array<{
+    pricing?: { source: string; ruleId?: string; revision?: number; actorProfileId?: string; reason?: string; originalBaseUnitPrice?: string; baseUnitPrice?: string } | null
+    measurement?: import('./measurement').MeasurementSnapshot | null
     id: string
     itemType: 'product' | 'service'
     name: string

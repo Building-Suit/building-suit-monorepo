@@ -6,7 +6,10 @@
   "exports": {
     ".": "./src/index.ts",
     "./barcode": "./src/utils/barcode.js",
-    "./downloadText": "./src/utils/downloadText.js"
+    "./downloadText": "./src/utils/downloadText.js",
+    "./decimalText": "./src/utils/decimalText.js",
+    "./mtSics": "./src/utils/mtSics.js",
+    "./sicsScale": "./src/controllers/createSicsScale.ts"
   },
   "dependencies": {
     "@building-suit/contracts": "workspace:*",

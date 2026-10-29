@@ -4,6 +4,45 @@ export type ShopRpcDatabase = {
     Tables: Record<string, never>
     Views: Record<string, never>
     Functions: {
+      commodity_pricing_command: { Args: { p_request_id:string;p_shop_id:string;p_kind:import('./commodityPricing').CommodityKind;p_id:string|null;p_revision:number;p_values:import('./commodityPricing').CommodityValues;p_reason:string }; Returns:{id:string;kind:import('./commodityPricing').CommodityKind;revision:number} }
+      commodity_pricing_context: { Args: { p_shop_id:string;p_kind?:import('./commodityPricing').CommodityKind|'quote_options';p_search?:string|null;p_page?:number;p_id?:string|null;p_history_page?:number }; Returns:import('./commodityPricing').CommodityContext }
+      weighing_setup_command: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_kind: import('./scales').WeighingSetupKind; p_id: string | null; p_revision: number; p_values: import('./scales').WeighingSetupValues; p_reason: string }; Returns: { id: string; kind: import('./scales').WeighingSetupKind; revision: number } }
+      weighing_setup_context: { Args: { p_shop_id: string; p_location_id: string; p_kind?: import('./scales').WeighingSetupKind; p_search?: string | null; p_page?: number; p_id?: string | null; p_history_page?: number }; Returns: import('./scales').WeighingSetupContext }
+      scale_counter_context: { Args: { p_shop_id: string; p_location_id: string; p_search?: string | null; p_page?: number; p_product_id?: string | null }; Returns: import('./scales').ScaleCounterContext }
+      record_scale_capture: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_product_id: string; p_device_id: string; p_device_revision: number; p_reading: import('./scales').ScaleCaptureSnapshot['reading']; p_factor_id?: string | null; p_factor_revision?: number | null }; Returns: import('./scales').ScaleCaptureResult }
+      get_scale_capture: { Args: { p_shop_id: string; p_location_id: string; p_capture_id: string }; Returns: import('./scales').ScaleCaptureResolution }
+      resolve_weight_barcode: { Args: { p_shop_id: string; p_location_id: string; p_barcode: string }; Returns: import('./weightBarcodes').WeightBarcodeResolution }
+      inventory_planning_command: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_kind: import('./supplyPlanning').PlanningKind; p_id: string | null; p_revision: number; p_values: import('./supplyPlanning').PlanningValues; p_reason: string }; Returns: { id: string; revision: number; kind: import('./supplyPlanning').PlanningKind } }
+      inventory_planning_context: { Args: { p_shop_id: string; p_location_id: string; p_kind: import('./supplyPlanning').PlanningKind; p_search?: string | null; p_page?: number; p_record_id?: string | null; p_history_page?: number }; Returns: import('./supplyPlanning').PlanningContext }
+      supplier_price_history: { Args: { p_shop_id: string; p_location_id: string; p_product_id?: string | null; p_vendor_id?: string | null; p_page?: number }; Returns: import('./supplyPlanning').SupplierPriceHistory }
+      supplier_order_context: { Args: { p_shop_id: string; p_location_id: string; p_order_id?: string | null; p_search?: string | null; p_status?: import('./supplierOrders').SupplierOrderStatus | null; p_page?: number; p_history_page?: number; p_receipt_page?: number }; Returns: import('./supplierOrders').SupplierOrderContext }
+      supplier_order_command: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_action: 'save' | 'issue' | 'cancel'; p_order_id: string | null; p_revision: number; p_values: import('./supplierOrders').SupplierOrderValues | Record<string, never>; p_reason: string }; Returns: { id: string; revision: number; status: import('./supplierOrders').SupplierOrderStatus } }
+      receive_supplier_order: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_order_id: string; p_revision: number; p_received_on: string; p_invoice_number: string | null; p_items: { lineId: string; quantity: string; reel_barcodes?: string[] }[]; p_reason: string }; Returns: { id: string; revision: number; status: import('./supplierOrders').SupplierOrderStatus; receiptId: string; invoiceId: string } }
+      trade_order_funding_context: { Args: { p_shop_id: string; p_location_id: string; p_order_id: string; p_page?: number; p_history_page?: number; p_invoice_page?: number; p_invoice_search?: string | null }; Returns: import('./tradeOrders').OrderFundingContext }
+      trade_order_deposit: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_order_id: string; p_revision: number; p_action: import('./tradeOrders').OrderDepositAction; p_amount: string; p_at: string; p_method: import('./tradeOrders').OrderPaymentMethod | null; p_allocation_id: string | null; p_invoice_id: string | null; p_reference: string | null; p_reason: string }; Returns: { id: string; revision: number; status: import('./tradeOrders').TradeOrderStatus; action: import('./tradeOrders').OrderDepositAction; paymentId: string; resultId: string } }
+      trade_order_delivery_context: { Args: { p_shop_id: string; p_location_id: string; p_order_id: string; p_page?: number }; Returns: import('./tradeOrders').OrderDeliveryContext }
+      fulfill_trade_order: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_order_id: string; p_revision: number; p_lines: { lineId: string; quantity: string; cuttingLoss: string }[]; p_apply_deposits: boolean; p_reason: string }; Returns: { id: string; revision: number; status: import('./tradeOrders').TradeOrderStatus; deliveryId: string; invoiceId: string; appliedDeposit: string } }
+      reserve_trade_order: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_order_id: string; p_revision: number; p_action: import('./tradeOrders').OrderReservationAction; p_lines: { lineId: string; quantity: string; cuttingLoss: string; reelId?: string }[]; p_expires_at: string | null; p_reason: string }; Returns: { id: string; revision: number; status: import('./tradeOrders').TradeOrderStatus; allocations: number } }
+      trade_order_reservation_context: { Args: { p_shop_id: string; p_location_id: string; p_order_id: string; p_page?: number; p_history_page?: number }; Returns: import('./tradeOrders').OrderReservationContext }
+      create_trade_order: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_quotation_id: string; p_revision: number; p_reason: string }; Returns: { id: string; revision: number; status: import('./tradeOrders').TradeOrderStatus; alreadyConverted: boolean } }
+      trade_order_context: { Args: { p_shop_id: string; p_location_id: string; p_order_id?: string | null; p_quotation_id?: string | null; p_search?: string | null; p_page?: number; p_history_page?: number; p_kind?: 'orders' | 'quotations' }; Returns: import('./tradeOrders').TradeOrderContext }
+
+      trade_quotation_context: { Args: { p_shop_id: string; p_location_id: string; p_quotation_id?: string | null; p_search?: string | null; p_page?: number; p_history_page?: number }; Returns: import('./tradeQuotations').QuotationContext }
+      trade_quotation_command: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_action: import('./tradeQuotations').QuotationAction; p_quotation_id: string | null; p_revision: number; p_payload: import('./tradeQuotations').QuotationValues | Record<string, never>; p_reason: string }; Returns: { id: string; revision: number; version: number; status: import('./tradeQuotations').QuotationStatus } }
+
+      save_trade_configuration: { Args: { p_request_id: string; p_shop_id: string; p_action: 'group' | 'assignment' | 'price'; p_payload: Record<string, string | number | boolean | null>; p_reason: string }; Returns: { id: string; revision: number } }
+      trade_pricing_context: { Args: { p_shop_id: string; p_kind?: 'group' | 'group_options' | 'price' | 'history'; p_product_id?: string | null; p_customer_id?: string | null; p_search?: string | null; p_page?: number }; Returns: import('./tradePricing').TradePricingContext }
+      quote_customer_sale: { Args: { p_shop_id: string; p_location_id: string; p_customer_id: string | null; p_lines: import('./measurement').SaleLineInput[]; p_bundles?: boolean; p_invoice_id?: string | null }; Returns: import('./tax').TaxQuote }
+
+      purchase_reel_options: { Args: { p_shop_id: string; p_purchase_id: string; p_line_id: string; p_search?: string | null; p_page?: number }; Returns: { items: { id: string; barcode: string; remainingLength: string }[]; total: number; page: number } }
+      inventory_reel_context: { Args: { p_shop_id: string; p_location_id: string; p_product_id?: string | null; p_search?: string | null; p_page?: number; p_page_size?: number; p_reel_id?: string | null; p_history_page?: number }; Returns: import('./electrical').InventoryReelContext }
+      pos_reel_options: { Args: { p_shop_id: string; p_location_id: string; p_product_id: string; p_search?: string | null; p_page?: number }; Returns: import('./electrical').PosReelOptions }
+      update_inventory_reel: { Args: { p_request_id: string; p_shop_id: string; p_location_id: string; p_reel_id: string; p_revision: number; p_action: 'count' | 'classify' | 'archive'; p_values: Record<string, string | null>; p_reason: string }; Returns: string }
+      product_technical_options: { Args: { p_shop_id: string; p_product_id: string | null }; Returns: import('./electrical').ProductTechnicalOptions }
+      save_product_technical_details: { Args: { p_shop_id: string; p_product_id: string; p_revision: number; p_family_name: string | null; p_attributes: Record<string, string | boolean>; p_reel_tracking: boolean; p_reason: string; p_reel_return_policy?: { unopenedResellable: boolean; cutRequiresManagerApproval: boolean } }; Returns: import('./electrical').ProductTechnicalSnapshot }
+      product_measurement_options: { Args: { p_shop_id: string; p_product_id: string }; Returns: import('./measurement').ProductMeasurementOptions }
+      configure_product_measurement: { Args: { p_shop_id: string; p_product_id: string; p_unit: string; p_increment: string; p_sale_units: string[]; p_reason: string }; Returns: unknown }
+      save_product_packaging: { Args: { p_request_id: string; p_shop_id: string; p_product_id: string; p_package_id: string | null; p_definition: Record<string, string | number | boolean | null> }; Returns: string }
       prepare_product_measurement: {
         Args: { p_shop_id: string; p_product_id: string; p_base_unit_code: string; p_quantity_increment: string; p_reason: string }
         Returns: import('./measurement').PreparedProductMeasurement
@@ -18,7 +57,7 @@ export type ShopRpcDatabase = {
       shop_offer_sources: { Args: {p_shop_id:string;p_search?:string;p_page?:number}; Returns: {items:import('../../shared/catalogOffers').OfferSource[];total:number} }
       shop_offer_save: { Args: {p_shop_id:string;p_id:string|null;p_revision:number;p_offer:{name:string;description:string;price:number;priority:number;active:boolean;websiteVisible:boolean;startsAt:string|null;endsAt:string|null;lines:{kind:'product'|'service';sourceId:string;quantity:number}[]}}; Returns:string }
       pos_catalog_offers: { Args: {p_shop_id:string;p_location_id:string}; Returns: import('../../shared/catalogOffers').CatalogOffer[] }
-      quote_pos_sale: { Args: {p_shop_id:string;p_location_id:string;p_lines:{item_type:string;source_id:string;quantity:number}[]}; Returns: import('./tax').TaxQuote & {discount:number;offers:import('../../shared/catalogOffers').OfferMatch[]} }
+      quote_pos_sale: { Args: {p_shop_id:string;p_location_id:string;p_lines:import('./measurement').SaleLineInput[]}; Returns: import('./tax').TaxQuote & {discount:number;offers:import('../../shared/catalogOffers').OfferMatch[]} }
 
       shop_subscription_currency_catalog: { Args: { p_currency: 'EGP' | 'USD' }; Returns: import('./plans').PublicPlan[] }
       shop_billing_currency_plans: { Args: { p_shop_id: string; p_currency: 'EGP' | 'USD' }; Returns: import('./billing').BillingPlanOption[] }
@@ -63,7 +102,7 @@ export type ShopRpcDatabase = {
       correct_service_material: { Args: {p_request_id: string; p_shop_id: string; p_consumption_id: string; p_quantity: number; p_reason: string}; Returns: string }
       reconcile_service_completion: { Args: {p_shop_id: string; p_args: Record<string, unknown>; p_resolution_request_id: string; p_reason: string}; Returns: {state: 'synced'; invoiceId: string} | {state: 'cancelled'; resolutionRequestId: string} }
 
-      quote_sale_tax: { Args: { p_shop_id: string; p_location_id: string; p_lines: { item_type: string; source_id: string; quantity: number }[] }; Returns: unknown }
+      quote_sale_tax: { Args: { p_shop_id: string; p_location_id: string; p_lines: import('./measurement').SaleLineInput[] }; Returns: unknown }
       save_tax_policy: { Args: { p_request_id: string; p_shop_id: string; p_effective_at: string; p_policy: import('./tax').TaxPolicy; p_reason: string }; Returns: string }
       tax_settings: { Args: { p_shop_id: string }; Returns: unknown }
       get_sale_tax_snapshot: { Args: { p_shop_id: string; p_invoice_id: string }; Returns: unknown }
@@ -99,7 +138,7 @@ export type ShopRpcDatabase = {
           p_customer_id: string | null
           p_due_date: string | null
           p_notes: string | null
-          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+          p_lines: Array<import('./measurement').SaleLineInput>
           p_amount: number
           p_paid_at: string
           p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'
@@ -378,7 +417,7 @@ export type ShopRpcDatabase = {
       shop_operational_report: {
         Args: {
           p_shop_id: string
-          p_report: 'sales' | 'collections' | 'receivables' | 'suppliers' | 'expenses' | 'inventory' | 'margin' | 'activity'
+          p_report: import('./reporting').OperationalReportKind
           p_location_id?: string | null
           p_from?: string | null
           p_to?: string | null
@@ -396,7 +435,7 @@ export type ShopRpcDatabase = {
           p_customer_id: string | null
           p_due_date: string | null
           p_notes: string | null
-          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+          p_lines: Array<import('./measurement').SaleLineInput>
         }
         Returns: string
       }
@@ -676,7 +715,7 @@ export type ShopRpcDatabase = {
           p_appointment_id: string | null
           p_customer_id: string | null
           p_notes: string | null
-          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+          p_lines: Array<import('./measurement').SaleLineInput>
         }
         Returns: string
       }
@@ -697,7 +736,7 @@ export type ShopRpcDatabase = {
           p_request_id: string; p_save_request_id: string; p_issue_request_id: string; p_payment_request_id: string
           p_appointment_request_id: string | null; p_shop_id: string; p_location_id: string; p_shift_id: string
           p_staff_membership_id: string; p_appointment_id: string | null; p_customer_id: string | null; p_notes: string | null
-          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+          p_lines: Array<import('./measurement').SaleLineInput>
           p_amount: number; p_paid_at: string; p_method: 'cash' | 'bank_transfer' | 'card' | 'wallet' | 'cheque' | 'other'; p_reference: string | null
         }
         Returns: string
@@ -1003,7 +1042,7 @@ export type ShopRpcDatabase = {
           p_invoice_number: string | null
           p_issued_on: string
           p_notes: string | null
-          p_items: Array<{ product_id: string; quantity: number; unit_cost: number }>
+          p_items: Array<{ product_id: string; quantity: number | string; unit_cost: number | string; unit_code?: string; package_id?: string; package_version?: number; measurement_revision?: number }>
         }
         Returns: string
       }
@@ -1072,7 +1111,7 @@ export type ShopRpcDatabase = {
           p_invoice_id: string | null
           p_customer_id: string | null
           p_notes: string | null
-          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+          p_lines: Array<import('./measurement').SaleLineInput>
         }
         Returns: string
       }
@@ -1084,7 +1123,7 @@ export type ShopRpcDatabase = {
           p_customer_id: string | null
           p_due_date: string | null
           p_notes: string | null
-          p_lines: Array<{ item_type: 'product' | 'service'; source_id: string; quantity: number }>
+          p_lines: Array<import('./measurement').SaleLineInput>
         }
         Returns: string
       }

@@ -227,6 +227,9 @@ export type { CalendarView } from './composables/useCalendarNavigation.ts'
 export { useFileUpload } from './composables/useFileUpload.ts'
 
 export { useViewportSpace } from './composables/useViewportSpace.ts'
+export { createSicsScale } from './controllers/createSicsScale.ts'
+export type { ScaleSerialOptions, ScaleSerialPort, ScaleSerialAccess, SicsReading, SicsScaleState } from './controllers/createSicsScale.ts'
+export { parseSicsWeight, parseSicsIdentity, parseSicsCapability, sicsNetReading } from './utils/mtSics.js'
 export { usePointOfSaleSections } from './composables/usePointOfSaleSections.ts'
 export { boundedQuantity, steppedQuantity, restoreQuantityInput } from './utils/quantity.ts'
 
@@ -263,3 +266,5 @@ export { useElementPrint } from './composables/useElementPrint.ts'
 export { useNavigationChamber } from './composables/useNavigationChamber.ts'
 
 export { readWebsiteImage } from './utils/readWebsiteImage.ts'
+
+export { normalizeDecimalText } from './utils/decimalText.js'

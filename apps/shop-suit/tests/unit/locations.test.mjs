@@ -5,10 +5,10 @@ import test from 'node:test'
 const migration = await readFile(new URL('../../supabase/migrations/20260928120000_first_class_locations.sql', import.meta.url), 'utf8')
 const lifecycleMigration = await readFile(new URL('../../supabase/migrations/20260930160000_complete_location_lifecycle.sql', import.meta.url), 'utf8')
 const databaseTest = await readFile(new URL('../../supabase/tests/shop_locations.sql', import.meta.url), 'utf8')
-const shopContext = await readFile(new URL('../../app/composables/useShop.ts', import.meta.url), 'utf8')
+const shopContext = await readFile(new URL('../../app/stores/shop.ts', import.meta.url), 'utf8')
 const shell = await readFile(new URL('../../app/layouts/default.vue', import.meta.url), 'utf8')
 const sales = await readFile(new URL('../../app/pages/sales/index.vue', import.meta.url), 'utf8')
-const settings = await readFile(new URL('../../app/pages/settings.vue', import.meta.url), 'utf8')
+const settings = await readFile(new URL('../../app/pages/settings/[[section]].vue', import.meta.url), 'utf8')
 
 test('location migration keeps tenant/location identity explicit and historical', () => {
   assert.match(migration, /create table public\.shop_locations/)
@@ -45,11 +45,12 @@ test('location database regression covers required authorization boundaries', ()
   ]) assert.match(databaseTest, new RegExp(evidence))
 })
 
-test('location switching clears shop data before changing context', () => {
-  const switchBody = shopContext.match(/async function selectLocation[\s\S]*?\n {2}}/)?.[0] ?? ''
-  assert.match(switchBody, /clearShopScopedData\(\)[\s\S]*currentLocationId\.value = locationId/)
-  assert.match(switchBody, /selectedLocationCookie\.value = locationId/)
-  assert.match(switchBody, /refreshNuxtData\(\)/)
+test('location switching scopes queries and only selects an accessible active location', () => {
+  const switchBody = shopContext.match(/function selectLocation[\s\S]*?\n {2}}/)?.[0] ?? ''
+  assert.match(switchBody, /activeLocations\.value\.some/)
+  assert.match(switchBody, /currentLocationId\.value = id; locationCookie\.value = id/)
+  assert.match(shopContext, /value\.actorId === user\.value\?\.id && value\.shopId === currentId\.value/)
+  assert.match(shopContext, /scope\.locationId/)
   assert.match(shell, /activeLocations/)
   assert.match(shell, /selectLocation/)
   assert.match(sales, /list_location_sales/)

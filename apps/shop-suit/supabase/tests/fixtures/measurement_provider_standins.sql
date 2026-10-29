@@ -11,6 +11,11 @@ grant select on auth.users to authenticated,service_role;
 create schema storage;create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
 create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text,owner uuid,owner_id text,metadata jsonb,created_at timestamptz default now(),updated_at timestamptz default now(),unique(bucket_id,name));
 alter table storage.objects enable row level security;
+-- Provider ACL stand-in only. Actual Shop migrations supply the object policies;
+-- direct anonymous/foreign-tenant writes remain denied by those RLS policies.
+grant usage on schema storage to anon,authenticated,service_role;
+grant select on storage.buckets to anon,authenticated,service_role;
+grant select,insert,update,delete on storage.objects to anon,authenticated,service_role;
 create function storage.foldername(text) returns text[] language sql as $$select string_to_array($1,'/')$$;
 create schema vault;create table vault.decrypted_secrets(id uuid,name text,decrypted_secret text);
 create schema net;create function net.http_post(url text,headers jsonb default '{}',body jsonb default '{}',timeout_milliseconds integer default 5000) returns bigint language plpgsql as $$begin raise exception 'PROVIDER_NETWORK_UNAVAILABLE_IN_SCHEMA_FIXTURE';end$$;

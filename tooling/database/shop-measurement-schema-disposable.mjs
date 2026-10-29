@@ -1,3 +1,8 @@
+import { verifyCommodityPricingRaces } from './shop-commodity-pricing-concurrency.mjs'
+import { verifyScaleCaptureRaces } from './shop-scale-capture-concurrency.mjs'
+import { verifySupplierOrderRaces } from './shop-supplier-order-concurrency.mjs'
+import { verifyOrderReservationRaces } from './shop-order-reservation-concurrency.mjs'
+import { verifyPhysicalReelRace } from './shop-reel-concurrency.mjs'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
@@ -12,7 +17,14 @@ import { ensureDisposableImage } from '../releases/docker-harness.mjs'
 const args = process.argv.slice(2)
 const regressions = args.includes('--regressions')
 if (regressions) args.splice(args.indexOf('--regressions'), 1)
-assert.ok(!args.length || (args.length === 2 && args[0] === '--types' && args[1]), 'Expected optional --regressions and --types output-file')
+const outputs = new Map()
+const extraSuites = new Set()
+while (args.length) {
+  const flag = args.shift(), path = args.shift()
+  if (flag === '--suite') { assert.match(path ?? '',/^shop_[a-z0-9_]+$/,'Expected a Shop SQL suite basename');extraSuites.add(path);continue }
+  assert.ok(['--types','--schema'].includes(flag) && path && !outputs.has(flag), 'Expected optional --regressions, --suite Shop-suite-basename, --types output-file and --schema output-file')
+  outputs.set(flag, path)
+}
 const regressionFailures = []
 const name = `bs-shop-measurement-${randomUUID()}`
 const network = `${name}-types`
@@ -60,7 +72,14 @@ try {
     try { sql(source) } catch (error) { throw new Error(`Migration failed: ${file}`, { cause: error }) }
   }
   sql(`BEGIN;\n${readFileSync(new URL('supabase/tests/shop_measurement_foundation.sql', app), 'utf8')}\nROLLBACK;`)
-  for (const suite of regressions ? ['shop_crm_product_catalog', 'shop_sale_issuance', 'shop_stock_counts_corrections', 'shop_supplier_payables_returns', 'shop_service_materials', 'shop_partial_returns', 'shop_storefront_bundle_offers'] : []) {
+  sql(`BEGIN;\n${readFileSync(new URL('supabase/tests/shop_measured_retail.sql', app), 'utf8')}\nROLLBACK;`)
+  console.log('Electrical measured merchant journey: PASS')
+  sql(`BEGIN;\n${readFileSync(new URL('supabase/tests/shop_electrical_reels.sql', app), 'utf8')}\nROLLBACK;`)
+  console.log('Physical reel merchant journey: PASS')
+  const suites = new Set([...(regressions ? ['shop_crm_product_catalog', 'shop_sale_issuance', 'shop_stock_counts_corrections', 'shop_supplier_payables_returns', 'shop_service_materials', 'shop_partial_returns', 'shop_storefront_bundle_offers', 'shop_operating_reports', 'shop_website_catalog', 'shop_catalog_media', 'shop_catalog_image_upload'] : []), ...extraSuites])
+  const availableSuites = readdirSync(new URL('supabase/tests/',app))
+  for (const suite of suites) {
+    assert.ok(availableSuites.includes(`${suite}.sql`),'Requested Shop SQL suite is unavailable')
     const fixture = readFileSync(new URL(`supabase/tests/${suite}.sql`, app), 'utf8').replace(/\bshop_crm\b/g, 'public')
     try {
       sql(`BEGIN;\n${fixture}\nROLLBACK;`)
@@ -99,10 +118,20 @@ try {
   assert.ok(received.stderr.includes('MEASUREMENT_WORKFLOW_NOT_READY'), 'Concurrent receipt failed for an unexpected reason')
   assert.equal(sql(`select count(*) from public.inventory_batches where product_id='${race.product_id}';`), '0')
   assert.equal(sql(`select count(*) from public.product_measurement_changes where product_id='${race.product_id}';`), '1')
-  console.log('Configuration/stock race: PASS; second session rechecks prepared status after product-lock wait; no stock or partial movement')
+  console.log('Configuration/stock race: PASS; second session rechecks prepared status after ordered write-lock wait; no stock or partial movement')
+  await verifyPhysicalReelRace(sql,parallelSql)
+  await verifyOrderReservationRaces(sql,parallelSql)
+  await verifySupplierOrderRaces(sql, parallelSql)
+  await verifyScaleCaptureRaces(sql, parallelSql)
+  await verifyCommodityPricingRaces(sql,parallelSql)
   const registry = JSON.parse(sql("select jsonb_agg(jsonb_build_object('code',code,'factor',case when canonical_conversion_factor is null then null else trim_scale(canonical_conversion_factor)::text end,'precision',allowed_precision,'nameEn',name_en,'nameAr',name_ar,'symbol',symbol,'dimension',dimension,'isActive',is_active) order by code) from public.units_of_measure;"))
   assert.deepEqual(registry, measurementUnits.map(unit => ({ code: unit.code, factor: unit.factor, precision: unit.allowedPrecision, nameEn: unit.nameEn, nameAr: unit.nameAr, symbol: unit.symbol, dimension: unit.dimension, isActive: unit.isActive })).sort((a, b) => a.code.localeCompare(b.code, 'en')))
-  if (args.length) {
+  if (outputs.has('--schema')) {
+    const schema = docker(['exec', name, 'pg_dump', '-U', 'postgres', '-d', 'postgres', '--schema-only', '--schema=public', '--schema=shop_private', '--no-owner', '--no-privileges'])
+    assert.ok(schema.includes('CREATE TABLE public.products') && schema.includes('CREATE FUNCTION shop_private.resolve_measured_line'), 'Expected complete effective business schema')
+    writeFileSync(outputs.get('--schema'), schema + '\n')
+  }
+  if (outputs.has('--types')) {
     ensureDisposableImage(metaImage, 'docker.io/supabase/postgres-meta:v0.98.0')
     docker(['network', 'create', network])
     docker(['network', 'connect', network, name])
@@ -112,7 +141,7 @@ try {
       '-e', `PG_META_DB_HOST=${name}`, '-e', 'PG_META_DB_USER=postgres', '-e', 'PG_META_DB_NAME=postgres',
       '-e', 'PG_META_DB_PASSWORD=postgres', metaImage])
     assert.ok(types.startsWith('export type Json') && types.includes('product_measurement_changes:'), 'Expected generated public schema contract')
-    writeFileSync(args[1], types + '\n')
+    writeFileSync(outputs.get('--types'), types + '\n')
   }
   if (regressionFailures.length) throw new Error(`Core measurement checks passed; existing regression failures retained: ${regressionFailures.join(', ')}`)
   console.log(`PASS: ${names.length} Shop business migrations, exact conversion/configuration/RLS/legacy tests and JS/SQL registry conformance. Provider stand-ins; full Supabase acceptance remains separate.`)

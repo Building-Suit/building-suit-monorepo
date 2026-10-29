@@ -14,7 +14,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
       if (name === 'shop_website_address_save') { address = { slug: String(args.p_slug), state: 'draft', aliases: address ? [address.slug] : [] }; return address }
       return undefined
     })
-    await fixtureGoto(page, '/settings')
+    await fixtureGoto(page, '/settings/website-address')
     const panel = page.locator('#website-address')
     await expect(panel).toContainText(ar ? 'راجع الملف العام للمتجر لإدارة النشر ومعرفة حالته' : 'manage publication and check its status in Public shop profile')
     await panel.getByRole('button', { name: ar ? 'تعديل العنوان' : 'Edit address', exact: true }).click()
@@ -45,7 +45,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) {
 }
 test('website settings permission denial issues no address write', async ({ page }) => {
   const { calls } = await pilotFixture(page, 'en', 'owner', name => name === 'shop_permission_access' ? { 'settings.manage': false } : undefined)
-  await fixtureGoto(page, '/settings')
+  await fixtureGoto(page, '/settings/website-address')
   await expect(page.locator('#website-address')).toContainText('Settings permission required.')
   await expect(page.locator('#website-address').getByRole('button')).toHaveCount(0)
   expect(calls.some(call => call.name === 'shop_website_address_save')).toBe(false)
@@ -59,7 +59,7 @@ test('website load retry and collision feedback retain the editable draft', asyn
     return route.fulfill({ json: null })
   })
   await fixtureRoute(page, '**/rest/v1/rpc/shop_website_address_save', route => route.fulfill({ status: 409, json: { code: '23505', message: 'private raw infrastructure detail' } }))
-  await fixtureGoto(page, '/settings')
+  await fixtureGoto(page, '/settings/website-address')
   const panel = page.locator('#website-address')
   await expect(panel).toContainText('Could not load address.')
   await expect(panel).not.toContainText('private raw')
@@ -87,7 +87,7 @@ for (const locale of ['en', 'ar']) test(`published website address uses neutral 
     }
     return undefined
   })
-  await fixtureGoto(page, '/settings')
+  await fixtureGoto(page, '/settings/website-address')
   const panel = page.locator('#website-address')
   await expect(panel).toContainText(ar ? 'الملف العام للمتجر لإدارة النشر ومعرفة حالته' : 'manage publication and check its status in Public shop profile')
   await expect(panel).not.toContainText(ar ? 'غير منشور' : 'unpublished')

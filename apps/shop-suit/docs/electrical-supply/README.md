@@ -13,3 +13,5 @@ Branch: `codex/shop-suit/measurement-foundation`; no active Shop parent PR at in
 External gates: production release catalog unavailable (HTTP 503), production publisher failed, environment configuration API denied (403), archived job logs denied. Hosted Shop migration history cannot be established from the available tools/credentials. These block hosted reconciliation and deployment claims, not disposable implementation.
 
 Review: draft [PR441](https://github.com/Building-Suit/building-suit-monorepo/pull/441), source checkpoint `ce62100b`. Neither M0 nor M1 is complete. Follow [checkpoint](CHECKPOINT.md) and [verification](VERIFICATION.md) for remaining gates.
+
+The review stack now includes measured retail in draft PR445 and a local physical-reel/electrical-catalogue child. See the current checkpoint for verified source, nine-suite database regression evidence, six bilingual synthetic browser scenarios and retained E4/E5/E6 work. This is an implementation stream, not a claim of sellable readiness.

@@ -1,43 +1,20 @@
-# Milestone
+# Electrical supply implementation checkpoint
 
-M0 readiness + M1 measurement foundation, SS-ELECTRICAL-001.
+The owner requires continuation through the entire electrical-store scope. This checkpoint does not establish commercial readiness or permission to stop.
 
-# Status
+## Active review stack
 
-Partial implementation, tested internal foundation. Neither M0 nor M1 is complete. Live reconciliation and full Supabase/provider qualification are blocked.
+- Root foundation: draft PR441, `codex/shop-suit/measurement-foundation`; committedc2bd65d9. Its dirty schema-dump experiment remains excluded.
+- Measured retail: draft PR445, `codex/shop-suit/measured-retail-operations`, published7c3b1c36 (source unchanged; corrected unaccepted draft public scope).
+- Electrical catalog/reels: draft PR450, `codex/shop-suit/reels-and-electrical-catalog`, published7ef59f5f after merging parent release-scope correction. Source15b52a32 native measured/media/accounts CI remains recorded. Native measured-retail, media and accounts CI pass on that exact head.
+- Current qualification child: `codex/shop-suit/electrical-regression-qualification`, merges15b52a32 without history rewriting. Repairs stale Shop tests, private counter initialization on public SSR, active scoped-cache cleanup, permission-menu mapping and the dropped optional pricing-card event.
 
-# Completed tasks
+## Evidence and remaining work
 
-SS-ELEC-002/003/004 implemented: complete55-task ledger, architecture/decisions and bilingual release draft. SS-ELEC-101/102/104/106/107 have scoped passing tests; operational acceptance remains pending. See TASKS.md and VERIFICATION.md for exact limits.
+Repository tests:2026 passed, zero failures,23 skipped. Shop units:478 passed. Full108-migration disposable replay: two merchant journeys,17 included legacy SQL suites and two actual-session races pass using explicit provider stand-ins. Six synthetic electrical browser scenarios pass in EN/light/desktop and AR/dark/mobile; eight built public website isolation scenarios pass. Build/typecheck/lint/boundary/release checks are recorded with scope in VERIFICATION.md. All7 consumer builds,48 auth browser cases,12 settings cases,4 appointment-access cases and the corrected full SAS/PostgREST protocol pass. Doctor’s48 unchanged cases and8 repaired shared-shell cases pass in their recorded runs. Current-head native CI follows publication.
 
-# In-progress tasks
+TASKS.md remains the initiative authority. E4 customer groups/pricing are being implemented in the local child `codex/shop-suit/trade-customer-pricing`; quotations, orders, reservations, deposits and supplier ordering/deliveries remain open; E5 store tools; and remaining E6 qualification still require implementation. Continue them after publishing this reviewable qualification checkpoint. Do not stop at this milestone.
 
-SS-ELEC-103: precision dependency audit completed; coherent operational migration not enabled. SS-ELEC-000: deployed-history/provider audit blocked. SS-ELEC-001: live release reconciliation blocked.
+## External gates
 
-# Remaining tasks
-
-SS-ELEC-105 and operational E2, electrical E3, wholesale E4, advanced E5 and production E6 remain NOT_STARTED, with explicit dependencies/acceptance in TASKS.md. Nothing claims the central measured-POS merchant journey is available.
-
-# Changes made
-
-Forward migration20261022185512; sealed23-unit registry; NUMERIC/BigInt exact converters; authorized prepared product configuration and resolver RPCs; immutable measurement audit; legacy/service compatibility; persistence guards; generated types; meaningful unit/SQL/upgrade/race checks and reproducible schema harness. Existing Shop/FIFO/bundle authorities retained.
-
-# Validation
-
-VERIFICATION.md records exact commands and pass/fail/block results, including54 reproduced parent unit failures, inherited lint errors, retained supplier SQL failure and Supabase image storage blocker. Core conversion/schema/security/upgrade/race, typecheck/build/check and release protocol tests pass within their stated scope.
-
-# Changelog
-
-No live entry relabeled.20 stale upcoming items are absent from current source net candidate, but production catalog503/publisher failure prevent authoritative recovery. Four newer net public items remain staging-only. Electrical copy is draft; internal release fragments classify this preparatory work and do not activate public claims.
-
-# Blockers
-
-Production release catalog/config/log access; real Supabase image storage; original regression failures; pending operational precision/snapshots/UI; real-provider/device/merchant evidence. No destructive hosted trial or permission bypass.
-
-# Next implementation step
-
-Restore disposable Supabase capacity and close foundational regression gates, then SS-ELEC-103/105: migrate all dependent quantity/snapshot contracts coherently and extend the existing product editor before activating measured purchasing/POS. Retain legacy compatibility and prepared guards until that complete path is verified.
-
-# Review checkpoint
-
-Draft [PR441](https://github.com/Building-Suit/building-suit-monorepo/pull/441), source commit `ce62100b`; targets stg as the Shop root. No merge/deployment performed.
+Production changelog recovery, deployment evidence, real merchant acceptance, native-speaker review and physical scanner/scale/printer qualification remain unverified. Device/pilot details have been requested while independent software work continues. No hosted business data was reset, no review branch merged or deployed, and no acceptance fabricated.

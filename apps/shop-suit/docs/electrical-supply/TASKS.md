@@ -1,6 +1,8 @@
 # SS-ELECTRICAL-001 task ledger
 
-Status authority for this initiative only. Source/test execution differs from deployment. Allowed states: NOT_STARTED, IN_PROGRESS, IMPLEMENTED, TESTED, VERIFIED, BLOCKED, DEFERRED, CANCELLED. No implementation milestone is complete yet. Five foundation tasks have passing scoped tests; full provider and operational qualification remains pending.
+Current independent evidence review: [2026-10-29 audit](AUDIT-2026-10-29.md) and [all55 task source/test mappings](AUDIT-2026-10-29.json). The per-task labels and dated evidence below retain their historical scope; they do not establish current combined acceptance. The unpublished recovery checkpoint is absent from this workspace.
+
+Status authority for this initiative only. Source/test execution differs from deployment. Allowed states: NOT_STARTED, IN_PROGRESS, IMPLEMENTED, TESTED, VERIFIED, BLOCKED, DEFERRED, CANCELLED. The measured-retail child implements canonical precision and the first merchant workflow. SQL execution and UI qualification are tracked separately; physical reels, trade ordering and final commercial qualification remain open.
 
 Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local work, as explicitly authorized by the owner brief. Public release claims remain blocked.
 
@@ -119,7 +121,7 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Audit every quantity/cost/price dependency; migrate quantities consistently without rounding or weakening constraints. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Measured-retail forward migrations, shared editor/POS/purchasing/sales/returns projections, shop_measured_retail.sql and measured-cart.test.mjs. Full task qualification remains pending.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -143,13 +145,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E1 / P0 / Shop domain/database.
 - Dependencies: SS-ELEC-102, SS-ELEC-103, SS-ELEC-104.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Extend existing shared product editor with translated measurement/increment fields and locked historical settings.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Extend existing shared product editor with translated measurement/increment fields and locked historical settings. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Measured-retail forward migrations, shared editor/POS/purchasing/sales/returns projections, shop_measured_retail.sql and measured-cart.test.mjs. Full task qualification remains pending.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -188,13 +190,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E2 / P0 / Shop domain/database.
 - Dependencies: SS-ELEC-103, SS-ELEC-104, SS-ELEC-202.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Receive 2 reels of 100m at 2500 each into 200m at25/m; supplier total5000; preserve idempotency and snapshots.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Receive 2 reels of 100m at 2500 each into 200m at25/m; supplier total5000; preserve idempotency and snapshots. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Measured-retail forward migrations, shared editor/POS/purchasing/sales/returns projections, shop_measured_retail.sql and measured-cart.test.mjs. Full task qualification remains pending.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -203,13 +205,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E2 / P0 / Shop domain/database.
 - Dependencies: SS-ELEC-102, SS-ELEC-104.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Version product-specific package definitions, barcode uniqueness, sale/purchase eligibility and archive lifecycle.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Version product-specific package definitions, barcode uniqueness, sale/purchase eligibility and archive lifecycle. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Measured-retail forward migrations, shared editor/POS/purchasing/sales/returns projections, shop_measured_retail.sql and measured-cart.test.mjs. Full task qualification remains pending.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -218,13 +220,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E2 / P0 / Shop domain/database.
 - Dependencies: SS-ELEC-202.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Apply fixed package price and canonical deduction server-side with deterministic bundle precedence.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Apply fixed package price and canonical deduction server-side with deterministic bundle precedence. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Measured-retail forward migrations, shared editor/POS/purchasing/sales/returns projections, shop_measured_retail.sql and measured-cart.test.mjs. Full task qualification remains pending.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -233,13 +235,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E2 / P0 / Shop domain/database.
 - Dependencies: SS-ELEC-103, SS-ELEC-104, SS-ELEC-203.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Show valid units and product increments in POS; server revalidate 250cm/12.5m; preserve ordinary piece behavior.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Show valid units and product increments in POS; server revalidate 250cm/12.5m; preserve ordinary piece behavior. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Measured-retail forward migrations, shared editor/POS/purchasing/sales/returns projections, shop_measured_retail.sql and measured-cart.test.mjs. Full task qualification remains pending.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -248,13 +250,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E2 / P0 / Shop domain/database.
 - Dependencies: SS-ELEC-103, SS-ELEC-201, SS-ELEC-204.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Use one canonical FIFO stock balance and original acquisition costs across converted transactions.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Use one canonical FIFO stock balance and original acquisition costs across converted transactions. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Measured-retail forward migrations, shared editor/POS/purchasing/sales/returns projections, shop_measured_retail.sql and measured-cart.test.mjs. Full task qualification remains pending.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -263,13 +265,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E2 / P0 / Shop domain/database.
 - Dependencies: SS-ELEC-205.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Count/correct/set thresholds in base units with audit reason and exact increments; preserve closed periods.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Count/correct/set thresholds in base units with audit reason and exact increments; preserve closed periods. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Measured-retail forward migrations, shared editor/POS/purchasing/sales/returns projections, shop_measured_retail.sql and measured-cart.test.mjs. Full task qualification remains pending.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -278,13 +280,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E2 / P0 / Shop domain/database.
 - Dependencies: SS-ELEC-204, SS-ELEC-205.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Freeze entered and base quantities, unit/conversion/package/price snapshots and display units on printed receipts.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Freeze entered and base quantities, unit/conversion/package/price snapshots and display units on printed receipts. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Measured-retail forward migrations, shared editor/POS/purchasing/sales/returns projections, shop_measured_retail.sql and measured-cart.test.mjs. Full task qualification remains pending.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -293,13 +295,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E2 / P0 / Shop domain/database.
 - Dependencies: SS-ELEC-207.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Return only original eligible quantity/cost/tax snapshots; no over-return, duplicate refund or false restock.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Return only original eligible quantity/cost/tax snapshots; no over-return, duplicate refund or false restock. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Measured-retail forward migrations, shared editor/POS/purchasing/sales/returns projections, shop_measured_retail.sql and measured-cart.test.mjs. Full task qualification remains pending.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -308,13 +310,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E2 / P0 / Shop domain/database.
 - Dependencies: SS-ELEC-202, SS-ELEC-205.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Extend legacy-compatible CSV templates and exports; validate unit/package barcode identity without formula injection.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Extend legacy-compatible CSV templates and exports; validate unit/package barcode identity without formula injection. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Measured-retail forward migrations, shared editor/POS/purchasing/sales/returns projections, shop_measured_retail.sql and measured-cart.test.mjs. Full task qualification remains pending.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -323,13 +325,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E2 / P0 / Shop domain/database.
 - Dependencies: SS-ELEC-207, SS-ELEC-208.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Version offline unit/package payloads; stale rules conflict; preserve request retries and frozen ETA mapping.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Version offline unit/package payloads; stale rules conflict; preserve request retries and frozen ETA mapping. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Measured-retail forward migrations, shared editor/POS/purchasing/sales/returns projections, shop_measured_retail.sql and measured-cart.test.mjs. Full task qualification remains pending.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -338,13 +340,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E2 / P0 / Shop domain/database.
 - Dependencies: SS-ELEC-205, SS-ELEC-207, SS-ELEC-208.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Group quantities by compatible units; preserve authorized FIFO COGS, margin, supplier and customer reports.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Group quantities by compatible units; preserve authorized FIFO COGS, margin, supplier and customer reports. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Measured-retail forward migrations, shared editor/POS/purchasing/sales/returns projections, shop_measured_retail.sql and measured-cart.test.mjs. Full task qualification remains pending.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -353,134 +355,134 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E3 / P1 / Shop feature.
 - Dependencies: SS-ELEC-102.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Store reusable typed technical attributes; distinguish cable cross-section from stock unit and support search.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Store reusable typed technical attributes; distinguish cable cross-section from stock unit and support search. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Local reel/catalog source and disposable SQL journey implemented. Full 107-migration replay, original-cost cuts/loss, supplier withdrawals, return approval policy and actual two-cashier serialization pass. Focused unit checks pass. Browser qualification and final current-head CI remain in progress; see VERIFICATION.md.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
+- Blocker: Complete bilingual browser coverage, full current-head regression qualification and external merchant/device acceptance remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
 ## SS-ELEC-302 — Product variants and SKU strategy
 
 - Epic / priority / owner: E3 / P1 / Shop feature.
 - Dependencies: SS-ELEC-301.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Give each stocked color/size its own SKU and stock; optional family does not merge balances.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Give each stocked color/size its own SKU and stock; optional family does not merge balances. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Local reel/catalog source and disposable SQL journey implemented. Full 107-migration replay, original-cost cuts/loss, supplier withdrawals, return approval policy and actual two-cashier serialization pass. Focused unit checks pass. Browser qualification and final current-head CI remain in progress; see VERIFICATION.md.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
+- Blocker: Complete bilingual browser coverage, full current-head regression qualification and external merchant/device acceptance remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
 ## SS-ELEC-303 — First-class cable reels/drums
 
 - Epic / priority / owner: E3 / P1 / Shop feature.
 - Dependencies: SS-ELEC-205, SS-ELEC-202.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Identify physical reels by product/location/batch/barcode with original and remaining length tied to FIFO.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Identify physical reels by product/location/batch/barcode with original and remaining length tied to FIFO. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Local reel/catalog source and disposable SQL journey implemented. Full 107-migration replay, original-cost cuts/loss, supplier withdrawals, return approval policy and actual two-cashier serialization pass. Focused unit checks pass. Browser qualification and final current-head CI remain in progress; see VERIFICATION.md.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
+- Blocker: Complete bilingual browser coverage, full current-head regression qualification and external merchant/device acceptance remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
 ## SS-ELEC-304 — Continuous cable-length allocation
 
 - Epic / priority / owner: E3 / P1 / Shop feature.
 - Dependencies: SS-ELEC-303.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Reject continuous80m from two50m reels; allow explicit split allocation only when requested and valid.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Reject continuous80m from two50m reels; allow explicit split allocation only when requested and valid. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Local reel/catalog source and disposable SQL journey implemented. Full 107-migration replay, original-cost cuts/loss, supplier withdrawals, return approval policy and actual two-cashier serialization pass. Focused unit checks pass. Browser qualification and final current-head CI remain in progress; see VERIFICATION.md.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
+- Blocker: Complete bilingual browser coverage, full current-head regression qualification and external merchant/device acceptance remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
 ## SS-ELEC-305 — Cutting operations and audit trail
 
 - Epic / priority / owner: E3 / P1 / Shop feature.
 - Dependencies: SS-ELEC-304, SS-ELEC-204.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Atomically record reel cut, actor, sale/order, requested/actual/loss and resulting FIFO stock.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Atomically record reel cut, actor, sale/order, requested/actual/loss and resulting FIFO stock. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Local reel/catalog source and disposable SQL journey implemented. Full 107-migration replay, original-cost cuts/loss, supplier withdrawals, return approval policy and actual two-cashier serialization pass. Focused unit checks pass. Browser qualification and final current-head CI remain in progress; see VERIFICATION.md.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
+- Blocker: Complete bilingual browser coverage, full current-head regression qualification and external merchant/device acceptance remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
 ## SS-ELEC-306 — Cable remnants and scrap
 
 - Epic / priority / owner: E3 / P1 / Shop feature.
 - Dependencies: SS-ELEC-305.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Track sellable/discounted/damaged/scrap remnants with auditable quantity and valuation effects.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Track sellable/discounted/damaged/scrap remnants with auditable quantity and valuation effects. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Local reel/catalog source and disposable SQL journey implemented. Full 107-migration replay, original-cost cuts/loss, supplier withdrawals, return approval policy and actual two-cashier serialization pass. Focused unit checks pass. Browser qualification and final current-head CI remain in progress; see VERIFICATION.md.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
+- Blocker: Complete bilingual browser coverage, full current-head regression qualification and external merchant/device acceptance remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
 ## SS-ELEC-307 — Cable return and damage policies
 
 - Epic / priority / owner: E3 / P1 / Shop feature.
 - Dependencies: SS-ELEC-306, SS-ELEC-208.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Apply configurable unopened/cut/damaged return policies and approvals using original sale lineage.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Apply configurable unopened/cut/damaged return policies and approvals using original sale lineage. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Local reel/catalog source and disposable SQL journey implemented. Full 107-migration replay, original-cost cuts/loss, supplier withdrawals, return approval policy and actual two-cashier serialization pass. Focused unit checks pass. Browser qualification and final current-head CI remain in progress; see VERIFICATION.md.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
+- Blocker: Complete bilingual browser coverage, full current-head regression qualification and external merchant/device acceptance remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
 ## SS-ELEC-308 — Reel-level inventory and reports
 
 - Epic / priority / owner: E3 / P1 / Shop feature.
 - Dependencies: SS-ELEC-305, SS-ELEC-306.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Paginate reel movements and report remaining/reserved/continuous lengths, scrap and valuation.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Paginate reel movements and report remaining/reserved/continuous lengths, scrap and valuation. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Local reel/catalog source and disposable SQL journey implemented. Full 107-migration replay, original-cost cuts/loss, supplier withdrawals, return approval policy and actual two-cashier serialization pass. Focused unit checks pass. Browser qualification and final current-head CI remain in progress; see VERIFICATION.md.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
+- Blocker: Complete bilingual browser coverage, full current-head regression qualification and external merchant/device acceptance remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
 ## SS-ELEC-401 — Customer groups
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-107.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Maintain tenant-scoped configurable customer groups without changing existing balances or privacy.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Maintain tenant-scoped configurable customer groups without changing existing balances or privacy. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: Forward migration20261023202711, TRADE-PRICING.md, public-command SQL scenarios and generated schema contract; local109-migration replay passes merchant/role/expiry/override/legacy/unit-reconfiguration cases and existing regressions. Shared editor, POS and sales adapters are implemented; final merged qualification and native CI remain pending.
+- PR / commit: Local feature `codex/shop-suit/trade-customer-pricing`, initially based on published qualification checkpoint6bb408b5. Stacked PR pending final qualification.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -488,14 +490,14 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-401, SS-ELEC-203.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Resolve contract/group/quantity/package/base precedence server-side; freeze prices and authorized overrides.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Resolve contract/group/quantity/package/base precedence server-side; freeze prices and authorized overrides. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: Forward migration20261023202711, TRADE-PRICING.md, public-command SQL scenarios and generated schema contract; local109-migration replay passes merchant/role/expiry/override/legacy/unit-reconfiguration cases and existing regressions. Shared editor, POS and sales adapters are implemented; final merged qualification and native CI remain pending.
+- PR / commit: Local feature `codex/shop-suit/trade-customer-pricing`, initially based on published qualification checkpoint6bb408b5. Stacked PR pending final qualification.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -503,14 +505,14 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-402, SS-ELEC-207.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Version quotations with validity, taxes, agreed measurements, explicit transitions and immutable issued history.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Version quotations with validity, taxes, agreed measurements, explicit transitions and immutable issued history. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: Forward migration20261023215636, public-command quote/role/expiry SQL suite, generated schema types, shared quotation editor/history/print presentation and scoped adapter. Local110-migration replay and14-suite regression matrix passed; both bilingual version/retry/history/print journeys pass. Final combined-head checks and native CI remain pending.
+- PR / commit: Local `codex/shop-suit/formal-quotations`, based on published pricing PR460 and forward-merged parent8b951073. Draft [PR463](https://github.com/Building-Suit/building-suit-monorepo/pull/463), feature869d4df4; combined typecheck/build and repository suite pass.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -518,14 +520,14 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-403.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Convert accepted quote to order retaining agreed prices and preventing duplicate conversion.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Convert accepted quote to order retaining agreed prices and preventing duplicate conversion. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: Forward migration20261023222339, public-command shop_trade_orders.sql and shared order page. Local111-migration replay, quotation/order SQL cases, large exact-money transport and both bilingual conversion/retry browser cases pass. Reservation/fulfillment remain separate open tasks.
+- PR / commit: draft [#464](https://github.com/Building-Suit/building-suit-monorepo/pull/464); conversion commit `841ed28f`, published checkpoint `e70ec48c`.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -533,14 +535,14 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-404, SS-ELEC-304.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Reserve canonical location/reel stock atomically; release expiry/cancellation; concurrent orders cannot overallocate.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Reserve canonical location/reel stock atomically; release expiry/cancellation; concurrent orders cannot overallocate. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: 112-migration replay and reservation SQL pass, including repeated-SKU replacement, POS availability, expiry and deferred count/scrap capacity checks. Two actual order/stock races pass. Both EN/AR reservation/retry journeys, read-only controls and both inherited conversion cases pass (5/5); all12 existing measured/reel/pricing/quotation cases pass separately. Native combined-head and merchant/device qualification remain open; see VERIFICATION.md.
+- PR / commit: draft [#464](https://github.com/Building-Suit/building-suit-monorepo/pull/464); reservation implementation pending verified commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
@@ -548,166 +550,166 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-405, SS-ELEC-208.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Reconcile deposits and partial deliveries with existing payment/invoice ledgers and no duplicate stock deduction.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Reconcile deposits and partial deliveries with existing payment/invoice ledgers and no duplicate stock deduction. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Evidence: Migration20261025164827 extends existing receipts/allocations and issues ordinary invoices for partial collections. Local113-migration replay,19 SQL suites, both merchant journeys, six real-session races, cash-drawer reconciliation and all22 distinct order/measured browser cases pass across recorded scoped runs. Root2032/2055 pass, zero fail,23 skip. See VERIFICATION.md for final label/consumer and native gates.
+- PR / commit: draft [#464](https://github.com/Building-Suit/building-suit-monorepo/pull/464), targeting formal quotations #463; deposit/collection source7f532d73 published; final local consumer/browser checks pass.
+- Blocker: Exact-head native Supabase and final shared-consumer qualification remain pending; hosted release reconciliation, real merchant/device and native-speaker acceptance are final initiative gates.
+- Completion notes / release fragment: Local implementation tested. Public fragment `ss-electrical-order-deposits-collections-20261025`; internal support `ss-electrical-order-funding-qualification-20261025`. No production availability claim.
 
 ## SS-ELEC-407 — Supplier purchase orders
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-201.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Issue supplier purchase orders with measured/package lines; ordering alone never creates stock.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Issue supplier purchase orders with measured/package lines; ordering alone never creates stock. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: The114-migration combined fixture passes20 SQL suites, both merchant journeys and eight real-session races. New supplier cases prove original units/cost, six then four receipts, retry/conflict, closed-period/plan/role/location denial and no stock/debt on ordering. All five final built browser cases pass in one run; both strengthened viewport journeys also pass. Shop typecheck/build, scoped lint, strict boundaries and committed release coverage pass; final shared/native qualification remains pending. See PURCHASING.md and VERIFICATION.md.
+- PR / commit: Draft [#487](https://github.com/Building-Suit/building-suit-monorepo/pull/487), source1bcdcf22, targets contractor orders #464. Native measured-retail/review/website and full local root checks pass; final initiative gates remain separate.
 - Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Completion notes / release fragment: Local implementation tested; public `ss-electrical-supplier-orders-receiving-20261025`, internal `ss-electrical-supplier-receiving-qualification-20261025`. Native, hosted and merchant/device gates remain separate.
 
 ## SS-ELEC-408 — Partial supplier deliveries
 
 - Epic / priority / owner: E4 / P1 / Shop feature.
 - Dependencies: SS-ELEC-407, SS-ELEC-205.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Receive6 of10 reels, retain4 outstanding; retry does not double receive or duplicate supplier debt.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Receive6 of10 reels, retain4 outstanding; retry does not double receive or duplicate supplier debt. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: The114-migration combined fixture passes20 SQL suites, both merchant journeys and eight real-session races. New supplier cases prove original units/cost, six then four receipts, retry/conflict, closed-period/plan/role/location denial and no stock/debt on ordering. All five final built browser cases pass in one run; both strengthened viewport journeys also pass. Shop typecheck/build, scoped lint, strict boundaries and committed release coverage pass; final shared/native qualification remains pending. See PURCHASING.md and VERIFICATION.md.
+- PR / commit: Draft [#487](https://github.com/Building-Suit/building-suit-monorepo/pull/487), source1bcdcf22, targets contractor orders #464. Native measured-retail/review/website and full local root checks pass; final initiative gates remain separate.
 - Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Completion notes / release fragment: Local implementation tested; public `ss-electrical-supplier-orders-receiving-20261025`, internal `ss-electrical-supplier-receiving-qualification-20261025`. Native, hosted and merchant/device gates remain separate.
 
 ## SS-ELEC-501 — Bin/shelf location tracking
 
 - Epic / priority / owner: E5 / P2 / Shop feature.
 - Dependencies: SS-ELEC-205.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Track tenant/location bin and shelf positions without disconnected inventory balances.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Track tenant/location bin and shelf positions without disconnected inventory balances. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: Final115-migration replay passes21 selected SQL suites, both merchant journeys and eight inherited races. All10 final planning/recovery/report-export and inherited reel browsers pass. Actual types, Shop typecheck/build, scoped lint,120-template boundaries/architecture and root2034/2057 (zero fail,23 skip) pass. See SUPPLY-PLANNING.md and VERIFICATION.md for scoped evidence and open native/final gates.
+- PR / commit: Draft [#490](https://github.com/Building-Suit/building-suit-monorepo/pull/490), sourcec7bc466b, targets #487 at1bcdcf22. Exact-source native review, measured and website checks pass.
 - Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Completion notes / release fragment: Local implementation tested. Public `ss-electrical-storage-supplier-planning-20261025`; internal `ss-electrical-supply-planning-qualification-20261025`. No hosted or merchant/device completion claim.
 
 ## SS-ELEC-502 — Supplier item codes and lead times
 
 - Epic / priority / owner: E5 / P2 / Shop feature.
 - Dependencies: SS-ELEC-201.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Maintain supplier-specific item references, package choices and lead times with scoped access.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Maintain supplier-specific item references, package choices and lead times with scoped access. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: Final115-migration replay passes21 selected SQL suites, both merchant journeys and eight inherited races. All10 final planning/recovery/report-export and inherited reel browsers pass. Actual types, Shop typecheck/build, scoped lint,120-template boundaries/architecture and root2034/2057 (zero fail,23 skip) pass. See SUPPLY-PLANNING.md and VERIFICATION.md for scoped evidence and open native/final gates.
+- PR / commit: Draft [#490](https://github.com/Building-Suit/building-suit-monorepo/pull/490), sourcec7bc466b, targets #487 at1bcdcf22. Exact-source native review, measured and website checks pass.
 - Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Completion notes / release fragment: Local implementation tested. Public `ss-electrical-storage-supplier-planning-20261025`; internal `ss-electrical-supply-planning-qualification-20261025`. No hosted or merchant/device completion claim.
 
 ## SS-ELEC-503 — Supplier price history
 
 - Epic / priority / owner: E5 / P2 / Shop feature.
 - Dependencies: SS-ELEC-502.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Preserve historical supplier purchase unit/price/currency snapshots and paginated comparisons.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Preserve historical supplier purchase unit/price/currency snapshots and paginated comparisons. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: Final115-migration replay passes21 selected SQL suites, both merchant journeys and eight inherited races. All10 final planning/recovery/report-export and inherited reel browsers pass. Actual types, Shop typecheck/build, scoped lint,120-template boundaries/architecture and root2034/2057 (zero fail,23 skip) pass. See SUPPLY-PLANNING.md and VERIFICATION.md for scoped evidence and open native/final gates.
+- PR / commit: Draft [#490](https://github.com/Building-Suit/building-suit-monorepo/pull/490), sourcec7bc466b, targets #487 at1bcdcf22. Exact-source native review, measured and website checks pass.
 - Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Completion notes / release fragment: Local implementation tested. Public `ss-electrical-storage-supplier-planning-20261025`; internal `ss-electrical-supply-planning-qualification-20261025`. No hosted or merchant/device completion claim.
 
 ## SS-ELEC-504 — Weight barcode compatibility
 
 - Epic / priority / owner: E5 / P2 / Shop feature.
 - Dependencies: SS-ELEC-204, SS-ELEC-209.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Support only verified GS1/market variable-measure formats with checksums and bounded values; normal barcodes unchanged.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Support only verified GS1/market variable-measure formats with checksums and bounded values; normal barcodes unchanged. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Evidence: BARCODES.md. Full116-migration replay passes22 selected SQL suites, both merchant journeys and eight inherited races. Eight POS/barcode units, root2038/2061 (zero failures,23 skips), Shop build/typecheck, Docs typecheck, app/shared lint, strict120-template ownership and committed release coverage pass. All13 final built EN/AR barcode/retail/reel/trade cases pass, including stock shared with offers/manual lines and reachable mobile payment controls. Native/final consumer and external acceptance remain separate.
+- PR / commit: Child `codex/shop-suit/weight-barcodes` starts from published #490 atc7bc466b; published [#493](https://github.com/Building-Suit/building-suit-monorepo/pull/493), sourceb0e467f1, includes implementatione14f4ab6 and mobile viewport fix8ebebaff. Stack and committed release checks pass; native review and measured checks pass, website qualification still running at this checkpoint.
+- Blocker: Native exact-source qualification and final merchant/device/native-speaker/provider acceptance remain pending.
+- Completion notes / release fragment: Local implementation tested. Public `ss-electrical-verified-weight-barcodes-20261025`; internal `ss-electrical-weight-barcode-qualification-20261025`. No hosted or merchant/device completion claim.
 
 ## SS-ELEC-505 — Electronic scale integration
 
 - Epic / priority / owner: E5 / P2 / Shop feature.
 - Dependencies: SS-ELEC-504.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Use an optional supported scale adapter with stable/tare/net readings, units, failures and staff confirmation.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Use an optional supported scale adapter with stable/tare/net readings, units, failures and staff confirmation. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Evidence: SCALES.md and VERIFICATION.md. Focused protocol/transport/conversion/malformed-reader units pass16/16; expanded117-migration scoped SQL and three new capture races pass with both merchant journeys and inherited races. All19 combined EN/AR scale/setup and inherited measured/reel/trade/GS1 browsers pass. Full117-migration replay,21 named regression suites plus foundation/both journeys and11 races pass; actual types match. Shop build/typecheck, scoped lint and121-template boundaries pass. Final root2054/2077 (zero fail,23 skip), Shop/Docs typechecks, committed release and separate final6-case built run pass. All three critical exact-source native jobs pass; physical hardware acceptance is separate.
+- PR / commit: Child `codex/shop-suit/scale-and-mass-length` starts from published [#493](https://github.com/Building-Suit/building-suit-monorepo/pull/493) atb0e467f1; published [#496](https://github.com/Building-Suit/building-suit-monorepo/pull/496), sourceb02f38f6. Native review121554177623, measured121554177774 and website121554178377 pass.
+- Blocker: Final combined E6 qualification and actual device/model/settings, merchant, native-speaker and hosted acceptance remain separate gates.
+- Completion notes / release fragment: Locally tested implementation. Public `ss-electrical-approved-scale-sales-20261026`; internal `ss-electrical-scale-qualification-20261026`. No physical-hardware or commercial completion claim.
 
 ## SS-ELEC-506 — Optional weight-to-length conversions
 
 - Epic / priority / owner: E5 / P2 / Shop feature.
 - Dependencies: SS-ELEC-104, SS-ELEC-505.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Require approved versioned product-specific mass/length relationship; reject universal cross-dimensional conversion.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Require approved versioned product-specific mass/length relationship; reject universal cross-dimensional conversion. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Evidence: SCALES.md and VERIFICATION.md. Focused protocol/transport/conversion/malformed-reader units pass16/16; expanded117-migration scoped SQL and three new capture races pass with both merchant journeys and inherited races. All19 combined EN/AR scale/setup and inherited measured/reel/trade/GS1 browsers pass. Full117-migration replay,21 named regression suites plus foundation/both journeys and11 races pass; actual types match. Shop build/typecheck, scoped lint and121-template boundaries pass. Final root2054/2077 (zero fail,23 skip), Shop/Docs typechecks, committed release and separate final6-case built run pass. All three critical exact-source native jobs pass; physical hardware acceptance is separate.
+- PR / commit: Child `codex/shop-suit/scale-and-mass-length` starts from published [#493](https://github.com/Building-Suit/building-suit-monorepo/pull/493) atb0e467f1; published [#496](https://github.com/Building-Suit/building-suit-monorepo/pull/496), sourceb02f38f6. Native review121554177623, measured121554177774 and website121554178377 pass.
+- Blocker: Final combined E6 qualification and actual device/model/settings, merchant, native-speaker and hosted acceptance remain separate gates.
+- Completion notes / release fragment: Locally tested implementation. Public `ss-electrical-approved-scale-sales-20261026`; internal `ss-electrical-scale-qualification-20261026`. No physical-hardware or commercial completion claim.
 
 ## SS-ELEC-507 — Demand and reorder forecasting
 
 - Epic / priority / owner: E5 / P2 / Shop feature.
 - Dependencies: SS-ELEC-211, SS-ELEC-502.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Derive explainable canonical reorder suggestions from scoped demand/lead times; no automatic stock writes.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Derive explainable canonical reorder suggestions from scoped demand/lead times; no automatic stock writes. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
+- Evidence: Final115-migration replay passes21 selected SQL suites, both merchant journeys and eight inherited races. All10 final planning/recovery/report-export and inherited reel browsers pass. Actual types, Shop typecheck/build, scoped lint,120-template boundaries/architecture and root2034/2057 (zero fail,23 skip) pass. See SUPPLY-PLANNING.md and VERIFICATION.md for scoped evidence and open native/final gates.
+- PR / commit: Draft [#490](https://github.com/Building-Suit/building-suit-monorepo/pull/490), sourcec7bc466b, targets #487 at1bcdcf22. Exact-source native review, measured and website checks pass.
 - Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Completion notes / release fragment: Local implementation tested. Public `ss-electrical-storage-supplier-planning-20261025`; internal `ss-electrical-supply-planning-qualification-20261025`. No hosted or merchant/device completion claim.
 
 ## SS-ELEC-508 — Optional commodity-based pricing
 
 - Epic / priority / owner: E5 / P2 / Shop feature.
 - Dependencies: SS-ELEC-402, SS-ELEC-503.
-- Status: NOT_STARTED.
+- Status: TESTED.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Introduce commodity rules only with justified source, currency, effective time and frozen authoritative pricing.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Introduce commodity rules only with justified source, currency, effective time and frozen authoritative pricing. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
-- Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
+- Evidence: COMMODITY-PRICING.md and VERIFICATION.md. Full118-migration replay passes22 named regression suites, foundation, both merchant journeys and15 races. Fresh scoped replay passes source shape/time/expiry guards, original return cost and accepted frozen collection; actual types match. All23 combined browsers plus two extra recovery/blocking cases pass, including same-payload payment retry at quoted25 rather than catalog35. Root2054/2077 passes with zero failures/23 skips; final build, scoped lint and122-template boundaries pass. Final current Shop/Docs typechecks pass; committed release/native qualification remains pending.
+- PR / commit: Uncommitted child `codex/shop-suit/commodity-pricing` of published [#496](https://github.com/Building-Suit/building-suit-monorepo/pull/496) atb02f38f6.
+- Blocker: Final consumer/release/native qualification, E6 checkout hardening and genuine integration, real source/merchant/native-speaker and hosted acceptance remain separate gates.
+- Completion notes / release fragment: Locally tested implementation. Public `ss-electrical-approved-commodity-pricing-20261026`; internal `ss-electrical-commodity-qualification-20261026`. No commercial or hosted completion claim.
 
 ## SS-ELEC-601 — Product limit and plan suitability review
 
@@ -728,13 +730,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E6 / P0 / QA.
 - Dependencies: SS-ELEC-107, SS-ELEC-210, SS-ELEC-405.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Verify all new RPC/table grants, roles, RLS, cross-tenant/location denial and immutable historical objects.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Verify all new RPC/table grants, roles, RLS, cross-tenant/location denial and immutable historical objects. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Qualification child passes478 Shop units and the merged repository gate (2026 pass, zero fail,23 skip). Eight built public-site isolation scenarios, actual Pinia/Colada account-switch/cancelled-response cases, six EN/AR electrical browser cases and the108-migration replay with17 legacy suites/two races pass. Native parent15b52a32 measured-retail/media/accounts CI passes. Trade/reservation implementation and final combined qualification remain open; see VERIFICATION.md.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -743,13 +745,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E6 / P0 / QA.
 - Dependencies: SS-ELEC-205, SS-ELEC-305, SS-ELEC-405, SS-ELEC-408.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Run real concurrent cashiers/reels/reservations and duplicate purchase/sale UUIDs; no oversell/duplicate movements.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Run real concurrent cashiers/reels/reservations and duplicate purchase/sale UUIDs; no oversell/duplicate movements. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Qualification child passes478 Shop units and the merged repository gate (2026 pass, zero fail,23 skip). Eight built public-site isolation scenarios, actual Pinia/Colada account-switch/cancelled-response cases, six EN/AR electrical browser cases and the108-migration replay with17 legacy suites/two races pass. Native parent15b52a32 measured-retail/media/accounts CI passes. Trade/reservation implementation and final combined qualification remain open; see VERIFICATION.md.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -773,13 +775,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E6 / P0 / QA.
 - Dependencies: SS-ELEC-210, SS-ELEC-211, SS-ELEC-406.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Run affected original product/service/payment/tax/bundle/return/reporting regressions without weakening assertions.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Run affected original product/service/payment/tax/bundle/return/reporting regressions without weakening assertions. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Qualification child passes478 Shop units and the merged repository gate (2026 pass, zero fail,23 skip). Eight built public-site isolation scenarios, actual Pinia/Colada account-switch/cancelled-response cases, six EN/AR electrical browser cases and the108-migration replay with17 legacy suites/two races pass. Native parent15b52a32 measured-retail/media/accounts CI passes. Trade/reservation implementation and final combined qualification remain open; see VERIFICATION.md.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
@@ -788,13 +790,13 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E6 / P0 / QA.
 - Dependencies: SS-ELEC-602, SS-ELEC-603, SS-ELEC-604, SS-ELEC-605.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Run full migrated disposable DB plus browser merchant journey; record every pass/failure/skipped gate.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Run full migrated disposable DB plus browser merchant journey; record every pass/failure/skipped gate. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: Qualification child passes478 Shop units and the merged repository gate (2026 pass, zero fail,23 skip). Eight built public-site isolation scenarios, actual Pinia/Colada account-switch/cancelled-response cases, six EN/AR electrical browser cases and the108-migration replay with17 legacy suites/two races pass. Native parent15b52a32 measured-retail/media/accounts CI passes. Trade/reservation implementation and final combined qualification remain open; see VERIFICATION.md.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
 - Blocker: Dependent implementations and required gates above remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.

@@ -1,3 +1,4 @@
+import { discardShopQuery } from '~/utils/shopQueryCleanup'
 import { useQueryCache } from '@pinia/colada'
 import { toValue } from 'vue'
 import { useShopScopeStore } from '~/stores/scope'
@@ -38,7 +39,7 @@ export function useShopQueryCache() {
     }))
   }
   function clear(selector?: ShopQuerySelector) {
-    for (const entry of entries(selector)) { cache.cancel(entry); cache.remove(entry) }
+    for (const entry of entries(selector)) { discardShopQuery(cache, entry) }
   }
   /** After a committed command, discard older requests but keep visible snapshots. */
   function invalidate(selector?: ShopQuerySelector) { for (const entry of entries(selector)) cache.invalidate(entry) }
