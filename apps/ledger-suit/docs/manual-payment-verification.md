@@ -1,5 +1,9 @@
 # LS-BILL-002 — InstaPay/manual payment
 
+2026-10-26 native follow-up: [LS-BILL-NATIVE-001](accountant-system/work-packages/LS-BILL-NATIVE-001.md) now verifies actual Auth/Edge/Storage/SQL, receipt expiry, quota/correction/renewal and mobile customer → desktop operator browser paths. It fixes receipt links through the configured public project origin. Earlier unrun/local-only statements below are historical; hosted configuration and accountant UAT remain separate.
+
+2026-10-22 update: native independent-session **approval contention and replay passed**. See [the current verification and boundaries](native-concurrency-verification.md) and [native SQL evidence](native-financial-verification.md). Historical blocked results below retain their original dates; this does not establish HTTP/Storage, provider, deployment or accountant acceptance.
+
 Implements BILL-MAN-01–04 and approved decision LS-D-MANUAL-PAYMENT. Changes are local and uncommitted; no hosted database, deployment or publication was performed.
 
 Customers select an approved launch plan and monthly/yearly interval in the existing checkout, then choose manual transfer. `prepare_manual_payment` resolves the existing catalog on the server and stores an immutable purchase quote, including customer-facing instructions. No amount, currency, price ID or entitlement target is accepted from the browser. One unfinished request per organization prevents competing quotes; cancel it to change plans. Unconfigured instructions fail closed.

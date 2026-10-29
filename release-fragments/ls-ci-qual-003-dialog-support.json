@@ -1,0 +1,28 @@
+{
+  "id": "ls-ci-qual-003-dialog-support",
+  "task": "LS-CI-QUAL-003",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/organisms/BsDialog.vue",
+    "packages/ui/src/organisms/BsRecordActionDialog.vue",
+    "packages/ui/src/templates/BsAppointmentsPage.vue",
+    "packages/ux/src/composables/useDialogInteraction.ts",
+    "packages/ux/tests/form-dialog.test.mjs",
+    "apps/shop-suit/tests/e2e/appointment-actions.spec.ts",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/interactions.md",
+    "apps/ledger-suit/docs/integration-check-recovery-20261029.md",
+    "release-changes/items.json",
+    "apps/shop-suit/tests/e2e/marketing-privacy.spec.ts"
+  ],
+  "reason": "Add an optional surviving focus-origin resolver to the shared dialog contract; default behavior, dirty/pending guards and all authorization remain. Qualify current appointment actions through accessible calendar/details controls without dropping focus, error recovery, pending or confirmation assertions. Other consumers receive compatibility only; Doctor remains synthetic/private. The synthetic HTTP forwarder closes each source connection explicitly across reload/prefetch cancellation; it does not retry or suppress request failures."
+}

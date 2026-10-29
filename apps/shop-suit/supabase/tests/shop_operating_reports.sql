@@ -41,6 +41,7 @@ set local role authenticated;
 do $$
 declare
   v_shop uuid; v_default uuid; v_branch uuid; v_staff uuid; v_customer uuid;
+  v_expected_fifo_cost numeric;
   v_product uuid; v_service uuid; v_bookable uuid; v_sale uuid; v_branch_sale uuid;
   v_outstanding uuid; v_shift uuid; v_appointment uuid; v_vendor uuid; v_purchase uuid;
   v_report jsonb; v_branch_report jsonb; v_full jsonb; v_page_two jsonb; v_export jsonb;
@@ -61,6 +62,11 @@ begin
     'RPT-PUR-1', v_anchor, null, jsonb_build_array(
       jsonb_build_object('product_id', v_product, 'quantity', 2, 'unit_cost', 8)));
 
+  -- Purchases are received at the document's Cairo noon; manual receipts use
+  -- the current instant. API call order is not acquisition-time FIFO order.
+  select unit_cost into v_expected_fifo_cost from public.inventory_batches
+    where shop_id=v_shop and product_id=v_product and location_id=v_default
+    order by received_at,id limit 1;
   v_shift := public.open_cash_shift(gen_random_uuid(), v_shop, v_default, 'main', 100, null);
   v_sale := public.save_pos_sale_draft(gen_random_uuid(), v_shop, v_default, null,
     v_staff, null, v_customer, null, jsonb_build_array(
@@ -180,13 +186,13 @@ begin
   end if;
   v_full := public.shop_operational_report(v_shop, 'inventory', null, null, null, 1, 20);
   if (v_full #>> '{summary,quantityOnHand}')::numeric <> 6
-    or (v_full #>> '{summary,inventoryValue}')::numeric <> 56 then
+    or (v_full #>> '{summary,inventoryValue}')::numeric <> 66-v_expected_fifo_cost then
     raise exception 'inventory report did not reconcile FIFO stock: %', v_full;
   end if;
   v_full := public.shop_operational_report(v_shop, 'margin', null, v_anchor, v_anchor, 1, 20);
   if (v_full #>> '{summary,revenue}')::numeric <> 20
-    or (v_full #>> '{summary,fifoCost}')::numeric <> 10
-    or (v_full #>> '{summary,margin}')::numeric <> 10
+    or (v_full #>> '{summary,fifoCost}')::numeric <> v_expected_fifo_cost
+    or (v_full #>> '{summary,margin}')::numeric <> 20-v_expected_fifo_cost
     or (v_full #>> '{summary,reconciledLineCount}')::integer <> 1
     or (v_full #>> '{summary,excludedLineCount}')::integer <> 0 then
     raise exception 'FIFO margin report did not reconcile: %', v_full;

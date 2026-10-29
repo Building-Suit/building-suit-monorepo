@@ -7,6 +7,7 @@ export type OperationalReportKind =
   | 'inventory'
   | 'margin'
   | 'activity'
+  | 'reorder'
 
 export type OperationalReportRow = Record<string, string | number | boolean | null>
 

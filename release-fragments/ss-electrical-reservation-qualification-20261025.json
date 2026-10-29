@@ -1,0 +1,28 @@
+{
+  "id": "ss-electrical-reservation-qualification-20261025",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui",
+    "packages/ux",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/shop-suit/app/types/database.types.ts",
+    "apps/shop-suit/tests",
+    "apps/shop-suit/supabase/tests",
+    "apps/shop-suit/docs/electrical-supply",
+    "tooling/database",
+    "docs/shared/interactions.md",
+    "release-changes/items.json",
+    ".github/workflows/shop-measurement-disposable.yml"
+  ],
+  "reason": "Reservation schema contracts, actual two-session capacity races, bilingual order/POS projections and shared optional dismissal blocking for uncertain retryable commands. Other shared dependency consumers remain internal; no hosted deployment or operational activation."
+}

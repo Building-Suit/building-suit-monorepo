@@ -1,0 +1,15 @@
+{
+  "id": "ls-ci-qual-001-private-doctor-controls",
+  "task": "LS-CI-QUAL-001",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/organisms/BsSettingsMenu.vue",
+    "packages/ui/src/templates/BsSignInPage.vue",
+    "packages/ui/src/organisms/BsSignupEnrollment.vue"
+  ],
+  "reason": "Carry shared control and native label repairs into the synthetic Doctor consumer as private provenance only. No operational registration, public release baseline, patient use or clinical/legal readiness is granted."
+}

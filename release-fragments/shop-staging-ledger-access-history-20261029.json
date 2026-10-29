@@ -1,0 +1,15 @@
+{
+  "id": "shop-staging-ledger-access-history-20261029",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "ledger-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/ledger-suit/supabase/migrations/20261022182716_explicit_data_api_access.sql",
+    "apps/ledger-suit/supabase/tests",
+    "apps/shop-suit/docs/electrical-supply/STAGING-INTEGRATION-2026-10-29.md"
+  ],
+  "reason": "Restore the already applied historical Ledger access migration byte-for-byte from published PR440, as verified again in Ledger439. Include only the twelve access-contract assertions and explicit execution for seven existing temporary test helpers. No Ledger feature-stack import, hosted write or migration metadata edit."
+}

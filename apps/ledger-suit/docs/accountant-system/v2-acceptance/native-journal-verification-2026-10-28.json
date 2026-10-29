@@ -1,0 +1,75 @@
+{
+  "task": "LS-JRN-VERIFY-001",
+  "date": "2026-10-28",
+  "parent_pr": 508,
+  "parent_sha": "dd4a7961198b76d7df460dc84881d946c89b6c3e",
+  "state": "native_journal_and_report_navigation_passed_external_gates_pending",
+  "browser": {
+    "cases": 2,
+    "passed": 2,
+    "failed": 0,
+    "retries": 0,
+    "locales": [
+      "en",
+      "ar"
+    ],
+    "backend": "actual local Auth/PostgREST; no API interception or injected sessions"
+  },
+  "independent_oracle": "Raw retained accounts/transactions/transaction_entries read in a read-only SQL transaction; integer minor-unit arithmetic, no report RPC oracle.",
+  "verified_fixtures": [
+    {
+      "locale": "ar",
+      "journals": 3,
+      "entries": 6,
+      "debit_minor": "118500",
+      "credit_minor": "118500",
+      "bank_closing_minor": "54300",
+      "equity_net_minor": "0",
+      "revenue_credit_minor": "54300",
+      "original": "ecf4a765-ed1b-4855-9d01-8f83e67db60b",
+      "reversal": "882df799-eb3e-4725-8bf8-a36f8f599ed5",
+      "income": "38825c6b-b548-4a6d-b99d-d1e42d763db5"
+    },
+    {
+      "locale": "en",
+      "journals": 3,
+      "entries": 6,
+      "debit_minor": "118500",
+      "credit_minor": "118500",
+      "bank_closing_minor": "54300",
+      "equity_net_minor": "0",
+      "revenue_credit_minor": "54300",
+      "original": "1a98371c-6733-43d5-8156-4831d6b594ca",
+      "reversal": "2193cf34-c78b-4724-beb9-63cd15dd2e89",
+      "income": "7b6fe327-c17c-407f-90bb-f398707ef845"
+    }
+  ],
+  "preserved_original": {
+    "accounts": 4,
+    "transactions": 0,
+    "entries": 0,
+    "all_original_rows_identical": true
+  },
+  "retained_total": {
+    "accounts": 35,
+    "journals": 31,
+    "entries": 62,
+    "includes_failed_or_interrupted_test_attempts": true,
+    "all_journals_balanced": true
+  },
+  "auth_users": 4,
+  "migrations": 107,
+  "before_sha256": "a7be9a8a3a749f734a23f9ff92d055e3f223068738d3c05295aa4408f5606cea",
+  "after_sha256": "3ce9e5a3c2bc89ffa96e3a6d95aa1c0349fc0f44ea8df9810fcb6cf22a0eae76",
+  "source_sha256": {
+    "apps/ledger-suit/scripts/native-browser-runtime.mjs": "5600c0204dd3efa4b1af556ab103341c76f60aab3c206ff103bf6a40e925e011",
+    "apps/ledger-suit/scripts/verify-native-journal-evidence.mjs": "e24c541aab14d9d755ea79a41684238639632efefeff9bca5bb6f1aa9b3bd4fa",
+    "apps/ledger-suit/playwright.native-journal.config.ts": "92e0a1d5812cc489cfcb837c8a08b3565a43e8de922c910047c8cc4f08dc270c",
+    "apps/ledger-suit/tests/e2e/journal-center.spec.ts": "ac5ae088776e172da5d4fcc9bf7ed6f0b8b270508712b30081d4dbbe95c276cf"
+  },
+  "limits": [
+    "No hosted or Automation mutation.",
+    "FS-06 broader saved-filter/focus UAT and every named accountant verdict remain pending.",
+    "Financial records and owned volumes retained; no reset/delete."
+  ]
+}

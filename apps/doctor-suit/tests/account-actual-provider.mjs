@@ -1,3 +1,4 @@
+import { installDoctorEntryValidity, readDoctorEntryValidity } from './helpers/entry-validity.mjs'
 import{doctorPasswordStep}from'./helpers/password-step.mjs'
 // Owned loopback-only browser against real GoTrue/Mailpit/PostgREST. No artifacts or error text.
 import { chromium,expect as browserExpect } from '@playwright/test'
@@ -33,7 +34,7 @@ export async function verifyDoctorAccountProvider({ root,api,key,serviceKey,proj
     await until(async () => { try { return (await fetch(`${origin}/`,{ signal: AbortSignal.timeout(1000) })).ok } catch { return false } })
     browser = await chromium.launch({ headless: true });context = await browser.newContext({ viewport: { width: 1280,height: 1000 } })
     await context.route('**/*',route => [origin,api].includes(new URL(route.request().url()).origin) ? route.continue() : route.abort())
-    page = await context.newPage();page.setDefaultTimeout(15000)
+    page = await context.newPage();page.setDefaultTimeout(15000);await installDoctorEntryValidity(page)
     page.on('response',async response => { try { if(response.url().startsWith(`${api}/auth/v1/token`) && response.ok()) { const body = await response.json();if(typeof body.access_token==='string')token = body.access_token } } catch { /* No diagnostics from credential-bearing responses. */ } })
     const email = `synthetic-web-${randomUUID()}@example.test`;const password = `Synthetic-${randomUUID()}!9`;const newPassword = `Synthetic-${randomUUID()}!8`
     setStage('actual browser signup and PKCE confirmation');policy(20);changedPolicy = true
@@ -73,6 +74,7 @@ export async function verifyDoctorAccountProvider({ root,api,key,serviceKey,proj
     setStage('actual reused recovery code denial');await page.goto(callback.href);await page.getByText('The recovery link is invalid or expired. Request another link.',{ exact: true }).waitFor();expect(await page.getByLabel('Password',{ exact: true }).count()===0,'Reused PKCE code exposed reset form')
     console.log('Actual browser Auth: signup PKCE, URL scrubbing, expired contact denial, new-SID reauthentication, frozen SID denial, same-browser recovery, wrong-browser/reused-code denial and password replacement passed')
   } catch(error) {
+    if(page&&!page.isClosed())try{console.log('Actual account entry native validity:',JSON.stringify(await readDoctorEntryValidity(page)))}catch{/* Fixed-state diagnostic unavailable. */}
     // Whitelisted state only: no account IDs, addresses, credentials, values or DOM text.
     if(page)try{console.log('Actual account safe readiness diagnostic:',JSON.stringify(await page.evaluate(()=>{
       const auth=document.getElementById('__nuxt')?.__vue_app__?.config.globalProperties?.$doctorAuth?.state

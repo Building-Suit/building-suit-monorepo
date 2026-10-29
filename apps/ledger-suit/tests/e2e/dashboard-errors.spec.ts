@@ -1,17 +1,14 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
+import { completePasswordSignIn } from './password-sign-in'
 
 async function signIn(page: Page) {
   await page.goto('/login')
-  await expect(page.locator('form')).toHaveAttribute('data-hydrated', 'true')
-  await page.getByLabel('Email').fill('owner@alpha.test')
-  await page.getByLabel('Password').fill('ledgersuit')
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await completePasswordSignIn(page, 'owner@alpha.test', 'ledgersuit')
   await expect(page).toHaveURL('/dashboard')
 }
 
 async function switchToArabic(page: Page) {
-  await page.getByRole('button', { name: 'Account menu', exact: true }).click()
-  await page.getByRole('button', { name: 'العربية', exact: true }).click()
+  await page.getByRole('button', { name: 'Language: English', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
 }
 
@@ -23,7 +20,8 @@ function transaction(description = 'Recovered dashboard transaction') {
     transaction_date: '2026-09-01',
     type: 'income',
     status: 'posted',
-    amount_minor: 1000,
+    debit_minor: '1000',
+    credit_minor: '1000',
     currency_code: 'EGP',
     category_name: null,
     from_account_name: 'Revenue',
@@ -44,7 +42,7 @@ for (const locale of ['en', 'ar'] as const) {
   test(`${locale}: a successful empty recent read is distinct from loading and shows the empty-company CTA`, async ({ page }) => {
     let release!: () => void
     const waiting = new Promise<void>((resolve) => { release = resolve })
-    await page.route('**/rest/v1/rpc/search_transactions', async (route) => {
+    await page.route('**/rest/v1/rpc/search_transactions**', async (route) => {
       await waiting
       await route.fulfill({ json: [] })
     })
@@ -69,7 +67,7 @@ test('a failed recent read never appears empty and retries without reloading the
   page.on('request', (request) => {
     if (request.resourceType() === 'document') documentRequests++
   })
-  await page.route('**/rest/v1/rpc/search_transactions', async (route) => {
+  await page.route('**/rest/v1/rpc/search_transactions**', async (route) => {
     if (unavailable) return fail(route)
     await route.fulfill({ json: [transaction()] })
   })
@@ -88,8 +86,8 @@ test('a failed recent read never appears empty and retries without reloading the
 
 test('summary, series, and cash failures remain independent and individually retryable', async ({ page }) => {
   const unavailable = { summary: true, series: true, liquid: true }
-  await page.route('**/rest/v1/rpc/search_transactions', route => route.fulfill({ json: [transaction('Visible partial data')] }))
-  await page.route('**/rest/v1/rpc/dashboard_summary', async (route) => {
+  await page.route('**/rest/v1/rpc/search_transactions**', route => route.fulfill({ json: [transaction('Visible partial data')] }))
+  await page.route('**/rest/v1/rpc/read_exact_dashboard_summary', async (route) => {
     if (unavailable.summary) return fail(route)
     await route.fulfill({ json: {
       base_currency: 'EGP', total_assets_minor: 1000, total_liabilities_minor: 0, net_worth_minor: 1000,
@@ -98,7 +96,7 @@ test('summary, series, and cash failures remain independent and individually ret
       revenue_previous_month_minor: 0, expenses_previous_month_minor: 0, net_profit_previous_month_minor: 0,
     } })
   })
-  await page.route('**/rest/v1/rpc/report_monthly_series', async (route) => {
+  await page.route('**/rest/v1/rpc/report_monthly_series**', async (route) => {
     if (unavailable.series) return fail(route)
     await route.fulfill({ json: [] })
   })
@@ -129,12 +127,12 @@ test('summary, series, and cash failures remain independent and individually ret
 
   unavailable.liquid = false
   await liquidAlert.getByRole('button', { name: 'Retry', exact: true }).click()
-  await expect(page.getByText('No liquid accounts yet.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Cash position', exact: true }).locator('../..').getByText('No liquid accounts yet.', { exact: true })).toBeVisible()
 })
 
 test('the recent-read error is localized and accessible in Arabic RTL', async ({ page }) => {
   let unavailable = true
-  await page.route('**/rest/v1/rpc/search_transactions', async (route) => {
+  await page.route('**/rest/v1/rpc/search_transactions**', async (route) => {
     if (unavailable) return fail(route)
     await route.fulfill({ json: [transaction('معاملة لوحة تحكم مستعادة')] })
   })

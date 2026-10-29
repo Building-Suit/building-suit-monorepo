@@ -227,6 +227,9 @@ export type { CalendarView } from './composables/useCalendarNavigation.ts'
 export { useFileUpload } from './composables/useFileUpload.ts'
 
 export { useViewportSpace } from './composables/useViewportSpace.ts'
+export { createSicsScale } from './controllers/createSicsScale.ts'
+export type { ScaleSerialOptions, ScaleSerialPort, ScaleSerialAccess, SicsReading, SicsScaleState } from './controllers/createSicsScale.ts'
+export { parseSicsWeight, parseSicsIdentity, parseSicsCapability, sicsNetReading } from './utils/mtSics.js'
 export { usePointOfSaleSections } from './composables/usePointOfSaleSections.ts'
 export { boundedQuantity, steppedQuantity, restoreQuantityInput } from './utils/quantity.ts'
 
@@ -251,7 +254,7 @@ export { usePageRevalidation } from './composables/usePageRevalidation.ts'
 export { useBlobUrl } from './composables/useBlobUrl.ts'
 export{createEmailStepController,emailStepState,emailStepDelay,normalizedAuthEmail,validAuthEmail}from'./controllers/emailStep.ts'
 export type{EmailStepState,EmailStepError}from'./controllers/emailStep.ts'
-export { useSignupWizard } from './composables/useSignupWizard.ts'
+export { useSignupWizard, focusSignupStage } from './composables/useSignupWizard.ts'
 
 export { useGuardedChoice } from './composables/useGuardedChoice.ts'
 export { useControlledRadioGroup } from './composables/useControlledRadioGroup.ts'
@@ -268,3 +271,4 @@ export { useNavigationChamber } from './composables/useNavigationChamber.ts'
 export { readWebsiteImage } from './utils/readWebsiteImage.ts'
 
 export { scrollRegionKey } from './scrollRegion.ts'
+export { normalizeDecimalText } from './utils/decimalText.js'

@@ -53,7 +53,7 @@ export function affectedSuits(files, graph) {
   while (changed) { changed = false; for (const node of graph) if (!affected.has(node.name) && node.dependencies.some(dep => affected.has(dep))) { affected.add(node.name); changed = true } }
   return graph.filter(node => node.suit && affected.has(node.name)).map(node => node.suit).sort()
 }
-export function validateCoverage(fragments, files, graph) {
+export function validateCoverage(fragments, files, graph, historicalScope = () => null) {
   const registry = graph.filter(node => node.suit).map(node => node.suit)
   const ids = new Set()
   for (const row of fragments) { validateFragment(row, registry); if (ids.has(row.id)) throw new Error('Duplicate fragment'); ids.add(row.id) }
@@ -67,11 +67,35 @@ export function validateCoverage(fragments, files, graph) {
   for (const row of fragments) {
     const scope = files.filter(file => row.paths.some(prefix => file === prefix || file.startsWith(`${prefix}/`)))
     const affected = affectedSuits(scope, graph)
-    if (affected.length && row.suits.some(suit => !affected.includes(suit))) throw new Error('Unrelated Suit in fragment')
+    if (affected.length && row.suits.some(suit => !affected.includes(suit))) {
+      // An append-only task receipt can outlive a reverted path or consolidated
+      // workflow. Its original consumer claim still needs committed evidence;
+      // the surviving net diff alone cannot reconstruct that historical scope.
+      const source = historicalScope(row)
+      const original = source && affectedSuits(source.files, source.graph)
+      if (!original?.length || row.suits.some(suit => !original.includes(suit))) throw new Error('Unrelated Suit in fragment')
+    }
   }
 }
 export function fragmentTree(ref) {
   return git('ls-tree', '-r', '--name-only', ref, '--', 'release-fragments').split('\n').filter(file => file.endsWith('.json')).map(file => ({ file, row: JSON.parse(git('show', `${ref}:${file}`)) }))
+}
+export function fragmentSourceScope(ref, file, row, run = git) {
+  const introductions = run('log', '--format=%H', '--diff-filter=A', ref, '--', file).split('\n').filter(Boolean)
+  if (introductions.length !== 1) return null
+  const source = introductions[0]
+  if (canonical(JSON.parse(run('show', `${source}:${file}`))) !== canonical(row)) return null
+  const files = run('diff-tree', '--root', '--no-commit-id', '--name-only', '-r', source).split('\n')
+    .filter(changed => row.paths.some(prefix => changed === prefix || changed.startsWith(`${prefix}/`)))
+  const graph = run('ls-tree', '-r', '--name-only', source, '--', 'apps', 'packages').split('\n')
+    .filter(manifest => /^(apps|packages)\/[^/]+\/package\.json$/.test(manifest))
+    .map(manifest => {
+      const value = JSON.parse(run('show', `${source}:${manifest}`))
+      const dir = manifest.slice(0, -'/package.json'.length)
+      return { dir, name: value.name, suit: dir.startsWith('apps/') && dir.endsWith('-suit') ? dir.slice(5) : null,
+        dependencies: Object.keys({ ...value.dependencies, ...value.devDependencies }) }
+    })
+  return { files, graph }
 }
 export function collectBatch(ref, parent, graph) {
   const prior = new Map(fragmentTree(parent).map(({ file, row }) => [file, row]))
@@ -82,7 +106,7 @@ export function collectBatch(ref, parent, graph) {
   }
   const fragments = current.filter(({ file }) => !prior.has(file)).map(({ row }) => row)
   const files = git('diff', '--name-only', parent, ref).split('\n').filter(Boolean)
-  validateCoverage(fragments, files, graph)
+  validateCoverage(fragments, files, graph, row => fragmentSourceScope(ref, current.find(item => item.row.id === row.id).file, row))
   const allIds = current.map(({ row }) => row.id)
   if (new Set(allIds).size !== allIds.length) throw new Error('Duplicate fragment ID in history')
   return fragments.sort((a, b) => a.id.localeCompare(b.id))

@@ -13,9 +13,9 @@
     "candidate:inspect": "node scripts/inspect-mobile-candidate.mjs"
   },
   "dependencies": {
-    "nuxt": "4.5.2",
-    "vue": "3.5.42",
-    "vue-router": "5.3.0",
+    "nuxt": "4.6.2",
+    "vue": "3.5.44",
+    "vue-router": "5.4.0",
     "@building-suit/nuxt-layer": "workspace:*",
     "@building-suit/contracts": "workspace:*",
     "@building-suit/ui": "workspace:*",

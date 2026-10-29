@@ -13,6 +13,19 @@ function report() {
 }
 const spec = (value, index = 0) => value.suites[0].suites[index].specs[0]
 
+test('reception action diagnostics admit only fixed phases, bounded counts and boolean states',()=>{
+ const value=report(),entry=spec(value,2),state={phase:'stale-reorder-reason',dialogCount:0,reasonCount:0,reasonDisabled:null,refreshDisabled:false}
+ entry.tests[0].results[0].status='failed'
+ entry.tests[0].annotations=[{type:'doctor-reception-action-state',description:JSON.stringify(state)}]
+ assert.deepEqual(evidence(value,1).failed[0].actionState,state)
+ for(const input of [{...state,patient:'private sentinel'},{...state,phase:'private sentinel'},{...state,reasonDisabled:'private sentinel'},{...state,dialogCount:11},{...state,reasonCount:-1},null]){
+  entry.tests[0].annotations[0].description=JSON.stringify(input)
+  const actual=evidence(value,1);assert.equal('actionState'in actual.failed[0],false);assert.equal(JSON.stringify(actual).includes('private sentinel'),false)
+ }
+ const other=report(),foreign=spec(other,3);foreign.tests[0].results[0].status='failed';foreign.tests[0].annotations=[{type:'doctor-reception-action-state',description:JSON.stringify(state)}]
+ assert.equal('actionState'in evidence(other,1).failed[0],false)
+})
+
 test('failed reception retains only bounded numeric geometry and fixed viewport flags',()=>{
  const value=report(),entry=spec(value,2),geometry={clientWidth:330,scrollWidth:1200,left:-868.5,width:390,rtl:true,dark:false}
  entry.tests[0].results[0].status='failed'

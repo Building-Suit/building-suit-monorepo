@@ -1,3 +1,4 @@
+import { discardShopQuery } from '~/utils/shopQueryCleanup'
 import { useMutationCache, useQueryCache } from '@pinia/colada'
 import { useShopScopeStore } from '~/stores/scope'
 import { usePosReceiptStore } from '~/stores/posReceipt'
@@ -10,7 +11,8 @@ export default defineNuxtPlugin({
     const scope = useShopScopeStore()
     const cache = useQueryCache()
     const mutations = useMutationCache()
-    const posReceipt = usePosReceiptStore()
+    const pinia = usePinia()
+    let posReceipt: ReturnType<typeof usePosReceiptStore> | undefined
     watch(() => user.value?.id ?? null, actor => {
       if (actor === scope.actorId) return
       scope.revision++
@@ -30,7 +32,12 @@ export default defineNuxtPlugin({
     }, { immediate: true, flush: 'sync' })
 
     watch([() => scope.revision, () => scope.shopId, () => scope.locationId, () => scope.publicAccessRevision], () => {
-      posReceipt.selectScope(JSON.stringify([scope.actorId, scope.revision, scope.shopId, scope.locationId]))
+      // Public SSR has no counter state. Once an authenticated receipt store
+      // exists, retain the reference so sign-out still clears it synchronously.
+      if (scope.actorId || posReceipt) {
+        posReceipt ??= usePosReceiptStore(pinia)
+        posReceipt.selectScope(JSON.stringify([scope.actorId, scope.revision, scope.shopId, scope.locationId]))
+      }
       for (const entry of cache.getEntries({ predicate: entry => {
         if (entry.key[0] !== 'shop-suit') return false
         if (entry.key[4] !== (user.value?.id ?? 'anonymous') || entry.key[5] !== scope.revision) return true
@@ -39,7 +46,7 @@ export default defineNuxtPlugin({
         return entry.key[6] !== '*' && entry.key[6] !== (scope.shopId ?? 'none') || entry.key[7] !== '*' && entry.key[7] !== (scope.locationId ?? 'none') || entry.key[8] !== scope.publicAccessRevision
       } })) {
         // Detached late responses cannot become another account/shop's cached snapshot.
-        cache.cancel(entry); cache.remove(entry)
+        discardShopQuery(cache, entry)
       }
       for (const entry of mutations.getEntries({ predicate: entry => entry.meta.shopMutation === true })) mutations.remove(entry)
     }, { immediate: true, flush: 'sync' })

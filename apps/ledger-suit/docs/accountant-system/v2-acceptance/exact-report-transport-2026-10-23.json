@@ -1,0 +1,85 @@
+{
+  "task": "LS-FIN-PRECISION-001",
+  "observed_at": "2026-10-23",
+  "parent_pr": 449,
+  "parent_sha": "fe8ed4c45bb760d4f0e1cbdb5107fc940c3e831a",
+  "regression": {
+    "exact_minor": "9007199254740993",
+    "old_actual_sdk_number": "9007199254740992",
+    "new_transport": "Exact decimal strings; native Supabase JavaScript client/PostgREST verified"
+  },
+  "native": {
+    "result": "pass",
+    "tables": 103,
+    "reports": 4,
+    "actual_postgrest": "16.1",
+    "migration_files": 106,
+    "exact_minor_units": true,
+    "financial_report_transport": "legacy rounding reproduced; exact P&L/GL/cash detail/overview/indirect cash/context verified",
+    "allocation_transport": "exact save/replay; changed retry, stale decision, partial total and outsider/viewer rejected",
+    "file_digests": "match",
+    "second_readable_tenant": "excluded",
+    "outsider_and_viewer_export": "denied",
+    "internal_request_table": "403",
+    "tenant_relations_accounted": 103,
+    "captured_schema": "ls-ops-001-v2",
+    "two_metadata_sources": "2 objects / 7 bytes / 1 receipt verified",
+    "storage_bytes": "not_exercised"
+  },
+  "migration_preservation": {
+    "previous_migrations_unchanged": 105,
+    "forward_migration": "20261022213133",
+    "public_app_tables": 122,
+    "before_after_equal": true,
+    "table_fingerprint_sha256": "6d36874ca1618faf5caee55633fb41eeeff6d4d71732816b50c415d7c7254b86",
+    "journals": 22,
+    "entries": 44,
+    "audit_rows": 163,
+    "operator_audit_rows": 3,
+    "boundary": "Snapshot before/after migration application only; subsequent native checks retain separate synthetic fixtures."
+  },
+  "verification": {
+    "native_sql_files": 64,
+    "native_sql_assertions": 1941,
+    "native_sql_result": "pass",
+    "ledger_units": 128,
+    "ledger_unit_failures": 0,
+    "app_eslint": "pass",
+    "workspace_check": "pass",
+    "production_build": "pass",
+    "database_lint": {
+      "app_functions_with_warnings": 13,
+      "app_warning_count": 21,
+      "app_error_count": 0,
+      "new_adapter_findings": 0,
+      "provider_extension_findings": "pgTAP helper warnings are separate from product function counts"
+    },
+    "retained_fixture_repair": "Platform observer payment assertion now verifies its two fixture identities alongside retained prior test payments.",
+    "browser": {
+      "pass": 18,
+      "fail": 0,
+      "engine": "System Chromium 154",
+      "scope": "EN/AR, light/dark, 390/768/1440 report surfaces; exact large-number display and large string allocation submissions",
+      "boundary": "Controlled UI API fixtures; actual PostgREST/SDK evidence recorded independently above"
+    },
+    "ledger_typecheck": "pass"
+  },
+  "source_sha256": {
+    "app/pages/reports.vue": "fe17e006c9fa47af3b473b99f1773fe41a2fa7305b8cf38fb4b0b045c3b02819",
+    "app/composables/useLedgerCashFlowAllocationDialogView.ts": "e0c74c581e7549939b9b86b3a4c12a07b172940cff4e44473726e342fabc03a4",
+    "app/composables/useLedgerActivityPresentation.ts": "1f99d8b3c62a02183321264560f48cce6dd65ba709d47431a0033fb56c48aa75",
+    "types/exact-report-rpc.types.ts": "50491d70eb9581b2cdb4355b116d0ac3d3ff460e006f74a387c87624f0fa67cc",
+    "supabase/migrations/20261022213133_exact_financial_report_transport.sql": "54b1a4d4d8a5ea47981f52911458e9f510f8c2e1d67aa9e57c8378845d5d9419",
+    "supabase/tests/52_exact_report_transport_test.sql": "9ab59c03f4002618ccdc0f27db3217fa141dfb41af9a921622f8ebdf982780ab",
+    "supabase/tests/78_platform_admin_test.sql": "bcdc1738264d32b6a22b7b9396dbe030c71ab720b8d188b5c242d0a489652177",
+    "scripts/test-portability-native.mjs": "296e7741009c6d2e6855e00b08407e6fad2fedad542ac63576a3e298f9323eeb",
+    "tests/e2e/atomic-reports.spec.ts": "22e3e7c5623e745c5111a4fd66a6aeecbc900d459fc5c3e5106bcb9cafe6da8a"
+  },
+  "pending": [
+    "Timed native second-instance restore and actual private Storage bytes",
+    "Integrated AR/AP/assets/bank/CF acceptance",
+    "Remaining dependency advisories and configured hosted security review",
+    "Live Automation queue reconciliation",
+    "Accountant UAT and provider deployment"
+  ]
+}
