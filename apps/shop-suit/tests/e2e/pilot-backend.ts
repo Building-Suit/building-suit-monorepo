@@ -101,7 +101,11 @@ export async function login(page: Page, account: Account, locale: string) {
   await expect(email).toBeEditable()
   await expect(password).toHaveCount(0)
   await email.fill(account.email)
+  const emailResponse = page.waitForResponse(response => new URL(response.url()).pathname === '/api/auth/email-step' && response.request().method() === 'POST')
   await page.getByRole('button', { name: locale === 'ar' ? 'التالي' : 'Continue', exact: true }).click()
+  const checkedEmail = await emailResponse
+  expect(checkedEmail.ok()).toBe(true)
+  expect(await checkedEmail.json()).toEqual({ canContinue: true })
   await expect(password).toBeEditable()
   await password.fill(account.password)
   const submit = form.locator('button[type="submit"]')
