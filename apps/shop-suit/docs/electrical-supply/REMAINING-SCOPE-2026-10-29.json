@@ -1,0 +1,1421 @@
+{
+  "reviewed_baseline": "81cdcc608519f538a2dec85c3d6d6c2bd4e4687d",
+  "scope": "All55 initiative tasks; available-source inventory and remaining gates, not fresh full requirement acceptance",
+  "tasks": [
+    {
+      "task": "SS-ELEC-000",
+      "title": "Initial source and database audit",
+      "source_group": "initiative gate",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/docs/electrical-supply/REQUIREMENTS.md",
+          "exists": true
+        }
+      ],
+      "test_paths": [],
+      "remaining": "Complete requirement-by-requirement current-source evidence audit; hosted history remains access-bound.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-001",
+      "title": "Existing changelog reconciliation",
+      "source_group": "initiative gate",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/docs/electrical-supply/RELEASE-RECONCILIATION.md",
+          "exists": true
+        }
+      ],
+      "test_paths": [],
+      "remaining": "Existing production baseline SHA/receipt and verified catalog binding; guarded catalog publication held.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-002",
+      "title": "Requirements and implementation tracker",
+      "source_group": "initiative gate",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/docs/electrical-supply/REQUIREMENTS.md",
+          "exists": true
+        }
+      ],
+      "test_paths": [],
+      "remaining": "Reconcile all55 tracker entries against integrated source and precise tests; historical statuses are not completion.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-003",
+      "title": "Measurement architecture and design decisions",
+      "source_group": "initiative gate",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/docs/electrical-supply/REQUIREMENTS.md",
+          "exists": true
+        }
+      ],
+      "test_paths": [],
+      "remaining": "Finish design/requirement traceability; preserve established measurement/financial authorities.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-004",
+      "title": "Electrical initiative changelog preparation",
+      "source_group": "initiative gate",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/docs/electrical-supply/REQUIREMENTS.md",
+          "exists": true
+        }
+      ],
+      "test_paths": [],
+      "remaining": "Curate actual net-diff release notes; preserve accepted fragments and wait for supported catalog publication.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-101",
+      "title": "Unit taxonomy and validated registry",
+      "source_group": "foundation",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022185512_measurement_foundation.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/measurement.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measurement_foundation.sql",
+          "exists": true
+        }
+      ],
+      "remaining": "Confirm complete registry taxonomy and inactive-unit denial in final native schema.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-102",
+      "title": "Canonical product stock units",
+      "source_group": "foundation",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022185512_measurement_foundation.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/measurement.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measurement_foundation.sql",
+          "exists": true
+        }
+      ],
+      "remaining": "Confirm canonical units and locked/legacy-product behavior in final native schema.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-103",
+      "title": "Quantity precision schema audit and migration",
+      "source_group": "foundation",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022185512_measurement_foundation.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/measurement.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measurement_foundation.sql",
+          "exists": true
+        }
+      ],
+      "remaining": "Audit exact quantity precision across all receipts, returns, imports, reporting and historical columns.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-104",
+      "title": "Server-authoritative unit conversion",
+      "source_group": "foundation",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022185512_measurement_foundation.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/measurement.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measurement_foundation.sql",
+          "exists": true
+        }
+      ],
+      "remaining": "Qualify real-session conversions, invalid dimensions/precision and server-authoritative amounts.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-105",
+      "title": "Product measurement settings UI",
+      "source_group": "foundation",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022185512_measurement_foundation.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/measurement.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measurement_foundation.sql",
+          "exists": true
+        }
+      ],
+      "remaining": "Complete measurement editor state matrix, keyboard/RTL and external native-Arabic review.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-106",
+      "title": "Existing-product and historical-data compatibility",
+      "source_group": "foundation",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022185512_measurement_foundation.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/measurement.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measurement_foundation.sql",
+          "exists": true
+        }
+      ],
+      "remaining": "Verify upgrades against retained legacy transactions; never reinterpret historical quantities.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-107",
+      "title": "UoM permissions, validation, and regression tests",
+      "source_group": "foundation",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022185512_measurement_foundation.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/measurement.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measurement_foundation.sql",
+          "exists": true
+        }
+      ],
+      "remaining": "Close final role/tenant/location and direct-write/private-helper denial evidence.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-201",
+      "title": "Purchase-unit conversion",
+      "source_group": "measured",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/pos.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measured_retail.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/measured-retail.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Real Auth purchase-unit browser-to-RPC qualification; retain supplier cost/quantity invariants.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-202",
+      "title": "Packaging definitions",
+      "source_group": "measured",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/pos.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measured_retail.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/measured-retail.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Packaging editor and versioned historical conversion qualification across roles.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-203",
+      "title": "Selling-unit and package pricing",
+      "source_group": "measured",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/pos.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measured_retail.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/measured-retail.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Verify exact package/unit prices through actual sale/payment and refund authorities.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-204",
+      "title": "Measurement-aware POS",
+      "source_group": "measured",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/pos.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measured_retail.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/measured-retail.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Real Auth POS financial browser flow; unpublished checkout recovery awaits original archive.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-205",
+      "title": "FIFO and physical stock integration",
+      "source_group": "measured",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/pos.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measured_retail.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/measured-retail.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Final native FIFO/stock races and actual counter/fulfillment consistency.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-206",
+      "title": "Inventory counts, corrections, and thresholds",
+      "source_group": "measured",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/pos.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measured_retail.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/measured-retail.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Complete native count/correction/threshold browser and location-isolation evidence.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-207",
+      "title": "Receipts and immutable line snapshots",
+      "source_group": "measured",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/pos.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measured_retail.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/measured-retail.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Verify immutable receipt snapshots, actual printer output and original values after catalog edits.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-208",
+      "title": "Measurement-aware returns and refunds",
+      "source_group": "measured",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/pos.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measured_retail.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/measured-retail.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Final original-cost partial-return/refund qualification and genuine merchant recovery procedure.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-209",
+      "title": "CSV import/export and barcode integration",
+      "source_group": "measured",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/pos.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measured_retail.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/measured-retail.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Complete CSV/barcode browser integration and real scanner acceptance; no synthetic hardware claim.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-210",
+      "title": "Tax/ETA and offline compatibility",
+      "source_group": "measured",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/pos.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measured_retail.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/measured-retail.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Original unpublished offline/atomic recovery is missing; ETA live setup/acceptance is separate.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-211",
+      "title": "Reporting and margin compatibility",
+      "source_group": "measured",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/pos.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_measured_retail.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/measured-retail.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Full reporting/margin regressions across quantity/tax/returns/partial fulfillment and RTL.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-301",
+      "title": "Electrical technical attributes",
+      "source_group": "reels",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022202543_electrical_catalog_and_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/pages/inventory/reels.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/electrical-reels.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Current technical search/editor exact-head browser qualification and large catalog behavior.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-302",
+      "title": "Product variants and SKU strategy",
+      "source_group": "reels",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022202543_electrical_catalog_and_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/pages/inventory/reels.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/electrical-reels.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Verify independently identified SKU/variant stock, imports and search; do not merge variant inventories.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-303",
+      "title": "First-class cable reels/drums",
+      "source_group": "reels",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022202543_electrical_catalog_and_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/pages/inventory/reels.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/electrical-reels.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Native reel lifecycle and merchant drum/reel identification acceptance.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-304",
+      "title": "Continuous cable-length allocation",
+      "source_group": "reels",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022202543_electrical_catalog_and_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/pages/inventory/reels.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/electrical-reels.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Final real-session continuous length/allocation and partial physical reel qualification.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-305",
+      "title": "Cutting operations and audit trail",
+      "source_group": "reels",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022202543_electrical_catalog_and_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/pages/inventory/reels.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/electrical-reels.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Current native cut/race/audit/role gates plus actual counter acceptance.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-306",
+      "title": "Cable remnants and scrap",
+      "source_group": "reels",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022202543_electrical_catalog_and_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/pages/inventory/reels.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/electrical-reels.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Remnant/scrap history and downstream report reconciliation in final merchant journey.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-307",
+      "title": "Cable return and damage policies",
+      "source_group": "reels",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022202543_electrical_catalog_and_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/pages/inventory/reels.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/electrical-reels.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Returned/opened/damaged reel policy, permission and original-cost verification.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-308",
+      "title": "Reel-level inventory and reports",
+      "source_group": "reels",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261022202543_electrical_catalog_and_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/pages/inventory/reels.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/electrical-reels.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Reconcile reel-level reporting/stock counts with real measured merchant operations.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-401",
+      "title": "Customer groups",
+      "source_group": "trade",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261023202711_trade_customer_groups_and_prices.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/pages/trade-pricing.vue",
+          "exists": true
+        },
+        {
+          "path": "packages/ui/src/templates/BsTradePricingPage.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_trade_pricing.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/trade-pricing.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Final native customer-group role, tenant and historical price snapshot verification.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-402",
+      "title": "Quantity-break and customer-specific pricing",
+      "source_group": "trade",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261023202711_trade_customer_groups_and_prices.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/pages/trade-pricing.vue",
+          "exists": true
+        },
+        {
+          "path": "packages/ui/src/templates/BsTradePricingPage.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_trade_pricing.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/trade-pricing.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Real Auth customer/quantity-break pricing-to-sale flow and original agreed price preservation.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-403",
+      "title": "Quotations and revisions",
+      "source_group": "quotation",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261023215636_formal_trade_quotations.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/pages/quotations.vue",
+          "exists": true
+        },
+        {
+          "path": "packages/ui/src/templates/BsTradeQuotationsPage.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_trade_quotations.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/quotations.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Complete native quote versions/expiry/role guards and EN/AR browser state matrix.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-404",
+      "title": "Sales orders",
+      "source_group": "order",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261023222339_accepted_quotation_sales_orders.sql",
+          "exists": true
+        },
+        {
+          "path": "packages/ui/src/templates/BsTradeOrdersPage.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_trade_orders.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/trade-orders.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Final native accepted-quote conversion/idempotency and immutable source evidence.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-405",
+      "title": "Stock reservation",
+      "source_group": "reservation",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261023224938_location_and_reel_order_reservations.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/composables/useOrderReservations.ts",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_order_reservations.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/order-reservations.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Native concurrency and location/reel reservation denial on final source; staged partial release recovery.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-406",
+      "title": "Deposits and partial fulfillment",
+      "source_group": "funding",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261025164827_order_deposits_and_partial_fulfillment.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/composables/useOrderFunding.ts",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/composables/useOrderDelivery.ts",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_order_funding.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_order_fulfillment.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/order-fulfillment.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Actual Auth deposit/collection/partial delivery financial browser journey; exact accounting/receipt assertions.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-407",
+      "title": "Supplier purchase orders",
+      "source_group": "supplier",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261025185907_supplier_orders_and_partial_receiving.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/composables/useSupplierOrders.ts",
+          "exists": true
+        },
+        {
+          "path": "packages/ui/src/templates/BsSupplierOrdersPage.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_supplier_orders.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/supplier-orders.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Final supplier-order roles/tenant/closed-period and no-posting-before-receipt qualification.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-408",
+      "title": "Partial supplier deliveries",
+      "source_group": "supplier",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261025185907_supplier_orders_and_partial_receiving.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/composables/useSupplierOrders.ts",
+          "exists": true
+        },
+        {
+          "path": "packages/ui/src/templates/BsSupplierOrdersPage.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_supplier_orders.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/supplier-orders.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Actual partial supplier delivery/race/retry and original debt/cost reconciliation.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-501",
+      "title": "Bin/shelf location tracking",
+      "source_group": "planning",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261025204604_inventory_positions_supplier_references_and_reorder.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/composables/useSupplyPlanning.ts",
+          "exists": true
+        },
+        {
+          "path": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_supply_planning.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/supply-planning.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Bin/shelf counts, relocation and location-isolation browser/native qualification.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-502",
+      "title": "Supplier item codes and lead times",
+      "source_group": "planning",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261025204604_inventory_positions_supplier_references_and_reorder.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/composables/useSupplyPlanning.ts",
+          "exists": true
+        },
+        {
+          "path": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_supply_planning.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/supply-planning.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Supplier item codes/lead-time version/history and tenant/location validation.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-503",
+      "title": "Supplier price history",
+      "source_group": "planning",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261025204604_inventory_positions_supplier_references_and_reorder.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/composables/useSupplyPlanning.ts",
+          "exists": true
+        },
+        {
+          "path": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_supply_planning.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/supply-planning.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Original supplier price history retention and purchasing/report browser qualification.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-504",
+      "title": "Weight barcode compatibility",
+      "source_group": "barcode",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261025214414_verified_gs1_weight_barcodes.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/utils/weightBarcodes.js",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_weight_barcodes.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/weight-barcodes.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "GS1 parser/configuration native and real scanner-label acceptance.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-505",
+      "title": "Electronic scale integration",
+      "source_group": "scale",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261026102152_approved_scale_captures_and_product_mass_length.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/composables/useScaleCounter.ts",
+          "exists": true
+        },
+        {
+          "path": "packages/ux/src/controllers/createSicsScale.ts",
+          "exists": true
+        },
+        {
+          "path": "packages/ui/src/organisms/BsScaleCaptureDialog.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_scale_captures.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/scale-captures.spec.ts",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/weighing-setup.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Approved scale profile/native capture integration plus actual device/operator acceptance.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-506",
+      "title": "Optional weight-to-length conversions",
+      "source_group": "scale",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261026102152_approved_scale_captures_and_product_mass_length.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/composables/useScaleCounter.ts",
+          "exists": true
+        },
+        {
+          "path": "packages/ux/src/controllers/createSicsScale.ts",
+          "exists": true
+        },
+        {
+          "path": "packages/ui/src/organisms/BsScaleCaptureDialog.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_scale_captures.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/scale-captures.spec.ts",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/weighing-setup.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Validate optional mass/length profiles, captured source and original conversion history; no assumed physical equivalence.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-507",
+      "title": "Demand and reorder forecasting",
+      "source_group": "planning",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261025204604_inventory_positions_supplier_references_and_reorder.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/composables/useSupplyPlanning.ts",
+          "exists": true
+        },
+        {
+          "path": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_supply_planning.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/supply-planning.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Forecast/reorder sources, units, stock holds and EN/AR browser qualification; no automatic financial posting.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-508",
+      "title": "Optional commodity-based pricing",
+      "source_group": "commodity",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/supabase/migrations/20261026115536_approved_commodity_pricing.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/app/composables/useCommodityPricing.ts",
+          "exists": true
+        },
+        {
+          "path": "packages/ui/src/templates/BsCommodityPricingPage.vue",
+          "exists": true
+        }
+      ],
+      "test_paths": [
+        {
+          "path": "apps/shop-suit/supabase/tests/shop_commodity_pricing.sql",
+          "exists": true
+        },
+        {
+          "path": "apps/shop-suit/tests/e2e/commodity-pricing.spec.ts",
+          "exists": true
+        }
+      ],
+      "remaining": "Final commodity source/time/expiry/retirement native gates and real sale original-price preservation.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-601",
+      "title": "Product limit and plan suitability review",
+      "source_group": "initiative gate",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/docs/electrical-supply/REQUIREMENTS.md",
+          "exists": true
+        }
+      ],
+      "test_paths": [],
+      "remaining": "Current120-migration SQL and10 synthetic browser cases pass; 10000 active SKU suitability and native/performance acceptance remain open.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-602",
+      "title": "Authorization and tenant-isolation verification",
+      "source_group": "initiative gate",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/docs/electrical-supply/REQUIREMENTS.md",
+          "exists": true
+        }
+      ],
+      "test_paths": [],
+      "remaining": "Reconcile all feature grants/roles/tenant/location/private helper coverage at exact final head.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-603",
+      "title": "Database concurrency and idempotency verification",
+      "source_group": "initiative gate",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/docs/electrical-supply/REQUIREMENTS.md",
+          "exists": true
+        }
+      ],
+      "test_paths": [],
+      "remaining": "Current schema harness race groups pass; complete native all-command duplicate/conflict evidence on final head.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-604",
+      "title": "Full English/Arabic UI qualification",
+      "source_group": "initiative gate",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/docs/electrical-supply/REQUIREMENTS.md",
+          "exists": true
+        }
+      ],
+      "test_paths": [],
+      "remaining": "Complete feature-wide English/Arabic, both themes, screen-reader/keyboard and narrow/desktop matrix; native speaker acceptance external.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-605",
+      "title": "Existing Shop regression qualification",
+      "source_group": "initiative gate",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/docs/electrical-supply/REQUIREMENTS.md",
+          "exists": true
+        }
+      ],
+      "test_paths": [],
+      "remaining": "Run final combined existing business/shared consumer regressions after latest staging reconciliation; capacity scope is not full acceptance.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-606",
+      "title": "Disposable database and E2E integration tests",
+      "source_group": "initiative gate",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/docs/electrical-supply/REQUIREMENTS.md",
+          "exists": true
+        }
+      ],
+      "test_paths": [],
+      "remaining": "Implement/execute genuine browser real Auth-to-financial-RPC disposable integration; synthetic RPC fixtures alone do not qualify.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-607",
+      "title": "Merchant pilot acceptance scenarios",
+      "source_group": "initiative gate",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/docs/electrical-supply/REQUIREMENTS.md",
+          "exists": true
+        }
+      ],
+      "test_paths": [],
+      "remaining": "Execute available synthetic pilot procedures; actual merchant/printer/scanner/scale/native-Arabic signoff remains external.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    },
+    {
+      "task": "SS-ELEC-608",
+      "title": "Release-readiness review and handoff",
+      "source_group": "initiative gate",
+      "inherited_evidence_inventory_sha": "03d5527371fe4cb880cd3ffe3757830626379990",
+      "source_paths": [
+        {
+          "path": "apps/shop-suit/docs/electrical-supply/RELEASE-RECONCILIATION.md",
+          "exists": true
+        }
+      ],
+      "test_paths": [],
+      "remaining": "Bind exact source/migrations/CI/pilot/provider receipt and supported catalog publication; no main/production authorization here.",
+      "completion": "OPEN; source/test presence is not semantic acceptance"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+
+> @building-suit/shop-suit@ typecheck /workspace/shop-suit-electrical-capacity-audit/apps/shop-suit
+> nuxt typecheck
+
+
+[@nuxt/supabase]  WARN  Missing supabase url, set it either in nuxt.config.ts or via env variable
+
+
+[@nuxt/supabase]  WARN  Missing supabase anon key, set it either in nuxt.config.ts or via env variable
+
+
+ WARN  Duplicated imports "PublicPlan", the one from "/workspace/shop-suit-electrical-capacity-audit/apps/shop-suit/app/composables/usePlans.ts" has been ignored and "/workspace/shop-suit-electrical-capacity-audit/apps/shop-suit/app/types/plans.ts" is used
+
+
+ WARN  Duplicated imports "PublicPlan", the one from "/workspace/shop-suit-electrical-capacity-audit/apps/shop-suit/app/composables/usePlans.ts" has been ignored and "/workspace/shop-suit-electrical-capacity-audit/apps/shop-suit/app/types/plans.ts" is used
+

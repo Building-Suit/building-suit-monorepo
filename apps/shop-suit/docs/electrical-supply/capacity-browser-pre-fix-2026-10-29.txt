@@ -1,0 +1,53 @@
+[WebServer] (node:176778) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:176786) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:176794) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 250 active, en (9.6s)
+
+
+  1) apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 250 active, en 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByRole('option', { name: '50', exact: true })
+    Expected: 0
+    Received: 1
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" with timeout 5000ms
+      - waiting for getByRole('option', { name: '50', exact: true })
+        14 × locator resolved to 1 element
+           - unexpected value "1"
+
+
+      54 |       // size would make page offsets disagree with the returned 20-row slice.
+      55 |       await table.getByRole('combobox', { name: 'Rows per page', exact: true }).click()
+    > 56 |       await expect(page.getByRole('option', { name: '50', exact: true })).toHaveCount(0)
+         |                                                                           ^
+      57 |       await expect(page.getByRole('option', { name: '10', exact: true })).toHaveCount(0)
+      58 |       await page.keyboard.press('Escape')
+      59 |     })
+        at /workspace/shop-suit-electrical-capacity-audit/apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:56:75
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/catalog-capacity/catalog-capacity-bounded-catalog-pagination-250-active-en/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/catalog-capacity/catalog-capacity-bounded-catalog-pagination-250-active-en/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/catalog-capacity/catalog-capacity-bounded-catalog-pagination-250-active-en/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/catalog-capacity/catalog-capacity-bounded-catalog-pagination-250-active-en/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    apps/shop-suit/tests/e2e/catalog-capacity.spec.ts:9:5 › bounded catalog pagination: 250 active, en 

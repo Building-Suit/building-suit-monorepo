@@ -1,0 +1,41 @@
+name: Shop catalog capacity browser
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/shop-catalog-capacity.yml'
+      - 'apps/shop-suit/tests/e2e/catalog-capacity*'
+      - 'apps/shop-suit/tests/e2e/pilot-fixture.ts'
+      - 'apps/shop-suit/tests/e2e/cash-policy-fixture-server.mjs'
+      - 'apps/shop-suit/app/pages/products/**'
+      - 'apps/shop-suit/app/pages/services/**'
+      - 'packages/ui/src/templates/BsCataloguePage.vue'
+      - 'packages/ui/src/organisms/BsDataTable.vue'
+      - 'packages/ux/src/composables/useTableQueryInteraction.ts'
+permissions:
+  contents: read
+concurrency:
+  group: shop-catalog-capacity-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  catalog-capacity-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @building-suit/shop-suit build
+        env:
+          NITRO_PRESET: node-server
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/catalog-capacity.config.ts
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: shop-catalog-capacity-browser-results
+          path: test-results/catalog-capacity
+          retention-days: 7
