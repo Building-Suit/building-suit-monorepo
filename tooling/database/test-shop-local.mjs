@@ -26,10 +26,12 @@ suites.push('shop_trial_admin_activation', 'shop_xpay_payments', 'shop_proration
 const activationMigration = await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261014063640_staging_proration_activation.sql', import.meta.url), 'utf8')
 const historicalOrder = (await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261014051811_checkout_recovery_proration_integration.sql', import.meta.url), 'utf8'))
   .replace('create or replace function public.shop_xpay_order_create(', 'create function pg_temp.historical_order_create(')
+  + '\nGRANT EXECUTE ON FUNCTION pg_temp.historical_order_create(uuid,uuid,uuid,jsonb) TO authenticated;\n'
 const priorQuoteMigration = await readFile(new URL('../../apps/shop-suit/supabase/migrations/20261013190345_proration_checkout_windows.sql', import.meta.url), 'utf8')
 const historicalQuote = priorQuoteMigration.slice(priorQuoteMigration.indexOf('create or replace function public.shop_xpay_proration_quote('), priorQuoteMigration.indexOf('create or replace function public.shop_xpay_proration_order('))
   .replace('create or replace function public.shop_xpay_proration_quote(', 'create function pg_temp.historical_quote_create(')
   .replace('on conflict(subscription_id) do nothing', 'on conflict(subscription_id,currency) do nothing')
+  + '\nGRANT EXECUTE ON FUNCTION pg_temp.historical_quote_create(uuid,uuid,uuid,jsonb) TO authenticated;\n'
 const journeys = await readFile(new URL('../../apps/shop-suit/supabase/tests/shop_proration_journeys.sql', import.meta.url), 'utf8')
 const journeySetup = journeys.slice(0, journeys.indexOf('\nDO $$'))
 const privateSetup = journeys.slice(journeys.indexOf('-- Issue secure terms'), journeys.indexOf('DO $$declare f journey_bridge;'))

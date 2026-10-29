@@ -104,3 +104,22 @@ needed explicit execution for `authenticated` under the historical defaults. Its
 assertions, expected SQLSTATEs and all production ACLs remain unchanged. No
 hosted SQL, migration metadata edit, provider setting or new security policy was
 introduced. Only supported CI may reconcile the restored source with staging.
+
+## Historical payment fixture execution
+
+Native `54515e83` review, broad SAS SQL and ordinary Shop suites passed, while
+payments/accounts/website reached the same missing execution grant on the
+rollback-only `pg_temp.historical_order_create` helper. The historical order and
+quote aliases now explicitly allow `authenticated` in all three existing test
+runners. Production constructors, role/owner guards, financial assertions, fixed
+disposable targets and GitHub-hosted admission guards are unchanged.
+
+All twelve database-tool unit checks and changed-script lint pass. A focused
+120-migration schema replay checks both temporary helper signatures: only the
+authenticated fixture actor may execute; anonymous/service actors remain denied;
+unauthenticated owner requests still reach `SHOP_OWNER_REQUIRED`. Existing
+merchant journeys and concurrency groups pass. An earlier attempt to execute
+complete payment SQL in the lightweight provider fixture stopped at unsupported
+`vault.create_secret`; it is retained as a limitation, not financial acceptance.
+Native Supabase payment/concurrency qualification remains required on the final
+commit with real disposable Vault support.

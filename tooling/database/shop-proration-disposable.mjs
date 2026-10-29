@@ -15,6 +15,7 @@ export async function runProrationConcurrency(connection) {
   await admin.query(prior.slice(prior.indexOf('create or replace function public.shop_xpay_proration_quote('), prior.indexOf('create or replace function public.shop_xpay_proration_order('))
     .replace('create or replace function public.shop_xpay_proration_quote(', 'create function pg_temp.historical_quote_create(')
     .replace('on conflict(subscription_id) do nothing', 'on conflict(subscription_id,currency) do nothing'))
+  await admin.query('GRANT EXECUTE ON FUNCTION pg_temp.historical_quote_create(uuid,uuid,uuid,jsonb) TO authenticated')
   const paidOwner = randomUUID(), quoteOwner = randomUUID()
   let clientCount = 0
   async function concurrent(actor, sql, params, key) {
