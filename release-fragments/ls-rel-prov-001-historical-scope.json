@@ -17,7 +17,11 @@
     "tooling/releases/historical-fragment-scope.test.mjs",
     "docs/work-packages/ledger-historical-release-provenance.md",
     "release-changes/items.json",
-    "tooling/releases/mobile-focus-evidence.test.mjs"
+    "tooling/releases/mobile-focus-evidence.test.mjs",
+    "tooling/releases/supersessions.mjs",
+    "tooling/releases/supersessions.test.mjs",
+    "tooling/releases/check.mjs",
+    "release-changes/supersessions.json"
   ],
-  "reason": "Verify immutable historical fragment consumers against their exact original Git source when a later net revert removes a shared path, preserving current path coverage, unknown-consumer rejection and publication gates. No operational product activation or hosted change."
+  "reason": "Verify immutable historical task consumers and exact accepted integration/corrective receipts when later source supersedes behavior. Preserve current semantic coverage, private consumer qualification, publication scope and all deployment/registry/baseline gates; no hosted or runtime change."
 }

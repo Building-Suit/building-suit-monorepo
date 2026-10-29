@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { git, validateFragment, affectedSuits, fragmentTree, digest, workspaceGraphAt } from './fragments.mjs'
+import { validateSupersessions } from './supersessions.mjs'
 export { workspaceGraphAt } from './fragments.mjs'
 
 /** Evidence is reviewed semantic text, compared directly between the two branch trees.
@@ -92,10 +93,12 @@ export function changedEdits(base, head, run = git) {
   }
   return edits
 }
-export function validatePublicTaskCoverage({fragments,inventory,candidate,base,main,head,run=git,reviewed=new Set()}) {
+export function validatePublicTaskCoverage({fragments,inventory,candidate,base,main,head,run=git,reviewed=new Set(),supersessions=[]}) {
+  const corrected = validateSupersessions({records:supersessions,inventory,candidate,head,run})
   const taskEdits=changedEdits(base,head,run), netEdits=changedEdits(main,head,run)
   const active=new Set(candidate.changes.filter(row=>row.disposition==='public').map(row=>row.id))
   for (const fragment of fragments.filter(row=>row.disposition==='public'&&!reviewed.has(row.id))) {
+    if (corrected.has(fragment.id)) continue // Exact replacement and private consumers were independently verified above.
     const survives=[...taskEdits].some(([file,tokens])=>fragment.paths.some(path=>file===path||file.startsWith(`${path}/`))
       && [...tokens].some(token=>netEdits.get(file)?.has(token)))
     for (const suit of fragment.suits) {

@@ -1,0 +1,47 @@
+[
+  {
+    "originalFragment": "ls-ci-qual-001-language-focus",
+    "originalTask": "LS-CI-QUAL-001",
+    "originalSource": "576b04736101808d938d7b2b986206c01a1bc2cd",
+    "originalItem": "ls-ci-qual-001-language-focus",
+    "correctiveFragment": "ss-electrical-cycle-keyboard-focus-20261023",
+    "correctiveTask": "SS-ELECTRICAL-001",
+    "correctiveSource": "a41a2b7c4f5666df365872ef305a06c9961a5143",
+    "correctiveItem": "ss-electrical-cycle-keyboard-focus-20261023",
+    "internalFragment": "ss-electrical-settings-consumer-qualification-20261023",
+    "proof": [
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": "await cycleFocus.preserveDuring(async () => {\n    languagePending.value = true\n    try { await setLocale(next.code as typeof locale.value) }\n    finally { languagePending.value = false }\n  })"
+      },
+      {
+        "path": "packages/ux/src/composables/useControlFocus.ts",
+        "contains": "if (focused && control && control === native.value && control.isConnected\n        && (document.activeElement === document.body || document.activeElement === control)) control.focus()"
+      }
+    ],
+    "originalTaskOrigin": "f2e7a13975c4a36f29982c381af94f807a1904b9",
+    "integrationSource": "3ce7e96f21d2bf21d0383af22b598da989481d1d"
+  },
+  {
+    "originalFragment": "ls-ci-qual-003-appointment-focus",
+    "originalTask": "LS-CI-QUAL-003",
+    "originalSource": "968bba972e8e119b1a08f2162df755ec2f4f2b1c",
+    "originalItem": "ls-ci-qual-003-appointment-focus",
+    "correctiveFragment": "ss-electrical-appointment-editor-context-20261023",
+    "correctiveTask": "SS-ELECTRICAL-001",
+    "correctiveSource": "83f3b6948d1a9f8d49689688b13586ee03ea0dd2",
+    "correctiveItem": "ss-electrical-appointment-editor-context-20261023",
+    "proof": [
+      {
+        "path": "packages/ui/src/templates/BsAppointmentsPage.vue",
+        "contains": "function editSelectedAppointment() { const id = selectedAppointment.value?.id; if (id) emit('edit', id) }"
+      },
+      {
+        "path": "packages/ui/src/templates/BsAppointmentsPage.vue",
+        "contains": ":pending=\"selectedAppointment.pending || showForm\""
+      }
+    ],
+    "originalTaskOrigin": "968bba972e8e119b1a08f2162df755ec2f4f2b1c",
+    "integrationSource": "3ce7e96f21d2bf21d0383af22b598da989481d1d"
+  }
+]
