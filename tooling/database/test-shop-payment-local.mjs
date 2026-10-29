@@ -1,3 +1,5 @@
+// Race fixtures execute the real public command before their held-commit pause;
+// they must not acquire business locks ahead of the command authorization gate.
 import { readFile } from 'node:fs/promises'
 import { spawn, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
@@ -43,7 +45,7 @@ let shopId
 try {
   await runSql(`insert into auth.users (id,email,encrypted_password,aud,role,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values ('${ownerId}','${ownerId}@payment-concurrency.invalid','x','authenticated','authenticated','{}','{}',now(),now());`)
   shopId = lastLine((await runSql(authenticated(ownerId,
-    `select public.create_owner_shop('Payment concurrency fixture','pro','service'::public.business_mode);`))).stdout)
+    `select public.create_owner_shop('Payment concurrency fixture','multi','service'::public.business_mode);`))).stdout)
   const customerId = lastLine((await runSql(authenticated(ownerId,
     `select public.save_customer('${shopId}',null,'Concurrency Customer',null,null,null,null);`))).stdout)
   const serviceId = lastLine((await runSql(authenticated(ownerId,
@@ -54,7 +56,7 @@ try {
   await runSql(authenticated(ownerId,
     `select public.issue_sale('${randomUUID()}','${shopId}','${invoiceId}');`))
 
-  const firstReceipt = `begin; select 1 from public.invoices where id='${invoiceId}' for update; select pg_sleep(0.4); set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_customer_receipt('${randomUUID()}','${shopId}','${customerId}',70,now(),'cash',null,null,'[{"invoice_id":"${invoiceId}","amount":70}]'::jsonb); commit;`
+  const firstReceipt = `begin; set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.record_customer_receipt('${randomUUID()}','${shopId}','${customerId}',70,now(),'cash',null,null,'[{"invoice_id":"${invoiceId}","amount":70}]'::jsonb); select pg_sleep(0.4); commit;`
   const receiptOne = runSql(firstReceipt, { allowFailure: true })
   await new Promise(resolve => setTimeout(resolve, 50))
   const receiptTwo = runSql(authenticated(ownerId,
@@ -69,7 +71,7 @@ try {
   const receiptEvidence = lastLine((await runSql(`select count(*) || '|' || sum(amount) || '|' || shop_private.invoice_outstanding('${invoiceId}') from public.customer_payment_allocations where invoice_id='${invoiceId}';`)).stdout)
   if (receiptEvidence !== '1|70.00|30.00') throw new Error(`receipt race reconciliation failed: ${receiptEvidence}`)
 
-  const firstAdjustment = `begin; select 1 from public.payments where id='${receiptId}' for update; select 1 from public.customer_payment_allocations where id='${allocationId}' for update; select pg_sleep(0.4); set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.reverse_customer_receipt('${randomUUID()}','${shopId}','${receiptId}',now(),'Concurrent correction','[{"allocation_id":"${allocationId}","amount":40}]'::jsonb); commit;`
+  const firstAdjustment = `begin; set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.reverse_customer_receipt('${randomUUID()}','${shopId}','${receiptId}',now(),'Concurrent correction','[{"allocation_id":"${allocationId}","amount":40}]'::jsonb); select pg_sleep(0.4); commit;`
   const adjustmentOne = runSql(firstAdjustment, { allowFailure: true })
   await new Promise(resolve => setTimeout(resolve, 50))
   const adjustmentTwo = runSql(authenticated(ownerId,

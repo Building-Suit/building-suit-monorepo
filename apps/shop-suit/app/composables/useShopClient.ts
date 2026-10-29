@@ -1,10 +1,11 @@
+import { shopQueryError } from '~/utils/shopQueryError'
 import type { Database as ShopDatabase } from '~/types/database.types'
 import { useShopQueryCache } from './useShopQueryCache'
 import { useShopMutation } from './useShopMutation'
 
 /** Explicit read RPC contract. Unknown/new RPCs are commands, never cached as reads. */
 const reads = new Set([
-  'shop_storefront_builder', 'shop_offers', 'shop_offer_sources', 'pos_catalog_offers', 'quote_pos_sale',
+  'commodity_pricing_context', 'weighing_setup_context', 'scale_counter_context', 'get_scale_capture', 'resolve_weight_barcode', 'inventory_planning_context', 'supplier_price_history', 'supplier_order_context', 'trade_order_funding_context', 'trade_order_delivery_context', 'trade_order_reservation_context', 'trade_order_context', 'trade_quotation_context', 'trade_pricing_context', 'quote_customer_sale', 'purchase_reel_options', 'inventory_reel_context', 'pos_reel_options', 'product_technical_options', 'product_measurement_options', 'shop_storefront_builder', 'shop_offers', 'shop_offer_sources', 'pos_catalog_offers', 'quote_pos_sale',
   'appointment_access_status', 'appointment_calendar', 'appointment_options', 'barcode_label_data', 'business_currency_settings',
   'cash_shift_dashboard', 'catalog_sales_report', 'commission_assignment_context', 'commission_history', 'customer_access', 'customer_statement',
   'eta_settings', 'get_customer', 'get_location_sale', 'get_location_sale_receipt', 'get_own_pos_receipt', 'list_own_pos_receipts', 'get_purchase', 'get_sale', 'get_sale_tax_snapshot', 'inventory_access',
@@ -52,7 +53,7 @@ export function useShopClient<Database = ShopDatabase>() {
             const entry = queries.cache.ensure<Response>({ key, staleTime: transient ? 0 : 1_000, gcTime: transient ? 0 : 300_000, meta: { shopResource: resource }, query: async ({ signal }) => {
               const combined = callerSignal ? AbortSignal.any([signal, callerSignal]) : signal
               const result = await (target.abortSignal ? target.abortSignal(combined) : target)
-              if (result.error) throw responseError(result)
+              if (result.error) throw shopQueryError(result.error, result)
               return result
             } })
             try { const result = await queries.cache.refresh(entry); if (result.error) throw result.error; if (!result.data) throw new DOMException('Shop request superseded', 'AbortError'); return result.data }
@@ -100,7 +101,7 @@ export function useShopClient<Database = ShopDatabase>() {
         const entry = queries.cache.ensure<Response>({
           key: [...queries.scopeKey(), resource, JSON.stringify(args)],
           meta: { shopResource: resource }, staleTime: 0, gcTime: 0,
-          query: async ({ signal }) => { const response = await operation(signal); if (response.error) throw responseError(response); return response },
+          query: async ({ signal }) => { const response = await operation(signal); if (response.error) throw shopQueryError(response.error, response); return response },
         })
         return queries.cache.refresh(entry).then(result => {
           if (result.error) throw result.error

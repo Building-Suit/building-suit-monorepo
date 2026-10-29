@@ -142,6 +142,9 @@ begin
 end;
 $$;
 
+-- Role-switched temporary helpers need explicit execution under secure defaults.
+grant execute on function pg_temp.perf_member_checks(uuid) to authenticated;
+grant execute on function pg_temp.perf_denial_checks(uuid,uuid,boolean) to authenticated,anon;
 set local role authenticated;
 select * from pg_temp.perf_member_checks('50000000-0000-4000-8000-000000000001');
 select * from pg_temp.perf_member_checks('50000000-0000-4000-8000-000000000002');

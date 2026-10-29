@@ -65,6 +65,8 @@ begin
   end loop;
   return true;
 end;$$;
+-- Role-switched temporary helpers need explicit execution under secure defaults.
+grant execute on function pg_temp.denial_matrix() to authenticated;
 set local role authenticated;
 select ok(pg_temp.denial_matrix(),'all global reads/commands deny all tenant roles, disabled operators and forged metadata across tenants');
 reset role;

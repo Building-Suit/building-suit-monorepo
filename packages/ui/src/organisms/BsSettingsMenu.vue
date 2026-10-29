@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useFloatingMenu } from '@building-suit/ux'
+import { useControlFocus, useFloatingMenu } from '@building-suit/ux'
 withDefaults(defineProps<{
   alwaysShowLabel?: boolean
   embedded?: boolean
@@ -32,19 +32,24 @@ const THEMES: Array<{ value: 'light' | 'dark' | 'system', labelKey: 'themeLight'
 const themeLabel = computed(() => ui(preference.value === 'light' ? 'themeLight' : preference.value === 'dark' ? 'themeDark' : 'themeSystem'))
 const languageLabel = computed(() => available.value.find(option => option.code === locale.value)?.name ?? locale.value)
 const languagePending = ref(false)
+const cycleControl = ref<HTMLElement | null>(null)
+const cycleFocus = useControlFocus(cycleControl, ref(null))
 async function cycleLanguage() {
   if (languagePending.value) return
   const index = available.value.findIndex(option => option.code === locale.value)
   const next = available.value[(index + 1) % available.value.length]
   if (!next) return
-  languagePending.value = true
-  try { await setLocale(next.code as typeof locale.value) }
-  finally { languagePending.value = false }
+  await cycleFocus.preserveDuring(async () => {
+    languagePending.value = true
+    try { await setLocale(next.code as typeof locale.value) }
+    finally { languagePending.value = false }
+  })
 }
 </script>
 
 <template>
-  <button v-if="cycle" type="button" class="bs-settings-menu__icon-trigger" :disabled="!hydrated || (cycle === 'language' && (available.length < 2 || languagePending))"
+  <button
+    v-if="cycle" ref="cycleControl" type="button" class="bs-settings-menu__icon-trigger" :disabled="!hydrated || (cycle === 'language' && (available.length < 2 || languagePending))"
     :aria-label="cycle === 'theme' ? `${ui('theme')}: ${themeLabel}` : `${ui('language')}: ${languageLabel}`"
     :title="cycle === 'theme' ? `${ui('theme')}: ${themeLabel}` : `${ui('language')}: ${languageLabel}`"
     @click="cycle === 'theme' ? cycleTheme() : cycleLanguage()">

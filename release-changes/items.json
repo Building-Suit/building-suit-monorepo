@@ -2381,5 +2381,1887 @@
     "sources": [
       "shop-plan-website-release-support-20261022"
     ]
+  },
+  {
+    "id": "ss-electrical-measurement-foundation-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Prepare exact units, guarded unused-product configuration and private implementation/release evidence. Measured transactions remain unavailable until dependent precision and workflow integration; no future capability is announced.",
+    "sources": [
+      "ss-electrical-measurement-foundation-20261022"
+    ]
+  },
+  {
+    "id": "ss-electrical-measurement-tooling-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/database/test-shop-local.mjs",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "tooling/database/shop-measurement-schema-disposable.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Add measurement SQL checks to the existing fixed local Shop runner and maintain private release provenance. Shared tooling bookkeeping changes no other product behavior or entitlements.",
+    "sources": [
+      "ss-electrical-measurement-tooling-20261022"
+    ]
+  },
+  {
+    "id": "ss-electrical-measured-retail-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui"
+    ],
+    "reason": "Enable exact measured receiving, sales and canonical FIFO stock through existing authorized workflows.",
+    "notes": {
+      "title": {
+        "en": "Sell and receive products by unit or package",
+        "ar": "بيع واستلام المنتجات بالوحدة أو العبوة"
+      },
+      "summary": {
+        "en": "Set product units and allowed increments, define product-specific packaging, and use them in purchasing and sales.",
+        "ar": "حدد وحدات المنتجات وأصغر كمية مسموحة، وعرّف عبوات كل منتج واستخدمها في المشتريات والمبيعات."
+      },
+      "details": {
+        "en": "Measured sales show their base quantity and preserve entered units and prices on receipts. Stock, counts and eligible returns use the same canonical quantity; used products retain their historical unit.",
+        "ar": "تعرض المبيعات المقاسة الكمية الأساسية وتحفظ الوحدات والأسعار المدخلة على الإيصالات. يستخدم المخزون والجرد والمرتجعات المؤهلة الكمية الأساسية نفسها، وتحتفظ المنتجات المستخدمة بوحدتها التاريخية."
+      }
+    },
+    "sources": [
+      "ss-electrical-measured-retail-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/pos.vue",
+        "contains": "@unit=\"setPosUnit\""
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+        "contains": "create function public.save_product_packaging"
+      },
+      {
+        "path": "packages/ui/src/templates/BsCataloguePage.vue",
+        "contains": "<BsFieldGroup v-if=\"form.measurement && copy.measurement && measurement\""
+      }
+    ]
+  },
+  {
+    "id": "ss-shop-query-error-recovery-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables",
+      "apps/shop-suit/app/plugins",
+      "apps/shop-suit/app/utils/shopQueryError.ts",
+      "apps/shop-suit/tests/unit/query-error-payload.test.mjs"
+    ],
+    "reason": "A failed server read must render its retry state without breaking SSR serialization or retaining provider request secrets.",
+    "notes": {
+      "title": {
+        "en": "Recover safely from failed reads",
+        "ar": "استعادة العرض بعد تعذر تحميل البيانات"
+      },
+      "summary": {
+        "en": "Failed reads can render their error and retry state during server rendering.",
+        "ar": "يمكن عرض حالة الخطأ وإعادة المحاولة عند تعذر قراءة البيانات أثناء عرض الصفحة على الخادم."
+      },
+      "details": {
+        "en": "Read failures retain their error code across hydration without retaining provider requests or credentials in page state.",
+        "ar": "تُحفظ رموز أخطاء القراءة عند تحميل الصفحة دون الاحتفاظ بطلبات المزود أو بيانات الاعتماد في حالة الصفحة."
+      }
+    },
+    "sources": [
+      "ss-shop-query-error-recovery-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/plugins/query-errors.ts",
+        "contains": "definePayloadReducer('ShopQueryError'"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-retail-verification-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/database",
+      "release-changes/items.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      ".github/workflows/shop-measurement-disposable.yml"
+    ],
+    "reason": "Extend the disposable Shop merchant harness and compatible optional shared measurement presentation contracts for existing consumers, including the internal Doctor scaffold. Public Shop/Ledger sign-in label recovery is classified separately; no other Suit is activated.",
+    "sources": [
+      "ss-electrical-retail-verification-20261022"
+    ]
+  },
+  {
+    "id": "shared-sign-in-label-hydration-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsSignInPage.vue"
+    ],
+    "reason": "Stable page-level sign-in control IDs preserve accessible labels after SSR hydration.",
+    "notes": {
+      "title": {
+        "en": "Keep sign-in fields labeled",
+        "ar": "الحفاظ على تسميات حقول تسجيل الدخول"
+      },
+      "summary": {
+        "en": "Email and password labels stay linked to their controls after the page loads.",
+        "ar": "تبقى تسميات البريد الإلكتروني وكلمة المرور مرتبطة بحقولها بعد تحميل الصفحة."
+      },
+      "details": {
+        "en": "Stable sign-in control IDs preserve keyboard and assistive-technology access across server rendering and hydration.",
+        "ar": "تحافظ معرفات حقول تسجيل الدخول الثابتة على الوصول بلوحة المفاتيح والتقنيات المساعدة أثناء عرض الصفحة وتحميلها."
+      }
+    },
+    "sources": [
+      "shared-sign-in-label-hydration-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsSignInPage.vue",
+        "contains": "for=\"bs-sign-in-email\""
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-reels-catalog-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui"
+    ],
+    "reason": "Track individual cable reels and exact cuts while preserving acquisition cost, stock balance, immutable receipts and controlled cable returns. Add typed electrical attributes and independently stocked SKU families.",
+    "notes": {
+      "title": {
+        "en": "Track cable reels and electrical specifications",
+        "ar": "تتبع بكرات الكابلات والمواصفات الكهربائية"
+      },
+      "summary": {
+        "en": "Record individual reels, sell continuous cable or explicit separate pieces, and maintain electrical specifications for each SKU.",
+        "ar": "سجل البكرات الفردية وبع الكابلات كقطع متصلة أو منفصلة باختيار واضح، واحتفظ بالمواصفات الكهربائية لكل صنف."
+      },
+      "details": {
+        "en": "Cuts record source barcodes, requested length and cutting loss. Reels support counts, remnant pricing, damage, scrap and history; eligible cable returns create separate pieces under the sale’s frozen policy.",
+        "ar": "تسجل عمليات القص باركود المصدر والطول المطلوب وفاقد القص. تدعم البكرات الجرد وتسعير البواقي والتلف والخردة والسجل، وتنشئ مرتجعات الكابلات المؤهلة قطعًا منفصلة وفق سياسة البيع المحفوظة."
+      }
+    },
+    "sources": [
+      "ss-electrical-reels-catalog-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261022202543_electrical_catalog_and_reels.sql",
+        "contains": "create function shop_private.plan_reel_sale"
+      },
+      {
+        "path": "apps/shop-suit/app/pages/inventory/reels.vue",
+        "contains": "<BsPhysicalStockPage"
+      },
+      {
+        "path": "packages/ui/src/organisms/BsPointOfSaleCart.vue",
+        "contains": "emit('physicalLoss', line.id, String($event))"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-reels-verification-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/database",
+      "docs/shared",
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "release-changes/items.json",
+      ".github/workflows/shop-measurement-disposable.yml"
+    ],
+    "reason": "Maintain typed optional shared reel presentation, template ownership/catalogue records and disposable physical-stock regression tooling. Other products retain their existing contracts; no additional Suit is activated.",
+    "sources": [
+      "ss-electrical-reels-verification-20261022"
+    ]
+  },
+  {
+    "id": "ss-measured-decimal-regression-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/database",
+      "apps/shop-suit/supabase/tests/shop_website_catalog.sql",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Keep exact numeric stock/price assertions across widened decimal scales; exercise the original website catalog regression alongside measured retail without weakening isolation, concurrency or public-field allowlists.",
+    "sources": [
+      "ss-measured-decimal-regression-20261022"
+    ]
+  },
+  {
+    "id": "ss-electrical-landing-fixture-lint-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/tests/unit/landing-journey.test.mjs",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md"
+    ],
+    "reason": "Remove unused fixture setup and update stale landing source-contract assertions to follow the extracted journey organism and current bilingual receipt story; runtime behavior is unchanged.",
+    "sources": [
+      "ss-electrical-landing-fixture-lint-20261022"
+    ]
+  },
+  {
+    "id": "ss-electrical-context-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/plugins/query-scope.ts",
+      "apps/shop-suit/app/composables/useShopQueryCache.ts",
+      "apps/shop-suit/app/stores/shop.ts",
+      "apps/shop-suit/app/utils/shopQueryCleanup.ts"
+    ],
+    "reason": "Keep counter receipt state off public storefront SSR and clear prior-scope cached snapshots before detaching active consumers. Existing server permissions remain authoritative.",
+    "notes": {
+      "title": {
+        "en": "Keep workspace state scoped to its context",
+        "ar": "حفظ حالة مساحة العمل ضمن سياقها"
+      },
+      "summary": {
+        "en": "Public storefront pages omit counter receipt-selection state. Account and location changes clear prior workspace snapshots immediately.",
+        "ar": "لا تتضمن صفحات المتجر العامة حالة اختيار إيصال نقطة البيع، وتُمسح لقطات مساحة العمل السابقة فور تغيير الحساب أو الفرع."
+      },
+      "details": {
+        "en": "Cancelled reads cannot restore a prior context after its consumers move. Current receipt selection is still cleared on sign-out.",
+        "ar": "لا تعيد القراءات الملغاة بيانات سياق سابق بعد انتقال الواجهة، ويظل اختيار الإيصال الحالي يُمسح عند تسجيل الخروج."
+      }
+    },
+    "sources": [
+      "ss-electrical-context-qualification-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/plugins/query-scope.ts",
+        "contains": "if (scope.actorId || posReceipt)"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-storefront-permission-menu-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/utils/shopPermissionMenu.ts"
+    ],
+    "reason": "Map the existing sales/settings permissions to the current offers and website-builder navigation entries without adding backend authority.",
+    "notes": {
+      "title": {
+        "en": "Review storefront permissions with their pages",
+        "ar": "مراجعة صلاحيات المتجر بجوار صفحاتها"
+      },
+      "summary": {
+        "en": "The role editor groups existing offer and website-builder permissions under their current page names.",
+        "ar": "يجمع محرر الأدوار صلاحيات العروض ومنشئ الموقع الحالية تحت أسماء صفحاتها."
+      },
+      "details": {
+        "en": "Saved and ungrantable permissions retain their existing behavior; backend permission keys are unchanged.",
+        "ar": "تحتفظ الصلاحيات المحفوظة وغير القابلة للمنح بسلوكها الحالي، دون تغيير مفاتيح الصلاحيات في الخادم."
+      }
+    },
+    "sources": [
+      "ss-electrical-storefront-permission-menu-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+        "contains": "'/offers': ['sales.manage', 'settings.manage']"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-regression-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "tooling/database/shop-measurement-schema-disposable.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Repair stale Shop harnesses around the current data client, real Pinia/Colada stores, current settings/receipt templates and scoped query contracts; preserve tenant/race/amount assertions and add actual cache-cancellation checks. Support explicitly selected existing SQL fixtures only in the uniquely owned disposable schema runner. No product activation or hosted mutation is included.",
+    "sources": [
+      "ss-electrical-regression-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-reel-catalog-entrypoint-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/supabase/migrations/20261023195653_catalog_media_entrypoint_authority.sql",
+      "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+      "tooling/database/shop-measurement-schema-disposable.mjs",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md",
+      "apps/shop-suit/supabase/tests/fixtures/measurement_provider_standins.sql"
+    ],
+    "reason": "Repair execution delegation inside the unpublished reel feature. The existing public catalog entry retains its ACL and delegates under its owner to private adapters whose tenant/actor checks remain authoritative. Preserve the authenticated denial for direct private adapter execution and add existing media/upload suites to local qualification.",
+    "sources": [
+      "ss-reel-catalog-entrypoint-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-reel-template-export-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/package.json",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md"
+    ],
+    "reason": "Retain the canonical physical-stock template export and remove its unused duplicate suffix alias, restoring the one-to-one governed source export invariant. No consumer imports the duplicate alias and no rendered behavior changes.",
+    "sources": [
+      "ss-reel-template-export-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-consented-pricing-event-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/index.vue",
+      "packages/ui/src/templates/BsLandingPage.vue"
+    ],
+    "reason": "Restore the existing optional pricing CTA event through the shared landing template; consent, route allowlist and deduplication remain authoritative.",
+    "notes": {
+      "title": {
+        "en": "Restore optional pricing-link measurement",
+        "ar": "استعادة القياس الاختياري لروابط الأسعار"
+      },
+      "summary": {
+        "en": "Pricing-card clicks forward the existing anonymous event when optional analytics is accepted.",
+        "ar": "ترسل نقرات بطاقات الأسعار الحدث المجهول الحالي عند قبول التحليلات الاختيارية."
+      },
+      "details": {
+        "en": "The existing consent and deduplication checks still apply; no plan, customer or form identifiers are sent.",
+        "ar": "تظل فحوص الموافقة ومنع التكرار سارية، ولا تُرسل معرّفات الخطط أو العملاء أو بيانات النماذج."
+      }
+    },
+    "sources": [
+      "ss-electrical-consented-pricing-event-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/index.vue",
+        "contains": "trackPricing: () => analytics.track('pricing_cta')"
+      },
+      {
+        "path": "packages/ui/src/templates/BsLandingPage.vue",
+        "contains": "linkAction: [planId: string]"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-customer-trade-prices-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase/migrations/20261023202711_trade_customer_groups_and_prices.sql",
+      "packages/ui/src/templates/BsTradePricingPage.vue",
+      "packages/ui/src/molecules/BsPriceApprovalFields.vue",
+      "packages/ui/src/organisms/BsPointOfSaleCart.vue",
+      "packages/ui/src/templates/BsPointOfSalePage.vue",
+      "packages/ui/src/templates/BsSalesDirectoryPage.vue",
+      "packages/ui/src/types"
+    ],
+    "reason": "Tenant customer groups, deterministic customer/group/quantity prices and server-owned manager approvals extend existing measured/legacy sale authority, FIFO, taxes and immutable receipts without creating a competing ledger.",
+    "notes": {
+      "title": {
+        "en": "Prices for customer groups and larger quantities",
+        "ar": "أسعار مجموعات العملاء والكميات الكبيرة"
+      },
+      "summary": {
+        "en": "Assign customer groups and use effective customer contracts, group prices and quantity breaks for measured and ordinary products.",
+        "ar": "عيّن مجموعات العملاء واستخدم أسعار التعاقد والمجموعات وشرائح الكميات السارية للمنتجات المقاسة والعادية."
+      },
+      "details": {
+        "en": "POS and sales resolve prices on the server, keep trade prices separate from bundle discounts and preserve issued price approvals and revision history.",
+        "ar": "تحسب نقطة البيع والمبيعات الأسعار في الخادم، ولا تجمع أسعار التعاقد مع خصومات الباقات، وتحفظ تفويضات الأسعار الصادرة وسجل المراجعات."
+      }
+    },
+    "sources": [
+      "ss-electrical-customer-trade-prices-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/trade-pricing.vue",
+        "contains": "rpc.rpc('save_trade_configuration', frozen.value)"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useSaleTaxQuote.ts",
+        "contains": "rpc.rpc('quote_customer_sale'"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-trade-pricing-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/shop-suit/app/types/database.types.ts",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/supabase/tests/shop_trade_pricing.sql",
+      "apps/shop-suit/docs/electrical-supply",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Optional typed shared pricing/editor presentation, explicit exports/route ownership/catalogue, real-schema generated types and merchant/permission/legacy/regression/browser qualification. Other shared consumers remain internal; no product registration, plan term or hosted deployment changes.",
+    "sources": [
+      "ss-electrical-trade-pricing-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-signup-labels-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsSignupEnrollment.vue"
+    ],
+    "reason": "The browser conversion regression reproduced signup email labels losing their control association after hydration. Use distinct semantic field IDs in the existing shared enrollment form, as the sign-in form already does.",
+    "notes": {
+      "title": {
+        "en": "Keep sign-up labels connected to their fields",
+        "ar": "ربط عناوين التسجيل بحقولها"
+      },
+      "summary": {
+        "en": "Account and workspace field labels retain their input associations after the sign-up form loads.",
+        "ar": "تحتفظ عناوين حقول الحساب ومساحة العمل بارتباطها بالمدخلات بعد تحميل نموذج التسجيل."
+      },
+      "details": {
+        "en": "Keyboard and assistive technology can identify the existing fields without changing enrollment or verification behavior.",
+        "ar": "يمكن للوحة المفاتيح والتقنيات المساعدة تحديد الحقول الحالية دون تغيير سلوك التسجيل أو التحقق."
+      }
+    },
+    "sources": [
+      "ss-electrical-signup-labels-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+        "contains": "for=\"bs-signup-email\""
+      },
+      {
+        "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+        "contains": "for=\"bs-signup-verified-email\""
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-shared-form-event-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsLandingPage.vue",
+      "packages/ui/src/organisms/BsSignupEnrollment.vue"
+    ],
+    "reason": "Shared dependency qualification covers all six consumers. Existing landing event forwarding is inert without the Shop analytics adapter. Enrollment input label identities preserve current form behavior; public effects are separately curated for consuming signup products. No product activation or enrollment authority changes.",
+    "sources": [
+      "ss-electrical-shared-form-event-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-cycle-keyboard-focus-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts"
+    ],
+    "reason": "A focused native language-cycle button blurs when disabled during locale loading. Restore its focus after completion only if the user has not focused another control; preserve standard popup-menu behavior. Only Shop has verified public release registration in this initiative.",
+    "notes": {
+      "title": {
+        "en": "Keep keyboard focus after changing language",
+        "ar": "الحفاظ على تركيز لوحة المفاتيح بعد تغيير اللغة"
+      },
+      "summary": {
+        "en": "The language button keeps keyboard focus when the selected language finishes loading.",
+        "ar": "يحتفظ زر اللغة بتركيز لوحة المفاتيح بعد اكتمال تحميل اللغة المختارة."
+      },
+      "details": {
+        "en": "Focus stays with a different control if you move away while the language is loading.",
+        "ar": "يبقى التركيز على أي حقل آخر تنتقل إليه أثناء تحميل اللغة."
+      }
+    },
+    "sources": [
+      "ss-electrical-cycle-keyboard-focus-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": "await cycleFocus.preserveDuring(async () => {"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-settings-consumer-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts",
+      "packages/ux/tests/point-of-sale-keyboard.test.mjs",
+      "packages/testing/e2e/settings-menu-focus.spec.ts",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify all dependency consumers without activating an operational product or inventing a production baseline. Retain popup keyboard navigation checks and test actual shell cycle controls, mobile navigation, hydration, focus and both locales. Restrict this open draft PR new signup public fragment to Shop; protected parent fragments remain untouched.",
+    "sources": [
+      "ss-electrical-settings-consumer-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-signin-draft-public-scope-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsSignInPage.vue",
+      "release-changes/items.json"
+    ],
+    "reason": "Correct the new, unaccepted public sign-in fragment in draft PR445 to Shop only. The real SAS/PostgREST fixture has no public Ledger registration/baseline for this change; shared consumers remain internal provenance. No protected accepted fragment, product registry, production version or release history changes.",
+    "sources": [
+      "ss-signin-draft-public-scope-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-shared-preview-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit/tests/e2e/dos-m1-004.spec.ts",
+      "packages/testing/e2e/settings-menu-focus.spec.ts",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts",
+      "apps/shop-suit/docs/electrical-supply"
+    ],
+    "reason": "Qualify current shared shell controls in their synthetic Doctor consumer without changing Doctor domain behavior, provider setup or clinical/public authority. Preserve scope disclosure, keyboard focus, theme transitions, mobile navigation and no-overflow assertions. Other consumers retain their actual popup/cycle checks.",
+    "sources": [
+      "ss-electrical-shared-preview-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-appointment-editor-context-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsAppointmentsPage.vue"
+    ],
+    "notes": {
+      "title": {
+        "en": "Return to appointment details after editing",
+        "ar": "العودة إلى تفاصيل الموعد بعد التعديل"
+      },
+      "summary": {
+        "en": "Appointment details stay available while you edit, and keyboard focus returns to Reschedule when you close the editor.",
+        "ar": "تبقى تفاصيل الموعد متاحة أثناء التعديل، ويعود تركيز لوحة المفاتيح إلى إعادة الجدولة عند إغلاق المحرر."
+      },
+      "details": {
+        "en": "Unsaved-change confirmation, pending-write protection and cancellation confirmations retain their existing behavior.",
+        "ar": "تحتفظ تأكيدات التغييرات غير المحفوظة وحماية الحفظ الجاري وتأكيدات الإلغاء بسلوكها الحالي."
+      }
+    },
+    "sources": [
+      "ss-electrical-appointment-editor-context-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsAppointmentsPage.vue",
+        "contains": "if (id) emit('edit', id)"
+      }
+    ],
+    "reason": "The current appointment detail dialog was destroyed as its editor opened, disconnecting the focus-return control. Keep the informational dialog mounted under the editor and qualify the actual dialog journey in both locales."
+  },
+  {
+    "id": "ss-electrical-appointment-dialog-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsAppointmentsPage.vue",
+      "apps/shop-suit/tests/e2e/appointment-actions.spec.ts",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify the current shared appointment detail/editor composition, actual scope-source watcher and nested Escape/focus recovery. Only Shop uses this operational route and has public registration for these notes; other dependency consumers remain internal provenance with no product activation.",
+    "sources": [
+      "ss-electrical-appointment-dialog-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-formal-quotations-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase/migrations/20261023215636_formal_trade_quotations.sql",
+      "packages/ui/src/templates/BsTradeQuotationsPage.vue",
+      "packages/ui/src/types/tradeQuotationPresentation.ts"
+    ],
+    "reason": "Formal quotations retain exact server-priced commercial versions, validity, measured lines, taxes and explicit authorized transitions separately from invoice and inventory ledgers.",
+    "notes": {
+      "title": {
+        "en": "Formal quotations with saved versions",
+        "ar": "عروض أسعار رسمية بإصدارات محفوظة"
+      },
+      "summary": {
+        "en": "Prepare measured material offers, review their server prices and taxes, and record issue, customer acceptance or rejection with validity rules.",
+        "ar": "جهّز عروض المواد المقاسة وراجع أسعارها وضرائبها من الخادم، وسجّل الإصدار وقبول العميل أو رفضه مع قواعد الصلاحية."
+      },
+      "details": {
+        "en": "Saved versions and state history remain available when catalog prices change. Print an offer, prepare an explicit new version, and retry an unconfirmed action safely without creating a sale or reserving stock.",
+        "ar": "تبقى الإصدارات وسجلات الحالات محفوظة عند تغير أسعار الكتالوج. اطبع العرض وجهّز إصدارًا جديدًا صريحًا وأعد محاولة الإجراء غير المؤكد بأمان، دون إنشاء بيع أو حجز مخزون."
+      }
+    },
+    "sources": [
+      "ss-electrical-formal-quotations-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/quotations.vue",
+        "contains": "rpc.rpc('trade_quotation_command', frozen.value)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261023215636_formal_trade_quotations.sql",
+        "contains": "create table public.trade_quotation_versions"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-quotation-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/shop-suit/app/types/database.types.ts",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/supabase/tests/shop_trade_quotations.sql",
+      "apps/shop-suit/docs/electrical-supply",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Optional typed quotation editor/history presentation, explicit exports and ownership registry, bilingual browser journeys and public-command SQL approval/expiry/legacy regression qualification. Other dependency consumers remain internal; no hosted deployment, product registration or competing financial ledger.",
+    "sources": [
+      "ss-electrical-quotation-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-agreed-customer-orders-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase/migrations/20261023222339_accepted_quotation_sales_orders.sql",
+      "packages/ui/src/templates/BsTradeOrdersPage.vue",
+      "packages/ui/src/templates/BsTradeQuotationsPage.vue",
+      "packages/ui/src/types"
+    ],
+    "reason": "Accepted quotations convert once into location-scoped customer orders retaining the exact agreed version, quantities, prices, names and taxes. Commercial metadata alone creates no financial or inventory entries.",
+    "notes": {
+      "title": {
+        "en": "Turn accepted quotations into customer orders",
+        "ar": "تحويل عروض الأسعار المقبولة إلى أوامر عملاء"
+      },
+      "summary": {
+        "en": "Create a customer order from an accepted offer while retaining its agreed measurements, prices and tax amounts.",
+        "ar": "أنشئ أمر عميل من عرض مقبول مع الاحتفاظ بالقياسات والأسعار ومبالغ الضرائب المتفق عليها."
+      },
+      "details": {
+        "en": "Repeated conversions return the same order. Agreed history remains unchanged when catalog prices change, and exact money remains readable in quote and order history. Creating an order does not reserve stock or record payment.",
+        "ar": "تعيد محاولات التحويل المتكررة الأمر نفسه. يبقى الاتفاق محفوظًا عند تغير الكتالوج، وتبقى المبالغ الدقيقة قابلة للقراءة في سجل العرض والأمر. لا يحجز إنشاء الأمر مخزونًا ولا يسجل دفعة."
+      }
+    },
+    "sources": [
+      "ss-electrical-agreed-customer-orders-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/orders.vue",
+        "contains": "rpc.rpc('create_trade_order', frozen.value)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261023222339_accepted_quotation_sales_orders.sql",
+        "contains": "create table public.trade_orders"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-order-agreement-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/shop-suit/app/types/database.types.ts",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/supabase/tests/shop_trade_orders.sql",
+      "apps/shop-suit/docs/electrical-supply",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Typed shared order conversion/details, forward-only exact commercial money read projections, scope/revision/retry controls, generated schema contracts and SQL/bilingual browser qualification. Other dependency consumers remain internal; no hosted deployment, ledger duplication or product registration.",
+    "sources": [
+      "ss-electrical-order-agreement-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-public-website-links-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app/composables/usePublicWebsite.ts",
+      "packages/ui/src/templates/BsShopWebsitePage.vue"
+    ],
+    "reason": "Preserve existing main-branch public permalink, locale/canonical and section-anchor contracts while qualifying the newer storefront composition. These links already work on main; restoring them in this open feature stack creates no separate public release capability.",
+    "sources": [
+      "ss-electrical-public-website-links-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-public-website-link-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app/composables/usePublicWebsite.ts",
+      "packages/ui/src/templates/BsShopWebsitePage.vue",
+      "apps/shop-suit/tests/e2e/ss-web-public-001-obligation-2.spec.ts",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify the current shared public storefront in both locales, three widths and both themes; assert both intentional phone links and current inquiry labels while retaining public-only data, host isolation, language/canonical/permalink and hydration checks. Other dependency consumers remain internal without operational activation.",
+    "sources": [
+      "ss-electrical-public-website-link-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-order-stock-reservations-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables/useOrderReservations.ts",
+      "apps/shop-suit/app/pages/orders.vue",
+      "apps/shop-suit/app/pages/pos.vue",
+      "apps/shop-suit/app/pages/inventory/reels.vue",
+      "apps/shop-suit/app/types",
+      "apps/shop-suit/supabase/migrations/20261023224938_location_and_reel_order_reservations.sql",
+      "packages/ui/src/templates/BsTradeOrdersPage.vue",
+      "packages/ui/src/types/tradeOrderPresentation.ts",
+      "apps/shop-suit/app/composables/useShopClient.ts"
+    ],
+    "reason": "Location-scoped customer orders reserve actual FIFO stock and physical source reels until an explicit expiry. Ordinary sales, counts and supplier withdrawals cannot consume held capacity; authorized replacement, release, expiry and cancellation retain immutable history.",
+    "notes": {
+      "title": {
+        "en": "Reserve stock for contractor orders",
+        "ar": "حجز المخزون لأوامر المقاولين"
+      },
+      "summary": {
+        "en": "Protect agreed material quantities and physical cable sources while showing on-hand, reserved and available stock.",
+        "ar": "احفظ كميات المواد ومصادر الكابلات الفعلية المتفق عليها مع عرض الموجود والمحجوز والمتاح."
+      },
+      "details": {
+        "en": "Replace or release order holds with a reason and deadline. Expired or cancelled holds return stock to availability. Cashier availability excludes active holds, and competing reservations cannot claim the same stock. Reservations create no invoice or payment.",
+        "ar": "استبدل حجوزات الأمر أو حرّرها مع تسجيل السبب والموعد. تعيد الحجوزات المنتهية أو الملغاة الكمية إلى المتاح. يستبعد المتاح للكاشير الحجوزات النشطة، ولا تستطيع الأوامر المتنافسة حجز المخزون نفسه. لا ينشئ الحجز فاتورة أو دفعة."
+      }
+    },
+    "sources": [
+      "ss-electrical-order-stock-reservations-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useOrderReservations.ts",
+        "contains": "rpc.rpc('reserve_trade_order', frozen.value)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261023224938_location_and_reel_order_reservations.sql",
+        "contains": "create table public.trade_order_reservations"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-reservation-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/shop-suit/app/types/database.types.ts",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/supabase/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "tooling/database",
+      "docs/shared/interactions.md",
+      "release-changes/items.json",
+      ".github/workflows/shop-measurement-disposable.yml"
+    ],
+    "reason": "Reservation schema contracts, actual two-session capacity races, bilingual order/POS projections and shared optional dismissal blocking for uncertain retryable commands. Other shared dependency consumers remain internal; no hosted deployment or operational activation.",
+    "sources": [
+      "ss-electrical-reservation-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-public-loader-state-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsLandingPage.vue"
+    ],
+    "reason": "Keep the landing loader HTML attribute explicit when asynchronous public changelog content arrives. The previous undefined removal could leave the loader hidden while headings and consent controls inherited hidden visibility.",
+    "notes": {
+      "title": {
+        "en": "Keep the public landing page visible after loading",
+        "ar": "بقاء صفحة المتجر الرئيسية ظاهرة بعد التحميل"
+      },
+      "summary": {
+        "en": "Landing headings and privacy controls remain visible when the changelog loads asynchronously.",
+        "ar": "تبقى عناوين الصفحة الرئيسية وخيارات الخصوصية ظاهرة عند تحميل سجل التحديثات بشكل غير متزامن."
+      },
+      "details": {
+        "en": "The loading marker now has an explicit completed state, and loading styles apply only while it is active. Release history, upcoming notes and consent choices keep their existing behavior.",
+        "ar": "أصبحت علامة التحميل تحدد اكتماله صراحة، وتُطبّق أنماط التحميل أثناء نشاطها فقط. يحتفظ سجل الإصدارات والتحديثات القادمة وخيارات الموافقة بسلوكها الحالي."
+      }
+    },
+    "sources": [
+      "ss-electrical-public-loader-state-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsLandingPage.vue",
+        "contains": "'data-shop-landing-loading': props.journey ? String(isLoading.value) : undefined"
+      },
+      {
+        "path": "packages/ui/src/templates/BsLandingPage.vue",
+        "contains": "html[data-shop-landing-loading=\"true\"] body>*"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-public-settings-browser-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/tests/e2e",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md",
+      "packages/ui/src/templates/BsLandingPage.vue",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify current section routes, intentional duplicate storefront links, current Arabic booking labels, explicit public map links and archived-location navigation while preserving guest access, privacy, permission denial, host isolation and publication assertions. Changelog qualification uses real disposable public feeds and asserts that the loader releases visibility; other dependency consumers remain internal.",
+    "sources": [
+      "ss-electrical-public-settings-browser-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-order-deposits-collections-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "notes": {
+      "title": {
+        "en": "Deposits and partial order collections",
+        "ar": "العربون والتسليم الجزئي لأوامر العملاء"
+      },
+      "summary": {
+        "en": "Receive, apply and refund order deposits, then invoice reserved goods as customers collect them.",
+        "ar": "سجّل عربون الأمر وخصّصه أو رده، ثم أصدر فواتير الكميات المحجوزة عند استلام العميل لها."
+      },
+      "details": {
+        "en": "Partial collections retain the accepted prices and taxes and preserve the pending stock reservation. Deposits use the existing customer receipt history, and applying them to a delivery invoice records no new receipt. Permissions, whole packages and cut-return approvals remain enforced.",
+        "ar": "يحفظ التسليم الجزئي الأسعار والضرائب المتفق عليها وحجز الكمية المتبقية. يظهر العربون في سجل إيصالات العميل الحالي، ولا يؤدي تخصيصه لفاتورة التسليم إلى تسجيل تحصيل جديد. تبقى الصلاحيات والعبوات الكاملة وموافقات إرجاع المقاطع ملزمة."
+      }
+    },
+    "sources": [
+      "ss-electrical-order-deposits-collections-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261025164827_order_deposits_and_partial_fulfillment.sql",
+        "contains": "create function public.fulfill_trade_order("
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useOrderFunding.ts",
+        "contains": "rpc.rpc('trade_order_deposit', frozen.value)"
+      }
+    ],
+    "paths": [
+      "apps/shop-suit/app/composables/useOrderFunding.ts",
+      "apps/shop-suit/app/composables/useOrderDelivery.ts",
+      "apps/shop-suit/app/pages/orders.vue",
+      "apps/shop-suit/app/pages/customers/[id].vue",
+      "apps/shop-suit/supabase/migrations/20261025164827_order_deposits_and_partial_fulfillment.sql",
+      "packages/ui/src/organisms/BsOrderFundingPanel.vue",
+      "packages/ui/src/organisms/BsOrderDeliveryPanel.vue",
+      "packages/ui/src/templates/BsTradeOrdersPage.vue"
+    ],
+    "reason": "Record order advances in the existing receipt ledger, transfer them to normal invoices and collect reserved agreed quantities over multiple visits without duplicate stock or funds. Preserve accepted prices/taxes, FIFO sources and remaining holds."
+  },
+  {
+    "id": "ss-electrical-order-funding-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/supabase/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ui",
+      "packages/ux",
+      "tooling/database",
+      "docs/shared/interactions.md",
+      "release-changes/items.json",
+      ".github/workflows/shop-measurement-disposable.yml",
+      "tooling/control-plane/tests/dot-event-relay.test.mjs"
+    ],
+    "reason": "Generated schema contracts, localized exact decimal transport, order funding/collection security, tax/FIFO/return and concurrency qualification, shared typed panels and owned disposable regression runners. Other shared dependency consumers remain internal; no hosted deployment or activation.",
+    "sources": [
+      "ss-electrical-order-funding-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-nested-confirmation-focus-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ux/src/composables/useDialogInteraction.ts"
+    ],
+    "reason": "Restore a nested confirmation opener after the finite entrance motion of its containing dialog, preventing late vendor autofocus from stealing the keyboard position. Keep a different active foreground dialog focused.",
+    "notes": {
+      "title": {
+        "en": "Restore focus after nested confirmations",
+        "ar": "إعادة التركيز بعد نوافذ التأكيد المتداخلة"
+      },
+      "summary": {
+        "en": "Keyboard focus returns to the action that opened a confirmation, including while its parent window is still appearing.",
+        "ar": "يعود تركيز لوحة المفاتيح إلى زر الإجراء الذي فتح التأكيد، حتى أثناء ظهور النافذة الأصلية."
+      },
+      "details": {
+        "en": "Cancelling a confirmation no longer lets the parent window move focus to its close button afterward. A different active dialog keeps its focus, while dirty-form protection and pending command locks retain their behavior.",
+        "ar": "لا يؤدي إلغاء التأكيد إلى انتقال التركيز لاحقًا إلى زر إغلاق النافذة الأصلية. تحتفظ النافذة النشطة الأخرى بتركيزها، وتستمر حماية النماذج المعدّلة وقفل الأوامر المعلّقة كما هي."
+      }
+    },
+    "sources": [
+      "ss-electrical-nested-confirmation-focus-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ux/src/composables/useDialogInteraction.ts",
+        "contains": "await Promise.allSettled(animations.map(animation => animation.finished))"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-dialog-focus-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ux/src/composables/useDialogInteraction.ts",
+      "packages/ux/tests/form-dialog.test.mjs",
+      "apps/shop-suit/tests/e2e/appointment-actions.spec.ts",
+      "tooling/database/test-shop-stock-local.mjs",
+      "tooling/database/test-shop-supplier-payables-local.mjs",
+      "docs/shared/interactions.md",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify nested-confirmation focus after the real parent entrance settles, preserve pending and dirty-form policies, and compare exact PostgreSQL stock/return values independently of their newly widened display scale. Other shared consumers remain internal.",
+    "sources": [
+      "ss-electrical-dialog-focus-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-supplier-orders-receiving-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables/useSupplierOrders.ts",
+      "apps/shop-suit/app/pages/purchase-orders.vue",
+      "apps/shop-suit/app/utils/supplierOrderCopy.ts",
+      "apps/shop-suit/app/utils/shopNavigation.ts",
+      "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+      "apps/shop-suit/app/utils/businessMode.ts",
+      "apps/shop-suit/supabase/migrations/20261025185907_supplier_orders_and_partial_receiving.sql",
+      "packages/ui/src/templates/BsSupplierOrdersPage.vue"
+    ],
+    "reason": "Issue supplier purchase orders without creating stock or debt, then receive measured quantities through existing purchases, physical sources and supplier balances. Preserve original package and cost snapshots, remaining quantities and immutable receipt links.",
+    "notes": {
+      "title": {
+        "en": "Supplier orders and partial receiving",
+        "ar": "أوامر الموردين والاستلام الجزئي"
+      },
+      "summary": {
+        "en": "Order measured goods, receive part of an order and keep the outstanding quantities visible.",
+        "ar": "اطلب الأصناف المقاسة واستلم جزءًا من الأمر مع متابعة الكميات المتبقية."
+      },
+      "details": {
+        "en": "An order records the agreement without adding stock or supplier debt. Each confirmed receipt creates an ordinary purchase at the original agreed unit and cost, including six reels now and four later. Receipt history, invoice links, exact quantities and retry protection remain available.",
+        "ar": "يسجّل الأمر الاتفاق دون زيادة المخزون أو مديونية المورد. ينشئ كل استلام مؤكد فاتورة شراء عادية بالوحدة والتكلفة المتفق عليهما، مثل استلام ست بكرات الآن وأربع لاحقًا. تتوفر سجلات الاستلام وروابط الفواتير والكميات الدقيقة والحماية من تكرار العملية."
+      }
+    },
+    "sources": [
+      "ss-electrical-supplier-orders-receiving-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useSupplierOrders.ts",
+        "contains": "rpc.rpc('receive_supplier_order', input.args)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261025185907_supplier_orders_and_partial_receiving.sql",
+        "contains": "create function public.receive_supplier_order("
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-supplier-receiving-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ui",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database",
+      ".github/workflows/shop-measurement-disposable.yml",
+      "release-changes/items.json"
+    ],
+    "reason": "Generate actual schema contracts and qualify exact supplier order/receipt authority, accounting-period and subscription checks, immutable original package/cost, deferred receiving capacity and real-session retry races. Register the complete shared template and bilingual catalogue; other shared consumers remain internal.",
+    "sources": [
+      "ss-electrical-supplier-receiving-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-storage-supplier-planning-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/supply-planning.vue",
+      "apps/shop-suit/app/composables/useSupplyPlanning.ts",
+      "apps/shop-suit/app/composables/usePlanningPlacementPicker.ts",
+      "apps/shop-suit/app/utils/supplyPlanningCopy.ts",
+      "apps/shop-suit/app/utils/shopNavigation.ts",
+      "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+      "apps/shop-suit/app/utils/businessMode.ts",
+      "apps/shop-suit/app/pages/reports/index.vue",
+      "apps/shop-suit/supabase/migrations/20261025204604_inventory_positions_supplier_references_and_reorder.sql",
+      "packages/ui/src/templates/BsSupplyPlanningPage.vue",
+      "apps/shop-suit/app/pages/inventory/reels.vue"
+    ],
+    "reason": "Locate existing inventory without a competing stock balance, retain supplier item codes and versioned purchase units with lead times, read original purchase-price history and derive reviewable canonical reorder suggestions through existing operational reports.",
+    "notes": {
+      "title": {
+        "en": "Storage positions and supplier planning",
+        "ar": "أماكن المخزون وتخطيط التوريد"
+      },
+      "summary": {
+        "en": "Locate products and reels, retain supplier references and compare original purchase costs before reviewing reorder suggestions.",
+        "ar": "حدّد أماكن الأصناف والبكرات واحفظ مراجع الموردين وقارن تكاليف الشراء الأصلية قبل مراجعة اقتراحات إعادة الطلب."
+      },
+      "details": {
+        "en": "Bins and shelf placements describe existing stock. Supplier item references retain purchase units, packages and lead times, while purchase history keeps original currencies and costs separate. Reorder suggestions explain net sales, held and free stock, incoming orders and supplier timing; staff review them before placing an order.",
+        "ar": "تصف الخانات والأرفف مواضع المخزون الحالي. تحفظ مراجع أصناف الموردين وحدات الشراء والعبوات ومدد التوريد، ويعرض سجل الشراء العملات والتكاليف الأصلية منفصلة. توضّح اقتراحات إعادة الطلب صافي المبيعات والمخزون المحجوز والمتاح والأوامر الواردة ومدد المورد؛ يراجعها الموظف قبل إصدار أي أمر."
+      }
+    },
+    "sources": [
+      "ss-electrical-storage-supplier-planning-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261025204604_inventory_positions_supplier_references_and_reorder.sql",
+        "contains": "create function public.inventory_planning_command("
+      },
+      {
+        "path": "apps/shop-suit/app/pages/reports/index.vue",
+        "contains": "{ value: 'reorder', label: copy.value.reorder }"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-supply-planning-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ui",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify location/role/subscription isolation, immutable position and supplier history, original exact purchase cost, physical placement through existing reel authority, net demand after returns/corrections, package rounding and bounded Cairo-date report/export parity. Generate actual database contracts and register shared presentation; other shared consumers remain internal.",
+    "sources": [
+      "ss-electrical-supply-planning-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-verified-weight-barcodes-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/pos.vue",
+      "apps/shop-suit/app/utils/weightBarcodes.js",
+      "apps/shop-suit/app/utils/pos.js",
+      "apps/shop-suit/supabase/migrations/20261025214414_verified_gs1_weight_barcodes.sql",
+      "packages/ui/src/organisms/BsPointOfSaleCart.vue",
+      "packages/ui/src/templates/BsPointOfSalePage.vue",
+      "packages/ux/src/composables/useViewportSpace.ts"
+    ],
+    "reason": "Scan verified GS1 net-weight labels into separate measured sale lines while preserving literal barcode lookup and the existing authoritative sale, stock and return paths.",
+    "notes": {
+      "title": {
+        "en": "Verified weight-label scanning",
+        "ar": "مسح ملصقات الوزن المعتمدة"
+      },
+      "summary": {
+        "en": "Scan supported GS1 kilogram labels with verified product identity and retain the original weight through checkout.",
+        "ar": "امسح ملصقات الكيلوغرام المدعومة وفق GS1 مع التحقق من هوية الصنف وحفظ الوزن الأصلي حتى إتمام البيع."
+      },
+      "details": {
+        "en": "Online scanning verifies the GTIN checksum and exact kilogram or gram quantity. Each captured label keeps its own line and original evidence; staff remove and rescan to change its weight. Existing fixed barcodes retain their meaning, and unsupported national or price-encoded formats require ordinary manual entry. Selecting the cart reveals enough space for payment controls when offers appear above it.",
+        "ar": "يتحقق المسح أثناء الاتصال من رقم تحقق GTIN والكمية الدقيقة بالكيلوغرام أو الغرام. يحتفظ كل ملصق ببند مستقل ودليله الأصلي؛ يُحذف البند ويُعاد المسح لتغيير الوزن. تحتفظ الباركودات الثابتة بمعناها، وتُدخل الكمية يدويًا للتنسيقات المحلية أو المشفّرة بالسعر غير المدعومة. يُظهر اختيار السلة مساحة كافية لأزرار وحقول الدفع عند وجود عروض فوقها."
+      }
+    },
+    "sources": [
+      "ss-electrical-verified-weight-barcodes-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/utils/weightBarcodes.js",
+        "contains": "export function parseGs1WeightBarcode(input)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261025214414_verified_gs1_weight_barcodes.sql",
+        "contains": "create function public.resolve_weight_barcode("
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-weight-barcode-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "packages/ui",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "release-changes/items.json",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ux"
+    ],
+    "reason": "Qualify exact GS1 parsing and canonical stock capacity, private capture authority, ordinary issuance revalidation and immutable original measurement evidence; generate actual database contracts and retain shared consumer qualification as a separate gate. Reveal the selected POS cart before measuring viewport space so tall offer content cannot clip mobile payment controls.",
+    "sources": [
+      "ss-electrical-weight-barcode-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-approved-scale-sales-20261026",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables/useScaleCounter.ts",
+      "apps/shop-suit/app/composables/useWeighingSetup.ts",
+      "apps/shop-suit/app/pages/weighing-setup.vue",
+      "apps/shop-suit/app/pages/pos.vue",
+      "apps/shop-suit/app/utils/scaleMeasurement.js",
+      "apps/shop-suit/supabase/migrations/20261026102152_approved_scale_captures_and_product_mass_length.sql",
+      "packages/ui/src/organisms/BsScaleCaptureDialog.vue",
+      "packages/ui/src/templates/BsWeighingSetupPage.vue",
+      "packages/ui/src/templates/BsPointOfSalePage.vue",
+      "packages/ux/src/controllers/createSicsScale.ts"
+    ],
+    "reason": "Add optional explicitly connected stable scale readings and versioned product-specific mass/length approvals to ordinary authoritative counter sales.",
+    "notes": {
+      "title": {
+        "en": "Approved scale readings for counter sales",
+        "ar": "قراءات ميزان معتمدة للبيع من الكاونتر"
+      },
+      "summary": {
+        "en": "Confirm supported scale readings and convert weight using an approved relationship for the selected product.",
+        "ar": "أكّد قراءات الموازين المدعومة وحوّل الوزن بعلاقة معتمدة تخص الصنف المختار."
+      },
+      "details": {
+        "en": "Managers approve each device and product factor with a reference and immutable history. Staff connect explicitly, review stable net, tare, gross and stock quantity, then confirm a separate locked sale line. Unknown results retry the same request. Manual measured sales remain available without a scale; actual device approval and supported protocol settings are required.",
+        "ar": "يعتمد المدير كل جهاز ومعامل صنف بمرجع وسجل ثابت. يوصّل الموظف الجهاز صراحةً ويراجع الصافي ووزن الوعاء والإجمالي وكمية المخزون، ثم يؤكد بند بيع مستقلًا بكمية مقفلة. تُعاد النتيجة غير المؤكدة بالطلب نفسه. يظل البيع بالكمية المدخلة يدويًا متاحًا دون ميزان؛ ويلزم اعتماد الجهاز الفعلي وإعدادات البروتوكول المدعوم."
+      }
+    },
+    "sources": [
+      "ss-electrical-approved-scale-sales-20261026"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261026102152_approved_scale_captures_and_product_mass_length.sql",
+        "contains": "create function public.record_scale_capture("
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useScaleCounter.ts",
+        "contains": "export function useScaleCounter("
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useWeighingSetup.ts",
+        "contains": "export function useWeighingSetup()"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-scale-qualification-20261026",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database",
+      ".github/workflows/shop-measurement-disposable.yml",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify stable protocol framing, bounded session cleanup, exact whole-ratio conversion, immutable capture and approval evidence, actor/location/subscription authority, lost-response retry and competing capture/invoice/device-retirement sessions. Generate actual database contracts and register shared presentation; physical hardware and final native/consumer qualification remain explicit gates.",
+    "sources": [
+      "ss-electrical-scale-qualification-20261026"
+    ]
+  },
+  {
+    "id": "ss-electrical-approved-commodity-pricing-20261026",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/commodity-pricing.vue",
+      "apps/shop-suit/app/composables/useCommodityPricing.ts",
+      "apps/shop-suit/app/composables/useCommodityQuotePicker.ts",
+      "apps/shop-suit/app/pages/pos.vue",
+      "apps/shop-suit/app/utils/commodityPricingCopy.ts",
+      "apps/shop-suit/app/utils/tradePricing.ts",
+      "apps/shop-suit/supabase/migrations/20261026115536_approved_commodity_pricing.sql",
+      "packages/ui/src/templates/BsCommodityPricingPage.vue"
+    ],
+    "reason": "Add explicitly approved same-currency commodity source quotes and exact product-content/premium rules to the existing authoritative price pipeline while retaining prior agreements and issued evidence. Preserve the reviewed payment amount across draft-save quote invalidation.",
+    "notes": {
+      "title": {
+        "en": "Approved commodity reference prices",
+        "ar": "أسعار مواد مرجعية معتمدة"
+      },
+      "summary": {
+        "en": "Price selected products from a documented source quote, approved material content and a stock-unit premium.",
+        "ar": "سعّر أصنافًا مختارة بسعر مصدر موثق ومحتوى مادة معتمد وإضافة لكل وحدة مخزون."
+      },
+      "details": {
+        "en": "Managers approve source currency and validity and retain immutable terms and history. Existing customer agreements, fixed packages, remnants and authorized staff prices keep their precedence. Issued sales and accepted orders retain the original source evidence. Checkout retains the reviewed amount while the draft is saved; no live feed or exchange rate is assumed.",
+        "ar": "يعتمد المدير عملة المصدر وسريانه مع حفظ شروطه وسجله. تحتفظ تعاقدات العملاء والعبوات ذات السعر المحدد والبواقي والأسعار المفوّضة بأولويتها. تحفظ المبيعات الصادرة والأوامر المقبولة دليل المصدر الأصلي. يحتفظ الدفع بالمبلغ الذي تمت مراجعته أثناء حفظ المسودة، دون افتراض تغذية سعرية مباشرة أو سعر صرف."
+      }
+    },
+    "sources": [
+      "ss-electrical-approved-commodity-pricing-20261026"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261026115536_approved_commodity_pricing.sql",
+        "contains": "create function shop_private.resolve_commodity_price("
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useCommodityPricing.ts",
+        "contains": "export function useCommodityPricing()"
+      },
+      {
+        "path": "apps/shop-suit/app/pages/pos.vue",
+        "contains": "const attemptAmount = checkoutAmount.value ??= total.value"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-commodity-qualification-20261026",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ui",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database",
+      ".github/workflows/shop-measurement-disposable.yml",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify immutable source terms, exact commodity pricing and existing precedence, actor/tenant/subscription checks, frozen original returns and accepted collections, duplicate/stale/retirement/sale-first concurrency, bilingual approval and same-request recovery. Generate actual database contracts and register shared presentation; genuine merchant/source and final E6 acceptance remain separate.",
+    "sources": [
+      "ss-electrical-commodity-qualification-20261026"
+    ]
+  },
+  {
+    "id": "ss-electrical-technical-search-pagination-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/supabase/migrations/20261029125033_electrical_technical_search_pagination.sql"
+    ],
+    "reason": "Correct the product directory row predicate to include the same tenant-scoped technical matches as its total, retaining the existing RPC authority and bounds.",
+    "notes": {
+      "title": {
+        "en": "Find products by electrical specifications",
+        "ar": "العثور على الأصناف بالمواصفات الكهربائية"
+      },
+      "summary": {
+        "en": "Technical searches return matching products on every page.",
+        "ar": "تعرض عمليات البحث بالمواصفات الأصناف المطابقة في كل صفحة."
+      },
+      "details": {
+        "en": "Product results and their total now use the same technical specification filter, including searches that do not match the product name or SKU. Existing permissions and page limits apply.",
+        "ar": "تستخدم نتائج الأصناف وعددها الإجمالي مرشح المواصفات نفسه، بما يشمل البحث الذي لا يطابق اسم الصنف أو رمزه. تظل الصلاحيات وحدود الصفحات الحالية مطبقة."
+      }
+    },
+    "sources": [
+      "ss-electrical-technical-search-pagination-20261029"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261029125033_electrical_technical_search_pagination.sql",
+        "contains": "after_predicate text := $after$or coalesce(category.name, '') ilike '%' || v_search || '%'"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-source-evidence-audit-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Strengthen null-safe SQL assertions, technical pagination/media-path/isolation coverage and bind all55 task evidence references and current release blockers without claiming missing recovery or external acceptance.",
+    "sources": [
+      "ss-electrical-source-evidence-audit-20261029"
+    ]
+  },
+  {
+    "id": "shop-staging-disposable-image-qualification-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/releases/docker-harness.mjs",
+      "tooling/releases/docker-harness.test.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Unblock required combined staging qualification when a public pinned image pull has an unclassified registry response. Use only the caller’s already configured same-version mirror; keep known local resource and daemon failures fatal, preserve redacted diagnostics and every catalog assertion. No publisher, credential, registration, migration or readiness policy changes.",
+    "sources": [
+      "shop-staging-disposable-image-qualification-20261029"
+    ]
+  },
+  {
+    "id": "shared-mobile-navigation-focus-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ux/src/composables/useSideNavigation.ts",
+      "packages/testing",
+      "docs/shared/interactions.md",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ui/src/templates/BsAuthLayout.vue"
+    ],
+    "reason": "Restore initial keyboard focus after the canonical mobile navigation becomes visible, preserving Escape dismissal and focus return across Suit shells. Qualify current shared shell, settings, landing and appointment contracts without increasing assertion deadlines. Keep logos in ordinary document flow for access/loading states without an auth card, preventing blocked retry controls without changing glass form presentation.",
+    "notes": {
+      "title": {
+        "en": "Keep keyboard focus inside mobile navigation",
+        "ar": "إبقاء تركيز لوحة المفاتيح داخل قائمة التنقل على الهاتف"
+      },
+      "summary": {
+        "en": "Opening the mobile menu moves focus to its close control.",
+        "ar": "ينتقل التركيز إلى زر الإغلاق عند فتح قائمة الهاتف."
+      },
+      "details": {
+        "en": "Focus waits for the menu’s own finite entrance motion, so Escape dismisses it and returns focus to the opening button. Closing or navigating away cancels pending focus. Access-status logos also remain above their actions instead of covering retry controls.",
+        "ar": "ينتظر التركيز انتهاء حركة ظهور القائمة المحدودة، ليغلقها مفتاح Escape ويعيد التركيز إلى زر الفتح. يلغي إغلاق القائمة أو الانتقال منها التركيز المعلّق. وتبقى شعارات حالات الوصول أعلى إجراءاتها بدلًا من حجب أزرار إعادة المحاولة."
+      }
+    },
+    "sources": [
+      "shared-mobile-navigation-focus-20261029"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ux/src/composables/useSideNavigation.ts",
+        "contains": "if (!cancelled && open())"
+      },
+      {
+        "path": "packages/ui/src/templates/BsAuthLayout.vue",
+        "contains": ":not(:has(.bs-auth-form)) .bs-auth-layout__mobile-logo"
+      }
+    ]
+  },
+  {
+    "id": "shop-staging-ledger-access-history-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "ledger-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/ledger-suit/supabase/migrations/20261022182716_explicit_data_api_access.sql",
+      "apps/ledger-suit/supabase/tests",
+      "apps/shop-suit/docs/electrical-supply/STAGING-INTEGRATION-2026-10-29.md"
+    ],
+    "reason": "Restore the already applied historical Ledger access migration byte-for-byte from published PR440, as verified again in Ledger439. Include only the twelve access-contract assertions and explicit execution for seven existing temporary test helpers. No Ledger feature-stack import, hosted write or migration metadata edit.",
+    "sources": [
+      "shop-staging-ledger-access-history-20261029"
+    ]
+  },
+  {
+    "id": "shop-staging-menu-animation-compatibility-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ux/src/composables/useSideNavigation.ts",
+      "packages/ux/tests/menu-share.test.mjs"
+    ],
+    "reason": "Qualify finite animation settlement, ignored infinite animation and cancellation on close. Use the optional Web Animations API when available, preserving no-animation runtimes and existing keyboard tests. The exact-head native unit failure is retained as evidence; no retry or assertion bypass.",
+    "sources": [
+      "shop-staging-menu-animation-compatibility-20261029"
+    ]
+  },
+  {
+    "id": "shop-staging-shared-shell-consumer-qualification-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsAuthLayout.vue",
+      "packages/ux/src/composables/useSideNavigation.ts",
+      "apps/shop-suit/tests/e2e/post-unification-regressions.spec.ts",
+      "packages/testing",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/interactions.md"
+    ],
+    "reason": "Preserve private provenance for all existing shared-shell source consumers without activating another operational/public product or inventing release baselines. Public Shop focus/access changes remain separately classified. Qualify the approved October19 dashboard: scope Team tabs independently from navigation tabs, use generated navigation identity, and assert the actual transparent toolbar/inactive buttons, muted track, surface active button and existing contrast/gradient/geometry bounds.",
+    "sources": [
+      "shop-staging-shared-shell-consumer-qualification-20261029"
+    ]
+  },
+  {
+    "id": "shop-staging-applied-access-source-reconciliation-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/supabase/migrations/20261022182717_explicit_data_api_access.sql",
+      "apps/super-admin-suit/supabase/migrations/20261022182719_explicit_data_api_access.sql",
+      "apps/shop-suit/supabase/tests/shop_measurement_foundation.sql",
+      "apps/shop-suit/docs/electrical-supply/STAGING-INTEGRATION-2026-10-29.md",
+      "apps/shop-suit/docs/electrical-supply/evidence/applied-access-source-20261029.json"
+    ],
+    "reason": "Restore only the exact published Shop and SAS access files recorded as applied on October22, preserving source history alongside the Ledger restoration. Current staging reports remote versions missing from source; no hosted SQL, migration metadata edit, provider configuration, new policy or operational activation is authorized. Explicitly permit the named temporary assertion helper in its rollback-only fixture; preserve every application permission and assertion.",
+    "sources": [
+      "shop-staging-applied-access-source-reconciliation-20261029"
+    ]
   }
 ]

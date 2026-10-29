@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BsInventoryCopy, BsInventoryView, BsInventoryEditor, BsInventoryStockRow, BsInventoryMovementRow, BsInventoryCountRow, BsInventoryAdjustmentForm, BsInventoryCountForm } from '../types/inventoryPresentation'
-defineProps<{ text: BsInventoryCopy; view: BsInventoryView; rows: BsInventoryStockRow[]; movementRows: BsInventoryMovementRow[]; countRows: BsInventoryCountRow[]; productOptions: { id: string; name: string }[]; adjustmentEditor: BsInventoryEditor; countEditor: BsInventoryEditor; thresholdEditor: BsInventoryEditor }>()
+defineProps<{ physicalStockTo?: string; text: BsInventoryCopy; view: BsInventoryView; rows: BsInventoryStockRow[]; movementRows: BsInventoryMovementRow[]; countRows: BsInventoryCountRow[]; productOptions: { id: string; name: string }[]; adjustmentEditor: BsInventoryEditor; countEditor: BsInventoryEditor; thresholdEditor: BsInventoryEditor }>()
 const adjustmentForm = defineModel<BsInventoryAdjustmentForm>('adjustmentForm', { required: true })
 const countForm = defineModel<BsInventoryCountForm>('countForm', { required: true })
 const thresholdValue = defineModel<number>('thresholdValue', { required: true })
@@ -15,7 +15,7 @@ const emit = defineEmits<{ retryAccess: []; retry: []; retryHistory: []; saveAdj
 </script>
 <template>
   <BsStack gap="lg">
-    <BsPageHeader :title="text.title" :subtitle="text.subtitle" />
+    <BsPageHeader :title="text.title" :subtitle="text.subtitle"><template #actions><BsLink v-if="physicalStockTo && view.canView" :to="physicalStockTo">{{ text.physicalStock }}</BsLink></template></BsPageHeader>
     <BsPanel v-if="!view.available && !view.loadingContext" padding="md">
       <BsText as="p">{{ text.noShop }}</BsText>
       <BsLink to="/dashboard">{{ text.dashboard }}</BsLink>
@@ -117,11 +117,11 @@ const emit = defineEmits<{ retryAccess: []; retry: []; retryHistory: []; saveAdj
         <BsField v-slot="field" :label="text.product">
           <BsSelect :model-value="adjustmentForm.productId" :input-id="field.id" :aria-describedby="field.describedby" :label="text.product" :options="productOptions" option-label="name" option-value="id" filter virtual :aria-required="true" :disabled="adjustmentEditor.pending" @update:model-value="adjustmentForm = { ...adjustmentForm, productId: String($event) }"/>
         </BsField>
-        <BsField v-slot="field" :label="text.quantity">
-          <BsInput :id="field.id" :model-value="adjustmentForm.quantity" :aria-describedby="field.describedby" type="number" :min="0.01" :max="1000000" :step="0.01" required @update:model-value="adjustmentForm = { ...adjustmentForm, quantity: Number($event) }"/>
+        <BsField v-slot="field" :label="adjustmentEditor.unit ? `${text.quantity} (${adjustmentEditor.unit})` : text.quantity">
+          <BsInput :id="field.id" :model-value="adjustmentForm.quantity" :aria-describedby="field.describedby" type="number" :min="adjustmentEditor.quantityStep ?? 0.01" :max="1000000" :step="adjustmentEditor.quantityStep ?? 0.01" required @update:model-value="adjustmentForm = { ...adjustmentForm, quantity: Number($event) }"/>
         </BsField>
         <BsField v-if="view.receive" v-slot="field" :label="text.unitCost">
-          <BsInput :id="field.id" :model-value="adjustmentForm.unitCost" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required @update:model-value="adjustmentForm = { ...adjustmentForm, unitCost: Number($event) }"/>
+          <BsInput :id="field.id" :model-value="adjustmentForm.unitCost" :aria-describedby="field.describedby" type="number" :min="0" :step="adjustmentEditor.costStep ?? 0.01" required @update:model-value="adjustmentForm = { ...adjustmentForm, unitCost: Number($event) }"/>
         </BsField>
         <BsField v-slot="field" :label="text.reason">
           <BsInput :id="field.id" :model-value="adjustmentForm.reason" :aria-describedby="field.describedby" :maxlength="500" :required="!view.receive" @update:model-value="adjustmentForm = { ...adjustmentForm, reason: String($event) }"/>
@@ -134,14 +134,14 @@ const emit = defineEmits<{ retryAccess: []; retry: []; retryHistory: []; saveAdj
         <BsText as="p" tone="muted">{{ text.expected }}: {{ view.countExpected }} · {{ text.variance }}: {{ view.countVariance }}</BsText>
       </BsBox>
       <BsGrid :columns="2">
-        <BsField v-slot="field" :label="text.counted">
-          <BsInput :id="field.id" :model-value="countForm.quantity" :aria-describedby="field.describedby" type="number" :min="0" :max="1000000" :step="0.01" required @update:model-value="countForm = { ...countForm, quantity: Number($event) }"/>
+        <BsField v-slot="field" :label="countEditor.unit ? `${text.counted} (${countEditor.unit})` : text.counted">
+          <BsInput :id="field.id" :model-value="countForm.quantity" :aria-describedby="field.describedby" type="number" :min="0" :max="1000000" :step="countEditor.quantityStep ?? 0.01" required @update:model-value="countForm = { ...countForm, quantity: Number($event) }"/>
         </BsField>
         <BsField v-slot="field" :label="text.countedAt">
           <BsInput :id="field.id" :model-value="countForm.date" :aria-describedby="field.describedby" type="datetime-local" required @update:model-value="countForm = { ...countForm, date: String($event) }"/>
         </BsField>
         <BsField v-if="view.positiveVariance" v-slot="field" :label="text.positiveCost">
-          <BsInput :id="field.id" :model-value="countForm.unitCost" :aria-describedby="field.describedby" type="number" :min="0" :step="0.01" required @update:model-value="countForm = { ...countForm, unitCost: Number($event) }"/>
+          <BsInput :id="field.id" :model-value="countForm.unitCost" :aria-describedby="field.describedby" type="number" :min="0" :step="countEditor.costStep ?? 0.01" required @update:model-value="countForm = { ...countForm, unitCost: Number($event) }"/>
         </BsField>
         <BsField v-slot="field" :label="text.reference">
           <BsInput :id="field.id" :model-value="countForm.reference" :aria-describedby="field.describedby" :maxlength="200" required @update:model-value="countForm = { ...countForm, reference: String($event) }"/>
@@ -152,8 +152,8 @@ const emit = defineEmits<{ retryAccess: []; retry: []; retryHistory: []; saveAdj
       </BsGrid>
     </BsRecordActionDialog>
     <BsRecordActionDialog v-model:visible="thresholdOpen" :title="text.setThreshold" :dirty="thresholdEditor.dirty" :pending="thresholdEditor.pending" :error="view.actionError" :submit-label="text.save" @submit="emit('saveThreshold')">
-      <BsField v-slot="field" :label="text.threshold">
-        <BsInput :id="field.id" :model-value="thresholdValue" :aria-describedby="field.describedby" type="number" :min="0" :max="1000000" :step="0.01" required @update:model-value="thresholdValue = Number($event)"/>
+      <BsField v-slot="field" :label="thresholdEditor.unit ? `${text.threshold} (${thresholdEditor.unit})` : text.threshold">
+        <BsInput :id="field.id" :model-value="thresholdValue" :aria-describedby="field.describedby" type="number" :min="0" :max="1000000" :step="thresholdEditor.quantityStep ?? 0.01" required @update:model-value="thresholdValue = Number($event)"/>
       </BsField>
     </BsRecordActionDialog>
   </BsStack>

@@ -51,7 +51,7 @@ export function buildReceiptShareText(
     `${copy.customer}: ${receipt.customer.name ?? copy.walkIn}`,
     '',
     copy.items,
-    ...receipt.lines.map(line => `${line.name}${receipt.presentation?.showDescriptions !== false && line.description ? ` (${line.description})` : ''} — ${copy.quantity} ${line.quantity} — ${money(line.total)}`),
+    ...receipt.lines.map(line => `${line.name}${(line.measurement?.reelAllocations ?? []).map(piece => ` [${piece.barcode}: ${piece.soldQuantity} ${line.measurement?.baseUnitCode}]`).join('')}${receipt.presentation?.showDescriptions !== false && line.description ? ` (${line.description})` : ''} — ${copy.quantity} ${line.measurement ? `${line.measurement.enteredQuantity} ${line.measurement.packageName || (locale === 'ar' ? line.measurement.unitNameAr : line.measurement.unitNameEn)}` : line.quantity} — ${money(line.total)}`),
     '',
     ...(receipt.offers ?? []).map(offer => `${offer.name} × ${offer.quantity} — −${money(offer.saving)}`),
     ...receipt.payments.map(payment => `${copy.payment}: ${paymentLabel(payment.method)} — ${money(payment.amount)}`),

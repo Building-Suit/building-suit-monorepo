@@ -1,3 +1,4 @@
+import { discardShopQuery } from '~/utils/shopQueryCleanup'
 import { defineStore } from 'pinia'
 import { useQuery, useQueryCache } from '@pinia/colada'
 import { computed, watch, nextTick } from 'vue'
@@ -116,7 +117,7 @@ export const useShopStore = defineStore('shop-context', () => {
   }
   function resetSession() {
     const actor = user.value?.id
-    for (const entry of cache.getEntries({ predicate: entry => entry.key[0] === 'shop-suit' && entry.key[4] === actor })) { cache.cancel(entry); cache.remove(entry) }
+    for (const entry of cache.getEntries({ predicate: entry => entry.key[0] === 'shop-suit' && entry.key[4] === actor })) { discardShopQuery(cache, entry) }
     scope.revision++
     scope.shopId = null; scope.locationId = null
     shopCookie.value = null; locationCookie.value = null
