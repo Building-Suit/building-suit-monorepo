@@ -5,6 +5,7 @@ on:
       - '.github/workflows/shop-catalog-capacity.yml'
       - 'apps/shop-suit/tests/e2e/catalog-capacity*'
       - 'apps/shop-suit/tests/e2e/native-pilot-login*'
+      - 'apps/shop-suit/tests/e2e/electrical-native-controls*'
       - 'apps/shop-suit/tests/e2e/pilot-backend.ts'
       - 'apps/shop-suit/tests/e2e/pilot-fixture.ts'
       - 'apps/shop-suit/tests/e2e/cash-policy-fixture-server.mjs'
@@ -36,6 +37,7 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/catalog-capacity.config.ts
       - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/native-pilot-login.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/electrical-native-controls.config.ts
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -43,4 +45,5 @@ jobs:
           path: |
             test-results/catalog-capacity
             test-results/native-pilot-login
+            test-results/electrical-native-controls
           retention-days: 7

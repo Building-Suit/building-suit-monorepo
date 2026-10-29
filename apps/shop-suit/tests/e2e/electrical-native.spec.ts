@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { electricalBackendFixture } from './electrical-native-fixture'
 import { login } from './pilot-backend'
+import { addElectricalItem } from './electrical-native-controls'
 import { apiUrl } from '../pilot/local-backend.mjs'
 import { expectNoPageOverflow } from '../../../../packages/testing/browser-foundation'
 
@@ -18,21 +19,8 @@ for (const locale of ['en', 'ar']) {
     await login(page, fixture.owner, locale)
     await page.goto('/pos')
     const cart = page.locator('.bs-pos-cart')
-    const quantities = ar ? 'الكمية' : 'Quantity'
 
-    async function add(product: { name: string }, quantity: string, gram = false) {
-      const tile = page.locator('.bs-catalog-tile').filter({ hasText: product.name })
-      await expect(tile).toHaveCount(1)
-      await tile.getByRole('button', { name: /^Add:|^إضافة:/ }).click()
-      if (gram) {
-        await cart.getByRole('listitem').filter({ hasText: product.name }).getByRole('combobox', { name: ar ? 'وحدة البيع' : 'Sale unit', exact: true }).click()
-        await page.getByRole('option', { name: ar ? 'جرام' : 'Gram', exact: true }).click()
-      }
-      const input = cart.getByRole('spinbutton', { name: `${quantities}: ${product.name}`, exact: true })
-      await input.fill(quantity)
-      await input.blur()
-      await expect(input).toHaveValue(quantity)
-    }
+    const add = (product: { name: string }, quantity: string, gram = false) => addElectricalItem(page, locale, product, quantity, gram)
 
     async function checkout(total: number) {
       await page.keyboard.press('F4')
