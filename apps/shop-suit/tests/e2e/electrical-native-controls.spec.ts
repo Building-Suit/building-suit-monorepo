@@ -16,7 +16,7 @@ for (const locale of ['en', 'ar']) test(`native electrical item driver handles a
       items: products.map(product => ({ ...product, itemType: 'product', discount: 0, sku: product.id, barcode: null, measurement: { baseUnitCode: product.unit, increment: product.increment, revision: 1, saleUnits: product.units, baseUnitPrice: String(product.unitPrice), packages: [] } })),
       total: 3, page: 1, pageSize: 30, businessMode: 'mixed',
     }
-    if (name === 'pos_checkout_context') return { staff: [{ id: 'member-1', name: 'Synthetic cashier' }], customers: [], appointments: [] }
+    if (name === 'pos_checkout_context') return { staff: [{ id: 'membership-1', name: 'Synthetic cashier' }], customers: [], appointments: [] }
     if (name === 'pos_catalog_offers') return []
     if (name === 'quote_customer_sale') return { calculationEnabled: false, tradePricingEnabled: false, tax: 0, total: 787.5, lines: [], offers: [] }
   })
@@ -29,4 +29,11 @@ for (const locale of ['en', 'ar']) test(`native electrical item driver handles a
     { item_type: 'product', source_id: 'copper', quantity: '250', unit_code: 'g', measurement_revision: 1 },
     { item_type: 'product', source_id: 'breaker', quantity: '2', unit_code: 'ea', measurement_revision: 1 },
   ])
+  await page.keyboard.press('F4')
+  await page.getByRole('button', { name: locale === 'ar' ? 'بدون عميل — بيع كاونتر مسدد بالكامل' : 'No customer — fully paid counter sale', exact: true }).click()
+  await expect(page.locator('.bs-pos-cart').getByRole('button', { name: locale === 'ar' ? /^حصّل / : /^Pay / })).toBeEnabled()
+  await page.keyboard.press('F8')
+  await expect.poll(() => calls.filter(call => call.name === 'checkout_pos_sale').map(call => call.args.p_amount)).toEqual([787.5])
+  await expect(page.getByRole('dialog', { name: locale === 'ar' ? 'إيصال بيع' : 'Sales Receipt', exact: true })).toBeVisible()
+  await expect.poll(() => calls.some(call => call.name === 'get_own_pos_receipt' && call.args.p_invoice_id === 'sale-1')).toBe(true)
 })

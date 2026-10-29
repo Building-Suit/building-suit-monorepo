@@ -29,7 +29,6 @@ for (const locale of ['en', 'ar']) {
       const saved = page.waitForResponse(response => response.url() === `${apiUrl}/rest/v1/rpc/save_pos_sale_draft` && response.request().method() === 'POST')
       const paid = page.waitForResponse(response => response.url() === `${apiUrl}/rest/v1/rpc/checkout_pos_sale` && response.request().method() === 'POST')
       await page.keyboard.press('F8')
-      await page.getByRole('dialog', { name: ar ? 'تأكيد' : 'Confirm', exact: true }).getByRole('button', { name: ar ? 'تأكيد' : 'Confirm', exact: true }).click()
       const savedResponse = await saved
       expect(savedResponse.ok()).toBe(true)
       const payment = await paid
