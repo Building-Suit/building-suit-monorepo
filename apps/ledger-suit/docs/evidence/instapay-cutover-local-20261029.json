@@ -80,12 +80,14 @@
   "native_full_service_rerun": "not performed; no owned billing fixture instantiated here",
   "legacy_browser_files": "expectations adapted, not selected by maintained suite",
   "publication": "must bind fresh exact committed head to valid same-stack PR and fresh combined checks after Doctor coordination; no competing CI queued",
-  "minimum_input": "Exact bank-displayed recipient name remains pending from parent. IPA building-suit@instapay is user-approved; no need to ask again for the address. Do not configure an incomplete instruction block.",
+  "minimum_input": "No further customer destination field is required by the existing contract. User-approved IPA building-suit@instapay supports valid IPA-only public instructions. A bank-displayed recipient name is optional and pending; do not invent it. Hosted configuration and release qualification remain outstanding.",
   "production": "held; parent owns denied SAS baseline evidence; no retry, acknowledgment or release history mutation",
   "approved_public_destination": {
     "ipa": "building-suit@instapay",
     "authority": "Explicit user reply forwarded by parent, 2026-10-29 17:00:36; not inferred from test fixtures",
     "recipient_name": null,
-    "instructions_configured": false
+    "instructions_configured": false,
+    "recipient_name_required": false,
+    "prepared_instructions": "InstaPay: building-suit@instapay. Transfer the exact amount and currency shown in this checkout, then upload your payment receipt for manual review. Your subscription activates only after approval."
   }
 }

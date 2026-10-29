@@ -19,7 +19,7 @@ Applied local edits: primary plan choice opens the existing manual flow; new bro
 
 ## Exact remaining input and holds
 
-The user explicitly supplied the approved public IPA `building-suit@instapay` at 2026-10-29 17:00:36, as forwarded by the parent. This new user evidence, rather than any synthetic test alias, authorizes that exact address. The exact bank-displayed recipient name remains pending. Do not infer Building Suit or any personal name, seed incomplete instructions, or execute a test transfer. The existing contract stores one public instruction block; no separate link/QR field is required. Missing configuration fails closed. No hosted beneficiary, operator role, credential, security setting, acknowledgment or release-history mutation has been performed.
+The user explicitly supplied the approved public IPA `building-suit@instapay` at 2026-10-29 17:00:36, as forwarded by the parent. This new user evidence, rather than any synthetic test alias, authorizes that exact address. The exact bank-displayed recipient name remains pending. Do not infer Building Suit or any personal name, or execute a test transfer. The existing contract requires only one nonempty public instruction block (trimmed length 1–4000); there is no recipient-name field or validation. The confirmed IPA alone is sufficient destination information for valid instructions. A bank-displayed name is optional and must not block implementation or staging. No separate link/QR field is required. Missing configuration fails closed. No hosted beneficiary, operator role, credential, security setting, acknowledgment or release-history mutation has been performed.
 
 SAS staging catalog baseline read for lwecnmsosfwovlzxauml was denied. Parent owns the minimum requested evidence; do not retry or work around that denial. Production/catalog publication remains held. Do not promote broad PR408. Existing isolated-main snapshot is an unpublished historical review artifact and does not include this cutover.
 
@@ -34,6 +34,12 @@ This worktree branches from local security reconciliation 50d0ca37e20af745bbda5f
 1. Preserve recovery archive Library ID libfile_386d388123fc8191959e6a8b9003d7ac and checkpoint5ccc0734b94849e7bc4498263f3d301ce1aac130; restore only to a new worktree if needed.
 2. Deno, Ledger units/type/build and maintained billing browser qualification pass locally. Native full-service browser rerun remains unperformed; its primary-action selector has been adapted without changing financial assertions. Historical webhook and SQL sources are unchanged.
 3. Curated public/internal fragments and semantic release evidence are prepared; validate the committed exact candidate against current staging before publication.
-4. Obtain the pending bank-displayed recipient name from parent, retain the approved IPA exactly, then prepare the complete public instruction block for an authorized configuration path. Verify existing operator/configuration readiness only through authorized interfaces.
+4. Retain the approved IPA exactly and use the prepared IPA-only instruction block below through the authorized configuration/release path. Add a bank-displayed name only if supplied later. Verify existing operator/configuration readiness only through authorized interfaces; this document does not seed hosted configuration.
 5. Publish a coherent same-stack follow-up after Doctor queue coordination; retain security and checkout histories and perform fresh combined checks.
 6. Integrate to staging, verify exact provider/frontend/CI outcomes, then revisit only an authorized isolated Ledger production path after baseline gates clear. Marketing follows verified release.
+
+## Prepared public instructions
+
+InstaPay: building-suit@instapay. Transfer the exact amount and currency shown in this checkout, then upload your payment receipt for manual review. Your subscription activates only after approval.
+
+Contract evidence: `20260928220000_manual_payment_evidence.sql` defines only `singleton` and `instructions`; `prepare_manual_payment` freezes that text into the authorized server quote. The client renders the quoted text without extracting recipient fields. No additional recipient label is required. This prepared text is not a claim that hosted configuration is installed.
