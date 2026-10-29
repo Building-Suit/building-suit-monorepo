@@ -22,7 +22,7 @@ function component(file, language = 'en', imports = {}) {
   const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   const module = { exports: {} }
   const copy = language === 'ar' ? { close: 'إغلاق', saving: 'جارٍ الحفظ…', search: 'بحث', empty: 'لا توجد سجلات' } : { close: 'Close', saving: 'Saving…', search: 'Search', empty: 'No records found' }
-  const globals = { useDialogInteraction, useControlFocus, useFormInteraction, useNavigationDisclosure, ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
+  const globals = { useDialogInteraction, useControlFocus, useFormInteraction, useNavigationDisclosure, useRoute: () => ({ fullPath: '/' }), ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(name => imports[name] ?? require(name), module, module.exports, ...Object.values(globals))
   return module.exports.default
 }
@@ -208,6 +208,25 @@ test('primitive inventory centrally owns fields, choices, states, navigation, an
   const empty = readFileSync(new URL('../src/molecules/BsEmptyState.vue', import.meta.url), 'utf8')
   assert.match(empty, /<BsStateSurface state="empty"/)
   assert.doesNotMatch(empty, /<button\b/)
+})
+
+test('loading select exposes the same disabled state that its click handler enforces', async () => {
+  const props = { modelValue: null, label: 'Patient', options: [], optionLabel: 'label', optionValue: 'value', loading: true }
+  const html = await render('molecules/BsSelect.vue', props)
+  const control = html.match(/<[^>]+role="combobox"[^>]*>/)?.[0]
+  assert.ok(control)
+  assert.match(control, /aria-disabled="true"/)
+  const native = await render('molecules/BsSelect.vue', { ...props, native: true })
+  assert.match(native.match(/<select\b[^>]*>/)?.[0] ?? '', /\bdisabled(?:\s|>|=)/)
+  const ready = await render('molecules/BsSelect.vue', { ...props, loading: false })
+  assert.match(ready.match(/<[^>]+role="combobox"[^>]*>/)?.[0] ?? '', /aria-disabled="false"/)
+})
+
+test('landing navigation cannot accept a server-rendered click before hydration', async () => {
+  const html = await render('organisms/BsLandingTopHeader.vue', { navigation: [], labels: { home: 'Home', navigation: 'Navigation', openApp: 'Workspace', signIn: 'Sign in', startTrial: 'Sign up', close: 'Close menu', open: 'Open menu' } })
+  const trigger = html.match(/<button\b[^>]*aria-controls="marketing-mobile-navigation"[^>]*>/)?.[0]
+  assert.ok(trigger)
+  assert.match(trigger, /\bdisabled(?:\s|>|=)/)
 })
 
 test('shared marketing owns the landing frame and Ledger-derived pricing presentation', () => {
