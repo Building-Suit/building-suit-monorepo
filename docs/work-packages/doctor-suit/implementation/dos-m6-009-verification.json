@@ -538,5 +538,37 @@
     "browser_assertions_retries_timeouts": "unchanged",
     "actual_repaired_browser": "pending-owned-CI",
     "full_task_acceptance": false
+  },
+  "oct29_repaired_candidate_checks": {
+    "source_head": "4b137e31f0e88e764aa0d1ae854d70b5e72b3d70",
+    "parent_pr": 498,
+    "parent_head": "98b0a0b46cd4f04db3116fe0d36cbf8832ba38a3",
+    "focused_tests": {
+      "total": 54,
+      "passed": 54,
+      "failed": 0
+    },
+    "financial_e2e_types": "passed",
+    "changed_shared_lint": "passed",
+    "all_app_types": {
+      "passed": 8,
+      "concurrency": 2
+    },
+    "all_static_builds": {
+      "passed": 8,
+      "concurrency": 2
+    },
+    "root_tests": {
+      "total": 2539,
+      "passed": 2462,
+      "failed": 54,
+      "skipped": 23,
+      "exit_code": 1,
+      "all_failure_files": "apps/shop-suit/tests/unit/"
+    },
+    "initial_broad_typecheck": "failed missing generated docs catalogue; corrected by documented pnpm run setup, then all8 passed",
+    "actual_repaired_browser": "pending-owned-CI",
+    "no_local_doctor_runtime": true,
+    "full_task_acceptance": false
   }
 }
