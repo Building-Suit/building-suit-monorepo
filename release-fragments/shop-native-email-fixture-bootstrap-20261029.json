@@ -1,0 +1,17 @@
+{
+  "id": "shop-native-email-fixture-bootstrap-20261029",
+  "task": "SS-ELEC-606",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/tests/pilot/local-backend.mjs",
+    "apps/shop-suit/tests/pilot/server.mjs",
+    "apps/shop-suit/tests/e2e/pilot-backend.ts",
+    "apps/shop-suit/tests/unit/native-pilot-environment.test.mjs",
+    "apps/shop-suit/docs/electrical-supply/NATIVE-CI-REPAIRS-2026-10-29.md"
+  ],
+  "reason": "Provide the existing guarded disposable private email-lookup key only to the native test server and verify the real email-step response. Reject hosted or shared credential inputs, retain production auth guards and all deadlines, and explicitly keep initial failed native execution unqualified."
+}

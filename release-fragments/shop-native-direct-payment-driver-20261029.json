@@ -1,0 +1,15 @@
+{
+  "id": "shop-native-direct-payment-driver-20261029",
+  "task": "SS-ELEC-606",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/tests/e2e/electrical-native.spec.ts",
+    "apps/shop-suit/tests/e2e/electrical-native-controls.spec.ts",
+    "apps/shop-suit/docs/electrical-supply/NATIVE-CI-REPAIRS-2026-10-29.md"
+  ],
+  "reason": "Align native qualification with the maintained two-step counter: F4 selects payment/customer context and F8 submits directly. Preserve all financial receipt, replay, FIFO and isolation assertions; exercise direct submission separately with explicit synthetic transport."
+}

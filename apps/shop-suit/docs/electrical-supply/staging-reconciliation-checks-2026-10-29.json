@@ -1,0 +1,20 @@
+{
+  "stagingBase": "6a662776619061d36eb11f38041cecd2fc1fea3e",
+  "mergeHead": "ebaec76b85141fc84a241f2d8a8d0b9d01512e3f",
+  "frozenInstall": "PASS",
+  "shopBuild": "PASS",
+  "shopTypecheck": "PASS",
+  "i18nSecurity": {
+    "pass": 4,
+    "fail": 0
+  },
+  "syntheticBrowserGroups": {
+    "capacity": 10,
+    "nativeLoginDriver": 2,
+    "catalogueRegression": 12,
+    "measuredRetail": 2,
+    "fail": 0
+  },
+  "nativeFinancialExecution": "UNRUN; owned runner/coordination gate",
+  "fullShopGithubCI": "NOT DISPATCHED; hold remains"
+}

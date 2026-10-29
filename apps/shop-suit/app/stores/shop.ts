@@ -72,7 +72,7 @@ export const useShopStore = defineStore('shop-context', () => {
 
   watch([() => user.value?.id, () => snapshot.data.value], ([actor, value]) => {
     if (!actor || !value || value.actorId !== actor) { currentId.value = null; currentLocationId.value = null; return }
-    const selected = [currentId.value, shopCookie.value].find(id => value.shops.some(shop => shop.id === id)) ?? value.shops[0]?.id ?? null
+    const selected = [currentId.value, shopCookie.value].find(id => value.shops.some((shop: ShopSummary) => shop.id === id)) ?? value.shops[0]?.id ?? null
     if (selected !== currentId.value) currentLocationId.value = null
     currentId.value = selected
     shopCookie.value = selected
