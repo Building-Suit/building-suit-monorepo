@@ -21,3 +21,11 @@ Branch codex/shop-suit/catalog-search-sequencing starts from staging eb5a80b6. P
 Before, full-group after and final targeted output are retained alongside this report as capacity-search-ordering-{before,after,final}-20261029.txt. The final targeted execution adds explicit obsolete response contents and last-call checks to the full-group passing patch.
 
 Committed console copies trim trailing whitespace; original local logs and the failing trace remain unchanged.
+
+## Reconciliation with accepted staging
+
+Merged current staging c4497c3d434762768d871773126ebba71d25e252 into the original local correction using merge commit 5c624b85d4ef87b75d870dfe2820ab14d2d5c69b. Both c4497c3d and original correction 01964594 remain ancestors; the maintained test is byte-identical to 01964594. All Doctor, Ledger, shared UI/UX, Shop runtime/database and native financial test source match current staging exactly. No coupling to the separate Ledger private-table RLS proposal.
+
+Reinstalled the frozen lockfile with this worktree's own workspace dependency links and built Shop from the reconciled source (53.4 seconds, passed), because accepted staging changes shared table/select components. The former last-call expectation deterministically fails again against this new build with expected page1/received25; the temporary diagnostic edit was restored automatically and verified. The unmodified correction then passes all 10 capacity cases in 39.9 seconds, including both deliberately late old-response cases. Scoped ESLint, strict standalone TypeScript and release provenance pass. Original deadlines, retries 0 and assertions remain intact.
+
+Reconciled before/after console output is preserved below in separate text files, with trailing whitespace trimmed only in committed copies. The original local logs and failing trace remain unchanged. The correction remains local; Doctor owns current CI. No push, PR, GitHub workflow dispatch, staging mutation, hosted write, provider change or main/production action was performed.
