@@ -1,0 +1,16 @@
+{
+  "id": "doctor-queue-activation-diagnostic-20261029",
+  "task": "DOCTOR-QUEUE-ACTIVATION-AUDIT-20261029",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts",
+    "apps/doctor-suit/tests/helpers/queue-activation-diagnostic.ts",
+    "apps/doctor-suit/tests/unit/queue-activation-diagnostic.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/queue-activation-diagnostic-2026-10-29.md"
+  ],
+  "reason": "Bounded failure-only queue activation diagnostics and fixture local-name correction; no product behavior, authorization or acceptance change."
+}
