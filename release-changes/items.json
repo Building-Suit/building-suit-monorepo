@@ -2572,5 +2572,29 @@
     "sources": [
       "ledger-applied-access-source-restoration-20261029"
     ]
+  },
+  {
+    "id": "ls-sec-dep-007-i18n-runtime",
+    "task": "LS-SEC-DEP-007",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "pnpm-workspace.yaml",
+      "pnpm-lock.yaml",
+      "tooling/checks/i18n-escape-security.test.mjs",
+      "apps/ledger-suit/docs/accountant-system"
+    ],
+    "reason": "Patch the actual shared translation runtime and qualify its HTML-escaping contracts without enabling an HTML translation flow or claiming a vulnerable product entry point, hosted deployment, new feature or accountant acceptance. All actual workspace consumers retain private dependency provenance.",
+    "sources": [
+      "ls-sec-dep-007-i18n-runtime"
+    ]
   }
 ]
