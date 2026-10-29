@@ -80,5 +80,12 @@
   "result": "source-bindings-verified-domain-acceptance-unavailable",
   "runtime_execution_in_this_check": false,
   "qualified_approvals_supplied": false,
-  "full_task_acceptance": false
+  "full_task_acceptance": false,
+  "main_history_reconciliation": {
+    "main_sha": "221e0e39d82dcebf6a84ab2b63ead10b67149ae0",
+    "prior_candidate": "06c9be20cbcffd06bb45010216d6ac1bb5c810f3",
+    "merge_commit": "c4273543727f68e3c4db7624c25fe10b4523f788",
+    "tree_change": false,
+    "reason": "Preserve actual main ancestry required by the M3 exact-candidate guard when PR408 validates staging against main; no guard or workflow changed."
+  }
 }

@@ -20,6 +20,9 @@ try {
   const binding = JSON.parse(source(head, folder + 'm7-source-consolidation-2026-10-29.json'))
   check('recorded-staging-base', binding.exact_staging_base === base)
   for (const ref of [base, binding.evaluated_committed_merge, binding.preserved_preparation_leaf]) check('preserved-ancestor:' + ref, git('merge-base', ref, head) === ref)
+  const history = binding.main_history_reconciliation
+  for (const ref of [history.main_sha, history.prior_candidate, history.merge_commit]) check('main-history-ancestor:' + ref, git('merge-base', ref, head) === ref)
+  check('main-history-merge-changes-no-files', git('diff', '--name-only', history.prior_candidate, history.merge_commit) === '')
   check('three-canonical-task-bindings', binding.tasks.length === 3 && ['DOS-M7-001', 'DOS-M7-004', 'DOS-M7-005'].every(id => binding.tasks.filter(task => task.task_id === id).length === 1))
   for (const task of binding.tasks) {
     const bytes = source(head, task.historical_receipt), receipt = JSON.parse(bytes)
