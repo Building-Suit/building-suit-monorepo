@@ -2,7 +2,7 @@
   "schema": "doctor-privacy-policy-evidence/v1",
   "task_id": "DOS-M7-004",
   "parent_pr": 502,
-  "parent_head": "5f0f41d0a6103967dd4d086b31dc9eab627497b1",
+  "parent_head": "17f0d8c72ed02a4d0cdf21cb67971b39b0aeb2e7",
   "candidate_binding": "evaluated-committed-head",
   "scope": "proposed-policy-and-case-contract-only",
   "full_task_acceptance": false,
