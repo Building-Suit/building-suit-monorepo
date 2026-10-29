@@ -507,5 +507,75 @@
     "Doctor_typecheck": "passed",
     "repaired_actual_browser": "pending owned CI",
     "focused_comparison": "119/119 pass across financial003\u2013007/009 and shared foundation; final merged-parent total will include new ancestor readiness case"
+  },
+  "oct29_source_dialog_diagnosis": {
+    "observed_runs": [
+      40355163190,
+      40357141312
+    ],
+    "actual_failure_coordinates": {
+      "009": {
+        "file": "dos-m6-009.spec.ts",
+        "line": 17,
+        "column": 282
+      },
+      "010": {
+        "file": "dos-m6-010.spec.ts",
+        "line": 14,
+        "column": 481
+      }
+    },
+    "reproduction": "shared SSR with actual pinned PrimeVue Dialog; no Doctor runtime",
+    "before": {
+      "EN_close_buttons": 2,
+      "AR_close_buttons": 2,
+      "single_action_assertion": "failed"
+    },
+    "after": {
+      "EN_AR_ready_loading_error": "passed",
+      "canonical_header_close": "retained"
+    },
+    "browser_assertions_retries_timeouts": "unchanged",
+    "actual_repaired_browser": "pending-owned-CI",
+    "full_task_acceptance": false
+  },
+  "oct29_repaired_candidate_checks": {
+    "source_head": "4b137e31f0e88e764aa0d1ae854d70b5e72b3d70",
+    "parent_pr": 498,
+    "parent_head": "98b0a0b46cd4f04db3116fe0d36cbf8832ba38a3",
+    "focused_tests": {
+      "total": 54,
+      "passed": 54,
+      "failed": 0
+    },
+    "financial_e2e_types": "passed",
+    "changed_shared_lint": "passed",
+    "all_app_types": {
+      "passed": 8,
+      "concurrency": 2
+    },
+    "all_static_builds": {
+      "passed": 8,
+      "concurrency": 2
+    },
+    "root_tests": {
+      "total": 2539,
+      "passed": 2462,
+      "failed": 54,
+      "skipped": 23,
+      "exit_code": 1,
+      "all_failure_files": "apps/shop-suit/tests/unit/"
+    },
+    "initial_broad_typecheck": "failed missing generated docs catalogue; corrected by documented pnpm run setup, then all8 passed",
+    "actual_repaired_browser": "pending-owned-CI",
+    "no_local_doctor_runtime": true,
+    "full_task_acceptance": false,
+    "broader_lint": {
+      "exit_code": 1,
+      "doctor_inherited_errors": 12,
+      "shop_untouched_errors": 2,
+      "docs_warnings": 5,
+      "shop_warnings": 25
+    }
   }
 }

@@ -9,6 +9,8 @@ import * as vue from 'vue'
 import ts from 'typescript'
 import { useTableQueryInteraction } from '../../ux/src/composables/useTableQueryInteraction.ts'
 import { useFormInteraction } from '../../ux/src/composables/useFormInteraction.ts'
+import { useDialogInteraction } from '../../ux/src/composables/useDialogInteraction.ts'
+import { interactionPolicy } from '../../ux/src/index.ts'
 import { useControlFocus } from '../../ux/src/composables/useControlFocus.ts'
 import { useNavigationDisclosure } from '../../ux/src/composables/useNavigationDisclosure.ts'
 
@@ -19,7 +21,7 @@ function component(file, language = 'en', imports = {}) {
   const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   const module = { exports: {} }
   const copy = language === 'ar' ? { close: 'إغلاق', saving: 'جارٍ الحفظ…', search: 'بحث', empty: 'لا توجد سجلات' } : { close: 'Close', saving: 'Saving…', search: 'Search', empty: 'No records found' }
-  const globals = { useControlFocus, useFormInteraction, useNavigationDisclosure, ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
+  const globals = { useDialogInteraction, useControlFocus, useFormInteraction, useNavigationDisclosure, ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(name => imports[name] ?? require(name), module, module.exports, ...Object.values(globals))
   return module.exports.default
 }
@@ -701,4 +703,29 @@ test('practice ledger report rows expose the exact source and financial amount t
   const html = await renderToString(app)
   for (const value of [row.source, row.amount, row.recorded, row.issued, row.state]) assert.ok(html.includes(value), 'Report must expose its source and monetary evidence')
   assert.equal(tableKey, 'id')
+})
+
+// Shared SSR composition only: no Doctor app, service, browser or private data.
+test('financial source dialogs expose one localized close action through the canonical dialog', async () => {
+  for (const language of ['en', 'ar']) for (const state of ['ready', 'loading', 'error']) {
+    const close = language === 'ar' ? 'إغلاق' : 'Close'
+    const copy = { title: 'Synthetic report', sourceTitle: 'Synthetic source', close, source: 'Source', loading: 'Loading', sourceError: 'Unavailable' }
+    const view = { ready: false, loading: false, denied: false, error: false, totals: [], rows: [], clinics: [], statuses: [], metrics: [], groups: [], source: { visible: true, loading: state === 'loading', error: state === 'error', items: [] } }
+    const filters = { location: '', from: '', until: '', status: 'all', metric: 'collections', group: '' }
+    const detail = component('organisms/BsDetailDialog.vue', language)
+    const app = vue.createSSRApp({ render: () => vue.h(component('organisms/BsPracticeLedgerReportsWorkspace.vue', language), { view, copy, filters }) })
+    for (const name of ['BsStack', 'BsGrid', 'BsFilterBar', 'BsText', 'BsPanel', 'BsHeading', 'BsInline', 'BsMetricGrid', 'BsLink', 'BsDescriptionList', 'BsDescriptionItem', 'BsFormActions']) app.component(name, { setup: (_, { slots }) => () => vue.h('div', slots.default?.()) })
+    for (const name of ['BsPageHeader', 'BsSelect', 'BsInput', 'BsKpiCard', 'BsDataTable']) app.component(name, { render: () => null })
+    app.component('BsField', { setup: (_, { slots }) => () => vue.h('div', slots.default?.({ id: 'synthetic-field', describedby: undefined })) })
+    app.component('BsButton', { setup: (_, { slots }) => () => vue.h('button', slots.default?.()) })
+    app.component('BsDialog', component('organisms/BsDialog.vue', language, { '@building-suit/ux': { interactionPolicy } }))
+    // Inline the real PrimeVue portal for SSR inspection; preserve the actual header/close button.
+    app.component('BsDetailDialog', { setup: (_, { attrs, slots }) => () => vue.h(detail, { ...attrs, appendTo: 'self' }, slots) })
+    app.config.globalProperties.$primevue = { config: { unstyled: true, locale: { aria: { close } } } }
+    const html = await renderToString(app)
+    assert.ok(html.includes('role="dialog"'))
+    const matches = [...html.matchAll(/<button\b[^>]*>[\s\S]*?<\/button>/gi)].filter(([button]) => button.includes(`aria-label="${close}"`) || button.includes(`>${close}</button>`))
+    assert.equal(matches.length, 1, `${language}/${state}: source close must resolve to one accessible action`)
+    assert.ok(matches[0][0].includes('data-pc-name="pcclosebutton"'), 'Keep canonical dialog dismissal and focus handling')
+  }
 })

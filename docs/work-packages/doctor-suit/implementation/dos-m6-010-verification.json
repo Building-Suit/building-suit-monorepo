@@ -986,5 +986,270 @@
       "execution": false,
       "reporter": "list override; no fabricated runtime receipt"
     }
+  },
+  "oct29_guard_and_parent_repair": {
+    "source_head": "32203798b25115dd939a521c96fa08f65c0c65e0",
+    "parent_head": "0dd0abf6df135b541022025e76f4887a86874afd",
+    "focused_tests": {
+      "total": 12,
+      "passed": 12
+    },
+    "financial_e2e_types": "passed",
+    "static_sql": {
+      "parser": "pglast7.21",
+      "statements": 112,
+      "actual_execution": false
+    },
+    "SQL_assertions_expected": 44,
+    "root_tests": {
+      "total": 2551,
+      "passed": 2474,
+      "failed": 54,
+      "skipped": 23,
+      "exit_code": 1,
+      "failures": "all Shop-owned"
+    },
+    "shared_app_types_builds": "parent499 all8 passed; no app/shared implementation changed by task010 follow-up",
+    "inherited_lint": "12 Doctor errors /2 Shop errors retained at parent499",
+    "C03_comparison": {
+      "schema": "doctor-financial-independent-verifier/v1",
+      "execution_id": "80247056-46df-42c5-9770-b63a6cb34634",
+      "task_id": "DOS-M6-010",
+      "case_id": "DOS-M6-010-C03",
+      "exact_base": "0dd0abf6df135b541022025e76f4887a86874afd",
+      "exact_candidate": "32203798b25115dd939a521c96fa08f65c0c65e0",
+      "started_at_utc": "2026-10-29T12:54:09.071Z",
+      "ended_at_utc": "2026-10-29T12:54:09.282Z",
+      "argv": [
+        "node",
+        "docs/work-packages/doctor-suit/implementation/dos-m6-010-verify.mjs",
+        "--base",
+        "0dd0abf6df135b541022025e76f4887a86874afd",
+        "--head",
+        "32203798b25115dd939a521c96fa08f65c0c65e0"
+      ],
+      "node": "26.8.1",
+      "evaluated_input_sha256": {
+        "docs/work-packages/doctor-suit/implementation/dos-m6-010-verify.mjs": "dc19fd1bd3367a891786ab8c9270ccb1d7d0058bc24325984ea7c0fea468cacf",
+        "docs/work-packages/doctor-suit/implementation/dos-m6-010.md": "5d3557adfe0f5b359e67455d3c8ff3046bc5ac13b5b28167b05e91e5cffc414e",
+        "docs/work-packages/doctor-suit/implementation/dos-m6-010-packet.json": "a3ce0aeb4fbbb14a5cb84ecf0227e8e91f7cd0d770932264c3d0e13710010f65",
+        "apps/doctor-suit/tests/financial-acceptance-review.mjs": "a54a661ef3a8fa5cf220bb0f52da81ffdcb7e58effa3786249f22bfc623d3566",
+        "docs/work-packages/doctor-suit/implementation/dos-m6-008-packet.json": "4c54e5ac74fe435f585b55329c07e94d644b4aa2ab6ff392c93437d35e6439bc",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json": "8881c8b68172d75bc9827e910864c3fdd6c056119b0575e24bd49c5a87755a23",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json": "b442acff9a25ecbadbcf7d5f21f6fd672ae7ac10e6a5d186013cd253856f1125",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json": "7caf1851066eb8b2c4741be514ce4f7ee612a2570e76f94b8db3538815cf606f",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json": "041145f78b703fda51a0185744c7f6b2e900fbca7c7ff5dc129ad2170ed5634d",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json": "6ddb7b1ec6310bf2dfbbf562028c47ad1300eb6eb8e01f4cf94a54ed2b280e2b",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json": "eea1e06584bcd599fa13ea8a65400344e660055a7b75e4d817a0f04fe0a09240",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json": "9d937de32c9062852f228f79ea6f89887f39c15b20e7dc7cb485b17a273c1a0c",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json": "24dc2b7d993036671e2958751410e491fad1623910b08ce6418f1b702eca62a6",
+        "docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json": "fde4ee5825fa131a2bd61a565e7c6a746a8a4e3ec74c6f53f878dbe818b8f418",
+        "apps/doctor-suit/app/utils/practiceFinancialReport.ts": "e4744bb2d05717c9bafa8c748ea6c97e0b746892ee8b71d11c57b230b185bc18",
+        "apps/doctor-suit/app/utils/practiceMoney.ts": "c1f1b972d44ded62adcb405a0462bd49a1af634018810a1c641a9f39f9a5f33a",
+        "apps/doctor-suit/app/utils/practiceBilling.ts": "86e467cdc91324d06811fe4b9adb0051c993ff2b09589dc7d76ccc65ed603f20",
+        "apps/doctor-suit/app/utils/locationContext.ts": "75f5e4981decc38f40772a9cd185a999a5ef72c0b8bfabcd25f04749d6d05587",
+        "apps/doctor-suit/app/utils/administrativeEdition.ts": "f7cf04a7b6db73e22bef8b180e32d5dfe7e1ff9879d7ac9585633533d3ffd54c",
+        "apps/doctor-suit/app/utils/entitlement.ts": "9b00e532191f9ff95635d1c471e32b54ff15afbbaf66decd15f200725521b028"
+      },
+      "assertions": [
+        {
+          "id": "executing-exact-candidate",
+          "status": "passed"
+        },
+        {
+          "id": "parent-is-ancestor",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m6-010-verify.mjs",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m6-010.md",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m6-010-packet.json",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/tests/financial-acceptance-review.mjs",
+          "status": "passed"
+        },
+        {
+          "id": "correct-task-and-reviewed-parent",
+          "status": "passed"
+        },
+        {
+          "id": "no-invented-domain-authority",
+          "status": "passed"
+        },
+        {
+          "id": "commercial-launch-stays-unapproved",
+          "status": "passed"
+        },
+        {
+          "id": "current-unavailable-obligations-not-fabricated",
+          "status": "passed"
+        },
+        {
+          "id": "actual-journey-and-review-limits-explicit",
+          "status": "passed"
+        },
+        {
+          "id": "historical-runs-are-only-source-specific",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/implementation/dos-m6-008-packet.json",
+          "status": "passed"
+        },
+        {
+          "id": "tax-profile-and-dependent-adapter-remain-held",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-1-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-2-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-3-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-4-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-5-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-6-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-7-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-8-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-packet-9-unchanged",
+          "status": "passed"
+        },
+        {
+          "id": "canonical-task-retains-accountable-review",
+          "status": "passed"
+        },
+        {
+          "id": "only-task-allowed-paths",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/practiceFinancialReport.ts",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/practiceMoney.ts",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/practiceBilling.ts",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/locationContext.ts",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/administrativeEdition.ts",
+          "status": "passed"
+        },
+        {
+          "id": "working-source-matches-candidate:apps/doctor-suit/app/utils/entitlement.ts",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-contract-baseline",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-boundary-rejects:external_transport",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-boundary-rejects:live_money",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-boundary-rejects:tax_invoice",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-boundary-rejects:tax_exempt",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-boundary-rejects:provider_payout",
+          "status": "passed"
+        },
+        {
+          "id": "pure-report-boundary-rejects:saas_netting",
+          "status": "passed"
+        }
+      ],
+      "exit_code": 0,
+      "result": "passed-blocked-disposition-and-pure-contract-only",
+      "runtime_journey_acceptance": "unrun-for-exact-candidate",
+      "accountable_financial_review": "unavailable",
+      "commercial_launch": "unapproved",
+      "legal_or_provider_authority_granted": false,
+      "full_task_acceptance": false
+    },
+    "actual_repaired_SQL_browser": "pending-owned-CI",
+    "full_task_acceptance": false
   }
 }
