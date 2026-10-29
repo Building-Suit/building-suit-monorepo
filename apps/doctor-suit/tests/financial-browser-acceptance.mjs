@@ -4,6 +4,9 @@ export async function verifyM6FinancialBrowser({ root, fixture }) {
   if (fixture.origin !== 'http://127.0.0.1:4341' || fixture.api !== 'http://127.0.0.1:65321' || !Array.isArray(fixture.storageState?.cookies)) throw Error('Owned financial browser fixture required')
   const sourceHead = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim()
   if (!/^[a-f0-9]{40}$/.test(sourceHead)) throw Error('Financial browser source binding invalid')
+  try {
+    execFileSync('pnpm', ['--filter', '@building-suit/doctor-suit', 'exec', 'vue-tsc', '--project', 'tests/e2e/tsconfig.financial.json'], { cwd: root, timeout: 120000, stdio: ['ignore', 'ignore', 'ignore'] })
+  } catch { throw Error('Financial browser static type verification failed') }
   const result = await new Promise(resolve => {
     let output = '', finished = false
     const child = spawn('pnpm', ['exec', 'playwright', 'test', '-c', 'apps/doctor-suit/tests/e2e/playwright.financial.config.ts'], { cwd: root, env: { ...process.env, DOCTOR_FINANCIAL_ACCEPTANCE: 'owned-actual-provider', DOCTOR_FINANCIAL_SOURCE_HEAD: sourceHead, DOCTOR_FINANCIAL_FIXTURE: JSON.stringify(fixture) }, detached: true, stdio: ['ignore', 'pipe', 'pipe'] })
