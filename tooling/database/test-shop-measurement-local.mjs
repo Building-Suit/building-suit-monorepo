@@ -6,7 +6,7 @@ import { measurementUnits } from '../../apps/shop-suit/app/utils/measurement.js'
 // Deliberately fixed local container. No connection URL, environment ref, hosted
 // database or arbitrary container override is accepted by this runner.
 const command = sql => spawnSync('docker', ['exec', '-i', 'supabase_db_building-suit-shop', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-Atq'], { input: sql, encoding: 'utf8', timeout: 120000 })
-for (const suite of ['shop_measurement_foundation','shop_measured_retail','shop_electrical_reels','shop_trade_pricing','shop_trade_quotations','shop_trade_orders','shop_order_reservations','shop_order_funding','shop_order_fulfillment','shop_supplier_orders','shop_supply_planning','shop_weight_barcodes','shop_scale_captures','shop_commodity_pricing']) {
+for (const suite of ['shop_measurement_foundation','shop_measured_retail','shop_electrical_reels','shop_trade_pricing','shop_trade_quotations','shop_trade_orders','shop_order_reservations','shop_order_funding','shop_order_fulfillment','shop_supplier_orders','shop_supply_planning','shop_weight_barcodes','shop_scale_captures','shop_commodity_pricing','shop_electrical_capacity_audit','shop_electrical_native_journey']) {
   const result = command(`BEGIN;\n${readFileSync(new URL(`../../apps/shop-suit/supabase/tests/${suite}.sql`, import.meta.url), 'utf8')}\nROLLBACK;`)
   if (result.status !== 0) {
     console.error(`${suite}: FAILED\n${result.stderr || result.error}`)

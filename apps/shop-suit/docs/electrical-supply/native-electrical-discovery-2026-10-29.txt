@@ -1,0 +1,4 @@
+Listing tests:
+  electrical-native.spec.ts:13:3 › real Auth, measured payment, FIFO and frozen receipts: en
+  electrical-native.spec.ts:13:3 › real Auth, measured payment, FIFO and frozen receipts: ar
+Total: 2 tests in 1 file
