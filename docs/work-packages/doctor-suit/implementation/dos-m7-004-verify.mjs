@@ -23,7 +23,7 @@ try {
   check('parent-ancestry', git('merge-base', base, head) === base)
   bound(folder + 'dos-m7-004-verify.mjs'); bound(folder + 'dos-m7-004.md')
   const p = JSON.parse(bound(folder + 'dos-m7-004-packet.json'))
-  check('canonical-task-and-exact-parent', p.task_id === 'DOS-M7-004' && p.parent_pr === 504 && p.parent_head === base && p.candidate_binding === 'evaluated-committed-head')
+  check('canonical-task-and-exact-parent', p.task_id === 'DOS-M7-004' && p.parent_pr === 502 && p.parent_head === base && p.candidate_binding === 'evaluated-committed-head')
   check('scope-is-proposal-only', p.scope === 'proposed-policy-and-case-contract-only' && !p.actual_fulfillment_implemented && p.full_task_acceptance === false)
   check('qualified-decisions-absent', ['qualified_policy_approval', 'qualified_identity_policy', 'approved_retention_schedule', 'approved_hold_resolution', 'approved_refusal_partial_policy', 'accountable_review_receipt'].every(k => p[k] === null) && p.actual_outcome_receipts.length === 0)
   const ids = ['account-profile', 'practice-administration', 'patient-administration', 'guardian-relationship', 'clinical-draft', 'signed-clinical-version', 'private-documents', 'released-clinical-material', 'practice-money', 'saas-money', 'communication-outbox', 'audit-security', 'backup-recovery']
@@ -53,7 +53,7 @@ try {
   let tasks = 0
   for (let n = 1; n <= 9; n++) { const file = `docs/work-packages/doctor-suit/planning-v0.4/DOS-M${n}.json`, bytes = bound(file); tasks += JSON.parse(bytes).tasks.length; check('canonical-packet-unchanged:' + n, hash(bytes) === hash(source(base, file))) }
   check('canonical-nine-packets-104-tasks', tasks === 104)
-  const allowed = new Set(['dos-m7-004.md', 'dos-m7-004-packet.json', 'dos-m7-004-verify.mjs', 'dos-m7-004-verification.json', 'm7-continuation.md'].map(f => folder + f).concat('release-fragments/dos-m7-004.json'))
+  const allowed = new Set(['dos-m7-004.md', 'dos-m7-004-packet.json', 'dos-m7-004-verify.mjs', 'dos-m7-004-verification.json', 'dos-m7-004-reconciliation-20261029.json', 'm7-continuation.md'].map(f => folder + f).concat('release-fragments/dos-m7-004.json', 'release-fragments/dos-m7-004-queued-reconciliation-20261029.json'))
   check('no-runtime-or-foreign-task-implementation', git('diff', '--name-only', base, head).split('\n').filter(Boolean).every(file => allowed.has(file)))
 } catch { check('input-or-contract-evaluation', false) }
 const failed = checks.filter(c => c.status === 'failed').length, code = failed ? 1 : 2
