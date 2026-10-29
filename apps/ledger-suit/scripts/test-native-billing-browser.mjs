@@ -65,7 +65,7 @@ try {
       const pricing = page.getByTestId('plan-pricing')
       await pricing.getByRole('radio', { name: copy.billing.monthly, exact: true }).check()
       const quoted = page.waitForResponse(response => new URL(response.url()).pathname.endsWith('/rpc/prepare_manual_payment'))
-      await pricing.locator('[data-plan="starter"]').getByRole('button', { name: copy.billing.manual.choose, exact: true }).click()
+      await pricing.locator('[data-plan="starter"]').getByRole('button').first().click()
       const response = await quoted; assert.equal(response.status(), 200)
       const payment = await response.json(); state.browserRequest = payment.id
       assert.equal(String(payment.amount_minor), '59900')

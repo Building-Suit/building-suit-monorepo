@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { manualCheckoutFixture } from './manual-checkout-fixture'
 
 test('launch pricing is responsive, catalog-accurate, and does not advertise unenforced features', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -59,20 +60,13 @@ test('Arabic pricing remains localized and usable under RTL', async ({ page, con
 })
 
 test('checkout submits the selected plan and interval from the pricing card', async ({ page }) => {
-  let checkoutBody: Record<string, unknown> | undefined
+  const manualCheckout = await manualCheckoutFixture(page)
   await page.route('**/rest/v1/rpc/subscription_access_state', route => route.fulfill({
     status: 200,
     contentType: 'application/json',
     body: JSON.stringify('checkout_required'),
   }))
-  await page.route('**/functions/v1/paymob-checkout', async (route) => {
-    checkoutBody = route.request().postDataJSON() as Record<string, unknown>
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ url: '/subscribe?checkout=complete&success=false' }),
-    })
-  })
+
 
   await page.goto('/login')
   await expect(page.locator('form')).toHaveAttribute('data-hydrated', 'true')
@@ -87,11 +81,13 @@ test('checkout submits the selected plan and interval from the pricing card', as
   await expect(policyReview.getByRole('link', { name: 'Refund & Cancellation Policy' })).toHaveAttribute('href', '/refund-cancellation')
   await expect(policyReview.getByRole('link', { name: 'Privacy Policy' })).toHaveAttribute('href', '/privacy')
   await expect(policyReview.locator('input[type="checkbox"]')).toHaveCount(0)
-  await expect(pricing.getByTestId('payment-method-branding')).toHaveText('Secure payments powered by Paymob')
+  await expect(pricing.getByTestId('payment-method-branding')).toHaveText('InstaPay transfer — reviewed manually; no automatic renewal')
   await pricing.getByRole('radio', { name: 'Yearly', exact: true }).check()
   await pricing.locator('[data-plan="business"]').getByRole('button', { name: 'Choose Business' }).click()
 
-  await expect.poll(() => checkoutBody).toMatchObject({ planKey: 'business', interval: 'yearly' })
+  await expect(page.getByRole('dialog')).toContainText(manualCheckout.instructions)
+  expect(manualCheckout.commands[0]).toMatchObject({ p_plan_key: 'business', p_interval: 'yearly' })
+  expect(manualCheckout.onlineCalls()).toBe(0)
 })
 
 test('grace-period billing shows plans without checkout actions', async ({ page }) => {
