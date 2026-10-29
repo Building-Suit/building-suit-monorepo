@@ -22,4 +22,4 @@ GitHub branch-protection required-check inspection also returned 403 Resource no
 
 ## Validation
 
-Local repair verification and resulting candidate SHA are recorded below when completed. No staging/main merge, review approval, hosted mutation or public Ledger promotion is included.
+Local repair qualification: all seven app builds pass, all four appointment-access cases pass, and all nine marketing/privacy cases pass. The original consent assertions were retained; no forwarding-fixture code was changed. Focused consent/signup unit tests pass, as do workspace/tokens and release-provenance checks. Focused lint has zero errors and seven attribute-order warnings. The initial typecheck invocation found a missing generated docs index; the documented generator has run and the bounded-concurrency rerun is pending. Full GitHub checks remain required on the final published SHA. No staging/main merge, review approval, hosted mutation or public Ledger promotion is included.

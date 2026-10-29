@@ -1,0 +1,23 @@
+{
+  "id": "ls-ci-qual-002-shared-consent-support",
+  "task": "LS-CI-QUAL-002",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/organisms/BsLandingFooter.vue",
+    "packages/ui/src/templates/BsMarketingLayout.vue",
+    "packages/ui/src/templates/BsLandingPage.vue",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "release-changes/items.json",
+    "apps/ledger-suit/docs/integration-check-recovery-20261029.md"
+  ],
+  "reason": "Classify all six consumers of optional shared footer/settings props and landing link events. Only Shop connects product consent/analytics; other consumers retain their existing behavior and receive build/type compatibility qualification. Docs demonstrates the opt-in footer action. No Doctor public activation or hosted change."
+}
