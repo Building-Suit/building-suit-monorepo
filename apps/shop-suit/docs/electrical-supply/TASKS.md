@@ -1,5 +1,7 @@
 # SS-ELECTRICAL-001 task ledger
 
+Current independent evidence review: [2026-10-29 audit](AUDIT-2026-10-29.md) and [all55 task source/test mappings](AUDIT-2026-10-29.json). The per-task labels and dated evidence below retain their historical scope; they do not establish current combined acceptance. The unpublished recovery checkpoint is absent from this workspace.
+
 Status authority for this initiative only. Source/test execution differs from deployment. Allowed states: NOT_STARTED, IN_PROGRESS, IMPLEMENTED, TESTED, VERIFIED, BLOCKED, DEFERRED, CANCELLED. The measured-retail child implements canonical precision and the first merchant workflow. SQL execution and UI qualification are tracked separately; physical reels, trade ordering and final commercial qualification remain open.
 
 Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local work, as explicitly authorized by the owner brief. Public release claims remain blocked.

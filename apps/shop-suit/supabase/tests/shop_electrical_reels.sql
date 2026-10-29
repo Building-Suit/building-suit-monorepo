@@ -35,7 +35,21 @@ do $$declare shop uuid;location uuid;staff uuid;customer uuid;vendor uuid;cable 
  begin perform public.save_product_technical_details(shop,red,1,'Cable 2.5','{"core_count":"1.5"}',false,'Invalid fractional cores');raise exception 'Fractional core count accepted';exception when invalid_parameter_value then if sqlerrm<>'PRODUCT_ATTRIBUTE_RANGE' then raise;end if;end;
  begin perform public.save_product(shop,red,'Cable Red',null,null,36);raise exception 'Family lost independent SKU';exception when check_violation then if sqlerrm<>'VARIANT_FAMILY_REQUIRES_SKU' then raise;end if;end;
  result:=public.list_products(shop,'Schneider 2.5 Blue',null,1,20);
- if (result->>'total')::integer<>1 or result#>>'{items,0,id}'<>cable::text then raise exception 'Technical multi-term search failed: %',result;end if;
+ if (result->>'total')::integer is distinct from 1 or jsonb_array_length(result->'items') is distinct from 1
+ or result#>>'{items,0,id}' is distinct from cable::text then raise exception 'Technical multi-term search failed: %',result;end if;
+ result:=public.shop_catalog_media(shop,'products','{"p_search":"Schneider 2.5 Blue","p_page":1,"p_page_size":20}');
+ if (result->>'total')::integer is distinct from 1 or jsonb_array_length(result->'items') is distinct from 1
+ or result#>>'{items,0,id}' is distinct from cable::text then raise exception 'Media product technical search failed: %',result;end if;
+ -- Both the count and each bounded page must use the same technical predicate.
+ result:=public.list_products(shop,'Schneider 2.5',null,1,1);
+ if (result->>'total')::integer is distinct from 2 or jsonb_array_length(result->'items') is distinct from 1
+ or result#>>'{items,0,id}' is distinct from cable::text then raise exception 'First technical search page incorrect: %',result;end if;
+ result:=public.list_products(shop,'Schneider 2.5',null,2,1);
+ if (result->>'total')::integer is distinct from 2 or jsonb_array_length(result->'items') is distinct from 1
+ or result#>>'{items,0,id}' is distinct from red::text then raise exception 'Second technical search page incorrect: %',result;end if;
+ result:=public.list_products(shop,'Schneider 2.5',null,3,1);
+ if (result->>'total')::integer is distinct from 2 or jsonb_array_length(result->'items') is distinct from 0
+ then raise exception 'Past-last technical search page incorrect: %',result;end if;
  pack:=public.save_product_packaging(gen_random_uuid(),shop,cable,null,'{"code":"R100","name":"100 meter reel","unitCode":"reel","containedQuantity":"100","containedUnitCode":"m","salePrice":3200,"canPurchase":true,"canSell":true}');
  purchase:=public.create_supplier_purchase(request,shop,vendor,'REEL100',current_date,null,jsonb_build_array(jsonb_build_object('product_id',cable,'quantity','1','unit_cost',2500,'package_id',pack,'package_version',1,'measurement_revision',1,'reel_barcodes',jsonb_build_array('PHYSICAL-100'))));
  select id into reel from public.inventory_reels where shop_id=shop and product_id=cable;
@@ -141,6 +155,7 @@ do $$declare shop uuid;location uuid;staff uuid;customer uuid;vendor uuid;cable 
   if exists(select 1 from public.inventory_reels where shop_id=shop) or exists(select 1 from public.product_attribute_values where shop_id=shop) then raise exception 'Physical/technical RLS leaked cross-tenant data';end if;
   begin perform public.pos_reel_options(shop,location,cable);raise exception 'Cross-tenant cashier reel lookup accepted';exception when insufficient_privilege then null;end;
   begin perform public.inventory_reel_context(shop,location,cable);raise exception 'Cross-tenant reel history accepted';exception when insufficient_privilege then null;end;
+  begin perform public.list_products(shop,'Schneider 2.5',null,1,1);raise exception 'Cross-tenant technical search accepted';exception when insufficient_privilege then null;end;
   begin perform public.save_product_technical_details(shop,cable,2,null,'{}',true,'Cross tenant attempt');raise exception 'Cross-tenant technical edit accepted';exception when insufficient_privilege then null;end;
   perform set_config('request.jwt.claim.sub',original_actor::text,true);
  end;

@@ -1,5 +1,11 @@
 # Existing Shop changelog reconciliation — 2026-10-22
 
+## Current read-only follow-up — 2026-10-29
+
+Staging still returns HTTP200 with20 Coming Soon items dated2026-10-18T16:12:55.527Z and four retrospective Released records. Production still returns HTTP503. Authorized runtime logs for production deployment `dpl_tDofAaMvTUr8Jmboxf5fjK49tFz8` at main`221e0e39` show `CHANGELOG_UPSTREAM_STATUS` with status401 on the public-feed request. This distinguishes an upstream rejection from malformed-config/feed branches, but does not establish which binding/key condition caused that rejection.
+
+Production publisher [run40836788577/job123323321891](https://github.com/Building-Suit/building-suit-monorepo/actions/runs/40836788577/job/123323321891) fails before catalog RPCs with `Verified catalog environment binding required`. Main and the published Shop leaf both retain a blank SAS production projectRef in the environment registry; the guard correctly rejects that unverified binding. The execution also has empty staging export/ack configuration and required deployment contexts. An authorized operator must verify the actual production SAS identity and supported reader/publisher configuration before any later recovery. No key was inspected, guard weakened, workflow rerun, private Supabase denial bypassed, live version assigned or hosted state changed. The October22 observations below remain historical evidence.
+
 Status: **BLOCKED** for hosted correction. Audited before feature implementation. No live status/timestamp/version was changed.
 
 Observed public staging feed at `2026-10-22T18:48:09.620Z`: 20 Coming Soon items targeting0.5.0, four released retrospective records0.1.0–0.4.0. The upcoming preview clock is still2026-10-18T16:12:55.527Z. Main is `221e0e39d82dcebf6a84ab2b63ead10b67149ae0`; staging is `2efbed85c5893dfcd4d7a40eaa27a22e9690b00d`.

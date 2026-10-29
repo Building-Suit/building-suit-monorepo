@@ -3626,5 +3626,58 @@
     "sources": [
       "ss-electrical-commodity-qualification-20261026"
     ]
+  },
+  {
+    "id": "ss-electrical-technical-search-pagination-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/supabase/migrations/20261029125033_electrical_technical_search_pagination.sql"
+    ],
+    "reason": "Correct the product directory row predicate to include the same tenant-scoped technical matches as its total, retaining the existing RPC authority and bounds.",
+    "notes": {
+      "title": {
+        "en": "Find products by electrical specifications",
+        "ar": "العثور على الأصناف بالمواصفات الكهربائية"
+      },
+      "summary": {
+        "en": "Technical searches return matching products on every page.",
+        "ar": "تعرض عمليات البحث بالمواصفات الأصناف المطابقة في كل صفحة."
+      },
+      "details": {
+        "en": "Product results and their total now use the same technical specification filter, including searches that do not match the product name or SKU. Existing permissions and page limits apply.",
+        "ar": "تستخدم نتائج الأصناف وعددها الإجمالي مرشح المواصفات نفسه، بما يشمل البحث الذي لا يطابق اسم الصنف أو رمزه. تظل الصلاحيات وحدود الصفحات الحالية مطبقة."
+      }
+    },
+    "sources": [
+      "ss-electrical-technical-search-pagination-20261029"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261029125033_electrical_technical_search_pagination.sql",
+        "contains": "after_predicate text := $after$or coalesce(category.name, '') ilike '%' || v_search || '%'"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-source-evidence-audit-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+      "apps/shop-suit/docs/electrical-supply"
+    ],
+    "reason": "Strengthen null-safe SQL assertions, technical pagination/media-path/isolation coverage and bind all55 task evidence references and current release blockers without claiming missing recovery or external acceptance.",
+    "sources": [
+      "ss-electrical-source-evidence-audit-20261029"
+    ]
   }
 ]
