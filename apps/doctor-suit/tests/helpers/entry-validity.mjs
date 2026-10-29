@@ -2,7 +2,7 @@
 // validation messages, identity, credentials, URLs or application state objects.
 export async function installDoctorEntryValidity(page) {
   await page.addInitScript(() => {
-    const lastInvalid = []
+    const lastInvalid = [], events = []
     function state(control) {
       const label = [...(control.labels || [])].map(item => item.textContent || '').join(' ')
       const field = control.type === 'password' ? 'password'
@@ -21,9 +21,15 @@ export async function installDoctorEntryValidity(page) {
       if (!(event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement || event.target instanceof HTMLTextAreaElement)) return
       lastInvalid.push(state(event.target));if (lastInvalid.length > 8) lastInvalid.shift()
     }, true)
+    for (const kind of ['focusin', 'input', 'change']) document.addEventListener(kind, event => {
+      if (!(event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement || event.target instanceof HTMLTextAreaElement)) return
+      const control = state(event.target)
+      events.push({ kind, field: control.field, provided: control.provided, entering: Boolean(document.querySelector('.bs-auth-wizard-stage-enter-active')) })
+      if (events.length > 12) events.shift()
+    }, true)
     window.__doctorEntrySafeValidity = () => ({
       controls: [...document.querySelectorAll('form input,form select,form textarea')].slice(0, 16).map(state),
-      lastInvalid: [...lastInvalid],
+      lastInvalid: [...lastInvalid], events: [...events],
       entering: Boolean(document.querySelector('.bs-auth-wizard-stage-enter-active')),
       leaving: Boolean(document.querySelector('.bs-auth-wizard-stage-leave-active')),
       stageCount: Math.min(3, document.querySelectorAll('.bs-signup-wizard__content').length),

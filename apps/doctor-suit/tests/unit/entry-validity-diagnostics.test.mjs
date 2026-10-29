@@ -33,9 +33,9 @@ test('entry diagnostics retain only fixed validity facts, never values, labels, 
 })
 test('entry diagnostics bound control/event counts and ignore non-controls', async () => {
   const f = await fixture(40)
-  for (const target of f.inputs) f.listeners.invalid({ target })
+  for (const target of f.inputs) { f.listeners.invalid({ target });f.listeners.focusin({ target });f.listeners.input({ target }) }
   f.listeners.invalid({ target: { value: 'SYNTHETIC_PRIVATE_VALUE',type: 'email' } })
-  const result = f.snapshot();assert.equal(result.controls.length, 16);assert.equal(result.lastInvalid.length, 8)
+  const result = f.snapshot();assert.equal(result.controls.length, 16);assert.equal(result.lastInvalid.length, 8);assert.equal(result.events.length, 12)
   assert.equal(result.lastInvalid.every(item => item.field === 'other'), true)
   assert.equal(JSON.stringify(result).includes('SYNTHETIC_PRIVATE'), false)
 })
