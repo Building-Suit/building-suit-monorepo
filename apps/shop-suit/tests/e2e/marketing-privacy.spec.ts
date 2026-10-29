@@ -215,7 +215,8 @@ test('conversion transport remains scoped, deduplicated and separate from signup
   await dispatch()
   expect((await events(page)).filter(event => event[1] === 'sign_up')).toHaveLength(1)
   await page.goto(origin + '/privacy')
-  await page.getByRole('button', { name: 'Privacy settings', exact: true }).click()
+  // The policy action and footer are both valid reopening entries; exercise the policy control here.
+  await page.getByRole('main').getByRole('button', { name: 'Privacy settings', exact: true }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Reject optional' }).click()
   await expect(page.locator('iframe[title="Optional analytics"]')).toHaveCount(0)
   expect(await page.evaluate(() => sessionStorage.getItem('bs-shop.analytics.signup'))).toBe(null)
