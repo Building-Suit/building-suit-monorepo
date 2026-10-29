@@ -53,7 +53,7 @@ Fill each ignored app `.env` with its local API URL and browser-safe publishable
 
 Verified production/staging refs are recorded in `docs/architecture/environments.json`. Account membership roles, including the requested CEO Owner arrangement, still require verification against Supabase's Free-project quota rules in [manual setup](docs/shared/supabase-manual-setup.md). No paid resources or hosted changes are created by workspace setup.
 
-`pnpm dev:doctor` deliberately serves the current worktree on loopback port 3006; run it from the Doctor implementation worktree. Doctor browser checks use port 4336, while its independent local database/API use 65322/65321. Doctor production/staging refs remain blank.
+`pnpm dev:doctor` selects the latest active Doctor worktree on loopback port 3006, using the same live-PR selection as Shop. Use `--list` to inspect the source or `--current` to serve the current checkout. Restart an already running preview to select the new source. Doctor browser checks use port 4336, while its independent local database/API use 65322/65321. Doctor production/staging refs remain blank.
 
 ## Workspace commands
 

@@ -14,12 +14,12 @@ const validation = ref(false)
 onMounted(async () => {
   const callback = doctorPkceCallback(route.query)
   const hasCallback = Object.keys(route.query).length > 0 || Boolean(route.hash)
-  await navigateTo('/recover', { replace: true })
+  if (hasCallback) await navigateTo('/recover', { replace: true })
   if (hasCallback) {
     mode.value = 'reset'
     valid.value = Boolean(callback && await auth.exchange(callback.code, callback.flowId))
     if (!callback) await auth.refresh()
-  } else await auth.refresh()
+  } else if (auth.state.phase === 'checking') await auth.refresh()
 })
 async function submit() {
   validation.value = mode.value === 'reset' ? password.value.length < 12 || password.value !== confirmation.value : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)

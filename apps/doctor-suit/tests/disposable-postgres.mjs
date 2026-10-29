@@ -1,4 +1,20 @@
+import{verifyPracticeFinancialReportConcurrency}from'./practice-financial-report-concurrency.mjs'
+import{verifyPracticeMoneyConcurrency}from'./practice-money-concurrency.mjs'
+import { verifyPracticeBillingConcurrency } from './practice-billing-concurrency.mjs'
+import { verifySaasLifecycleRequestConcurrency } from './saas-lifecycle-request-concurrency.mjs'
+import{verifyReportsConcurrency}from'./reports-concurrency.mjs'
+import{pullPinnedDoctorMetaImage}from'./pinned-meta-image.mjs'
+import{verifyImportConcurrency}from'./import-concurrency.mjs'
+import{verifyFulfillmentConcurrency}from'./fulfillment-concurrency.mjs'
+import{verifyOutboxConcurrency}from'./outbox-concurrency.mjs'
+import{verifyContactConcurrency}from'./contacts-concurrency.mjs'
+import{verifyWorklistConcurrency}from'./worklists-concurrency.mjs'
+import{verifyWaitlistConcurrency}from './waitlist-concurrency.mjs'
+import{verifyConsultationConcurrency}from './consultations-concurrency.mjs'
+import {verifyClinicalConcurrency} from './clinical-concurrency.mjs'
 // SQL/RLS fallback for small executors. This is not a Supabase service integration test.
+import { verifyAnnualPricingUpgrade } from './annual-pricing-upgrade.mjs'
+import{verifyReceptionConcurrency}from'./reception-concurrency.mjs'
 import{verifyDoctorIsolatedRecovery}from'./recovery-isolated.mjs'
 import { createHash, randomUUID } from 'node:crypto'
 import { mkdtemp, readFile, readdir, rm, writeFile, mkdir, chmod } from 'node:fs/promises'
@@ -26,7 +42,9 @@ import { verifySaasWriteConcurrency } from './saas-write-concurrency.mjs'
 
 const root = fileURLToPath(new URL('../../../', import.meta.url))
 const app = `${root}apps/doctor-suit/`
-const generate = process.argv.slice(2)
+const argv=process.argv.slice(2)
+const focused=argv[0]==='--suite'&&argv.length===2&&/^dos-m3-00[6-9]\.sql$|^dos-m3-010\.sql$/.test(argv[1])?argv[1]:null
+const generate = focused?[]:argv
 if (generate.length && (generate.length !== 1 || generate[0] !== '--types')) throw new Error('Only --types is supported')
 validateLocalDoctorTarget(JSON.parse(await readFile(`${root}docs/architecture/environments.json`, 'utf8')), await readFile(`${app}supabase/config.toml`, 'utf8'), process.env)
 const container = `doctor-sql-${randomUUID()}`
@@ -70,7 +88,7 @@ try {
   for (const file of ['pgtap.control', 'pgtap--1.3.4.sql']) docker(['cp', `${directory}/${file}`, `${container}:/usr/local/share/postgresql/extension/${file}`])
   docker(['exec', container, 'chmod', '644', '/usr/local/share/postgresql/extension/pgtap.control', '/usr/local/share/postgresql/extension/pgtap--1.3.4.sql'])
   sql(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create schema extensions;
-    create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,is_anonymous boolean default false,banned_until timestamptz,raw_user_meta_data jsonb);
+    create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,is_anonymous boolean default false,banned_until timestamptz,deleted_at timestamptz,raw_user_meta_data jsonb);
     create table auth.sessions(id uuid primary key,user_id uuid references auth.users(id),not_after timestamptz,created_at timestamptz default now());
     create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;
     create function auth.uid() returns uuid language sql stable as $$select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid$$;
@@ -91,16 +109,33 @@ try {
   // Publication interface only. No logical replication service is run here.
   sql('create publication supabase_realtime;')
   const migrations = (await readdir(`${app}supabase/migrations`)).filter(file => file.endsWith('.sql')).sort()
-  for (const file of migrations) sql(await readFile(`${app}supabase/migrations/${file}`, 'utf8'))
-  const suites = (await readdir(`${app}supabase/tests`)).filter(file => file.endsWith('.sql')).sort()
+  for (const file of migrations) {
+    const migration = await readFile(`${app}supabase/migrations/${file}`, 'utf8')
+    if (file === '20261018154514_doctor_annual_discount_32.sql') verifyAnnualPricingUpgrade(sql, migration, await readFile(`${app}supabase/tests/dos-instapay-manual.sql`, 'utf8'))
+    sql(migration)
+  }
+  const suites = (await readdir(`${app}supabase/tests`)).filter(file => file.endsWith('.sql')&&(!focused||file===focused)).sort()
   if (!suites.length) throw new Error('No Doctor SQL suites found')
+  // Preserve psql's file-relative includes for shared, test-only fixtures.
+  docker(['cp', `${app}supabase/tests`, `${container}:/doctor-tests`])
   for (const file of suites) {
-    const result = sql(await readFile(`${app}supabase/tests/${file}`, 'utf8'))
+    const result = docker(['exec', '-i', container, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At', '-f', `/doctor-tests/${file}`])
     const plan = result.match(/^1\.\.(\d+)$/m)
     const passed = result.match(/^ok \d+\b/gm) ?? []
     if (!plan || Number(plan[1]) < 1 || Number(plan[1]) !== passed.length || /^not ok\b|^Bail out!/m.test(result)) throw new Error(`${file}: SQL assertions failed\n${result}`)
     console.log(`${file}: ${passed.length} SQL assertions passed`)
   }
+  if(!focused){
+  await verifyReportsConcurrency(container)
+  await verifyImportConcurrency(container)
+  await verifyFulfillmentConcurrency(container)
+  await verifyOutboxConcurrency(container)
+  await verifyContactConcurrency(container)
+  await verifyWorklistConcurrency(container)
+  await verifyReceptionConcurrency(container)
+  await verifyWaitlistConcurrency(container)
+  await verifyConsultationConcurrency(container)
+  await verifyClinicalConcurrency(container)
   await verifyOnboardingConcurrency(container)
   await verifyInvitationConcurrency(container)
   await verifyPatientConcurrency(container)
@@ -117,21 +152,18 @@ try {
   await verifySaasReconciliationConcurrency(container)
   await verifyDoctorAdministrationProtocol(container)
   await verifyManualPaymentConcurrency(container)
+  await verifySaasLifecycleRequestConcurrency(container)
+  await verifyPracticeBillingConcurrency(container)
+  await verifyPracticeMoneyConcurrency(container)
+  await verifyPracticeFinancialReportConcurrency(container)
   await verifyDoctorIsolatedRecovery(container)
+  }
   if (generate.length) {
     // Registry throttling must remain a failed check after bounded retries; it
     // cannot waive schema generation or select an unpinned image.
     // Official v0.98.0 release publishes this same build to GHCR, ECR and Docker Hub:
     // https://github.com/supabase/postgres-meta/blob/v0.98.0/.github/workflows/release.yml
-    const metaImage='ghcr.io/supabase/postgres-meta:v0.98.0@sha256:cef71ba901751dcc242cc685cf13786935ea8926820fb342f23bb0fbef77de5a'
-    for(let attempt=0;attempt<3;attempt++){
-      const pull=spawnSync('docker',['pull',metaImage],{encoding:'utf8',timeout:120000,maxBuffer:1024*1024})
-      if(!pull.error&&pull.status===0)break
-      const transient=/toomanyrequests|rate exceeded|429|timed? ?out|502|503|temporary failure/i.test(String(pull.stderr))
-      if(attempt===2||!transient)throw new Error('Pinned PostgreSQL Meta image unavailable; schema generation remains unverified')
-      console.log('Pinned PostgreSQL Meta registry temporarily unavailable; retrying the same image')
-      await new Promise(resolve=>setTimeout(resolve,[5000,15000][attempt]))
-    }
+    const metaImage=await pullPinnedDoctorMetaImage(image=>spawnSync('docker',['pull',image],{encoding:'utf8',timeout:120000,maxBuffer:1024*1024}))
     const output = docker(['run', '--rm', '--network', `container:${container}`,
       '-e', 'PG_META_DB_HOST=127.0.0.1', '-e', 'PG_META_DB_NAME=postgres', '-e', 'PG_META_DB_USER=postgres',
       '-e', 'PG_META_GENERATE_TYPES=typescript', '-e', 'PG_META_GENERATE_TYPES_INCLUDED_SCHEMAS=public',
@@ -143,6 +175,7 @@ try {
     await writeFile(`${app}supabase/functions/_shared/database.types.ts`, output)
     console.log('Generated public schema types from the migrated disposable database using CLI-pinned PostgreSQL Meta v0.98.0')
   }
+  console.log(focused?'FOCUSED diagnostic only; inherited suites/races/recovery not executed.':'Full SQL regression completed.');
   console.log('SQL/RLS verification only. Minimal Auth/Storage interfaces only; actual Supabase Auth, Storage and Realtime service integration: UNRUN in this SQL runner.')
 } finally {
   spawnSync('docker', ['rm', '-f', '-v', container], { stdio: 'ignore' })

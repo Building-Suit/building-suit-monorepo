@@ -28,11 +28,19 @@ export function seedAvailabilityProtocol(data) {
   data.scheduleCommitments = [{ id: randomUUID(),practice_id: practice.id,doctor_user_id: practice.owner_user_id,location_id: location.id,starts_at: instant(data.scheduleTestDay,780,location.timezone),ends_at: instant(data.scheduleTestDay,800,location.timezone),state: 'booked',version: 1 }]
 }
 export function availabilityProtocol({ businessWritable=()=>true, data,actor,rpc,input,send,capability }) {
-  if (!['doctor_schedule','doctor_write_schedule','doctor_availability'].includes(rpc)) return false
+  if (!['doctor_schedule','doctor_write_schedule','doctor_availability','doctor_consultation_availability'].includes(rpc)) return false
   const reject = (code='42501',message='DOCTOR_ACCESS_DENIED') => { send({ code,message },400); return true }
   const location = data.locations.find(item => item.id===input.p_location && item.practice_id===input.p_practice && !item.archived_at)
   const canManage = location && capability(input.p_practice,location.id,'availability.manage')
   if (!location || (!canManage && !capability(input.p_practice,location.id,'appointments.read'))) return reject()
+  let ignoredAppointment = null
+  if (rpc==='doctor_consultation_availability') {
+    const original = data.appointmentRows?.find(row=>row.id===input.p_appointment && row.practice_id===input.p_practice)
+    if (!original || !capability(input.p_practice,original.location_id,'appointments.read')) return reject()
+    // This legacy fixture cannot invent typed consultation snapshots/capacity.
+    if (input.p_type!=null || input.p_version!=null || original.consultation_snapshot!=null || original.consultation!=null) return reject('22023','SYNTHETIC_TYPED_AVAILABILITY_UNIMPLEMENTED')
+    ignoredAppointment = original.id
+  }
   const configuration = () => ({ practice_id: input.p_practice,location_id: location.id,timezone: location.timezone,location_version: location.version,...(data.scheduleRules[location.id] || { slot_minutes: 20,weekly: [],exceptions: [],version: 0 }),can_manage: businessWritable(input.p_practice) && Boolean(canManage),override_policy: 'deny',existing_commitments: data.scheduleCommitments.filter(item => item.practice_id===input.p_practice && item.location_id===location.id).length })
   if (rpc==='doctor_schedule') { send(configuration()); return true }
   if (rpc==='doctor_write_schedule') {
@@ -53,9 +61,9 @@ export function availabilityProtocol({ businessWritable=()=>true, data,actor,rpc
   const slots = []; const doctor = data.practices.find(item => item.id===input.p_practice).owner_user_id
   for (const window of windows) for (let minute=window.start;minute+config.slot_minutes<=window.end;minute+=config.slot_minutes) {
     const start = instant(day,minute,location.timezone); const end = instant(day,minute+config.slot_minutes,location.timezone)
-    const busy = data.scheduleCommitments.some(item => item.doctor_user_id===doctor && !['cancelled','no_show'].includes(item.state) && Date.parse(item.starts_at)<Date.parse(end) && Date.parse(item.ends_at)>Date.parse(start))
+    const busy = data.scheduleCommitments.some(item => item.id!==ignoredAppointment && item.doctor_user_id===doctor && !['cancelled','no_show'].includes(item.state) && Date.parse(item.starts_at)<Date.parse(end) && Date.parse(item.ends_at)>Date.parse(start))
     const reason = Date.parse(start)<=Date.now() ? 'past' : busy ? 'busy' : null
     slots.push({ minute,starts_at: start,ends_at: end,available: !reason,reason })
   }
-  send({ practice_id: input.p_practice,location_id: location.id,date: day,timezone: location.timezone,location_version: location.version,schedule_version: config.version,slot_minutes: config.slot_minutes,slots,override_policy: 'deny' }); return true
+  send({ practice_id: input.p_practice,location_id: location.id,date: day,timezone: location.timezone,location_version: location.version,schedule_version: config.version,slot_minutes: config.slot_minutes,slots,override_policy: 'deny',...(rpc==='doctor_consultation_availability'?{consultation:null}:{}) }); return true
 }

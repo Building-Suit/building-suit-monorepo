@@ -1,0 +1,23 @@
+{
+  "id": "dos-m2-011-synthetic-engineering",
+  "task": "DOS-M2-011",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/supabase/config.toml",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/functions/doctor-clinical-release/backend.ts",
+    "apps/doctor-suit/supabase/functions/doctor-clinical-release/handler.ts",
+    "apps/doctor-suit/supabase/functions/doctor-clinical-release/index.ts",
+    "apps/doctor-suit/supabase/migrations/20261020002541_clinical_m2_011.sql",
+    "apps/doctor-suit/supabase/tests/dos-m2-011.sql",
+    "apps/doctor-suit/tests/unit/dos-m2-011-files.test.mjs",
+    "apps/doctor-suit/tests/unit/dos-m2-011.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m2-011.md"
+  ],
+  "reason": "Implement reviewed private result delivery for the unactivated synthetic Doctor workspace. Shared new typed contracts/templates have no existing operational product consumers. Preserve explicit fixture authority, qualified review and live-use boundaries; no hosted activation or professional approval."
+}

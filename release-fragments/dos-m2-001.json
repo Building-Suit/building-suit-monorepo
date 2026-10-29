@@ -1,0 +1,13 @@
+{
+  "id": "dos-m2-001",
+  "task": "DOS-M2-001",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m2-001.md"
+  ],
+  "reason": "Prepare the concrete qualified-clinician review packet for synthetic encounter/drafting/signing/amendment/release/conflict policy. Preserve DOS-M2-GATE-CLINICAL as OPEN with reviewer/date/scope/version/signature absent; no clinical implementation or authority, provider/native/live-data action, operational activation, integration or deployment is conferred."
+}

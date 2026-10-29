@@ -1,0 +1,2 @@
+import{test,expect,openOperations}from'./operations-actual-fixture'
+test('DOS-M3-007: browser states external delivery disabled without provider success',async({browser})=>{const v=await openOperations(browser,'/messages');try{await expect(v.page.getByText(/External delivery is disabled/)).toBeVisible();await expect(v.page.getByRole('button',{name:/activate provider|send externally/i})).toHaveCount(0);await expect(v.page.getByText(/Choose an authorized patient/)).toBeVisible()}finally{await v.context.close()}})

@@ -1,0 +1,19 @@
+{
+  "id": "dos-m4-006-contract-support",
+  "task": "DOS-M4-006",
+  "suits": [
+    "doctor-suit",
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/contracts/src/doctorClinical.ts",
+    "packages/contracts/src/index.ts"
+  ],
+  "reason": "Share unchanged pure Doctor synthetic clinical DTO/snapshot/hash verification contracts with web and native clients; no queries, recommendations, signature/provider authority or activation."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "doctor-entry-validity-diagnostics-20261029",
+  "task": "DOCTOR-CONSOLIDATION-20261029",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/helpers/entry-validity.mjs",
+    "apps/doctor-suit/tests/unit/entry-validity-diagnostics.test.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts",
+    "apps/doctor-suit/tests/account-actual-provider.mjs",
+    "docs/work-packages/doctor-suit/implementation/consolidation-2026-10-29.md"
+  ],
+  "reason": "Bounded value-free diagnostics for reproduced owned cloud onboarding and signup failures during staging consolidation. Preserve all assertions, real-service guards and acceptance distinctions; no product or domain authority changes."
+}

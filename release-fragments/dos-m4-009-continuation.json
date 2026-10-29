@@ -1,0 +1,14 @@
+{
+  "id": "dos-m4-009-continuation",
+  "task": "DOS-M4-009",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/m4-continuation.md"
+  ],
+  "reason": "Record current online-only synthetic engineering, actual source checks, inherited CI failures and missing accountable/device evidence while continuing canonical tasks."
+}

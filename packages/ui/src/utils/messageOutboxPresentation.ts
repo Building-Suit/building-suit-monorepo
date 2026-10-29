@@ -1,0 +1,2 @@
+export interface BsMessageOutboxView{loading:boolean;error:string|null;rows:{id:string;state:string;purpose:string;recipient:string;attempts:string;blocker:string;created:string}[];total:number;page:number;patients:{value:string;label:string}[]}
+export interface BsMessageOutboxCopy{title:string;notice:string;patient:string;reload:string;empty:string;state:string;purpose:string;recipient:string;attempts:string;blocker:string;created:string;previous:string;next:string}

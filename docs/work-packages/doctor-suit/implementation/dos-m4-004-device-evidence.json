@@ -1,0 +1,35 @@
+{
+  "task": "DOS-M4-004",
+  "status": "in progress",
+  "parent_pr": 453,
+  "parent_sha": "4b537e2cd240856c4166a1cbf3b6f19598c19db5",
+  "executed_native_cases": [],
+  "task_acceptance": false,
+  "physical_device": false,
+  "clinical_approval": false,
+  "offline_chart_approval": false,
+  "provider_activation": false,
+  "planned_native_cases": [
+    "server-scopes-explicit-selection",
+    "delayed-doctor-a-switch-b",
+    "revoke-one-location-retain-other",
+    "unsaved-discard-confirm-cancel",
+    "background-session-clears-context"
+  ],
+  "checks": {
+    "task_units_passed": 11,
+    "combined_mobile_units_passed": 44,
+    "lint": "pass",
+    "typecheck": "pass",
+    "boundaries": "pass",
+    "static_build_and_sync": "pass",
+    "actual_service_native_device": "unrun"
+  },
+  "full_repository_baseline": {
+    "parent_total": 2232,
+    "parent_passed": 2155,
+    "inherited_shop_failures": 54,
+    "parent_skipped": 23,
+    "repeated_for_this_task": false
+  }
+}

@@ -252,6 +252,9 @@ export { usePageExitCleanup } from './composables/usePageExitCleanup.ts'
 export { usePrivateSessionLifecycle } from './composables/usePrivateSessionLifecycle.ts'
 export { usePageRevalidation } from './composables/usePageRevalidation.ts'
 export { useBlobUrl } from './composables/useBlobUrl.ts'
+export{createEmailStepController,emailStepState,emailStepDelay,normalizedAuthEmail,validAuthEmail}from'./controllers/emailStep.ts'
+export type{EmailStepState,EmailStepError}from'./controllers/emailStep.ts'
+export { useSignupWizard, focusSignupStage } from './composables/useSignupWizard.ts'
 
 export { useGuardedChoice } from './composables/useGuardedChoice.ts'
 export { useControlledRadioGroup } from './composables/useControlledRadioGroup.ts'
@@ -267,4 +270,5 @@ export { useNavigationChamber } from './composables/useNavigationChamber.ts'
 
 export { readWebsiteImage } from './utils/readWebsiteImage.ts'
 
+export { scrollRegionKey } from './scrollRegion.ts'
 export { normalizeDecimalText } from './utils/decimalText.js'
