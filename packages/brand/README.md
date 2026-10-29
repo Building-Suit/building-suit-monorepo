@@ -45,3 +45,12 @@ node --test apps/shop-suit/tests/unit/ss-launch-brand-001-2.test.mjs
 ```
 
 Production acceptance runs with `pnpm test:built-assets` after `pnpm build` (or a Shop build). It checks the compiled HTTP pipeline for all six canonical assets, exact bytes/MIME types and rendered favicon links. CI review checks validate source images without requiring stale build output; the full CI job runs production acceptance after its build.
+
+## Ledger family artwork
+
+Ledger's canonical mark is a white open ledger/L with gold ruled rows inside a
+charcoal tile with a gold border, following the accepted Shop and Doctor family.
+Both wordmark tones are outlined vectors without external font or image dependencies.
+All existing Ledger public URLs remain stable, including app-icon/logo-mark aliases
+and the 512 × 512 PNG fallback. The generated artwork is adopted from shared PR
+#437 at `613177246eb05eda4e7458fd5d5d212062e03f5e`; Shop and Doctor assets are unchanged.

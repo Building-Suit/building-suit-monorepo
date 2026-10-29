@@ -1,0 +1,9 @@
+{
+  "id": "ledger-brand-family-adoption-20261029",
+  "task": "LEDGER-BRAND-20261029",
+  "suits": ["ledger-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["packages/brand/assets/ledger-suit", "packages/brand/README.md", "docs/work-packages/ledger-brand-release"],
+  "reason": "Adopt generated Ledger family artwork at stable canonical URLs. Ledger remains an internal release consumer; no operational registration, release baseline, sale readiness or marketing activation is inferred."
+}
