@@ -1,6 +1,6 @@
 # Ledger InstaPay cutover — recovery checkpoint
 
-Status: local implementation checkpoint, unpublished and not release-qualified. Main promotion and general Ledger marketing are held by the user's latest instruction until this cutover is completed and verified.
+Status: locally qualified application checkout; unpublished, live beneficiary configuration and combined release qualification still pending. Main promotion and general Ledger marketing are held by the user's latest instruction until this cutover is completed and verified.
 
 ## Saved scope
 
@@ -13,7 +13,7 @@ Applied local edits: primary plan choice opens the existing manual flow; new bro
 - Ledger typecheck and production build pass.
 - 141 Ledger/security unit cases pass, including fresh-auth/tenant retirement denials and stale-instruction handling.
 - Maintained billing browser suite: 30 pass, covering EN/AR, themes/viewports, annual quote identity, private evidence UI, missing instructions, billing-viewer denial and zero online-checkout calls.
-- Deno 2.5.6 is available; actual Deno SDK/type checking is pending, not claimed passed.
+- Actual Deno 2.5.6 SDK/type checking passes against the existing npm:@supabase/supabase-js@2 import (resolved2.118.0). The first attempt failed on the managed certificate chain; command-scoped DENO_TLS_CA_STORE=system fixed trust without disabling verification or changing persistent settings.
 - Legacy pricing/trial test adaptations are saved but have not been separately qualified. Full combined follow-up CI remains pending.
 
 ## Exact remaining input and holds
@@ -30,9 +30,9 @@ This worktree branches from local security reconciliation 50d0ca37e20af745bbda5f
 
 ## Resume
 
-1. Verify the recovery archive/hash and restore the pinned base/branch if needed; preserve original worktrees.
-2. Complete Deno checking and focused billing/security validation; assess any native legacy test adaptation without dropping historical webhook assertions.
-3. Finish curated release fragments/net-change evidence and factual deployment documentation before publication.
+1. Preserve recovery archive Library ID libfile_386d388123fc8191959e6a8b9003d7ac and checkpoint5ccc0734b94849e7bc4498263f3d301ce1aac130; restore only to a new worktree if needed.
+2. Deno, Ledger units/type/build and maintained billing browser qualification pass locally. Native full-service browser rerun remains unperformed; its primary-action selector has been adapted without changing financial assertions. Historical webhook and SQL sources are unchanged.
+3. Curated public/internal fragments and semantic release evidence are prepared; validate the committed exact candidate against current staging before publication.
 4. Obtain the parent's authoritative public instructions; verify the existing operator/configuration through authorized interfaces only.
 5. Publish a coherent same-stack follow-up after Doctor queue coordination; retain security and checkout histories and perform fresh combined checks.
 6. Integrate to staging, verify exact provider/frontend/CI outcomes, then revisit only an authorized isolated Ledger production path after baseline gates clear. Marketing follows verified release.

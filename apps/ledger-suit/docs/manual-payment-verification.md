@@ -1,5 +1,7 @@
 # LS-BILL-002 — InstaPay/manual payment
 
+Current cutover work: [InstaPay checkout](instapay-checkout-cutover.md) replaces new customer online enrollment with server-quoted manual InstaPay review. Historical provider callbacks, secrets and payment records are retained; no credential rotation or hosted configuration change is included. Do not use the legacy online-enrollment setup below to enable new payments. Verified live recipient instructions remain a release prerequisite.
+
 2026-10-26 native follow-up: [LS-BILL-NATIVE-001](accountant-system/work-packages/LS-BILL-NATIVE-001.md) now verifies actual Auth/Edge/Storage/SQL, receipt expiry, quota/correction/renewal and mobile customer → desktop operator browser paths. It fixes receipt links through the configured public project origin. Earlier unrun/local-only statements below are historical; hosted configuration and accountant UAT remain separate.
 
 2026-10-22 update: native independent-session **approval contention and replay passed**. See [the current verification and boundaries](native-concurrency-verification.md) and [native SQL evidence](native-financial-verification.md). Historical blocked results below retain their original dates; this does not establish HTTP/Storage, provider, deployment or accountant acceptance.
