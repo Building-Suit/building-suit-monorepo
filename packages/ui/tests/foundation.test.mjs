@@ -12,6 +12,7 @@ import { useFormInteraction } from '../../ux/src/composables/useFormInteraction.
 import { useDialogInteraction } from '../../ux/src/composables/useDialogInteraction.ts'
 import { interactionPolicy } from '../../ux/src/index.ts'
 import { useControlFocus } from '../../ux/src/composables/useControlFocus.ts'
+import { focusSignupStage } from '../../ux/src/composables/useSignupWizard.ts'
 import { useNavigationDisclosure } from '../../ux/src/composables/useNavigationDisclosure.ts'
 
 const require = createRequire(import.meta.url)
@@ -267,6 +268,30 @@ test('shared auth owns split geometry, form shells, wizard controls, and verific
   assert.match(verification, /<BsOtpInput v-if="!verified" v-model="code"/)
   assert.match(verification, /aria-live="polite"/)
   assert.match(verification, /@click="emit\('resend'\)"/)
+})
+
+
+test('wizard transition completion preserves a field the user already focused', async () => {
+  let afterEnter
+  const Transition = vue.defineComponent({
+    inheritAttrs: false, props: ['onAfterEnter'],
+    setup(props, { slots }) { afterEnter = props.onAfterEnter; return () => slots.default?.() },
+  })
+  const Wizard = component('organisms/BsSignupWizard.vue', 'en', { vue: { ...vue, Transition }, '@building-suit/ux': { focusSignupStage } })
+  const app = vue.createSSRApp({ render: () => vue.h(Wizard, {
+    step: 2, steps: [{ id: 'account', title: 'Account' }, { id: 'practice', title: 'Practice' }], submitLabel: 'Continue',
+  }, () => vue.h('input')) })
+  app.component('BsButton', { render: () => vue.h('button') })
+  await renderToString(app)
+  assert.equal(typeof afterEnter, 'function')
+  let firstFocus = 0
+  const first = { focus: () => { firstFocus++ } }, chosen = {}, outside = {}
+  const stage = { ownerDocument: { activeElement: chosen }, contains: node => node === first || node === chosen, querySelector: () => first }
+  afterEnter(stage)
+  assert.equal(firstFocus, 0, 'finishing an animation must not move focus away from the field already being edited')
+  stage.ownerDocument.activeElement = outside
+  afterEnter(stage)
+  assert.equal(firstFocus, 1, 'a new step still receives initial focus when the user has not entered it')
 })
 
 test('authenticated chrome is composed from canonical shared organisms', () => {

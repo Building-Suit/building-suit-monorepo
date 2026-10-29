@@ -52,6 +52,10 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       }
       await page.locator('form button[type=submit]').click()
       await expect(page.locator('input[autocomplete=name]')).toHaveCount(0)
+      const chosenWorkspaceField = page.locator('form input').nth(1)
+      await chosenWorkspaceField.focus()
+      await expect(page.locator('.bs-auth-wizard-stage-enter-active')).toHaveCount(0)
+      await expect(chosenWorkspaceField, 'Completing a step transition must retain the field already selected by the user').toBeFocused()
       await page.locator('form input').nth(0).fill('Parity workspace')
       await page.locator('form input').nth(1).fill(product.name === 'ledger' ? 'Parity legal name' : 'Main location')
       if (product.name === 'ledger') {

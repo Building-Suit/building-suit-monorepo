@@ -251,7 +251,7 @@ export { usePageRevalidation } from './composables/usePageRevalidation.ts'
 export { useBlobUrl } from './composables/useBlobUrl.ts'
 export{createEmailStepController,emailStepState,emailStepDelay,normalizedAuthEmail,validAuthEmail}from'./controllers/emailStep.ts'
 export type{EmailStepState,EmailStepError}from'./controllers/emailStep.ts'
-export { useSignupWizard } from './composables/useSignupWizard.ts'
+export { useSignupWizard, focusSignupStage } from './composables/useSignupWizard.ts'
 
 export { useGuardedChoice } from './composables/useGuardedChoice.ts'
 export { useControlledRadioGroup } from './composables/useControlledRadioGroup.ts'

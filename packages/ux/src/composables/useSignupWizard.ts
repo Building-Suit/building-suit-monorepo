@@ -17,3 +17,11 @@ export function useSignupWizard(totalSteps: number) {
   function reset() { generation++; step.value = 1; advancing.value = false }
   return { step, advancing, isLastStep, advance, back, reset }
 }
+
+/** Initial step focus must never interrupt a user already editing that step. */
+export function focusSignupStage(element: Element) {
+  const active = element.ownerDocument.activeElement
+  if (active && element.contains(active)) return
+  const control = element.querySelector<HTMLElement>('input:not([readonly]):not([disabled]),select:not([disabled]),button:not([disabled])')
+  control?.focus({ preventScroll: true })
+}

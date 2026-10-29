@@ -1827,12 +1827,13 @@
         "ar": "تنقّل بين خطوات التسجيل بتركيز أوضح وإشعارات تقدم مناسبة."
       },
       "details": {
-        "en": "The next editable field receives keyboard focus, pending feedback uses the form’s label, and an old validation response cannot advance a reset wizard.",
-        "ar": "ينتقل تركيز لوحة المفاتيح إلى الحقل التالي القابل للتحرير، وتستخدم حالة الانتظار نص النموذج، ولا تنقل استجابة تحقق قديمة معالجاً أُعيد ضبطه."
+        "en": "New signup steps receive initial keyboard focus without interrupting a field you already started editing. Pending feedback uses the form’s label, and an old validation response cannot advance a reset wizard.",
+        "ar": "تتلقى خطوات التسجيل الجديدة التركيز الأولي للوحة المفاتيح دون مقاطعة حقل بدأت تحريره. وتستخدم حالة الانتظار نص النموذج، ولا تنقل استجابة تحقق قديمة معالجاً أُعيد ضبطه."
       }
     },
     "sources": [
-      "shared-auth-form-feedback"
+      "shared-auth-form-feedback",
+      "shared-signup-focus-retention"
     ],
     "evidence": [
       {
@@ -1841,11 +1842,15 @@
       },
       {
         "path": "packages/ui/src/organisms/BsSignupWizard.vue",
-        "contains": "@after-enter=\"focusStage\""
+        "contains": "@after-enter=\"focusSignupStage\""
       },
       {
         "path": "packages/ux/src/composables/useSignupWizard.ts",
         "contains": "captured !== generation"
+      },
+      {
+        "path": "packages/ux/src/composables/useSignupWizard.ts",
+        "contains": "if (active && element.contains(active)) return"
       }
     ]
   },
