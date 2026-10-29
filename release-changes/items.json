@@ -3775,5 +3775,27 @@
     "sources": [
       "shop-staging-ledger-access-history-20261029"
     ]
+  },
+  {
+    "id": "shop-staging-menu-animation-compatibility-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ux/src/composables/useSideNavigation.ts",
+      "packages/ux/tests/menu-share.test.mjs"
+    ],
+    "reason": "Qualify finite animation settlement, ignored infinite animation and cancellation on close. Use the optional Web Animations API when available, preserving no-animation runtimes and existing keyboard tests. The exact-head native unit failure is retained as evidence; no retry or assertion bypass.",
+    "sources": [
+      "shop-staging-menu-animation-compatibility-20261029"
+    ]
   }
 ]
