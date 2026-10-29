@@ -40,3 +40,5 @@ Do not combine a wrapper search box with a second independent global-search cont
 API inventory is generated from the pinned installed declaration files by `pnpm table:inventory`. Vendor behavior and unsupported native combinations follow the pinned upstream implementation, not a separately reimplemented grid.
 
 Column totals use the Bs-owned `footer` value and `footer-{key}` slots. Footer cells follow the column's alignment and width; products retain total calculations over the full report population. `ariaSort` preserves accessible sort state when a product's header actions own server sorting. Vendor column groups and passthrough styling are unnecessary for these cases.
+
+`BsCataloguePage` receives one controlled server `table.pageSize`; its paginator offers only that size and forwards the typed `pageSize`/`pageSizes` wrapper props. Product and service adapters currently request20 rows. A template that emits only page numbers must not offer alternative row counts without an adapter contract for those counts.

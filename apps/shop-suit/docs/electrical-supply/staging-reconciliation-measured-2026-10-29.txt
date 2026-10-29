@@ -1,0 +1,13 @@
+[WebServer] (node:215229) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:215237) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:215245) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 apps/shop-suit/tests/e2e/measured-retail.spec.ts:7:2 › measured cart and immutable product settings en light 1440 (5.3s)
+  ✓  2 apps/shop-suit/tests/e2e/measured-retail.spec.ts:7:2 › measured cart and immutable product settings ar dark 390 (4.7s)
+
+  2 passed (12.6s)

@@ -1,0 +1,559 @@
+{
+  "reviewed_head": "11be3b3d094d1273cf9b730151b59d2ab41c1c7f",
+  "historical_native_qualified_head": "7697676152938086b3820193a9da7fcc501e9845",
+  "shop_migration_count": 120,
+  "shop_migrations_byte_identical": true,
+  "proof_method": "Git blob identity of all tracked Shop migration paths; no SQL tests rerun for this documentation reconciliation",
+  "tasks": [
+    {
+      "task": "SS-ELEC-000",
+      "source_group": "initiative gate",
+      "source_pr": "441",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "All55 source/test mappings and applied-source identity are inventoried; local120-migration replay and scoped checks are recorded. Full semantic acceptance and unavailable hosted-history reconciliation remain separate.",
+      "remaining_gate": "Complete requirement-by-requirement current-source evidence audit; hosted history remains access-bound.",
+      "status": "BLOCKED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-001",
+      "source_group": "initiative gate",
+      "source_pr": "441",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "Protected staging97c1f50e review/verify passed; publisher alone stopped at production baseline acknowledgment. Recorded production baseline/existing receipt/operator binding remains unresolved; no denied read was retried.",
+      "remaining_gate": "Existing production baseline SHA/receipt and verified catalog binding; guarded catalog publication held.",
+      "status": "BLOCKED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-002",
+      "source_group": "initiative gate",
+      "source_pr": "441",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "All55 tracker entries reconciled at11be3b3d source checkpoint, preserving prior evidence/PR references as historical. No task is promoted to VERIFIED by this documentation reconciliation.",
+      "remaining_gate": "Reconcile all55 tracker entries against integrated source and precise tests; historical statuses are not completion.",
+      "status": "IMPLEMENTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-003",
+      "source_group": "initiative gate",
+      "source_pr": "441",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "ARCHITECTURE.md, DECISIONS.md and current public-command implementation are retained; no second measurement/financial authority was introduced. Full semantic traceability remains open.",
+      "remaining_gate": "Finish design/requirement traceability; preserve established measurement/financial authorities.",
+      "status": "IMPLEMENTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-004",
+      "source_group": "initiative gate",
+      "source_pr": "441",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "Curated release fragments/current-net-diff inventory and normal provenance checks are retained. Publication still waits for supported catalog baseline/receipt recovery; no versions/times are invented.",
+      "remaining_gate": "Curate actual net-diff release notes; preserve accepted fragments and wait for supported catalog publication.",
+      "status": "IMPLEMENTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-101",
+      "source_group": "foundation",
+      "source_pr": "441",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local schema replay passes foundation/registry/conversion and both merchant fixtures; the27-unit group includes measurement/quantity/cart/receipt checks. Final native/full-workspace evidence remains required.",
+      "remaining_gate": "Confirm complete registry taxonomy and inactive-unit denial in final native schema.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-102",
+      "source_group": "foundation",
+      "source_pr": "441",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local schema replay passes foundation/registry/conversion and both merchant fixtures; the27-unit group includes measurement/quantity/cart/receipt checks. Final native/full-workspace evidence remains required.",
+      "remaining_gate": "Confirm canonical units and locked/legacy-product behavior in final native schema.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-103",
+      "source_group": "foundation",
+      "source_pr": "441",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local schema replay passes foundation/registry/conversion and both merchant fixtures; the27-unit group includes measurement/quantity/cart/receipt checks. Final native/full-workspace evidence remains required.",
+      "remaining_gate": "Audit exact quantity precision across all receipts, returns, imports, reporting and historical columns.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-104",
+      "source_group": "foundation",
+      "source_pr": "441",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local schema replay passes foundation/registry/conversion and both merchant fixtures; the27-unit group includes measurement/quantity/cart/receipt checks. Final native/full-workspace evidence remains required.",
+      "remaining_gate": "Qualify real-session conversions, invalid dimensions/precision and server-authoritative amounts.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-105",
+      "source_group": "foundation",
+      "source_pr": "441",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local schema replay passes foundation/registry/conversion and both merchant fixtures; the27-unit group includes measurement/quantity/cart/receipt checks. Final native/full-workspace evidence remains required.",
+      "remaining_gate": "Complete measurement editor state matrix, keyboard/RTL and external native-Arabic review.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-106",
+      "source_group": "foundation",
+      "source_pr": "441",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local schema replay passes foundation/registry/conversion and both merchant fixtures; the27-unit group includes measurement/quantity/cart/receipt checks. Final native/full-workspace evidence remains required.",
+      "remaining_gate": "Verify upgrades against retained legacy transactions; never reinterpret historical quantities.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-107",
+      "source_group": "foundation",
+      "source_pr": "441",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local schema replay passes foundation/registry/conversion and both merchant fixtures; the27-unit group includes measurement/quantity/cart/receipt checks. Final native/full-workspace evidence remains required.",
+      "remaining_gate": "Close final role/tenant/location and direct-write/private-helper denial evidence.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-201",
+      "source_group": "measured",
+      "source_pr": "445",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local measured merchant and new mixed/FIFO public-command companion pass;48-case synthetic browser group includes measured cart/settings. Two actual-Auth electrical browser cases are implemented/discovered, not executed.",
+      "remaining_gate": "Real Auth purchase-unit browser-to-RPC qualification; retain supplier cost/quantity invariants.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-202",
+      "source_group": "measured",
+      "source_pr": "445",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local measured merchant and new mixed/FIFO public-command companion pass;48-case synthetic browser group includes measured cart/settings. Two actual-Auth electrical browser cases are implemented/discovered, not executed.",
+      "remaining_gate": "Packaging editor and versioned historical conversion qualification across roles.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-203",
+      "source_group": "measured",
+      "source_pr": "445",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local measured merchant and new mixed/FIFO public-command companion pass;48-case synthetic browser group includes measured cart/settings. Two actual-Auth electrical browser cases are implemented/discovered, not executed.",
+      "remaining_gate": "Verify exact package/unit prices through actual sale/payment and refund authorities.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-204",
+      "source_group": "measured",
+      "source_pr": "445",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local measured merchant and new mixed/FIFO public-command companion pass;48-case synthetic browser group includes measured cart/settings. Two actual-Auth electrical browser cases are implemented/discovered, not executed.",
+      "remaining_gate": "Real Auth POS financial browser flow; unpublished checkout recovery awaits original archive.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-205",
+      "source_group": "measured",
+      "source_pr": "445",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local measured merchant and new mixed/FIFO public-command companion pass;48-case synthetic browser group includes measured cart/settings. Two actual-Auth electrical browser cases are implemented/discovered, not executed.",
+      "remaining_gate": "Final native FIFO/stock races and actual counter/fulfillment consistency.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-206",
+      "source_group": "measured",
+      "source_pr": "445",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local measured merchant and new mixed/FIFO public-command companion pass;48-case synthetic browser group includes measured cart/settings. Two actual-Auth electrical browser cases are implemented/discovered, not executed.",
+      "remaining_gate": "Complete native count/correction/threshold browser and location-isolation evidence.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-207",
+      "source_group": "measured",
+      "source_pr": "445",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local measured merchant and new mixed/FIFO public-command companion pass;48-case synthetic browser group includes measured cart/settings. Two actual-Auth electrical browser cases are implemented/discovered, not executed.",
+      "remaining_gate": "Verify immutable receipt snapshots, actual printer output and original values after catalog edits.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-208",
+      "source_group": "measured",
+      "source_pr": "445",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local measured merchant and new mixed/FIFO public-command companion pass;48-case synthetic browser group includes measured cart/settings. Two actual-Auth electrical browser cases are implemented/discovered, not executed.",
+      "remaining_gate": "Final original-cost partial-return/refund qualification and genuine merchant recovery procedure.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-209",
+      "source_group": "measured",
+      "source_pr": "445",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local measured merchant and new mixed/FIFO public-command companion pass;48-case synthetic browser group includes measured cart/settings. Two actual-Auth electrical browser cases are implemented/discovered, not executed.",
+      "remaining_gate": "Complete CSV/barcode browser integration and real scanner acceptance; no synthetic hardware claim.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-210",
+      "source_group": "measured",
+      "source_pr": "445",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local measured merchant and new mixed/FIFO public-command companion pass;48-case synthetic browser group includes measured cart/settings. Two actual-Auth electrical browser cases are implemented/discovered, not executed.",
+      "remaining_gate": "Original unpublished offline/atomic recovery is missing; ETA live setup/acceptance is separate.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-211",
+      "source_group": "measured",
+      "source_pr": "445",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration local measured merchant and new mixed/FIFO public-command companion pass;48-case synthetic browser group includes measured cart/settings. Two actual-Auth electrical browser cases are implemented/discovered, not executed.",
+      "remaining_gate": "Full reporting/margin regressions across quantity/tax/returns/partial fulfillment and RTL.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-301",
+      "source_group": "reels",
+      "source_pr": "450",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration physical reel merchant and actual-session reel race pass in provider-stand-in scope;48-case synthetic group covers count/cut/supplier-return controls. Device/merchant/native electrical-reel execution remains open.",
+      "remaining_gate": "Current technical search/editor exact-head browser qualification and large catalog behavior.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-302",
+      "source_group": "reels",
+      "source_pr": "450",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration physical reel merchant and actual-session reel race pass in provider-stand-in scope;48-case synthetic group covers count/cut/supplier-return controls. Device/merchant/native electrical-reel execution remains open.",
+      "remaining_gate": "Verify independently identified SKU/variant stock, imports and search; do not merge variant inventories.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-303",
+      "source_group": "reels",
+      "source_pr": "450",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration physical reel merchant and actual-session reel race pass in provider-stand-in scope;48-case synthetic group covers count/cut/supplier-return controls. Device/merchant/native electrical-reel execution remains open.",
+      "remaining_gate": "Native reel lifecycle and merchant drum/reel identification acceptance.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-304",
+      "source_group": "reels",
+      "source_pr": "450",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration physical reel merchant and actual-session reel race pass in provider-stand-in scope;48-case synthetic group covers count/cut/supplier-return controls. Device/merchant/native electrical-reel execution remains open.",
+      "remaining_gate": "Final real-session continuous length/allocation and partial physical reel qualification.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-305",
+      "source_group": "reels",
+      "source_pr": "450",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration physical reel merchant and actual-session reel race pass in provider-stand-in scope;48-case synthetic group covers count/cut/supplier-return controls. Device/merchant/native electrical-reel execution remains open.",
+      "remaining_gate": "Current native cut/race/audit/role gates plus actual counter acceptance.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-306",
+      "source_group": "reels",
+      "source_pr": "450",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration physical reel merchant and actual-session reel race pass in provider-stand-in scope;48-case synthetic group covers count/cut/supplier-return controls. Device/merchant/native electrical-reel execution remains open.",
+      "remaining_gate": "Remnant/scrap history and downstream report reconciliation in final merchant journey.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-307",
+      "source_group": "reels",
+      "source_pr": "450",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration physical reel merchant and actual-session reel race pass in provider-stand-in scope;48-case synthetic group covers count/cut/supplier-return controls. Device/merchant/native electrical-reel execution remains open.",
+      "remaining_gate": "Returned/opened/damaged reel policy, permission and original-cost verification.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-308",
+      "source_group": "reels",
+      "source_pr": "450",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "120-migration physical reel merchant and actual-session reel race pass in provider-stand-in scope;48-case synthetic group covers count/cut/supplier-return controls. Device/merchant/native electrical-reel execution remains open.",
+      "remaining_gate": "Reconcile reel-level reporting/stock counts with real measured merchant operations.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-401",
+      "source_group": "trade",
+      "source_pr": "460",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers group/rule retry and quoted POS prices; inherited exact769 native qualification is historical. New exact-head native/full regression still required.",
+      "remaining_gate": "Final native customer-group role, tenant and historical price snapshot verification.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-402",
+      "source_group": "trade",
+      "source_pr": "460",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers group/rule retry and quoted POS prices; inherited exact769 native qualification is historical. New exact-head native/full regression still required.",
+      "remaining_gate": "Real Auth customer/quantity-break pricing-to-sale flow and original agreed price preservation.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-403",
+      "source_group": "quotation",
+      "source_pr": "463",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers frozen quote versions/history/transition retry. Historical native769 evidence does not replace current exact-head verification.",
+      "remaining_gate": "Complete native quote versions/expiry/role guards and EN/AR browser state matrix.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-404",
+      "source_group": "order",
+      "source_pr": "464",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers accepted-quote/order flows; current actual-session order/reservation races pass with provider stand-ins. Exact-head native browser/financial execution remains pending.",
+      "remaining_gate": "Final native accepted-quote conversion/idempotency and immutable source evidence.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-405",
+      "source_group": "reservation",
+      "source_pr": "464",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "Current actual-session reservation/stock/collection races pass with provider stand-ins;48-case synthetic browser group covers EN/AR reservation/release/retry and denied controls. Current native browser execution remains pending.",
+      "remaining_gate": "Native concurrency and location/reel reservation denial on final source; staged partial release recovery.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-406",
+      "source_group": "funding",
+      "source_pr": "464",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers deposits/refunds/partial collections/read-only/error states; current actual-session collection races pass in schema scope. Genuine Auth financial execution and merchant acceptance remain open.",
+      "remaining_gate": "Actual Auth deposit/collection/partial delivery financial browser journey; exact accounting/receipt assertions.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-407",
+      "source_group": "supplier",
+      "source_pr": "487",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers six-then-four supplier deliveries, stale retry and read-only guards; current actual-session receipt races pass in schema scope. Final native/merchant evidence remains open.",
+      "remaining_gate": "Final supplier-order roles/tenant/closed-period and no-posting-before-receipt qualification.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-408",
+      "source_group": "supplier",
+      "source_pr": "487",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers six-then-four supplier deliveries, stale retry and read-only guards; current actual-session receipt races pass in schema scope. Final native/merchant evidence remains open.",
+      "remaining_gate": "Actual partial supplier delivery/race/retry and original debt/cost reconciliation.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-501",
+      "source_group": "planning",
+      "source_pr": "490",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers supply-planning controls. Published implementation/migration is present; historical native769 evidence is retained separately. Exact-head native and merchant suitability remain open.",
+      "remaining_gate": "Bin/shelf counts, relocation and location-isolation browser/native qualification.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-502",
+      "source_group": "planning",
+      "source_pr": "490",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers supply-planning controls. Published implementation/migration is present; historical native769 evidence is retained separately. Exact-head native and merchant suitability remain open.",
+      "remaining_gate": "Supplier item codes/lead-time version/history and tenant/location validation.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-503",
+      "source_group": "planning",
+      "source_pr": "490",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers supply-planning controls. Published implementation/migration is present; historical native769 evidence is retained separately. Exact-head native and merchant suitability remain open.",
+      "remaining_gate": "Original supplier price history retention and purchasing/report browser qualification.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-504",
+      "source_group": "barcode",
+      "source_pr": "493",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers verified/invalid weight labels and retained checkout requests. Real scanner/label-provider acceptance and current native financial execution remain open.",
+      "remaining_gate": "GS1 parser/configuration native and real scanner-label acceptance.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-505",
+      "source_group": "scale",
+      "source_pr": "496",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers capture/factor/profile/retry/manual fallback; current actual-session capture races pass with provider stand-ins. Actual approved device, provider/native and merchant acceptance remain open.",
+      "remaining_gate": "Approved scale profile/native capture integration plus actual device/operator acceptance.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-506",
+      "source_group": "scale",
+      "source_pr": "496",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers capture/factor/profile/retry/manual fallback; current actual-session capture races pass with provider stand-ins. Actual approved device, provider/native and merchant acceptance remain open.",
+      "remaining_gate": "Validate optional mass/length profiles, captured source and original conversion history; no assumed physical equivalence.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-507",
+      "source_group": "planning",
+      "source_pr": "490",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers supply-planning controls. Published implementation/migration is present; historical native769 evidence is retained separately. Exact-head native and merchant suitability remain open.",
+      "remaining_gate": "Forecast/reorder sources, units, stock holds and EN/AR browser qualification; no automatic financial posting.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-508",
+      "source_group": "commodity",
+      "source_pr": "500",
+      "tracked_paths_present": true,
+      "current_evidence_scope": "48-case synthetic group covers approved source/rule/retry/history/POS blockers; current real-session source/rule retirement/issuance races pass in schema scope. Native final-head and merchant qualification remain open.",
+      "remaining_gate": "Final commodity source/time/expiry/retirement native gates and real sale original-price preservation.",
+      "status": "TESTED.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-601",
+      "source_group": "initiative gate",
+      "source_pr": null,
+      "tracked_paths_present": true,
+      "current_evidence_scope": "CAPACITY-QUALIFICATION-2026-10-29.md:120 migrations and approved250/500/1000/2000 boundaries pass;10 synthetic capacity cases and12 catalog regressions pass.10000 retained/2000 active is not10000-active suitability.",
+      "remaining_gate": "Current120-migration SQL and10 synthetic browser cases pass; 10000 active SKU suitability and native/performance acceptance remain open.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-602",
+      "source_group": "initiative gate",
+      "source_pr": null,
+      "tracked_paths_present": true,
+      "current_evidence_scope": "Current schema companions/races include role/tenant/location checks; native electrical cases include real-Auth tenant/location denials but are unexecuted. Full exact-head authorization coverage remains open.",
+      "remaining_gate": "Reconcile all feature grants/roles/tenant/location/private helper coverage at exact final head.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-603",
+      "source_group": "initiative gate",
+      "source_pr": null,
+      "tracked_paths_present": true,
+      "current_evidence_scope": "Current provider-stand-in configuration/reel/order/supplier/scale/commodity session races pass; native SQL769 is historical. New native electrical replay/FIFO cases are prepared and awaiting the owned runner.",
+      "remaining_gate": "Current schema harness race groups pass; complete native all-command duplicate/conflict evidence on final head.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-604",
+      "source_group": "initiative gate",
+      "source_pr": null,
+      "tracked_paths_present": true,
+      "current_evidence_scope": "All48 published electrical synthetic browser cases and12 EN/AR/theme/viewport catalog regressions pass in recorded scope. Full feature/theme/keyboard/screen-reader and native-speaker acceptance is not complete.",
+      "remaining_gate": "Complete feature-wide English/Arabic, both themes, screen-reader/keyboard and narrow/desktop matrix; native speaker acceptance external.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-605",
+      "source_group": "initiative gate",
+      "source_pr": null,
+      "tracked_paths_present": true,
+      "current_evidence_scope": "Exact769 full CI and staging97 review/verify passed historically. Scoped current120-schema/48-browser/27-unit checks pass; all current combined/shared consumer/native checks must run on the reconciled candidate.",
+      "remaining_gate": "Run final combined existing business/shared consumer regressions after latest staging reconciliation; capacity scope is not full acceptance.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-606",
+      "source_group": "initiative gate",
+      "source_pr": null,
+      "tracked_paths_present": true,
+      "current_evidence_scope": "NATIVE-ELECTRICAL-JOURNEY-2026-10-29.md:2 genuine-Auth cases implemented/discovered; matching120-migration SQL companion,27 units,2 synthetic driver cases and strict TypeScript pass. Actual native browser execution is pending.",
+      "remaining_gate": "Two real-Auth electrical measured/FIFO browser cases now implemented/discovered; companion120-migration public-command scenario passes. Execute on owned native backend via coordinated GitHub-hosted measured-retail job, then close exact-head native/full regression/role/location gates. Native execution is pending; original recovery and external acceptance remain separate.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-607",
+      "source_group": "initiative gate",
+      "source_pr": null,
+      "tracked_paths_present": true,
+      "current_evidence_scope": "Representative electrical scenario, SQL/browser procedures and exact assertions are prepared. No actual merchant/printer/scanner/approved-scale/native-Arabic acceptance evidence exists.",
+      "remaining_gate": "Execute available synthetic pilot procedures; actual merchant/printer/scanner/scale/native-Arabic signoff remains external.",
+      "status": "IN_PROGRESS.",
+      "verified_completion_claim": false
+    },
+    {
+      "task": "SS-ELEC-608",
+      "source_group": "initiative gate",
+      "source_pr": null,
+      "tracked_paths_present": true,
+      "current_evidence_scope": "Exact source/checkpoint/merge provenance and remaining-gate records are prepared. Supported catalog receipt/baseline recovery and external acceptance remain pending; no main/production authorization is inferred.",
+      "remaining_gate": "Bind exact source/migrations/CI/pilot/provider receipt and supported catalog publication; no main/production authorization here.",
+      "status": "BLOCKED.",
+      "verified_completion_claim": false
+    }
+  ]
+}

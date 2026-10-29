@@ -4732,5 +4732,41 @@
     "sources": [
       "ls-bill-instapay-001-release-support"
     ]
+  },
+  {
+    "id": "shop-catalog-fixed-server-pagination-20261029",
+    "task": "SS-ELEC-601",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsCataloguePage.vue"
+    ],
+    "reason": "Both actual consumers are Shop product/service catalogs with fixed20-row queries. Match the shared template paginator to its supplied server page size; no query, quota, authorization or commercial changes.",
+    "notes": {
+      "title": {
+        "en": "Consistent catalog pagination",
+        "ar": "\u062a\u0646\u0642\u0644 \u0645\u062a\u0633\u0642 \u0628\u064a\u0646 \u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0643\u062a\u0627\u0644\u0648\u062c"
+      },
+      "summary": {
+        "en": "Product and service catalogs keep page controls aligned with the records loaded from the server.",
+        "ar": "\u062a\u062d\u0627\u0641\u0638 \u0643\u062a\u0627\u0644\u0648\u062c\u0627\u062a \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0648\u0627\u0644\u062e\u062f\u0645\u0627\u062a \u0639\u0644\u0649 \u062a\u0637\u0627\u0628\u0642 \u0639\u0646\u0627\u0635\u0631 \u0627\u0644\u062a\u0646\u0642\u0644 \u0645\u0639 \u0627\u0644\u0633\u062c\u0644\u0627\u062a \u0627\u0644\u0645\u062d\u0645\u0651\u0644\u0629 \u0645\u0646 \u0627\u0644\u062e\u0627\u062f\u0645."
+      },
+      "details": {
+        "en": "Catalogs show the supported page size so changing a page cannot use a different row count from the server query.",
+        "ar": "\u062a\u0639\u0631\u0636 \u0627\u0644\u0643\u062a\u0627\u0644\u0648\u062c\u0627\u062a \u062d\u062c\u0645 \u0627\u0644\u0635\u0641\u062d\u0629 \u0627\u0644\u0645\u062f\u0639\u0648\u0645 \u062d\u062a\u0649 \u0644\u0627 \u064a\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u062a\u0646\u0642\u0644 \u0639\u062f\u062f \u0635\u0641\u0648\u0641 \u0645\u062e\u062a\u0644\u0641\u064b\u0627 \u0639\u0646 \u0627\u0633\u062a\u0639\u0644\u0627\u0645 \u0627\u0644\u062e\u0627\u062f\u0645."
+      }
+    },
+    "sources": [
+      "shop-catalog-fixed-server-pagination-20261029"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsCataloguePage.vue",
+        "contains": ":page-size=\"table.pageSize\" :page-sizes=\"[table.pageSize]\""
+      }
+    ]
   }
 ]

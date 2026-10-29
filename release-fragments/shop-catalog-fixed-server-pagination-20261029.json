@@ -1,0 +1,27 @@
+{
+  "id": "shop-catalog-fixed-server-pagination-20261029",
+  "task": "SS-ELEC-601",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/templates/BsCataloguePage.vue"
+  ],
+  "reason": "Both actual consumers are Shop product/service catalogs with fixed20-row queries. Match the shared template paginator to its supplied server page size; no query, quota, authorization or commercial changes.",
+  "notes": {
+    "title": {
+      "en": "Consistent catalog pagination",
+      "ar": "تنقل متسق بين صفحات الكتالوج"
+    },
+    "summary": {
+      "en": "Product and service catalogs keep page controls aligned with the records loaded from the server.",
+      "ar": "تحافظ كتالوجات المنتجات والخدمات على تطابق عناصر التنقل مع السجلات المحمّلة من الخادم."
+    },
+    "details": {
+      "en": "Catalogs show the supported page size so changing a page cannot use a different row count from the server query.",
+      "ar": "تعرض الكتالوجات حجم الصفحة المدعوم حتى لا يستخدم التنقل عدد صفوف مختلفًا عن استعلام الخادم."
+    }
+  }
+}
