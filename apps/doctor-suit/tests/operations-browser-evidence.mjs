@@ -40,6 +40,20 @@ function scrollGeometry(task,test){
  }catch{return null}
 }
 
+function receptionActionState(task,test){
+ if(task!=='DOS-M3-003'||!Array.isArray(test?.annotations))return null
+ const annotation=test.annotations.find(value=>value?.type==='doctor-reception-action-state')
+ if(typeof annotation?.description!=='string'||annotation.description.length>512)return null
+ try{
+  const value=JSON.parse(annotation.description)
+  if(!value||Object.keys(value).sort().join(',')!=='dialogCount,phase,reasonCount,reasonDisabled,refreshDisabled'||
+   !['stale-reorder-open','stale-reorder-reason','stale-reorder-conflict'].includes(value.phase)||
+   ![value.dialogCount,value.reasonCount].every(count=>Number.isSafeInteger(count)&&count>=0&&count<=10)||
+   ![value.reasonDisabled,value.refreshDisabled].every(flag=>flag===null||typeof flag==='boolean'))return null
+  return value
+ }catch{return null}
+}
+
 export function doctorOperationsBrowserEvidence(report, exitCode) {
   const issues = new Set()
   const passed = new Set()
@@ -76,7 +90,8 @@ export function doctorOperationsBrowserEvidence(report, exitCode) {
             test.results?.length !== 1 || result?.status !== 'passed' || result?.retry !== 0 || !Array.isArray(result?.errors) || result.errors.length) {
           issues.add('browser-task-not-passed-once')
           const geometry=scrollGeometry(task,test)
-          failed.push({task, category: failureCategory(result), location: failureLocation(task, result),...(geometry?{geometry}:{})})
+          const actionState=receptionActionState(task,test)
+          failed.push({task, category: failureCategory(result), location: failureLocation(task, result),...(geometry?{geometry}:{}),...(actionState?{actionState}:{})})
         } else {
           passed.add(task)
         }
