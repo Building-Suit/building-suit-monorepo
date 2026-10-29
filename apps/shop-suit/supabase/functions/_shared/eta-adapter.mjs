@@ -69,6 +69,7 @@ async function buildReceiptInternal(source, previousUUID = '', forInvoice = fals
  const itemData = snap.lines.map(line => {
   const code = source.items.find(item=>item.sourceId === line.sourceId && item.sourceType === line.itemType)
   if (!validateItem(code, source.profile.rin)) fail('ETA_ITEM_CODES_REQUIRED')
+  if (line.measurement && code.stockUnitCode !== line.measurement.baseUnitCode) fail('ETA_MEASUREMENT_UNIT_MAPPING_REQUIRED')
   const description = source.names[line.id]
   if (!str(description,500)) fail('ETA_ITEM_DESCRIPTION_REQUIRED')
   const rule = line.rule

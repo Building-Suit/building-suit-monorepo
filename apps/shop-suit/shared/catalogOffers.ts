@@ -1,4 +1,4 @@
-export interface CatalogOfferLine { kind: 'product' | 'service'; sourceId: string; quantity: number; name: string; available: boolean; stock?: number | null; unitPrice: number; discount: number }
+export interface CatalogOfferLine { measurement?: import('../app/types/measurement').PosMeasurement | null; kind: 'product' | 'service'; sourceId: string; quantity: number; name: string; available: boolean; stock?: number | null; unitPrice: number; discount: number }
 export interface CatalogOffer { id: string; name: string; description: string; price: number; oldPrice: number | null; priority: number; active: boolean; website_visible: boolean; starts_at: string | null; ends_at: string | null; revision: number; lines: CatalogOfferLine[] }
 export interface OfferMatch { id: string; name: string; revision: number; quantity: number; price: number; oldPrice: number; saving: number }
 export interface OfferSource { id: string; key: string; kind: 'product' | 'service'; name: string; price: number; discount: number }

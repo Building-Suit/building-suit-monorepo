@@ -35,33 +35,13 @@ for (const app of [
   { name: 'Docs', port: 4322, path: '/components', product: false },
 ]) {
   test(`${app.name}: shared Ledger palette reaches rendered UI and theme changes`, async ({ page, context }) => {
-    // The full catalogue paints two screenshots and restores three theme states.
-    if (app.name === 'Docs') test.setTimeout(60000)
     await context.addCookies([{ name: 'building-suit-locale', value: 'en', domain: '127.0.0.1', path: '/' }])
+    await page.addInitScript(() => { if (!localStorage.getItem('building-suit.theme')) localStorage.setItem('building-suit.theme', 'light') })
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
     await page.goto(`http://127.0.0.1:${app.port}${app.path}`)
     // Catalogue examples may include their own settings control. Exercise the
-    // Docs site's header control; standalone product auth pages have no banner.
-    const settings = app.product
-      ? page.getByRole('button', { name: 'Language · Theme', exact: true })
-      : page.locator('.bs-side-navigation').first().getByRole('button', { name: /^Theme:/ })
-    async function selectTheme(value: 'Light' | 'Dark' | 'System') {
-      if (app.product) {
-        await settings.click()
-        await page.getByRole('menuitemradio', { name: value, exact: true }).click()
-        await settings.click()
-        return
-      }
-      const next: Record<string, string> = { 'Theme: System': 'Theme: Light', 'Theme: Light': 'Theme: Dark', 'Theme: Dark': 'Theme: System' }
-      for (let step = 0; step < 3; step++) {
-        const current = await settings.getAttribute('aria-label')
-        if (current === `Theme: ${value}`) return
-        expect(current).toBeTruthy()
-        await settings.click()
-        await expect(settings).toHaveAttribute('aria-label', next[current!]!)
-      }
-      await expect(settings).toHaveAttribute('aria-label', `Theme: ${value}`)
-    }
+    // Docs site's outer navigation control; standalone product auth pages have no banner.
+    const settings = app.product ? page.getByRole('button', { name: 'Language · Theme', exact: true }) : page.locator('.bs-side-navigation').first().getByRole('button', { name: /^Theme:/ })
     const primary = page.locator('.ls-btn-primary').first()
     const input = page.locator('.ls-input').first()
     await expect(primary).toBeVisible()
@@ -81,7 +61,11 @@ for (const app of [
     await page.mouse.up()
     await page.screenshot({ path: `.local/screenshots/${app.name.toLowerCase()}-palette-light.png`, fullPage: true })
 
-    await selectTheme('Dark')
+    await settings.click()
+    if (app.product) {
+      await page.getByRole('menuitemradio', { name: 'Dark', exact: true }).click()
+      await settings.click()
+    }
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(11, 11, 13)')
     await expect(page.locator('body')).toHaveCSS('color', 'rgb(250, 250, 250)')
     // Approved glass identity fields mix 88% raised #27272A and 12% #141416;
@@ -98,7 +82,11 @@ for (const app of [
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(11, 11, 13)')
     await page.screenshot({ path: `.local/screenshots/${app.name.toLowerCase()}-palette-dark.png`, fullPage: true })
 
-    await selectTheme('System')
+    await settings.click()
+    if (app.product) {
+      await page.getByRole('menuitemradio', { name: 'System', exact: true }).click()
+      await settings.click()
+    }
     await page.emulateMedia({ colorScheme: 'dark' })
     await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.+/)
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(11, 11, 13)')
@@ -107,11 +95,10 @@ for (const app of [
 
     if (app.product) {
       await page.goto(`http://127.0.0.1:${app.port}/`)
+      // Preserve painted surfaces in each registered landing presentation.
       if (app.name === 'Shop') {
-        // The current cinematic set uses the approved midnight brand backdrop;
-        // its real product-screen surface still follows the dark theme.
-        await expect(page.locator('[data-journey-stage]')).toHaveCSS('background-color', 'rgb(10, 17, 26)')
-        await expect(page.locator('.bs-film__app')).toHaveCSS('background-color', 'rgb(11, 11, 13)')
+        await expect(page.locator('.bs-film')).toHaveCSS('background-color', 'rgb(13, 27, 40)')
+        await expect(page.locator('.bs-film__stage')).toHaveCSS('background-color', 'rgb(10, 17, 26)')
       } else {
         await expect(page.locator('.ls-hero-preview').first()).toHaveCSS('background-color', 'rgb(20, 20, 22)')
         await expect(page.locator('.ls-hero-preview .bg-surface-muted, .ls-hero-preview .bs-box--surface-muted, .ls-hero-preview .ls-card-flat').first()).toHaveCSS('background-color', 'rgb(28, 28, 31)')

@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import type { BsOfferCardView } from '../types/storefrontBuilderPresentation'
+import type { BsScaleCaptureCopy, BsScaleCaptureForm, BsScaleCaptureView } from '../types/scaleCapturePresentation'
 import type { BsReceiptPreview } from '../types/receiptPresentation'
 import type { BsOfflineCounterView } from '../types/offlineCounterPresentation'
 import { usePointOfSaleSections } from '@building-suit/ux'
 import type { BsPointOfSaleCopy, BsPointOfSaleView, BsPointOfSaleChoice, BsPointOfSaleCatalogItem, BsPointOfSaleCartLine, BsPointOfSaleCustomer, BsPointOfSalePaymentForm } from '../types/pointOfSalePresentation'
-const props = withDefaults(defineProps<{ offers?: BsOfferCardView[]; offersTitle?: string; offerSelectLabel?: string; offersError?: string; offerSummary?: string; receiptPreview?: BsReceiptPreview; offline?: BsOfflineCounterView; variant?: 'default' | 'shop'; copy: BsPointOfSaleCopy; view: BsPointOfSaleView; itemTypeOptions: BsPointOfSaleChoice[]; categoryOptions: BsPointOfSaleChoice[]; appointmentOptions: BsPointOfSaleChoice[]; staffOptions: BsPointOfSaleChoice[]; paymentOptions: BsPointOfSaleChoice[]; catalogItems: BsPointOfSaleCatalogItem[]; cartLines: BsPointOfSaleCartLine[]; customerOptions: BsPointOfSaleCustomer[]; staffId: string; appointmentId: string; customerId: string }>(), { variant: 'default', offline: undefined, receiptPreview: undefined, offers: () => [], offersTitle: '', offerSelectLabel: '', offersError: '', offerSummary: '' })
+const props = withDefaults(defineProps<{ scale?: BsScaleCaptureView; scaleCopy?: BsScaleCaptureCopy; scaleForm?: BsScaleCaptureForm; offers?: BsOfferCardView[]; offersTitle?: string; offerSelectLabel?: string; offersError?: string; offerSummary?: string; receiptPreview?: BsReceiptPreview; offline?: BsOfflineCounterView; variant?: 'default' | 'shop'; copy: BsPointOfSaleCopy; view: BsPointOfSaleView; itemTypeOptions: BsPointOfSaleChoice[]; categoryOptions: BsPointOfSaleChoice[]; appointmentOptions: BsPointOfSaleChoice[]; staffOptions: BsPointOfSaleChoice[]; paymentOptions: BsPointOfSaleChoice[]; catalogItems: BsPointOfSaleCatalogItem[]; cartLines: BsPointOfSaleCartLine[]; customerOptions: BsPointOfSaleCustomer[]; staffId: string; appointmentId: string; customerId: string }>(), { scale: undefined, scaleCopy: undefined, scaleForm: undefined, variant: 'default', offline: undefined, receiptPreview: undefined, offers: () => [], offersTitle: '', offerSelectLabel: '', offersError: '', offerSummary: '' })
+const scaleVisible = defineModel<boolean>('scaleVisible', { default: false })
 const receiptVisible = defineModel<boolean>('receiptVisible', { default: false })
 const catalogSearch = defineModel<string>('catalogSearch', { required: true })
 const categoryFilter = defineModel<string>('categoryFilter', { required: true })
 const itemType = defineModel<string>('itemType', { required: true })
 const catalogPage = defineModel<number>('catalogPage', { required: true })
 const paymentForm = defineModel<BsPointOfSalePaymentForm>('paymentForm', { required: true })
-const emit = defineEmits<{ selectOffer: [id: string]; retryOffers: []; openReceipt: []; receiptLanguage: [value: string | number | (string | number)[]]; selectReceipt: [id: string]; receiptPaper: [value: string]; retryReceipt: []; shareReceipt: []; downloadReceipt: []; printedReceipt: []; reconcileOffline: [id: string]; retryOffline: [id: string]; reset: []; checkout: []; retryCatalog: []; retryContext: []; add: [key: string]; remove: [id: string]; quantity: [id: string, value: number]; appointment: [id: string]; staff: [id: string]; customerSearch: [value: string]; resetCustomerSearch: []; customer: [value: string | number | null | undefined]; clearCustomer: []; dismissFeedback: []; barcode: [code: string] }>()
+const emit = defineEmits<{ scaleOpen: []; scaleProfile: [id: string]; scaleProduct: [id: string]; scaleSearch: [query: string]; scaleMore: []; scaleRetry: []; scaleConnect: []; scaleDisconnect: []; scaleRead: []; scaleTare: []; scaleSubmit: []; selectOffer: [id: string]; retryOffers: []; openReceipt: []; receiptLanguage: [value: string | number | (string | number)[]]; selectReceipt: [id: string]; receiptPaper: [value: string]; retryReceipt: []; shareReceipt: []; downloadReceipt: []; printedReceipt: []; reconcileOffline: [id: string]; retryOffline: [id: string]; reset: []; priceOverride: [id: string, value: string]; priceReason: [id: string, value: string]; checkout: []; retryCatalog: []; retryContext: []; add: [key: string]; remove: [id: string]; physicalSplit: [id: string, value: boolean]; physicalLoss: [id: string, value: string]; physicalSource: [id: string, value: string]; physicalSearch: [id: string, query: string]; physicalMore: [id: string]; physicalRetry: [id: string]; quantity: [id: string, value: number]; unit: [id: string, value: string]; appointment: [id: string]; staff: [id: string]; customerSearch: [value: string]; resetCustomerSearch: []; customer: [value: string | number | null | undefined]; clearCustomer: []; dismissFeedback: []; barcode: [code: string] }>()
 const panels = usePointOfSaleSections()
 const shopCart = ref<{ focus: () => void; focusCustomer: () => void; checkout: () => void } | null>(null)
 const catalogHeading = ref<{ $el: HTMLElement } | null>(null)
@@ -25,6 +27,7 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
   <BsStack :class="{ 'bs-pos-shop': variant === 'shop' }" :data-active-panel="panels.selected.value">
     <BsPageHeader class="bs-pos-header" :title="copy.title" :subtitle="variant === 'shop' ? undefined : copy.subtitle" :context="variant === 'shop' && view.available ? [{ label: copy.location, value: view.location }, { label: copy.staff, value: view.staff }] : []">
       <template #actions>
+        <BsButton v-if="scale?.available && scaleCopy" variant="secondary" :disabled="view.checkingOut || view.confirming" @click="emit('scaleOpen')">{{ scaleCopy.open }}</BsButton>
         <BsButton v-if="receiptPreview && view.available" variant="secondary" :disabled="view.checkingOut" @click="emit('openReceipt')"><BsIcon name="invoice" :size="18" />{{ receiptPreview.lastLabel }}</BsButton>
         <BsLink v-if="variant === 'shop' && view.available" class="bs-pos-shift-action" to="/cash-shifts"><BsIcon name="wallet" :size="18" />{{ copy.closeShift }}</BsLink>
         <BsButton variant="secondary" :disabled="view.checkingOut || view.confirming" @click="emit('reset')"><BsIcon name="repeat" :size="18" />{{ copy.reset }}</BsButton>
@@ -93,7 +96,7 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
             </BsInline>
             </div>
           </BsPanel>
-          <BsPointOfSaleCart v-if="variant === 'shop'" ref="shopCart" v-model:payment-form="paymentForm" :copy="copy" :view="{...view,offerSummary}" :cart-lines="cartLines" :appointment-options="appointmentOptions" :staff-options="staffOptions" :customer-options="customerOptions" :payment-options="paymentOptions" :appointment-id="appointmentId" :staff-id="staffId" :customer-id="customerId" @checkout="emit('checkout')" @retry-context="emit('retryContext')" @remove="emit('remove', $event)" @quantity="(id, value) => emit('quantity', id, value)" @appointment="emit('appointment', $event)" @staff="emit('staff', $event)" @customer-search="emit('customerSearch', $event)" @reset-customer-search="emit('resetCustomerSearch')" @customer="emit('customer', $event)" @clear-customer="emit('clearCustomer')" />
+          <BsPointOfSaleCart v-if="variant === 'shop'" ref="shopCart" v-model:payment-form="paymentForm" :copy="copy" :view="{...view,offerSummary}" :cart-lines="cartLines" :appointment-options="appointmentOptions" :staff-options="staffOptions" :customer-options="customerOptions" :payment-options="paymentOptions" :appointment-id="appointmentId" :staff-id="staffId" :customer-id="customerId" @checkout="emit('checkout')" @retry-context="emit('retryContext')" @remove="emit('remove', $event)" @price-override="(id, value) => emit('priceOverride', id, value)" @price-reason="(id, value) => emit('priceReason', id, value)" @physical-split="(id, value) => emit('physicalSplit', id, value)" @physical-loss="(id, value) => emit('physicalLoss', id, value)" @physical-source="(id, value) => emit('physicalSource', id, value)" @physical-search="(id, value) => emit('physicalSearch', id, value)" @physical-more="emit('physicalMore', $event)" @physical-retry="emit('physicalRetry', $event)" @unit="(id, value) => emit('unit', id, value)" @quantity="(id, value) => emit('quantity', id, value)" @appointment="emit('appointment', $event)" @staff="emit('staff', $event)" @customer-search="emit('customerSearch', $event)" @reset-customer-search="emit('resetCustomerSearch')" @customer="emit('customer', $event)" @clear-customer="emit('clearCustomer')" />
           <BsPanel v-else aria-labelledby="pos-cart-title" padding="md">
             <BsHeading id="pos-cart-title" tabindex="-1" :level="2">{{ copy.cart }}</BsHeading>
             <BsText v-if="view.contextLoading" role="status" as="p" size="sm">{{ copy.loading }}</BsText>
@@ -109,11 +112,11 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
             <BsLineItemsEditor v-else :items="cartLines" :label="copy.cart" :add-label="copy.catalog" :remove-label="copy.remove" :row-label="item => item.name" :show-add="false" :pending="view.checkingOut" @remove="emit('remove', $event.id)">
               <template #default="{ item: line }">
                 <BsInline justify="between">
-                  <BsText as="strong">{{ line.name }}</BsText>
+                  <BsText as="strong">{{ line.name }}</BsText><BsText v-if="line.quantityNotice" size="sm" tone="muted">{{ line.quantityNotice }}</BsText>
                 </BsInline>
                 <BsInline justify="between">
                   <BsField v-slot="field" :label="(copy.quantity)">
-                    <BsQuantityInput :id="field.id" :aria-describedby="field.describedby" :model-value="line.quantity" :label="copy.quantity"  :min="0.001" :max="1000000" :step="1" @update:model-value="value => emit('quantity', line.id, Number(value))"/>
+                    <BsQuantityInput :id="field.id" :aria-describedby="field.describedby" :model-value="line.quantity" :label="copy.quantity" :disabled="line.quantityLocked || view.checkingOut || view.confirming" :min="0.001" :max="1000000" :step="line.quantityStep ?? 1" @update:model-value="value => emit('quantity', line.id, Number(value))"/>
                   </BsField>
                   <BsText as="span" emphasis="semibold">{{ line.total }}</BsText>
                 </BsInline>
@@ -161,6 +164,7 @@ defineExpose({ focusCatalog: navigation.focusCatalog })
         </BsGrid>
       </BsFieldGroup>
     </template>
+    <BsScaleCaptureDialog v-if="scale && scaleCopy && scaleForm" v-model:visible="scaleVisible" :copy="scaleCopy" :view="scale" :form="scaleForm" @profile="emit('scaleProfile',$event)" @product="emit('scaleProduct',$event)" @search="emit('scaleSearch',$event)" @more="emit('scaleMore')" @retry="emit('scaleRetry')" @connect="emit('scaleConnect')" @disconnect="emit('scaleDisconnect')" @read="emit('scaleRead')" @tare="emit('scaleTare')" @submit="emit('scaleSubmit')" />
     <BsReceiptPreviewDialog v-if="receiptPreview" v-model:visible="receiptVisible" :view="receiptPreview" @select="emit('selectReceipt', $event)" @recent="emit('openReceipt')" @language="emit('receiptLanguage', $event)" @paper="emit('receiptPaper', $event)" @retry="emit('retryReceipt')" @share="emit('shareReceipt')" @download="emit('downloadReceipt')" @printed="emit('printedReceipt')" />
   </BsStack>
 </template>

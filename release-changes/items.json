@@ -1396,15 +1396,15 @@
     "notes": {
       "title": {
         "en": "Resume Google signup safely",
-        "ar": "كمّل التسجيل باستخدام Google بأمان"
+        "ar": "\u0643\u0645\u0651\u0644 \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u0628\u0627\u0633\u062a\u062e\u062f\u0627\u0645 Google \u0628\u0623\u0645\u0627\u0646"
       },
       "summary": {
         "en": "Keep your verified Google identity while completing your shop details.",
-        "ar": "احتفظ ببيانات Google المؤكدة أثناء استكمال بيانات متجرك."
+        "ar": "\u0627\u062d\u062a\u0641\u0638 \u0628\u0628\u064a\u0627\u0646\u0627\u062a Google \u0627\u0644\u0645\u0624\u0643\u062f\u0629 \u0623\u062b\u0646\u0627\u0621 \u0627\u0633\u062a\u0643\u0645\u0627\u0644 \u0628\u064a\u0627\u0646\u0627\u062a \u0645\u062a\u062c\u0631\u0643."
       },
       "details": {
         "en": "Callback refresh resumes your authenticated session. Incomplete signup retains shop details, and unavailable account checks block duplicate creation. Signing out returns to one login form.",
-        "ar": "يستكمل تحديث صفحة العودة الجلسة المؤكدة. يحتفظ التسجيل غير المكتمل ببيانات المتجر، ويتوقف إنشاء الحساب عند تعذر التحقق لتجنب التكرار. يعيد تسجيل الخروج نموذج دخول واحداً."
+        "ar": "\u064a\u0633\u062a\u0643\u0645\u0644 \u062a\u062d\u062f\u064a\u062b \u0635\u0641\u062d\u0629 \u0627\u0644\u0639\u0648\u062f\u0629 \u0627\u0644\u062c\u0644\u0633\u0629 \u0627\u0644\u0645\u0624\u0643\u062f\u0629. \u064a\u062d\u062a\u0641\u0638 \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u063a\u064a\u0631 \u0627\u0644\u0645\u0643\u062a\u0645\u0644 \u0628\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0645\u062a\u062c\u0631\u060c \u0648\u064a\u062a\u0648\u0642\u0641 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u062d\u0633\u0627\u0628 \u0639\u0646\u062f \u062a\u0639\u0630\u0631 \u0627\u0644\u062a\u062d\u0642\u0642 \u0644\u062a\u062c\u0646\u0628 \u0627\u0644\u062a\u0643\u0631\u0627\u0631. \u064a\u0639\u064a\u062f \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c \u0646\u0645\u0648\u0630\u062c \u062f\u062e\u0648\u0644 \u0648\u0627\u062d\u062f\u0627\u064b."
       }
     },
     "sources": [
@@ -1440,15 +1440,15 @@
     "notes": {
       "title": {
         "en": "Choose your subscription currency",
-        "ar": "اختر عملة الاشتراك"
+        "ar": "\u0627\u062e\u062a\u0631 \u0639\u0645\u0644\u0629 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643"
       },
       "summary": {
         "en": "Compare fixed EGP and USD subscription prices with explicit currency selection.",
-        "ar": "قارن أسعار الاشتراك الثابتة بالجنيه المصري والدولار مع اختيار العملة بوضوح."
+        "ar": "\u0642\u0627\u0631\u0646 \u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643 \u0627\u0644\u062b\u0627\u0628\u062a\u0629 \u0628\u0627\u0644\u062c\u0646\u064a\u0647 \u0627\u0644\u0645\u0635\u0631\u064a \u0648\u0627\u0644\u062f\u0648\u0644\u0627\u0631 \u0645\u0639 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0639\u0645\u0644\u0629 \u0628\u0648\u0636\u0648\u062d."
       },
       "details": {
         "en": "Existing EGP payments are preserved. USD checkout stays unavailable until merchant eligibility is verified. Quotes, credit and refund history retain their original currency.",
-        "ar": "يستمر الدفع الحالي بالجنيه المصري. يظل الدفع بالدولار غير متاح حتى التحقق من أهلية حساب التاجر. تحتفظ عروض الأسعار والأرصدة وسجلات الاسترداد بعملتها الأصلية."
+        "ar": "\u064a\u0633\u062a\u0645\u0631 \u0627\u0644\u062f\u0641\u0639 \u0627\u0644\u062d\u0627\u0644\u064a \u0628\u0627\u0644\u062c\u0646\u064a\u0647 \u0627\u0644\u0645\u0635\u0631\u064a. \u064a\u0638\u0644 \u0627\u0644\u062f\u0641\u0639 \u0628\u0627\u0644\u062f\u0648\u0644\u0627\u0631 \u063a\u064a\u0631 \u0645\u062a\u0627\u062d \u062d\u062a\u0649 \u0627\u0644\u062a\u062d\u0642\u0642 \u0645\u0646 \u0623\u0647\u0644\u064a\u0629 \u062d\u0633\u0627\u0628 \u0627\u0644\u062a\u0627\u062c\u0631. \u062a\u062d\u062a\u0641\u0638 \u0639\u0631\u0648\u0636 \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0648\u0627\u0644\u0623\u0631\u0635\u062f\u0629 \u0648\u0633\u062c\u0644\u0627\u062a \u0627\u0644\u0627\u0633\u062a\u0631\u062f\u0627\u062f \u0628\u0639\u0645\u0644\u062a\u0647\u0627 \u0627\u0644\u0623\u0635\u0644\u064a\u0629."
       }
     },
     "sources": [
@@ -1490,15 +1490,15 @@
     "notes": {
       "title": {
         "en": "A ready-to-scroll introduction",
-        "ar": "مقدمة جاهزة للتصفح"
+        "ar": "\u0645\u0642\u062f\u0645\u0629 \u062c\u0627\u0647\u0632\u0629 \u0644\u0644\u062a\u0635\u0641\u062d"
       },
       "summary": {
         "en": "The Shop Suit story opens with a branded loader, fills the screen and keeps its laptop visible through the closing scene.",
-        "ar": "تبدأ حكاية Shop Suit بمؤشر تحميل يحمل الشعار، وتملأ الشاشة مع بقاء الحاسوب ظاهرًا في المشهد الختامي."
+        "ar": "\u062a\u0628\u062f\u0623 \u062d\u0643\u0627\u064a\u0629 Shop Suit \u0628\u0645\u0624\u0634\u0631 \u062a\u062d\u0645\u064a\u0644 \u064a\u062d\u0645\u0644 \u0627\u0644\u0634\u0639\u0627\u0631\u060c \u0648\u062a\u0645\u0644\u0623 \u0627\u0644\u0634\u0627\u0634\u0629 \u0645\u0639 \u0628\u0642\u0627\u0621 \u0627\u0644\u062d\u0627\u0633\u0648\u0628 \u0638\u0627\u0647\u0631\u064b\u0627 \u0641\u064a \u0627\u0644\u0645\u0634\u0647\u062f \u0627\u0644\u062e\u062a\u0627\u0645\u064a."
       },
       "details": {
         "en": "Wait for page assets before the illustrated transaction begins. Follow the saved sample sale forward or backward, reach the changelog from navigation, and retain the separate tenant website entry.",
-        "ar": "انتظر اكتمال أصول الصفحة قبل بدء المعاملة التوضيحية، وتابع البيع التجريبي للأمام أو الخلف، وافتح سجل التحديثات من القائمة مع الحفاظ على المدخل المستقل لموقع المتجر."
+        "ar": "\u0627\u0646\u062a\u0638\u0631 \u0627\u0643\u062a\u0645\u0627\u0644 \u0623\u0635\u0648\u0644 \u0627\u0644\u0635\u0641\u062d\u0629 \u0642\u0628\u0644 \u0628\u062f\u0621 \u0627\u0644\u0645\u0639\u0627\u0645\u0644\u0629 \u0627\u0644\u062a\u0648\u0636\u064a\u062d\u064a\u0629\u060c \u0648\u062a\u0627\u0628\u0639 \u0627\u0644\u0628\u064a\u0639 \u0627\u0644\u062a\u062c\u0631\u064a\u0628\u064a \u0644\u0644\u0623\u0645\u0627\u0645 \u0623\u0648 \u0627\u0644\u062e\u0644\u0641\u060c \u0648\u0627\u0641\u062a\u062d \u0633\u062c\u0644 \u0627\u0644\u062a\u062d\u062f\u064a\u062b\u0627\u062a \u0645\u0646 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0645\u0639 \u0627\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u0627\u0644\u0645\u062f\u062e\u0644 \u0627\u0644\u0645\u0633\u062a\u0642\u0644 \u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u0645\u062a\u062c\u0631."
       }
     },
     "evidence": [
@@ -1537,15 +1537,15 @@
     "notes": {
       "title": {
         "en": "Easier appointment date navigation",
-        "ar": "تنقل أسهل بين تواريخ المواعيد"
+        "ar": "\u062a\u0646\u0642\u0644 \u0623\u0633\u0647\u0644 \u0628\u064a\u0646 \u062a\u0648\u0627\u0631\u064a\u062e \u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f"
       },
       "summary": {
         "en": "Use a compact month picker and clearer calendar controls when reviewing appointments.",
-        "ar": "استخدم تقويمًا شهريًا مصغرًا وعناصر تنقل أوضح عند مراجعة المواعيد."
+        "ar": "\u0627\u0633\u062a\u062e\u062f\u0645 \u062a\u0642\u0648\u064a\u0645\u064b\u0627 \u0634\u0647\u0631\u064a\u064b\u0627 \u0645\u0635\u063a\u0631\u064b\u0627 \u0648\u0639\u0646\u0627\u0635\u0631 \u062a\u0646\u0642\u0644 \u0623\u0648\u0636\u062d \u0639\u0646\u062f \u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f."
       },
       "details": {
         "en": "Choose the displayed date from the appointment calendar and review the selected day with the existing staff, location and appointment controls.",
-        "ar": "اختر التاريخ المعروض من تقويم المواعيد وراجع اليوم المحدد مع عناصر الموظف والموقع والمواعيد الحالية."
+        "ar": "\u0627\u062e\u062a\u0631 \u0627\u0644\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0645\u0639\u0631\u0648\u0636 \u0645\u0646 \u062a\u0642\u0648\u064a\u0645 \u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f \u0648\u0631\u0627\u062c\u0639 \u0627\u0644\u064a\u0648\u0645 \u0627\u0644\u0645\u062d\u062f\u062f \u0645\u0639 \u0639\u0646\u0627\u0635\u0631 \u0627\u0644\u0645\u0648\u0638\u0641 \u0648\u0627\u0644\u0645\u0648\u0642\u0639 \u0648\u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a\u0629."
       }
     },
     "evidence": [
@@ -1579,15 +1579,15 @@
     "notes": {
       "title": {
         "en": "Preview your recent counter receipts",
-        "ar": "معاينة إيصالات نقطة البيع الأخيرة"
+        "ar": "\u0645\u0639\u0627\u064a\u0646\u0629 \u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u0627\u0644\u0623\u062e\u064a\u0631\u0629"
       },
       "summary": {
         "en": "Open saved counter receipts in a preview with language, paper-size, printing and image-sharing controls.",
-        "ar": "افتح إيصالات نقطة البيع المحفوظة في معاينة تتضمن اللغة وحجم الورق والطباعة ومشاركة الصورة."
+        "ar": "\u0627\u0641\u062a\u062d \u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629 \u0641\u064a \u0645\u0639\u0627\u064a\u0646\u0629 \u062a\u062a\u0636\u0645\u0646 \u0627\u0644\u0644\u063a\u0629 \u0648\u062d\u062c\u0645 \u0627\u0644\u0648\u0631\u0642 \u0648\u0627\u0644\u0637\u0628\u0627\u0639\u0629 \u0648\u0645\u0634\u0627\u0631\u0643\u0629 \u0627\u0644\u0635\u0648\u0631\u0629."
       },
       "details": {
         "en": "Review recent receipts within your own shop, location and staff access. The counter also presents clearer payment choices and quantity editing; receipt access remains authorized by the server.",
-        "ar": "راجع الإيصالات الأخيرة ضمن صلاحيات متجرك وموقعك وموظفك، مع خيارات دفع وتحرير كميات أوضح في نقطة البيع. يظل الوصول إلى الإيصالات خاضعًا لتفويض الخادم."
+        "ar": "\u0631\u0627\u062c\u0639 \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0627\u0644\u0623\u062e\u064a\u0631\u0629 \u0636\u0645\u0646 \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0645\u062a\u062c\u0631\u0643 \u0648\u0645\u0648\u0642\u0639\u0643 \u0648\u0645\u0648\u0638\u0641\u0643\u060c \u0645\u0639 \u062e\u064a\u0627\u0631\u0627\u062a \u062f\u0641\u0639 \u0648\u062a\u062d\u0631\u064a\u0631 \u0643\u0645\u064a\u0627\u062a \u0623\u0648\u0636\u062d \u0641\u064a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639. \u064a\u0638\u0644 \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u062e\u0627\u0636\u0639\u064b\u0627 \u0644\u062a\u0641\u0648\u064a\u0636 \u0627\u0644\u062e\u0627\u062f\u0645."
       }
     },
     "evidence": [
@@ -1624,15 +1624,15 @@
     "notes": {
       "title": {
         "en": "Reopen privacy preferences from the policy",
-        "ar": "إعادة فتح تفضيلات الخصوصية من السياسة"
+        "ar": "\u0625\u0639\u0627\u062f\u0629 \u0641\u062a\u062d \u062a\u0641\u0636\u064a\u0644\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0645\u0646 \u0627\u0644\u0633\u064a\u0627\u0633\u0629"
       },
       "summary": {
         "en": "Open privacy settings directly from the Shop Suit privacy policy.",
-        "ar": "افتح إعدادات الخصوصية مباشرة من سياسة خصوصية Shop Suit."
+        "ar": "\u0627\u0641\u062a\u062d \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0646 \u0633\u064a\u0627\u0633\u0629 \u062e\u0635\u0648\u0635\u064a\u0629 Shop Suit."
       },
       "details": {
         "en": "Review and change optional analytics preferences using the policy page action, with the existing consent and keyboard-focus behavior.",
-        "ar": "راجع تفضيلات التحليلات الاختيارية وعدلها من الإجراء الموجود في صفحة السياسة، مع الحفاظ على سلوك الموافقة وتركيز لوحة المفاتيح."
+        "ar": "\u0631\u0627\u062c\u0639 \u062a\u0641\u0636\u064a\u0644\u0627\u062a \u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0648\u0639\u062f\u0644\u0647\u0627 \u0645\u0646 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0627\u0644\u0645\u0648\u062c\u0648\u062f \u0641\u064a \u0635\u0641\u062d\u0629 \u0627\u0644\u0633\u064a\u0627\u0633\u0629\u060c \u0645\u0639 \u0627\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u0633\u0644\u0648\u0643 \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0648\u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d."
       }
     },
     "evidence": [
@@ -1713,15 +1713,15 @@
     "notes": {
       "title": {
         "en": "Workspace controls stay within reach",
-        "ar": "أدوات مساحة العمل في متناولك"
+        "ar": "\u0623\u062f\u0648\u0627\u062a \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0641\u064a \u0645\u062a\u0646\u0627\u0648\u0644\u0643"
       },
       "summary": {
         "en": "Use workspace controls beside the working page, with account and settings actions grouped in the shared sidebar.",
-        "ar": "استخدم أدوات مساحة العمل بجانب الصفحة، مع تجميع إجراءات الحساب والإعدادات في القائمة الجانبية المشتركة."
+        "ar": "\u0627\u0633\u062a\u062e\u062f\u0645 \u0623\u062f\u0648\u0627\u062a \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0628\u062c\u0627\u0646\u0628 \u0627\u0644\u0635\u0641\u062d\u0629\u060c \u0645\u0639 \u062a\u062c\u0645\u064a\u0639 \u0625\u062c\u0631\u0627\u0621\u0627\u062a \u0627\u0644\u062d\u0633\u0627\u0628 \u0648\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0641\u064a \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062c\u0627\u0646\u0628\u064a\u0629 \u0627\u0644\u0645\u0634\u062a\u0631\u0643\u0629."
       },
       "details": {
         "en": "Navigation retains its collapsible rail, mobile drawer, theme and language controls. Shop catalogue filters stay specific to the shop; workspace and account actions keep their existing permissions.",
-        "ar": "يحتفظ التنقل بالشريط القابل للطي والقائمة على الهاتف وأدوات المظهر واللغة. تبقى فلاتر الكتالوج خاصة بالمتجر، وتحتفظ إجراءات مساحة العمل والحساب بصلاحياتها الحالية."
+        "ar": "\u064a\u062d\u062a\u0641\u0638 \u0627\u0644\u062a\u0646\u0642\u0644 \u0628\u0627\u0644\u0634\u0631\u064a\u0637 \u0627\u0644\u0642\u0627\u0628\u0644 \u0644\u0644\u0637\u064a \u0648\u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0639\u0644\u0649 \u0627\u0644\u0647\u0627\u062a\u0641 \u0648\u0623\u062f\u0648\u0627\u062a \u0627\u0644\u0645\u0638\u0647\u0631 \u0648\u0627\u0644\u0644\u063a\u0629. \u062a\u0628\u0642\u0649 \u0641\u0644\u0627\u062a\u0631 \u0627\u0644\u0643\u062a\u0627\u0644\u0648\u062c \u062e\u0627\u0635\u0629 \u0628\u0627\u0644\u0645\u062a\u062c\u0631\u060c \u0648\u062a\u062d\u062a\u0641\u0638 \u0625\u062c\u0631\u0627\u0621\u0627\u062a \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0648\u0627\u0644\u062d\u0633\u0627\u0628 \u0628\u0635\u0644\u0627\u062d\u064a\u0627\u062a\u0647\u0627 \u0627\u0644\u062d\u0627\u0644\u064a\u0629."
       }
     },
     "sources": [
@@ -1781,15 +1781,15 @@
     "notes": {
       "title": {
         "en": "Custom storefronts and bundle offers",
-        "ar": "تصميم موقع المتجر وعروض الباقات"
+        "ar": "\u062a\u0635\u0645\u064a\u0645 \u0645\u0648\u0642\u0639 \u0627\u0644\u0645\u062a\u062c\u0631 \u0648\u0639\u0631\u0648\u0636 \u0627\u0644\u0628\u0627\u0642\u0627\u062a"
       },
       "summary": {
         "en": "Team and Multi shops can publish a banner, gallery and team; bundle offers appear on the storefront and apply automatically at the counter.",
-        "ar": "يمكن لمتاجر Team وMulti نشر بانر ومعرض صور وفريق، وتظهر الباقات على الموقع وتطبق تلقائيًا في نقطة البيع."
+        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0645\u062a\u0627\u062c\u0631 Team \u0648Multi \u0646\u0634\u0631 \u0628\u0627\u0646\u0631 \u0648\u0645\u0639\u0631\u0636 \u0635\u0648\u0631 \u0648\u0641\u0631\u064a\u0642\u060c \u0648\u062a\u0638\u0647\u0631 \u0627\u0644\u0628\u0627\u0642\u0627\u062a \u0639\u0644\u0649 \u0627\u0644\u0645\u0648\u0642\u0639 \u0648\u062a\u0637\u0628\u0642 \u062a\u0644\u0642\u0627\u0626\u064a\u064b\u0627 \u0641\u064a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639."
       },
       "details": {
         "en": "Keep layout drafts separate from published content, show bundle savings, select complete bundles in POS and retain their names on saved receipts. Public basket requests still require merchant confirmation.",
-        "ar": "احتفظ بمسودات التصميم منفصلة عن المحتوى المنشور، واعرض توفير الباقات وأضفها كاملة في نقطة البيع مع حفظ أسمائها في الإيصالات. تظل طلبات سلة الموقع بحاجة إلى تأكيد المتجر."
+        "ar": "\u0627\u062d\u062a\u0641\u0638 \u0628\u0645\u0633\u0648\u062f\u0627\u062a \u0627\u0644\u062a\u0635\u0645\u064a\u0645 \u0645\u0646\u0641\u0635\u0644\u0629 \u0639\u0646 \u0627\u0644\u0645\u062d\u062a\u0648\u0649 \u0627\u0644\u0645\u0646\u0634\u0648\u0631\u060c \u0648\u0627\u0639\u0631\u0636 \u062a\u0648\u0641\u064a\u0631 \u0627\u0644\u0628\u0627\u0642\u0627\u062a \u0648\u0623\u0636\u0641\u0647\u0627 \u0643\u0627\u0645\u0644\u0629 \u0641\u064a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u0645\u0639 \u062d\u0641\u0638 \u0623\u0633\u0645\u0627\u0626\u0647\u0627 \u0641\u064a \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a. \u062a\u0638\u0644 \u0637\u0644\u0628\u0627\u062a \u0633\u0644\u0629 \u0627\u0644\u0645\u0648\u0642\u0639 \u0628\u062d\u0627\u062c\u0629 \u0625\u0644\u0649 \u062a\u0623\u0643\u064a\u062f \u0627\u0644\u0645\u062a\u062c\u0631."
       }
     },
     "sources": [
@@ -1851,15 +1851,15 @@
     "notes": {
       "title": {
         "en": "Edit business settings directly on the page",
-        "ar": "تعديل إعدادات النشاط مباشرة في الصفحة"
+        "ar": "\u062a\u0639\u062f\u064a\u0644 \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0646\u0634\u0627\u0637 \u0645\u0628\u0627\u0634\u0631\u0629 \u0641\u064a \u0627\u0644\u0635\u0641\u062d\u0629"
       },
       "summary": {
         "en": "Update shop details, business mode, locations and receipt settings without opening an editor dialog.",
-        "ar": "عدّل بيانات المتجر وطريقة التشغيل والفروع وإعدادات الإيصال دون فتح نافذة تحرير."
+        "ar": "\u0639\u062f\u0651\u0644 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0645\u062a\u062c\u0631 \u0648\u0637\u0631\u064a\u0642\u0629 \u0627\u0644\u062a\u0634\u063a\u064a\u0644 \u0648\u0627\u0644\u0641\u0631\u0648\u0639 \u0648\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0625\u064a\u0635\u0627\u0644 \u062f\u0648\u0646 \u0641\u062a\u062d \u0646\u0627\u0641\u0630\u0629 \u062a\u062d\u0631\u064a\u0631."
       },
       "details": {
         "en": "Profile, location and receipt editors appear inline. Cashier policy and business currency use the same Save and Cancel actions. Unsaved drafts are retained during background refreshes, and navigation prompts before discarding changes. Existing permissions, quotas and saving commands are preserved.",
-        "ar": "تظهر نماذج ملف المتجر والفروع والإيصالات داخل الصفحة. تستخدم سياسة ورديات الخزنة وعملة النشاط إجراءات الحفظ والإلغاء نفسها. تبقى المسودات غير المحفوظة أثناء تحديث البيانات في الخلفية، ويطلب التنقل تأكيد تجاهل التغييرات. تظل الصلاحيات والحصص وأوامر الحفظ الحالية محفوظة."
+        "ar": "\u062a\u0638\u0647\u0631 \u0646\u0645\u0627\u0630\u062c \u0645\u0644\u0641 \u0627\u0644\u0645\u062a\u062c\u0631 \u0648\u0627\u0644\u0641\u0631\u0648\u0639 \u0648\u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u062f\u0627\u062e\u0644 \u0627\u0644\u0635\u0641\u062d\u0629. \u062a\u0633\u062a\u062e\u062f\u0645 \u0633\u064a\u0627\u0633\u0629 \u0648\u0631\u062f\u064a\u0627\u062a \u0627\u0644\u062e\u0632\u0646\u0629 \u0648\u0639\u0645\u0644\u0629 \u0627\u0644\u0646\u0634\u0627\u0637 \u0625\u062c\u0631\u0627\u0621\u0627\u062a \u0627\u0644\u062d\u0641\u0638 \u0648\u0627\u0644\u0625\u0644\u063a\u0627\u0621 \u0646\u0641\u0633\u0647\u0627. \u062a\u0628\u0642\u0649 \u0627\u0644\u0645\u0633\u0648\u062f\u0627\u062a \u063a\u064a\u0631 \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629 \u0623\u062b\u0646\u0627\u0621 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0641\u064a \u0627\u0644\u062e\u0644\u0641\u064a\u0629\u060c \u0648\u064a\u0637\u0644\u0628 \u0627\u0644\u062a\u0646\u0642\u0644 \u062a\u0623\u0643\u064a\u062f \u062a\u062c\u0627\u0647\u0644 \u0627\u0644\u062a\u063a\u064a\u064a\u0631\u0627\u062a. \u062a\u0638\u0644 \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0648\u0627\u0644\u062d\u0635\u0635 \u0648\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u062d\u0641\u0638 \u0627\u0644\u062d\u0627\u0644\u064a\u0629 \u0645\u062d\u0641\u0648\u0638\u0629."
       }
     },
     "sources": [
@@ -1916,15 +1916,15 @@
     "notes": {
       "title": {
         "en": "Website inclusion is clear on plan cards",
-        "ar": "توضيح تضمين الموقع في بطاقات الباقات"
+        "ar": "\u062a\u0648\u0636\u064a\u062d \u062a\u0636\u0645\u064a\u0646 \u0627\u0644\u0645\u0648\u0642\u0639 \u0641\u064a \u0628\u0637\u0627\u0642\u0627\u062a \u0627\u0644\u0628\u0627\u0642\u0627\u062a"
       },
       "summary": {
         "en": "Team and Multi show the shop website as included; Solo shows it as not included.",
-        "ar": "تعرض باقتا تيم ومالتي موقع المتجر كميزة مشمولة، وتعرضه باقة سولو كميزة غير مشمولة."
+        "ar": "\u062a\u0639\u0631\u0636 \u0628\u0627\u0642\u062a\u0627 \u062a\u064a\u0645 \u0648\u0645\u0627\u0644\u062a\u064a \u0645\u0648\u0642\u0639 \u0627\u0644\u0645\u062a\u062c\u0631 \u0643\u0645\u064a\u0632\u0629 \u0645\u0634\u0645\u0648\u0644\u0629\u060c \u0648\u062a\u0639\u0631\u0636\u0647 \u0628\u0627\u0642\u0629 \u0633\u0648\u0644\u0648 \u0643\u0645\u064a\u0632\u0629 \u063a\u064a\u0631 \u0645\u0634\u0645\u0648\u0644\u0629."
       },
       "details": {
         "en": "The English and Arabic feature row appears in public pricing and Subscription & billing, for monthly and yearly plan variants. Pricing and subscription access rules are unchanged.",
-        "ar": "يظهر صف الميزة بالعربية والإنجليزية في الأسعار العامة والاشتراك والفوترة، للخيارات الشهرية والسنوية. تظل الأسعار وقواعد الوصول إلى الاشتراك دون تغيير."
+        "ar": "\u064a\u0638\u0647\u0631 \u0635\u0641 \u0627\u0644\u0645\u064a\u0632\u0629 \u0628\u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0648\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629 \u0641\u064a \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0639\u0627\u0645\u0629 \u0648\u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643 \u0648\u0627\u0644\u0641\u0648\u062a\u0631\u0629\u060c \u0644\u0644\u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u0634\u0647\u0631\u064a\u0629 \u0648\u0627\u0644\u0633\u0646\u0648\u064a\u0629. \u062a\u0638\u0644 \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0648\u0642\u0648\u0627\u0639\u062f \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643 \u062f\u0648\u0646 \u062a\u063a\u064a\u064a\u0631."
       }
     },
     "sources": [
@@ -1956,6 +1956,1907 @@
     "reason": "Maintain private bilingual release inventory provenance for the Shop plan-card clarification. This bookkeeping does not change other products or activate public releases for internal consumers.",
     "sources": [
       "shop-plan-website-release-support-20261022"
+    ]
+  },
+  {
+    "id": "ss-electrical-measurement-foundation-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit"
+    ],
+    "reason": "Prepare exact units, guarded unused-product configuration and private implementation/release evidence. Measured transactions remain unavailable until dependent precision and workflow integration; no future capability is announced.",
+    "sources": [
+      "ss-electrical-measurement-foundation-20261022"
+    ]
+  },
+  {
+    "id": "ss-electrical-measurement-tooling-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/database/test-shop-local.mjs",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "tooling/database/shop-measurement-schema-disposable.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Add measurement SQL checks to the existing fixed local Shop runner and maintain private release provenance. Shared tooling bookkeeping changes no other product behavior or entitlements.",
+    "sources": [
+      "ss-electrical-measurement-tooling-20261022"
+    ]
+  },
+  {
+    "id": "ss-electrical-measured-retail-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui"
+    ],
+    "reason": "Enable exact measured receiving, sales and canonical FIFO stock through existing authorized workflows.",
+    "notes": {
+      "title": {
+        "en": "Sell and receive products by unit or package",
+        "ar": "\u0628\u064a\u0639 \u0648\u0627\u0633\u062a\u0644\u0627\u0645 \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0628\u0627\u0644\u0648\u062d\u062f\u0629 \u0623\u0648 \u0627\u0644\u0639\u0628\u0648\u0629"
+      },
+      "summary": {
+        "en": "Set product units and allowed increments, define product-specific packaging, and use them in purchasing and sales.",
+        "ar": "\u062d\u062f\u062f \u0648\u062d\u062f\u0627\u062a \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0648\u0623\u0635\u063a\u0631 \u0643\u0645\u064a\u0629 \u0645\u0633\u0645\u0648\u062d\u0629\u060c \u0648\u0639\u0631\u0651\u0641 \u0639\u0628\u0648\u0627\u062a \u0643\u0644 \u0645\u0646\u062a\u062c \u0648\u0627\u0633\u062a\u062e\u062f\u0645\u0647\u0627 \u0641\u064a \u0627\u0644\u0645\u0634\u062a\u0631\u064a\u0627\u062a \u0648\u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a."
+      },
+      "details": {
+        "en": "Measured sales show their base quantity and preserve entered units and prices on receipts. Stock, counts and eligible returns use the same canonical quantity; used products retain their historical unit.",
+        "ar": "\u062a\u0639\u0631\u0636 \u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a \u0627\u0644\u0645\u0642\u0627\u0633\u0629 \u0627\u0644\u0643\u0645\u064a\u0629 \u0627\u0644\u0623\u0633\u0627\u0633\u064a\u0629 \u0648\u062a\u062d\u0641\u0638 \u0627\u0644\u0648\u062d\u062f\u0627\u062a \u0648\u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0645\u062f\u062e\u0644\u0629 \u0639\u0644\u0649 \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a. \u064a\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0648\u0627\u0644\u062c\u0631\u062f \u0648\u0627\u0644\u0645\u0631\u062a\u062c\u0639\u0627\u062a \u0627\u0644\u0645\u0624\u0647\u0644\u0629 \u0627\u0644\u0643\u0645\u064a\u0629 \u0627\u0644\u0623\u0633\u0627\u0633\u064a\u0629 \u0646\u0641\u0633\u0647\u0627\u060c \u0648\u062a\u062d\u062a\u0641\u0638 \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0629 \u0628\u0648\u062d\u062f\u062a\u0647\u0627 \u0627\u0644\u062a\u0627\u0631\u064a\u062e\u064a\u0629."
+      }
+    },
+    "sources": [
+      "ss-electrical-measured-retail-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/pos.vue",
+        "contains": "@unit=\"setPosUnit\""
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261022193300_measured_retail_commands.sql",
+        "contains": "create function public.save_product_packaging"
+      },
+      {
+        "path": "packages/ui/src/templates/BsCataloguePage.vue",
+        "contains": "<BsFieldGroup v-if=\"form.measurement && copy.measurement && measurement\""
+      }
+    ]
+  },
+  {
+    "id": "ss-shop-query-error-recovery-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables",
+      "apps/shop-suit/app/plugins",
+      "apps/shop-suit/app/utils/shopQueryError.ts",
+      "apps/shop-suit/tests/unit/query-error-payload.test.mjs"
+    ],
+    "reason": "A failed server read must render its retry state without breaking SSR serialization or retaining provider request secrets.",
+    "notes": {
+      "title": {
+        "en": "Recover safely from failed reads",
+        "ar": "\u0627\u0633\u062a\u0639\u0627\u062f\u0629 \u0627\u0644\u0639\u0631\u0636 \u0628\u0639\u062f \u062a\u0639\u0630\u0631 \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a"
+      },
+      "summary": {
+        "en": "Failed reads can render their error and retry state during server rendering.",
+        "ar": "\u064a\u0645\u0643\u0646 \u0639\u0631\u0636 \u062d\u0627\u0644\u0629 \u0627\u0644\u062e\u0637\u0623 \u0648\u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0645\u062d\u0627\u0648\u0644\u0629 \u0639\u0646\u062f \u062a\u0639\u0630\u0631 \u0642\u0631\u0627\u0621\u0629 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0623\u062b\u0646\u0627\u0621 \u0639\u0631\u0636 \u0627\u0644\u0635\u0641\u062d\u0629 \u0639\u0644\u0649 \u0627\u0644\u062e\u0627\u062f\u0645."
+      },
+      "details": {
+        "en": "Read failures retain their error code across hydration without retaining provider requests or credentials in page state.",
+        "ar": "\u062a\u064f\u062d\u0641\u0638 \u0631\u0645\u0648\u0632 \u0623\u062e\u0637\u0627\u0621 \u0627\u0644\u0642\u0631\u0627\u0621\u0629 \u0639\u0646\u062f \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0635\u0641\u062d\u0629 \u062f\u0648\u0646 \u0627\u0644\u0627\u062d\u062a\u0641\u0627\u0638 \u0628\u0637\u0644\u0628\u0627\u062a \u0627\u0644\u0645\u0632\u0648\u062f \u0623\u0648 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0627\u0639\u062a\u0645\u0627\u062f \u0641\u064a \u062d\u0627\u0644\u0629 \u0627\u0644\u0635\u0641\u062d\u0629."
+      }
+    },
+    "sources": [
+      "ss-shop-query-error-recovery-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/plugins/query-errors.ts",
+        "contains": "definePayloadReducer('ShopQueryError'"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-retail-verification-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/database",
+      "release-changes/items.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      ".github/workflows/shop-measurement-disposable.yml"
+    ],
+    "reason": "Extend the disposable Shop merchant harness and compatible optional shared measurement presentation contracts for existing consumers, including the internal Doctor scaffold. Public Shop/Ledger sign-in label recovery is classified separately; no other Suit is activated.",
+    "sources": [
+      "ss-electrical-retail-verification-20261022"
+    ]
+  },
+  {
+    "id": "shared-sign-in-label-hydration-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsSignInPage.vue"
+    ],
+    "reason": "Stable page-level sign-in control IDs preserve accessible labels after SSR hydration.",
+    "notes": {
+      "title": {
+        "en": "Keep sign-in fields labeled",
+        "ar": "\u0627\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u062a\u0633\u0645\u064a\u0627\u062a \u062d\u0642\u0648\u0644 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644"
+      },
+      "summary": {
+        "en": "Email and password labels stay linked to their controls after the page loads.",
+        "ar": "\u062a\u0628\u0642\u0649 \u062a\u0633\u0645\u064a\u0627\u062a \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0648\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u0645\u0631\u062a\u0628\u0637\u0629 \u0628\u062d\u0642\u0648\u0644\u0647\u0627 \u0628\u0639\u062f \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0635\u0641\u062d\u0629."
+      },
+      "details": {
+        "en": "Stable sign-in control IDs preserve keyboard and assistive-technology access across server rendering and hydration.",
+        "ar": "\u062a\u062d\u0627\u0641\u0638 \u0645\u0639\u0631\u0641\u0627\u062a \u062d\u0642\u0648\u0644 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0627\u0644\u062b\u0627\u0628\u062a\u0629 \u0639\u0644\u0649 \u0627\u0644\u0648\u0635\u0648\u0644 \u0628\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0648\u0627\u0644\u062a\u0642\u0646\u064a\u0627\u062a \u0627\u0644\u0645\u0633\u0627\u0639\u062f\u0629 \u0623\u062b\u0646\u0627\u0621 \u0639\u0631\u0636 \u0627\u0644\u0635\u0641\u062d\u0629 \u0648\u062a\u062d\u0645\u064a\u0644\u0647\u0627."
+      }
+    },
+    "sources": [
+      "shared-sign-in-label-hydration-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsSignInPage.vue",
+        "contains": "for=\"bs-sign-in-email\""
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-reels-catalog-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit",
+      "packages/ui"
+    ],
+    "reason": "Track individual cable reels and exact cuts while preserving acquisition cost, stock balance, immutable receipts and controlled cable returns. Add typed electrical attributes and independently stocked SKU families.",
+    "notes": {
+      "title": {
+        "en": "Track cable reels and electrical specifications",
+        "ar": "\u062a\u062a\u0628\u0639 \u0628\u0643\u0631\u0627\u062a \u0627\u0644\u0643\u0627\u0628\u0644\u0627\u062a \u0648\u0627\u0644\u0645\u0648\u0627\u0635\u0641\u0627\u062a \u0627\u0644\u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629"
+      },
+      "summary": {
+        "en": "Record individual reels, sell continuous cable or explicit separate pieces, and maintain electrical specifications for each SKU.",
+        "ar": "\u0633\u062c\u0644 \u0627\u0644\u0628\u0643\u0631\u0627\u062a \u0627\u0644\u0641\u0631\u062f\u064a\u0629 \u0648\u0628\u0639 \u0627\u0644\u0643\u0627\u0628\u0644\u0627\u062a \u0643\u0642\u0637\u0639 \u0645\u062a\u0635\u0644\u0629 \u0623\u0648 \u0645\u0646\u0641\u0635\u0644\u0629 \u0628\u0627\u062e\u062a\u064a\u0627\u0631 \u0648\u0627\u0636\u062d\u060c \u0648\u0627\u062d\u062a\u0641\u0638 \u0628\u0627\u0644\u0645\u0648\u0627\u0635\u0641\u0627\u062a \u0627\u0644\u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629 \u0644\u0643\u0644 \u0635\u0646\u0641."
+      },
+      "details": {
+        "en": "Cuts record source barcodes, requested length and cutting loss. Reels support counts, remnant pricing, damage, scrap and history; eligible cable returns create separate pieces under the sale\u2019s frozen policy.",
+        "ar": "\u062a\u0633\u062c\u0644 \u0639\u0645\u0644\u064a\u0627\u062a \u0627\u0644\u0642\u0635 \u0628\u0627\u0631\u0643\u0648\u062f \u0627\u0644\u0645\u0635\u062f\u0631 \u0648\u0627\u0644\u0637\u0648\u0644 \u0627\u0644\u0645\u0637\u0644\u0648\u0628 \u0648\u0641\u0627\u0642\u062f \u0627\u0644\u0642\u0635. \u062a\u062f\u0639\u0645 \u0627\u0644\u0628\u0643\u0631\u0627\u062a \u0627\u0644\u062c\u0631\u062f \u0648\u062a\u0633\u0639\u064a\u0631 \u0627\u0644\u0628\u0648\u0627\u0642\u064a \u0648\u0627\u0644\u062a\u0644\u0641 \u0648\u0627\u0644\u062e\u0631\u062f\u0629 \u0648\u0627\u0644\u0633\u062c\u0644\u060c \u0648\u062a\u0646\u0634\u0626 \u0645\u0631\u062a\u062c\u0639\u0627\u062a \u0627\u0644\u0643\u0627\u0628\u0644\u0627\u062a \u0627\u0644\u0645\u0624\u0647\u0644\u0629 \u0642\u0637\u0639\u064b\u0627 \u0645\u0646\u0641\u0635\u0644\u0629 \u0648\u0641\u0642 \u0633\u064a\u0627\u0633\u0629 \u0627\u0644\u0628\u064a\u0639 \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629."
+      }
+    },
+    "sources": [
+      "ss-electrical-reels-catalog-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261022202543_electrical_catalog_and_reels.sql",
+        "contains": "create function shop_private.plan_reel_sale"
+      },
+      {
+        "path": "apps/shop-suit/app/pages/inventory/reels.vue",
+        "contains": "<BsPhysicalStockPage"
+      },
+      {
+        "path": "packages/ui/src/organisms/BsPointOfSaleCart.vue",
+        "contains": "emit('physicalLoss', line.id, String($event))"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-reels-verification-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/database",
+      "docs/shared",
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "release-changes/items.json",
+      ".github/workflows/shop-measurement-disposable.yml"
+    ],
+    "reason": "Maintain typed optional shared reel presentation, template ownership/catalogue records and disposable physical-stock regression tooling. Other products retain their existing contracts; no additional Suit is activated.",
+    "sources": [
+      "ss-electrical-reels-verification-20261022"
+    ]
+  },
+  {
+    "id": "ss-measured-decimal-regression-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/database",
+      "apps/shop-suit/supabase/tests/shop_website_catalog.sql",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Keep exact numeric stock/price assertions across widened decimal scales; exercise the original website catalog regression alongside measured retail without weakening isolation, concurrency or public-field allowlists.",
+    "sources": [
+      "ss-measured-decimal-regression-20261022"
+    ]
+  },
+  {
+    "id": "ss-electrical-landing-fixture-lint-20261022",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/tests/unit/landing-journey.test.mjs",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md"
+    ],
+    "reason": "Remove unused fixture setup and update stale landing source-contract assertions to follow the extracted journey organism and current bilingual receipt story; runtime behavior is unchanged.",
+    "sources": [
+      "ss-electrical-landing-fixture-lint-20261022"
+    ]
+  },
+  {
+    "id": "ss-electrical-context-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/plugins/query-scope.ts",
+      "apps/shop-suit/app/composables/useShopQueryCache.ts",
+      "apps/shop-suit/app/stores/shop.ts",
+      "apps/shop-suit/app/utils/shopQueryCleanup.ts"
+    ],
+    "reason": "Keep counter receipt state off public storefront SSR and clear prior-scope cached snapshots before detaching active consumers. Existing server permissions remain authoritative.",
+    "notes": {
+      "title": {
+        "en": "Keep workspace state scoped to its context",
+        "ar": "\u062d\u0641\u0638 \u062d\u0627\u0644\u0629 \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0636\u0645\u0646 \u0633\u064a\u0627\u0642\u0647\u0627"
+      },
+      "summary": {
+        "en": "Public storefront pages omit counter receipt-selection state. Account and location changes clear prior workspace snapshots immediately.",
+        "ar": "\u0644\u0627 \u062a\u062a\u0636\u0645\u0646 \u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0645\u062a\u062c\u0631 \u0627\u0644\u0639\u0627\u0645\u0629 \u062d\u0627\u0644\u0629 \u0627\u062e\u062a\u064a\u0627\u0631 \u0625\u064a\u0635\u0627\u0644 \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639\u060c \u0648\u062a\u064f\u0645\u0633\u062d \u0644\u0642\u0637\u0627\u062a \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0641\u0648\u0631 \u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u062d\u0633\u0627\u0628 \u0623\u0648 \u0627\u0644\u0641\u0631\u0639."
+      },
+      "details": {
+        "en": "Cancelled reads cannot restore a prior context after its consumers move. Current receipt selection is still cleared on sign-out.",
+        "ar": "\u0644\u0627 \u062a\u0639\u064a\u062f \u0627\u0644\u0642\u0631\u0627\u0621\u0627\u062a \u0627\u0644\u0645\u0644\u063a\u0627\u0629 \u0628\u064a\u0627\u0646\u0627\u062a \u0633\u064a\u0627\u0642 \u0633\u0627\u0628\u0642 \u0628\u0639\u062f \u0627\u0646\u062a\u0642\u0627\u0644 \u0627\u0644\u0648\u0627\u062c\u0647\u0629\u060c \u0648\u064a\u0638\u0644 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0625\u064a\u0635\u0627\u0644 \u0627\u0644\u062d\u0627\u0644\u064a \u064a\u064f\u0645\u0633\u062d \u0639\u0646\u062f \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c."
+      }
+    },
+    "sources": [
+      "ss-electrical-context-qualification-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/plugins/query-scope.ts",
+        "contains": "if (scope.actorId || posReceipt)"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-storefront-permission-menu-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/utils/shopPermissionMenu.ts"
+    ],
+    "reason": "Map the existing sales/settings permissions to the current offers and website-builder navigation entries without adding backend authority.",
+    "notes": {
+      "title": {
+        "en": "Review storefront permissions with their pages",
+        "ar": "\u0645\u0631\u0627\u062c\u0639\u0629 \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u062a\u062c\u0631 \u0628\u062c\u0648\u0627\u0631 \u0635\u0641\u062d\u0627\u062a\u0647\u0627"
+      },
+      "summary": {
+        "en": "The role editor groups existing offer and website-builder permissions under their current page names.",
+        "ar": "\u064a\u062c\u0645\u0639 \u0645\u062d\u0631\u0631 \u0627\u0644\u0623\u062f\u0648\u0627\u0631 \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0639\u0631\u0648\u0636 \u0648\u0645\u0646\u0634\u0626 \u0627\u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u062d\u0627\u0644\u064a\u0629 \u062a\u062d\u062a \u0623\u0633\u0645\u0627\u0621 \u0635\u0641\u062d\u0627\u062a\u0647\u0627."
+      },
+      "details": {
+        "en": "Saved and ungrantable permissions retain their existing behavior; backend permission keys are unchanged.",
+        "ar": "\u062a\u062d\u062a\u0641\u0638 \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629 \u0648\u063a\u064a\u0631 \u0627\u0644\u0642\u0627\u0628\u0644\u0629 \u0644\u0644\u0645\u0646\u062d \u0628\u0633\u0644\u0648\u0643\u0647\u0627 \u0627\u0644\u062d\u0627\u0644\u064a\u060c \u062f\u0648\u0646 \u062a\u063a\u064a\u064a\u0631 \u0645\u0641\u0627\u062a\u064a\u062d \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0641\u064a \u0627\u0644\u062e\u0627\u062f\u0645."
+      }
+    },
+    "sources": [
+      "ss-electrical-storefront-permission-menu-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+        "contains": "'/offers': ['sales.manage', 'settings.manage']"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-regression-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "tooling/database/shop-measurement-schema-disposable.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Repair stale Shop harnesses around the current data client, real Pinia/Colada stores, current settings/receipt templates and scoped query contracts; preserve tenant/race/amount assertions and add actual cache-cancellation checks. Support explicitly selected existing SQL fixtures only in the uniquely owned disposable schema runner. No product activation or hosted mutation is included.",
+    "sources": [
+      "ss-electrical-regression-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-reel-catalog-entrypoint-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/supabase/migrations/20261023195653_catalog_media_entrypoint_authority.sql",
+      "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+      "tooling/database/shop-measurement-schema-disposable.mjs",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md",
+      "apps/shop-suit/supabase/tests/fixtures/measurement_provider_standins.sql"
+    ],
+    "reason": "Repair execution delegation inside the unpublished reel feature. The existing public catalog entry retains its ACL and delegates under its owner to private adapters whose tenant/actor checks remain authoritative. Preserve the authenticated denial for direct private adapter execution and add existing media/upload suites to local qualification.",
+    "sources": [
+      "ss-reel-catalog-entrypoint-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-reel-template-export-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/package.json",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md"
+    ],
+    "reason": "Retain the canonical physical-stock template export and remove its unused duplicate suffix alias, restoring the one-to-one governed source export invariant. No consumer imports the duplicate alias and no rendered behavior changes.",
+    "sources": [
+      "ss-reel-template-export-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-consented-pricing-event-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/index.vue",
+      "packages/ui/src/templates/BsLandingPage.vue"
+    ],
+    "reason": "Restore the existing optional pricing CTA event through the shared landing template; consent, route allowlist and deduplication remain authoritative.",
+    "notes": {
+      "title": {
+        "en": "Restore optional pricing-link measurement",
+        "ar": "\u0627\u0633\u062a\u0639\u0627\u062f\u0629 \u0627\u0644\u0642\u064a\u0627\u0633 \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a \u0644\u0631\u0648\u0627\u0628\u0637 \u0627\u0644\u0623\u0633\u0639\u0627\u0631"
+      },
+      "summary": {
+        "en": "Pricing-card clicks forward the existing anonymous event when optional analytics is accepted.",
+        "ar": "\u062a\u0631\u0633\u0644 \u0646\u0642\u0631\u0627\u062a \u0628\u0637\u0627\u0642\u0627\u062a \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u062d\u062f\u062b \u0627\u0644\u0645\u062c\u0647\u0648\u0644 \u0627\u0644\u062d\u0627\u0644\u064a \u0639\u0646\u062f \u0642\u0628\u0648\u0644 \u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629."
+      },
+      "details": {
+        "en": "The existing consent and deduplication checks still apply; no plan, customer or form identifiers are sent.",
+        "ar": "\u062a\u0638\u0644 \u0641\u062d\u0648\u0635 \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0648\u0645\u0646\u0639 \u0627\u0644\u062a\u0643\u0631\u0627\u0631 \u0633\u0627\u0631\u064a\u0629\u060c \u0648\u0644\u0627 \u062a\u064f\u0631\u0633\u0644 \u0645\u0639\u0631\u0651\u0641\u0627\u062a \u0627\u0644\u062e\u0637\u0637 \u0623\u0648 \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0623\u0648 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0646\u0645\u0627\u0630\u062c."
+      }
+    },
+    "sources": [
+      "ss-electrical-consented-pricing-event-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/index.vue",
+        "contains": "trackPricing: () => analytics.track('pricing_cta')"
+      },
+      {
+        "path": "packages/ui/src/templates/BsLandingPage.vue",
+        "contains": "linkAction: [planId: string]"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-customer-trade-prices-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase/migrations/20261023202711_trade_customer_groups_and_prices.sql",
+      "packages/ui/src/templates/BsTradePricingPage.vue",
+      "packages/ui/src/molecules/BsPriceApprovalFields.vue",
+      "packages/ui/src/organisms/BsPointOfSaleCart.vue",
+      "packages/ui/src/templates/BsPointOfSalePage.vue",
+      "packages/ui/src/templates/BsSalesDirectoryPage.vue",
+      "packages/ui/src/types"
+    ],
+    "reason": "Tenant customer groups, deterministic customer/group/quantity prices and server-owned manager approvals extend existing measured/legacy sale authority, FIFO, taxes and immutable receipts without creating a competing ledger.",
+    "notes": {
+      "title": {
+        "en": "Prices for customer groups and larger quantities",
+        "ar": "\u0623\u0633\u0639\u0627\u0631 \u0645\u062c\u0645\u0648\u0639\u0627\u062a \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0648\u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0627\u0644\u0643\u0628\u064a\u0631\u0629"
+      },
+      "summary": {
+        "en": "Assign customer groups and use effective customer contracts, group prices and quantity breaks for measured and ordinary products.",
+        "ar": "\u0639\u064a\u0651\u0646 \u0645\u062c\u0645\u0648\u0639\u0627\u062a \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0648\u0627\u0633\u062a\u062e\u062f\u0645 \u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u062a\u0639\u0627\u0642\u062f \u0648\u0627\u0644\u0645\u062c\u0645\u0648\u0639\u0627\u062a \u0648\u0634\u0631\u0627\u0626\u062d \u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0627\u0644\u0633\u0627\u0631\u064a\u0629 \u0644\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0627\u0644\u0645\u0642\u0627\u0633\u0629 \u0648\u0627\u0644\u0639\u0627\u062f\u064a\u0629."
+      },
+      "details": {
+        "en": "POS and sales resolve prices on the server, keep trade prices separate from bundle discounts and preserve issued price approvals and revision history.",
+        "ar": "\u062a\u062d\u0633\u0628 \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u0648\u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0641\u064a \u0627\u0644\u062e\u0627\u062f\u0645\u060c \u0648\u0644\u0627 \u062a\u062c\u0645\u0639 \u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u062a\u0639\u0627\u0642\u062f \u0645\u0639 \u062e\u0635\u0648\u0645\u0627\u062a \u0627\u0644\u0628\u0627\u0642\u0627\u062a\u060c \u0648\u062a\u062d\u0641\u0638 \u062a\u0641\u0648\u064a\u0636\u0627\u062a \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0635\u0627\u062f\u0631\u0629 \u0648\u0633\u062c\u0644 \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0627\u062a."
+      }
+    },
+    "sources": [
+      "ss-electrical-customer-trade-prices-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/trade-pricing.vue",
+        "contains": "rpc.rpc('save_trade_configuration', frozen.value)"
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useSaleTaxQuote.ts",
+        "contains": "rpc.rpc('quote_customer_sale'"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-trade-pricing-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/shop-suit/app/types/database.types.ts",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/supabase/tests/shop_trade_pricing.sql",
+      "apps/shop-suit/docs/electrical-supply",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Optional typed shared pricing/editor presentation, explicit exports/route ownership/catalogue, real-schema generated types and merchant/permission/legacy/regression/browser qualification. Other shared consumers remain internal; no product registration, plan term or hosted deployment changes.",
+    "sources": [
+      "ss-electrical-trade-pricing-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-signup-labels-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsSignupEnrollment.vue"
+    ],
+    "reason": "The browser conversion regression reproduced signup email labels losing their control association after hydration. Use distinct semantic field IDs in the existing shared enrollment form, as the sign-in form already does.",
+    "notes": {
+      "title": {
+        "en": "Keep sign-up labels connected to their fields",
+        "ar": "\u0631\u0628\u0637 \u0639\u0646\u0627\u0648\u064a\u0646 \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u0628\u062d\u0642\u0648\u0644\u0647\u0627"
+      },
+      "summary": {
+        "en": "Account and workspace field labels retain their input associations after the sign-up form loads.",
+        "ar": "\u062a\u062d\u062a\u0641\u0638 \u0639\u0646\u0627\u0648\u064a\u0646 \u062d\u0642\u0648\u0644 \u0627\u0644\u062d\u0633\u0627\u0628 \u0648\u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0628\u0627\u0631\u062a\u0628\u0627\u0637\u0647\u0627 \u0628\u0627\u0644\u0645\u062f\u062e\u0644\u0627\u062a \u0628\u0639\u062f \u062a\u062d\u0645\u064a\u0644 \u0646\u0645\u0648\u0630\u062c \u0627\u0644\u062a\u0633\u062c\u064a\u0644."
+      },
+      "details": {
+        "en": "Keyboard and assistive technology can identify the existing fields without changing enrollment or verification behavior.",
+        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0648\u0627\u0644\u062a\u0642\u0646\u064a\u0627\u062a \u0627\u0644\u0645\u0633\u0627\u0639\u062f\u0629 \u062a\u062d\u062f\u064a\u062f \u0627\u0644\u062d\u0642\u0648\u0644 \u0627\u0644\u062d\u0627\u0644\u064a\u0629 \u062f\u0648\u0646 \u062a\u063a\u064a\u064a\u0631 \u0633\u0644\u0648\u0643 \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u0623\u0648 \u0627\u0644\u062a\u062d\u0642\u0642."
+      }
+    },
+    "sources": [
+      "ss-electrical-signup-labels-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+        "contains": "for=\"bs-signup-email\""
+      },
+      {
+        "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+        "contains": "for=\"bs-signup-verified-email\""
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-shared-form-event-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsLandingPage.vue",
+      "packages/ui/src/organisms/BsSignupEnrollment.vue"
+    ],
+    "reason": "Shared dependency qualification covers all six consumers. Existing landing event forwarding is inert without the Shop analytics adapter. Enrollment input label identities preserve current form behavior; public effects are separately curated for consuming signup products. No product activation or enrollment authority changes.",
+    "sources": [
+      "ss-electrical-shared-form-event-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-cycle-keyboard-focus-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts"
+    ],
+    "reason": "A focused native language-cycle button blurs when disabled during locale loading. Restore its focus after completion only if the user has not focused another control; preserve standard popup-menu behavior. Only Shop has verified public release registration in this initiative.",
+    "notes": {
+      "title": {
+        "en": "Keep keyboard focus after changing language",
+        "ar": "\u0627\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0628\u0639\u062f \u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0644\u063a\u0629"
+      },
+      "summary": {
+        "en": "The language button keeps keyboard focus when the selected language finishes loading.",
+        "ar": "\u064a\u062d\u062a\u0641\u0638 \u0632\u0631 \u0627\u0644\u0644\u063a\u0629 \u0628\u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0628\u0639\u062f \u0627\u0643\u062a\u0645\u0627\u0644 \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0644\u063a\u0629 \u0627\u0644\u0645\u062e\u062a\u0627\u0631\u0629."
+      },
+      "details": {
+        "en": "Focus stays with a different control if you move away while the language is loading.",
+        "ar": "\u064a\u0628\u0642\u0649 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0644\u0649 \u0623\u064a \u062d\u0642\u0644 \u0622\u062e\u0631 \u062a\u0646\u062a\u0642\u0644 \u0625\u0644\u064a\u0647 \u0623\u062b\u0646\u0627\u0621 \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0644\u063a\u0629."
+      }
+    },
+    "sources": [
+      "ss-electrical-cycle-keyboard-focus-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": "await cycleFocus.preserveDuring(async () => {"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-settings-consumer-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts",
+      "packages/ux/tests/point-of-sale-keyboard.test.mjs",
+      "packages/testing/e2e/settings-menu-focus.spec.ts",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify all dependency consumers without activating an operational product or inventing a production baseline. Retain popup keyboard navigation checks and test actual shell cycle controls, mobile navigation, hydration, focus and both locales. Restrict this open draft PR new signup public fragment to Shop; protected parent fragments remain untouched.",
+    "sources": [
+      "ss-electrical-settings-consumer-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-signin-draft-public-scope-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsSignInPage.vue",
+      "release-changes/items.json"
+    ],
+    "reason": "Correct the new, unaccepted public sign-in fragment in draft PR445 to Shop only. The real SAS/PostgREST fixture has no public Ledger registration/baseline for this change; shared consumers remain internal provenance. No protected accepted fragment, product registry, production version or release history changes.",
+    "sources": [
+      "ss-signin-draft-public-scope-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-shared-preview-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit/tests/e2e/dos-m1-004.spec.ts",
+      "packages/testing/e2e/settings-menu-focus.spec.ts",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ux/src/composables/useControlFocus.ts",
+      "apps/shop-suit/docs/electrical-supply"
+    ],
+    "reason": "Qualify current shared shell controls in their synthetic Doctor consumer without changing Doctor domain behavior, provider setup or clinical/public authority. Preserve scope disclosure, keyboard focus, theme transitions, mobile navigation and no-overflow assertions. Other consumers retain their actual popup/cycle checks.",
+    "sources": [
+      "ss-electrical-shared-preview-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-appointment-editor-context-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsAppointmentsPage.vue"
+    ],
+    "notes": {
+      "title": {
+        "en": "Return to appointment details after editing",
+        "ar": "\u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0645\u0648\u0639\u062f \u0628\u0639\u062f \u0627\u0644\u062a\u0639\u062f\u064a\u0644"
+      },
+      "summary": {
+        "en": "Appointment details stay available while you edit, and keyboard focus returns to Reschedule when you close the editor.",
+        "ar": "\u062a\u0628\u0642\u0649 \u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0645\u0648\u0639\u062f \u0645\u062a\u0627\u062d\u0629 \u0623\u062b\u0646\u0627\u0621 \u0627\u0644\u062a\u0639\u062f\u064a\u0644\u060c \u0648\u064a\u0639\u0648\u062f \u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0625\u0644\u0649 \u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u062c\u062f\u0648\u0644\u0629 \u0639\u0646\u062f \u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0645\u062d\u0631\u0631."
+      },
+      "details": {
+        "en": "Unsaved-change confirmation, pending-write protection and cancellation confirmations retain their existing behavior.",
+        "ar": "\u062a\u062d\u062a\u0641\u0638 \u062a\u0623\u0643\u064a\u062f\u0627\u062a \u0627\u0644\u062a\u063a\u064a\u064a\u0631\u0627\u062a \u063a\u064a\u0631 \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629 \u0648\u062d\u0645\u0627\u064a\u0629 \u0627\u0644\u062d\u0641\u0638 \u0627\u0644\u062c\u0627\u0631\u064a \u0648\u062a\u0623\u0643\u064a\u062f\u0627\u062a \u0627\u0644\u0625\u0644\u063a\u0627\u0621 \u0628\u0633\u0644\u0648\u0643\u0647\u0627 \u0627\u0644\u062d\u0627\u0644\u064a."
+      }
+    },
+    "sources": [
+      "ss-electrical-appointment-editor-context-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsAppointmentsPage.vue",
+        "contains": "if (id) emit('edit', id)"
+      }
+    ],
+    "reason": "The current appointment detail dialog was destroyed as its editor opened, disconnecting the focus-return control. Keep the informational dialog mounted under the editor and qualify the actual dialog journey in both locales."
+  },
+  {
+    "id": "ss-electrical-appointment-dialog-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsAppointmentsPage.vue",
+      "apps/shop-suit/tests/e2e/appointment-actions.spec.ts",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify the current shared appointment detail/editor composition, actual scope-source watcher and nested Escape/focus recovery. Only Shop uses this operational route and has public registration for these notes; other dependency consumers remain internal provenance with no product activation.",
+    "sources": [
+      "ss-electrical-appointment-dialog-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-formal-quotations-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase/migrations/20261023215636_formal_trade_quotations.sql",
+      "packages/ui/src/templates/BsTradeQuotationsPage.vue",
+      "packages/ui/src/types/tradeQuotationPresentation.ts"
+    ],
+    "reason": "Formal quotations retain exact server-priced commercial versions, validity, measured lines, taxes and explicit authorized transitions separately from invoice and inventory ledgers.",
+    "notes": {
+      "title": {
+        "en": "Formal quotations with saved versions",
+        "ar": "\u0639\u0631\u0648\u0636 \u0623\u0633\u0639\u0627\u0631 \u0631\u0633\u0645\u064a\u0629 \u0628\u0625\u0635\u062f\u0627\u0631\u0627\u062a \u0645\u062d\u0641\u0648\u0638\u0629"
+      },
+      "summary": {
+        "en": "Prepare measured material offers, review their server prices and taxes, and record issue, customer acceptance or rejection with validity rules.",
+        "ar": "\u062c\u0647\u0651\u0632 \u0639\u0631\u0648\u0636 \u0627\u0644\u0645\u0648\u0627\u062f \u0627\u0644\u0645\u0642\u0627\u0633\u0629 \u0648\u0631\u0627\u062c\u0639 \u0623\u0633\u0639\u0627\u0631\u0647\u0627 \u0648\u0636\u0631\u0627\u0626\u0628\u0647\u0627 \u0645\u0646 \u0627\u0644\u062e\u0627\u062f\u0645\u060c \u0648\u0633\u062c\u0651\u0644 \u0627\u0644\u0625\u0635\u062f\u0627\u0631 \u0648\u0642\u0628\u0648\u0644 \u0627\u0644\u0639\u0645\u064a\u0644 \u0623\u0648 \u0631\u0641\u0636\u0647 \u0645\u0639 \u0642\u0648\u0627\u0639\u062f \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0629."
+      },
+      "details": {
+        "en": "Saved versions and state history remain available when catalog prices change. Print an offer, prepare an explicit new version, and retry an unconfirmed action safely without creating a sale or reserving stock.",
+        "ar": "\u062a\u0628\u0642\u0649 \u0627\u0644\u0625\u0635\u062f\u0627\u0631\u0627\u062a \u0648\u0633\u062c\u0644\u0627\u062a \u0627\u0644\u062d\u0627\u0644\u0627\u062a \u0645\u062d\u0641\u0648\u0638\u0629 \u0639\u0646\u062f \u062a\u063a\u064a\u0631 \u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0643\u062a\u0627\u0644\u0648\u062c. \u0627\u0637\u0628\u0639 \u0627\u0644\u0639\u0631\u0636 \u0648\u062c\u0647\u0651\u0632 \u0625\u0635\u062f\u0627\u0631\u064b\u0627 \u062c\u062f\u064a\u062f\u064b\u0627 \u0635\u0631\u064a\u062d\u064b\u0627 \u0648\u0623\u0639\u062f \u0645\u062d\u0627\u0648\u0644\u0629 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u063a\u064a\u0631 \u0627\u0644\u0645\u0624\u0643\u062f \u0628\u0623\u0645\u0627\u0646\u060c \u062f\u0648\u0646 \u0625\u0646\u0634\u0627\u0621 \u0628\u064a\u0639 \u0623\u0648 \u062d\u062c\u0632 \u0645\u062e\u0632\u0648\u0646."
+      }
+    },
+    "sources": [
+      "ss-electrical-formal-quotations-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/quotations.vue",
+        "contains": "rpc.rpc('trade_quotation_command', frozen.value)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261023215636_formal_trade_quotations.sql",
+        "contains": "create table public.trade_quotation_versions"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-quotation-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/shop-suit/app/types/database.types.ts",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/supabase/tests/shop_trade_quotations.sql",
+      "apps/shop-suit/docs/electrical-supply",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Optional typed quotation editor/history presentation, explicit exports and ownership registry, bilingual browser journeys and public-command SQL approval/expiry/legacy regression qualification. Other dependency consumers remain internal; no hosted deployment, product registration or competing financial ledger.",
+    "sources": [
+      "ss-electrical-quotation-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-agreed-customer-orders-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase/migrations/20261023222339_accepted_quotation_sales_orders.sql",
+      "packages/ui/src/templates/BsTradeOrdersPage.vue",
+      "packages/ui/src/templates/BsTradeQuotationsPage.vue",
+      "packages/ui/src/types"
+    ],
+    "reason": "Accepted quotations convert once into location-scoped customer orders retaining the exact agreed version, quantities, prices, names and taxes. Commercial metadata alone creates no financial or inventory entries.",
+    "notes": {
+      "title": {
+        "en": "Turn accepted quotations into customer orders",
+        "ar": "\u062a\u062d\u0648\u064a\u0644 \u0639\u0631\u0648\u0636 \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0645\u0642\u0628\u0648\u0644\u0629 \u0625\u0644\u0649 \u0623\u0648\u0627\u0645\u0631 \u0639\u0645\u0644\u0627\u0621"
+      },
+      "summary": {
+        "en": "Create a customer order from an accepted offer while retaining its agreed measurements, prices and tax amounts.",
+        "ar": "\u0623\u0646\u0634\u0626 \u0623\u0645\u0631 \u0639\u0645\u064a\u0644 \u0645\u0646 \u0639\u0631\u0636 \u0645\u0642\u0628\u0648\u0644 \u0645\u0639 \u0627\u0644\u0627\u062d\u062a\u0641\u0627\u0638 \u0628\u0627\u0644\u0642\u064a\u0627\u0633\u0627\u062a \u0648\u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0648\u0645\u0628\u0627\u0644\u063a \u0627\u0644\u0636\u0631\u0627\u0626\u0628 \u0627\u0644\u0645\u062a\u0641\u0642 \u0639\u0644\u064a\u0647\u0627."
+      },
+      "details": {
+        "en": "Repeated conversions return the same order. Agreed history remains unchanged when catalog prices change, and exact money remains readable in quote and order history. Creating an order does not reserve stock or record payment.",
+        "ar": "\u062a\u0639\u064a\u062f \u0645\u062d\u0627\u0648\u0644\u0627\u062a \u0627\u0644\u062a\u062d\u0648\u064a\u0644 \u0627\u0644\u0645\u062a\u0643\u0631\u0631\u0629 \u0627\u0644\u0623\u0645\u0631 \u0646\u0641\u0633\u0647. \u064a\u0628\u0642\u0649 \u0627\u0644\u0627\u062a\u0641\u0627\u0642 \u0645\u062d\u0641\u0648\u0638\u064b\u0627 \u0639\u0646\u062f \u062a\u063a\u064a\u0631 \u0627\u0644\u0643\u062a\u0627\u0644\u0648\u062c\u060c \u0648\u062a\u0628\u0642\u0649 \u0627\u0644\u0645\u0628\u0627\u0644\u063a \u0627\u0644\u062f\u0642\u064a\u0642\u0629 \u0642\u0627\u0628\u0644\u0629 \u0644\u0644\u0642\u0631\u0627\u0621\u0629 \u0641\u064a \u0633\u062c\u0644 \u0627\u0644\u0639\u0631\u0636 \u0648\u0627\u0644\u0623\u0645\u0631. \u0644\u0627 \u064a\u062d\u062c\u0632 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0623\u0645\u0631 \u0645\u062e\u0632\u0648\u0646\u064b\u0627 \u0648\u0644\u0627 \u064a\u0633\u062c\u0644 \u062f\u0641\u0639\u0629."
+      }
+    },
+    "sources": [
+      "ss-electrical-agreed-customer-orders-20261023"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/pages/orders.vue",
+        "contains": "rpc.rpc('create_trade_order', frozen.value)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261023222339_accepted_quotation_sales_orders.sql",
+        "contains": "create table public.trade_orders"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-order-agreement-support-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/shop-suit/app/types/database.types.ts",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/supabase/tests/shop_trade_orders.sql",
+      "apps/shop-suit/docs/electrical-supply",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Typed shared order conversion/details, forward-only exact commercial money read projections, scope/revision/retry controls, generated schema contracts and SQL/bilingual browser qualification. Other dependency consumers remain internal; no hosted deployment, ledger duplication or product registration.",
+    "sources": [
+      "ss-electrical-order-agreement-support-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-public-website-links-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app/composables/usePublicWebsite.ts",
+      "packages/ui/src/templates/BsShopWebsitePage.vue"
+    ],
+    "reason": "Preserve existing main-branch public permalink, locale/canonical and section-anchor contracts while qualifying the newer storefront composition. These links already work on main; restoring them in this open feature stack creates no separate public release capability.",
+    "sources": [
+      "ss-electrical-public-website-links-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-public-website-link-qualification-20261023",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app/composables/usePublicWebsite.ts",
+      "packages/ui/src/templates/BsShopWebsitePage.vue",
+      "apps/shop-suit/tests/e2e/ss-web-public-001-obligation-2.spec.ts",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify the current shared public storefront in both locales, three widths and both themes; assert both intentional phone links and current inquiry labels while retaining public-only data, host isolation, language/canonical/permalink and hydration checks. Other dependency consumers remain internal without operational activation.",
+    "sources": [
+      "ss-electrical-public-website-link-qualification-20261023"
+    ]
+  },
+  {
+    "id": "ss-electrical-order-stock-reservations-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables/useOrderReservations.ts",
+      "apps/shop-suit/app/pages/orders.vue",
+      "apps/shop-suit/app/pages/pos.vue",
+      "apps/shop-suit/app/pages/inventory/reels.vue",
+      "apps/shop-suit/app/types",
+      "apps/shop-suit/supabase/migrations/20261023224938_location_and_reel_order_reservations.sql",
+      "packages/ui/src/templates/BsTradeOrdersPage.vue",
+      "packages/ui/src/types/tradeOrderPresentation.ts",
+      "apps/shop-suit/app/composables/useShopClient.ts"
+    ],
+    "reason": "Location-scoped customer orders reserve actual FIFO stock and physical source reels until an explicit expiry. Ordinary sales, counts and supplier withdrawals cannot consume held capacity; authorized replacement, release, expiry and cancellation retain immutable history.",
+    "notes": {
+      "title": {
+        "en": "Reserve stock for contractor orders",
+        "ar": "\u062d\u062c\u0632 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0644\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0645\u0642\u0627\u0648\u0644\u064a\u0646"
+      },
+      "summary": {
+        "en": "Protect agreed material quantities and physical cable sources while showing on-hand, reserved and available stock.",
+        "ar": "\u0627\u062d\u0641\u0638 \u0643\u0645\u064a\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u062f \u0648\u0645\u0635\u0627\u062f\u0631 \u0627\u0644\u0643\u0627\u0628\u0644\u0627\u062a \u0627\u0644\u0641\u0639\u0644\u064a\u0629 \u0627\u0644\u0645\u062a\u0641\u0642 \u0639\u0644\u064a\u0647\u0627 \u0645\u0639 \u0639\u0631\u0636 \u0627\u0644\u0645\u0648\u062c\u0648\u062f \u0648\u0627\u0644\u0645\u062d\u062c\u0648\u0632 \u0648\u0627\u0644\u0645\u062a\u0627\u062d."
+      },
+      "details": {
+        "en": "Replace or release order holds with a reason and deadline. Expired or cancelled holds return stock to availability. Cashier availability excludes active holds, and competing reservations cannot claim the same stock. Reservations create no invoice or payment.",
+        "ar": "\u0627\u0633\u062a\u0628\u062f\u0644 \u062d\u062c\u0648\u0632\u0627\u062a \u0627\u0644\u0623\u0645\u0631 \u0623\u0648 \u062d\u0631\u0651\u0631\u0647\u0627 \u0645\u0639 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u0633\u0628\u0628 \u0648\u0627\u0644\u0645\u0648\u0639\u062f. \u062a\u0639\u064a\u062f \u0627\u0644\u062d\u062c\u0648\u0632\u0627\u062a \u0627\u0644\u0645\u0646\u062a\u0647\u064a\u0629 \u0623\u0648 \u0627\u0644\u0645\u0644\u063a\u0627\u0629 \u0627\u0644\u0643\u0645\u064a\u0629 \u0625\u0644\u0649 \u0627\u0644\u0645\u062a\u0627\u062d. \u064a\u0633\u062a\u0628\u0639\u062f \u0627\u0644\u0645\u062a\u0627\u062d \u0644\u0644\u0643\u0627\u0634\u064a\u0631 \u0627\u0644\u062d\u062c\u0648\u0632\u0627\u062a \u0627\u0644\u0646\u0634\u0637\u0629\u060c \u0648\u0644\u0627 \u062a\u0633\u062a\u0637\u064a\u0639 \u0627\u0644\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0645\u062a\u0646\u0627\u0641\u0633\u0629 \u062d\u062c\u0632 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0646\u0641\u0633\u0647. \u0644\u0627 \u064a\u0646\u0634\u0626 \u0627\u0644\u062d\u062c\u0632 \u0641\u0627\u062a\u0648\u0631\u0629 \u0623\u0648 \u062f\u0641\u0639\u0629."
+      }
+    },
+    "sources": [
+      "ss-electrical-order-stock-reservations-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useOrderReservations.ts",
+        "contains": "rpc.rpc('reserve_trade_order', frozen.value)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261023224938_location_and_reel_order_reservations.sql",
+        "contains": "create table public.trade_order_reservations"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-reservation-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/shop-suit/app/types/database.types.ts",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/supabase/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "tooling/database",
+      "docs/shared/interactions.md",
+      "release-changes/items.json",
+      ".github/workflows/shop-measurement-disposable.yml"
+    ],
+    "reason": "Reservation schema contracts, actual two-session capacity races, bilingual order/POS projections and shared optional dismissal blocking for uncertain retryable commands. Other shared dependency consumers remain internal; no hosted deployment or operational activation.",
+    "sources": [
+      "ss-electrical-reservation-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-public-loader-state-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsLandingPage.vue"
+    ],
+    "reason": "Keep the landing loader HTML attribute explicit when asynchronous public changelog content arrives. The previous undefined removal could leave the loader hidden while headings and consent controls inherited hidden visibility.",
+    "notes": {
+      "title": {
+        "en": "Keep the public landing page visible after loading",
+        "ar": "\u0628\u0642\u0627\u0621 \u0635\u0641\u062d\u0629 \u0627\u0644\u0645\u062a\u062c\u0631 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629 \u0638\u0627\u0647\u0631\u0629 \u0628\u0639\u062f \u0627\u0644\u062a\u062d\u0645\u064a\u0644"
+      },
+      "summary": {
+        "en": "Landing headings and privacy controls remain visible when the changelog loads asynchronously.",
+        "ar": "\u062a\u0628\u0642\u0649 \u0639\u0646\u0627\u0648\u064a\u0646 \u0627\u0644\u0635\u0641\u062d\u0629 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629 \u0648\u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0638\u0627\u0647\u0631\u0629 \u0639\u0646\u062f \u062a\u062d\u0645\u064a\u0644 \u0633\u062c\u0644 \u0627\u0644\u062a\u062d\u062f\u064a\u062b\u0627\u062a \u0628\u0634\u0643\u0644 \u063a\u064a\u0631 \u0645\u062a\u0632\u0627\u0645\u0646."
+      },
+      "details": {
+        "en": "The loading marker now has an explicit completed state, and loading styles apply only while it is active. Release history, upcoming notes and consent choices keep their existing behavior.",
+        "ar": "\u0623\u0635\u0628\u062d\u062a \u0639\u0644\u0627\u0645\u0629 \u0627\u0644\u062a\u062d\u0645\u064a\u0644 \u062a\u062d\u062f\u062f \u0627\u0643\u062a\u0645\u0627\u0644\u0647 \u0635\u0631\u0627\u062d\u0629\u060c \u0648\u062a\u064f\u0637\u0628\u0651\u0642 \u0623\u0646\u0645\u0627\u0637 \u0627\u0644\u062a\u062d\u0645\u064a\u0644 \u0623\u062b\u0646\u0627\u0621 \u0646\u0634\u0627\u0637\u0647\u0627 \u0641\u0642\u0637. \u064a\u062d\u062a\u0641\u0638 \u0633\u062c\u0644 \u0627\u0644\u0625\u0635\u062f\u0627\u0631\u0627\u062a \u0648\u0627\u0644\u062a\u062d\u062f\u064a\u062b\u0627\u062a \u0627\u0644\u0642\u0627\u062f\u0645\u0629 \u0648\u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0628\u0633\u0644\u0648\u0643\u0647\u0627 \u0627\u0644\u062d\u0627\u0644\u064a."
+      }
+    },
+    "sources": [
+      "ss-electrical-public-loader-state-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsLandingPage.vue",
+        "contains": "'data-shop-landing-loading': props.journey ? String(isLoading.value) : undefined"
+      },
+      {
+        "path": "packages/ui/src/templates/BsLandingPage.vue",
+        "contains": "html[data-shop-landing-loading=\"true\"] body>*"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-public-settings-browser-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/tests/e2e",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md",
+      "packages/ui/src/templates/BsLandingPage.vue",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify current section routes, intentional duplicate storefront links, current Arabic booking labels, explicit public map links and archived-location navigation while preserving guest access, privacy, permission denial, host isolation and publication assertions. Changelog qualification uses real disposable public feeds and asserts that the loader releases visibility; other dependency consumers remain internal.",
+    "sources": [
+      "ss-electrical-public-settings-browser-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-order-deposits-collections-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "notes": {
+      "title": {
+        "en": "Deposits and partial order collections",
+        "ar": "\u0627\u0644\u0639\u0631\u0628\u0648\u0646 \u0648\u0627\u0644\u062a\u0633\u0644\u064a\u0645 \u0627\u0644\u062c\u0632\u0626\u064a \u0644\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0639\u0645\u0644\u0627\u0621"
+      },
+      "summary": {
+        "en": "Receive, apply and refund order deposits, then invoice reserved goods as customers collect them.",
+        "ar": "\u0633\u062c\u0651\u0644 \u0639\u0631\u0628\u0648\u0646 \u0627\u0644\u0623\u0645\u0631 \u0648\u062e\u0635\u0651\u0635\u0647 \u0623\u0648 \u0631\u062f\u0647\u060c \u062b\u0645 \u0623\u0635\u062f\u0631 \u0641\u0648\u0627\u062a\u064a\u0631 \u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0627\u0644\u0645\u062d\u062c\u0648\u0632\u0629 \u0639\u0646\u062f \u0627\u0633\u062a\u0644\u0627\u0645 \u0627\u0644\u0639\u0645\u064a\u0644 \u0644\u0647\u0627."
+      },
+      "details": {
+        "en": "Partial collections retain the accepted prices and taxes and preserve the pending stock reservation. Deposits use the existing customer receipt history, and applying them to a delivery invoice records no new receipt. Permissions, whole packages and cut-return approvals remain enforced.",
+        "ar": "\u064a\u062d\u0641\u0638 \u0627\u0644\u062a\u0633\u0644\u064a\u0645 \u0627\u0644\u062c\u0632\u0626\u064a \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0648\u0627\u0644\u0636\u0631\u0627\u0626\u0628 \u0627\u0644\u0645\u062a\u0641\u0642 \u0639\u0644\u064a\u0647\u0627 \u0648\u062d\u062c\u0632 \u0627\u0644\u0643\u0645\u064a\u0629 \u0627\u0644\u0645\u062a\u0628\u0642\u064a\u0629. \u064a\u0638\u0647\u0631 \u0627\u0644\u0639\u0631\u0628\u0648\u0646 \u0641\u064a \u0633\u062c\u0644 \u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0627\u0644\u0639\u0645\u064a\u0644 \u0627\u0644\u062d\u0627\u0644\u064a\u060c \u0648\u0644\u0627 \u064a\u0624\u062f\u064a \u062a\u062e\u0635\u064a\u0635\u0647 \u0644\u0641\u0627\u062a\u0648\u0631\u0629 \u0627\u0644\u062a\u0633\u0644\u064a\u0645 \u0625\u0644\u0649 \u062a\u0633\u062c\u064a\u0644 \u062a\u062d\u0635\u064a\u0644 \u062c\u062f\u064a\u062f. \u062a\u0628\u0642\u0649 \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0648\u0627\u0644\u0639\u0628\u0648\u0627\u062a \u0627\u0644\u0643\u0627\u0645\u0644\u0629 \u0648\u0645\u0648\u0627\u0641\u0642\u0627\u062a \u0625\u0631\u062c\u0627\u0639 \u0627\u0644\u0645\u0642\u0627\u0637\u0639 \u0645\u0644\u0632\u0645\u0629."
+      }
+    },
+    "sources": [
+      "ss-electrical-order-deposits-collections-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261025164827_order_deposits_and_partial_fulfillment.sql",
+        "contains": "create function public.fulfill_trade_order("
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useOrderFunding.ts",
+        "contains": "rpc.rpc('trade_order_deposit', frozen.value)"
+      }
+    ],
+    "paths": [
+      "apps/shop-suit/app/composables/useOrderFunding.ts",
+      "apps/shop-suit/app/composables/useOrderDelivery.ts",
+      "apps/shop-suit/app/pages/orders.vue",
+      "apps/shop-suit/app/pages/customers/[id].vue",
+      "apps/shop-suit/supabase/migrations/20261025164827_order_deposits_and_partial_fulfillment.sql",
+      "packages/ui/src/organisms/BsOrderFundingPanel.vue",
+      "packages/ui/src/organisms/BsOrderDeliveryPanel.vue",
+      "packages/ui/src/templates/BsTradeOrdersPage.vue"
+    ],
+    "reason": "Record order advances in the existing receipt ledger, transfer them to normal invoices and collect reserved agreed quantities over multiple visits without duplicate stock or funds. Preserve accepted prices/taxes, FIFO sources and remaining holds."
+  },
+  {
+    "id": "ss-electrical-order-funding-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/supabase/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ui",
+      "packages/ux",
+      "tooling/database",
+      "docs/shared/interactions.md",
+      "release-changes/items.json",
+      ".github/workflows/shop-measurement-disposable.yml",
+      "tooling/control-plane/tests/dot-event-relay.test.mjs"
+    ],
+    "reason": "Generated schema contracts, localized exact decimal transport, order funding/collection security, tax/FIFO/return and concurrency qualification, shared typed panels and owned disposable regression runners. Other shared dependency consumers remain internal; no hosted deployment or activation.",
+    "sources": [
+      "ss-electrical-order-funding-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-nested-confirmation-focus-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ux/src/composables/useDialogInteraction.ts"
+    ],
+    "reason": "Restore a nested confirmation opener after the finite entrance motion of its containing dialog, preventing late vendor autofocus from stealing the keyboard position. Keep a different active foreground dialog focused.",
+    "notes": {
+      "title": {
+        "en": "Restore focus after nested confirmations",
+        "ar": "\u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0628\u0639\u062f \u0646\u0648\u0627\u0641\u0630 \u0627\u0644\u062a\u0623\u0643\u064a\u062f \u0627\u0644\u0645\u062a\u062f\u0627\u062e\u0644\u0629"
+      },
+      "summary": {
+        "en": "Keyboard focus returns to the action that opened a confirmation, including while its parent window is still appearing.",
+        "ar": "\u064a\u0639\u0648\u062f \u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0625\u0644\u0649 \u0632\u0631 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0627\u0644\u0630\u064a \u0641\u062a\u062d \u0627\u0644\u062a\u0623\u0643\u064a\u062f\u060c \u062d\u062a\u0649 \u0623\u062b\u0646\u0627\u0621 \u0638\u0647\u0648\u0631 \u0627\u0644\u0646\u0627\u0641\u0630\u0629 \u0627\u0644\u0623\u0635\u0644\u064a\u0629."
+      },
+      "details": {
+        "en": "Cancelling a confirmation no longer lets the parent window move focus to its close button afterward. A different active dialog keeps its focus, while dirty-form protection and pending command locks retain their behavior.",
+        "ar": "\u0644\u0627 \u064a\u0624\u062f\u064a \u0625\u0644\u063a\u0627\u0621 \u0627\u0644\u062a\u0623\u0643\u064a\u062f \u0625\u0644\u0649 \u0627\u0646\u062a\u0642\u0627\u0644 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0644\u0627\u062d\u0642\u064b\u0627 \u0625\u0644\u0649 \u0632\u0631 \u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0646\u0627\u0641\u0630\u0629 \u0627\u0644\u0623\u0635\u0644\u064a\u0629. \u062a\u062d\u062a\u0641\u0638 \u0627\u0644\u0646\u0627\u0641\u0630\u0629 \u0627\u0644\u0646\u0634\u0637\u0629 \u0627\u0644\u0623\u062e\u0631\u0649 \u0628\u062a\u0631\u0643\u064a\u0632\u0647\u0627\u060c \u0648\u062a\u0633\u062a\u0645\u0631 \u062d\u0645\u0627\u064a\u0629 \u0627\u0644\u0646\u0645\u0627\u0630\u062c \u0627\u0644\u0645\u0639\u062f\u0651\u0644\u0629 \u0648\u0642\u0641\u0644 \u0627\u0644\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0645\u0639\u0644\u0651\u0642\u0629 \u0643\u0645\u0627 \u0647\u064a."
+      }
+    },
+    "sources": [
+      "ss-electrical-nested-confirmation-focus-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ux/src/composables/useDialogInteraction.ts",
+        "contains": "await Promise.allSettled(animations.map(animation => animation.finished))"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-dialog-focus-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ux/src/composables/useDialogInteraction.ts",
+      "packages/ux/tests/form-dialog.test.mjs",
+      "apps/shop-suit/tests/e2e/appointment-actions.spec.ts",
+      "tooling/database/test-shop-stock-local.mjs",
+      "tooling/database/test-shop-supplier-payables-local.mjs",
+      "docs/shared/interactions.md",
+      "apps/shop-suit/docs/electrical-supply/VERIFICATION.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify nested-confirmation focus after the real parent entrance settles, preserve pending and dirty-form policies, and compare exact PostgreSQL stock/return values independently of their newly widened display scale. Other shared consumers remain internal.",
+    "sources": [
+      "ss-electrical-dialog-focus-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-supplier-orders-receiving-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables/useSupplierOrders.ts",
+      "apps/shop-suit/app/pages/purchase-orders.vue",
+      "apps/shop-suit/app/utils/supplierOrderCopy.ts",
+      "apps/shop-suit/app/utils/shopNavigation.ts",
+      "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+      "apps/shop-suit/app/utils/businessMode.ts",
+      "apps/shop-suit/supabase/migrations/20261025185907_supplier_orders_and_partial_receiving.sql",
+      "packages/ui/src/templates/BsSupplierOrdersPage.vue"
+    ],
+    "reason": "Issue supplier purchase orders without creating stock or debt, then receive measured quantities through existing purchases, physical sources and supplier balances. Preserve original package and cost snapshots, remaining quantities and immutable receipt links.",
+    "notes": {
+      "title": {
+        "en": "Supplier orders and partial receiving",
+        "ar": "\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0645\u0648\u0631\u062f\u064a\u0646 \u0648\u0627\u0644\u0627\u0633\u062a\u0644\u0627\u0645 \u0627\u0644\u062c\u0632\u0626\u064a"
+      },
+      "summary": {
+        "en": "Order measured goods, receive part of an order and keep the outstanding quantities visible.",
+        "ar": "\u0627\u0637\u0644\u0628 \u0627\u0644\u0623\u0635\u0646\u0627\u0641 \u0627\u0644\u0645\u0642\u0627\u0633\u0629 \u0648\u0627\u0633\u062a\u0644\u0645 \u062c\u0632\u0621\u064b\u0627 \u0645\u0646 \u0627\u0644\u0623\u0645\u0631 \u0645\u0639 \u0645\u062a\u0627\u0628\u0639\u0629 \u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0627\u0644\u0645\u062a\u0628\u0642\u064a\u0629."
+      },
+      "details": {
+        "en": "An order records the agreement without adding stock or supplier debt. Each confirmed receipt creates an ordinary purchase at the original agreed unit and cost, including six reels now and four later. Receipt history, invoice links, exact quantities and retry protection remain available.",
+        "ar": "\u064a\u0633\u062c\u0651\u0644 \u0627\u0644\u0623\u0645\u0631 \u0627\u0644\u0627\u062a\u0641\u0627\u0642 \u062f\u0648\u0646 \u0632\u064a\u0627\u062f\u0629 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0623\u0648 \u0645\u062f\u064a\u0648\u0646\u064a\u0629 \u0627\u0644\u0645\u0648\u0631\u062f. \u064a\u0646\u0634\u0626 \u0643\u0644 \u0627\u0633\u062a\u0644\u0627\u0645 \u0645\u0624\u0643\u062f \u0641\u0627\u062a\u0648\u0631\u0629 \u0634\u0631\u0627\u0621 \u0639\u0627\u062f\u064a\u0629 \u0628\u0627\u0644\u0648\u062d\u062f\u0629 \u0648\u0627\u0644\u062a\u0643\u0644\u0641\u0629 \u0627\u0644\u0645\u062a\u0641\u0642 \u0639\u0644\u064a\u0647\u0645\u0627\u060c \u0645\u062b\u0644 \u0627\u0633\u062a\u0644\u0627\u0645 \u0633\u062a \u0628\u0643\u0631\u0627\u062a \u0627\u0644\u0622\u0646 \u0648\u0623\u0631\u0628\u0639 \u0644\u0627\u062d\u0642\u064b\u0627. \u062a\u062a\u0648\u0641\u0631 \u0633\u062c\u0644\u0627\u062a \u0627\u0644\u0627\u0633\u062a\u0644\u0627\u0645 \u0648\u0631\u0648\u0627\u0628\u0637 \u0627\u0644\u0641\u0648\u0627\u062a\u064a\u0631 \u0648\u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0627\u0644\u062f\u0642\u064a\u0642\u0629 \u0648\u0627\u0644\u062d\u0645\u0627\u064a\u0629 \u0645\u0646 \u062a\u0643\u0631\u0627\u0631 \u0627\u0644\u0639\u0645\u0644\u064a\u0629."
+      }
+    },
+    "sources": [
+      "ss-electrical-supplier-orders-receiving-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/composables/useSupplierOrders.ts",
+        "contains": "rpc.rpc('receive_supplier_order', input.args)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261025185907_supplier_orders_and_partial_receiving.sql",
+        "contains": "create function public.receive_supplier_order("
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-supplier-receiving-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ui",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database",
+      ".github/workflows/shop-measurement-disposable.yml",
+      "release-changes/items.json"
+    ],
+    "reason": "Generate actual schema contracts and qualify exact supplier order/receipt authority, accounting-period and subscription checks, immutable original package/cost, deferred receiving capacity and real-session retry races. Register the complete shared template and bilingual catalogue; other shared consumers remain internal.",
+    "sources": [
+      "ss-electrical-supplier-receiving-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-storage-supplier-planning-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/supply-planning.vue",
+      "apps/shop-suit/app/composables/useSupplyPlanning.ts",
+      "apps/shop-suit/app/composables/usePlanningPlacementPicker.ts",
+      "apps/shop-suit/app/utils/supplyPlanningCopy.ts",
+      "apps/shop-suit/app/utils/shopNavigation.ts",
+      "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+      "apps/shop-suit/app/utils/businessMode.ts",
+      "apps/shop-suit/app/pages/reports/index.vue",
+      "apps/shop-suit/supabase/migrations/20261025204604_inventory_positions_supplier_references_and_reorder.sql",
+      "packages/ui/src/templates/BsSupplyPlanningPage.vue",
+      "apps/shop-suit/app/pages/inventory/reels.vue"
+    ],
+    "reason": "Locate existing inventory without a competing stock balance, retain supplier item codes and versioned purchase units with lead times, read original purchase-price history and derive reviewable canonical reorder suggestions through existing operational reports.",
+    "notes": {
+      "title": {
+        "en": "Storage positions and supplier planning",
+        "ar": "\u0623\u0645\u0627\u0643\u0646 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0648\u062a\u062e\u0637\u064a\u0637 \u0627\u0644\u062a\u0648\u0631\u064a\u062f"
+      },
+      "summary": {
+        "en": "Locate products and reels, retain supplier references and compare original purchase costs before reviewing reorder suggestions.",
+        "ar": "\u062d\u062f\u0651\u062f \u0623\u0645\u0627\u0643\u0646 \u0627\u0644\u0623\u0635\u0646\u0627\u0641 \u0648\u0627\u0644\u0628\u0643\u0631\u0627\u062a \u0648\u0627\u062d\u0641\u0638 \u0645\u0631\u0627\u062c\u0639 \u0627\u0644\u0645\u0648\u0631\u062f\u064a\u0646 \u0648\u0642\u0627\u0631\u0646 \u062a\u0643\u0627\u0644\u064a\u0641 \u0627\u0644\u0634\u0631\u0627\u0621 \u0627\u0644\u0623\u0635\u0644\u064a\u0629 \u0642\u0628\u0644 \u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0642\u062a\u0631\u0627\u062d\u0627\u062a \u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0637\u0644\u0628."
+      },
+      "details": {
+        "en": "Bins and shelf placements describe existing stock. Supplier item references retain purchase units, packages and lead times, while purchase history keeps original currencies and costs separate. Reorder suggestions explain net sales, held and free stock, incoming orders and supplier timing; staff review them before placing an order.",
+        "ar": "\u062a\u0635\u0641 \u0627\u0644\u062e\u0627\u0646\u0627\u062a \u0648\u0627\u0644\u0623\u0631\u0641\u0641 \u0645\u0648\u0627\u0636\u0639 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0627\u0644\u062d\u0627\u0644\u064a. \u062a\u062d\u0641\u0638 \u0645\u0631\u0627\u062c\u0639 \u0623\u0635\u0646\u0627\u0641 \u0627\u0644\u0645\u0648\u0631\u062f\u064a\u0646 \u0648\u062d\u062f\u0627\u062a \u0627\u0644\u0634\u0631\u0627\u0621 \u0648\u0627\u0644\u0639\u0628\u0648\u0627\u062a \u0648\u0645\u062f\u062f \u0627\u0644\u062a\u0648\u0631\u064a\u062f\u060c \u0648\u064a\u0639\u0631\u0636 \u0633\u062c\u0644 \u0627\u0644\u0634\u0631\u0627\u0621 \u0627\u0644\u0639\u0645\u0644\u0627\u062a \u0648\u0627\u0644\u062a\u0643\u0627\u0644\u064a\u0641 \u0627\u0644\u0623\u0635\u0644\u064a\u0629 \u0645\u0646\u0641\u0635\u0644\u0629. \u062a\u0648\u0636\u0651\u062d \u0627\u0642\u062a\u0631\u0627\u062d\u0627\u062a \u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0637\u0644\u0628 \u0635\u0627\u0641\u064a \u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a \u0648\u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0627\u0644\u0645\u062d\u062c\u0648\u0632 \u0648\u0627\u0644\u0645\u062a\u0627\u062d \u0648\u0627\u0644\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0648\u0627\u0631\u062f\u0629 \u0648\u0645\u062f\u062f \u0627\u0644\u0645\u0648\u0631\u062f\u061b \u064a\u0631\u0627\u062c\u0639\u0647\u0627 \u0627\u0644\u0645\u0648\u0638\u0641 \u0642\u0628\u0644 \u0625\u0635\u062f\u0627\u0631 \u0623\u064a \u0623\u0645\u0631."
+      }
+    },
+    "sources": [
+      "ss-electrical-storage-supplier-planning-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261025204604_inventory_positions_supplier_references_and_reorder.sql",
+        "contains": "create function public.inventory_planning_command("
+      },
+      {
+        "path": "apps/shop-suit/app/pages/reports/index.vue",
+        "contains": "{ value: 'reorder', label: copy.value.reorder }"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-supply-planning-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ui",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify location/role/subscription isolation, immutable position and supplier history, original exact purchase cost, physical placement through existing reel authority, net demand after returns/corrections, package rounding and bounded Cairo-date report/export parity. Generate actual database contracts and register shared presentation; other shared consumers remain internal.",
+    "sources": [
+      "ss-electrical-supply-planning-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-verified-weight-barcodes-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/pos.vue",
+      "apps/shop-suit/app/utils/weightBarcodes.js",
+      "apps/shop-suit/app/utils/pos.js",
+      "apps/shop-suit/supabase/migrations/20261025214414_verified_gs1_weight_barcodes.sql",
+      "packages/ui/src/organisms/BsPointOfSaleCart.vue",
+      "packages/ui/src/templates/BsPointOfSalePage.vue",
+      "packages/ux/src/composables/useViewportSpace.ts"
+    ],
+    "reason": "Scan verified GS1 net-weight labels into separate measured sale lines while preserving literal barcode lookup and the existing authoritative sale, stock and return paths.",
+    "notes": {
+      "title": {
+        "en": "Verified weight-label scanning",
+        "ar": "\u0645\u0633\u062d \u0645\u0644\u0635\u0642\u0627\u062a \u0627\u0644\u0648\u0632\u0646 \u0627\u0644\u0645\u0639\u062a\u0645\u062f\u0629"
+      },
+      "summary": {
+        "en": "Scan supported GS1 kilogram labels with verified product identity and retain the original weight through checkout.",
+        "ar": "\u0627\u0645\u0633\u062d \u0645\u0644\u0635\u0642\u0627\u062a \u0627\u0644\u0643\u064a\u0644\u0648\u063a\u0631\u0627\u0645 \u0627\u0644\u0645\u062f\u0639\u0648\u0645\u0629 \u0648\u0641\u0642 GS1 \u0645\u0639 \u0627\u0644\u062a\u062d\u0642\u0642 \u0645\u0646 \u0647\u0648\u064a\u0629 \u0627\u0644\u0635\u0646\u0641 \u0648\u062d\u0641\u0638 \u0627\u0644\u0648\u0632\u0646 \u0627\u0644\u0623\u0635\u0644\u064a \u062d\u062a\u0649 \u0625\u062a\u0645\u0627\u0645 \u0627\u0644\u0628\u064a\u0639."
+      },
+      "details": {
+        "en": "Online scanning verifies the GTIN checksum and exact kilogram or gram quantity. Each captured label keeps its own line and original evidence; staff remove and rescan to change its weight. Existing fixed barcodes retain their meaning, and unsupported national or price-encoded formats require ordinary manual entry. Selecting the cart reveals enough space for payment controls when offers appear above it.",
+        "ar": "\u064a\u062a\u062d\u0642\u0642 \u0627\u0644\u0645\u0633\u062d \u0623\u062b\u0646\u0627\u0621 \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0645\u0646 \u0631\u0642\u0645 \u062a\u062d\u0642\u0642 GTIN \u0648\u0627\u0644\u0643\u0645\u064a\u0629 \u0627\u0644\u062f\u0642\u064a\u0642\u0629 \u0628\u0627\u0644\u0643\u064a\u0644\u0648\u063a\u0631\u0627\u0645 \u0623\u0648 \u0627\u0644\u063a\u0631\u0627\u0645. \u064a\u062d\u062a\u0641\u0638 \u0643\u0644 \u0645\u0644\u0635\u0642 \u0628\u0628\u0646\u062f \u0645\u0633\u062a\u0642\u0644 \u0648\u062f\u0644\u064a\u0644\u0647 \u0627\u0644\u0623\u0635\u0644\u064a\u061b \u064a\u064f\u062d\u0630\u0641 \u0627\u0644\u0628\u0646\u062f \u0648\u064a\u064f\u0639\u0627\u062f \u0627\u0644\u0645\u0633\u062d \u0644\u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0648\u0632\u0646. \u062a\u062d\u062a\u0641\u0638 \u0627\u0644\u0628\u0627\u0631\u0643\u0648\u062f\u0627\u062a \u0627\u0644\u062b\u0627\u0628\u062a\u0629 \u0628\u0645\u0639\u0646\u0627\u0647\u0627\u060c \u0648\u062a\u064f\u062f\u062e\u0644 \u0627\u0644\u0643\u0645\u064a\u0629 \u064a\u062f\u0648\u064a\u064b\u0627 \u0644\u0644\u062a\u0646\u0633\u064a\u0642\u0627\u062a \u0627\u0644\u0645\u062d\u0644\u064a\u0629 \u0623\u0648 \u0627\u0644\u0645\u0634\u0641\u0651\u0631\u0629 \u0628\u0627\u0644\u0633\u0639\u0631 \u063a\u064a\u0631 \u0627\u0644\u0645\u062f\u0639\u0648\u0645\u0629. \u064a\u064f\u0638\u0647\u0631 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0633\u0644\u0629 \u0645\u0633\u0627\u062d\u0629 \u0643\u0627\u0641\u064a\u0629 \u0644\u0623\u0632\u0631\u0627\u0631 \u0648\u062d\u0642\u0648\u0644 \u0627\u0644\u062f\u0641\u0639 \u0639\u0646\u062f \u0648\u062c\u0648\u062f \u0639\u0631\u0648\u0636 \u0641\u0648\u0642\u0647\u0627."
+      }
+    },
+    "sources": [
+      "ss-electrical-verified-weight-barcodes-20261025"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/utils/weightBarcodes.js",
+        "contains": "export function parseGs1WeightBarcode(input)"
+      },
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261025214414_verified_gs1_weight_barcodes.sql",
+        "contains": "create function public.resolve_weight_barcode("
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-weight-barcode-qualification-20261025",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "packages/ui",
+      "tooling/database/test-shop-measurement-local.mjs",
+      "release-changes/items.json",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ux"
+    ],
+    "reason": "Qualify exact GS1 parsing and canonical stock capacity, private capture authority, ordinary issuance revalidation and immutable original measurement evidence; generate actual database contracts and retain shared consumer qualification as a separate gate. Reveal the selected POS cart before measuring viewport space so tall offer content cannot clip mobile payment controls.",
+    "sources": [
+      "ss-electrical-weight-barcode-qualification-20261025"
+    ]
+  },
+  {
+    "id": "ss-electrical-approved-scale-sales-20261026",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables/useScaleCounter.ts",
+      "apps/shop-suit/app/composables/useWeighingSetup.ts",
+      "apps/shop-suit/app/pages/weighing-setup.vue",
+      "apps/shop-suit/app/pages/pos.vue",
+      "apps/shop-suit/app/utils/scaleMeasurement.js",
+      "apps/shop-suit/supabase/migrations/20261026102152_approved_scale_captures_and_product_mass_length.sql",
+      "packages/ui/src/organisms/BsScaleCaptureDialog.vue",
+      "packages/ui/src/templates/BsWeighingSetupPage.vue",
+      "packages/ui/src/templates/BsPointOfSalePage.vue",
+      "packages/ux/src/controllers/createSicsScale.ts"
+    ],
+    "reason": "Add optional explicitly connected stable scale readings and versioned product-specific mass/length approvals to ordinary authoritative counter sales.",
+    "notes": {
+      "title": {
+        "en": "Approved scale readings for counter sales",
+        "ar": "\u0642\u0631\u0627\u0621\u0627\u062a \u0645\u064a\u0632\u0627\u0646 \u0645\u0639\u062a\u0645\u062f\u0629 \u0644\u0644\u0628\u064a\u0639 \u0645\u0646 \u0627\u0644\u0643\u0627\u0648\u0646\u062a\u0631"
+      },
+      "summary": {
+        "en": "Confirm supported scale readings and convert weight using an approved relationship for the selected product.",
+        "ar": "\u0623\u0643\u0651\u062f \u0642\u0631\u0627\u0621\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u0632\u064a\u0646 \u0627\u0644\u0645\u062f\u0639\u0648\u0645\u0629 \u0648\u062d\u0648\u0651\u0644 \u0627\u0644\u0648\u0632\u0646 \u0628\u0639\u0644\u0627\u0642\u0629 \u0645\u0639\u062a\u0645\u062f\u0629 \u062a\u062e\u0635 \u0627\u0644\u0635\u0646\u0641 \u0627\u0644\u0645\u062e\u062a\u0627\u0631."
+      },
+      "details": {
+        "en": "Managers approve each device and product factor with a reference and immutable history. Staff connect explicitly, review stable net, tare, gross and stock quantity, then confirm a separate locked sale line. Unknown results retry the same request. Manual measured sales remain available without a scale; actual device approval and supported protocol settings are required.",
+        "ar": "\u064a\u0639\u062a\u0645\u062f \u0627\u0644\u0645\u062f\u064a\u0631 \u0643\u0644 \u062c\u0647\u0627\u0632 \u0648\u0645\u0639\u0627\u0645\u0644 \u0635\u0646\u0641 \u0628\u0645\u0631\u062c\u0639 \u0648\u0633\u062c\u0644 \u062b\u0627\u0628\u062a. \u064a\u0648\u0635\u0651\u0644 \u0627\u0644\u0645\u0648\u0638\u0641 \u0627\u0644\u062c\u0647\u0627\u0632 \u0635\u0631\u0627\u062d\u0629\u064b \u0648\u064a\u0631\u0627\u062c\u0639 \u0627\u0644\u0635\u0627\u0641\u064a \u0648\u0648\u0632\u0646 \u0627\u0644\u0648\u0639\u0627\u0621 \u0648\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a \u0648\u0643\u0645\u064a\u0629 \u0627\u0644\u0645\u062e\u0632\u0648\u0646\u060c \u062b\u0645 \u064a\u0624\u0643\u062f \u0628\u0646\u062f \u0628\u064a\u0639 \u0645\u0633\u062a\u0642\u0644\u064b\u0627 \u0628\u0643\u0645\u064a\u0629 \u0645\u0642\u0641\u0644\u0629. \u062a\u064f\u0639\u0627\u062f \u0627\u0644\u0646\u062a\u064a\u062c\u0629 \u063a\u064a\u0631 \u0627\u0644\u0645\u0624\u0643\u062f\u0629 \u0628\u0627\u0644\u0637\u0644\u0628 \u0646\u0641\u0633\u0647. \u064a\u0638\u0644 \u0627\u0644\u0628\u064a\u0639 \u0628\u0627\u0644\u0643\u0645\u064a\u0629 \u0627\u0644\u0645\u062f\u062e\u0644\u0629 \u064a\u062f\u0648\u064a\u064b\u0627 \u0645\u062a\u0627\u062d\u064b\u0627 \u062f\u0648\u0646 \u0645\u064a\u0632\u0627\u0646\u061b \u0648\u064a\u0644\u0632\u0645 \u0627\u0639\u062a\u0645\u0627\u062f \u0627\u0644\u062c\u0647\u0627\u0632 \u0627\u0644\u0641\u0639\u0644\u064a \u0648\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0628\u0631\u0648\u062a\u0648\u0643\u0648\u0644 \u0627\u0644\u0645\u062f\u0639\u0648\u0645."
+      }
+    },
+    "sources": [
+      "ss-electrical-approved-scale-sales-20261026"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261026102152_approved_scale_captures_and_product_mass_length.sql",
+        "contains": "create function public.record_scale_capture("
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useScaleCounter.ts",
+        "contains": "export function useScaleCounter("
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useWeighingSetup.ts",
+        "contains": "export function useWeighingSetup()"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-scale-qualification-20261026",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "packages/ui",
+      "packages/ux",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database",
+      ".github/workflows/shop-measurement-disposable.yml",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify stable protocol framing, bounded session cleanup, exact whole-ratio conversion, immutable capture and approval evidence, actor/location/subscription authority, lost-response retry and competing capture/invoice/device-retirement sessions. Generate actual database contracts and register shared presentation; physical hardware and final native/consumer qualification remain explicit gates.",
+    "sources": [
+      "ss-electrical-scale-qualification-20261026"
+    ]
+  },
+  {
+    "id": "ss-electrical-approved-commodity-pricing-20261026",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/pages/commodity-pricing.vue",
+      "apps/shop-suit/app/composables/useCommodityPricing.ts",
+      "apps/shop-suit/app/composables/useCommodityQuotePicker.ts",
+      "apps/shop-suit/app/pages/pos.vue",
+      "apps/shop-suit/app/utils/commodityPricingCopy.ts",
+      "apps/shop-suit/app/utils/tradePricing.ts",
+      "apps/shop-suit/supabase/migrations/20261026115536_approved_commodity_pricing.sql",
+      "packages/ui/src/templates/BsCommodityPricingPage.vue"
+    ],
+    "reason": "Add explicitly approved same-currency commodity source quotes and exact product-content/premium rules to the existing authoritative price pipeline while retaining prior agreements and issued evidence. Preserve the reviewed payment amount across draft-save quote invalidation.",
+    "notes": {
+      "title": {
+        "en": "Approved commodity reference prices",
+        "ar": "\u0623\u0633\u0639\u0627\u0631 \u0645\u0648\u0627\u062f \u0645\u0631\u062c\u0639\u064a\u0629 \u0645\u0639\u062a\u0645\u062f\u0629"
+      },
+      "summary": {
+        "en": "Price selected products from a documented source quote, approved material content and a stock-unit premium.",
+        "ar": "\u0633\u0639\u0651\u0631 \u0623\u0635\u0646\u0627\u0641\u064b\u0627 \u0645\u062e\u062a\u0627\u0631\u0629 \u0628\u0633\u0639\u0631 \u0645\u0635\u062f\u0631 \u0645\u0648\u062b\u0642 \u0648\u0645\u062d\u062a\u0648\u0649 \u0645\u0627\u062f\u0629 \u0645\u0639\u062a\u0645\u062f \u0648\u0625\u0636\u0627\u0641\u0629 \u0644\u0643\u0644 \u0648\u062d\u062f\u0629 \u0645\u062e\u0632\u0648\u0646."
+      },
+      "details": {
+        "en": "Managers approve source currency and validity and retain immutable terms and history. Existing customer agreements, fixed packages, remnants and authorized staff prices keep their precedence. Issued sales and accepted orders retain the original source evidence. Checkout retains the reviewed amount while the draft is saved; no live feed or exchange rate is assumed.",
+        "ar": "\u064a\u0639\u062a\u0645\u062f \u0627\u0644\u0645\u062f\u064a\u0631 \u0639\u0645\u0644\u0629 \u0627\u0644\u0645\u0635\u062f\u0631 \u0648\u0633\u0631\u064a\u0627\u0646\u0647 \u0645\u0639 \u062d\u0641\u0638 \u0634\u0631\u0648\u0637\u0647 \u0648\u0633\u062c\u0644\u0647. \u062a\u062d\u062a\u0641\u0638 \u062a\u0639\u0627\u0642\u062f\u0627\u062a \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0648\u0627\u0644\u0639\u0628\u0648\u0627\u062a \u0630\u0627\u062a \u0627\u0644\u0633\u0639\u0631 \u0627\u0644\u0645\u062d\u062f\u062f \u0648\u0627\u0644\u0628\u0648\u0627\u0642\u064a \u0648\u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0645\u0641\u0648\u0651\u0636\u0629 \u0628\u0623\u0648\u0644\u0648\u064a\u062a\u0647\u0627. \u062a\u062d\u0641\u0638 \u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a \u0627\u0644\u0635\u0627\u062f\u0631\u0629 \u0648\u0627\u0644\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0645\u0642\u0628\u0648\u0644\u0629 \u062f\u0644\u064a\u0644 \u0627\u0644\u0645\u0635\u062f\u0631 \u0627\u0644\u0623\u0635\u0644\u064a. \u064a\u062d\u062a\u0641\u0638 \u0627\u0644\u062f\u0641\u0639 \u0628\u0627\u0644\u0645\u0628\u0644\u063a \u0627\u0644\u0630\u064a \u062a\u0645\u062a \u0645\u0631\u0627\u062c\u0639\u062a\u0647 \u0623\u062b\u0646\u0627\u0621 \u062d\u0641\u0638 \u0627\u0644\u0645\u0633\u0648\u062f\u0629\u060c \u062f\u0648\u0646 \u0627\u0641\u062a\u0631\u0627\u0636 \u062a\u063a\u0630\u064a\u0629 \u0633\u0639\u0631\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0623\u0648 \u0633\u0639\u0631 \u0635\u0631\u0641."
+      }
+    },
+    "sources": [
+      "ss-electrical-approved-commodity-pricing-20261026"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261026115536_approved_commodity_pricing.sql",
+        "contains": "create function shop_private.resolve_commodity_price("
+      },
+      {
+        "path": "apps/shop-suit/app/composables/useCommodityPricing.ts",
+        "contains": "export function useCommodityPricing()"
+      },
+      {
+        "path": "apps/shop-suit/app/pages/pos.vue",
+        "contains": "const attemptAmount = checkoutAmount.value ??= total.value"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-commodity-qualification-20261026",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/app",
+      "apps/shop-suit/supabase",
+      "apps/shop-suit/tests",
+      "apps/shop-suit/docs/electrical-supply",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ui",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "tooling/database",
+      ".github/workflows/shop-measurement-disposable.yml",
+      "release-changes/items.json"
+    ],
+    "reason": "Qualify immutable source terms, exact commodity pricing and existing precedence, actor/tenant/subscription checks, frozen original returns and accepted collections, duplicate/stale/retirement/sale-first concurrency, bilingual approval and same-request recovery. Generate actual database contracts and register shared presentation; genuine merchant/source and final E6 acceptance remain separate.",
+    "sources": [
+      "ss-electrical-commodity-qualification-20261026"
+    ]
+  },
+  {
+    "id": "ss-electrical-technical-search-pagination-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/supabase/migrations/20261029125033_electrical_technical_search_pagination.sql"
+    ],
+    "reason": "Correct the product directory row predicate to include the same tenant-scoped technical matches as its total, retaining the existing RPC authority and bounds.",
+    "notes": {
+      "title": {
+        "en": "Find products by electrical specifications",
+        "ar": "\u0627\u0644\u0639\u062b\u0648\u0631 \u0639\u0644\u0649 \u0627\u0644\u0623\u0635\u0646\u0627\u0641 \u0628\u0627\u0644\u0645\u0648\u0627\u0635\u0641\u0627\u062a \u0627\u0644\u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629"
+      },
+      "summary": {
+        "en": "Technical searches return matching products on every page.",
+        "ar": "\u062a\u0639\u0631\u0636 \u0639\u0645\u0644\u064a\u0627\u062a \u0627\u0644\u0628\u062d\u062b \u0628\u0627\u0644\u0645\u0648\u0627\u0635\u0641\u0627\u062a \u0627\u0644\u0623\u0635\u0646\u0627\u0641 \u0627\u0644\u0645\u0637\u0627\u0628\u0642\u0629 \u0641\u064a \u0643\u0644 \u0635\u0641\u062d\u0629."
+      },
+      "details": {
+        "en": "Product results and their total now use the same technical specification filter, including searches that do not match the product name or SKU. Existing permissions and page limits apply.",
+        "ar": "\u062a\u0633\u062a\u062e\u062f\u0645 \u0646\u062a\u0627\u0626\u062c \u0627\u0644\u0623\u0635\u0646\u0627\u0641 \u0648\u0639\u062f\u062f\u0647\u0627 \u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a \u0645\u0631\u0634\u062d \u0627\u0644\u0645\u0648\u0627\u0635\u0641\u0627\u062a \u0646\u0641\u0633\u0647\u060c \u0628\u0645\u0627 \u064a\u0634\u0645\u0644 \u0627\u0644\u0628\u062d\u062b \u0627\u0644\u0630\u064a \u0644\u0627 \u064a\u0637\u0627\u0628\u0642 \u0627\u0633\u0645 \u0627\u0644\u0635\u0646\u0641 \u0623\u0648 \u0631\u0645\u0632\u0647. \u062a\u0638\u0644 \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0648\u062d\u062f\u0648\u062f \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u062d\u0627\u0644\u064a\u0629 \u0645\u0637\u0628\u0642\u0629."
+      }
+    },
+    "sources": [
+      "ss-electrical-technical-search-pagination-20261029"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/supabase/migrations/20261029125033_electrical_technical_search_pagination.sql",
+        "contains": "after_predicate text := $after$or coalesce(category.name, '') ilike '%' || v_search || '%'"
+      }
+    ]
+  },
+  {
+    "id": "ss-electrical-source-evidence-audit-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/supabase/tests/shop_electrical_reels.sql",
+      "apps/shop-suit/docs/electrical-supply",
+      "release-changes/items.json"
+    ],
+    "reason": "Strengthen null-safe SQL assertions, technical pagination/media-path/isolation coverage and bind all55 task evidence references and current release blockers without claiming missing recovery or external acceptance.",
+    "sources": [
+      "ss-electrical-source-evidence-audit-20261029"
+    ]
+  },
+  {
+    "id": "shop-staging-disposable-image-qualification-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/releases/docker-harness.mjs",
+      "tooling/releases/docker-harness.test.mjs",
+      "release-changes/items.json"
+    ],
+    "reason": "Unblock required combined staging qualification when a public pinned image pull has an unclassified registry response. Use only the caller\u2019s already configured same-version mirror; keep known local resource and daemon failures fatal, preserve redacted diagnostics and every catalog assertion. No publisher, credential, registration, migration or readiness policy changes.",
+    "sources": [
+      "shop-staging-disposable-image-qualification-20261029"
+    ]
+  },
+  {
+    "id": "shared-mobile-navigation-focus-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ux/src/composables/useSideNavigation.ts",
+      "packages/testing",
+      "docs/shared/interactions.md",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ui/src/templates/BsAuthLayout.vue"
+    ],
+    "reason": "Restore initial keyboard focus after the canonical mobile navigation becomes visible, preserving Escape dismissal and focus return across Suit shells. Qualify current shared shell, settings, landing and appointment contracts without increasing assertion deadlines. Keep logos in ordinary document flow for access/loading states without an auth card, preventing blocked retry controls without changing glass form presentation.",
+    "notes": {
+      "title": {
+        "en": "Keep keyboard focus inside mobile navigation",
+        "ar": "\u0625\u0628\u0642\u0627\u0621 \u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u062f\u0627\u062e\u0644 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062a\u0646\u0642\u0644 \u0639\u0644\u0649 \u0627\u0644\u0647\u0627\u062a\u0641"
+      },
+      "summary": {
+        "en": "Opening the mobile menu moves focus to its close control.",
+        "ar": "\u064a\u0646\u062a\u0642\u0644 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0625\u0644\u0649 \u0632\u0631 \u0627\u0644\u0625\u063a\u0644\u0627\u0642 \u0639\u0646\u062f \u0641\u062a\u062d \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0647\u0627\u062a\u0641."
+      },
+      "details": {
+        "en": "Focus waits for the menu\u2019s own finite entrance motion, so Escape dismisses it and returns focus to the opening button. Closing or navigating away cancels pending focus. Access-status logos also remain above their actions instead of covering retry controls.",
+        "ar": "\u064a\u0646\u062a\u0638\u0631 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0646\u062a\u0647\u0627\u0621 \u062d\u0631\u0643\u0629 \u0638\u0647\u0648\u0631 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0645\u062d\u062f\u0648\u062f\u0629\u060c \u0644\u064a\u063a\u0644\u0642\u0647\u0627 \u0645\u0641\u062a\u0627\u062d Escape \u0648\u064a\u0639\u064a\u062f \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0625\u0644\u0649 \u0632\u0631 \u0627\u0644\u0641\u062a\u062d. \u064a\u0644\u063a\u064a \u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0623\u0648 \u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0645\u0646\u0647\u0627 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u0645\u0639\u0644\u0651\u0642. \u0648\u062a\u0628\u0642\u0649 \u0634\u0639\u0627\u0631\u0627\u062a \u062d\u0627\u0644\u0627\u062a \u0627\u0644\u0648\u0635\u0648\u0644 \u0623\u0639\u0644\u0649 \u0625\u062c\u0631\u0627\u0621\u0627\u062a\u0647\u0627 \u0628\u062f\u0644\u064b\u0627 \u0645\u0646 \u062d\u062c\u0628 \u0623\u0632\u0631\u0627\u0631 \u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0645\u062d\u0627\u0648\u0644\u0629."
+      }
+    },
+    "sources": [
+      "shared-mobile-navigation-focus-20261029"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ux/src/composables/useSideNavigation.ts",
+        "contains": "if (!cancelled && open())"
+      },
+      {
+        "path": "packages/ui/src/templates/BsAuthLayout.vue",
+        "contains": ":not(:has(.bs-auth-form)) .bs-auth-layout__mobile-logo"
+      }
+    ]
+  },
+  {
+    "id": "shop-staging-ledger-access-history-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "ledger-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/ledger-suit/supabase/migrations/20261022182716_explicit_data_api_access.sql",
+      "apps/ledger-suit/supabase/tests",
+      "apps/shop-suit/docs/electrical-supply/STAGING-INTEGRATION-2026-10-29.md"
+    ],
+    "reason": "Restore the already applied historical Ledger access migration byte-for-byte from published PR440, as verified again in Ledger439. Include only the twelve access-contract assertions and explicit execution for seven existing temporary test helpers. No Ledger feature-stack import, hosted write or migration metadata edit.",
+    "sources": [
+      "shop-staging-ledger-access-history-20261029"
+    ]
+  },
+  {
+    "id": "shop-staging-menu-animation-compatibility-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ux/src/composables/useSideNavigation.ts",
+      "packages/ux/tests/menu-share.test.mjs"
+    ],
+    "reason": "Qualify finite animation settlement, ignored infinite animation and cancellation on close. Use the optional Web Animations API when available, preserving no-animation runtimes and existing keyboard tests. The exact-head native unit failure is retained as evidence; no retry or assertion bypass.",
+    "sources": [
+      "shop-staging-menu-animation-compatibility-20261029"
+    ]
+  },
+  {
+    "id": "shop-staging-shared-shell-consumer-qualification-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsAuthLayout.vue",
+      "packages/ux/src/composables/useSideNavigation.ts",
+      "apps/shop-suit/tests/e2e/post-unification-regressions.spec.ts",
+      "packages/testing",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/interactions.md"
+    ],
+    "reason": "Preserve private provenance for all existing shared-shell source consumers without activating another operational/public product or inventing release baselines. Public Shop focus/access changes remain separately classified. Qualify the approved October19 dashboard: scope Team tabs independently from navigation tabs, use generated navigation identity, and assert the actual transparent toolbar/inactive buttons, muted track, surface active button and existing contrast/gradient/geometry bounds.",
+    "sources": [
+      "shop-staging-shared-shell-consumer-qualification-20261029"
+    ]
+  },
+  {
+    "id": "shop-staging-applied-access-source-reconciliation-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/shop-suit/supabase/migrations/20261022182717_explicit_data_api_access.sql",
+      "apps/super-admin-suit/supabase/migrations/20261022182719_explicit_data_api_access.sql",
+      "apps/shop-suit/supabase/tests/shop_measurement_foundation.sql",
+      "apps/shop-suit/docs/electrical-supply/STAGING-INTEGRATION-2026-10-29.md",
+      "apps/shop-suit/docs/electrical-supply/evidence/applied-access-source-20261029.json"
+    ],
+    "reason": "Restore only the exact published Shop and SAS access files recorded as applied on October22, preserving source history alongside the Ledger restoration. Current staging reports remote versions missing from source; no hosted SQL, migration metadata edit, provider configuration, new policy or operational activation is authorized. Explicitly permit the named temporary assertion helper in its rollback-only fixture; preserve every application permission and assertion.",
+    "sources": [
+      "shop-staging-applied-access-source-reconciliation-20261029"
+    ]
+  },
+  {
+    "id": "shop-staging-historical-payment-fixture-access-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/database/shop-xpay-disposable.mjs",
+      "tooling/database/test-shop-local.mjs",
+      "tooling/database/shop-proration-disposable.mjs",
+      "apps/shop-suit/docs/electrical-supply/STAGING-INTEGRATION-2026-10-29.md"
+    ],
+    "reason": "Explicit authenticated execution for existing rollback-only historical order/quote fixture aliases after restoration of applied secure defaults. Keep anonymous/service actors denied, preserve production constructors and owner/financial assertions, and retain fixed disposable targets and GitHub-hosted guards. Native payment/accounts/website failures share this helper dependency; full Vault-backed native verification remains mandatory.",
+    "sources": [
+      "shop-staging-historical-payment-fixture-access-20261029"
     ]
   },
   {
@@ -1998,15 +3899,15 @@
     "notes": {
       "title": {
         "en": "Exact amounts in financial reports",
-        "ar": "مبالغ دقيقة في التقارير المالية"
+        "ar": "\u0645\u0628\u0627\u0644\u063a \u062f\u0642\u064a\u0642\u0629 \u0641\u064a \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631 \u0627\u0644\u0645\u0627\u0644\u064a\u0629"
       },
       "summary": {
         "en": "Large financial amounts retain their exact minor units in reports and cash-flow allocations.",
-        "ar": "تحتفظ المبالغ المالية الكبيرة بوحداتها الصغرى الدقيقة في التقارير وتوزيعات التدفقات النقدية."
+        "ar": "\u062a\u062d\u062a\u0641\u0638 \u0627\u0644\u0645\u0628\u0627\u0644\u063a \u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u0627\u0644\u0643\u0628\u064a\u0631\u0629 \u0628\u0648\u062d\u062f\u0627\u062a\u0647\u0627 \u0627\u0644\u0635\u063a\u0631\u0649 \u0627\u0644\u062f\u0642\u064a\u0642\u0629 \u0641\u064a \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631 \u0648\u062a\u0648\u0632\u064a\u0639\u0627\u062a \u0627\u0644\u062a\u062f\u0641\u0642\u0627\u062a \u0627\u0644\u0646\u0642\u062f\u064a\u0629."
       },
       "details": {
         "en": "Profit and loss, General Ledger, financial overview and cash-flow reports preserve exact decimal digits. Cash-flow allocation saves and retries preserve the same exact amounts.",
-        "ar": "تحفظ قائمة الدخل والأستاذ العام والملخص المالي وتقارير التدفقات النقدية الأرقام العشرية الدقيقة، وتحافظ عمليات حفظ توزيعات التدفقات وإعادة محاولتها على المبالغ نفسها."
+        "ar": "\u062a\u062d\u0641\u0638 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062f\u062e\u0644 \u0648\u0627\u0644\u0623\u0633\u062a\u0627\u0630 \u0627\u0644\u0639\u0627\u0645 \u0648\u0627\u0644\u0645\u0644\u062e\u0635 \u0627\u0644\u0645\u0627\u0644\u064a \u0648\u062a\u0642\u0627\u0631\u064a\u0631 \u0627\u0644\u062a\u062f\u0641\u0642\u0627\u062a \u0627\u0644\u0646\u0642\u062f\u064a\u0629 \u0627\u0644\u0623\u0631\u0642\u0627\u0645 \u0627\u0644\u0639\u0634\u0631\u064a\u0629 \u0627\u0644\u062f\u0642\u064a\u0642\u0629\u060c \u0648\u062a\u062d\u0627\u0641\u0638 \u0639\u0645\u0644\u064a\u0627\u062a \u062d\u0641\u0638 \u062a\u0648\u0632\u064a\u0639\u0627\u062a \u0627\u0644\u062a\u062f\u0641\u0642\u0627\u062a \u0648\u0625\u0639\u0627\u062f\u0629 \u0645\u062d\u0627\u0648\u0644\u062a\u0647\u0627 \u0639\u0644\u0649 \u0627\u0644\u0645\u0628\u0627\u0644\u063a \u0646\u0641\u0633\u0647\u0627."
       }
     },
     "sources": [
@@ -2059,15 +3960,15 @@
     "notes": {
       "title": {
         "en": "Reliable private document uploads",
-        "ar": "رفع موثوق للمستندات الخاصة"
+        "ar": "\u0631\u0641\u0639 \u0645\u0648\u062b\u0648\u0642 \u0644\u0644\u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u062e\u0627\u0635\u0629"
       },
       "summary": {
         "en": "Upload transaction attachments and import source documents with their exact file size and type.",
-        "ar": "رفع مرفقات المعاملات ومستندات الاستيراد بحجم الملف ونوعه الدقيقين."
+        "ar": "\u0631\u0641\u0639 \u0645\u0631\u0641\u0642\u0627\u062a \u0627\u0644\u0645\u0639\u0627\u0645\u0644\u0627\u062a \u0648\u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u0627\u0633\u062a\u064a\u0631\u0627\u062f \u0628\u062d\u062c\u0645 \u0627\u0644\u0645\u0644\u0641 \u0648\u0646\u0648\u0639\u0647 \u0627\u0644\u062f\u0642\u064a\u0642\u064a\u0646."
       },
       "details": {
         "en": "Private document uploads preserve their original bytes while tenant permissions, file-type validation and storage quotas remain enforced.",
-        "ar": "تحفظ عمليات رفع المستندات الخاصة بايتات الملف الأصلية مع تطبيق صلاحيات المنشأة والتحقق من نوع الملف وحصص التخزين."
+        "ar": "\u062a\u062d\u0641\u0638 \u0639\u0645\u0644\u064a\u0627\u062a \u0631\u0641\u0639 \u0627\u0644\u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u062e\u0627\u0635\u0629 \u0628\u0627\u064a\u062a\u0627\u062a \u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0623\u0635\u0644\u064a\u0629 \u0645\u0639 \u062a\u0637\u0628\u064a\u0642 \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u0646\u0634\u0623\u0629 \u0648\u0627\u0644\u062a\u062d\u0642\u0642 \u0645\u0646 \u0646\u0648\u0639 \u0627\u0644\u0645\u0644\u0641 \u0648\u062d\u0635\u0635 \u0627\u0644\u062a\u062e\u0632\u064a\u0646."
       }
     },
     "sources": [
@@ -2188,15 +4089,15 @@
     "notes": {
       "title": {
         "en": "Reliable keyboard focus in mobile navigation",
-        "ar": "تركيز موثوق للوحة المفاتيح في قائمة الهاتف"
+        "ar": "\u062a\u0631\u0643\u064a\u0632 \u0645\u0648\u062b\u0648\u0642 \u0644\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0641\u064a \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0647\u0627\u062a\u0641"
       },
       "summary": {
         "en": "Opening mobile navigation moves keyboard focus into the drawer so Escape can close it.",
-        "ar": "ينقل فتح قائمة الهاتف تركيز لوحة المفاتيح إلى داخلها كي يغلقها زر Escape."
+        "ar": "\u064a\u0646\u0642\u0644 \u0641\u062a\u062d \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0647\u0627\u062a\u0641 \u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0625\u0644\u0649 \u062f\u0627\u062e\u0644\u0647\u0627 \u0643\u064a \u064a\u063a\u0644\u0642\u0647\u0627 \u0632\u0631 Escape."
       },
       "details": {
         "en": "Focus waits for the control to become visible and is cancelled if the drawer closes or is removed.",
-        "ar": "ينتظر التركيز ظهور عنصر التحكم ويُلغى إذا أُغلقت القائمة أو أُزيلت."
+        "ar": "\u064a\u0646\u062a\u0638\u0631 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0638\u0647\u0648\u0631 \u0639\u0646\u0635\u0631 \u0627\u0644\u062a\u062d\u0643\u0645 \u0648\u064a\u064f\u0644\u063a\u0649 \u0625\u0630\u0627 \u0623\u064f\u063a\u0644\u0642\u062a \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0623\u0648 \u0623\u064f\u0632\u064a\u0644\u062a."
       }
     },
     "sources": [
@@ -2229,15 +4130,15 @@
     "notes": {
       "title": {
         "en": "Correct sorting in administration tables",
-        "ar": "ترتيب صحيح في جداول الإدارة"
+        "ar": "\u062a\u0631\u062a\u064a\u0628 \u0635\u062d\u064a\u062d \u0641\u064a \u062c\u062f\u0627\u0648\u0644 \u0627\u0644\u0625\u062f\u0627\u0631\u0629"
       },
       "summary": {
         "en": "Administrators can sort displayed resource rows in both directions.",
-        "ar": "يمكن للمشرفين ترتيب صفوف الموارد المعروضة في الاتجاهين."
+        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u0634\u0631\u0641\u064a\u0646 \u062a\u0631\u062a\u064a\u0628 \u0635\u0641\u0648\u0641 \u0627\u0644\u0645\u0648\u0627\u0631\u062f \u0627\u0644\u0645\u0639\u0631\u0648\u0636\u0629 \u0641\u064a \u0627\u0644\u0627\u062a\u062c\u0627\u0647\u064a\u0646."
       },
       "details": {
         "en": "Mouse and keyboard sorting use the displayed values within the currently loaded result scope.",
-        "ar": "يستخدم ترتيب الفأرة ولوحة المفاتيح القيم المعروضة ضمن نطاق النتائج المحملة حاليًا."
+        "ar": "\u064a\u0633\u062a\u062e\u062f\u0645 \u062a\u0631\u062a\u064a\u0628 \u0627\u0644\u0641\u0623\u0631\u0629 \u0648\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0627\u0644\u0642\u064a\u0645 \u0627\u0644\u0645\u0639\u0631\u0648\u0636\u0629 \u0636\u0645\u0646 \u0646\u0637\u0627\u0642 \u0627\u0644\u0646\u062a\u0627\u0626\u062c \u0627\u0644\u0645\u062d\u0645\u0644\u0629 \u062d\u0627\u0644\u064a\u064b\u0627."
       }
     },
     "sources": [
@@ -2281,248 +4182,248 @@
       "ls-browser-001-verification-support"
     ]
   },
-{
-  "id": "ls-ci-qual-001-shop-boundaries",
-  "task": "LS-CI-QUAL-001",
-  "suits": [
-    "shop-suit"
-  ],
-  "classification": "patch",
-  "disposition": "public",
-  "paths": [
-    "apps/shop-suit/app/composables/useShopMutation.ts",
-    "apps/shop-suit/app/composables/useShopQueryCache.ts",
-    "apps/shop-suit/app/plugins/query-scope.ts",
-    "apps/shop-suit/app/stores/shop.ts",
-    "apps/shop-suit/app/utils/shopQueryCleanup.ts",
-    "apps/shop-suit/app/utils/shopPermissionMenu.ts",
-    "apps/shop-suit/app/utils/shopQueryPayload.ts"
-  ],
-  "reason": "Qualify existing shared CI blockers with bounded current-cache lifecycle and permission mappings; preserve command error redaction. No unrelated Shop feature stack is integrated. Serialize failed-read hydration safely so an unavailable pricing backend does not turn the public page into a server error.",
-  "notes": {
-    "title": {
-      "en": "Safer session changes and menu access",
-      "ar": "تبديل أكثر أمانًا للجلسات وصلاحيات القوائم"
+  {
+    "id": "ls-ci-qual-001-shop-boundaries",
+    "task": "LS-CI-QUAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/shop-suit/app/composables/useShopMutation.ts",
+      "apps/shop-suit/app/composables/useShopQueryCache.ts",
+      "apps/shop-suit/app/plugins/query-scope.ts",
+      "apps/shop-suit/app/stores/shop.ts",
+      "apps/shop-suit/app/utils/shopQueryCleanup.ts",
+      "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+      "apps/shop-suit/app/utils/shopQueryPayload.ts"
+    ],
+    "reason": "Qualify existing shared CI blockers with bounded current-cache lifecycle and permission mappings; preserve command error redaction. No unrelated Shop feature stack is integrated. Serialize failed-read hydration safely so an unavailable pricing backend does not turn the public page into a server error.",
+    "notes": {
+      "title": {
+        "en": "Safer session changes and menu access",
+        "ar": "\u062a\u0628\u062f\u064a\u0644 \u0623\u0643\u062b\u0631 \u0623\u0645\u0627\u0646\u064b\u0627 \u0644\u0644\u062c\u0644\u0633\u0627\u062a \u0648\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0642\u0648\u0627\u0626\u0645"
+      },
+      "summary": {
+        "en": "Shop clears previous account and location snapshots during scope changes and respects permissions for offers and website settings.",
+        "ar": "\u062a\u0645\u0633\u062d \u062d\u0632\u0645\u0629 \u0627\u0644\u0645\u062a\u062c\u0631 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u062d\u0633\u0627\u0628 \u0648\u0627\u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u0633\u0627\u0628\u0642\u064a\u0646 \u0639\u0646\u062f \u062a\u0628\u062f\u064a\u0644 \u0627\u0644\u0646\u0637\u0627\u0642 \u0648\u062a\u062d\u062a\u0631\u0645 \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0639\u0631\u0648\u0636 \u0648\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0645\u0648\u0642\u0639."
+      },
+      "details": {
+        "en": "Public pages avoid initializing private counter state. Cancelled queries hide old results immediately, and command failures keep provider details out of cached state. Public pages remain usable when plan prices cannot be loaded.",
+        "ar": "\u062a\u062a\u062c\u0646\u0628 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0639\u0627\u0645\u0629 \u062a\u0647\u064a\u0626\u0629 \u062d\u0627\u0644\u0629 \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u0627\u0644\u062e\u0627\u0635\u0629. \u062a\u062e\u0641\u064a \u0627\u0644\u0627\u0633\u062a\u0639\u0644\u0627\u0645\u0627\u062a \u0627\u0644\u0645\u0644\u063a\u0627\u0629 \u0627\u0644\u0646\u062a\u0627\u0626\u062c \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u0641\u0648\u0631\u064b\u0627 \u0648\u062a\u0628\u0642\u064a \u0623\u062e\u0637\u0627\u0621 \u0627\u0644\u0623\u0648\u0627\u0645\u0631 \u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0645\u0648\u0641\u0651\u0631 \u062e\u0627\u0631\u062c \u0627\u0644\u062d\u0627\u0644\u0629 \u0627\u0644\u0645\u062e\u0632\u0646\u0629 \u0645\u0624\u0642\u062a\u064b\u0627. \u062a\u0628\u0642\u0649 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0639\u0627\u0645\u0629 \u0642\u0627\u0628\u0644\u0629 \u0644\u0644\u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0639\u0646\u062f \u062a\u0639\u0630\u0631 \u062a\u062d\u0645\u064a\u0644 \u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u062e\u0637\u0637."
+      }
     },
-    "summary": {
-      "en": "Shop clears previous account and location snapshots during scope changes and respects permissions for offers and website settings.",
-      "ar": "تمسح حزمة المتجر بيانات الحساب والموقع السابقين عند تبديل النطاق وتحترم صلاحيات العروض وإعدادات الموقع."
-    },
-    "details": {
-      "en": "Public pages avoid initializing private counter state. Cancelled queries hide old results immediately, and command failures keep provider details out of cached state. Public pages remain usable when plan prices cannot be loaded.",
-      "ar": "تتجنب الصفحات العامة تهيئة حالة نقطة البيع الخاصة. تخفي الاستعلامات الملغاة النتائج القديمة فورًا وتبقي أخطاء الأوامر تفاصيل الموفّر خارج الحالة المخزنة مؤقتًا. تبقى الصفحات العامة قابلة للاستخدام عند تعذر تحميل أسعار الخطط."
-    }
+    "sources": [
+      "ls-ci-qual-001-shop-boundaries"
+    ],
+    "evidence": [
+      {
+        "path": "apps/shop-suit/app/utils/shopQueryCleanup.ts",
+        "contains": "cache.setEntryState(entry, { status: 'pending', data: undefined, error: null })"
+      },
+      {
+        "path": "apps/shop-suit/app/plugins/query-scope.ts",
+        "contains": "if (scope.actorId || posReceipt)"
+      },
+      {
+        "path": "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+        "contains": "'/offers': ['sales.manage', 'settings.manage']"
+      },
+      {
+        "path": "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+        "contains": "'/website-builder': ['settings.manage']"
+      },
+      {
+        "path": "apps/shop-suit/app/utils/shopQueryPayload.ts",
+        "contains": "entry[1] == null ? entry[1] : { message: 'Shop query failed' }"
+      }
+    ]
   },
-  "sources": [
-    "ls-ci-qual-001-shop-boundaries"
-  ],
-  "evidence": [
-    {
-      "path": "apps/shop-suit/app/utils/shopQueryCleanup.ts",
-      "contains": "cache.setEntryState(entry, { status: 'pending', data: undefined, error: null })"
+  {
+    "id": "ls-ci-qual-001-language-focus",
+    "task": "LS-CI-QUAL-001",
+    "suits": [
+      "automation-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsSettingsMenu.vue"
+    ],
+    "reason": "Keep keyboard focus on the language cycle control while the locale update is pending; aria-disabled/busy and the existing pending guard prevent duplicate activation without disabling the focused native button.",
+    "notes": {
+      "title": {
+        "en": "Keep focus when changing language",
+        "ar": "\u0627\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0646\u062f \u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0644\u063a\u0629"
+      },
+      "summary": {
+        "en": "Keyboard users keep their position when switching the navigation language.",
+        "ar": "\u064a\u062d\u062a\u0641\u0638 \u0645\u0633\u062a\u062e\u062f\u0645\u0648 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0628\u0645\u0648\u0636\u0639\u0647\u0645 \u0639\u0646\u062f \u062a\u0628\u062f\u064a\u0644 \u0644\u063a\u0629 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062a\u0646\u0642\u0644."
+      },
+      "details": {
+        "en": "The language control announces pending work and ignores repeated activation while the update completes.",
+        "ar": "\u064a\u0639\u0644\u0646 \u0639\u0646\u0635\u0631 \u062a\u0628\u062f\u064a\u0644 \u0627\u0644\u0644\u063a\u0629 \u0623\u0646 \u0627\u0644\u062a\u062d\u062f\u064a\u062b \u062c\u0627\u0631\u064d \u0648\u064a\u062a\u062c\u0627\u0647\u0644 \u0627\u0644\u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u0645\u062a\u0643\u0631\u0631 \u062d\u062a\u0649 \u064a\u0643\u062a\u0645\u0644."
+      }
     },
-    {
-      "path": "apps/shop-suit/app/plugins/query-scope.ts",
-      "contains": "if (scope.actorId || posReceipt)"
-    },
-    {
-      "path": "apps/shop-suit/app/utils/shopPermissionMenu.ts",
-      "contains": "'/offers': ['sales.manage', 'settings.manage']"
-    },
-    {
-      "path": "apps/shop-suit/app/utils/shopPermissionMenu.ts",
-      "contains": "'/website-builder': ['settings.manage']"
-    },
-    {
-      "path": "apps/shop-suit/app/utils/shopQueryPayload.ts",
-      "contains": "entry[1] == null ? entry[1] : { message: 'Shop query failed' }"
-    }
-  ]
-},
-{
-  "id": "ls-ci-qual-001-language-focus",
-  "task": "LS-CI-QUAL-001",
-  "suits": [
-    "automation-suit",
-    "inventory-suit",
-    "ledger-suit",
-    "shop-suit",
-    "super-admin-suit"
-  ],
-  "classification": "patch",
-  "disposition": "public",
-  "paths": [
-    "packages/ui/src/organisms/BsSettingsMenu.vue"
-  ],
-  "reason": "Keep keyboard focus on the language cycle control while the locale update is pending; aria-disabled/busy and the existing pending guard prevent duplicate activation without disabling the focused native button.",
-  "notes": {
-    "title": {
-      "en": "Keep focus when changing language",
-      "ar": "الحفاظ على التركيز عند تغيير اللغة"
-    },
-    "summary": {
-      "en": "Keyboard users keep their position when switching the navigation language.",
-      "ar": "يحتفظ مستخدمو لوحة المفاتيح بموضعهم عند تبديل لغة قائمة التنقل."
-    },
-    "details": {
-      "en": "The language control announces pending work and ignores repeated activation while the update completes.",
-      "ar": "يعلن عنصر تبديل اللغة أن التحديث جارٍ ويتجاهل التفعيل المتكرر حتى يكتمل."
-    }
+    "sources": [
+      "ls-ci-qual-001-language-focus"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": ":aria-disabled=\"cycle === 'language' && languagePending ? true : undefined\""
+      },
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": ":disabled=\"!hydrated || (cycle === 'language' && available.length < 2)\""
+      }
+    ]
   },
-  "sources": [
-    "ls-ci-qual-001-language-focus"
-  ],
-  "evidence": [
-    {
-      "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
-      "contains": ":aria-disabled=\"cycle === 'language' && languagePending ? true : undefined\""
+  {
+    "id": "ls-ci-qual-001-auth-field-labels",
+    "task": "LS-CI-QUAL-001",
+    "suits": [
+      "ledger-suit",
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsSignInPage.vue",
+      "packages/ui/src/organisms/BsSignupEnrollment.vue"
+    ],
+    "reason": "Give the sole canonical auth forms stable, distinct field IDs so native labels remain associated after SSR hydration and form updates. Account and verified-identity stages use separate IDs.",
+    "notes": {
+      "title": {
+        "en": "Keep account fields accessible after loading",
+        "ar": "\u0625\u0628\u0642\u0627\u0621 \u062d\u0642\u0648\u0644 \u0627\u0644\u062d\u0633\u0627\u0628 \u0645\u062a\u0627\u062d\u0629 \u0628\u0639\u062f \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0635\u0641\u062d\u0629"
+      },
+      "summary": {
+        "en": "Email, password and signup identity fields keep their labels when account pages become interactive.",
+        "ar": "\u062a\u062d\u062a\u0641\u0638 \u062d\u0642\u0648\u0644 \u0627\u0644\u0628\u0631\u064a\u062f \u0648\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u0648\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u0628\u062a\u0633\u0645\u064a\u0627\u062a\u0647\u0627 \u0639\u0646\u062f \u0627\u0643\u062a\u0645\u0627\u0644 \u062a\u0641\u0627\u0639\u0644 \u0635\u0641\u062d\u0627\u062a \u0627\u0644\u062d\u0633\u0627\u0628."
+      },
+      "details": {
+        "en": "Screen readers and label-based navigation can identify the fields consistently in English and Arabic.",
+        "ar": "\u062a\u062a\u0639\u0631\u0641 \u0642\u0627\u0631\u0626\u0627\u062a \u0627\u0644\u0634\u0627\u0634\u0629 \u0648\u0627\u0644\u062a\u0646\u0642\u0644 \u0639\u0628\u0631 \u0627\u0644\u062a\u0633\u0645\u064a\u0627\u062a \u0639\u0644\u0649 \u0627\u0644\u062d\u0642\u0648\u0644 \u0628\u0635\u0648\u0631\u0629 \u0645\u062a\u0633\u0642\u0629 \u0628\u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0648\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629."
+      }
     },
-    {
-      "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
-      "contains": ":disabled=\"!hydrated || (cycle === 'language' && available.length < 2)\""
-    }
-  ]
-},
-{
-  "id": "ls-ci-qual-001-auth-field-labels",
-  "task": "LS-CI-QUAL-001",
-  "suits": [
-    "ledger-suit",
-    "shop-suit"
-  ],
-  "classification": "patch",
-  "disposition": "public",
-  "paths": [
-    "packages/ui/src/templates/BsSignInPage.vue",
-    "packages/ui/src/organisms/BsSignupEnrollment.vue"
-  ],
-  "reason": "Give the sole canonical auth forms stable, distinct field IDs so native labels remain associated after SSR hydration and form updates. Account and verified-identity stages use separate IDs.",
-  "notes": {
-    "title": {
-      "en": "Keep account fields accessible after loading",
-      "ar": "إبقاء حقول الحساب متاحة بعد تحميل الصفحة"
-    },
-    "summary": {
-      "en": "Email, password and signup identity fields keep their labels when account pages become interactive.",
-      "ar": "تحتفظ حقول البريد وكلمة المرور وبيانات التسجيل بتسمياتها عند اكتمال تفاعل صفحات الحساب."
-    },
-    "details": {
-      "en": "Screen readers and label-based navigation can identify the fields consistently in English and Arabic.",
-      "ar": "تتعرف قارئات الشاشة والتنقل عبر التسميات على الحقول بصورة متسقة بالعربية والإنجليزية."
-    }
+    "sources": [
+      "ls-ci-qual-001-auth-field-labels"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsSignInPage.vue",
+        "contains": "for=\"bs-sign-in-email\""
+      },
+      {
+        "path": "packages/ui/src/templates/BsSignInPage.vue",
+        "contains": "for=\"bs-sign-in-password\""
+      },
+      {
+        "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+        "contains": "for=\"bs-signup-account-email\""
+      },
+      {
+        "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
+        "contains": "for=\"bs-signup-verified-email\""
+      }
+    ]
   },
-  "sources": [
-    "ls-ci-qual-001-auth-field-labels"
-  ],
-  "evidence": [
-    {
-      "path": "packages/ui/src/templates/BsSignInPage.vue",
-      "contains": "for=\"bs-sign-in-email\""
+  {
+    "id": "ls-ci-qual-001-landing-visibility",
+    "task": "LS-CI-QUAL-001",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsLandingPage.vue"
+    ],
+    "reason": "Write an explicit inactive loading attribute and select only its true value, so a stale SSR-only attribute cannot hide the interactive page after the loader and inert state have ended.",
+    "notes": {
+      "title": {
+        "en": "Keep public pages usable after loading",
+        "ar": "\u0625\u0628\u0642\u0627\u0621 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0639\u0627\u0645\u0629 \u0645\u062a\u0627\u062d\u0629 \u0628\u0639\u062f \u0627\u0644\u062a\u062d\u0645\u064a\u0644"
+      },
+      "summary": {
+        "en": "Headings and privacy choices stay available when the landing loader closes.",
+        "ar": "\u062a\u0628\u0642\u0649 \u0627\u0644\u0639\u0646\u0627\u0648\u064a\u0646 \u0648\u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0645\u062a\u0627\u062d\u0629 \u0628\u0639\u062f \u0625\u063a\u0644\u0627\u0642 \u0634\u0627\u0634\u0629 \u0627\u0644\u062a\u062d\u0645\u064a\u0644."
+      },
+      "details": {
+        "en": "The loading state clears reliably when the page becomes interactive, including with reduced motion.",
+        "ar": "\u062a\u0646\u062a\u0647\u064a \u062d\u0627\u0644\u0629 \u0627\u0644\u062a\u062d\u0645\u064a\u0644 \u0628\u0635\u0648\u0631\u0629 \u0645\u0648\u062b\u0648\u0642\u0629 \u0639\u0646\u062f \u062a\u0641\u0627\u0639\u0644 \u0627\u0644\u0635\u0641\u062d\u0629\u060c \u0628\u0645\u0627 \u0641\u064a \u0630\u0644\u0643 \u0639\u0646\u062f \u062a\u0642\u0644\u064a\u0644 \u0627\u0644\u062d\u0631\u0643\u0629."
+      }
     },
-    {
-      "path": "packages/ui/src/templates/BsSignInPage.vue",
-      "contains": "for=\"bs-sign-in-password\""
-    },
-    {
-      "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
-      "contains": "for=\"bs-signup-account-email\""
-    },
-    {
-      "path": "packages/ui/src/organisms/BsSignupEnrollment.vue",
-      "contains": "for=\"bs-signup-verified-email\""
-    }
-  ]
-},
-{
-  "id": "ls-ci-qual-001-landing-visibility",
-  "task": "LS-CI-QUAL-001",
-  "suits": [
-    "shop-suit"
-  ],
-  "classification": "patch",
-  "disposition": "public",
-  "paths": [
-    "packages/ui/src/templates/BsLandingPage.vue"
-  ],
-  "reason": "Write an explicit inactive loading attribute and select only its true value, so a stale SSR-only attribute cannot hide the interactive page after the loader and inert state have ended.",
-  "notes": {
-    "title": {
-      "en": "Keep public pages usable after loading",
-      "ar": "إبقاء الصفحات العامة متاحة بعد التحميل"
-    },
-    "summary": {
-      "en": "Headings and privacy choices stay available when the landing loader closes.",
-      "ar": "تبقى العناوين وخيارات الخصوصية متاحة بعد إغلاق شاشة التحميل."
-    },
-    "details": {
-      "en": "The loading state clears reliably when the page becomes interactive, including with reduced motion.",
-      "ar": "تنتهي حالة التحميل بصورة موثوقة عند تفاعل الصفحة، بما في ذلك عند تقليل الحركة."
-    }
+    "sources": [
+      "ls-ci-qual-001-landing-visibility"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsLandingPage.vue",
+        "contains": "'data-shop-landing-loading': props.journey && isLoading.value ? 'true' : 'false'"
+      },
+      {
+        "path": "packages/ui/src/templates/BsLandingPage.vue",
+        "contains": "html[data-shop-landing-loading=\"true\"] body>* { visibility:hidden; }"
+      }
+    ]
   },
-  "sources": [
-    "ls-ci-qual-001-landing-visibility"
-  ],
-  "evidence": [
-    {
-      "path": "packages/ui/src/templates/BsLandingPage.vue",
-      "contains": "'data-shop-landing-loading': props.journey && isLoading.value ? 'true' : 'false'"
+  {
+    "id": "ls-fin-precision-002-journal-dashboard",
+    "task": "LS-FIN-PRECISION-002",
+    "suits": [
+      "ledger-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "apps/ledger-suit/app",
+      "apps/ledger-suit/types",
+      "apps/ledger-suit/supabase/migrations/20261028195440_exact_dashboard_summary_transport.sql"
+    ],
+    "reason": "Keep large journal, entry, dashboard and amount-filter values exact before JSON parsing; preserve the existing authorized SQL providers and financial history.",
+    "notes": {
+      "title": {
+        "en": "Exact large amounts in journals and the dashboard",
+        "ar": "\u0645\u0628\u0627\u0644\u063a \u0643\u0628\u064a\u0631\u0629 \u062f\u0642\u064a\u0642\u0629 \u0641\u064a \u0627\u0644\u064a\u0648\u0645\u064a\u0629 \u0648\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629"
+      },
+      "summary": {
+        "en": "Large journals open reliably and retain their exact digits in details, dashboard totals and amount filters.",
+        "ar": "\u062a\u064f\u0641\u062a\u062d \u0627\u0644\u0642\u064a\u0648\u062f \u0627\u0644\u0643\u0628\u064a\u0631\u0629 \u0628\u0635\u0648\u0631\u0629 \u0645\u0648\u062b\u0648\u0642\u0629 \u0648\u062a\u062d\u062a\u0641\u0638 \u0628\u0623\u0631\u0642\u0627\u0645\u0647\u0627 \u0627\u0644\u062f\u0642\u064a\u0642\u0629 \u0641\u064a \u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644 \u0648\u0625\u062c\u0645\u0627\u0644\u064a\u0627\u062a \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0648\u0641\u0644\u0627\u062a\u0631 \u0627\u0644\u0645\u0628\u0627\u0644\u063a."
+      },
+      "details": {
+        "en": "Journal lines, recent transactions, dashboard balances and commitment totals preserve exact minor units, including when filtering by a one-cent difference.",
+        "ar": "\u062a\u062d\u0641\u0638 \u0628\u0646\u0648\u062f \u0627\u0644\u0642\u064a\u0648\u062f \u0648\u0622\u062e\u0631 \u0627\u0644\u0645\u0639\u0627\u0645\u0644\u0627\u062a \u0648\u0623\u0631\u0635\u062f\u0629 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0648\u0625\u062c\u0645\u0627\u0644\u064a\u0627\u062a \u0627\u0644\u0627\u0644\u062a\u0632\u0627\u0645\u0627\u062a \u0648\u062d\u062f\u0627\u062a\u0647\u0627 \u0627\u0644\u0635\u063a\u0631\u0649 \u0627\u0644\u062f\u0642\u064a\u0642\u0629\u060c \u0628\u0645\u0627 \u0641\u064a \u0630\u0644\u0643 \u0639\u0646\u062f \u0627\u0644\u062a\u0635\u0641\u064a\u0629 \u0628\u0641\u0627\u0631\u0642 \u0642\u0631\u0634 \u0648\u0627\u062d\u062f."
+      }
     },
-    {
-      "path": "packages/ui/src/templates/BsLandingPage.vue",
-      "contains": "html[data-shop-landing-loading=\"true\"] body>* { visibility:hidden; }"
-    }
-  ]
-},
-{
-  "id": "ls-fin-precision-002-journal-dashboard",
-  "task": "LS-FIN-PRECISION-002",
-  "suits": [
-    "ledger-suit"
-  ],
-  "classification": "patch",
-  "disposition": "public",
-  "paths": [
-    "apps/ledger-suit/app",
-    "apps/ledger-suit/types",
-    "apps/ledger-suit/supabase/migrations/20261028195440_exact_dashboard_summary_transport.sql"
-  ],
-  "reason": "Keep large journal, entry, dashboard and amount-filter values exact before JSON parsing; preserve the existing authorized SQL providers and financial history.",
-  "notes": {
-    "title": {
-      "en": "Exact large amounts in journals and the dashboard",
-      "ar": "مبالغ كبيرة دقيقة في اليومية ولوحة المتابعة"
-    },
-    "summary": {
-      "en": "Large journals open reliably and retain their exact digits in details, dashboard totals and amount filters.",
-      "ar": "تُفتح القيود الكبيرة بصورة موثوقة وتحتفظ بأرقامها الدقيقة في التفاصيل وإجماليات لوحة المتابعة وفلاتر المبالغ."
-    },
-    "details": {
-      "en": "Journal lines, recent transactions, dashboard balances and commitment totals preserve exact minor units, including when filtering by a one-cent difference.",
-      "ar": "تحفظ بنود القيود وآخر المعاملات وأرصدة لوحة المتابعة وإجماليات الالتزامات وحداتها الصغرى الدقيقة، بما في ذلك عند التصفية بفارق قرش واحد."
-    }
+    "sources": [
+      "ls-fin-precision-002-journal-dashboard"
+    ],
+    "evidence": [
+      {
+        "path": "apps/ledger-suit/app/composables/useTransactionWorkspace.ts",
+        "contains": "}).select(JOURNAL_SEARCH_COLUMNS).abortSignal(signal)"
+      },
+      {
+        "path": "apps/ledger-suit/app/composables/useLedgerTransactionDetailDialogView.ts",
+        "contains": ".select(JOURNAL_SUMMARY_COLUMNS)"
+      },
+      {
+        "path": "apps/ledger-suit/app/pages/dashboard.vue",
+        "contains": "exactRpc.rpc('read_exact_dashboard_summary'"
+      },
+      {
+        "path": "apps/ledger-suit/supabase/migrations/20261028195440_exact_dashboard_summary_transport.sql",
+        "contains": "select app.exact_minor_json(public.dashboard_summary(p_organization_id));"
+      }
+    ]
   },
-  "sources": [
-    "ls-fin-precision-002-journal-dashboard"
-  ],
-  "evidence": [
-    {
-      "path": "apps/ledger-suit/app/composables/useTransactionWorkspace.ts",
-      "contains": "}).select(JOURNAL_SEARCH_COLUMNS).abortSignal(signal)"
-    },
-    {
-      "path": "apps/ledger-suit/app/composables/useLedgerTransactionDetailDialogView.ts",
-      "contains": ".select(JOURNAL_SUMMARY_COLUMNS)"
-    },
-    {
-      "path": "apps/ledger-suit/app/pages/dashboard.vue",
-      "contains": "exactRpc.rpc('read_exact_dashboard_summary'"
-    },
-    {
-      "path": "apps/ledger-suit/supabase/migrations/20261028195440_exact_dashboard_summary_transport.sql",
-      "contains": "select app.exact_minor_json(public.dashboard_summary(p_organization_id));"
-    }
-  ]
-},
   {
     "id": "ledger-brand-family-adoption",
     "task": "LEDGER-BRAND-20261029",
@@ -2718,6 +4619,28 @@
     "reason": "Add an optional surviving focus-origin resolver to the shared dialog contract; default behavior, dirty/pending guards and all authorization remain. Qualify current appointment actions through accessible calendar/details controls without dropping focus, error recovery, pending or confirmation assertions. Other consumers receive compatibility only; Doctor remains synthetic/private. The synthetic HTTP forwarder closes each source connection explicitly across reload/prefetch cancellation; it does not retry or suppress request failures.",
     "sources": [
       "ls-ci-qual-003-dialog-support"
+    ]
+  },
+  {
+    "id": "ls-ci-qual-004-staging-reconciliation",
+    "task": "LS-CI-QUAL-004",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/ledger-suit/docs/integration-check-recovery-20261029.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Merge accepted Shop staging 97c1f50e into the existing Ledger root while retaining both histories, immutable fragments, Ledger bytes and accepted Shop electrical/domain/dialog protections. Union unchanged inventory IDs and keep alternative superseded focus probes genuinely inactive. Fresh combined validation remains required; no main promotion or hosted mutation.",
+    "sources": [
+      "ls-ci-qual-004-staging-reconciliation"
     ]
   }
 ]
