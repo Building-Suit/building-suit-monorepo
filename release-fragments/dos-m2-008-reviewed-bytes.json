@@ -1,0 +1,15 @@
+{
+  "id": "dos-m2-008-reviewed-bytes",
+  "task": "DOS-M2-008",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/clinical.ts",
+    "apps/doctor-suit/app/utils/clinicalRepository.ts",
+    "apps/doctor-suit/tests/unit/dos-m2-008.test.mjs"
+  ],
+  "reason": "Verify canonical snapshot bytes and digest against the content presented for explicit synthetic finalization and printing; reject malformed or mismatched revisions before review. No clinical authority or operational activation."
+}

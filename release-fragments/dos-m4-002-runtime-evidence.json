@@ -1,0 +1,17 @@
+{
+  "id": "dos-m4-002-runtime-evidence",
+  "task": "DOS-M4-002",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/mobile/doctor/README.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-002.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-002-verification.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-002-device-evidence.json",
+    "docs/work-packages/doctor-suit/implementation/m4-continuation.md"
+  ],
+  "reason": "Retain exact-source same-APK successful planned synthetic emulator receipts and the unchanged54-Shop-failure baseline. Preserve historical failures and all physical/qualified/clinical/offline/native-session/distribution gates; no operational activation."
+}

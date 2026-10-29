@@ -1,0 +1,13 @@
+{
+  "id": "dos-m4-005-navigation-support",
+  "task": "DOS-M4-005",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/unit/dos-m4-002.test.mjs"
+  ],
+  "reason": "Patient routes are now explicitly implemented and permission-checked. Preserve prior unknown-link rejection cases with an actually unregistered destination; new task005 cases independently require patient-read grants and reject tokens/external/encoded links."
+}

@@ -20,7 +20,7 @@
         "BsSideMenu",
         "BsSidebarAccount"
       ],
-      "adapterBoundary": "Product-supplied navigation, scopes, account, trial, notification and registry projections; shared rail/collapse/drawer defaults with no standalone top header. Shop variant controls catalogue filtering only.",
+      "adapterBoundary": "Product-supplied navigation, scopes, account, trial, notification and registry projections; shared rail/collapse/drawer defaults with no standalone top header. Shop variant controls catalogue filtering only.; language controls render configured language names; Doctor owns continuation routing and enrollment",
       "task": "SHARED-WORKSPACE-CHROME-20261019",
       "migrationStatus": "implemented-source: rendered and local check verification unrun at owner instruction"
     },
@@ -691,6 +691,157 @@
       "adapterBoundary": "Shop owns Team/Multi eligibility, private draft and explicit owner publishing, public disclosure, tenant-scoped offers and atomic server price matching. Shared UI owns the layout/media editors, bundle worklist and public/POS offer strip. Shared UX owns bounded raster processing and record/dialog lifecycle. Receipt snapshots retain matched offer names.",
       "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
       "migrationStatus": "implemented-source; browser/database tests deferred at user instruction"
+    },
+    {
+      "family": "synthetic-clinical-workspace",
+      "owner": "packages/ui",
+      "components": [
+        "BsClinicalWorkspacePage",
+        "BsReleasedClinicalPage"
+      ],
+      "adapterBoundary": "Typed controlled entered-data fields and version/release/document projections; Doctor owns all queries, clinical fixture authority, validation, immutable operations and transport. No medical defaults or professional approval.",
+      "task": "DOS-M2",
+      "migrationStatus": "implemented-source; verification in progress; no clinical approval"
+    },
+    {
+      "family": "consultation-type-settings",
+      "owner": "packages/ui",
+      "components": [
+        "BsConsultationTypesPage"
+      ],
+      "adapterBoundary": "Typed configuration, controlled fields and semantic commands. Doctor owns consultation history, capacity, scope, scheduling and authorization.",
+      "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "waitlist-request-worklist",
+      "owner": "packages/ui",
+      "components": [
+        "BsWaitlistPage"
+      ],
+      "adapterBoundary": "Typed request/offer/history views and controlled record forms. Doctor owns request permission, atomic holds, acceptance, expiry and capability scopes. No provider dispatch or patient priority is inferred.",
+      "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "administrative-follow-up-worklist",
+      "owner": "packages/ui",
+      "components": [
+        "BsFollowUpWorklistPage"
+      ],
+      "adapterBoundary": "Typed finite task, assignment and history views with controlled forms and semantic commands. Doctor owns scope, current grants, due clocks and atomic transitions. No clinical data or delivery authority.",
+      "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "patient-contact-preferences",
+      "owner": "packages/ui",
+      "components": [
+        "BsPatientContactPreferencesPage"
+      ],
+      "adapterBoundary": "Typed patient/contact/consent/guardian projections and controlled finite editors. Doctor owns current patient scope, owner review, literal clocks, consent/guardian versions and revocation. No Auth identity binding, legal approval, clinical access or external messaging.",
+      "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "synthetic-message-status",
+      "owner": "packages/ui",
+      "components": [
+        "BsMessageOutboxPage"
+      ],
+      "adapterBoundary": "Typed redacted outbox status. Doctor owns authority and consent. No external transport.",
+      "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "synthetic-operational-fulfillment",
+      "owner": "packages/ui",
+      "components": [
+        "BsFulfillmentTrackingPage"
+      ],
+      "adapterBoundary": "Typed operational request/document status and controlled forms. Doctor owns exact issued sources, authority and timestamps. No clinical review or partner integration.",
+      "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "synthetic-import-preview",
+      "owner": "packages/ui",
+      "components": [
+        "BsSyntheticImportPreviewPage"
+      ],
+      "adapterBoundary": "Typed preview batches/counts/errors and controlled synthetic source form. Doctor owns mapping, provenance, cursor/idempotency, custody gate and canonical-write denial.",
+      "migrationStatus": "implemented; acceptance in progress"
+    },
+    {
+      "family": "mobile-shell-access",
+      "owner": "packages/ui",
+      "components": [
+        "BsMobileAccessPage",
+        "BsWorkspaceShell"
+      ],
+      "adapterBoundary": "Separate Doctor Android client supplies explicit synthetic access state and fresh versioned context; shared templates own all presentation. Nested mobile clients receive the same zero-debt boundary checks.",
+      "task": "DOS-M4-002",
+      "migrationStatus": "synthetic shell engineering; actual device and clinical/offline acceptance pending"
+    },
+    {
+      "family": "native-session-auth",
+      "owner": "packages/ui",
+      "components": [
+        "BsSignInPage",
+        "BsPasswordRecoveryPage",
+        "BsProductAuthFrame",
+        "BsMobileAccessPage",
+        "BsAccountSessionPage"
+      ],
+      "adapterBoundary": "Native Doctor adapters own marker/user/SID validation, Keystore and token transport. Shared complete templates retain email-first login and optionally accept entered recovery code fields and semantic access actions. No credentials belong in presentation state or links.",
+      "task": "DOS-M4-003",
+      "migrationStatus": "synthetic engineering; native/qualified verification pending"
+    },
+    {
+      "family": "native-patient-read",
+      "owner": "packages/ui",
+      "components": [
+        "BsPatientDirectoryPage",
+        "BsPatientProfilePage"
+      ],
+      "adapterBoundary": "Separate native Doctor app projects scoped online-only patient reads into the same complete canonical templates. No local composition, patient identity matching, chart persistence or private file delivery; device/document policy acceptance remains held.",
+      "task": "DOS-M4-005",
+      "migrationStatus": "synthetic native routes; device and document acceptance pending"
+    },
+    {
+      "family": "native-clinical-notes",
+      "owner": "packages/ui",
+      "components": [
+        "BsClinicalWorkspacePage"
+      ],
+      "adapterBoundary": "One canonical clinical workspace template supports optional editor sections and read-only uncertain/conflicted drafts. Native Doctor owns current server scope, versioned synthetic commands and no-replay outcome state. Shared UX retains dialog, dirty-close and navigation confirmation. Existing web defaults retain all sections.",
+      "task": "DOS-M4-006",
+      "migrationStatus": "synthetic native notes route; qualified/native actual-service acceptance pending"
+    },
+    {
+      "family": "practice-service-price-and-visit-charge-records",
+      "owner": "packages/ui",
+      "components": [
+        "BsPracticeBillingPage"
+      ],
+      "adapterBoundary": "Controlled price/charge fields, typed read-only rows, current ownership/entitlement projections, cursor history and semantic commands. Doctor owns authorization, exact money, immutable versions, source binding and request receipts. No collection, clinical or tax authority.",
+      "task": "DOS-M6-006",
+      "migrationStatus": "implemented-source; actual acceptance in progress"
+    },
+    {
+      "family": "practice-synthetic-collections-and-refund-reconciliation",
+      "owner": "packages/ui",
+      "components": [
+        "BsPracticeMoneyPage"
+      ],
+      "adapterBoundary": "Typed monetary/source/status rows, explicit same-request recovery and semantic financial actions. Doctor owns fresh owner authority, source/version binding, exact money, persisted reservations, immutable receipts and acceptance-based reconciliation. No external money movement or tax authority.",
+      "task": "DOS-M6-007",
+      "migrationStatus": "implemented-source; actual acceptance in progress"
+    },
+    {
+      "family": "practice-financial-report-contribution-trace",
+      "owner": "packages/ui",
+      "components": [
+        "BsReportsPage",
+        "BsPracticeLedgerReportsWorkspace"
+      ],
+      "adapterBoundary": "Optional typed ledger workspace preserves existing report branches. Doctor owns immutable source reads, exact per-currency totals, issue-date cohort filters and owner authority; the UI grants no financial/provider/tax authority.",
+      "task": "DOS-M6-009",
+      "migrationStatus": "implemented source; owned acceptance in progress"
     },
     {
       "family": "physical-stock",

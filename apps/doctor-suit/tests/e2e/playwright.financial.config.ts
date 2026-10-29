@@ -1,0 +1,4 @@
+import { defineConfig } from '@playwright/test'
+import { fileURLToPath } from 'node:url'
+if (process.env.DOCTOR_FINANCIAL_ACCEPTANCE !== 'owned-actual-provider' || !/^[a-f0-9]{40}$/.test(process.env.DOCTOR_FINANCIAL_SOURCE_HEAD ?? '')) throw Error('Owned exact-source financial fixture required')
+export default defineConfig({ testDir: fileURLToPath(new URL('.', import.meta.url)), testMatch: ['dos-m6-003.spec.ts', 'dos-m6-004.spec.ts', 'dos-m6-006.spec.ts', 'dos-m6-007.spec.ts', 'dos-m6-009.spec.ts','dos-m6-010.spec.ts'], workers: 1, retries: 0, timeout: 60000, preserveOutput: 'never', outputDir: fileURLToPath(new URL('../../../../test-results/doctor-financial', import.meta.url)), reporter: fileURLToPath(new URL('./financial-reporter.mjs', import.meta.url)), use: { baseURL: 'http://127.0.0.1:4341', browserName: 'chromium', trace: 'off', screenshot: 'off', video: 'off' } })

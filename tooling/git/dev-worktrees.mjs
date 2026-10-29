@@ -13,6 +13,7 @@ const git = (args, cwd) => command('git', args, cwd)
 const paths = value => value.split('\0').filter(Boolean)
 export const applications = {
   ledger: { directory: 'ledger-suit', package: '@building-suit/ledger-suit', port: 3000 },
+  doctor: { directory: 'doctor-suit', package: '@building-suit/doctor-suit', port: 3006 },
   shop: { directory: 'shop-suit', package: '@building-suit/shop-suit', port: 3001 },
   docs: { directory: 'building-suit-docs', package: '@building-suit/docs', port: 3002 },
   inventory: { directory: 'inventory-suit', package: '@building-suit/inventory-suit', port: 3003 },

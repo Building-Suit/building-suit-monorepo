@@ -1,7 +1,10 @@
+import { doctorPolicyMetadata } from './policyPresentation.ts'
 import { doctorPublicPreview } from './publicPreview.ts'
 import { doctorLandingContent } from './landingPresentation.ts'
 export function doctorPageMetadata(path: string,arabic: boolean,workflow: { title: string; description: string }) {
   const locale = arabic ? 'ar_EG' : 'en_US'
+  const policy = doctorPolicyMetadata(path,arabic)
+  if(policy)return { publicPage: true,title: `Doctor Suit · ${policy.title}`,description: policy.intro,locale,robots: 'noindex, nofollow' }
   if(path!=='/' && path!=='/preview')return { publicPage: false,title: arabic ? 'Doctor Suit · مساحة خاصة' : 'Doctor Suit · Private area',description: undefined,locale,robots: 'noindex, nofollow, noarchive, nosnippet' }
   const copy = doctorPublicPreview(arabic)
   const landing=doctorLandingContent(arabic)

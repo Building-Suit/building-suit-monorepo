@@ -430,3 +430,6 @@ verify_jwt = true
 # Payment evidence retains the platform JWT gate and fresh Doctor identity checks.
 [functions.doctor-payment-evidence]
 verify_jwt = true
+
+[functions.doctor-clinical-release]
+verify_jwt = true

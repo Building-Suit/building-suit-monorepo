@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { doctorPageMetadata } from './utils/previewMetadata'
+import { doctorRootPresentation } from './utils/rootPresentation'
 import { usePageExitCleanup, useFreshPageOnRestore, usePageRevalidation } from '@building-suit/ux'
 const context = useDoctorContext()
 const auth = useDoctorAuth()
 const route = useRoute()
+const router = useRouter()
+const root = computed(() => doctorRootPresentation(router.currentRoute.value.path, router.currentRoute.value.meta.layout))
 const nuxt = useNuxtApp()
 const transitioning = ref(false)
 const stopStart = nuxt.hook('page:loading:start', () => { transitioning.value = true })
@@ -26,4 +29,4 @@ useSeoMeta({ description: () => metadata.value.description,robots: () => metadat
 })
 useHead(() => ({ htmlAttrs: { lang: localeProperties.value.language || locale.value, dir: localeProperties.value.dir || 'ltr' } }))
 </script>
-<template><BsAppRoot toast-host :page-transition="false" /></template>
+<template><BsAppRoot toast-host :layout-key="root.layoutKey" :page-transition="root.pageTransition" /></template>

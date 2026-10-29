@@ -1,0 +1,9 @@
+{
+  "id": "doctor-m3-scroll-report-support",
+  "task": "DOS-M3-ACCEPTANCE-CI",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["packages/ui/src/organisms/BsDataTable.vue", "packages/ux/src/index.ts", "packages/ux/src/scrollRegion.ts", "packages/ux/tests/scroll-region.test.mjs", "packages/ui/src/templates/BsReportsPage.vue", "packages/ui/src/types/reportsPresentation.ts", "apps/building-suit-docs/app/pages/components.vue", "docs/shared/data-table.md", "release-changes/items.json", "apps/doctor-suit/app/composables/useDoctorOperationalReportsPage.ts"],
+  "reason": "Classify every shared consumer, catalogue, interaction tests and opt-in Doctor report hydration guard. Shop's visible keyboard behavior has separate linked public provenance. This does not activate Doctor or another internal consumer, grant authority or weaken browser/registry acceptance."
+}

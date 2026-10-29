@@ -1,0 +1,99 @@
+import{test,expect,operationsFixture,operationsClient,openOperations}from'./operations-actual-fixture'
+import{randomUUID}from'node:crypto'
+import{mkdir}from'node:fs/promises'
+test('DOS-M3-003: actual reception exceptions, two-actor reconciliation, walk-in and manual order',async({browser})=>{
+ const f=operationsFixture(),owner=await operationsClient('reception'),staff=await operationsClient('receptionStaff'),other=await operationsClient('other'),scope={p_practice:f.reception.scope.practiceId,p_location:f.reception.scope.locationId},records=f.receptionRecords,day=f.receptionDay
+ const rpc=async(client:typeof owner,name:string,args:object)=>{const{data,error}=await client.rpc(name,args);expect(error).toBeNull();return data}
+ const board=()=>rpc(owner,'doctor_appointment_board',{...scope,p_day:day}),command=(id:string,version:number,action:string,reason:string)=>({...scope,p_appointment:id,p_expected_version:version,p_action:action,p_input:{reason},p_key:randomUUID()})
+ expect((await other.rpc('doctor_reception_command',command(records.late,1,'late_check_in','Synthetic foreign owner denial'))).error?.code).toBe('42501')
+ const clinical=await staff.rpc('doctor_clinical_command',{...scope,p_encounter:null,p_expected_version:null,p_action:'create',p_input:{patient_id:f.reception.scope.patientId},p_key:randomUUID()});expect(clinical.error?.code).toBe('42501')
+ const initial=await board(),arrival=initial.queue.find((v:{id:string})=>v.id===records.queue).checked_in_at
+ const{context,page}=await openOperations(browser,'/appointments',{role:'reception'}),dir='test-results/doctor-m3-actual';await mkdir(dir,{recursive:true})
+ const card=(name:string)=>page.getByRole('listitem').filter({has:page.getByText(name,{exact:true})}),queueRow=(name:string)=>page.getByRole('row').filter({hasText:name}),lateName='Synthetic reception owner patient',queueName='Synthetic reception waiting patient',missedName='Synthetic reception missed patient'
+ async function refresh(){await expect(page.getByLabel('Local date',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Refresh',exact:true}).click();await expect(page.getByRole('heading',{name:'Current waiting queue',exact:true})).toBeVisible()}
+ async function openCardAction(name:string,action:string){
+  const c=card(name)
+  await expect(c).toHaveCount(1)
+  // Locator attribute reads re-resolve a card replaced by a board refresh.
+  // Element evaluation can race detachment between resolution and execution.
+  const disclosure=c.locator('details').filter({has:page.getByText('Actions and history',{exact:true})})
+  if(await disclosure.getAttribute('open')===null)await disclosure.getByText('Actions and history',{exact:true}).click()
+  await c.getByRole('button',{name:action,exact:true}).click()
+  return page.getByRole('dialog')
+ }
+ async function commitReason(d:ReturnType<typeof page.getByRole>,label:string,text:string){await d.getByLabel('Administrative reason').fill(text);await d.getByRole('button',{name:label,exact:true}).click();await expect(d).toHaveCount(0)}
+ async function available(){const v=await rpc(owner,'doctor_availability',{...scope,p_day:day});return v.slots.find((s:{available:boolean})=>s.available)}
+ const time=(minute:number)=>`${String(Math.floor(minute/60)).padStart(2,'0')}:${String(minute%60).padStart(2,'0')}`
+ try{
+  await refresh();await expect(card(lateName)).toHaveCount(1);let dialog=await openCardAction(lateName,'Record late arrival');await dialog.getByLabel('Administrative reason').fill('Synthetic patient arrived after booked start')
+  let original:unknown,retried:unknown;await context.route('**/rest/v1/rpc/doctor_reception_command',async route=>{original=route.request().postDataJSON();await route.fetch();await route.abort('failed')},{times:1});await dialog.getByRole('button',{name:'Record late arrival',exact:true}).click();await expect(dialog.getByText(/result could not be confirmed/)).toBeVisible();await page.screenshot({path:dir+'/reception-uncertain.png',animations:'disabled'})
+  await context.route('**/rest/v1/rpc/doctor_reception_command',async route=>{retried=route.request().postDataJSON();await route.continue()},{times:1});await dialog.getByRole('button',{name:'Record late arrival',exact:true}).click();await expect(dialog).toHaveCount(0);expect(retried).toEqual(original);expect((await board()).queue.filter((r:{id:string})=>r.id===records.late)).toHaveLength(1)
+  await queueRow(queueName).getByRole('button',{name:'Move to queue end',exact:true}).click();dialog=page.getByRole('dialog');await dialog.getByLabel('Administrative reason').fill('Synthetic requested administrative order change')
+  let release!:()=>void,seen!:()=>void;const waiting=new Promise<void>(r=>release=r),arrived=new Promise<void>(r=>seen=r);await context.route('**/rest/v1/rpc/doctor_reception_command',async route=>{const response=await route.fetch();seen();await waiting;await route.fulfill({response})},{times:1});await dialog.getByRole('button',{name:'Move to queue end',exact:true}).click();await arrived;await expect(dialog.getByRole('button',{name:'Move to queue end',exact:true})).toBeDisabled();await page.keyboard.press('Escape');await expect(dialog).toBeVisible();await page.screenshot({path:dir+'/reception-pending.png',animations:'disabled'});release();await expect(dialog).toHaveCount(0)
+  let current=await board();expect(current.queue.map((r:{id:string})=>r.id)).toEqual([records.late,records.queue]);expect(current.queue.find((r:{id:string})=>r.id===records.queue).checked_in_at).toBe(arrival)
+  let actionPhase='stale-reorder-open'
+  try{
+   await queueRow(lateName).getByRole('button',{name:'Move to queue end',exact:true}).click();dialog=page.getByRole('dialog')
+   actionPhase='stale-reorder-reason';await dialog.getByLabel('Administrative reason').fill('Synthetic stale owner action')
+   actionPhase='stale-reorder-conflict';await rpc(staff,'doctor_reception_command',command(records.late,2,'move_to_end','Synthetic authorized secretary reordered queue'));await dialog.getByRole('button',{name:'Move to queue end',exact:true}).click();await expect(dialog.getByText(/Refresh before starting a new action/)).toBeVisible();await page.screenshot({path:dir+'/reception-conflict.png',animations:'disabled'})
+  }catch(cause){
+   // Retain only bounded state, never values, markup, locator text or credentials.
+   try{
+    const reasons=page.getByRole('dialog').getByLabel('Administrative reason'),refresh=page.getByRole('button',{name:'Refresh',exact:true})
+    const [dialogCount,reasonState,refreshDisabled]=await Promise.all([page.getByRole('dialog').count(),reasons.evaluateAll(elements=>({count:elements.length,disabled:elements.length===1?elements[0]!.matches(':disabled'):null})),refresh.evaluateAll(elements=>elements.length===1?elements[0]!.matches(':disabled'):null)])
+    test.info().annotations.push({type:'doctor-reception-action-state',description:JSON.stringify({phase:actionPhase,dialogCount,reasonCount:reasonState.count,reasonDisabled:reasonState.disabled,refreshDisabled})})
+   }catch{ /* A closed page cannot replace the original failed assertion. */ }
+   throw cause
+  }
+  await context.setOffline(true);await context.setOffline(false);await page.reload();await refresh();current=await board();expect(current.queue.map((r:{id:string})=>r.id)).toEqual([records.queue,records.late]);const history=await rpc(owner,'doctor_appointment_history',{...scope,p_appointment:records.late});expect(history.events[0].actor_user_id).toBe(records.staffUser)
+  await queueRow(queueName).getByRole('button',{name:'Leave waiting queue',exact:true}).click();await commitReason(page.getByRole('dialog'),'Leave waiting queue','Synthetic patient left waiting queue');await expect(queueRow(queueName)).toHaveCount(0)
+  const yesterday=new Date(Date.parse(day+'T00:00:00Z')-86400000).toISOString().slice(0,10);await page.getByLabel('Local date',{exact:true}).fill(yesterday);await page.getByLabel('Local date',{exact:true}).press('Tab');dialog=await openCardAction(missedName,'Reverse no-show');await commitReason(dialog,'Reverse no-show','Synthetic operator corrected missed attendance')
+  dialog=await openCardAction(missedName,'Mark no-show');await commitReason(dialog,'Mark no-show','Synthetic confirmed no-show');dialog=await openCardAction(missedName,'Reverse no-show');await commitReason(dialog,'Reverse no-show','Synthetic explicit no-show correction')
+  dialog=await openCardAction(missedName,'Reschedule');const slot=await available();expect(slot).toBeTruthy();await expect(dialog.getByRole('combobox',{name:'Available time',exact:true})).toBeEnabled();await dialog.getByRole('combobox',{name:'Available time',exact:true}).click();await page.getByRole('option',{name:time(slot.minute),exact:true}).click();await dialog.getByLabel('Administrative reason').fill('Synthetic manual reschedule after corrected no-show');await dialog.getByRole('button',{name:'Save appointment',exact:true}).click();await expect(dialog).toHaveCount(0)
+  const before=await rpc(owner,'doctor_patients',scope);const patientsResponse=page.waitForResponse(r=>r.url().endsWith('/rpc/doctor_patients')&&r.request().method()==='POST');await page.getByRole('button',{name:'Record synthetic walk-in',exact:true}).click();await patientsResponse;dialog=page.getByRole('dialog');await dialog.getByRole('combobox',{name:'Administrative patient',exact:true}).click();await page.getByRole('option',{name:'Synthetic reception walk-in patient',exact:true}).click();const walkSlot=await available();expect(walkSlot).toBeTruthy();await expect(dialog.getByRole('combobox',{name:'Available time',exact:true})).toBeEnabled();await dialog.getByRole('combobox',{name:'Available time',exact:true}).click();await page.getByRole('option',{name:time(walkSlot.minute),exact:true}).click();await dialog.getByLabel('Administrative reason').fill('Synthetic explicit same-day walk-in request');await page.screenshot({path:dir+'/reception-walk-in.png',animations:'disabled'});await dialog.getByRole('button',{name:'Save appointment',exact:true}).click();await expect(dialog).toHaveCount(0);await expect(queueRow('Synthetic reception walk-in patient')).toHaveCount(1);expect((await rpc(owner,'doctor_patients',scope)).total).toBe(before.total)
+  current=await board();expect(current.queue).toHaveLength(2);expect(current.items.filter((r:{id:string})=>r.id===records.missed)).toHaveLength(1);expect(current.external_notifications).toBe('disabled')
+  for(const width of[390,1280])for(const ar of[false,true])for(const dark of[false,true]){
+   const v=await openOperations(browser,'/appointments',{role:'reception',width,ar,dark})
+   try{
+    await expect(v.page.getByLabel(ar?'التاريخ المحلي':'Local date',{exact:true})).toBeVisible()
+    const refreshButton=v.page.getByRole('button',{name:ar?'تحديث':'Refresh',exact:true})
+    await expect(refreshButton).toBeEnabled()
+    const refreshed=v.page.waitForResponse(response=>response.request().method()==='POST'&&response.url().endsWith('/rpc/doctor_appointment_board'))
+    await refreshButton.click();await refreshed;await expect(refreshButton).toBeEnabled()
+    await expect(v.page.getByRole('heading',{name:ar?'طابور الحضور الحالي':'Current waiting queue',exact:true})).toBeVisible()
+    await expect(v.page.getByRole('row').filter({hasText:'Synthetic reception walk-in patient'})).toHaveCount(1)
+    await expect(v.page.locator('html')).toHaveAttribute('dir',ar?'rtl':'ltr')
+    await expect(v.page.locator('html')).toHaveAttribute('data-theme',dark?'dark':'light')
+    expect(await v.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true)
+    await v.page.screenshot({path:`${dir}/reception-${width}-${ar?'ar':'en'}-${dark?'dark':'light'}.png`,fullPage:true,animations:'disabled'})
+    if(width===390){
+     const scroll=v.page.getByRole('region',{name:ar?'طابور الحضور الحالي':'Current waiting queue',exact:true}).and(v.page.locator('[tabindex="0"]'))
+     await scroll.scrollIntoViewIfNeeded();await scroll.focus();await expect(scroll).toBeFocused()
+     expect(await scroll.evaluate(el=>el.scrollWidth>el.clientWidth)).toBe(true)
+     for(let step=0;step<100;step++){
+      const before=await scroll.evaluate(el=>Math.abs(el.scrollLeft))
+      if(await scroll.evaluate(el=>Math.abs(el.scrollLeft)+el.clientWidth>=el.scrollWidth-1))break
+      await scroll.press(ar?'ArrowLeft':'ArrowRight')
+      await expect.poll(()=>scroll.evaluate(el=>Math.abs(el.scrollLeft))).toBeGreaterThan(before)
+     }
+     try{await expect.poll(()=>scroll.evaluate(el=>Math.abs(el.scrollLeft)+el.clientWidth>=el.scrollWidth-1)).toBe(true)}catch(error){
+      const geometry=await scroll.evaluate(el=>({clientWidth:el.clientWidth,scrollWidth:el.scrollWidth,left:el.scrollLeft}))
+      test.info().annotations.push({type:'doctor-scroll-geometry',description:JSON.stringify({...geometry,width,rtl:ar,dark})})
+      throw error
+     }
+     // Retain the keyboard-scrolled queue in the full-page image. Capture
+     // through the page while the table can replace its own DOM node.
+     await expect(scroll).toBeVisible()
+     await v.page.screenshot({path:`${dir}/reception-queue-${ar?'ar':'en'}-${dark?'dark':'light'}.png`,fullPage:true,animations:'disabled'})
+    }
+    if(width===390&&ar&&dark){
+     await v.page.getByRole('button',{name:'تسجيل حضور اصطناعي دون حجز سابق',exact:true}).click()
+     const d=v.page.getByRole('dialog');await expect(d).toBeVisible()
+     await expect.poll(()=>d.evaluate(el=>el.contains(document.activeElement))).toBe(true)
+     await v.page.keyboard.press('Tab');await d.getByLabel('السبب الإداري').scrollIntoViewIfNeeded()
+     await v.page.screenshot({path:dir+'/reception-editor-ar-mobile.png',animations:'disabled'})
+    }
+   }finally{await v.context.close()}
+  }
+ }finally{await context.close()}
+})

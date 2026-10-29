@@ -1,0 +1,243 @@
+{
+  "task": "DOS-M4-005",
+  "status": "synthetic directory/profile engineering implemented; native/device and document-policy acceptance open",
+  "parent_pr": 456,
+  "initial_parent_sha": "9410934019178b988168c2455b207d4266c6aaec",
+  "executed_native_cases": [],
+  "task_acceptance": false,
+  "physical_device": false,
+  "clinical_approval": false,
+  "offline_chart_approval": false,
+  "provider_activation": false,
+  "document_delivery": "disabled; device cache/custody policy and native verification outstanding",
+  "planned_native_cases": [
+    "scoped-search-pagination-profile",
+    "shared-contact-distinct-identities",
+    "outsider-revoked-membership-denial",
+    "profile-switch-background-offline-clears-state",
+    "profile-directory-workspace-back-order"
+  ],
+  "checks": {
+    "doctor_and_contracts_broad_passed": 566,
+    "subsequent_task_owned_passed": 12,
+    "additional_case_in_later_command": "hardware-back; no combined aggregate inferred",
+    "mobile_lint_and_types": "passed",
+    "boundaries": "6 Suits/7 applications/136 templates;80 historical migrations unchanged",
+    "static_bundle_and_sync": "passed before final hardware-back-only update; later typecheck separate",
+    "shared_codecs_and_web_exports_lint": "passed",
+    "canonical_packets": {
+      "milestones": 9,
+      "tasks": 104,
+      "fingerprints_and_graph": "pass unchanged"
+    },
+    "serial_web_consumer_typechecks": "7 successful/7 total at concurrency1; separate latest mobile typecheck passed"
+  },
+  "parent_full_unit_baseline": {
+    "tests": 2232,
+    "passed": 2155,
+    "inherited_shop_failures": 54,
+    "skipped": 23,
+    "repeated_for_task005": false
+  },
+  "executions": [
+    {
+      "sourceHead": "e0777b28983545b02e984355af509722382c586b",
+      "run": 40027392414,
+      "result": "failed at unknown-deep-link-denied on both APIs; first4 shell and all7 vault cases pass per API",
+      "cause": "harness still classified the now-implemented patients destination as unknown",
+      "change": "use an actually unregistered destination, preserving all cases/assertions and acceptance gates",
+      "receipts": [
+        {
+          "version": 1,
+          "sourceHead": "e0777b28983545b02e984355af509722382c586b",
+          "appId": "com.buildingsuit.doctor.synthetic",
+          "apkSha256": "9c2d439b1bb53aff97eef3ea1060358ceee404c07f117bed02d38f02c623a126",
+          "api": 29,
+          "accepted": false,
+          "stage": "unknown-deep-link-denied",
+          "cleanup": "passed",
+          "runtime": {
+            "webviewMajor": 74,
+            "clientIssues": [],
+            "webviewVisible": true,
+            "syntheticPackageVisible": true
+          },
+          "lifecycle": {
+            "backgroundObserved": true,
+            "resumeObserved": true
+          },
+          "runner": "owned-disposable-android-emulator",
+          "physicalDevice": false,
+          "cases": [
+            {
+              "id": "cold-launch-signed-out",
+              "status": "passed"
+            },
+            {
+              "id": "cold-deep-link-signed-out",
+              "status": "passed"
+            },
+            {
+              "id": "hardware-back-workspace",
+              "status": "passed"
+            },
+            {
+              "id": "background-resume-signed-out",
+              "status": "passed"
+            },
+            {
+              "id": "unknown-deep-link-denied",
+              "status": "failed"
+            }
+          ],
+          "syntheticOnly": true,
+          "clinicalApproval": false,
+          "offlineClinicalApproval": false,
+          "storeUpload": false
+        },
+        {
+          "version": 1,
+          "task": "DOS-M4-003",
+          "sourceHead": "e0777b28983545b02e984355af509722382c586b",
+          "apkSha256": "9c2d439b1bb53aff97eef3ea1060358ceee404c07f117bed02d38f02c623a126",
+          "testApkSha256": "a019b7a965cfb5ad7d03e607a14ad2199361cba3ea8955299fdd48847642f117",
+          "api": 29,
+          "cases": [
+            {
+              "id": "fresh-install-empty",
+              "status": "passed"
+            },
+            {
+              "id": "ciphertext-roundtrip",
+              "status": "passed"
+            },
+            {
+              "id": "tamper-denied",
+              "status": "passed"
+            },
+            {
+              "id": "namespace-denied",
+              "status": "passed"
+            },
+            {
+              "id": "purge-marker",
+              "status": "passed"
+            },
+            {
+              "id": "seed-before-reinstall",
+              "status": "passed"
+            },
+            {
+              "id": "fresh-after-reinstall",
+              "status": "passed"
+            }
+          ],
+          "stage": "complete",
+          "cleanup": "passed",
+          "issues": [],
+          "accepted": true,
+          "runner": "owned-disposable-android-emulator",
+          "physicalDevice": false,
+          "syntheticOnly": true,
+          "clinicalApproval": false,
+          "offlineChartApproval": false
+        },
+        {
+          "version": 1,
+          "sourceHead": "e0777b28983545b02e984355af509722382c586b",
+          "appId": "com.buildingsuit.doctor.synthetic",
+          "apkSha256": "9c2d439b1bb53aff97eef3ea1060358ceee404c07f117bed02d38f02c623a126",
+          "api": 36,
+          "accepted": false,
+          "stage": "unknown-deep-link-denied",
+          "cleanup": "passed",
+          "runtime": {
+            "webviewMajor": 133,
+            "clientIssues": [],
+            "webviewVisible": true,
+            "syntheticPackageVisible": true
+          },
+          "lifecycle": {
+            "backgroundObserved": true,
+            "resumeObserved": true
+          },
+          "runner": "owned-disposable-android-emulator",
+          "physicalDevice": false,
+          "cases": [
+            {
+              "id": "cold-launch-signed-out",
+              "status": "passed"
+            },
+            {
+              "id": "cold-deep-link-signed-out",
+              "status": "passed"
+            },
+            {
+              "id": "hardware-back-workspace",
+              "status": "passed"
+            },
+            {
+              "id": "background-resume-signed-out",
+              "status": "passed"
+            },
+            {
+              "id": "unknown-deep-link-denied",
+              "status": "failed"
+            }
+          ],
+          "syntheticOnly": true,
+          "clinicalApproval": false,
+          "offlineClinicalApproval": false,
+          "storeUpload": false
+        },
+        {
+          "version": 1,
+          "task": "DOS-M4-003",
+          "sourceHead": "e0777b28983545b02e984355af509722382c586b",
+          "apkSha256": "9c2d439b1bb53aff97eef3ea1060358ceee404c07f117bed02d38f02c623a126",
+          "testApkSha256": "a019b7a965cfb5ad7d03e607a14ad2199361cba3ea8955299fdd48847642f117",
+          "api": 36,
+          "cases": [
+            {
+              "id": "fresh-install-empty",
+              "status": "passed"
+            },
+            {
+              "id": "ciphertext-roundtrip",
+              "status": "passed"
+            },
+            {
+              "id": "tamper-denied",
+              "status": "passed"
+            },
+            {
+              "id": "namespace-denied",
+              "status": "passed"
+            },
+            {
+              "id": "purge-marker",
+              "status": "passed"
+            },
+            {
+              "id": "seed-before-reinstall",
+              "status": "passed"
+            },
+            {
+              "id": "fresh-after-reinstall",
+              "status": "passed"
+            }
+          ],
+          "stage": "complete",
+          "cleanup": "passed",
+          "issues": [],
+          "accepted": true,
+          "runner": "owned-disposable-android-emulator",
+          "physicalDevice": false,
+          "syntheticOnly": true,
+          "clinicalApproval": false,
+          "offlineChartApproval": false
+        }
+      ]
+    }
+  ]
+}

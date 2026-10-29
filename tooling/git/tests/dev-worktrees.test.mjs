@@ -100,6 +100,18 @@ test('shared changes reach all apps and deleted source files are counted', async
   assert.equal(selectWorktree((await f.inspect('ledger')).trees, f.root).path, shared)
 })
 
+test('Doctor preview selects its newest active worktree instead of the original checkout', async t => {
+  const f = await fixture(t)
+  const doctor = f.tree('doctor-enrollment')
+  await writeFile(join(doctor, 'apps/doctor-suit/page.vue'), 'guided enrollment')
+  git(doctor, 'add', '.')
+  git(doctor, 'commit', '-m', 'Doctor enrollment')
+  assert.equal(selectWorktree((await f.inspect('doctor')).trees, f.root).path, doctor)
+  const output = execFileSync(process.execPath, [launcher, 'doctor', '--worktree', doctor, '--dry-run'], { cwd: f.root, encoding: 'utf8' })
+  assert.ok(output.includes('"@building-suit/doctor-suit"'))
+  assert.ok(output.includes('"3006"'))
+})
+
 test('Inventory is a first-class dev target with an isolated port and package', () => {
   assert.deepEqual(applications.inventory, {
     directory: 'inventory-suit',

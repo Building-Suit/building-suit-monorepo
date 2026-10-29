@@ -1,0 +1,52 @@
+{
+  "task_id": "DOS-M5-005",
+  "scope": "independent-synthetic-prescription-projection-and-reconciliation",
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "professional_signature": false,
+  "live_prescribing": false,
+  "external_notifications": false,
+  "patient_native_scaffold": false,
+  "patient_identity_approval": null,
+  "patient_platform_approval": null,
+  "clinician_reminder_policy_approval": null,
+  "native_cases": [],
+  "device_status": "blocked-unrun-no-approved-patient-platform-or-command-map",
+  "unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m5-005.test.mjs"
+    ],
+    "exit_code": 0,
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full_root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2365,
+    "passed": 2288,
+    "failed": 54,
+    "skipped": 23,
+    "failure_locations": "all54-under-apps/shop-suit/tests"
+  },
+  "source_files": {
+    "apps/doctor-suit/app/utils/patientPrescriptionPreview.ts": "385a55940f5084f7c994aaaed63eb43c9e80ac8b8cc1c777964ccbb1522ce9cc",
+    "apps/doctor-suit/tests/unit/dos-m5-005.test.mjs": "4695bb6f93e9887129e550e90ea4104e48efb12fbd8bf5752812cd939e76a02d"
+  },
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-record",
+  "limitations": [
+    "No native/provider/live-data patient integration or signed clinical source",
+    "No qualified identity/caregiver/platform/reminder-policy approval",
+    "No approved-platform/device/rendered instruction acceptance",
+    "No actual notification schedule/cancel or medical interpretation",
+    "Fixture refresh callbacks only; future server adapters must enforce fresh authorization",
+    "Source hash retained as provenance; original clinical bytes/signature not verified"
+  ]
+}

@@ -4,15 +4,15 @@ The user selected InstaPay instead of X-Pay for the initial route, then authoriz
 
 ## Authorized launch list prices — 2026-10-18
 
-Canonical source: `apps/doctor-suit/config/introductory-plans.v1.json`, mirrored by the checked forward migration and consistency tests.
+Canonical source: `apps/doctor-suit/config/introductory-plans.v2.json`, mirrored by the checked forward migration and consistency tests.
 
 | Plan | Monthly EGP | Prepaid yearly EGP | Active clinic locations | Total named users including owner | Server staff reservations excluding owner |
 |---|---:|---:|---:|---:|---:|
-| Starter | 299 | 2,990 | 1 | 5 | 4 |
-| Clinic | 599 | 5,990 | 3 | 10 | 9 |
-| Group | 999 | 9,990 | 5 | 25 | 24 |
+| Starter | 299 | 2,439.84 | 1 | 5 | 4 |
+| Clinic | 599 | 4,887.84 | 3 | 10 | 9 |
+| Group | 999 | 8,151.84 | 5 | 25 | 24 |
 
-A year is 12 calendar months for ten monthly payments (16.7% saving). Self-service activation has no setup fee. These are the user-selected launch list prices, without a crossed-out former price, lifetime promise, tax-treatment claim, clinical-release claim, or unlimited storage/support promise. All qualified administrative features are included. Unit economics remain provisional; profitability is not established.
+The later owner decision supersedes the original ten-payment proposal: prepay 12 calendar months at exactly 32% below twelve monthly payments. The original v1 catalogue, migrations, issued terms, quotes, payment intents/notices, received funds, periods and audit history remain unchanged; v2 applies to newly created catalogue quotes. Self-service activation has no setup fee. These are the user-selected launch list prices, without a crossed-out former price, lifetime promise, tax-treatment claim, clinical-release claim, or unlimited storage/support promise. All qualified administrative features are included. Unit economics remain provisional; profitability is not established.
 
 Parent-coordinated research accessed 2026-10-18: [Tabeeb Hub](https://tabeeb-hub.com/en/pricing) 149/249/449 EGP; [ClinicsAdmin](https://clinicsadmin.com/en) 250/500 monthly and 2,500/5,000 yearly; [Clinbeam](https://clinbeam.com/pricing) 599/1,199/2,499; [Tabbaba](https://tabbaba.com/pricing/) 799/1,599/3,299 and a 2,500 setup charge. These are the parent's current official-source research observations, not feature-equivalence or audited unit-economics findings. Tabeeb Hub has a lower starting price, so Doctor is not described as cheapest.
 
@@ -34,7 +34,7 @@ The final user decision supersedes earlier provisional proposals. Standard futur
 
 ## Implementation and acceptance
 
-The shared `BsManualPaymentPage` owns all presentation for `/payment-notices` and `/payment-review`; Doctor supplies versioned terms, request-scoped identities, server projections and semantic commands. `/subscription` links to notices and the public landing reuses the shared pricing cards. Approved list prices are 299/599/999 EGP monthly and 2990/5990/9990 yearly, with 1/3/5 active clinics and 5/10/25 named users including the owner. No earlier price is presented as a discount.
+The shared `BsManualPaymentPage` owns all presentation for `/payment-notices` and `/payment-review`; Doctor supplies versioned terms, request-scoped identities, server projections and semantic commands. `/subscription` links to notices and the public landing reuses the shared pricing cards. Approved list prices are 299/599/999 EGP monthly and 2439.84/4887.84/8151.84 yearly, with 1/3/5 active clinics and 5/10/25 named users including the owner. No earlier price is presented as a discount.
 
 Preparation binds immutable quote, intent and recipient snapshots before instructions are displayed. Customer notices remain unverified claims. The optional private receipt accepts one validated PDF/PNG/JPEG up to 5 MiB; real byte hashing and readback precede metadata finalization. Direct Storage reads, public/signed bypass URLs and client service-facade calls remain denied. A separate Doctor reviewer grant is required for independent bank-entry verification; verification alone creates no subscription. A subsequent activation command requires an explicit approved inactive-account policy, matching funds, quote/configuration snapshots and a server-derived calendar period. Existing active or suspended periods are held for separate review. Historical activity is immutable.
 

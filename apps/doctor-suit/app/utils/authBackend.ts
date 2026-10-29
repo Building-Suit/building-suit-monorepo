@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../types/database.types'
-import type { DoctorAuthBackend, DoctorIdentity } from './authController'
+import type { DoctorAuthBackend, DoctorIdentity, DoctorRegistrationIdentity } from './authController'
+import { doctorRegistrationIdentity } from './registrationIdentity.ts'
 
 const record = (value: unknown): value is Record<string, unknown> => Boolean(value && typeof value === 'object' && !Array.isArray(value))
 const uuid = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
@@ -23,7 +24,17 @@ export function doctorAuthBackend(client: SupabaseClient<Database>, origin: stri
     },
     async signIn(email, password) { checked((await client.auth.signInWithPassword({ email, password })).error) },
     async signUp(name, email, password) {
-      checked((await client.auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/verify`, data: { display_name: name } } })).error)
+      const { data, error } = await client.auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/verify`, data: { display_name: name } } })
+      checked(error)
+      // GoTrue can return an obfuscated existing user without an error.
+      if (!data.user || (!data.session && data.user.identities?.length === 0)) throw { code: 'DOCTOR_ACCOUNT_EXISTS' }
+      return data.session && doctorRegistrationIdentity((await client.auth.getUser()).data.user) ? 'verified' : 'challenge'
+    },
+    async registrationIdentity(): Promise<DoctorRegistrationIdentity | null> {
+      const { data, error } = await client.auth.getUser()
+      if (error?.name === 'AuthSessionMissingError') return null
+      checked(error)
+      return doctorRegistrationIdentity(data.user)
     },
     async verify(email, code) { checked((await client.auth.verifyOtp({ email, token: code, type: 'signup' })).error) },
     async exchange(code, flowId) { checked((await client.auth.exchangeCodeForSession(code, flowId ? { flowId } : undefined)).error) },

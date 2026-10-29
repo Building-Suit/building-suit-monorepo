@@ -1,0 +1,133 @@
+{
+  "task_id": "DOS-M5-006",
+  "decision_id": "DOS-M5-GATE-REMINDERS",
+  "status": "proposed-unreviewed",
+  "task_acceptance": false,
+  "clinician_reviewer": null,
+  "approved_at": null,
+  "approved_candidate_sha": null,
+  "approval_references": [],
+  "clinical_approval": false,
+  "professional_signature": false,
+  "qualified_interpretation": false,
+  "patient_identity_approval": null,
+  "patient_platform_approval": null,
+  "native_notification_activation": false,
+  "external_delivery": false,
+  "source_limit": "Existing M2 source is synthetic-manual; no professional signed source or clinician approval is invented.",
+  "proposed_algorithm": {
+    "id": "doctor-reminder-preview-v1",
+    "event_identity": [
+      "algorithm",
+      "release_id",
+      "version_id",
+      "snapshot_sha256",
+      "prescription_id",
+      "original_segment_index",
+      "utc_occurrence_ms"
+    ],
+    "zone": "Use entered segment IANA zone; never silently use device/travel zone. A travel adjustment requires a new reviewed decision/source.",
+    "dates": "Inclusive segment and requested horizon civil dates in entered segment zone.",
+    "interval": "Require explicit matching absolute UTC minute anchor and explicit elapsed_utc basis; never infer start from an unknown anchor.",
+    "dst_weekdays": "A gap or fold blocks the complete preview window with zero guessed or partial events.",
+    "dst_elapsed_interval": "Explicit elapsed_utc proposal preserves elapsed spacing across clock transitions; this interpretation requires clinician review before use.",
+    "as_needed_or_mixed": "Unsupported for deterministic scheduled events; no guessed frequency.",
+    "free_text_or_taper": "Preserve entered text/amount. Existing segments have no per-segment dose field; do not derive taper amounts or interpret inconsistent prose. Qualified review/model support remains missing.",
+    "bounds": {
+      "max_inclusive_days": 31,
+      "max_events": 512,
+      "limit_behavior": "Reject entire preview, never truncate."
+    },
+    "clock": "Explicit asOf must remain within the selected source admission and not precede observation. No implicit clock, missed-dose catchup or compensation.",
+    "amend_stop": "Compute immutable obsolete-ID diff; preserve source links/history; actual native cancellation requires approved future adapter.",
+    "clock_precision": "Minute-aligned UTC anchors/occurrences only. Historical second-based offsets are explicitly unsupported, never rounded into guessed times."
+  },
+  "technical_runtime": {
+    "node": "v26.8.1",
+    "icu": "78.3",
+    "tz": "2026c"
+  },
+  "runtime_qualification": "Node Intl vectors only. Patient renderer/tzdb parity, physical device/clock policy and platform command registration are unrun/unapproved.",
+  "technical_vectors": [
+    {
+      "name": "UTC midnight and selected weekdays",
+      "source_dates": [
+        "2026-01-01",
+        "2026-01-04"
+      ],
+      "weekdays": [
+        4,
+        7
+      ],
+      "times": [
+        "23:59",
+        "00:00"
+      ],
+      "expected_events": 4
+    },
+    {
+      "name": "New York gap",
+      "zone": "America/New_York",
+      "day": "2026-03-08",
+      "time": "02:30",
+      "expected_blocker": "dst_gap"
+    },
+    {
+      "name": "New York fold",
+      "zone": "America/New_York",
+      "day": "2026-11-01",
+      "time": "01:30",
+      "expected_blocker": "dst_fold"
+    },
+    {
+      "name": "Lord Howe half-hour fold",
+      "zone": "Australia/Lord_Howe",
+      "day": "2026-04-05",
+      "time": "01:45",
+      "expected_blocker": "dst_fold"
+    },
+    {
+      "name": "Kathmandu non-hour offset",
+      "zone": "Asia/Kathmandu",
+      "day": "2026-01-06",
+      "time": "09:00",
+      "expected_utc": "2026-01-06T03:15:00.000Z"
+    },
+    {
+      "name": "Explicit interval anchor",
+      "zone": "Etc/UTC",
+      "dates": [
+        "2026-01-01",
+        "2026-01-02"
+      ],
+      "anchor": "2026-01-01T00:30:00Z",
+      "basis": "elapsed_utc",
+      "interval_minutes": 90,
+      "expected_events": 32
+    },
+    {
+      "name": "New York elapsed interval across spring jump",
+      "anchor": "2026-03-08T05:30:00Z",
+      "basis": "elapsed_utc",
+      "interval_minutes": 60,
+      "first_local_times": [
+        "00:30",
+        "01:30",
+        "03:30"
+      ],
+      "qualification": "unreviewed-technical-proposal"
+    }
+  ],
+  "review_required": [
+    "Clinician interpretation of interval basis, anchors, inclusivity, taper/complex prose and timezone/travel changes",
+    "Patient identity/caregiver, minimal consent and withdrawal contract",
+    "Native permission/channel/notification scheduling, missed/delayed/snoozed/amended reconciliation",
+    "Approved platform/renderer/tzdb/build/device clock and physical accessibility/security evidence",
+    "Unambiguous disclosure that reminders are not medical dosing advice or guaranteed delivery"
+  ],
+  "technical_implementation_sha256": {
+    "apps/doctor-suit/app/utils/patientReminderPreview.ts": "f3196b38d0e52ced10bd477e2983e279bc5b815fedbaad1e0d85e8961f22260b",
+    "apps/doctor-suit/tests/unit/dos-m5-006.test.mjs": "c63fd2c60954aa8f5b3f8a68b5e44b06db3cb7eb21278aa9555a61d3b40718c9"
+  },
+  "no_approval_substitution": "This packet and its self-produced Node checks cannot replace accountable clinical review or independent exact-candidate/device evidence."
+}
