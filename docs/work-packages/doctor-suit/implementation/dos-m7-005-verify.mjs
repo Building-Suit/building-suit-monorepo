@@ -48,7 +48,7 @@ try {
   check('nine-packets-104-tasks', count === 104)
   const prior = JSON.parse(bound(folder + 'dos-m7-004-packet.json'))
   check('privacy-dependency-not-accepted', prior.full_task_acceptance === false && prior.qualified_policy_approval === null)
-  const allowed = new Set(['dos-m7-005.md', 'dos-m7-005-packet.json', 'dos-m7-005-verify.mjs', 'dos-m7-005-verification.json'].map(file => folder + file).concat('release-fragments/dos-m7-005.json'))
+  const allowed = new Set(['dos-m7-005.md', 'dos-m7-005-packet.json', 'dos-m7-005-verify.mjs', 'dos-m7-005-verification.json', 'dos-m7-005-shop515-verification.json'].map(file => folder + file).concat('release-fragments/dos-m7-005.json', 'release-fragments/dos-m7-005-shop515-binding-20261029.json'))
   const changed = git('diff', '--name-only', base, head).split('\n').filter(Boolean)
   check('only-owned-evidence-changed', changed.length > 0 && changed.every(file => allowed.has(file)))
 } catch { check('input-or-contract-evaluation', false) }

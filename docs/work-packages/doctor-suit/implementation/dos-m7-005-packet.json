@@ -2,7 +2,7 @@
   "schema": "doctor-security-review-handoff/v1",
   "task_id": "DOS-M7-005",
   "parent_pr": 505,
-  "parent_head": "713615f8d35e32ed7962839051ff97150062e353",
+  "parent_head": "7293dc6e727912385c99d8abaf93d163c7f161e5",
   "scope": "source-inventory-and-independent-review-handoff",
   "full_task_acceptance": false,
   "runtime_execution": false,
