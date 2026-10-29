@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
-import { git, validateFragment, affectedSuits, fragmentTree, digest } from './fragments.mjs'
+import { git, validateFragment, affectedSuits, fragmentTree, digest, workspaceGraphAt } from './fragments.mjs'
+export { workspaceGraphAt } from './fragments.mjs'
 
 /** Evidence is reviewed semantic text, compared directly between the two branch trees.
  * Commit lists, merge-base-only diffs and fragment accumulation are never release authority. */
@@ -47,12 +48,6 @@ export function netCandidate({ main, staging, items, graph, read = readTree, dif
     for (const suit of affectedSuits([file],graph)) if (!covered.get(file).has(suit)) throw new Error(`Unclassified net consumer: ${suit} for ${file}`)
   }
   return active.sort((a,b) => a.id.localeCompare(b.id))
-}
-export function workspaceGraphAt(ref, run = git) {
-  return run('ls-tree','-r','--name-only',ref,'--','apps','packages').split('\n').filter(file=>/^(apps|packages)\/[^/]+\/package.json$/.test(file)).map(file=>{
-    const manifest=JSON.parse(run('show',`${ref}:${file}`)), dir=file.slice(0,-'/package.json'.length)
-    return {dir,name:manifest.name,suit:dir.startsWith('apps/')&&dir.endsWith('-suit')?dir.slice(5):null,dependencies:Object.keys({...manifest.dependencies,...manifest.devDependencies})}
-  })
 }
 export function buildCandidate(main, staging) {
   const items = JSON.parse(readTree(staging, 'release-changes/items.json'))

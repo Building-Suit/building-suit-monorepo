@@ -4732,5 +4732,30 @@
     "sources": [
       "ls-bill-instapay-001-release-support"
     ]
+  },
+  {
+    "id": "ls-rel-prov-001-historical-scope",
+    "task": "LS-REL-PROV-001",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "tooling/releases/fragments.mjs",
+      "tooling/releases/candidate.mjs",
+      "tooling/releases/historical-fragment-scope.test.mjs",
+      "docs/work-packages/ledger-historical-release-provenance.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Verify immutable historical fragment consumers against their exact original Git source when a later net revert removes a shared path, preserving current path coverage, unknown-consumer rejection and publication gates. No operational product activation or hosted change.",
+    "sources": [
+      "ls-rel-prov-001-historical-scope"
+    ]
   }
 ]
