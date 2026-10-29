@@ -9,17 +9,11 @@
   "paths": [
     "apps/doctor-suit/mobile/doctor/app/layouts/auth.vue",
     "apps/doctor-suit/mobile/doctor/app/layouts/default.vue",
-    "apps/doctor-suit/mobile/doctor/app/pages/[[...path]].vue",
-    "apps/doctor-suit/mobile/doctor/app/pages/account.vue",
-    "apps/doctor-suit/mobile/doctor/app/pages/encounters.vue",
-    "apps/doctor-suit/mobile/doctor/app/pages/patients/[id].vue",
-    "apps/doctor-suit/mobile/doctor/app/pages/patients/index.vue",
-    "apps/doctor-suit/mobile/doctor/app/pages/recover.vue",
-    "apps/doctor-suit/mobile/doctor/app/pages/schedule.vue",
     "apps/doctor-suit/tests/unit/dos-m4-006.test.mjs",
     "apps/doctor-suit/tests/unit/dos-m4-008.test.mjs",
     "docs/work-packages/doctor-suit/implementation/consolidation-2026-10-29.md",
-    "docs/work-packages/doctor-suit/implementation/consolidation-2026-10-29-inventory.json"
+    "docs/work-packages/doctor-suit/implementation/consolidation-2026-10-29-inventory.json",
+    "apps/doctor-suit/mobile/doctor/app/pages"
   ],
   "reason": "Owner-requested consolidation and integration validation: name nested Nuxt mobile components explicitly and remove unused fixture bindings without changing runtime authority, assertions, lint rules or product behavior. Preserve exact published-head ancestry and source-bound CI evidence."
 }
