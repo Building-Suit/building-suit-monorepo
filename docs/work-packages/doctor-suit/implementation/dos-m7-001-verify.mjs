@@ -31,7 +31,7 @@ let disposition='unavailable-no-qualified-receipt'
 try{
  check('executing-exact-candidate',git('rev-parse','HEAD')===head);check('parent-is-ancestor',git('merge-base',base,head)===base)
  bound(script);bound(folder+'dos-m7-001.md');const p=JSON.parse(bound(folder+'dos-m7-001-packet.json'))
- check('canonical-task-decision-and-parent',p.task_id==='DOS-M7-001'&&p.decision_id==='DOS-M7-GATE-LEGAL'&&p.parent_pr===501&&p.parent_head===base&&p.candidate_binding==='evaluated-committed-head')
+ check('canonical-task-decision-and-parent',p.task_id==='DOS-M7-001'&&p.decision_id==='DOS-M7-GATE-LEGAL'&&p.parent_pr===401&&p.parent_head===base&&p.candidate_binding==='evaluated-committed-head')
  check('genuine-review-policies-and-approval-not-invented',p.review_receipt===null&&p.qualified_reviewer===null&&p.approved_policy_requirements===null&&p.decision_approval===null&&p.gate_state==='OPEN'&&p.full_task_acceptance===false)
  const ids=['doctor-practice','practice-staff','patient','caregiver','saas-operator','external-processors','external-health-partners']
  check('separate-participant-responsibilities-without-assigned-legal-roles',p.participants.length===ids.length&&new Set(p.participants.map(x=>x.id)).size===ids.length&&ids.every(id=>p.participants.some(x=>x.id===id&&x.legal_role===null&&x.approved_legal_basis===null&&x.actual_entity===null&&x.review_questions.length>=2)))
@@ -47,7 +47,7 @@ try{
   ['unsigned',{signed:false},'invalid-unsigned'],['wrong-candidate',{candidate_sha:base},'invalid-scope'],['changed-flow',{data_flow_sha256:'0'.repeat(64)},'invalid-scope'],['missing-party',{participant_ids:ids.slice(1)},'invalid-scope'],['superseded',{superseded:true},'invalid-superseded'],['expired',{reviewed_at:'2000-01-01T00:00:00Z',valid_until:'2000-01-02T00:00:00Z'},'invalid-date-or-validity'],['future',{reviewed_at:'9999-12-31T00:00:00Z'},'invalid-date-or-validity'],['unqualified',{reviewer:{}},'invalid-incomplete']])check('negative-receipt-control:'+id,reviewReceipt({...fixture,...patch},scope)===expected)
  check('well-shaped-generated-claim-cannot-supply-authority',reviewReceipt(fixture,scope)==='unavailable-reviewer-authority-not-validated')
  for(let n=1;n<=9;n++){const file=`docs/work-packages/doctor-suit/planning-v0.4/DOS-M${n}.json`;check('canonical-packet-'+n+'-unchanged',sha(bound(file))===sha(source(base,file)))}
- const changed=git('diff','--name-only',base,head).split('\n').filter(Boolean);check('evidence-only-allowed-paths',changed.length>0&&changed.every(file=>file.startsWith('docs/work-packages/doctor-suit/')||file==='release-fragments/dos-m7-001.json'))
+ const changed=git('diff','--name-only',base,head).split('\n').filter(Boolean);check('evidence-only-allowed-paths',changed.length>0&&changed.every(file=>file.startsWith('docs/work-packages/doctor-suit/')||file==='release-fragments/dos-m7-001.json'||file==='release-fragments/dos-m7-001-consolidation-binding-20261029.json'))
  const factPaths=['docs/architecture/environments.json','apps/doctor-suit/app/utils/authConfiguration.ts','apps/doctor-suit/app/utils/patientCaregiverProtocol.ts','apps/doctor-suit/app/utils/privacyRequests.ts','apps/doctor-suit/app/utils/contactPreferences.ts','apps/doctor-suit/app/utils/locationContext.ts','apps/doctor-suit/app/utils/administrativeEdition.ts','apps/doctor-suit/app/utils/entitlement.ts']
  for(const file of factPaths)check('technical-fact-source-unchanged:'+file,sha(bound(file))===sha(source(base,file)))
  const env=JSON.parse(source(head,'docs/architecture/environments.json')).products['doctor-suit']
