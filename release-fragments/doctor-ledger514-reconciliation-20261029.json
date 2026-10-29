@@ -1,0 +1,12 @@
+{
+  "id": "doctor-ledger514-reconciliation-20261029",
+  "task": "DOCTOR-CONSOLIDATION-20261029",
+  "suits": ["doctor-suit", "ledger-suit", "shop-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/ledger514-reconciliation-2026-10-29.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Reconcile the queued Doctor candidate with verified Ledger staging while preserving both histories and accepted release inventory. No new public behavior, product registration, clinical/legal approval, provider action or production authority is supplied; fresh exact-head owned CI remains required."
+}
