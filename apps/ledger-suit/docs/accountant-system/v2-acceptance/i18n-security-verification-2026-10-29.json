@@ -1,0 +1,122 @@
+{
+  "task": "LS-SEC-DEP-007",
+  "date": "2026-10-29",
+  "parent_pr": 439,
+  "parent_sha": "4be53d400b4a789dec01e95b9aa364abeb6724da",
+  "state": "local_qualification_pass_combined_ci_required",
+  "runtime": {
+    "before": "11.4.12",
+    "after": "11.4.14"
+  },
+  "audit_before": {
+    "info": 0,
+    "low": 4,
+    "moderate": 0,
+    "high": 5,
+    "critical": 0
+  },
+  "audit_after": {
+    "info": 0,
+    "low": 1,
+    "moderate": 0,
+    "high": 1,
+    "critical": 0
+  },
+  "patched_advisories": [
+    "GHSA-83rm-6c8r-g728",
+    "GHSA-8rc2-428q-7ww3"
+  ],
+  "before_regressions": {
+    "pass": 1,
+    "fail": 3
+  },
+  "after_regressions": {
+    "pass": 4,
+    "fail": 0
+  },
+  "browser": [
+    {
+      "runtime": "11.4.12",
+      "scenario": "control",
+      "marker": "123",
+      "activeSrcdoc": 1
+    },
+    {
+      "runtime": "11.4.12",
+      "scenario": "literal",
+      "marker": "123",
+      "activeSrcdoc": 1
+    },
+    {
+      "runtime": "11.4.12",
+      "scenario": "parameter",
+      "marker": "123",
+      "activeSrcdoc": 1
+    },
+    {
+      "runtime": "11.4.12",
+      "scenario": "mixed",
+      "marker": "123",
+      "activeSrcdoc": 1
+    },
+    {
+      "runtime": "11.4.14",
+      "scenario": "control",
+      "marker": "123",
+      "activeSrcdoc": 1
+    },
+    {
+      "runtime": "11.4.14",
+      "scenario": "literal",
+      "marker": null,
+      "activeSrcdoc": 0
+    },
+    {
+      "runtime": "11.4.14",
+      "scenario": "parameter",
+      "marker": null,
+      "activeSrcdoc": 0
+    },
+    {
+      "runtime": "11.4.14",
+      "scenario": "mixed",
+      "marker": null,
+      "activeSrcdoc": 0
+    }
+  ],
+  "remaining": [
+    {
+      "package": "node-forge",
+      "severity": "high",
+      "patched_versions": "<0.0.0",
+      "url": "https://github.com/advisories/GHSA-86w9-cpqp-85rv"
+    },
+    {
+      "package": "deepmerge",
+      "severity": "low",
+      "patched_versions": "<0.0.0",
+      "url": "https://github.com/advisories/GHSA-gcqx-w48m-w2h4"
+    }
+  ],
+  "types": "seven_apps_pass",
+  "builds": "seven_apps_pass",
+  "public_browser": {
+    "pass": 36,
+    "fail": 0,
+    "scope": "maintained auth, signup and public-route suites across six configured app servers"
+  },
+  "financial_or_hosted_changes": false,
+  "production_entrypoint_exploitability_established": false,
+  "unit": {
+    "total": 2065,
+    "pass": 2042,
+    "skip": 23,
+    "fail": 0
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 31
+  },
+  "workspace": "pass",
+  "tokens": "pass"
+}

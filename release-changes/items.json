@@ -4644,6 +4644,96 @@
     ]
   },
   {
+    "id": "ls-sec-dep-007-i18n-runtime",
+    "task": "LS-SEC-DEP-007",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "pnpm-workspace.yaml",
+      "pnpm-lock.yaml",
+      "tooling/checks/i18n-escape-security.test.mjs",
+      "apps/ledger-suit/docs/accountant-system"
+    ],
+    "reason": "Patch the actual shared translation runtime and qualify its HTML-escaping contracts without enabling an HTML translation flow or claiming a vulnerable product entry point, hosted deployment, new feature or accountant acceptance. All actual workspace consumers retain private dependency provenance.",
+    "sources": [
+      "ls-sec-dep-007-i18n-runtime"
+    ]
+  },
+  {
+    "id": "ls-bill-instapay-001-cutover",
+    "task": "LS-BILL-INSTAPAY-001",
+    "suits": [
+      "ledger-suit"
+    ],
+    "classification": "minor",
+    "disposition": "public",
+    "paths": [
+      "apps/ledger-suit"
+    ],
+    "reason": "Make existing server-quoted InstaPay/manual-review checkout primary, retire new online enrollment after authentication/tenant admission, remove customer provider branding and prevent stale selected instructions after a failed quote. Keep historical payment evidence, callbacks, audit, existing paid-period conflicts and authorization unchanged. No recipient is inferred or configured.",
+    "notes": {
+      "title": {
+        "en": "Pay by InstaPay with manual review",
+        "ar": "\u0627\u0644\u062f\u0641\u0639 \u0628\u0625\u0646\u0633\u062a\u0627\u0628\u0627\u064a \u0645\u0639 \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u064a\u062f\u0648\u064a\u0629"
+      },
+      "summary": {
+        "en": "Choose a plan, review its payment instructions and submit a receipt for authorized review.",
+        "ar": "\u0627\u062e\u062a\u0631 \u0628\u0627\u0642\u0629 \u0648\u0631\u0627\u062c\u0639 \u062a\u0639\u0644\u064a\u0645\u0627\u062a \u0627\u0644\u062f\u0641\u0639 \u062b\u0645 \u0623\u0631\u0633\u0644 \u0627\u0644\u0625\u064a\u0635\u0627\u0644 \u0644\u0644\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0645\u062e\u0648\u0651\u0644\u0629."
+      },
+      "details": {
+        "en": "A transfer or receipt submission does not activate access. Prices and instructions come from the server quote; missing instructions block payment preparation. Existing payment records are preserved.",
+        "ar": "\u0627\u0644\u062a\u062d\u0648\u064a\u0644 \u0623\u0648 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0625\u064a\u0635\u0627\u0644 \u0644\u0627 \u064a\u0641\u0639\u0651\u0644 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643. \u062a\u0635\u062f\u0631 \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0648\u0627\u0644\u062a\u0639\u0644\u064a\u0645\u0627\u062a \u0645\u0646 \u0639\u0631\u0636 \u0627\u0644\u0633\u0639\u0631 \u0628\u0627\u0644\u0646\u0638\u0627\u0645\u060c \u0648\u064a\u062a\u0639\u0630\u0631 \u0625\u0639\u062f\u0627\u062f \u0627\u0644\u062f\u0641\u0639 \u0639\u0646\u062f \u063a\u064a\u0627\u0628 \u0627\u0644\u062a\u0639\u0644\u064a\u0645\u0627\u062a. \u062a\u0638\u0644 \u0633\u062c\u0644\u0627\u062a \u0627\u0644\u062f\u0641\u0639 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0645\u062d\u0641\u0648\u0638\u0629."
+      }
+    },
+    "sources": [
+      "ls-bill-instapay-001-cutover"
+    ],
+    "evidence": [
+      {
+        "path": "apps/ledger-suit/app/composables/useLedgerBillingCheckoutView.ts",
+        "contains": "if (surface.value === 'checkout') chooseManualPlan(plan.plan_key)"
+      },
+      {
+        "path": "apps/ledger-suit/i18n/locales/en.json",
+        "contains": "\"manualPaymentNotice\": \"InstaPay transfer \u2014 reviewed manually; no automatic renewal\""
+      },
+      {
+        "path": "apps/ledger-suit/app/composables/useManualPayment.ts",
+        "contains": "selected.value = null; evidence.value = []; history.value = []\n      const result = await client.from('manual_payment_requests')"
+      }
+    ]
+  },
+  {
+    "id": "ls-bill-instapay-001-release-support",
+    "task": "LS-BILL-INSTAPAY-001",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "release-changes/items.json",
+      "apps/ledger-suit/docs"
+    ],
+    "reason": "Maintain curated private provenance and recovery/qualification records for the Ledger payment-method transition. Other consumers receive no checkout, provider, activation or hosted changes.",
+    "sources": [
+      "ls-bill-instapay-001-release-support"
+    ]
+  },
+  {
     "id": "shop-catalog-fixed-server-pagination-20261029",
     "task": "SS-ELEC-601",
     "suits": [
