@@ -1,0 +1,274 @@
+{
+  "schema": "doctor-security-review-handoff/v1",
+  "task_id": "DOS-M7-005",
+  "parent_pr": 505,
+  "parent_head": "713615f8d35e32ed7962839051ff97150062e353",
+  "scope": "source-inventory-and-independent-review-handoff",
+  "full_task_acceptance": false,
+  "runtime_execution": false,
+  "accountable_assessor": null,
+  "assessment_receipt": null,
+  "findings": null,
+  "residual_risk_decisions": null,
+  "canonical_cases": {
+    "C01": "unavailable-independent-accountable-assessment",
+    "C02": "unavailable-assessment-findings-and-independent-retest-inputs",
+    "C03": "unavailable-accountable-risk-disposition"
+  },
+  "surfaces": [
+    {
+      "surface_id": "tenant-location",
+      "source_paths": [
+        "apps/doctor-suit/app/utils/contextScope.ts",
+        "apps/doctor-suit/supabase/migrations/20261016205145_doctor_identity_foundation.sql",
+        "apps/doctor-suit/supabase/migrations/20261016234236_doctor_administrative_delegation.sql"
+      ],
+      "existing_test_paths": [
+        "apps/doctor-suit/tests/unit/dos-m1-006.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-008.test.mjs"
+      ],
+      "source_observation": "Current context keys include product/environment/account/session/practice/location/grant revisions; the context lifecycle is not server authorization.",
+      "required_independent_review": "Independently test cross-doctor/location access, revoked membership and cleanup races against actual SQL/RLS and API behavior.",
+      "independent_assessment": "unavailable",
+      "execution_in_this_task": "not-executed"
+    },
+    {
+      "surface_id": "auth-recovery",
+      "source_paths": [
+        "apps/doctor-suit/app/utils/authController.ts",
+        "apps/doctor-suit/app/utils/authEntry.ts",
+        "apps/doctor-suit/supabase/migrations/20261016215141_doctor_session_verification.sql"
+      ],
+      "existing_test_paths": [
+        "apps/doctor-suit/tests/unit/auth-entry.test.mjs",
+        "apps/doctor-suit/tests/e2e/registration.auth.fixture.ts"
+      ],
+      "source_observation": "Auth/session and return navigation are product-owned; no hosted or user-account session is used by this preparation.",
+      "required_independent_review": "Assess account recovery, session/SID revocation, return destinations, callback scope and replay without recording credentials or verification links.",
+      "independent_assessment": "unavailable",
+      "execution_in_this_task": "not-executed"
+    },
+    {
+      "surface_id": "email-abuse",
+      "source_paths": [
+        "apps/doctor-suit/server/api/auth/email-step.post.ts",
+        "packages/auth/src/rateLimit.ts",
+        "apps/doctor-suit/supabase/migrations/20261018143439_doctor_auth_email_lookup.sql"
+      ],
+      "existing_test_paths": [
+        "apps/doctor-suit/tests/e2e/registration.auth.fixture.ts",
+        "apps/doctor-suit/supabase/tests/doctor-auth-email.sql"
+      ],
+      "source_observation": "The checked-email path returns a bounded continuation boolean, no-store, with per-instance 12/caller and 4/caller/address limits per ten minutes. This is not distributed production abuse protection.",
+      "required_independent_review": "Review caller/proxy trust, horizontal scaling, malformed/timeout behavior, enumeration tradeoffs and protection of the service-only lookup.",
+      "independent_assessment": "unavailable",
+      "execution_in_this_task": "not-executed"
+    },
+    {
+      "surface_id": "private-documents",
+      "source_paths": [
+        "apps/doctor-suit/supabase/functions/doctor-documents/handler.ts",
+        "apps/doctor-suit/supabase/functions/doctor-documents/backend.ts",
+        "apps/doctor-suit/supabase/migrations/20261017014608_doctor_private_documents.sql"
+      ],
+      "existing_test_paths": [
+        "apps/doctor-suit/tests/unit/dos-m1-012-http.test.mjs",
+        "apps/doctor-suit/tests/unit/dos-m1-012-files.test.mjs"
+      ],
+      "source_observation": "The handler checks allowed origins, authenticates and authorizes before I/O, validates bytes/hash and rechecks download authorization after I/O.",
+      "required_independent_review": "Independently assess RLS/Storage policies, object-path binding, upload reservation/finalization, content handling, revoked access and no credential-bearing artifacts.",
+      "independent_assessment": "unavailable",
+      "execution_in_this_task": "not-executed"
+    },
+    {
+      "surface_id": "realtime",
+      "source_paths": [
+        "apps/doctor-suit/app/utils/appointmentsRealtime.ts",
+        "apps/doctor-suit/app/utils/contextScope.ts"
+      ],
+      "existing_test_paths": [
+        "packages/contracts/tests/bs-realtime-adoption-001-1.test.mjs"
+      ],
+      "source_observation": "Realtime context includes account/session/practice/location and location-scoped filters; filters alone are not authorization.",
+      "required_independent_review": "Assess actual subscription policy, stale events, token/grant revocation and channel teardown without broadening tenant scope.",
+      "independent_assessment": "unavailable",
+      "execution_in_this_task": "not-executed"
+    },
+    {
+      "surface_id": "audit",
+      "source_paths": [
+        "apps/doctor-suit/app/utils/auditRepository.ts",
+        "apps/doctor-suit/supabase/migrations/20261017062525_doctor_administrative_audit.sql"
+      ],
+      "existing_test_paths": [
+        "apps/doctor-suit/tests/unit/dos-m1-016.test.mjs"
+      ],
+      "source_observation": "Personal account audit and practice/location administrative audit use different RPCs.",
+      "required_independent_review": "Assess read scope, immutable event attribution, command/result correlation, minimization and privileged routine access.",
+      "independent_assessment": "unavailable",
+      "execution_in_this_task": "not-executed"
+    },
+    {
+      "surface_id": "privacy-clinical",
+      "source_paths": [
+        "apps/doctor-suit/app/utils/privacyRequests.ts",
+        "packages/contracts/src/doctorClinical.ts",
+        "apps/doctor-suit/supabase/migrations/20261020003704_clinical_m2_013.sql"
+      ],
+      "existing_test_paths": [
+        "apps/doctor-suit/tests/unit/privacy-requests.test.mjs"
+      ],
+      "source_observation": "Own-account intake is awaiting_review with no policy/fulfillment; clinical export is unapproved_no_erasure and excludes Storage bytes.",
+      "required_independent_review": "Assess authorization, signed-version immutability, scope isolation and leakage; do not invent a privacy policy or treat export as rights fulfillment.",
+      "independent_assessment": "unavailable",
+      "execution_in_this_task": "not-executed"
+    },
+    {
+      "surface_id": "android-vault",
+      "source_paths": [
+        "apps/doctor-suit/mobile/doctor/app/utils/nativeSession.ts",
+        "apps/doctor-suit/mobile/doctor/app/utils/nativeSessionVault.ts",
+        "apps/doctor-suit/mobile/doctor/android/app/src/main/java/com/buildingsuit/doctor/synthetic/DoctorSessionVault.java",
+        "apps/doctor-suit/mobile/doctor/android/app/src/main/AndroidManifest.xml"
+      ],
+      "existing_test_paths": [
+        "apps/doctor-suit/tests/unit/dos-m4-003.test.mjs",
+        "apps/doctor-suit/mobile/doctor/scripts/verify-session-vault.mjs"
+      ],
+      "source_observation": "The documented native exception uses Android Keystore AES-GCM and no-backup ciphertext; restored sessions still require server verification.",
+      "required_independent_review": "Review actual supported API/WebView behavior, key invalidation, corrupt storage, backup exclusion, logging and missing-plugin fail-closed behavior. Emulator evidence is not physical-device certification.",
+      "independent_assessment": "unavailable",
+      "execution_in_this_task": "not-executed"
+    },
+    {
+      "surface_id": "android-online",
+      "source_paths": [
+        "apps/doctor-suit/mobile/doctor/app/utils/nativeOnlinePolicy.ts",
+        "apps/doctor-suit/mobile/doctor/scripts/verify-online-policy.mjs"
+      ],
+      "existing_test_paths": [
+        "apps/doctor-suit/tests/unit/dos-m4-009.test.mjs"
+      ],
+      "source_observation": "The 40-second memory admission lease invalidates on background/offline/expiry; it does not authorize chart caching or offline replay.",
+      "required_independent_review": "Review background screenshots, memory/cache clearing, connectivity/session races and absence of persisted clinical drafts or replay queues.",
+      "independent_assessment": "unavailable",
+      "execution_in_this_task": "not-executed"
+    },
+    {
+      "surface_id": "dependencies",
+      "source_paths": [
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml",
+        "tooling/checks/i18n-escape-security.test.mjs",
+        "apps/ledger-suit/docs/accountant-system/v2-acceptance/i18n-security-verification-2026-10-29.json"
+      ],
+      "existing_test_paths": [
+        "tooling/checks/i18n-escape-security.test.mjs"
+      ],
+      "source_observation": "The merged staging source pins the patched 11.4.14 translation runtime. Existing dated audit receipts remain historical; this inventory performs no fresh registry audit.",
+      "required_independent_review": "Independently triage current resolved dependency exposure and every reported high/critical finding, with exact source, remediation and retest; no developer waiver or clean-audit inference.",
+      "independent_assessment": "unavailable",
+      "execution_in_this_task": "not-executed"
+    }
+  ],
+  "input_sha256": {
+    "apps/doctor-suit/app/utils/appointmentsRealtime.ts": "a0fecc8e01e8611de29915c765dcc093d0b93f09cdf74c4a27480f106c9fe86f",
+    "apps/doctor-suit/app/utils/auditRepository.ts": "1b6f8c1d804d47e49ae6243a9798bb46cf3149767709935b73dae70aed6319b1",
+    "apps/doctor-suit/app/utils/authController.ts": "9c8e03319db1beccc6adaf77823735cc3bac883e51ef6fe6178813ec184fbcc2",
+    "apps/doctor-suit/app/utils/authEntry.ts": "63a7b5db0cbbb8645237117c41dab509fa9ec996623de337d8c04e05adf2108d",
+    "apps/doctor-suit/app/utils/contextScope.ts": "e088e1c79b08618b81e143906fde8d8dc0230cb387949f926fd6abfd75a72af3",
+    "apps/doctor-suit/app/utils/privacyRequests.ts": "23f07f6b363078baa0a1b0ba19c7f5fce40d2fc5a9ad9f32fd26ce5822457735",
+    "apps/doctor-suit/mobile/doctor/android/app/src/main/AndroidManifest.xml": "f033356fe3157bd08342766ab98c8e164b91760d25555bb6e49a513be26722d9",
+    "apps/doctor-suit/mobile/doctor/android/app/src/main/java/com/buildingsuit/doctor/synthetic/DoctorSessionVault.java": "b47f0a7760543750868abd32188061f9e88e06b0dec030c187dad9ad81e6ea0e",
+    "apps/doctor-suit/mobile/doctor/app/utils/nativeOnlinePolicy.ts": "4e4f60b8589bc9c02324c56b24ceb6cba38fcb1a66bc1b2b5d71ef1ac832158d",
+    "apps/doctor-suit/mobile/doctor/app/utils/nativeSession.ts": "974e498bc8caee43b145d8933ae53268b7da38db487e9a1ae9deb011ef8cf36d",
+    "apps/doctor-suit/mobile/doctor/app/utils/nativeSessionVault.ts": "0f4a73aa12a23a27d09eb9568fea93fe0037d569957b35f41dfa9c0bb4eb490b",
+    "apps/doctor-suit/mobile/doctor/scripts/verify-online-policy.mjs": "cbd0c8e99e68745fc5922a52d11d5596e9c0129773695502798185c04d61f9ec",
+    "apps/doctor-suit/mobile/doctor/scripts/verify-session-vault.mjs": "addec11c9fce0ad82b1ecfacb3b01e2a11e21f052eba1d7f0385904ca62582d0",
+    "apps/doctor-suit/server/api/auth/email-step.post.ts": "99957f49ae01583bf25adbdfa178d7404ae2af41c65f38336ea137e2b8269bca",
+    "apps/doctor-suit/supabase/functions/doctor-documents/backend.ts": "4b5e21c332557fa8787ed1cc86662023da51d9bd3e62922fb9d1d5f821d76102",
+    "apps/doctor-suit/supabase/functions/doctor-documents/handler.ts": "e7ca988d4465a7c66575401864e0b8ea4c70ef3d817fbe9e6bd99b8d4f8ac2e5",
+    "apps/doctor-suit/supabase/migrations/20261016205145_doctor_identity_foundation.sql": "578a74f7e754218499095c9a22f8466a5cb463b9afc580a6f8191abe4b9db742",
+    "apps/doctor-suit/supabase/migrations/20261016215141_doctor_session_verification.sql": "c18a5b31c88501229e7e471a930e47926ed0fda2beea03de251ee800ea06e179",
+    "apps/doctor-suit/supabase/migrations/20261016234236_doctor_administrative_delegation.sql": "8c6650836e2eb600c600f78a952fd9ce6862a7af7253450d76a3ee6ece84faf6",
+    "apps/doctor-suit/supabase/migrations/20261017014608_doctor_private_documents.sql": "e8d2bd7a388f0a95ace086c92d643918464797bd22be064d11efa5f68bc426fa",
+    "apps/doctor-suit/supabase/migrations/20261017062525_doctor_administrative_audit.sql": "740618d494456ed18aa6a00024d677d65e0d7a33057e6c5da43cc8166baadf20",
+    "apps/doctor-suit/supabase/migrations/20261018143439_doctor_auth_email_lookup.sql": "6ecfd8402fc088f928aa48b2f1d11985727e1ffa4f686cc0f3f5785aa9574dc4",
+    "apps/doctor-suit/supabase/migrations/20261020003704_clinical_m2_013.sql": "2a1f523981a39a222fddab06fd8b2c742cf546db0719d0afe4d359523ec82ea4",
+    "apps/doctor-suit/supabase/tests/doctor-auth-email.sql": "9d3d831c732282c5bf46a3fa86b4aae59265a55e09037288e569f3304baa22cf",
+    "apps/doctor-suit/tests/e2e/registration.auth.fixture.ts": "cf50674eec87dbff447f6a1ac89660ad7edd37c3e05ecefb641598b52b1713a5",
+    "apps/doctor-suit/tests/unit/auth-entry.test.mjs": "85b9007761b038857c02e33ad7c47cf71a4f90daddef3f835a0274f4b9430a8f",
+    "apps/doctor-suit/tests/unit/dos-m1-006.test.mjs": "406675e0f4e28d77e0c5173b46922ca600c1d3f37ca3728ed13f1cddea49aa2f",
+    "apps/doctor-suit/tests/unit/dos-m1-008.test.mjs": "78c6cdfec5938d70ef631756bf18a77bc203556476b17d8edfa241d708d6625b",
+    "apps/doctor-suit/tests/unit/dos-m1-012-files.test.mjs": "8dbe100b077bb874c871b53fd5945c7b3ac0f14c3660a68fc36df3e7411a49f8",
+    "apps/doctor-suit/tests/unit/dos-m1-012-http.test.mjs": "852699e6fc67ef0ac9c387d4f02a255418624e28a20236c80d523c99ae29f739",
+    "apps/doctor-suit/tests/unit/dos-m1-016.test.mjs": "cabcc12f79f789242fa71d87bf5e6dd0aaee1060f89f02736c273e594d7375ea",
+    "apps/doctor-suit/tests/unit/dos-m4-003.test.mjs": "d00da8f7fc9cf0fd04315fa1894fad291b34b8bdbedfcd12bb189e47771bf450",
+    "apps/doctor-suit/tests/unit/dos-m4-009.test.mjs": "6d8d5299f69ae169744b957d99d61581362249077f167d7f07d2ae6db35204e4",
+    "apps/doctor-suit/tests/unit/privacy-requests.test.mjs": "891ddb16df55577a396cd8a5a0b9ac1876f2d0ecc7595b942113f08cbe8f3f40",
+    "apps/ledger-suit/docs/accountant-system/v2-acceptance/i18n-security-verification-2026-10-29.json": "1eed18f09b59d20f86e594249b8815e686fbe4d8be494e198d08f0f4332da632",
+    "packages/auth/src/rateLimit.ts": "08c68fe2cd6fead1766d42a852efc7893a7ad17b2aae8fe1221250ba0cc19876",
+    "packages/contracts/src/doctorClinical.ts": "891cf1c455f31052bde214fe19b653080e88d9d45de81e77d8ce85ddfa0af0cf",
+    "packages/contracts/tests/bs-realtime-adoption-001-1.test.mjs": "3be47b94ad53181cda4be07aa677f4bf3312e00f4fb757469a7922a61bb96421",
+    "pnpm-lock.yaml": "0f022010d7c0124a311b19942d1112af39f467f183f03c841da521657fbb06e8",
+    "pnpm-workspace.yaml": "dbe116d0e01b1489b1a85e7250ff0780ad216d6f613d81dca5078cd465c5faaf",
+    "tooling/checks/i18n-escape-security.test.mjs": "c005fbdef9d23099c77c8c7fca68581abc362dc634a2c5b7b133dcb1813f6321"
+  },
+  "proposed_finding_fields": [
+    "finding_id",
+    "assessor_reference",
+    "assessor_independence_reference",
+    "assessment_scope_digest",
+    "exact_base_sha",
+    "exact_candidate_sha",
+    "surface_id",
+    "affected_source_coordinates",
+    "synthetic_reproduction_reference",
+    "severity",
+    "launch_blocking",
+    "accountable_owner_reference",
+    "status",
+    "remediation_commit",
+    "retest_receipt",
+    "evaluated_input_hashes",
+    "authorization_scope",
+    "review_date",
+    "residual_risk_decision_reference"
+  ],
+  "launch_rule": {
+    "developer_waiver_allowed": false,
+    "empty_findings_means_pass": false,
+    "accountable_review_required": true,
+    "unknown_assessment_or_unresolved_launch_blocker": "held",
+    "critical_high_findings": "No unresolved critical/high launch-blocking finding can be waived by the developer; preserve accountable review and exact-candidate retests."
+  },
+  "finding_command_policy": "record-reviewed-argv-only-never-execute-from-packet",
+  "receipt_requirements": [
+    "Independently established assessor identity, qualification, independence and mandate using private references, not personal data in this repository",
+    "Exact candidate/base and full approved assessment scope, with UTC assessment dates and source hashes",
+    "Reproducible synthetic findings, complete inventory including unassessed surfaces, severity/owner and explicit unresolved launch blockers",
+    "Remediation commits and independently executed exact-candidate retest receipts; changed source requires re-evaluation",
+    "Accountable residual-risk decisions with supporting evidence; no developer-issued release waiver"
+  ],
+  "evidence_limits": [
+    "Source comparisons are not an independent security assessment or penetration test",
+    "Existing tests and historical CI are discovery references, not fresh M7 security acceptance",
+    "No real identity, credentials, clinical payload, provider access, mobile runtime or exploit execution in this preparation",
+    "No empty findings array or passing build implies no vulnerabilities",
+    "No new infrastructure, account, security service or paid reviewer is provisioned"
+  ],
+  "next_required_evidence": [
+    {
+      "missing": "Independent assessor mandate, scope and actual assessment receipt",
+      "blocks": "C01 and a complete finding inventory"
+    },
+    {
+      "missing": "Actual findings, reviewed severity/owner, remediation and independent retest inputs",
+      "blocks": "C02 exact-candidate finding/remediation verification"
+    },
+    {
+      "missing": "Accountable risk decisions with no unresolved launch-blocking critical/high findings",
+      "blocks": "C03 and security launch acceptance"
+    }
+  ]
+}
