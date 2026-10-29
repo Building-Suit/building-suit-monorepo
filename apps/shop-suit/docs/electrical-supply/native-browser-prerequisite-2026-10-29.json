@@ -1,0 +1,7 @@
+{
+  "admitted": false,
+  "reason": "Requires GitHub Actions\n+ actual - expected\n\n+ undefined\n- 'true'\n",
+  "operation": "maintained native Shop legacy-baseline setup",
+  "target": "fresh GitHub-hosted disposable Shop Supabase",
+  "missingPrerequisite": "GitHub Actions github-hosted runner with ACCOUNT_PROVISION_DISPOSABLE=1; never spoof the runner environment"
+}

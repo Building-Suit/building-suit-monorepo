@@ -1,0 +1,23 @@
+[WebServer] (node:178019) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:178027) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 12 tests using 1 worker
+
+(node:178053) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 apps/shop-suit/tests/e2e/atomic-catalogue.spec.ts:7:3 › shared catalogue adapters: en, light, 390 (5.3s)
+  ✓   2 apps/shop-suit/tests/e2e/atomic-catalogue.spec.ts:7:3 › shared catalogue adapters: en, light, 768 (4.8s)
+  ✓   3 apps/shop-suit/tests/e2e/atomic-catalogue.spec.ts:7:3 › shared catalogue adapters: en, light, 1440 (5.7s)
+  ✓   4 apps/shop-suit/tests/e2e/atomic-catalogue.spec.ts:7:3 › shared catalogue adapters: en, dark, 390 (4.9s)
+  ✓   5 apps/shop-suit/tests/e2e/atomic-catalogue.spec.ts:7:3 › shared catalogue adapters: en, dark, 768 (5.0s)
+  ✓   6 apps/shop-suit/tests/e2e/atomic-catalogue.spec.ts:7:3 › shared catalogue adapters: en, dark, 1440 (5.3s)
+  ✓   7 apps/shop-suit/tests/e2e/atomic-catalogue.spec.ts:7:3 › shared catalogue adapters: ar, light, 390 (4.8s)
+  ✓   8 apps/shop-suit/tests/e2e/atomic-catalogue.spec.ts:7:3 › shared catalogue adapters: ar, light, 768 (5.1s)
+  ✓   9 apps/shop-suit/tests/e2e/atomic-catalogue.spec.ts:7:3 › shared catalogue adapters: ar, light, 1440 (5.4s)
+  ✓  10 apps/shop-suit/tests/e2e/atomic-catalogue.spec.ts:7:3 › shared catalogue adapters: ar, dark, 390 (4.7s)
+  ✓  11 apps/shop-suit/tests/e2e/atomic-catalogue.spec.ts:7:3 › shared catalogue adapters: ar, dark, 768 (5.0s)
+  ✓  12 apps/shop-suit/tests/e2e/atomic-catalogue.spec.ts:7:3 › shared catalogue adapters: ar, dark, 1440 (5.4s)
+
+  12 passed (1.1m)

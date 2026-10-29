@@ -1,0 +1,22 @@
+Listing tests:
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: en, 360px, owner
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: en, 360px, manager
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: en, 360px, cashier
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: en, 768px, owner
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: en, 768px, manager
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: en, 768px, cashier
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: en, 1440px, owner
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: en, 1440px, manager
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: en, 1440px, cashier
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: ar, 360px, owner
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: ar, 360px, manager
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: ar, 360px, cashier
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: ar, 768px, owner
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: ar, 768px, manager
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: ar, 768px, cashier
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: ar, 1440px, owner
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: ar, 1440px, manager
+  pilot-qualification.spec.ts:24:3 › paid pilot journey: ar, 1440px, cashier
+  pilot-qualification.spec.ts:155:3 › barber branch revocation and money permission boundary: en
+  pilot-qualification.spec.ts:155:3 › barber branch revocation and money permission boundary: ar
+Total: 20 tests in 1 file

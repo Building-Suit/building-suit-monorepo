@@ -1,0 +1,1 @@
+PASS: ShopSummary annotation erases; emitted JavaScript differs only by optional parentheses around the arrow parameter. Existing actor/scope runtime logic unchanged.

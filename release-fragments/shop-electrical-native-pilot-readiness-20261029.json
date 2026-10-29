@@ -1,0 +1,32 @@
+{
+  "id": "shop-electrical-native-pilot-readiness-20261029",
+  "task": "SS-ELEC-606",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/shop-catalog-capacity.yml",
+    "apps/shop-suit/tests/e2e/pilot-backend.ts",
+    "apps/shop-suit/tests/e2e/native-pilot-login.spec.ts",
+    "apps/shop-suit/tests/e2e/native-pilot-login.config.ts",
+    "apps/shop-suit/docs/electrical-supply/NATIVE-BROWSER-READINESS-2026-10-29.md",
+    "apps/shop-suit/docs/electrical-supply/TEST-MATRIX.md",
+    "apps/shop-suit/docs/electrical-supply/VERIFICATION.md",
+    "apps/shop-suit/docs/electrical-supply/REMAINING-SCOPE-2026-10-29.md",
+    "apps/shop-suit/docs/electrical-supply/REMAINING-SCOPE-2026-10-29.json",
+    "apps/shop-suit/docs/electrical-supply/electrical-browser-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/native-pilot-login-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/native-pilot-login-initial-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/native-pilot-discovery-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/native-admission-units-2026-10-29.txt",
+    "apps/shop-suit/docs/electrical-supply/native-browser-prerequisite-2026-10-29.json"
+  ],
+  "reason": "Preserve existing native real-Auth financial pilot, repair obsolete plan-neutral creation/login fixture contracts, qualify the login driver with explicitly synthetic EN/AR transport, and retain exact independent48-case electrical browser results. Native backend/admission and real electrical financial acceptance remain open. Root CI support requires private consumer provenance; no operational activation or runtime/financial permission change."
+}

@@ -1,0 +1,35 @@
+✔ loose length and whole reels retain distinct cart identities and command quantities (2.945978ms)
+✔ centimeter and gram previews preserve exact base quantities and product increments (0.857358ms)
+✔ feet use the smallest representable step instead of rounding to meters (0.211259ms)
+✔ legacy cart keys and numeric command payloads remain compatible (0.219882ms)
+✔ receipt projection uses frozen entered units and prices in both languages (24.527487ms)
+✔ price approvals preserve exact entered strings and service lines cannot carry product overrides (0.313444ms)
+✔ physical conversions remain exact in canonical quantities (1.464095ms)
+✔ conversion rejects incompatible physical dimensions and product-specific packaging (2.143023ms)
+✔ invalid input, source precision and inexact target conversion never round (0.494719ms)
+✔ product increment is checked after conversion into the base unit (0.498194ms)
+✔ large quantities and canonical decimal serialization do not lose digits (0.220895ms)
+✔ registry snapshots cannot be mutated by a client consumer (0.33023ms)
+✔ catalog increments respect remaining stock without blocking fractional product sales (0.857898ms)
+✔ services and legacy unknown-stock entries preserve the existing quantity ceiling (0.967394ms)
+✔ receipt retains allocations from separate server pages without dropping earlier selections (1.556226ms)
+✔ unknown, stale, empty and invalid allocations never form a receipt request (0.275868ms)
+✔ issued currency amounts retain their precision without conversion in English and Arabic (21.724266ms)
+✔ sharing uses the issued currency for line, payment and total amounts without mutating the snapshot (11.185317ms)
+✔ English share receipt matches the complete proof-of-sale snapshot (0.841474ms)
+✔ Arabic share receipt snapshot preserves Arabic numbers and customer-facing RTL copy (0.969728ms)
+✔ receipt storage is immutable, tenant-scoped, and captures only fully-paid issued sales (0.480156ms)
+✔ thermal/A4 print and share actions are connected from POS completion and sale detail (0.284381ms)
+✔ new presentation snapshots drive share label, notes and description visibility while legacy documents retain their behavior (0.907704ms)
+✔ provisioning acceptance refuses ordinary/local/self-hosted execution (1.926586ms)
+✔ only the two isolated product loopback APIs can receive generated fixture credentials (0.476201ms)
+✔ media runner rejects non-Actions, self-hosted and non-disposable execution (2.866699ms)
+✔ media runner rejects hosted projects, arbitrary local services and URL credentials (0.751247ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 295.072569
