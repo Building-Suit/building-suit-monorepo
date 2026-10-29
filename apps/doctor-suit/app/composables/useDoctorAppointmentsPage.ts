@@ -15,8 +15,9 @@ export function useDoctorAppointmentsPage() {
   const date = ref(today());const page = ref(0);const queuePage = ref(0);const form = ref<{ consultationId?:string;patientId: string; destinationId: string; date: string; minute: number | null; reason: string }>({ consultationId:'',patientId: '',destinationId: '',date: today(),minute: null,reason: '' });const reason = ref('')
   const walkInMode=ref(false);const original = ref<DoctorAppointment | null>(null);const transitionTarget = ref<{ row: DoctorAppointment; action: Exclude<DoctorAppointment['state'],'booked'>|DoctorReceptionAction } | null>(null);const historyTarget = ref<string | null>(null);const historyOpen = ref(false);const sourceMode = ref(false)
   const submitted = ref<{ scope: string | null; fingerprint: string; input: DoctorAppointmentCommand } | null>(null)
+  const preparingEditor = ref(false);let editorPreparation = 0
   const editor = useRecordAction(() => form.value);const transition = useRecordAction(() => ({ reason: reason.value }));const query = () => ({ date: date.value,page: page.value,queuePage: queuePage.value })
-  function reset() { walkInMode.value=false;submitted.value = null;editor.reset();transition.reset();appointments.discard();original.value = null;transitionTarget.value = null;historyTarget.value = null;historyOpen.value = false;sourceMode.value = false;reason.value = '';form.value = { consultationId:'',patientId: '',destinationId: '',date: today(),minute: null,reason: '' } }
+  function reset() { editorPreparation++;preparingEditor.value=false;walkInMode.value=false;submitted.value = null;editor.reset();transition.reset();appointments.discard();original.value = null;transitionTarget.value = null;historyTarget.value = null;historyOpen.value = false;sourceMode.value = false;reason.value = '';form.value = { consultationId:'',patientId: '',destinationId: '',date: today(),minute: null,reason: '' } }
   const unregister = context.registerClear(reset)
   let initialRead = true;let refreshAfterInitial = false;let stopped = false
   onBeforeUnmount(() => { stopped=true;unregister();reset();appointments.clear();void nuxt.$doctorAppointmentsLive.update(null,async () => {}) })
@@ -53,7 +54,7 @@ export function useDoctorAppointmentsPage() {
     }
   })
   usePageRevalidation(async () => { await context.refresh();await read() },() => hydrated.value && Boolean(scopeKey.value) && !state.pending && !editor.visible.value && !transition.visible.value && !historyOpen.value)
-  watch(editor.visible,value => { if(!value && !state.pending) { submitted.value = null;appointments.discard() } })
+  watch(editor.visible,value => { if(!value && !state.pending) { editorPreparation++;preparingEditor.value=false;submitted.value = null;appointments.discard() } },{ flush: 'sync' })
   watch(historyOpen,value => { if(!value) { historyTarget.value = null;state.history = null;sourceMode.value = false } })
   const row = (id: string) => state.board?.items.find(item => item.id===id) || state.board?.queue.find(item => item.id===id)
   // A board read does not change clinic capabilities. Keep the permitted action
@@ -70,7 +71,20 @@ export function useDoctorAppointmentsPage() {
     const item = id ? row(id) : null;if(!hydrated.value || state.pending || (id ? !item || item.state!=='booked' || !state.board?.canWrite || !state.board.canReadPatients : !canCreate.value))return
     walkInMode.value=asWalkIn;submitted.value = null;appointments.discard();original.value = item ? { ...item } : null
     form.value = { consultationId:'',patientId: item?.patientId || '',destinationId: item?.locationId || nuxt.$doctorAppointmentsScope()?.locationId || '',date: asWalkIn?today():date.value<today() ? today() : date.value,minute: null,reason: '' }
-    if(item)editor.edit();else editor.create();if(!administrative.value)await nuxt.$doctorConsultations.load();await Promise.all([offers(),...(item ? [] : [patients()])])
+    // Preparation starts before the dialog is visible, including the awaited
+    // type catalogue read before the initial patient/slot requests begin.
+    const preparation=++editorPreparation,captured=scopeKey.value
+    preparingEditor.value=true
+    if(item)editor.edit();else editor.create()
+    try{
+      if(!administrative.value)await nuxt.$doctorConsultations.load()
+      if(preparation!==editorPreparation||captured!==scopeKey.value||!editor.visible.value)return
+      const lookups = [offers(),...(item ? [] : [patients()])]
+      // Both calls set their own loading state synchronously. Hand readiness
+      // back to each lookup now, so a slower sibling cannot disable its picker.
+      preparingEditor.value=false
+      await Promise.all(lookups)
+    }finally{if(preparation===editorPreparation)preparingEditor.value=false}
   }
   function command(): DoctorAppointmentCommand | null {
     const retry = submitted.value
@@ -120,7 +134,7 @@ export function useDoctorAppointmentsPage() {
   const days = computed(() => state.board ? [{ id: date.value,label: `${date.value} · ${state.board.timezone}`,appointments: state.board.items.map(card) }] : [])
   const queue = computed(() => state.board?.queue.map(item => ({ id: item.id,time: item.checkedInAt ? stamp(item.checkedInAt,item.timezone) : '',patient: item.patientName || copy.value.restricted,status: copy.value.states[item.state],actions: [...[...permitted(item),...receptionPermitted(item)].map(value => ({ value,label: copy.value.actions[value] })),{ value: 'history',label: copy.value.history }] })) || [])
   const earliest = computed(() => today(state.offers?.timezone));const latest = computed(() => { const value = new Date(`${earliest.value}T00:00:00Z`);value.setUTCDate(value.getUTCDate()+365);return value.toISOString().slice(0,10) })
-  const editorView = computed(() => ({ title: walkInMode.value?copy.value.walkIn:original.value ? copy.value.reschedule : copy.value.create,dirty: editor.dirty.value,pending: editor.pending.value || state.pending,error: editor.error.value || (editor.dirty.value && !command() ? copy.value.invalid : null),disabled: !command() || state.pending || state.offersLoading,reasonRequired:walkInMode.value,selectingPatient: !original.value,earliestDate: earliest.value,latestDate: walkInMode.value?today():latest.value,timezone: `${copy.value.timezone}: ${state.offers?.timezone || ''}`,patientLoading: state.patientsLoading,patientError: error(state.patientsError),offersLoading: state.offersLoading,offersError: error(state.offersError) }))
+  const editorView = computed(() => ({ title: walkInMode.value?copy.value.walkIn:original.value ? copy.value.reschedule : copy.value.create,dirty: editor.dirty.value,pending: editor.pending.value || state.pending,error: editor.error.value || (editor.dirty.value && !command() ? copy.value.invalid : null),disabled: !command() || state.pending || state.offersLoading || preparingEditor.value,reasonRequired:walkInMode.value,selectingPatient: !original.value,earliestDate: earliest.value,latestDate: walkInMode.value?today():latest.value,timezone: `${copy.value.timezone}: ${state.offers?.timezone || ''}`,patientLoading: state.patientsLoading || preparingEditor.value,patientError: error(state.patientsError),offersLoading: state.offersLoading || preparingEditor.value,offersError: error(state.offersError) }))
   const transitionView = computed(() => ({ title: transitionTarget.value ? copy.value.actions[transitionTarget.value.action] : '',description: copy.value.resolution,reasonRequired: reasonRequired.value,dirty: transition.dirty.value,pending: transition.pending.value || state.pending,error: transition.error.value || (transition.dirty.value && reasonRequired.value && !validReason(reason.value) ? copy.value.invalid : null),disabled: state.pending || (reasonRequired.value && !validReason(reason.value)) }))
   const snapshot = (value: DoctorAppointmentSnapshot | null) => value ? `${value.locationName} · ${stamp(value.startsAt,value.timezone)}` : ''
   const historyRecord = computed(() => {

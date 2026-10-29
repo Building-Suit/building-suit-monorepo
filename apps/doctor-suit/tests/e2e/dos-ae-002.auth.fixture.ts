@@ -41,8 +41,16 @@ for(const ar of [false,true])test(`DOS-AE-002 candidate ${ar ? 'AR mobile light 
     const cancelled = data.appointmentRows.find((row: { state: string }) => row.state==='cancelled')
     expect(data.appointmentHistory[cancelled.id].at(-1).details.reason).toBe('admin.cancellation')
     await page.getByLabel(copy.date,{ exact: true }).fill(data.scheduleTestDay);await page.getByLabel(copy.date,{ exact: true }).press('Tab')
+    // Hold only the owned synthetic lookup, so the loading admission state is
+    // exercised deterministically without replacing its response or authority.
+    let releasePatients!: () => void
+    const patientGate = new Promise<void>(resolve => { releasePatients = resolve })
+    await page.route('http://127.0.0.1:4338/rest/v1/rpc/doctor_patients',async route => { await patientGate;await route.continue() },{ times: 1 })
     await page.getByRole('button',{ name: copy.create,exact: true }).click();const editor = page.getByRole('dialog',{ name: copy.create,exact: true })
-    await editor.getByRole('combobox',{ name: copy.patient,exact: true }).click();await page.getByRole('searchbox',{ name: `${ar ? 'بحث' : 'Search'} · ${copy.patient}`,exact: true }).fill('household');await page.getByRole('option',{ name: 'Synthetic household',exact: true }).click()
+    const patientPicker = editor.getByRole('combobox',{ name: copy.patient,exact: true })
+    try { await expect(patientPicker).toBeDisabled() } finally { releasePatients() }
+    await expect(patientPicker).toBeEnabled()
+    await patientPicker.click();await page.getByRole('searchbox',{ name: `${ar ? 'بحث' : 'Search'} · ${copy.patient}`,exact: true }).fill('household');await page.getByRole('option',{ name: 'Synthetic household',exact: true }).click()
     await editor.getByRole('combobox',{ name: copy.slot,exact: true }).click();await page.getByRole('option',{ name: '09:00',exact: true }).click();await editor.getByRole('button',{ name: copy.save,exact: true }).click();await expect(editor).toBeHidden()
     const booked = card(page,'Synthetic household');if(await booked.locator('details').getAttribute('open')===null)await booked.getByText(copy.calendar.actions,{ exact: true }).click();await booked.getByRole('button',{ name: copy.calendar.reschedule,exact: true }).click();const move = page.getByRole('dialog',{ name: copy.reschedule,exact: true })
     await expect(move.getByRole('textbox',{ name: copy.reason,exact: true })).toHaveCount(0);await move.getByRole('combobox',{ name: copy.slot,exact: true }).click();await page.getByRole('option',{ name: '09:40',exact: true }).click();await move.getByRole('combobox',{ name: copy.reason,exact: true }).click();await page.getByRole('option',{ name: options[1]!.label,exact: true }).click();await move.getByRole('button',{ name: copy.save,exact: true }).click();await expect(move).toBeHidden()

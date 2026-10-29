@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { navigateTo } from '#app'
 import { doctorTimezoneChoices } from '../utils/timezoneChoices'
 import { doctorPolicyLinks } from '../utils/policyPresentation'
 definePageMeta({ layout: false })

@@ -338,7 +338,7 @@
         "BsReceiptPreviewDialog",
         "BsQuantityStepper"
       ],
-      "adapterBoundary": "Typed image catalog/cart/customer projections, payment choices and immutable receipt previews. Product owns quantity limits, scoped own-receipt queries and a newest-first index limited to ten own receipts, and atomic checkout commands; shared UX owns two-stage checkout, isolated document printing, viewport, keyboard, stepping and focus lifecycle.",
+      "adapterBoundary": "Typed image catalog/cart/customer projections, optional unit choices, product quantity steps and formatted base equivalents, payment choices and immutable receipt previews. Unit conversion, packaging identities, prices and financial authority stay product-owned. Product owns quantity limits, scoped own-receipt queries and a newest-first index limited to ten own receipts, and atomic checkout commands; shared UX owns two-stage checkout, isolated document printing, viewport, keyboard, stepping and focus lifecycle.",
       "auditSources": [
         "apps/shop-suit/app/pages/pos.vue"
       ],
@@ -361,6 +361,17 @@
       "adapterBoundary": "typed policy forms, staff and draft assignment projections, formatted earning rows, translated copy and authorized semantic commands",
       "task": "SS-BARBER-COMP-001",
       "migrationStatus": "implemented; verification recorded in product task evidence"
+    },
+    {
+      "family": "inline-business-settings",
+      "owner": "packages/ui",
+      "components": [
+        "BsBusinessSettingsPage",
+        "BsSettingsForm"
+      ],
+      "adapterBoundary": "Typed on-page business settings drafts, translated copy, permission/quota projections and existing authorized commands. UX owns scoped dirty snapshots, refresh-safe drafts and unsaved-navigation protection. Website and public-booking editors retain their existing presentation.",
+      "task": "SHOP-INLINE-SETTINGS-20261020",
+      "migrationStatus": "implemented-source; automated and rendered verification unrun at owner instruction"
     },
     {
       "family": "shop-tax-settings",
@@ -670,6 +681,18 @@
       "migrationStatus": "synthetic acceptance pending; live payment disabled"
     },
     {
+      "family": "shop-storefront-builder-offers",
+      "owner": "packages/ui",
+      "components": [
+        "BsStorefrontBuilderPage",
+        "BsCatalogOffersPage",
+        "BsOfferStrip"
+      ],
+      "adapterBoundary": "Shop owns Team/Multi eligibility, private draft and explicit owner publishing, public disclosure, tenant-scoped offers and atomic server price matching. Shared UI owns the layout/media editors, bundle worklist and public/POS offer strip. Shared UX owns bounded raster processing and record/dialog lifecycle. Receipt snapshots retain matched offer names.",
+      "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
+      "migrationStatus": "implemented-source; browser/database tests deferred at user instruction"
+    },
+    {
       "family": "synthetic-clinical-workspace",
       "owner": "packages/ui",
       "components": [
@@ -697,29 +720,6 @@
       ],
       "adapterBoundary": "Typed request/offer/history views and controlled record forms. Doctor owns request permission, atomic holds, acceptance, expiry and capability scopes. No provider dispatch or patient priority is inferred.",
       "migrationStatus": "implemented; acceptance in progress"
-    },
-    {
-      "family": "inline-business-settings",
-      "owner": "packages/ui",
-      "components": [
-        "BsBusinessSettingsPage",
-        "BsSettingsForm"
-      ],
-      "adapterBoundary": "Typed on-page business settings drafts, translated copy, permission/quota projections and existing authorized commands. UX owns scoped dirty snapshots, refresh-safe drafts and unsaved-navigation protection. Website and public-booking editors retain their existing presentation.",
-      "task": "SHOP-INLINE-SETTINGS-20261020",
-      "migrationStatus": "implemented-source; automated and rendered verification unrun at owner instruction"
-    },
-    {
-      "family": "shop-storefront-builder-offers",
-      "owner": "packages/ui",
-      "components": [
-        "BsStorefrontBuilderPage",
-        "BsCatalogOffersPage",
-        "BsOfferStrip"
-      ],
-      "adapterBoundary": "Shop owns Team/Multi eligibility, private draft and explicit owner publishing, public disclosure, tenant-scoped offers and atomic server price matching. Shared UI owns the layout/media editors, bundle worklist and public/POS offer strip. Shared UX owns bounded raster processing and record/dialog lifecycle. Receipt snapshots retain matched offer names.",
-      "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
-      "migrationStatus": "implemented-source; browser/database tests deferred at user instruction"
     },
     {
       "family": "administrative-follow-up-worklist",
@@ -842,6 +842,85 @@
       "adapterBoundary": "Optional typed ledger workspace preserves existing report branches. Doctor owns immutable source reads, exact per-currency totals, issue-date cohort filters and owner authority; the UI grants no financial/provider/tax authority.",
       "task": "DOS-M6-009",
       "migrationStatus": "implemented source; owned acceptance in progress"
+    },
+    {
+      "family": "physical-stock",
+      "owner": "packages/ui",
+      "components": [
+        "BsPhysicalStockPage"
+      ],
+      "adapterBoundary": "Product-supplied physical stock rows, server pagination, permissions, immutable movement projections and semantic count/classify/archive commands. Shared presentation owns fields, table, history and record dialog.",
+      "task": "SS-ELECTRICAL-001",
+      "migrationStatus": "implemented-local: database107-migration replay, actual cashier race, focused units and six EN/AR synthetic browser scenarios pass; provider CI and merchant acceptance pending"
+    },
+    {
+      "family": "trade-pricing",
+      "owner": "packages/ui",
+      "components": [
+        "BsTradePricingPage"
+      ],
+      "adapterBoundary": "Typed price/group/history rows, bounded pickers, immutable command retry state and semantic group, assignment and price-rule commands. Shop owns pricing, scope, conversion and financial authority.",
+      "task": "SS-ELECTRICAL-001",
+      "migrationStatus": "implementation qualification in progress"
+    },
+    {
+      "family": "formal-quotations",
+      "owner": "packages/ui",
+      "components": [
+        "BsTradeQuotationsPage"
+      ],
+      "adapterBoundary": "Typed commercial version, state/history and line-editor projections; bounded pickers and semantic commands. Shop retains server pricing, immutable history, location/actor/period authority and print data.",
+      "task": "SS-ELECTRICAL-001",
+      "migrationStatus": "implementation qualification in progress"
+    },
+    {
+      "family": "contractor-orders",
+      "owner": "packages/ui",
+      "components": [
+        "BsTradeOrdersPage"
+      ],
+      "adapterBoundary": "Typed accepted-quotation picker, agreed order rows/details/history and frozen conversion retry state. Shop owns quotation authority, agreed prices, quantities and subsequent inventory/payment commands.",
+      "task": "SS-ELECTRICAL-001",
+      "migrationStatus": "implementation qualification in progress"
+    },
+    {
+      "family": "supplier-orders",
+      "owner": "packages/ui",
+      "components": [
+        "BsSupplierOrdersPage"
+      ],
+      "adapterBoundary": "Typed supplier-order directory, draft measured/package lines, received and pending quantities, invoice/history pages and immutable command retry state. Shop owns prices, unit resolution, authorization and existing purchase/FIFO/supplier liability.",
+      "task": "SS-ELECTRICAL-001",
+      "migrationStatus": "implementation qualification in progress"
+    },
+    {
+      "family": "supply-planning",
+      "owner": "packages/ui",
+      "components": [
+        "BsSupplyPlanningPage"
+      ],
+      "adapterBoundary": "Typed storage/bin placements, supplier item/unit/lead-time forms and original purchase-cost history. Shop owns location/role authority, immutable retry identity, stock/source integrity and report-derived reorder calculations.",
+      "task": "SS-ELECTRICAL-001",
+      "migrationStatus": "implementation qualification in progress"
+    },
+    {
+      "family": "weighing-setup",
+      "owner": "packages/ui",
+      "components": [
+        "BsWeighingSetupPage",
+        "BsScaleCaptureDialog"
+      ],
+      "interactionOwner": "packages/ux",
+      "notes": "Shared approval setup and optional counter-scale capture presentation; product owns permissions, device/factor approval, exact conversion and atomic capture/sale commands."
+    },
+    {
+      "family": "commodity-pricing",
+      "owner": "packages/ui",
+      "components": [
+        "BsCommodityPricingPage"
+      ],
+      "interactionOwner": "packages/ux",
+      "notes": "Shared source-quote and product-rule approval presentation. Product owns permissions, exact source/currency/validity validation and authoritative financial pricing."
     }
   ]
 }

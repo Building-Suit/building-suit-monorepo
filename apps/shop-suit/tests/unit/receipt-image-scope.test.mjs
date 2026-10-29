@@ -20,10 +20,10 @@ function fixture(render) {
     },
   }
   const exports = {}
-  new Function('exports', 'require', 'ref', 'watch', 'onScopeDispose', 'useI18n', 'useToasts', 'useShop', 'useRoute', compiled)(
+  new Function('exports', 'require', 'ref', 'watch', 'onScopeDispose', 'useI18n', 'useToasts', 'useShop', 'useRoute', 'useReceiptTranslation', compiled)(
     exports, name => { assert.ok(modules[name], name); return modules[name] }, ref, watch, onScopeDispose,
     () => ({ t: key => key, locale: ref('en') }), () => ({ push: value => toasts.push(value) }),
-    () => ({ currentId: merchant, currentLocationId: location }), () => ({ params }),
+    () => ({ currentId: merchant, currentLocationId: location }), () => ({ params }), () => key => key,
   )
   const scope = effectScope()
   const controller = scope.run(() => exports.useSaleReceiptShare())

@@ -1,10 +1,10 @@
-import type { Database } from '~~/types/database.types'
+import type { ExactReportRpcDatabase } from '~~/types/exact-report-rpc.types'
 
 /** Ledger-owned cash allocation rules and authorized classification command. */
 export function useLedgerCashFlowAllocationDialogView(props: { entryId: string | null, accountName: string }, emit: (event: 'close' | 'saved') => void) {
 const entryId = computed(() => props.entryId)
 const accountName = computed(() => props.accountName)
-const supabase = useSupabaseClient<Database>()
+const supabase = useSupabaseClient<ExactReportRpcDatabase>()
 const { currentId, baseCurrency, can } = useTenant()
 const { t } = useI18n()
 const describeError = useErrorMessage()
@@ -14,7 +14,7 @@ const error = ref('')
 const reason = ref('')
 const amounts = reactive({ operating: '', investing: '', financing: '' })
 const { dirty } = useRecordAction(() => ({ reason: reason.value, ...amounts }), computed(() => !loading.value))
-const context = ref<{ amount_minor: number, decision_id: string | null, allocations: Record<string, number> }>()
+const context = ref<{ amount_minor: string, decision_id: string | null, allocations: Record<string, string> }>()
 let requestId: string | undefined
 const total = computed(() => {
   try { return (['operating', 'investing', 'financing'] as const)
@@ -31,7 +31,8 @@ async function load() {
   const requested = props.entryId
   if (!currentId.value || !requested) return
   loading.value = true
-  const { data, error: failure } = await supabase.rpc('cash_flow_allocation_context', {
+  const { data, error: failure } = await supabase.rpc('read_exact_financial_report', {
+    p_report: 'cash_allocation',
     p_organization_id: currentId.value, p_entry_id: requested,
   })
   if (version !== generation || organization !== currentId.value || requested !== props.entryId) return
@@ -51,12 +52,12 @@ async function save() {
   error.value = ''
   requestId ??= crypto.randomUUID()
   try {
-    const allocations: Record<string, number> = {}
+    const allocations: Record<string, string> = {}
     for (const key of ['operating', 'investing', 'financing'] as const) {
       const value = amounts[key] ? parseMoneyToMinor(amounts[key], baseCurrency.value) : 0n
-      if (value > 0n) allocations[key] = Number(value)
+      if (value > 0n) allocations[key] = value.toString()
     }
-    const result = await supabase.rpc('classify_cash_flow_entry', {
+    const result = await supabase.rpc('classify_cash_flow_entry_exact', {
       p_organization_id: currentId.value, p_entry_id: props.entryId,
       p_allocations: allocations, p_reason: reason.value.trim(), p_request_id: requestId,
       p_expected_decision_id: context.value?.decision_id ?? undefined,

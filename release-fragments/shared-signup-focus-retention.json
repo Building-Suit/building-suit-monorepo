@@ -1,0 +1,29 @@
+{
+  "id": "shared-signup-focus-retention",
+  "task": "DOCTOR-CONSOLIDATION-20261029",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/organisms/BsSignupWizard.vue",
+    "packages/ux/src/composables/useSignupWizard.ts",
+    "packages/ux/src/index.ts"
+  ],
+  "reason": "Preserve keyboard focus in an already edited signup field when the shared step animation finishes, while retaining initial focus for an untouched new step.",
+  "notes": {
+    "title": {
+      "en": "Keep focus while entering signup details",
+      "ar": "الحفاظ على التركيز أثناء إدخال بيانات التسجيل"
+    },
+    "summary": {
+      "en": "Finishing a signup step animation keeps you in the field you are editing.",
+      "ar": "عند انتهاء حركة الانتقال في التسجيل، يبقى التركيز في الحقل الذي تحرره."
+    },
+    "details": {
+      "en": "New steps still receive initial keyboard focus, while ongoing input in another field is left uninterrupted.",
+      "ar": "تظل الخطوات الجديدة تتلقى التركيز الأولي للوحة المفاتيح، دون مقاطعة الكتابة في حقل آخر."
+    }
+  }
+}

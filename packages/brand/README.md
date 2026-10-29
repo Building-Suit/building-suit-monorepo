@@ -104,3 +104,12 @@ bytes, correct light/dark and mobile/collapsed rendering, accessible names,
 and missing-variant fallback. The Doctor CI fixture also proves that dropping
 synthetic SVGs into these slots is picked up by a fresh build; it never commits
 those fixture files or deploys them.
+
+## Ledger family artwork
+
+Ledger's canonical mark is a white open ledger/L with gold ruled rows inside a
+charcoal tile with a gold border, following the accepted Shop and Doctor family.
+Both wordmark tones are outlined vectors without external font or image dependencies.
+All existing Ledger public URLs remain stable, including app-icon/logo-mark aliases
+and the 512 × 512 PNG fallback. The generated artwork is adopted from shared PR
+#437 at `613177246eb05eda4e7458fd5d5d212062e03f5e`; Shop and Doctor assets are unchanged.

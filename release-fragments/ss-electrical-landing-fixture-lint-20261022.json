@@ -1,0 +1,14 @@
+{
+  "id": "ss-electrical-landing-fixture-lint-20261022",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/tests/unit/landing-journey.test.mjs",
+    "apps/shop-suit/docs/electrical-supply/VERIFICATION.md"
+  ],
+  "reason": "Remove unused fixture setup and update stale landing source-contract assertions to follow the extracted journey organism and current bilingual receipt story; runtime behavior is unchanged."
+}

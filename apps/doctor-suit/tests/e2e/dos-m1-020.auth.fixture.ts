@@ -1,3 +1,4 @@
+import { installDoctorEntryValidity, readDoctorEntryValidity } from '../helpers/entry-validity.mjs'
 import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { test,expect,type Page,type BrowserContext } from '@playwright/test'
 import { doctorPatientsCopy } from '../../app/utils/patientsPresentation'
@@ -25,7 +26,7 @@ for(const ar of [false,true])test(`DOS-M1-020-C01/C02 ${ar ? 'AR mobile light' :
   const contexts: BrowserContext[] = [];const stage = (value: string) => console.info(`Doctor M1 combined stage: ${value}`)
   try {
     for(let n=0;n<4;n++) { const context = await browser.newContext({ viewport: { width: ar ? 390 : 1280,height: 1000 },reducedMotion: 'reduce' });contexts.push(context);await prepare(context,ar) }
-    const [a,b,s,o] = await Promise.all(contexts.map(context => context.newPage()));
+    const [a,b,s,o] = await Promise.all(contexts.map(context => context.newPage()));await installDoctorEntryValidity(a);
     const rpcNames={doctor_identity:'identity',doctor_contexts:'contexts',doctor_appointment_board:'appointment_board',doctor_transition_appointment:'appointment_transition'} as const
     s.on('response',response=>{const name=Object.keys(rpcNames).find(name=>response.url().endsWith('/rpc/'+name));if(name)secretaryRpc.push({rpc:rpcNames[name as keyof typeof rpcNames],status:response.status()});if(secretaryRpc.length>16)secretaryRpc.shift()})
     a.on('request',request=>{if(request.method()!=='POST')return;const target=request.url().endsWith('/rpc/doctor_save_onboarding_draft')?'saveRequests':request.url().endsWith('/rpc/doctor_complete_onboarding')?'completeRequests':null;if(target)setupDiagnostic[target]=Math.min(5,setupDiagnostic[target]+1)})
@@ -49,6 +50,7 @@ for(const ar of [false,true])test(`DOS-M1-020-C01/C02 ${ar ? 'AR mobile light' :
     const data = (await (await request.get(fixture)).json()).delegation;expect(data.milestoneCompleteCalls).toBe(1);expect(data.patientRows).toHaveLength(2);expect(data.appointmentRows).toHaveLength(1);expect(data.memberships).toHaveLength(2);expect(data.memberships.filter((item: { status: string }) => item.status==='revoked')).toHaveLength(1);expect(Object.values(data.appointmentHistory).flat().filter((item: unknown) => (item as { type: string }).type==='appointment.in_progress')).toHaveLength(1);expect(await s.evaluate(() => document.documentElement.scrollWidth<=innerWidth+1)).toBe(true)
   } catch(error) {
     console.info('Doctor M1 setup acknowledgement diagnostic '+JSON.stringify(setupDiagnostic))
+    const entry=contexts[0]?.pages()[0];if(entry&&!entry.isClosed())try{console.info('Doctor M1 entry native validity '+JSON.stringify(await readDoctorEntryValidity(entry)))}catch{/* Fixed-state diagnostic unavailable. */}
     const page=contexts[0]?.pages()[0]
     if(page&&!page.isClosed())try{
       const cue=await page.evaluate(()=>{

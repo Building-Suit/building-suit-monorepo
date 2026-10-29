@@ -14,7 +14,7 @@ export const tenantTables = [
   ['organization_settings', 'organization_id', '*', 'organization_id.asc'],
   ['organization_members', 'organization_id'],
   ['organization_invitations', 'organization_id'],
-  ['profiles', 'organization_members.organization_id', '*,organization_members!inner(organization_id)'],
+  ['profiles', 'organization_members.organization_id', '*,organization_members!organization_members_user_id_fkey!inner(organization_id)'],
   ['organization_roles', 'organization_id'],
   ['organization_system_roles', 'organization_id', '*', 'role.asc'],
   ['organization_system_role_capabilities', 'organization_id', '*', 'role.asc,capability_key.asc'],
@@ -50,11 +50,17 @@ export const tenantTables = [
   ['ar_allocations', 'organization_id'],
   ['ap_documents', 'organization_id'],
   ['ap_allocations', 'organization_id'],
+  ['fx_account_mappings', 'organization_id', '*', 'organization_id.asc'],
+  ['fx_open_items', 'organization_id'],
+  ['fx_settlements', 'organization_id'],
+  ['fx_allocations', 'organization_id'],
+  ['fx_revaluation_batches', 'organization_id'],
+  ['fx_revaluation_lines', 'organization_id'],
   ['bank_reconciliations', 'organization_id'],
   ['bank_statement_lines', 'organization_id'],
   ['bank_match_groups', 'organization_id'],
-  ['bank_match_lines', 'organization_id'],
-  ['bank_match_transactions', 'organization_id'],
+  ['bank_match_lines', 'organization_id', '*', 'match_group_id.asc,statement_line_id.asc'],
+  ['bank_match_transactions', 'organization_id', '*', 'match_group_id.asc,transaction_id.asc'],
   ['bank_adjustments', 'organization_id'],
   ['bank_outstanding_items', 'organization_id'],
   ['bank_reconciliation_events', 'organization_id'],
@@ -65,17 +71,58 @@ export const tenantTables = [
   ['asset_disposals', 'organization_id'],
   ['accounting_dimension_values', 'organization_id'],
   ['account_dimension_policies', 'organization_id', '*', 'account_id.asc,kind.asc'],
-  ['dimension_value_requests', 'organization_id', '*', 'request_id.asc'],
-  ['organization_vat_profiles', 'organization_id', '*', 'organization_id.asc'],
+  ['organization_vat_profiles', 'organization_id'],
   ['vat_documents', 'organization_id'],
+  ['organization_eta_profiles', 'organization_id'],
+  ['eta_b2b_documents', 'organization_id'],
+  ['eta_b2b_delivery_state', 'organization_id', '*', 'document_id.asc'],
+  ['eta_b2b_delivery_events', 'organization_id'],
+  ['organization_eta_ereceipt_profiles', 'organization_id'],
+  ['eta_ereceipt_documents', 'organization_id'],
+  ['eta_ereceipt_delivery_state', 'organization_id', '*', 'document_id.asc'],
+  ['eta_ereceipt_delivery_events', 'organization_id'],
   ['inventory_accounting_sources', 'organization_id'],
   ['inventory_accounting_facts', 'organization_id'],
   ['cash_flow_allocation_decisions', 'organization_id'],
   ['cash_flow_allocations', 'cash_flow_allocation_decisions.organization_id', '*,cash_flow_allocation_decisions!inner(organization_id)', 'decision_id.asc,section.asc'],
+  ['migration_projects', 'organization_id'],
+  ['migration_source_revisions', 'organization_id'],
+  ['migration_original_rows', 'organization_id'],
+  ['migration_mapping_revisions', 'organization_id'],
+  ['migration_mapping_entries', 'organization_id'],
+  ['migration_staging_batches', 'organization_id'],
+  ['migration_normalized_rows', 'organization_id'],
+  ['migration_validation_runs', 'organization_id'],
+  ['migration_open_item_batches', 'organization_id'],
+  ['migration_open_items', 'organization_id'],
+  ['migration_open_item_allocations', 'organization_id'],
+  ['migration_open_item_validation_runs', 'organization_id'],
+  ['migration_counterparty_acceptances', 'organization_id'],
+  ['migration_open_item_acceptances', 'organization_id'],
+  ['migration_operational_batches', 'organization_id'],
+  ['migration_asset_openings', 'organization_id'],
+  ['migration_inventory_openings', 'organization_id'],
+  ['migration_bank_positions', 'organization_id'],
+  ['migration_bank_outstanding_items', 'organization_id'],
+  ['migration_tax_openings', 'organization_id'],
+  ['migration_operational_validation_runs', 'organization_id'],
+  ['migration_cutover_approvals', 'organization_id'],
   ['notifications', 'organization_id'],
   ['subscriptions', 'organization_id'],
   ['subscription_customers', 'organization_id'],
+  ['manual_payment_requests', 'organization_id'],
+  ['manual_payment_evidence', 'organization_id'],
+  ['manual_payment_history', 'organization_id'],
 ]
+
+// These are not customer-readable financial tables. The operator database
+// backup preserves them; never broaden grants to make a tenant export pass.
+export const excludedTenantTables = {
+  audit_logs: 'Audit history uses the existing plan-windowed list_audit_history RPC, not unrestricted table SELECT.',
+  billing_events: 'Raw payment-provider webhook payloads are operator backup data.',
+  dimension_value_requests: 'Internal command-idempotency records have no authenticated SELECT grant.',
+  support_requests: 'Private support intake is outside the financial export; retain it in the operator backup.',
+}
 
 export function assertTenantStoragePath(organizationId, storageKey) {
   if (!storageKey.startsWith(`${organizationId}/`)) throw new Error(`foreign attachment path: ${storageKey}`)
@@ -100,11 +147,16 @@ function requestHeaders(key, token, extra = {}) {
   return { apikey: key, Authorization: `Bearer ${token}`, ...extra }
 }
 
-function contentRangePage(value, table) {
-  if (value === '*/0') return { end: -1, total: 0 }
+function contentRangePage(value, table, expectedStart, previousTotal) {
+  if (value === '*/0' && expectedStart === 0 && previousTotal === undefined) return { end: -1, total: 0 }
   const match = value?.match(/^(\d+)-(\d+)\/(\d+)$/)
   if (!match) throw new Error(`missing exact Content-Range for ${table}`)
-  return { end: Number(match[2]), total: Number(match[3]) }
+  const [start, end, total] = match.slice(1).map(Number)
+  if (![start, end, total].every(Number.isSafeInteger) || start !== expectedStart || end < start || end >= total) {
+    throw new Error(`invalid pagination range for ${table}`)
+  }
+  if (previousTotal !== undefined && total !== previousTotal) throw new Error(`row count changed while exporting ${table}`)
+  return { end, total }
 }
 
 async function checkedFetch(url, options) {
@@ -134,11 +186,12 @@ async function exportTable({ baseUrl, key, token, organizationId, output, table,
       }),
     })
     const raw = await response.text()
-    const range = contentRangePage(response.headers.get('content-range'), table)
+    const range = contentRangePage(response.headers.get('content-range'), table, start, total)
     total = range.total
     const pageName = `page-${String(files.length + 1).padStart(6, '0')}.json`
-    writeFileSync(join(directory, pageName), `${raw}\n`, { mode: 0o600 })
-    files.push({ path: `tables/${table}/${pageName}`, sha256: sha256(raw) })
+    const contents = `${raw}\n`
+    writeFileSync(join(directory, pageName), contents, { mode: 0o600 })
+    files.push({ path: `tables/${table}/${pageName}`, sha256: sha256(contents) })
     start = range.end + 1
   } while (start < total)
   return { table, rows: String(total), files }
@@ -176,33 +229,39 @@ async function exportReports(context, fromDate, toDate) {
   return files
 }
 
-async function fetchAttachmentRows(context) {
+async function fetchStorageObjectRows(context) {
   const rows = []
-  let start = 0
-  let total
-  do {
-    const url = new URL(`${context.baseUrl}/rest/v1/attachments`)
-    url.searchParams.set('select', 'id,organization_id,storage_bucket,storage_key,file_name,mime_type,size_bytes,checksum')
-    url.searchParams.set('organization_id', `eq.${context.organizationId}`)
-    url.searchParams.set('order', 'storage_key.asc')
-    const response = await checkedFetch(url, {
-      headers: requestHeaders(context.key, context.token, {
-        Accept: 'application/json', Prefer: 'count=exact', Range: `${start}-${start + PAGE_SIZE - 1}`,
-        'Range-Unit': 'items',
-      }),
-    })
-    const page = JSON.parse(await response.text())
-    const range = contentRangePage(response.headers.get('content-range'), 'attachments')
-    total = range.total
-    rows.push(...page)
-    start = range.end + 1
-  } while (start < total)
+  const definitions = [
+    ['attachments', 'id,organization_id,storage_bucket,storage_key,file_name,mime_type,size_bytes,checksum'],
+    ['manual_payment_evidence', 'id,organization_id,storage_key,file_name:filename,mime_type,size_bytes,checksum:sha256', 'manual-payment-receipts'],
+  ]
+  for (const [table, select, bucket] of definitions) {
+    let start = 0
+    let total
+    do {
+      const url = new URL(`${context.baseUrl}/rest/v1/${table}`)
+      url.searchParams.set('select', select)
+      url.searchParams.set('organization_id', `eq.${context.organizationId}`)
+      url.searchParams.set('order', 'storage_key.asc')
+      const response = await checkedFetch(url, {
+        headers: requestHeaders(context.key, context.token, {
+          Accept: 'application/json', Prefer: 'count=exact', Range: `${start}-${start + PAGE_SIZE - 1}`,
+          'Range-Unit': 'items',
+        }),
+      })
+      const page = JSON.parse(await response.text())
+      const range = contentRangePage(response.headers.get('content-range'), table, start, total)
+      total = range.total
+      rows.push(...page.map(row => bucket ? { ...row, storage_bucket: bucket } : row))
+      start = range.end + 1
+    } while (start < total)
+  }
   return rows
 }
 
 async function exportAttachmentObjects(context) {
-  const objects = []
-  for (const row of await fetchAttachmentRows(context)) {
+  const objects = new Map()
+  for (const row of await fetchStorageObjectRows(context)) {
     const parts = assertTenantStoragePath(context.organizationId, row.storage_key)
     const encodedPath = parts.map(encodeURIComponent).join('/')
     const bucket = encodeURIComponent(row.storage_bucket)
@@ -212,19 +271,33 @@ async function exportAttachmentObjects(context) {
     )
     const bytes = Buffer.from(await response.arrayBuffer())
     if (BigInt(bytes.length) !== BigInt(row.size_bytes)) throw new Error(`attachment size mismatch: ${row.storage_key}`)
-    const target = resolve(context.output, 'attachments', ...parts)
-    const attachmentRoot = `${resolve(context.output, 'attachments')}${sep}`
+    const digest = sha256(bytes)
+    // The legacy checksum column is optional and does not declare an algorithm.
+    // Recognize a SHA-256 value when present, while preserving other metadata.
+    if (typeof row.checksum === 'string' && /^[a-f0-9]{64}$/i.test(row.checksum)
+        && row.checksum.toLowerCase() !== digest) throw new Error(`attachment checksum mismatch: ${row.storage_key}`)
+    if (!row.storage_bucket || ['.', '..'].includes(row.storage_bucket)) throw new Error('invalid storage bucket')
+    const relativePath = ['objects', encodeURIComponent(row.storage_bucket), ...parts].join('/')
+    const target = resolve(context.output, relativePath)
+    const attachmentRoot = `${resolve(context.output, 'objects')}${sep}`
     if (!target.startsWith(attachmentRoot)) throw new Error(`attachment escaped export root: ${row.storage_key}`)
     mkdirSync(dirname(target), { recursive: true })
     writeFileSync(target, bytes, { mode: 0o600 })
-    objects.push({
+    const object = {
+      path: relativePath,
       storage_bucket: row.storage_bucket,
       storage_key: row.storage_key,
       size_bytes: String(bytes.length),
-      sha256: sha256(bytes),
-    })
+      sha256: digest,
+    }
+    const key = `${bucket}/${encodedPath}`
+    const previous = objects.get(key)
+    if (previous && (previous.sha256 !== digest || previous.size_bytes !== object.size_bytes)) {
+      throw new Error(`inconsistent duplicate object: ${row.storage_key}`)
+    }
+    objects.set(key, object)
   }
-  return objects.sort((left, right) => left.storage_key.localeCompare(right.storage_key))
+  return [...objects.values()].sort((left, right) => left.storage_bucket.localeCompare(right.storage_bucket) || left.storage_key.localeCompare(right.storage_key))
 }
 
 export async function exportOrganizationPortability(options) {
@@ -255,21 +328,23 @@ export async function exportOrganizationPortability(options) {
   const reports = await exportReports(context, options.fromDate, options.toDate)
   const objects = await exportAttachmentObjects(context)
   const attachmentManifest = {
-    schema_version: 'ls-ops-001-attachments-v1',
+    schema_version: 'ls-ops-001-attachments-v2',
     environment_id: options.environmentId,
     organization_id: options.organizationId,
     objects,
   }
-  writeFileSync(join(output, 'attachments-manifest.json'), `${JSON.stringify(attachmentManifest, null, 2)}\n`, { mode: 0o600 })
+  const attachmentManifestContents = `${JSON.stringify(attachmentManifest, null, 2)}\n`
+  writeFileSync(join(output, 'attachments-manifest.json'), attachmentManifestContents, { mode: 0o600 })
   const manifest = {
-    schema_version: 'ls-ops-001-portability-v1',
+    schema_version: 'ls-ops-001-portability-v2',
     environment_id: options.environmentId,
     organization_id: options.organizationId,
     from_date: options.fromDate,
     to_date: options.toDate,
     tables,
+    excluded_tenant_tables: excludedTenantTables,
     reports,
-    attachment_manifest_sha256: sha256(JSON.stringify(attachmentManifest)),
+    attachment_manifest_sha256: sha256(attachmentManifestContents),
   }
   writeFileSync(join(output, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o600 })
   return manifest

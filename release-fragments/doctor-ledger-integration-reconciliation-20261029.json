@@ -1,0 +1,16 @@
+{
+  "id": "doctor-ledger-integration-reconciliation-20261029",
+  "task": "DOCTOR-CONSOLIDATION-20261029",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/ledger-reconciliation-2026-10-29.md",
+    "apps/doctor-suit/app/pages/sign-up.vue",
+    "apps/doctor-suit/package.json",
+    "apps/doctor-suit/mobile/doctor/package.json",
+    "packages/brand/README.md",
+    "pnpm-lock.yaml"
+  ],
+  "reason": "History-preserving integration support after the actual Ledger staging merge, including reviewed signup/branding conflicts and alignment of the separate Doctor mobile consumer with the already qualified patched shared runtime. Existing public classifications and historical receipts remain intact; this grants no hosted, clinical, commercial or release authority."
+}

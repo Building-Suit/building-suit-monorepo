@@ -1,0 +1,104 @@
+{
+  "task": "LS-FIN-PRECISION-002",
+  "date": "2026-10-28",
+  "parent_pr": 439,
+  "parent_sha": "6e2205ce81e06b9bf239a7d254aa0fa605e8cfdb",
+  "state": "local_native_precision_qualification_complete_external_gates_pending",
+  "stored_minor": "9007199254740993",
+  "old_numeric_parse": "9007199254740992",
+  "exact_search_minor": "9007199254740993",
+  "summary_assets_minor": "9007199255338293",
+  "exact_filter_match": true,
+  "one_cent_exclusion": true,
+  "cross_tenant_and_anonymous_denials": [
+    {
+      "actor": "anonymous",
+      "status": 401,
+      "code": "42501"
+    },
+    {
+      "actor": "other_organization",
+      "status": 403,
+      "code": "42501"
+    }
+  ],
+  "invoker_authority": true,
+  "before_migrations": 107,
+  "after_migrations": 108,
+  "preserved_tables": 122,
+  "preservation_sha256": "f4b399018a2c0ef3bd57e0224e4f1ef6e0e0ca012b66ee71c59407457cf31a66",
+  "financial_reset_or_delete": false,
+  "limits": [
+    "No hosted/Automation mutation or accountant acceptance.",
+    "Numeric chart/percentage geometry is approximate; monetary labels and command/filter integers remain exact."
+  ],
+  "checks": {
+    "native_large_value_browser": {
+      "passed": 2,
+      "failed": 0,
+      "retries": 0,
+      "locales": [
+        "en",
+        "ar"
+      ],
+      "mobile_width": 390,
+      "backend": "actual Auth/PostgREST, no interception"
+    },
+    "native_ordinary_journal_browser": {
+      "passed": 2,
+      "failed": 0,
+      "backend": "actual Auth/PostgREST"
+    },
+    "read_fault_browser": {
+      "passed": 5,
+      "failed": 0,
+      "backend": "actual Auth; specifically intercepted recent/summary/series/cash reads"
+    },
+    "atomic_related_browser": {
+      "passed": 39,
+      "failed": 0,
+      "backend": "synthetic intercepted API"
+    },
+    "foundation_browser": {
+      "passed": 11,
+      "backend": "synthetic intercepted API; recorded alongside five initial wrong-backend error-test failures"
+    },
+    "ledger_units": {
+      "passed": 130,
+      "failed": 0
+    },
+    "ledger_types": "pass",
+    "ledger_build": "pass",
+    "ledger_lint": "pass",
+    "runtime": "stopped; financial volumes retained",
+    "script_lint": "pass",
+    "workspace": "pass",
+    "release": "pass",
+    "public_build_private_value_scan": {
+      "files": 265,
+      "privileged_value_matches": 0
+    }
+  },
+  "preservation_after_navigation": {
+    "original_financial_rows_preserved": {
+      "accounts": 37,
+      "transactions": 32,
+      "transaction_entries": 64
+    },
+    "final_financial_rows": {
+      "accounts": 43,
+      "transactions": 38,
+      "transaction_entries": 76
+    },
+    "all_journals_balanced": true
+  },
+  "source_sha256": {
+    "apps/ledger-suit/app/composables/useTransactionWorkspace.ts": "ded5bb2858ce695bdc49c22ef62b76e8a3f038ca64a233cbdc89c26b10c87a9f",
+    "apps/ledger-suit/app/composables/useLedgerTransactionDetailDialogView.ts": "33a601bd513229d5b711118d78e3d986b0a3a6232334ad357ce646800009573c",
+    "apps/ledger-suit/app/composables/useLedgerPresentation.ts": "d6c917499b86791a944e8baa6f507c62939547e736f389f274da08c925cc7840",
+    "apps/ledger-suit/app/pages/dashboard.vue": "00715a85f4f8e3e932b454ade6d99da71786e74b3fa0650521c36ffd93b04237",
+    "apps/ledger-suit/app/utils/journalTransport.ts": "66ef3ba326855fd37c23cc16ac4f75a9cba12643af08af65da77e2b82f60a970",
+    "apps/ledger-suit/supabase/migrations/20261028195440_exact_dashboard_summary_transport.sql": "a03f47dd88594954f7d9c8bc7de104e3aa8e794e1660c9cf60d59ec54aaeb334",
+    "apps/ledger-suit/tests/e2e/journal-precision.spec.ts": "1333970b58239eb9f66b4e00fe7339b8d2272649faacb89899906efa0b8bd43d"
+  }
+}

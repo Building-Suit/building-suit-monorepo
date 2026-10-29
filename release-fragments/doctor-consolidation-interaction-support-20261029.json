@@ -1,0 +1,24 @@
+{
+  "id": "doctor-consolidation-interaction-support-20261029",
+  "task": "DOCTOR-CONSOLIDATION-20261029",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/molecules/BsSelect.vue",
+    "packages/ui/src/organisms/BsLandingTopHeader.vue",
+    "packages/ui/tests/foundation.test.mjs",
+    "apps/doctor-suit/tests/e2e/dos-ae-002.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/workspace-entry.auth.fixture.ts",
+    "docs/work-packages/doctor-suit/implementation/interaction-readiness-2026-10-29.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Shared compatibility and synthetic integration evidence for truthful loading and hydration admission. Deterministic owned-runner regressions delay only synthetic lookup or static script transport without replacing responses, changing assertions, increasing deadlines or granting authority. Public Shop behavior has its separate linked fragment; other products retain registration and domain gates."
+}

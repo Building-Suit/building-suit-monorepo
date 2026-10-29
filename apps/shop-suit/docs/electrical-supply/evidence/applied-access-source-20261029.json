@@ -1,0 +1,18 @@
+[
+  {
+    "path": "apps/shop-suit/supabase/migrations/20261022182717_explicit_data_api_access.sql",
+    "git_blob": "d44cf4f345c1d9d19d061390913eb88ccb28e1fe",
+    "bytes": 105001,
+    "sha256": "c47b648d5731f66e1c0b768099dc2f906cf28eec2b0c892880d522c41a3ce2e5",
+    "source_pr": 440,
+    "source_commit": "cdb22ec3278d2f016e487c52119ed0c2b490b8df"
+  },
+  {
+    "path": "apps/super-admin-suit/supabase/migrations/20261022182719_explicit_data_api_access.sql",
+    "git_blob": "02906342f25ea62658662bbfd1679972ca00e064",
+    "bytes": 10970,
+    "sha256": "849ed5a0e5bf5c047675a9b17299243eb6fb4b20986f9b75b9985071a5057d10",
+    "source_pr": 440,
+    "source_commit": "cdb22ec3278d2f016e487c52119ed0c2b490b8df"
+  }
+]

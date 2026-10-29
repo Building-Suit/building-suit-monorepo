@@ -79,8 +79,18 @@ for (const ar of [false, true]) test(`linear setup, dashboard return and languag
   await expect(page).toHaveURL(/\/workspace$/)
   await page.reload()
   await expect(page.getByRole('heading', { name: ar ? 'لوحة التحكم' : 'Dashboard', exact: true })).toBeVisible()
-  await page.goto('/')
-  if (ar) await page.getByRole('button', { name: 'فتح القائمة', exact: true }).click()
+  if (ar) {
+    let releaseScripts!: () => void
+    const scriptsReady = new Promise<void>(resolve => { releaseScripts = resolve })
+    const holdScripts = async (route: import('@playwright/test').Route) => { if (route.request().resourceType() === 'script') await scriptsReady; await route.continue() }
+    await page.route('**/_nuxt/**', holdScripts)
+    await page.goto('/', { waitUntil: 'commit' })
+    const menu = page.getByRole('button', { name: 'فتح القائمة', exact: true })
+    try { await expect(menu).toBeDisabled() } finally { releaseScripts() }
+    await page.waitForLoadState('domcontentloaded')
+    await page.unroute('**/_nuxt/**', holdScripts)
+    await menu.click()
+  } else await page.goto('/')
   await page.getByRole('link', { name: ar ? 'مساحة العمل' : 'Open workspace', exact: true }).click()
   await expect(page).toHaveURL(/\/workspace$/)
   await expect(page.getByRole('heading', { name: ar ? 'لوحة التحكم' : 'Dashboard', exact: true })).toBeVisible()

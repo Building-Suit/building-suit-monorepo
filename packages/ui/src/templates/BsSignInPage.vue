@@ -143,7 +143,7 @@ function goBack() {
         }"
         :aria-busy="emailStepPending || undefined"
       >
-        <BsField v-slot="field" :label="copy.email" :error="emailStepError" required>
+        <BsField v-slot="field" for="bs-sign-in-email" :label="copy.email" :error="emailStepError" required>
           <BsInput
             :id="field.id"
             v-model="email"
@@ -187,7 +187,7 @@ function goBack() {
           class="bs-sign-in__identity bs-sign-in__password-row"
           :class="{ 'bs-sign-in__identity--invalid': Boolean(passwordFieldError) }"
         >
-          <BsField v-slot="field" :label="copy.password" :error="passwordFieldError" :required="passwordStep">
+          <BsField v-slot="field" for="bs-sign-in-password" :label="copy.password" :error="passwordFieldError" :required="passwordStep">
             <BsInput
               :id="field.id"
               ref="passwordControl"
@@ -273,11 +273,11 @@ function goBack() {
       :data-client-ready="hydrated ? 'true' : 'false'"
       @submit="onSubmit"
     >
-      <BsField v-slot="field" :label="copy.email" :error="emailStepError" required>
+      <BsField v-slot="field" for="bs-sign-in-email" :label="copy.email" :error="emailStepError" required>
         <BsInput :id="field.id" v-model="email" type="email" :autocomplete="emailAutocomplete ?? 'email'" :readonly="emailStepRequired && (passwordStep || emailStepPending)" required dir="ltr" />
       </BsField>
       <BsButton v-if="emailStepRequired && passwordStep" type="button" variant="link" :disabled="pending" @click="goBack">{{ copy.back ?? copy.email }}</BsButton>
-      <BsField v-if="!emailStepRequired || passwordStep" v-slot="field" :label="copy.password" required>
+      <BsField v-if="!emailStepRequired || passwordStep" v-slot="field" for="bs-sign-in-password" :label="copy.password" required>
         <BsInput :id="field.id" v-model="password" type="password" autocomplete="current-password" required dir="ltr" />
       </BsField>
       <BsLink v-if="forgot" :to="forgot.to" variant="muted">{{ forgot.label }}</BsLink>

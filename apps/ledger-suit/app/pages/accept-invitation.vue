@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { navigateTo } from '#app'
 import type { Database } from '~~/types/database.types'
 
 definePageMeta({ layout: false })

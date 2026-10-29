@@ -12,6 +12,7 @@ import { useFormInteraction } from '../../ux/src/composables/useFormInteraction.
 import { useDialogInteraction } from '../../ux/src/composables/useDialogInteraction.ts'
 import { interactionPolicy } from '../../ux/src/index.ts'
 import { useControlFocus } from '../../ux/src/composables/useControlFocus.ts'
+import { focusSignupStage } from '../../ux/src/composables/useSignupWizard.ts'
 import { useNavigationDisclosure } from '../../ux/src/composables/useNavigationDisclosure.ts'
 
 const require = createRequire(import.meta.url)
@@ -21,7 +22,7 @@ function component(file, language = 'en', imports = {}) {
   const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   const module = { exports: {} }
   const copy = language === 'ar' ? { close: 'إغلاق', saving: 'جارٍ الحفظ…', search: 'بحث', empty: 'لا توجد سجلات' } : { close: 'Close', saving: 'Saving…', search: 'Search', empty: 'No records found' }
-  const globals = { useDialogInteraction, useControlFocus, useFormInteraction, useNavigationDisclosure, ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
+  const globals = { useDialogInteraction, useControlFocus, useFormInteraction, useNavigationDisclosure, useRoute: () => ({ fullPath: '/' }), ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(name => imports[name] ?? require(name), module, module.exports, ...Object.values(globals))
   return module.exports.default
 }
@@ -209,6 +210,25 @@ test('primitive inventory centrally owns fields, choices, states, navigation, an
   assert.doesNotMatch(empty, /<button\b/)
 })
 
+test('loading select exposes the same disabled state that its click handler enforces', async () => {
+  const props = { modelValue: null, label: 'Patient', options: [], optionLabel: 'label', optionValue: 'value', loading: true }
+  const html = await render('molecules/BsSelect.vue', props)
+  const control = html.match(/<[^>]+role="combobox"[^>]*>/)?.[0]
+  assert.ok(control)
+  assert.match(control, /aria-disabled="true"/)
+  const native = await render('molecules/BsSelect.vue', { ...props, native: true })
+  assert.match(native.match(/<select\b[^>]*>/)?.[0] ?? '', /\bdisabled(?:\s|>|=)/)
+  const ready = await render('molecules/BsSelect.vue', { ...props, loading: false })
+  assert.match(ready.match(/<[^>]+role="combobox"[^>]*>/)?.[0] ?? '', /aria-disabled="false"/)
+})
+
+test('landing navigation cannot accept a server-rendered click before hydration', async () => {
+  const html = await render('organisms/BsLandingTopHeader.vue', { navigation: [], labels: { home: 'Home', navigation: 'Navigation', openApp: 'Workspace', signIn: 'Sign in', startTrial: 'Sign up', close: 'Close menu', open: 'Open menu' } })
+  const trigger = html.match(/<button\b[^>]*aria-controls="marketing-mobile-navigation"[^>]*>/)?.[0]
+  assert.ok(trigger)
+  assert.match(trigger, /\bdisabled(?:\s|>|=)/)
+})
+
 test('shared marketing owns the landing frame and Ledger-derived pricing presentation', () => {
   const landing = readFileSync(new URL('../src/templates/BsLandingPage.vue', import.meta.url), 'utf8')
   const frame = readFileSync(new URL('../src/templates/BsMarketingLayout.vue', import.meta.url), 'utf8')
@@ -267,6 +287,30 @@ test('shared auth owns split geometry, form shells, wizard controls, and verific
   assert.match(verification, /<BsOtpInput v-if="!verified" v-model="code"/)
   assert.match(verification, /aria-live="polite"/)
   assert.match(verification, /@click="emit\('resend'\)"/)
+})
+
+
+test('wizard transition completion preserves a field the user already focused', async () => {
+  let afterEnter
+  const Transition = vue.defineComponent({
+    inheritAttrs: false, props: ['onAfterEnter'],
+    setup(props, { slots }) { afterEnter = props.onAfterEnter; return () => slots.default?.() },
+  })
+  const Wizard = component('organisms/BsSignupWizard.vue', 'en', { vue: { ...vue, Transition }, '@building-suit/ux': { focusSignupStage } })
+  const app = vue.createSSRApp({ render: () => vue.h(Wizard, {
+    step: 2, steps: [{ id: 'account', title: 'Account' }, { id: 'practice', title: 'Practice' }], submitLabel: 'Continue',
+  }, () => vue.h('input')) })
+  app.component('BsButton', { render: () => vue.h('button') })
+  await renderToString(app)
+  assert.equal(typeof afterEnter, 'function')
+  let firstFocus = 0
+  const first = { focus: () => { firstFocus++ } }, chosen = {}, outside = {}
+  const stage = { ownerDocument: { activeElement: chosen }, contains: node => node === first || node === chosen, querySelector: () => first }
+  afterEnter(stage)
+  assert.equal(firstFocus, 0, 'finishing an animation must not move focus away from the field already being edited')
+  stage.ownerDocument.activeElement = outside
+  afterEnter(stage)
+  assert.equal(firstFocus, 1, 'a new step still receives initial focus when the user has not entered it')
 })
 
 test('authenticated chrome is composed from canonical shared organisms', () => {

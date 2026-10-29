@@ -19,6 +19,8 @@ begin
   return pg_temp.check_ap(actual=expected_code,label || ' (SQLSTATE ' || coalesce(actual,'none') || ')');
 end;
 $$;
+-- Role-switched temporary helpers need explicit execution under secure defaults.
+grant execute on function pg_temp.check_ap(boolean,text), pg_temp.reject_ap(text,text,text) to authenticated;
 create temp table ap_ids(key text primary key,id uuid);
 grant all on ap_ids to authenticated;
 grant all on sequence ap_test_number to authenticated;

@@ -8,12 +8,12 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     await page.addInitScript(value => localStorage.setItem('building-suit.theme', value), theme)
     await pilotFixture(page, locale, 'owner', name => name === 'shop_team_read' ? { canManage: true, canManagePermissions: true, canViewAudit: true, permissionKeys: [], grantablePermissionKeys: [], members: [], roles: [], locations: [], invitations: [], events: [] } : undefined)
     await fixtureGoto(page, '/team')
-    const tabs = page.getByRole('tablist').getByRole('tab')
+    const tabs = page.getByRole('tablist', { name: locale === 'ar' ? 'الفريق والصلاحيات' : 'Team & permissions', exact: true }).getByRole('tab')
     const bounds = await tabs.evaluateAll(elements => elements.map(element => element.getBoundingClientRect().top))
     expect(bounds.length).toBeGreaterThan(1)
     expect(Math.max(...bounds) - Math.min(...bounds)).toBeLessThan(2)
-    if (width < 1024) await page.getByRole('button', { name: locale === 'ar' ? 'فتح القائمة' : 'Open menu', exact: true }).click()
-    const dashboard = page.locator('#bs-primary-navigation nav').getByRole('link', { name: locale === 'ar' ? 'التقارير ونظرة عامة' : 'Reports & overview', exact: true, includeHidden: true })
+    if (width < 1024) await page.locator('.bs-app-shell__mobile-trigger').click()
+    const dashboard = page.locator('.bs-side-navigation nav').getByRole('link', { name: locale === 'ar' ? 'التقارير ونظرة عامة' : 'Reports & overview', exact: true, includeHidden: true })
     await expect(dashboard).toHaveAttribute('href', '/dashboard')
     await dashboard.click()
     await expect(page).toHaveURL(/\/dashboard(?:[?#]|$)/)
@@ -46,21 +46,15 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     expect(contrast).toBeGreaterThanOrEqual(4.5)
     const inactivePeriod = page.getByRole('button', { name: locale === 'ar' ? 'شهر' : 'Month', exact: true })
     await expect(inactivePeriod).toHaveAttribute('aria-pressed', 'false')
-    // Cards paint a gradient, so their background-color is transparent. The
-    // period controls belong to the surface toolbar, not the first metric card.
+    // The approved Shop dashboard uses a transparent filter bar and inactive
+    // buttons over a muted segmented-control track; active buttons paint surface.
     const toolbar = page.getByRole('toolbar').filter({ has: inactivePeriod })
-    const surface = await toolbar.evaluate(element => {
-      const probe = document.createElement('span')
-      probe.style.backgroundColor = 'var(--bs-surface)'
-      element.append(probe)
-      const color = getComputedStyle(probe).backgroundColor
-      probe.remove()
-      return color
-    })
+    const periodTrack = toolbar.locator('.bs-dashboard-periods')
     await expect(panel).not.toHaveCSS('background-image', 'none')
-    await expect(toolbar).toHaveCSS('background-color', surface)
-    await expect(inactivePeriod).toHaveCSS('background-color', surface)
-    expect(await activePeriod.evaluate(element => getComputedStyle(element).backgroundColor)).not.toBe(surface)
+    await expect(toolbar).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+    await expect(inactivePeriod).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+    await expect(periodTrack).toHaveCSS('background-color', theme === 'dark' ? 'rgb(28, 28, 31)' : 'rgb(244, 244, 245)')
+    await expect(activePeriod).toHaveCSS('background-color', theme === 'dark' ? 'rgb(20, 20, 22)' : 'rgb(255, 255, 255)')
     await expectNoPageOverflow(page)
     await page.screenshot({ path: test.info().outputPath('shared-dashboard.png'), fullPage: true })
   })

@@ -17,9 +17,9 @@
     "@building-suit/ux": "workspace:*",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.116.0",
-    "nuxt": "4.5.2",
-    "vue": "3.5.42",
-    "vue-router": "5.3.0",
+    "nuxt": "4.6.2",
+    "vue": "3.5.44",
+    "vue-router": "5.4.0",
     "@building-suit/auth": "workspace:*",
     "@building-suit/brand": "workspace:*"
   },
