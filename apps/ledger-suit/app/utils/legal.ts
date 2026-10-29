@@ -122,7 +122,7 @@ export const legalDocuments: Record<
         {
           title: '3. Payments',
           paragraphs: [
-            'Card payments are processed by Paymob or another payment provider that we clearly identify at checkout. Payment-card details are entered into the payment provider’s payment environment.',
+            'Current subscription payments use InstaPay transfers following the instructions frozen into your payment request. Transfers and receipt evidence are reviewed manually. Submission alone does not activate or change subscription access.',
             'Ledger Suit does not store your full card number or card security code (CVV). We may receive and store payment references, transaction status, subscription identifiers, and other non-sensitive billing metadata required to operate your subscription.',
           ],
         },
@@ -201,7 +201,7 @@ export const legalDocuments: Record<
         {
           title: '3. المدفوعات',
           paragraphs: [
-            'تتم معالجة مدفوعات البطاقات من خلال Paymob أو أي مزود دفع آخر يتم توضيحه في صفحة الدفع. يتم إدخال بيانات البطاقة داخل بيئة الدفع التابعة لمزود الدفع.',
+            'تُسدّد الاشتراكات حاليًا بتحويل إنستاباي وفق التعليمات المحفوظة في طلب الدفع. تُراجع التحويلات وإيصالاتها يدويًا، ولا يؤدي الإرسال وحده إلى تفعيل الاشتراك أو تغيير صلاحياته.',
             'لا يخزن Ledger Suit رقم البطاقة الكامل أو رمز الأمان (CVV). وقد نحتفظ بمراجع الدفع وحالة المعاملة ومعرّفات الاشتراك وغيرها من بيانات الفوترة غير الحساسة اللازمة لتشغيل الاشتراك.',
           ],
         },
@@ -354,7 +354,7 @@ export const legalDocuments: Record<
           title: '3. Subscriptions and billing',
           paragraphs: [
             'Available plans, prices, billing periods, limits, and trial terms are shown on the website or at checkout. Your paid subscription begins after the payment provider confirms a successful payment and our systems process that confirmation.',
-            'Card payments and recurring billing are processed by Paymob or another payment provider clearly identified at checkout. Ledger Suit may retain payment references, subscription identifiers, transaction status, and other non-sensitive billing metadata, but does not store full card numbers or card security codes (CVV).',
+            'Current InstaPay transfers are reviewed manually. Ledger Suit retains payment-request references, receipt evidence, subscription identifiers and review history for authorized billing and audit work. Historical online-payment references remain in the record. Ledger Suit does not store full card numbers or card security codes (CVV).',
             'Where automatic renewal applies, the renewal schedule and price are those presented for the selected plan and billing cycle, subject to any change communicated as required by applicable law.',
           ],
         },
@@ -429,7 +429,7 @@ export const legalDocuments: Record<
           title: '3. الاشتراكات والفوترة',
           paragraphs: [
             'تظهر الخطط والأسعار ودورات الفوترة والحدود وشروط التجربة المتاحة على الموقع أو عند الدفع. ويبدأ الاشتراك المدفوع بعد تأكيد مزود الدفع نجاح العملية ومعالجة أنظمتنا لهذا التأكيد.',
-            'تتم معالجة مدفوعات البطاقات والفوترة المتكررة من خلال Paymob أو مزود دفع آخر يتم توضيحه عند الدفع. وقد يحتفظ Ledger Suit بمراجع الدفع ومعرّفات الاشتراك وحالة المعاملة وغيرها من بيانات الفوترة غير الحساسة، لكنه لا يخزن أرقام البطاقات الكاملة أو رموز الأمان (CVV).',
+            'تُراجع تحويلات إنستاباي الحالية يدويًا. يحتفظ Ledger Suit بمراجع طلبات الدفع وإيصالاتها ومعرّفات الاشتراك وسجل المراجعة لأعمال الفوترة والتدقيق المخوّلة. تبقى مراجع المدفوعات الإلكترونية السابقة ضمن السجل، ولا يخزن النظام أرقام البطاقات الكاملة أو رموز الأمان (CVV).',
             'عندما ينطبق التجديد التلقائي، يكون موعد التجديد وسعره وفق الخطة ودورة الفوترة المختارتين، مع مراعاة أي تغيير يتم إبلاغك به على النحو الذي يتطلبه القانون المعمول به.',
           ],
         },

@@ -16,10 +16,9 @@ const manualOpen = ref(false)
 const manualPlan = ref<LaunchPlanKey>()
 watch([currentId, user], () => { manualOpen.value = false; manualPlan.value = undefined })
 const { rows: usageRows } = usePlanUsage()
-const { createCheckoutSession, accessState, subscription } = useBilling()
+const { accessState, subscription } = useBilling()
 const { t, te, locale } = useI18n()
 const interval = ref<'monthly' | 'yearly'>('monthly')
-const pendingPlan = ref<LaunchPlanKey | null>(null)
 const reviewingPlan = ref<LaunchPlanKey | null>(null)
 const errorMessage = ref('')
 const describeError = useErrorMessage()
@@ -221,7 +220,7 @@ const pricingPlans = computed<MarketingPricingPlan[]>(() => plans.value.map((pla
     : surface.value === 'public'
       ? { label: t('landing.startTrial'), to: '/signup', variant: 'primary' as const }
       : surface.value === 'checkout'
-        ? { label: pendingPlan.value === plan.plan_key ? t('billing.openingCheckout') : t('billing.plans.choose', { plan: planName(plan) }), pending: pendingPlan.value === plan.plan_key, disabled: Boolean(pendingPlan.value), variant: 'primary' as const }
+        ? { label: t('billing.plans.choose', { plan: planName(plan) }), disabled: !can('billing.manage') || manualOpen.value, variant: 'primary' as const }
         : surface.value === 'manage' && launchPlanCurrent.value
           ? { label: reviewingPlan.value === plan.plan_key ? t('billing.planChange.reviewing') : t('billing.planChange.review', { plan: planName(plan) }), pending: reviewingPlan.value === plan.plan_key, disabled: Boolean(reviewingPlan.value) }
           : undefined
@@ -246,38 +245,20 @@ const pricingPlans = computed<MarketingPricingPlan[]>(() => plans.value.map((pla
     features: featureRows(plan),
     featureFallback: featureRows(plan).length ? undefined : t('billing.plans.scale.preview'),
     action,
-    secondaryAction: surface.value === 'checkout' && plan.is_purchasable && can('billing.manage')
-      ? { label: t('billing.manual.choose') }
-      : undefined,
   }
 }))
 
 function choosePlan(planKey: string) {
   const plan = plans.value.find(candidate => candidate.plan_key === planKey)
   if (!plan?.is_purchasable) return
-  if (surface.value === 'checkout') void checkout(plan.plan_key as LaunchPlanKey)
+  if (surface.value === 'checkout') chooseManualPlan(plan.plan_key)
   else if (surface.value === 'manage') void reviewChange(plan.plan_key as LaunchPlanKey)
 }
 
 function chooseManualPlan(planKey: string) {
+  if (surface.value !== 'checkout' || !currentId.value || !can('billing.manage') || manualOpen.value || !plans.value.some(plan => plan.plan_key === planKey && plan.is_purchasable)) return
   manualPlan.value = planKey as LaunchPlanKey
   manualOpen.value = true
-}
-
-async function checkout(planKey: LaunchPlanKey) {
-  if (!currentId.value || pendingPlan.value) return
-  pendingPlan.value = planKey
-  errorMessage.value = ''
-  try {
-    const url = await createCheckoutSession(currentId.value, planKey, interval.value, t('billing.checkoutFailed'))
-    window.location.assign(url)
-  }
-  catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : t('billing.checkoutFailed')
-  }
-  finally {
-    pendingPlan.value = null
-  }
 }
 
 async function reviewChange(planKey: LaunchPlanKey) {
@@ -300,5 +281,5 @@ async function reviewChange(planKey: LaunchPlanKey) {
     reviewingPlan.value = null
   }
 }
-return { supabase, currentId, can, user, manualOpen, manualPlan, usageRows, createCheckoutSession, accessState, subscription, t, te, locale, interval, pendingPlan, reviewingPlan, errorMessage, describeError, catalog, catalogPending, catalogError, refresh, plans, planImpact, currentPlanKey, currentPlanKind, trialPlanCurrent, launchPlanCurrent, compatibilityPlanCurrent, object, priceAmount, amount, yearlyOriginalAmount, yearlyMonthlyAmount, yearlyDiscount, annualDiscount, planName, planDescription, planNameForKey, formatAmount, formatDate, formatNumber, formatBytes, formatQuota, quotaImpacts, lostFeatures, gainedFeatures, auditHistoryIncreased, featureName, limit, included, featureRows, pricingPlans, choosePlan, chooseManualPlan, checkout, reviewChange, compact, surface }
+return { supabase, currentId, can, user, manualOpen, manualPlan, usageRows, accessState, subscription, t, te, locale, interval, reviewingPlan, errorMessage, describeError, catalog, catalogPending, catalogError, refresh, plans, planImpact, currentPlanKey, currentPlanKind, trialPlanCurrent, launchPlanCurrent, compatibilityPlanCurrent, object, priceAmount, amount, yearlyOriginalAmount, yearlyMonthlyAmount, yearlyDiscount, annualDiscount, planName, planDescription, planNameForKey, formatAmount, formatDate, formatNumber, formatBytes, formatQuota, quotaImpacts, lostFeatures, gainedFeatures, auditHistoryIncreased, featureName, limit, included, featureRows, pricingPlans, choosePlan, chooseManualPlan, reviewChange, compact, surface }
 }
