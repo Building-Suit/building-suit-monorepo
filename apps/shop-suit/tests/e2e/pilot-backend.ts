@@ -31,7 +31,7 @@ export async function backendFixture(role: PilotRole) {
     return { email, password, token: session.access_token }
   }
   const owner = await account('owner')
-  const shopId = await rpc<string>(owner, 'create_owner_shop', { p_shop_name: `Pilot ${runId}`, p_plan_slug: 'pro', p_business_mode: 'service' })
+  const shopId = await rpc<string>(owner, 'create_owner_shop', { p_shop_name: `Pilot ${runId}`, p_business_mode: 'service' })
   const locations = await rpc<Location[]>(owner, 'list_shop_locations', { p_shop_id: shopId })
   const second = await rpc<string>(owner, 'save_shop_location', { p_shop_id: shopId, p_location_id: null, p_name: 'Pilot second branch', p_code: 'P2', p_address: null, p_phone: null })
   locations.push({ id: second, name: 'Pilot second branch' })
@@ -92,20 +92,22 @@ export async function login(page: Page, account: Account, locale: string) {
     return root.__vue_app__?.config?.globalProperties?.$nuxt?.isHydrating === false
   })
 
-  const email = page.locator('#login-email')
-  const password = page.locator('#login-password')
-  const submit = page.locator('form button[type="submit"]')
-
+  const form = page.locator('form')
+  await expect(form).toHaveAttribute('data-client-ready', 'true', { timeout: 30_000 })
+  const email = page.getByLabel(locale === 'ar' ? /^البريد الإلكتروني\s*\*?$/ : /^Email\s*\*?$/)
+  const password = page.getByLabel(locale === 'ar' ? /^كلمة المرور\s*\*?$/ : /^Password\s*\*?$/)
   await expect(email).toBeEditable()
-  await expect(password).toBeEditable()
-  await expect(submit).toBeEnabled()
-
+  await expect(password).toHaveCount(0)
   await email.fill(account.email)
+  await page.getByRole('button', { name: locale === 'ar' ? 'التالي' : 'Continue', exact: true }).click()
+  await expect(password).toBeEditable()
   await password.fill(account.password)
-
+  const submit = form.locator('button[type="submit"]')
+  await expect(submit).toHaveCount(1)
+  await expect(submit).toBeEnabled()
   await Promise.all([
     page.waitForURL(/\/dashboard/, { timeout: 20_000 }),
     submit.click(),
   ])
-  await expect(page.getByRole('main').getByRole('heading', { name: locale === 'ar' ? 'لوحة التشغيل' : 'Operating dashboard', exact: true })).toBeVisible()
+  await expect(page.getByRole('main').getByRole('heading', { name: locale === 'ar' ? 'لوحة التحكم' : 'Operating dashboard', exact: true })).toBeVisible()
 }

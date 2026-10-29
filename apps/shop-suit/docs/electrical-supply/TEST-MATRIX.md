@@ -19,3 +19,7 @@ Results are recorded in VERIFICATION.md. A planned test is not a pass.
 | Qualification | full existing regression, 10000 SKU pagination/load, multi-location, plan review, merchant pilot | M6 + external |
 
 Representative merchant: breaker20A/ea, cable2.5blue/m, copper/kg, socket/ea, conduit/m. Receive two reels and 5kg; sell 12.5m,250g,2 breakers; receipt, stock/FIFO, count, eligible return, customer/supplier balances, reporting and bilingual verification. This journey remains pending until operational integration exists.
+
+## Current electrical browser qualification — October29
+
+All48 published measured-retail browser cases pass against the current integrated runtime (see NATIVE-BROWSER-READINESS-2026-10-29.md). Their transport is synthetic. Existing real-Auth barber pilot and signup/backend suites are separate; their discovery/source is not a fresh passing execution. Electrical Auth-to-financial-RPC, original unpublished checkout recovery, merchant/device/native-Arabic and release gates remain open.

@@ -1355,7 +1355,8 @@
       ],
       "test_paths": [],
       "remaining": "Complete feature-wide English/Arabic, both themes, screen-reader/keyboard and narrow/desktop matrix; native speaker acceptance external.",
-      "completion": "OPEN; source/test presence is not semantic acceptance"
+      "completion": "OPEN; source/test presence is not semantic acceptance",
+      "additional_evidence": "48/48 published electrical browser cases pass with EN/AR coverage; full feature matrix, native speaker and external acceptance remain open."
     },
     {
       "task": "SS-ELEC-605",
@@ -1384,7 +1385,7 @@
         }
       ],
       "test_paths": [],
-      "remaining": "Implement/execute genuine browser real Auth-to-financial-RPC disposable integration; synthetic RPC fixtures alone do not qualify.",
+      "remaining": "Existing real-Auth barber financial pilot is present; its current-contract setup/login repairs have synthetic UI/discovery checks. Fixed native Shop backend is absent; guarded CI bootstrap requires the coordinated GitHub-hosted runner. Execute real suite, finish electrical measured/FIFO/Auth financial journey and preserve all role/location gates. No synthetic/native equivalence.",
       "completion": "OPEN; source/test presence is not semantic acceptance"
     },
     {

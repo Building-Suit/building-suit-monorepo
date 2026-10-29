@@ -4,6 +4,8 @@ on:
     paths:
       - '.github/workflows/shop-catalog-capacity.yml'
       - 'apps/shop-suit/tests/e2e/catalog-capacity*'
+      - 'apps/shop-suit/tests/e2e/native-pilot-login*'
+      - 'apps/shop-suit/tests/e2e/pilot-backend.ts'
       - 'apps/shop-suit/tests/e2e/pilot-fixture.ts'
       - 'apps/shop-suit/tests/e2e/cash-policy-fixture-server.mjs'
       - 'apps/shop-suit/app/pages/products/**'
@@ -33,9 +35,12 @@ jobs:
           NITRO_PRESET: node-server
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/catalog-capacity.config.ts
+      - run: pnpm exec playwright test -c apps/shop-suit/tests/e2e/native-pilot-login.config.ts
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: shop-catalog-capacity-browser-results
-          path: test-results/catalog-capacity
+          path: |
+            test-results/catalog-capacity
+            test-results/native-pilot-login
           retention-days: 7

@@ -311,3 +311,7 @@ The extra stale-source and unavailable-source browser cases pass2/2 in41.9 secon
 Root2077 tests pass2054/zero failures/23 skips in154 seconds. Final production build, app/shared lint, workspace/122-route atomic ownership and diff whitespace checks pass. The last Shop and Docs typechecks, committed release check and native publication are the remaining current-child gates. Real supplier/source/merchant/native-speaker and hosted acceptance remain open, as does the separately tracked E6 uncertain-checkout edit/recovery issue.
 
 Final current Shop and Docs typechecks pass. The remaining publication gates are the committed release check and native CI; E6 and external acceptance remain separate.
+
+## October29 independent electrical browser qualification
+
+Current capacity branch qualification passes48/48 published electrical browser cases,2/2 repaired native-pilot login-driver UI tests (synthetic transport),4/4 native-admission/local-origin units, and20-case native pilot discovery. The native financial suite itself is unrun: fixed Shop backend is absent and guarded CI bootstrap rejects this non-GitHub executor. See NATIVE-BROWSER-READINESS-2026-10-29.md and its logs; no native financial, hardware or merchant acceptance is inferred. Original recovery36-case qualification is separate and still unavailable.
