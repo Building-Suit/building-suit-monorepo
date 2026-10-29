@@ -79,7 +79,11 @@ export function useDoctorAppointmentsPage() {
     try{
       if(!administrative.value)await nuxt.$doctorConsultations.load()
       if(preparation!==editorPreparation||captured!==scopeKey.value||!editor.visible.value)return
-      await Promise.all([offers(),...(item ? [] : [patients()])])
+      const lookups = [offers(),...(item ? [] : [patients()])]
+      // Both calls set their own loading state synchronously. Hand readiness
+      // back to each lookup now, so a slower sibling cannot disable its picker.
+      preparingEditor.value=false
+      await Promise.all(lookups)
     }finally{if(preparation===editorPreparation)preparingEditor.value=false}
   }
   function command(): DoctorAppointmentCommand | null {

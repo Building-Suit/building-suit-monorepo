@@ -11,15 +11,15 @@ const source = new URL('../../app/composables/useDoctorAppointmentsPage.ts', imp
 const require = createRequire(source)
 const code = ts.transpileModule(readFileSync(source, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
 const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done }); return { promise, resolve } }
-function fixture() {
-  const scope = effectScope(), mounted = [], unmounted = [], clearers = [], consultationReads = [], patientRead = deferred()
+function fixture({ holdOffers = false } = {}) {
+  const scope = effectScope(), mounted = [], unmounted = [], clearers = [], consultationReads = [], patientRead = deferred(), offerRead = deferred()
   const state = reactive(doctorAppointmentsState()), key = ref('scope-a')
   state.board = { canWrite: true, canQueue: true, canReadPatients: true, items: [], queue: [] }
   let patients = 0, offers = 0
   const appointments = {
     state, scopeKey: () => key.value, discard() {}, clear() {}, load: async () => true,
     async patients() { patients++; state.patientsLoading = true; await patientRead.promise; state.patientsLoading = false },
-    async offers() { offers++ },
+    async offers() { offers++; if(holdOffers) { state.offersLoading = true; await offerRead.promise; state.offersLoading = false } },
   }
   const context = { state: reactive({ current: { edition: 'synthetic_preview' }, options: [] }), refresh: async () => true, registerClear(callback) { clearers.push(callback); return () => {} } }
   const nuxt = { $doctorAppointments: appointments, $doctorAppointmentsScope: () => ({ practiceId: 'practice-a', locationId: 'clinic-a', timezone: 'Etc/UTC' }), $doctorAppointmentsLive: { connected: true, update: async () => {} }, $doctorConsultations: { state: { types: [] }, load() { const read = deferred(); consultationReads.push(read); return read.promise } } }
@@ -27,7 +27,7 @@ function fixture() {
   const module = { exports: {} }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(name => name === '@building-suit/ux' ? { useRecordAction, usePageRevalidation() {} } : require(name.startsWith('.') ? name + '.ts' : name), module, module.exports, ...Object.values(globals))
   const flow = scope.run(() => module.exports.useDoctorAppointmentsPage())
-  return { flow, key, state, consultationReads, patientRead, calls: () => ({ patients, offers }), mount: () => mounted[0](), invalidate: () => clearers.forEach(callback => callback()), async close() { unmounted.forEach(callback => callback()); await nextTick(); scope.stop() } }
+  return { flow, key, state, consultationReads, patientRead, offerRead, calls: () => ({ patients, offers }), mount: () => mounted[0](), invalidate: () => clearers.forEach(callback => callback()), async close() { unmounted.forEach(callback => callback()); await nextTick(); scope.stop() } }
 }
 
 test('appointment picker remains loading throughout initial consultation and patient preparation', async () => {
@@ -75,4 +75,22 @@ test('context invalidation during preparation cannot start patient or slot reads
     assert.equal(f.flow.editorOpen.value, false)
     assert.equal(f.flow.editorView.value.patientLoading, false)
   } finally { f.patientRead.resolve(); f.consultationReads.forEach(read => read.resolve()); await f.close() }
+})
+
+for (const first of ['patients', 'offers']) test(`initial ${first} lookup enables its picker independently of the other lookup`, async () => {
+  const f = fixture({ holdOffers: true })
+  try {
+    await f.mount()
+    const opening = f.flow.open()
+    f.consultationReads[0].resolve(); await nextTick()
+    assert.equal(f.flow.editorView.value.patientLoading, true)
+    assert.equal(f.flow.editorView.value.offersLoading, true)
+    const ready = first === 'patients' ? 'patientLoading' : 'offersLoading'
+    const waiting = first === 'patients' ? 'offersLoading' : 'patientLoading'
+    ;(first === 'patients' ? f.patientRead : f.offerRead).resolve(); await nextTick()
+    assert.equal(f.flow.editorView.value[ready], false, 'The completed lookup must enable its own picker while the other request is still pending')
+    assert.equal(f.flow.editorView.value[waiting], true)
+    assert.equal(f.flow.editorView.value.disabled, true, 'Independent picker readiness does not permit an incomplete booking')
+    f.patientRead.resolve(); f.offerRead.resolve(); await opening
+  } finally { f.patientRead.resolve(); f.offerRead.resolve(); f.consultationReads.forEach(read => read.resolve()); await f.close() }
 })
