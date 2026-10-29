@@ -53,7 +53,7 @@ try {
   let tasks = 0
   for (let n = 1; n <= 9; n++) { const file = `docs/work-packages/doctor-suit/planning-v0.4/DOS-M${n}.json`, bytes = bound(file); tasks += JSON.parse(bytes).tasks.length; check('canonical-packet-unchanged:' + n, hash(bytes) === hash(source(base, file))) }
   check('canonical-nine-packets-104-tasks', tasks === 104)
-  const allowed = new Set(['dos-m7-004.md', 'dos-m7-004-packet.json', 'dos-m7-004-verify.mjs', 'dos-m7-004-verification.json', 'dos-m7-004-reconciliation-20261029.json', 'dos-m7-004-ledger514-verification.json', 'm7-continuation.md'].map(f => folder + f).concat('release-fragments/dos-m7-004.json', 'release-fragments/dos-m7-004-consolidation-hold-20261029.json', 'release-fragments/dos-m7-004-queued-reconciliation-20261029.json', 'release-fragments/dos-m7-004-ledger514-binding-20261029.json'))
+  const allowed = new Set(['dos-m7-004.md', 'dos-m7-004-packet.json', 'dos-m7-004-verify.mjs', 'dos-m7-004-verification.json', 'dos-m7-004-reconciliation-20261029.json', 'dos-m7-004-ledger514-verification.json', 'dos-m7-004-shop515-verification.json', 'm7-continuation.md'].map(f => folder + f).concat('release-fragments/dos-m7-004.json', 'release-fragments/dos-m7-004-consolidation-hold-20261029.json', 'release-fragments/dos-m7-004-queued-reconciliation-20261029.json', 'release-fragments/dos-m7-004-ledger514-binding-20261029.json', 'release-fragments/dos-m7-004-shop515-binding-20261029.json'))
   check('no-runtime-or-foreign-task-implementation', git('diff', '--name-only', base, head).split('\n').filter(Boolean).every(file => allowed.has(file)))
 } catch { check('input-or-contract-evaluation', false) }
 const failed = checks.filter(c => c.status === 'failed').length, code = failed ? 1 : 2

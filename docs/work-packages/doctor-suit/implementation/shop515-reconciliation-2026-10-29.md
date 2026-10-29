@@ -1,0 +1,15 @@
+# Doctor reconciliation with Shop #515 — October 29
+
+Task `DOCTOR-CONSOLIDATION-20261029`, root PR401. GitHub confirms Shop PR515 merged at 20:41:11 UTC from `2c3b0f725a486b2d223207f4ffe21cbd0cc83cc3` to staging `eb5a80b6f5efbe71cfd99d8374b277fcf3bd096a`. Local Doctor root `62de0e0b8cfd519997240b95baaa731441b65295` incorporates that exact staging through preserving merge `5f46694d8dcca4f4c14bc3db5fb37e164ba8d386`. This is a feature-worktree merge only. Shop post-merge/provider validation retains the integration/full-CI slot until the coordinator releases it.
+
+The only conflict was `docs/shared/data-table.md`: retain Doctor's existing keyboard overflow-region contract and Shop's fixed server-pagination contract as separate paragraphs. Release inventory auto-merged; exact object comparisons retain every Doctor entry and add the unchanged `shop-catalog-fixed-server-pagination-20261029` item. Historical superseded focus rows remain inactive. The shared browser helper HTML annotation converges identically on both sides. All accepted fragments and source histories remain unchanged.
+
+Doctor application source, shared select/header readiness and signup diagnostics match the prior local root byte-for-byte. Shop application source, accepted catalogue template and Shop-owned workflow files match actual staging byte-for-byte. Dependency manifests/lockfile are unchanged from the already frozen, prepared local installation; no reinstall or SDK/provider runtime is needed for this source merge. The separate mobile package remains Android-first and gated.
+
+Local combined checks are recorded below after completion. Fresh owned Doctor account/shared-browser/native acceptance remains pending; the screenshot failure's cause is unresolved. Neither Shop's successful native acceptance nor local Doctor tests qualify Doctor's actual runtime. No assertion, deadline, retry, policy or authorization guard is weakened.
+
+The legal/privacy/security children are existing local source checkpoints, not accepted legal/privacy/security decisions. Propagate the final qualified root through preserving merges, rebind only current packet parents and retain all historical receipts. No further unavailable M7–M9 preparation is duplicated. Publication, new full CI, staging merge and main/production remain coordinated and held here; no denied provider access is retried.
+
+## Combined local qualification
+
+Merged product source5f46694d passed root2,670 total /2,647 passed /zero failed /23 skipped. All8 app typechecks passed with concurrency2 and no cached results; all8 static builds passed separately with concurrency2 and no cached results. Strict tokens/workspace checks pass149 complete routes, zero migration debt and80 unchanged historical migrations. All49 original Doctor heads, prior62de correction and both accepted Ledger/Shop staging commits are ancestors. These are local engineering results, not new owned browser/native/service acceptance. Exact committed parent/default/full-stack release results remain separately recorded. No additional runtime or provider action occurred.

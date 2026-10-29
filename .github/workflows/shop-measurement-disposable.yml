@@ -4,6 +4,11 @@ on:
     paths:
       - '.github/workflows/shop-measurement-disposable.yml'
       - 'apps/shop-suit/supabase/**'
+      - 'apps/shop-suit/tests/e2e/electrical-native*'
+      - 'apps/shop-suit/tests/e2e/pilot-backend.ts'
+      - 'apps/shop-suit/tests/pilot/**'
+      - 'apps/shop-suit/playwright.electrical-qualification.config.ts'
+      - 'apps/shop-suit/playwright.qualification.config.ts'
       - 'tooling/database/test-shop-measurement*.mjs'
       - 'tooling/database/*reel*.mjs'
       - 'tooling/database/*reservation*.mjs'
@@ -64,6 +69,18 @@ jobs:
           node tooling/database/test-shop-stock-local.mjs
           node tooling/database/test-shop-supplier-payables-local.mjs
           node tooling/database/test-shop-sale-correction-local.mjs
+      - name: Build Shop for owned native financial browser qualification
+        run: pnpm --filter @building-suit/shop-suit build
+        env:
+          NITRO_PRESET: node-server
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Verify real Auth measured checkout and FIFO through the browser
+        env:
+          SUPABASE_HOME: ${{ runner.temp }}/shop-measurement-supabase
+          SHOP_PILOT_DISPOSABLE: '1'
+        run: |
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          pnpm exec playwright test -c apps/shop-suit/playwright.electrical-qualification.config.ts
       - name: Stop owned disposable backend
         if: always()
         env:
