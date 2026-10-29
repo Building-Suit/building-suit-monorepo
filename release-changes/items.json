@@ -3713,12 +3713,7 @@
     "id": "shared-mobile-navigation-focus-20261029",
     "task": "SS-ELECTRICAL-001",
     "suits": [
-      "doctor-suit",
-      "inventory-suit",
-      "ledger-suit",
-      "shop-suit",
-      "super-admin-suit",
-      "automation-suit"
+      "shop-suit"
     ],
     "classification": "patch",
     "disposition": "public",
@@ -3796,6 +3791,32 @@
     "reason": "Qualify finite animation settlement, ignored infinite animation and cancellation on close. Use the optional Web Animations API when available, preserving no-animation runtimes and existing keyboard tests. The exact-head native unit failure is retained as evidence; no retry or assertion bypass.",
     "sources": [
       "shop-staging-menu-animation-compatibility-20261029"
+    ]
+  },
+  {
+    "id": "shop-staging-shared-shell-consumer-qualification-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/templates/BsAuthLayout.vue",
+      "packages/ux/src/composables/useSideNavigation.ts",
+      "apps/shop-suit/tests/e2e/post-unification-regressions.spec.ts",
+      "packages/testing",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/interactions.md"
+    ],
+    "reason": "Preserve private provenance for all existing shared-shell source consumers without activating another operational/public product or inventing release baselines. Public Shop focus/access changes remain separately classified. Qualify the approved October19 dashboard: scope Team tabs independently from navigation tabs, use generated navigation identity, and assert the actual transparent toolbar/inactive buttons, muted track, surface active button and existing contrast/gradient/geometry bounds.",
+    "sources": [
+      "shop-staging-shared-shell-consumer-qualification-20261029"
     ]
   }
 ]

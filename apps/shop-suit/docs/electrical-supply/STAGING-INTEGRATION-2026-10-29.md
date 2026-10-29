@@ -57,3 +57,24 @@ merchant/printer/scanner/scale/native-Arabic acceptance and supported release
 publication remain distinct gates. No commercial readiness, customer publication,
 production deployment or successful staging merge is inferred from consolidation.
 Exact-head combined checks and live provider/branch reconciliation remain required.
+
+## Local integration verification
+
+The complete generic browser group passed: 124 cases passed, one existing skip,
+zero failures (5.1 minutes). The complete separate shared-regressions browser
+group then passed all 30 cases (1.9 minutes). This is the repository's generic group, not the
+missing recovery archive's distinct 36-case group. All 83 shared UX units pass,
+including finite/infinite entrance-motion and stale-focus cancellation cases.
+The controller treats Web Animations as optional, preserving existing no-motion
+runtimes/test doubles. Native `ff00e807` repository tests independently passed
+2,058 cases with 23 existing skips; its disposable catalog then correctly
+rejected public classification for unregistered consumers.
+
+Public Shop accessibility changes retain their patch note. Other existing shared
+source consumers have private provenance only, following the existing workspace
+chrome classification. No registry, baseline, catalog guard or release workflow
+is relaxed. The shared dashboard regression also retains all painted-surface,
+contrast, geometry and overflow assertions against its approved October 19
+transparent toolbar, muted period track and raised active period. Team tabs are
+scoped separately from sidebar filtering tabs; generated navigation IDs are
+resolved through the canonical side menu.

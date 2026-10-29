@@ -2,12 +2,7 @@
   "id": "shared-mobile-navigation-focus-20261029",
   "task": "SS-ELECTRICAL-001",
   "suits": [
-    "doctor-suit",
-    "inventory-suit",
-    "ledger-suit",
-    "shop-suit",
-    "super-admin-suit",
-    "automation-suit"
+    "shop-suit"
   ],
   "classification": "patch",
   "disposition": "public",
