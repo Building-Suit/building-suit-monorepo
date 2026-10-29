@@ -14,6 +14,8 @@ $$;
 create function pg_temp.check_result(ok boolean, label text) returns text language sql as $$
   select extensions.ok(ok, label);
 $$;
+-- Role-switched temporary helpers need explicit execution under secure defaults.
+grant execute on function pg_temp.id(text), pg_temp.check_result(boolean,text) to authenticated;
 insert into auth.users(id,email,raw_user_meta_data,raw_app_meta_data)
 values ('54000000-0000-4000-8000-000000000001','integrated-cycle@test.local','{}','{}');
 select set_config('request.jwt.claims','{"sub":"54000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
