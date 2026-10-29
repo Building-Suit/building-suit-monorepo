@@ -315,3 +315,7 @@ Final current Shop and Docs typechecks pass. The remaining publication gates are
 ## October29 independent electrical browser qualification
 
 Current capacity branch qualification passes48/48 published electrical browser cases,2/2 repaired native-pilot login-driver UI tests (synthetic transport),4/4 native-admission/local-origin units, and20-case native pilot discovery. The native financial suite itself is unrun: fixed Shop backend is absent and guarded CI bootstrap rejects this non-GitHub executor. See NATIVE-BROWSER-READINESS-2026-10-29.md and its logs; no native financial, hardware or merchant acceptance is inferred. Original recovery36-case qualification is separate and still unavailable.
+
+## Electrical native measured/FIFO coverage follow-up
+
+Two EN/AR actual-Auth/financial-RPC browser cases are now implemented and discovered, with a matching120-migration SQL companion PASS and27 relevant units PASS. Owned native execution is still pending. See NATIVE-ELECTRICAL-JOURNEY-2026-10-29.md for exact scope, assertions, runner wiring and distinct original-recovery/external gates. Prior observations remain historical; synthetic and schema results are not native acceptance.

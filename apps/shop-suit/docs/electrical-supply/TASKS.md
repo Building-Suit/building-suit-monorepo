@@ -796,9 +796,9 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Run full migrated disposable DB plus browser merchant journey; record every pass/failure/skipped gate. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: Qualification child passes478 Shop units and the merged repository gate (2026 pass, zero fail,23 skip). Eight built public-site isolation scenarios, actual Pinia/Colada account-switch/cancelled-response cases, six EN/AR electrical browser cases and the108-migration replay with17 legacy suites/two races pass. Native parent15b52a32 measured-retail/media/accounts CI passes. Trade/reservation implementation and final combined qualification remain open; see VERIFICATION.md.
-- PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
+- Evidence: NATIVE-ELECTRICAL-JOURNEY-2026-10-29.md. Two real-Auth electrical browser cases are implemented/discovered but unexecuted. Companion120-migration schema scenario and inherited races pass;27 relevant units,2 synthetic driver regressions, strict TypeScript and scoped lint pass. The separate48-case synthetic electrical group passes. No native/provider/merchant acceptance is inferred.
+- PR / commit: `codex/shop-suit/electrical-capacity-qualification`, based on integrated81cdcc60 with8fed6ad6 parent checkpoint; cohesive draft preparation and owned-runner workflow source ready. #441 is already merged.
+- Blocker: Fixed owned native backend is absent here; supported bootstrap requires actual GitHub-hosted execution. Shop CI follows coordinated Doctor/Ledger slots. Missing original recovery source and external acceptance remain separate.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
 ## SS-ELEC-607 — Merchant pilot acceptance scenarios

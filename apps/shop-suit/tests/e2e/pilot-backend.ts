@@ -9,7 +9,7 @@ type Location = { id: string; name: string }
 // Local Auth + real PostgREST, with no intercepted responses. Credentials live
 // only in this process. Fixtures remain in the disposable backend for recovery
 // verification; this helper never resets a database or deletes unrelated data.
-export async function backendFixture(role: PilotRole) {
+export async function backendFixture(role: PilotRole, businessMode: 'service' | 'mixed' = 'service') {
   const status = localStatus()
   const runId = randomUUID()
   async function request<T>(path: string, token: string, body?: unknown): Promise<T> {
@@ -31,7 +31,7 @@ export async function backendFixture(role: PilotRole) {
     return { email, password, token: session.access_token }
   }
   const owner = await account('owner')
-  const shopId = await rpc<string>(owner, 'create_owner_shop', { p_shop_name: `Pilot ${runId}`, p_business_mode: 'service' })
+  const shopId = await rpc<string>(owner, 'create_owner_shop', { p_shop_name: `Pilot ${runId}`, p_business_mode: businessMode })
   const locations = await rpc<Location[]>(owner, 'list_shop_locations', { p_shop_id: shopId })
   const second = await rpc<string>(owner, 'save_shop_location', { p_shop_id: shopId, p_location_id: null, p_name: 'Pilot second branch', p_code: 'P2', p_address: null, p_phone: null })
   locations.push({ id: second, name: 'Pilot second branch' })
@@ -67,7 +67,9 @@ export async function backendFixture(role: PilotRole) {
     p_shop_id: shopId, p_customer_id: null, p_name: 'Pilot booked customer',
     p_phone: null, p_email: null, p_address: null, p_notes: null,
   })
-  return { owner, actor, shopId, locations, membershipId, serviceId, customerId, rpc }
+  const read = <T>(reader: Account, table: 'product_stock' | 'inventory_movements' | 'invoice_items' | 'invoices', query: Record<string, string>) =>
+    request<T>(`/rest/v1/${table}?${new URLSearchParams(query)}`, reader.token)
+  return { owner, actor, shopId, locations, membershipId, serviceId, customerId, rpc, read, account }
 }
 
 export async function login(page: Page, account: Account, locale: string) {

@@ -84,7 +84,7 @@ export async function recordShellGeometry(page: Page) {
   const box = element.getBoundingClientRect(), style = getComputedStyle(element)
   return { width: Math.round(box.width), height: Math.round(box.height), background: style.backgroundColor, border: style.borderColor, radius: style.borderRadius, font: style.fontFamily }
  })
- const state = await page.locator('html').evaluate(element => ({ locale: element.lang.split('-')[0], theme: element.dataset.theme }))
+ const state = await page.locator('html').evaluate(element => ({ locale: (element as HTMLElement).lang.split('-')[0], theme: element.dataset.theme }))
  test.info().annotations.push({ type: 'verified-shell', description: JSON.stringify({ suit, ...state, width: page.viewportSize()?.width, geometry }) })
 }
 

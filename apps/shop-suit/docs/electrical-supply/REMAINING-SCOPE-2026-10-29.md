@@ -91,3 +91,7 @@ Read-only cloud HTTP samples (companion read-only-indexing JSON): production hom
 ## Native gate follow-up
 
 The existing real-Auth barber financial pilot was found and retained. Current setup/login driver repairs are independently checked (2 synthetic EN/AR cases and20-case discovery); all48 published electrical browser cases pass. Native execution remains pending a prepared fixed backend/supported CI admission, and the electrical measured/FIFO real-Auth journey still needs completion. See NATIVE-BROWSER-READINESS-2026-10-29.md; do not create a second financial authority or count these synthetic checks as native acceptance.
+
+## Electrical native measured/FIFO coverage follow-up
+
+Two EN/AR actual-Auth/financial-RPC browser cases are now implemented and discovered, with a matching120-migration SQL companion PASS and27 relevant units PASS. Owned native execution is still pending. See NATIVE-ELECTRICAL-JOURNEY-2026-10-29.md for exact scope, assertions, runner wiring and distinct original-recovery/external gates. Prior observations remain historical; synthetic and schema results are not native acceptance.
