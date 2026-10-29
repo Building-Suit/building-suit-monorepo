@@ -3,7 +3,7 @@
   "task_id": "DOS-M6-008",
   "decision_id": "DOS-M6-GATE-TAX",
   "parent_pr": 495,
-  "parent_head": "2349c0de0e267ee806100e906315634ef5b89ade",
+  "parent_head": "91ad8e4d2aa08dcf3848fc3b7f7573ec1d304d0b",
   "scope": "synthetic-evidence-preparation-only",
   "recorded_at_utc": "2026-10-26T12:34:14.933445+00:00",
   "qualified_applicability_review": null,

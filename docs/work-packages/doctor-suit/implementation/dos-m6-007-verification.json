@@ -305,5 +305,24 @@
     "source_bug": "billing one-based UI skipped zero-based directory first25 clinics",
     "repair": "parent006/c8c7650b translated only the billing adapter and validated page completeness",
     "new_GUI_runtime": "unrun-await-exact-new-CI"
+  },
+  "oct29_parent_propagation": {
+    "source_head": "1feb7cff9cd914269d16e1969d9f5b0cd7c0e803",
+    "parent_pr": 492,
+    "parent_head": "ab6543ef498a23b36c8e495aae965900bd69bfb4",
+    "focused_tests": {
+      "total": 44,
+      "passed": 44,
+      "failed": 0
+    },
+    "financial_e2e_types": "passed",
+    "workspace": {
+      "routes": 140,
+      "preserved_migrations": 80,
+      "template_debt": 0
+    },
+    "actual_runtime": "pending-owned-CI",
+    "historical_receipts": "retained-original-bindings",
+    "full_task_acceptance": false
   }
 }
