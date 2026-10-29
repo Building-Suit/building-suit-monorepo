@@ -1,0 +1,20 @@
+# Doctor M7 source consolidation — October 29
+
+User-authorized source integration through existing PR502 incorporates PR505 and the separately prepared DOS-M7-005 source without granting missing domain authority. No canonical task is renumbered. No runtime, provider, hosted database, clinical or payment capability is enabled.
+
+PR401 merged at 21:28:15 UTC to `ca8f2f0a7671c848430fcff3cadc8a9ce67ddc47`, with exactly the tested tree of `2884e18aec448ae81555a0fb9431884abc0aa5dd`. All49 original source heads are ancestors. Exact candidate workspace40954430974, Doctor40954430735, Android40954430909, website40954430806, Shop capacity40954430954 and marketing40954430762 passed. Doctor passed60 public/87 account/four stress cases, all10 M3 tasks and actual owned Auth/Storage/Functions/Realtime acceptance; shared settings passed48 auth/12 settings cases. M2 and financial synthetic browser checks also passed; qualified clinical/legal/provider acceptance remains unavailable. Earlier failed/cancelled receipts remain failed/cancelled on their original sources. The earlier screenshot and staging Edge Function failures did not reproduce; their causes are not proven fixes.
+
+The consolidation preserves legal17f0d8c7, privacy7293dc6e and security0555c1a4, including published PR502/505 heads and saved privacy6174e0db. Legal's existing branch fast-forwards to the prepared leaf, then merges actual staging through `928086021a59ba40c6added434663a94ddea6258`. This conflict-free merge changes only30 evidence/provenance files relative to staging. Product/runtime/tooling/dependency files remain byte-identical. Original worktrees, branches, source commits, receipts and Library recovery archives remain retained.
+
+The JSON companion binds that exact merge to the original source-specific receipts. It verifies every evaluated input hash remains identical: legal67 controls/20 inputs, privacy75 controls/19 inputs, security128 controls/54 inputs. Original controls are not claimed reexecuted against a different task scope. Their exit2 dispositions remain UNAVAILABLE. Historical receipts and task parent bindings are not rewritten to pretend a new independent review. The companion verifier checks current committed integration ancestry, unchanged receipts and evaluated input bytes, exact permitted evidence paths and unchanged nine packets/104 tasks. It intentionally exits2 when source controls pass but domain acceptance is unavailable; exit1 identifies a source-binding failure.
+
+Run the verifier on the committed candidate with explicit staging base and head, retaining its exact output separately from the immutable historical receipts. Also run strict workspace boundaries and exact-parent, default and full-main release checks. GitHub required root checks and post-merge/provider outcomes remain required; local source comparison alone does not authorize staging or production.
+
+## Remaining gates
+
+- DOS-M7-001: no authenticated qualified legal review, approved jurisdiction/policy requirements or accountable approval. Legal review remains OPEN.
+- DOS-M7-004: proposed policy matrix/cases exist, but approved identity/guardian, retention/hold/refusal/partial-outcome policies and accountable fulfillment are absent. Existing own-account intake stays awaiting_review; no bulk erasure or clinical export approval.
+- DOS-M7-005: source inventory/finding/retest handoff exists. Independent assessor, actual assessment/findings and accountable residual-risk decisions remain absent; null findings do not mean a clean assessment.
+- M7 recovery/performance/operations/pilot/release require actual objectives, custody, ownership, supervision and approvals. M8 requires verified owning-product contracts; M9 requires explicit optional selections and qualified partner/licensing/protocol evidence. Do not duplicate unavailable preparations or manufacture these inputs.
+
+Only contained source may be marked superseded or merged. PR408 remains open. Main/production, catalog baseline acknowledgment, hosted Doctor readiness and all domain holds remain separate. No denied hosted read is retried and no approval review is self-issued.
