@@ -3,7 +3,7 @@
   "date": "2026-10-29",
   "parent_pr": 439,
   "parent_sha": "4be53d400b4a789dec01e95b9aa364abeb6724da",
-  "state": "focused_security_pass_seven_app_qualification_pending",
+  "state": "local_qualification_pass_combined_ci_required",
   "runtime": {
     "before": "11.4.12",
     "after": "11.4.14"
@@ -98,9 +98,25 @@
       "url": "https://github.com/advisories/GHSA-gcqx-w48m-w2h4"
     }
   ],
-  "types": "pending",
-  "builds": "pending",
-  "public_browser": "pending",
+  "types": "seven_apps_pass",
+  "builds": "seven_apps_pass",
+  "public_browser": {
+    "pass": 36,
+    "fail": 0,
+    "scope": "maintained auth, signup and public-route suites across six configured app servers"
+  },
   "financial_or_hosted_changes": false,
-  "production_entrypoint_exploitability_established": false
+  "production_entrypoint_exploitability_established": false,
+  "unit": {
+    "total": 2065,
+    "pass": 2042,
+    "skip": 23,
+    "fail": 0
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 31
+  },
+  "workspace": "pass",
+  "tokens": "pass"
 }

@@ -1,6 +1,6 @@
 # LS-SEC-DEP-007 — patched shared translation runtime
 
-Status: focused behavior/audit passed; seven-app qualification in progress.
+Status: local qualification passed; ordinary combined CI remains required before integration.
 
 Parent: Ledger root #439 at `4be53d400b4a789dec01e95b9aa364abeb6724da`. Worktree `/workspace/ledger-i18n-security`, branch `codex/ledger-suit/patched-i18n-runtime`. User resumed independent Ledger work while preserving the integration candidate; this child does not alter or merge the root candidate.
 
@@ -12,4 +12,4 @@ A separate Chromium harness renders only owned synthetic HTML. Literal, paramete
 
 The lockfile changes only the affected runtime family and its required devtools/message-compiler resolutions. The existing unaffected 11.4.12 build-time message compiler remains where its consumer already selected it. The audit falls to zero critical, one high, zero moderate and one low finding: node-forge and deepmerge retain no published fix in the audit response. They remain visible without a blanket waiver.
 
-Current evidence is in [i18n-security-verification-2026-10-29.json](../v2-acceptance/i18n-security-verification-2026-10-29.json). All seven app types/builds and relevant public bilingual browser behavior are being qualified before this child is considered ready. Existing 138 requirement criteria, accountant verdicts, financial data/migrations, Auth/Storage authorization, hosted history and Automation state are unchanged. Shared consumers require their ordinary combined CI before integration; Doctor is not publicly activated.
+Current evidence is in [i18n-security-verification-2026-10-29.json](../v2-acceptance/i18n-security-verification-2026-10-29.json). All seven app types and builds pass. Full units pass with 2,042 passed, 23 explicit skips and zero failures. The maintained public auth/signup/route browser suites pass all 36 cases across their six configured app servers; this is not a new Doctor browser qualification. Workspace/tokens pass; lint has zero errors and 31 warnings. Existing 138 requirement criteria, accountant verdicts, financial data/migrations, Auth/Storage authorization, hosted history and Automation state are unchanged. Shared consumers require their ordinary combined CI before integration; Doctor is not publicly activated.
