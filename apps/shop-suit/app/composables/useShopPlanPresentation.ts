@@ -39,7 +39,10 @@ export function useShopPlanPresentation(props: PlanPresentationInput, onSelect?:
     priceDetail: offer.priceSource === 'override' || offer.effectivePriceAmount !== offer.listPriceAmount
       ? `${copy.value.negotiated} · ${copy.value.publicList}: ${money(offer.listPriceAmount, offer.currency)}`
       : undefined,
-    features: resources.map(resource => ({ key: resource, included: true, text: `${copy.value.resourceLimits[resource]}: ${limit(offer, resource)}` })),
+    features: [
+      ...resources.map(resource => ({ key: resource, included: true, text: `${copy.value.resourceLimits[resource]}: ${limit(offer, resource)}` })),
+      { key: 'website', included: offer.planSlug === 'team' || offer.planSlug === 'multi', text: copy.value.website },
+    ],
     variant: offer.planSlug === 'solo' && offer.planVariant !== 'standard' ? {
       legend: copy.value.soloVariants,
       value: offer.planVariant,
@@ -110,6 +113,7 @@ export function useShopPlanPresentation(props: PlanPresentationInput, onSelect?:
   }
 
   const en = {
+    website: 'Shop website',
     cycle: 'Billing cycle', monthly: 'Monthly', yearly: 'Yearly', annualSaving: (percent: number) => `Save ${percent}% with yearly billing`,
     soloVariants: 'Solo member allowance', oneMember: '1 member', twoMembers: '2 members',
     variants: 'Multi branch allowance', twoBranches: '2 branches', threeBranches: '3 branches', discount: (percent: number) => `${percent}% off`, perMonth: 'per month',
@@ -121,6 +125,7 @@ export function useShopPlanPresentation(props: PlanPresentationInput, onSelect?:
     resourceLimits: { active_locations: 'Shop locations you can run', active_members: 'People on your team', active_products: 'Products you can keep active', active_services: 'Services you can keep active', active_customers: 'Customers you can keep active', active_suppliers: 'Suppliers you can keep active' },
   }
   const ar = {
+    website: 'موقع المتجر الإلكتروني',
     cycle: 'دورة الفوترة', monthly: 'شهري', yearly: 'سنوي', annualSaving: (percent: number) => `وفّر ${new Intl.NumberFormat('ar-EG').format(percent)}٪ مع الدفع السنوي`,
     soloVariants: 'عدد الأعضاء في خطة سولو', oneMember: 'عضو واحد', twoMembers: 'عضوان',
     variants: 'عدد الفروع في خطة مالتي', twoBranches: 'فرعان', threeBranches: '٣ فروع', discount: (percent: number) => `خصم ${percent}٪`, perMonth: 'شهريًا',
