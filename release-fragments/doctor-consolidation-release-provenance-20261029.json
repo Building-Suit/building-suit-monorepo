@@ -1,0 +1,14 @@
+{
+  "id": "doctor-consolidation-release-provenance-20261029",
+  "task": "DOCTOR-CONSOLIDATION-20261029",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/releases/fragments.mjs",
+    "tooling/releases/fragment-history.test.mjs",
+    "release-changes/items.json",
+    "docs/work-packages/doctor-suit/implementation/ledger-reconciliation-2026-10-29.md"
+  ],
+  "reason": "Validate immutable historical consumer claims against their unique committed introduction when later workflow consolidation reduces net scope; retain strict current path coverage and public evidence checks. Consolidate superseded mobile-focus inventory into the current shared behavior item with both original source links and existing affected consumers. No accepted receipt or publication gate is changed."
+}

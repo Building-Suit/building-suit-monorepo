@@ -1,11 +1,12 @@
+import { installDoctorEntryValidity, readDoctorEntryValidity } from './helpers/entry-validity.mjs'
 import{doctorPasswordStep}from'./helpers/password-step.mjs'
 // Owned loopback-only browser against real GoTrue/Mailpit/PostgREST. No artifacts or error text.
 import { chromium,expect as browserExpect } from '@playwright/test'
 import { createClient } from '@supabase/supabase-js'
 import { spawn,spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
-export async function verifyDoctorAccountProvider({ root,api,key,project,expect,setStage,admitEmail,expectedHome='/onboarding',expectVersionDocument=false }) {
-  const origin = 'http://127.0.0.1:4341';let server;let browser;let context;let token = '';let changedPolicy = false
+export async function verifyDoctorAccountProvider({ root,api,key,serviceKey,project,expect,setStage,admitEmail,expectedHome='/onboarding',expectVersionDocument=false }) {
+  const origin = 'http://127.0.0.1:4341';let server;let browser;let context;let page;let token = '';let changedPolicy = false
   const pause = milliseconds => new Promise(resolve => setTimeout(resolve,milliseconds))
   function policy(seconds) {
     expect([20,900].includes(seconds),'Owned account policy fixture rejected')
@@ -29,18 +30,29 @@ export async function verifyDoctorAccountProvider({ root,api,key,project,expect,
   async function settings(accessToken=token) { const result = await client(accessToken).rpc('doctor_account_settings');expect(!result.error,'Real account settings read rejected');return result.data }
   try {
     setStage('actual web app readiness')
-    server = spawn(process.execPath,['apps/doctor-suit/.output/server/index.mjs'],{ cwd: root,env: { ...process.env,NITRO_HOST: '127.0.0.1',NITRO_PORT: '4341',APP_URL: origin,NUXT_PUBLIC_DOCTOR_AUTH_CONFIGURED: 'true',NUXT_PUBLIC_DOCTOR_AUTH_ENVIRONMENT: 'local',NUXT_PUBLIC_DOCTOR_AUTH_ORIGIN: origin,NUXT_PUBLIC_DOCTOR_AUTH_URL: api,NUXT_PUBLIC_DOCTOR_AUTH_KEY: key },detached: true,stdio: 'ignore' })
+    server = spawn(process.execPath,['apps/doctor-suit/.output/server/index.mjs'],{ cwd: root,env: { ...process.env,NITRO_HOST: '127.0.0.1',NITRO_PORT: '4341',APP_URL: origin,NUXT_PUBLIC_DOCTOR_AUTH_CONFIGURED: 'true',NUXT_PUBLIC_DOCTOR_AUTH_ENVIRONMENT: 'local',NUXT_PUBLIC_DOCTOR_AUTH_ORIGIN: origin,NUXT_PUBLIC_DOCTOR_AUTH_URL: api,NUXT_PUBLIC_DOCTOR_AUTH_KEY: key,NUXT_DOCTOR_AUTH_EMAIL_LOOKUP_KEY: serviceKey },detached: true,stdio: 'ignore' })
     await until(async () => { try { return (await fetch(`${origin}/`,{ signal: AbortSignal.timeout(1000) })).ok } catch { return false } })
     browser = await chromium.launch({ headless: true });context = await browser.newContext({ viewport: { width: 1280,height: 1000 } })
     await context.route('**/*',route => [origin,api].includes(new URL(route.request().url()).origin) ? route.continue() : route.abort())
-    const page = await context.newPage();page.setDefaultTimeout(15000)
+    page = await context.newPage();page.setDefaultTimeout(15000);await installDoctorEntryValidity(page)
     page.on('response',async response => { try { if(response.url().startsWith(`${api}/auth/v1/token`) && response.ok()) { const body = await response.json();if(typeof body.access_token==='string')token = body.access_token } } catch { /* No diagnostics from credential-bearing responses. */ } })
     const email = `synthetic-web-${randomUUID()}@example.test`;const password = `Synthetic-${randomUUID()}!9`;const newPassword = `Synthetic-${randomUUID()}!8`
     setStage('actual browser signup and PKCE confirmation');policy(20);changedPolicy = true
-    await page.goto(`${origin}/sign-up`);await page.getByLabel(/^Display name/).fill('Synthetic personal web');setStage('actual email-first contact reauthentication');await page.getByLabel(/^Email/).fill(email);await doctorPasswordStep(page);await page.getByLabel(/^Password/).fill(password);await page.getByRole('button',{ name: 'Create synthetic account',exact: true }).click();await page.getByRole('heading',{ name: 'Verify account',exact: true }).waitFor()
-    const unconfirmed = await createClient(api,key,{ auth: { persistSession: false,autoRefreshToken: false } }).auth.signInWithPassword({ email,password });expect(Boolean(unconfirmed.error) && !unconfirmed.data.session,'Actual unconfirmed account admitted')
-    await admitEmail?.(email)
-    const confirmation = await link(email);await page.goto(confirmation);await page.waitForURL(`${origin}${expectedHome}`);expect(new URL(page.url()).search==='','Confirmation URL material was not scrubbed');if(expectVersionDocument){await page.getByRole('heading',{name:'Version document text',exact:true}).waitFor();await page.getByText('Synthetic actual-provider test document only. No legal approval or live-sale authority.',{exact:true}).waitFor();}await page.getByRole('link',{name:'Back to account',exact:true}).last().click();await page.waitForURL(`${origin}/account`);await page.getByRole('button',{ name: 'Edit account details',exact: true }).waitFor();await until(() => Boolean(token))
+    setStage('actual signup account form');await page.goto(`${origin}/sign-up`)
+    await page.getByLabel(/^Display name/).fill('Synthetic personal web');await page.getByLabel(/^Email/).fill(email)
+    await doctorPasswordStep(page);await page.getByLabel(/^Password/).fill(password)
+    setStage('actual signup checked email and practice transition');await page.getByRole('button',{ name: 'Continue',exact: true }).click()
+    await page.getByLabel(/^Practice name/).fill('Synthetic signup practice');await page.getByLabel(/^First location name/).fill('Synthetic first location');await page.getByRole('combobox',{name:/^Timezone/}).click();await page.getByRole('option',{name:'Africa/Cairo',exact:true}).click()
+    setStage('actual signup provider submission');await page.getByRole('button',{ name: 'Create synthetic account',exact: true }).click()
+    setStage('actual signup verification form');await page.getByRole('heading',{ name: 'Verify account',exact: true }).waitFor()
+    setStage('actual unconfirmed signup denial');const unconfirmed = await createClient(api,key,{ auth: { persistSession: false,autoRefreshToken: false } }).auth.signInWithPassword({ email,password });expect(Boolean(unconfirmed.error) && !unconfirmed.data.session,'Actual unconfirmed account admitted')
+    setStage('actual signup candidate admission');await admitEmail?.(email)
+    setStage('actual signup captured confirmation');const confirmation = await link(email)
+    setStage('actual signup confirmation callback');await page.goto(confirmation);await page.waitForURL(`${origin}${expectedHome}`);expect(new URL(page.url()).search==='','Confirmation URL material was not scrubbed')
+    if(expectVersionDocument){setStage('actual signup approved version document');await page.getByRole('heading',{name:'Version document text',exact:true}).waitFor();await page.getByText('Synthetic actual-provider test document only. No legal approval or live-sale authority.',{exact:true}).waitFor()}
+    setStage('actual signup own-account navigation');await page.getByRole('link',{name:'Back to account',exact:true}).last().click();await page.waitForURL(`${origin}/account`);await page.getByRole('button',{ name: 'Edit account details',exact: true }).waitFor()
+    setStage('actual signup verified token capture');await until(() => Boolean(token))
+    setStage('actual signup verified session authority')
     const identity = await client(token).rpc('doctor_session_context');expect(!identity.error && identity.data.practice_id===null,'Account confirmation must not create professional authority')
     const firstToken = token;const firstSid = identity.data.session_id
     setStage('actual personal settings authoritative defaults');const initialSettings=await settings();expect(initialSettings.in_app_confirmations===false && initialSettings.version===0,'Actual personal settings must start unchanged and opted out')
@@ -61,6 +73,14 @@ export async function verifyDoctorAccountProvider({ root,api,key,project,expect,
     const invalid = await createClient(api,key,{ auth: { persistSession: false,autoRefreshToken: false } }).auth.signInWithPassword({ email,password });expect(Boolean(invalid.error) && !invalid.data.session,'Old password survived actual reset');const valid = await createClient(api,key,{ auth: { persistSession: false,autoRefreshToken: false } }).auth.signInWithPassword({ email,password: newPassword });expect(!valid.error && Boolean(valid.data.session),'New password did not admit actual sign-in')
     setStage('actual reused recovery code denial');await page.goto(callback.href);await page.getByText('The recovery link is invalid or expired. Request another link.',{ exact: true }).waitFor();expect(await page.getByLabel('Password',{ exact: true }).count()===0,'Reused PKCE code exposed reset form')
     console.log('Actual browser Auth: signup PKCE, URL scrubbing, expired contact denial, new-SID reauthentication, frozen SID denial, same-browser recovery, wrong-browser/reused-code denial and password replacement passed')
+  } catch(error) {
+    if(page&&!page.isClosed())try{console.log('Actual account entry native validity:',JSON.stringify(await readDoctorEntryValidity(page)))}catch{/* Fixed-state diagnostic unavailable. */}
+    // Whitelisted state only: no account IDs, addresses, credentials, values or DOM text.
+    if(page)try{console.log('Actual account safe readiness diagnostic:',JSON.stringify(await page.evaluate(()=>{
+      const auth=document.getElementById('__nuxt')?.__vue_app__?.config.globalProperties?.$doctorAuth?.state
+      return{route:['/sign-up','/verify','/onboarding','/subscription','/account','/sign-in','/recover'].includes(location.pathname)?location.pathname:'other',auth:auth?{phase:['checking','unavailable','signed-out','verification','authenticated'].includes(auth.phase)?auth.phase:'unknown',pending:Boolean(auth.pending),identity:Boolean(auth.identity),error:['unavailable','credentials','exists','expired','rate-limit','network','session','password','sign-out'].includes(auth.error)?auth.error:null}:null,passwordControls:Math.min(2,document.querySelectorAll('input[type=password]').length),otpControls:Boolean(document.querySelector('input[autocomplete=one-time-code]'))}
+    })))}catch{/* A closed page supplies no diagnostic. */}
+    throw error
   } finally {
     token = '';await context?.close().catch(() => {});await browser?.close().catch(() => {})
     if(server?.pid) { try { process.kill(-server.pid,'SIGTERM') } catch { /* owned process exited */ }await Promise.race([new Promise(resolve => server.once('exit',resolve)),pause(2000)]);try { process.kill(-server.pid,'SIGKILL') } catch { /* owned group exited */ }server.unref() }

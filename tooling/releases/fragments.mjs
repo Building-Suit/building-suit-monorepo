@@ -91,13 +91,31 @@ export function validateCoverage(fragments, files, graph, historicalScope) {
     const scope = files.filter(file => row.paths.some(prefix => file === prefix || file.startsWith(`${prefix}/`)))
     const affected = affectedSuits(scope, graph)
     if (affected.length && row.suits.some(suit => !affected.includes(suit))) {
-      const original = historicalScope?.(row)
-      if (!original || row.suits.some(suit=>!original.includes(suit))) throw new Error('Unrelated Suit in fragment')
+      const receipt = historicalScope?.(row)
+      const original = Array.isArray(receipt) ? receipt : receipt && affectedSuits(receipt.files, receipt.graph)
+      if (!original?.length || row.suits.some(suit=>!original.includes(suit))) throw new Error('Unrelated Suit in fragment')
     }
   }
 }
 export function fragmentTree(ref, run = git) {
   return run('ls-tree', '-r', '--name-only', ref, '--', 'release-fragments').split('\n').filter(file => file.endsWith('.json')).map(file => ({ file, row: JSON.parse(run('show', `${ref}:${file}`)) }))
+}
+export function fragmentSourceScope(ref, file, row, run = git) {
+  const introductions = run('log', '--format=%H', '--diff-filter=A', ref, '--', file).split('\n').filter(Boolean)
+  if (introductions.length !== 1) return null
+  const source = introductions[0]
+  if (canonical(JSON.parse(run('show', `${source}:${file}`))) !== canonical(row)) return null
+  const files = run('diff-tree', '--root', '--no-commit-id', '--name-only', '-r', source).split('\n')
+    .filter(changed => row.paths.some(prefix => changed === prefix || changed.startsWith(`${prefix}/`)))
+  const graph = run('ls-tree', '-r', '--name-only', source, '--', 'apps', 'packages').split('\n')
+    .filter(manifest => /^(apps|packages)\/[^/]+\/package\.json$/.test(manifest))
+    .map(manifest => {
+      const value = JSON.parse(run('show', `${source}:${manifest}`))
+      const dir = manifest.slice(0, -'/package.json'.length)
+      return { dir, name: value.name, suit: dir.startsWith('apps/') && dir.endsWith('-suit') ? dir.slice(5) : null,
+        dependencies: Object.keys({ ...value.dependencies, ...value.devDependencies }) }
+    })
+  return { files, graph }
 }
 export function collectBatch(ref, parent, graph, run = git) {
   const prior = new Map(fragmentTree(parent, run).map(({ file, row }) => [file, row]))

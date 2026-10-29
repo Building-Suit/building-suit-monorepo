@@ -1,0 +1,14 @@
+{
+  "id": "dos-m2-012-recipient-label",
+  "task": "DOS-M2-012",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/clinical.ts",
+    "apps/doctor-suit/tests/unit/dos-m2-012.test.mjs"
+  ],
+  "reason": "Keep a full allowed patient display label and its explicit recipient UUID within the released-detail decoder bounds, without truncating source content or weakening scope checks. Synthetic engineering only."
+}

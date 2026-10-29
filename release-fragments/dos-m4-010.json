@@ -1,0 +1,17 @@
+{
+  "id": "dos-m4-010",
+  "task": "DOS-M4-010",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/mobile/doctor",
+    "apps/doctor-suit/tests/unit/dos-m4-010.test.mjs",
+    "apps/doctor-suit/supabase/tests/dos-m4-010.sql",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-010.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-010-device-evidence.json"
+  ],
+  "reason": "Verify the synthetic Android candidate and strict evidence binding with actual owned-runner native/cache and backend guards; preserve missing physical, clinical, security and release acceptance."
+}

@@ -3,8 +3,9 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { netCandidate } from './candidate.mjs'
 const inventory=JSON.parse(readFileSync(new URL('../../release-changes/items.json',import.meta.url)))
-const item=inventory.find(row=>row.id==='ls-browser-001-mobile-focus')
+const item=inventory.find(row=>row.id==='shared-mobile-navigation-focus-20261029') ?? inventory.find(row=>row.id==='ls-browser-001-mobile-focus')
 const sourcePath='packages/ux/src/composables/useSideNavigation.ts'
+const controllerEvidence=item.evidence.find(probe=>probe.path===sourcePath)
 const source=readFileSync(new URL('../../'+sourcePath,import.meta.url),'utf8')
 const suits=['automation-suit','inventory-suit','ledger-suit','shop-suit','super-admin-suit']
 const graph=[{name:'ux',dir:'packages/ux',dependencies:[]},...suits.map(suit=>({name:suit,dir:'apps/'+suit,suit,dependencies:['ux']}))]
@@ -16,13 +17,13 @@ test('obsolete visibility probes fail to contribute despite preserved internal p
 })
 test('reviewed combined settlement/cancellation evidence matches the actual implemented controller',()=>{
   assert.deepEqual(item.suits,suits,'Existing consumers are preserved; no new product is declared')
-  assert.equal(item.evidence.length,1)
-  assert.ok(item.evidence[0].contains.includes('await Promise.allSettled'))
-  assert.ok(item.evidence[0].contains.includes('if (!cancelled && open())'))
-  assert.ok(source.includes(item.evidence[0].contains))
+  assert.ok(controllerEvidence,'Accepted combined inventory retains controller evidence')
+  assert.ok(source.includes('await Promise.allSettled'))
+  assert.ok(controllerEvidence.contains.includes('if (!cancelled && open())'))
+  assert.ok(source.includes(controllerEvidence.contains))
   assert.deepEqual(candidate(item).filter(row=>row.disposition==='public').map(row=>row.id),[item.id])
 })
 test('removing the combined behavior cannot borrow internal coverage to announce it',()=>{
-  assert.equal(candidate(item,source.replace(item.evidence[0].contains,'')).filter(row=>row.disposition==='public').length,0)
+  assert.equal(candidate(item,source.replace(controllerEvidence.contains,'')).filter(row=>row.disposition==='public').length,0)
   assert.throws(()=>candidate({...item,suits:[...suits,'unknown-suit']}),/Invalid release fragment/)
 })

@@ -10,8 +10,8 @@ test('notice/queue decoding fences subscriber, queue capability, immutable histo
  assert.throws(()=>manualQueue({...queue,review_queue:true},actor,false));assert.throws(()=>manualQueue({...queue,actor_user_id:id(9)},actor,false));assert.throws(()=>manualQueue({...queue,items:[notice(),notice()],total:2},actor,false))
 })
 test('configured offer text cannot silently change owner-inclusive capacity or annual economics',()=>{
- const plans=[['starter','29900','299000',1,5],['clinic','59900','599000',3,10],['group','99900','999000',5,25]].map(([key,monthly,yearly,clinics,total])=>({key,name_en:key,name_ar:'خطة',monthly_minor:monthly,yearly_minor:yearly,clinic_limit:clinics,total_named_users:total,staff_limit_excluding_owner:total-1,configured:false,terms:null}))
- const catalog={version:1,publication_state:'approved_prices',currency:'EGP',currency_exponent:2,annual_calendar_months:12,annual_monthly_payments:10,self_service_setup_fee_minor:'0',live_acceptance_enabled:false,configuration_revision:1,plans}
+ const plans=[['starter','29900','243984',1,5],['clinic','59900','488784',3,10],['group','99900','815184',5,25]].map(([key,monthly,yearly,clinics,total])=>({key,name_en:key,name_ar:'خطة',monthly_minor:monthly,yearly_minor:yearly,clinic_limit:clinics,total_named_users:total,staff_limit_excluding_owner:total-1,configured:false,terms:null}))
+ const catalog={version:2,publication_state:'approved_prices',currency:'EGP',currency_exponent:2,annual_calendar_months:12,annual_discount_percent:32,self_service_setup_fee_minor:'0',live_acceptance_enabled:false,configuration_revision:1,plans}
  assert.equal(manualCatalog(catalog).plans[0].totalUsers,5)
  assert.throws(()=>manualCatalog({...catalog,plans:plans.map((p,i)=>i? p:{...p,staff_limit_excluding_owner:5})}))
  assert.throws(()=>manualCatalog({...catalog,plans:plans.map((p,i)=>i? p:{...p,yearly_minor:'29900'})}))

@@ -1,0 +1,16 @@
+{
+  "id": "dos-m7-005",
+  "task": "DOS-M7-005",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m7-005.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-005-packet.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-005-verify.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-005-verification.json"
+  ],
+  "reason": "Prepare a source-bound independent security review handoff and finding/retest evidence contract. No independent assessment, security certification, developer risk waiver, operational activation or runtime/domain acceptance is supplied."
+}

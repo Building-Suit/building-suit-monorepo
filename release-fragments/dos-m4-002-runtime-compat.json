@@ -1,0 +1,24 @@
+{
+  "id": "dos-m4-002-runtime-compat",
+  "task": "DOS-M4-002",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "pnpm-lock.yaml",
+    "apps/doctor-suit/mobile/doctor/package.json",
+    "apps/doctor-suit/mobile/doctor/app/plugins/runtime-compat.client.ts",
+    "apps/doctor-suit/tests/unit/dos-m4-002.test.mjs",
+    "apps/doctor-suit/mobile/doctor/README.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-002.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-002-verification.json"
+  ],
+  "reason": "Classify root lockfile for every consumer while adding one isolated mobile runtime polyfill dependency and behavior regression. Preserve all existing versions/peer graphs and required device gates; no operational activation, private-data adapter or qualified acceptance."
+}

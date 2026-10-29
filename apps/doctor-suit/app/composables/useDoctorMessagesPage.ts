@@ -1,0 +1,18 @@
+import{usePageRevalidation}from'@building-suit/ux'
+import type{BsMessageOutboxView,BsMessageOutboxCopy}from'@building-suit/ui/utils/messageOutboxPresentation'
+export function useDoctorMessagesPage(){
+ const app=useNuxtApp(),context=useDoctorContext(),service=app.$doctorOutbox,patients=app.$doctorPatients,patient=ref(''),page=ref(0),{locale}=useI18n(),ar=computed(()=>locale.value==='ar'),mounted=ref(false)
+ function clear(){patient.value='';page.value=0;service.clear();patients.clear()}
+ const unregister=context.registerClear(clear)
+ watch(()=>service.scopeKey(),()=>{clear();if(mounted.value)void reload()},{flush:'sync'})
+ async function reload(){await context.refresh();if(!service.scopeKey())return;await patients.load({page:0,size:20,search:'',status:'active'});if(patient.value)await service.read(patient.value,page.value)}
+ async function select(){page.value=0;service.clear();if(patient.value)await service.read(patient.value)}
+ async function changePage(v:number){page.value=v;if(patient.value)await service.read(patient.value,v)}
+ onMounted(()=>{mounted.value=true;void reload()});onBeforeUnmount(()=>{unregister();clear()})
+ usePageRevalidation(reload,()=>mounted.value&&Boolean(service.scopeKey())&&!service.state.loading)
+ const copy=computed<BsMessageOutboxCopy>(()=>ar.value?{title:'حالة الرسائل التجريبية',notice:'نقل تجريبي فقط. الإرسال الخارجي معطل. القبول والإقرار والتسليم حالات مستقلة؛ لا يُفترض التسليم.',patient:'المريض المحدد',reload:'إعادة التحميل',empty:'اختر مريضاً مصرحاً؛ قد لا توجد رسائل.',state:'الحالة',purpose:'الغرض',recipient:'نطاق المستلم',attempts:'المحاولات',blocker:'سبب التعليق',created:'وقت التسجيل',previous:'السابق',next:'التالي'}:{title:'Synthetic message status',notice:'Synthetic transport only. External delivery is disabled. Acceptance, acknowledgement and delivery are separate; delivery is never assumed.',patient:'Selected patient',reload:'Reload',empty:'Choose an authorized patient; there may be no messages.',state:'State',purpose:'Purpose',recipient:'Recipient scope',attempts:'Attempts',blocker:'Hold reason',created:'Recorded at',previous:'Previous',next:'Next'})
+ const labels:Record<string,[string,string]>={queued:['Queued','في الانتظار'],claimed:['Claimed','محجوزة'],sent:['Sent · synthetic acknowledgement','مرسلة · إقرار تجريبي'],delivered:['Delivered · synthetic receipt','مسلمة · إيصال تجريبي'],failed:['Failed','فشلت'],unknown:['Outcome unknown','النتيجة غير معروفة'],consent_unavailable:['Consent unavailable','الإذن غير متاح'],guardian_unavailable:['Guardian review unavailable','مراجعة الولي غير متاحة'],transport_timeout:['Transport timeout','انتهاء مهلة النقل'],appointment_reminder:['Appointment reminder','تذكير موعد'],administrative_follow_up:['Administrative follow-up','متابعة إدارية'],marketing:['Marketing','تسويق'],patient:['Selected patient','المريض المحدد'],guardian:['Reviewed guardian','الولي المراجع']}
+ const label=(v:string)=>labels[v]?.[ar.value?1:0]??v
+ const view=computed<BsMessageOutboxView>(()=>({loading:!mounted.value||service.state.loading||patients.state.loading,error:service.state.error||patients.state.error?(ar.value?'البيانات غير متاحة. أعد التحقق من النطاق والصلاحيات.':'Data unavailable. Recheck scope and permissions.'):null,rows:(service.state.directory?.rows??[]).map(r=>({id:r.id,state:label(r.state),purpose:label(r.purpose),recipient:label(r.recipient_kind),attempts:String(r.attempts),blocker:label(r.blocker??''),created:r.created_at})),total:service.state.directory?.total??0,page:page.value,patients:patients.state.directory?.rows.map(p=>({value:p.id,label:p.name}))??[]}))
+ return{context,patient,copy,view,reload,select,changePage}
+}

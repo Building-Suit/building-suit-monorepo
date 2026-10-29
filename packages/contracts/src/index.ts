@@ -151,3 +151,10 @@ export type {
   BsAdministrationDescriptors, BsAdministrationAdapters, BsSuitAdministrationRegistration,
 } from './administration.ts'
 export * from './changelog.ts'
+export * from './doctorMobile.ts'
+export * from './doctorPatients.ts'
+export * from './doctorPatientProfile.ts'
+export * from './doctorClinical.ts'
+export * from './doctorConsultations.ts'
+export * from './doctorAvailability.ts'
+export * from './doctorAppointments.ts'

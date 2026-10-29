@@ -1,0 +1,78 @@
+{
+  "task_id": "DOS-M5-011",
+  "scope": "independent-synthetic-memory-only-device-sync-and-ownership-proposals",
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "qualified_device_policy": false,
+  "patient_native_scaffold": false,
+  "external_notifications": false,
+  "automatic_mutations": [],
+  "approvals": {
+    "patient_identity": null,
+    "caregiver_legal": null,
+    "patient_platform": null,
+    "reminder_interpretation": null,
+    "privacy": null,
+    "device_channel_ownership": null
+  },
+  "unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m5-011.test.mjs"
+    ],
+    "exit_code": 0,
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0
+  },
+  "combined_patient_units": {
+    "passed": 84,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full_root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2426,
+    "passed": 2349,
+    "failed": 54,
+    "skipped": 23,
+    "all_failure_locations": "apps/shop-suit/tests",
+    "phase": "before-final-terminal-lease-and-same-owner-guard",
+    "final_followup": "focused10-combined84-eslint-typecheck-pass; full suite not repeated"
+  },
+  "regressions": [
+    {
+      "before_passed": 8,
+      "before_failed": 2,
+      "fix": "inactive copy cannot mask active; owned unknown copy prevents blind retry"
+    },
+    {
+      "before_passed": 9,
+      "before_failed": 1,
+      "fix": "retired lease remains terminal; same owner cancelled attempt cannot be reused"
+    }
+  ],
+  "sql_status": "blocked-unrun-no-approved-implemented-patient-server-identity-ownership-boundary",
+  "blocked_outputs": [
+    "apps/doctor-suit/supabase/tests/dos-m5-011.sql"
+  ],
+  "native_cases": [],
+  "source_files": {
+    "apps/doctor-suit/app/utils/patientDeviceSyncPreview.ts": "8889c5d094bb415cc31d494a48b74db88c5733282607909de9045a9742bddc01",
+    "apps/doctor-suit/tests/unit/dos-m5-011.test.mjs": "b4abcf59a72563faf8e7595bb186eb675568a2a6b6b8ca311d395269b92073de"
+  },
+  "document_sha256": "1b3892143da96219e34310f210a466b6e326d653ab0a5fd0bb504bbdc7c1a234",
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-record",
+  "limitations": [
+    "No actual server atomic claims, persisted receipts, RLS, crash reconciliation or real delivery deduplication",
+    "No actual patient Auth/grants/consent authority",
+    "No approved patient platform/native/privacy/device policy or physical acceptance",
+    "Comparison readiness requires fresh atomic server validation and is not authorization",
+    "No private offline persistence or automatic reconnect mutation"
+  ]
+}

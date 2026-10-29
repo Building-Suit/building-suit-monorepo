@@ -1,0 +1,14 @@
+{
+  "id": "dos-m4-010-continuation",
+  "task": "DOS-M4-010",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/m4-continuation.md"
+  ],
+  "reason": "Record actual native candidate source checks, preserved Shop baseline and missing physical/domain evidence while continuing all independent canonical tasks."
+}

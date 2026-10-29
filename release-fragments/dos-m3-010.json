@@ -1,0 +1,34 @@
+{
+  "id": "dos-m3-010",
+  "task": "DOS-M3-010",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/composables/useDoctorOperationalReportsPage.ts",
+    "apps/doctor-suit/app/layouts/practice.vue",
+    "apps/doctor-suit/app/pages/operational-reports.vue",
+    "apps/doctor-suit/app/plugins/doctor-auth.ts",
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/app/types/doctorAuth.d.ts",
+    "apps/doctor-suit/app/utils/authConfiguration.ts",
+    "apps/doctor-suit/app/utils/operationalReports.ts",
+    "apps/doctor-suit/app/utils/operationalReportsRepository.ts",
+    "apps/doctor-suit/app/utils/workspaceNavigation.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261020182122_scoped_operational_reports.sql",
+    "apps/doctor-suit/supabase/tests/dos-m3-010.sql",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m3-010.spec.ts",
+    "apps/doctor-suit/tests/reports-concurrency.mjs",
+    "apps/doctor-suit/tests/unit/dos-m3-010.test.mjs",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-010-verification.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-010.md",
+    "docs/work-packages/doctor-suit/implementation/m3-006-010-acceptance.json",
+    "docs/work-packages/doctor-suit/implementation/m3-continuation.md"
+  ],
+  "reason": "Doctor-only scoped synthetic operational reports using the existing shared report template, exact source populations, role-specific availability and current-state windows. Acceptance evidence retains provider/clinical/browser/CI gates; no operational registration or external delivery."
+}

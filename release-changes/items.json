@@ -17,21 +17,59 @@
     "notes": {
       "title": {
         "en": "Service recipes and material fulfillment",
-        "ar": "\u0648\u0635\u0641\u0627\u062a \u0627\u0644\u062e\u062f\u0645\u0627\u062a \u0648\u062a\u0646\u0641\u064a\u0630 \u0627\u0644\u0645\u0648\u0627\u062f"
+        "ar": "وصفات الخدمات وتنفيذ المواد"
       },
       "summary": {
         "en": "Configure optional versioned service recipes and record material use when work is completed.",
-        "ar": "\u0625\u0639\u062f\u0627\u062f \u0648\u0635\u0641\u0627\u062a \u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0644\u0644\u062e\u062f\u0645\u0627\u062a \u0628\u0625\u0635\u062f\u0627\u0631\u0627\u062a \u0648\u062a\u0633\u062c\u064a\u0644 \u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0627\u0644\u0645\u0648\u0627\u062f \u0639\u0646\u062f \u0625\u062a\u0645\u0627\u0645 \u0627\u0644\u0639\u0645\u0644."
+        "ar": "إعداد وصفات اختيارية للخدمات بإصدارات وتسجيل استخدام المواد عند إتمام العمل."
       },
       "details": {
         "en": "Ordinary services need no recipe. Payment does not complete work; authorized fulfillment records actual quantities and materials.",
-        "ar": "\u0644\u0627 \u062a\u062a\u0637\u0644\u0628 \u0627\u0644\u062e\u062f\u0645\u0627\u062a \u0627\u0644\u0639\u0627\u062f\u064a\u0629 \u0648\u0635\u0641\u0629. \u0644\u0627 \u064a\u0639\u0646\u064a \u0627\u0644\u062f\u0641\u0639 \u0625\u062a\u0645\u0627\u0645 \u0627\u0644\u0639\u0645\u0644\u061b \u064a\u0633\u062c\u0644 \u0627\u0644\u062a\u0646\u0641\u064a\u0630 \u0627\u0644\u0645\u0635\u0631\u062d \u0628\u0647 \u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0648\u0627\u0644\u0645\u0648\u0627\u062f \u0627\u0644\u0641\u0639\u0644\u064a\u0629."
+        "ar": "لا تتطلب الخدمات العادية وصفة. لا يعني الدفع إتمام العمل؛ يسجل التنفيذ المصرح به الكميات والمواد الفعلية."
       }
     },
     "evidence": [
       {
         "path": "apps/shop-suit/app/pages/service-materials.vue",
         "contains": "<BsServiceFulfillmentPage"
+      }
+    ]
+  },
+  {
+    "id": "shared-table-keyboard-scroll-20261022",
+    "task": "DOS-M3-ACCEPTANCE-CI",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsDataTable.vue",
+      "packages/ux/src/index.ts",
+      "packages/ux/src/scrollRegion.ts"
+    ],
+    "reason": "Keep physical arrow-key scrolling reliable on the shared named table overflow region without intercepting child editors or modified shortcuts.",
+    "notes": {
+      "title": {
+        "en": "Keyboard access to wide tables",
+        "ar": "تصفح الجداول العريضة بلوحة المفاتيح"
+      },
+      "summary": {
+        "en": "Use Left and Right arrows while the table’s scroll region is focused.",
+        "ar": "استخدم السهمين الأيسر والأيمن عند التركيز على منطقة تمرير الجدول."
+      },
+      "details": {
+        "en": "Scrolling follows the physical arrow direction in English and Arabic. Form controls and keyboard shortcuts retain their existing behavior.",
+        "ar": "يتبع التمرير اتجاه السهم الفعلي بالعربية والإنجليزية، مع الحفاظ على سلوك حقول الإدخال واختصارات لوحة المفاتيح."
+      }
+    },
+    "sources": [
+      "doctor-m3-keyboard-scroll"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsDataTable.vue",
+        "contains": "'aria-label': props.scrollLabel, onKeydown: scrollRegionKey"
       }
     ]
   },
@@ -53,15 +91,15 @@
     "notes": {
       "title": {
         "en": "Configurable taxes",
-        "ar": "\u0636\u0631\u0627\u0626\u0628 \u0642\u0627\u0628\u0644\u0629 \u0644\u0644\u0625\u0639\u062f\u0627\u062f"
+        "ar": "ضرائب قابلة للإعداد"
       },
       "summary": {
         "en": "Set up tax rates for your business.",
-        "ar": "\u0625\u0639\u062f\u0627\u062f \u0645\u0639\u062f\u0644\u0627\u062a \u0627\u0644\u0636\u0631\u0627\u0626\u0628 \u0644\u0646\u0634\u0627\u0637\u0643."
+        "ar": "إعداد معدلات الضرائب لنشاطك."
       },
       "details": {
         "en": "Issued documents retain their original tax calculation.",
-        "ar": "\u062a\u062d\u062a\u0641\u0638 \u0627\u0644\u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u0635\u0627\u062f\u0631\u0629 \u0628\u062d\u0633\u0627\u0628\u0627\u062a\u0647\u0627 \u0627\u0644\u0636\u0631\u064a\u0628\u064a\u0629 \u0627\u0644\u0623\u0635\u0644\u064a\u0629."
+        "ar": "تحتفظ المستندات الصادرة بحساباتها الضريبية الأصلية."
       }
     },
     "evidence": [
@@ -89,15 +127,15 @@
     "notes": {
       "title": {
         "en": "Optional staff commissions",
-        "ar": "\u0639\u0645\u0648\u0644\u0627\u062a \u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0644\u0644\u0645\u0648\u0638\u0641\u064a\u0646"
+        "ar": "عمولات اختيارية للموظفين"
       },
       "summary": {
         "en": "Configure service commissions and review earned amounts, adjustments and reversals.",
-        "ar": "\u0625\u0639\u062f\u0627\u062f \u0639\u0645\u0648\u0644\u0627\u062a \u0627\u0644\u062e\u062f\u0645\u0627\u062a \u0648\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0645\u0628\u0627\u0644\u063a \u0627\u0644\u0645\u0643\u062a\u0633\u0628\u0629 \u0648\u0627\u0644\u062a\u0633\u0648\u064a\u0627\u062a \u0648\u0627\u0644\u0639\u0643\u0648\u0633."
+        "ar": "إعداد عمولات الخدمات ومراجعة المبالغ المكتسبة والتسويات والعكوس."
       },
       "details": {
         "en": "Commission history remains separate from wages and preserves the original sale and fulfillment basis.",
-        "ar": "\u064a\u0628\u0642\u0649 \u0633\u062c\u0644 \u0627\u0644\u0639\u0645\u0648\u0644\u0627\u062a \u0645\u0646\u0641\u0635\u0644\u0627\u064b \u0639\u0646 \u0627\u0644\u0623\u062c\u0648\u0631 \u0648\u064a\u062d\u0641\u0638 \u0623\u0633\u0627\u0633 \u0627\u0644\u0628\u064a\u0639 \u0648\u0627\u0644\u062a\u0646\u0641\u064a\u0630 \u0627\u0644\u0623\u0635\u0644\u064a."
+        "ar": "يبقى سجل العمولات منفصلاً عن الأجور ويحفظ أساس البيع والتنفيذ الأصلي."
       }
     },
     "evidence": [
@@ -125,15 +163,15 @@
     "notes": {
       "title": {
         "en": "Offline counter reconciliation",
-        "ar": "\u062a\u0633\u0648\u064a\u0629 \u0639\u0645\u0644\u064a\u0627\u062a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u062f\u0648\u0646 \u0627\u062a\u0635\u0627\u0644"
+        "ar": "تسوية عمليات نقطة البيع دون اتصال"
       },
       "summary": {
         "en": "Keep counter operations queued when the connection drops.",
-        "ar": "\u062d\u0641\u0638 \u0639\u0645\u0644\u064a\u0627\u062a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u0641\u064a \u0642\u0627\u0626\u0645\u0629 \u0627\u0646\u062a\u0638\u0627\u0631 \u0639\u0646\u062f \u0627\u0646\u0642\u0637\u0627\u0639 \u0627\u0644\u0627\u062a\u0635\u0627\u0644."
+        "ar": "حفظ عمليات نقطة البيع في قائمة انتظار عند انقطاع الاتصال."
       },
       "details": {
         "en": "After reconnection, reconcile queued work with authoritative results.",
-        "ar": "\u0628\u0639\u062f \u0639\u0648\u062f\u0629 \u0627\u0644\u0627\u062a\u0635\u0627\u0644\u060c \u0633\u0648\u0650\u0651 \u0627\u0644\u0639\u0645\u0644\u064a\u0627\u062a \u0627\u0644\u0645\u0624\u062c\u0644\u0629 \u0645\u0639 \u0627\u0644\u0646\u062a\u0627\u0626\u062c \u0627\u0644\u0645\u0639\u062a\u0645\u062f\u0629."
+        "ar": "بعد عودة الاتصال، سوِّ العمليات المؤجلة مع النتائج المعتمدة."
       }
     },
     "evidence": [
@@ -161,15 +199,15 @@
     "notes": {
       "title": {
         "en": "Business and document settings",
-        "ar": "\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0646\u0634\u0627\u0637 \u0648\u0627\u0644\u0645\u0633\u062a\u0646\u062f\u0627\u062a"
+        "ar": "إعدادات النشاط والمستندات"
       },
       "summary": {
         "en": "Configure how your business documents are presented.",
-        "ar": "\u0625\u0639\u062f\u0627\u062f \u0637\u0631\u064a\u0642\u0629 \u0639\u0631\u0636 \u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0646\u0634\u0627\u0637\u0643."
+        "ar": "إعداد طريقة عرض مستندات نشاطك."
       },
       "details": {
         "en": "Historical currency and issued document evidence remain preserved.",
-        "ar": "\u062a\u0628\u0642\u0649 \u0627\u0644\u0639\u0645\u0644\u0629 \u0627\u0644\u062a\u0627\u0631\u064a\u062e\u064a\u0629 \u0648\u0623\u062f\u0644\u0629 \u0627\u0644\u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u0635\u0627\u062f\u0631\u0629 \u0645\u062d\u0641\u0648\u0638\u0629."
+        "ar": "تبقى العملة التاريخية وأدلة المستندات الصادرة محفوظة."
       }
     },
     "evidence": [
@@ -197,15 +235,15 @@
     "notes": {
       "title": {
         "en": "Partial item returns",
-        "ar": "\u0627\u0644\u0625\u0631\u062c\u0627\u0639 \u0627\u0644\u062c\u0632\u0626\u064a \u0644\u0644\u0623\u0635\u0646\u0627\u0641"
+        "ar": "الإرجاع الجزئي للأصناف"
       },
       "summary": {
         "en": "Return selected items and quantities from an issued sale, with a clear breakdown of debt reduction and any refund owed.",
-        "ar": "\u0623\u0639\u062f \u0623\u0635\u0646\u0627\u0641\u064b\u0627 \u0648\u0643\u0645\u064a\u0627\u062a \u0645\u062d\u062f\u062f\u0629 \u0645\u0646 \u0641\u0627\u062a\u0648\u0631\u0629 \u0628\u064a\u0639 \u0645\u064f\u0635\u062f\u0631\u0629\u060c \u0645\u0639 \u062a\u0648\u0636\u064a\u062d \u062a\u062e\u0641\u064a\u0636 \u0627\u0644\u0645\u0633\u062a\u062d\u0642 \u0648\u0623\u064a \u0645\u0628\u0644\u063a \u0645\u0637\u0644\u0648\u0628 \u0631\u062f\u0647."
+        "ar": "أعد أصنافًا وكميات محددة من فاتورة بيع مُصدرة، مع توضيح تخفيض المستحق وأي مبلغ مطلوب رده."
       },
       "details": {
-        "en": "Returns use the original sale\u2019s prices, discounts and taxes. Shop reduces that invoice\u2019s outstanding amount first, then allocates any excess to the original payments. Choose resellable or damaged stock; service returns do not restore consumed materials. Cash refunds are recorded after cash handover. Recording an externally completed refund documents a refund made outside Shop; it does not initiate a card or bank transfer. Returns and refund recording require a connection. Historical sales without sufficient original records are unavailable for partial returns.",
-        "ar": "\u062a\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u0645\u0631\u062a\u062c\u0639\u0627\u062a \u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0628\u064a\u0639 \u0627\u0644\u0623\u0635\u0644\u064a\u0629 \u0648\u062e\u0635\u0648\u0645\u0627\u062a\u0647 \u0648\u0636\u0631\u0627\u0626\u0628\u0647. \u064a\u062e\u0641\u0636 \u0627\u0644\u0645\u062a\u062c\u0631 \u0627\u0644\u0645\u0633\u062a\u062d\u0642 \u0639\u0644\u0649 \u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629 \u0646\u0641\u0633\u0647\u0627 \u0623\u0648\u0644\u0627\u064b\u060c \u062b\u0645 \u064a\u0648\u0632\u0639 \u0623\u064a \u0641\u0627\u0626\u0636 \u0639\u0644\u0649 \u0627\u0644\u062f\u0641\u0639\u0627\u062a \u0627\u0644\u0623\u0635\u0644\u064a\u0629. \u0627\u062e\u062a\u0631 \u0645\u062e\u0632\u0648\u0646\u064b\u0627 \u0635\u0627\u0644\u062d\u064b\u0627 \u0644\u0644\u0628\u064a\u0639 \u0623\u0648 \u062a\u0627\u0644\u0641\u064b\u0627\u061b \u0648\u0644\u0627 \u062a\u0639\u064a\u062f \u0645\u0631\u062a\u062c\u0639\u0627\u062a \u0627\u0644\u062e\u062f\u0645\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u062f \u0627\u0644\u0645\u0633\u062a\u0647\u0644\u0643\u0629. \u064a\u064f\u0633\u062c\u0644 \u0631\u062f \u0627\u0644\u0646\u0642\u062f \u0628\u0639\u062f \u062a\u0633\u0644\u064a\u0645\u0647 \u0641\u0639\u0644\u064a\u064b\u0627. \u064a\u0648\u062b\u0642 \u062a\u0633\u062c\u064a\u0644 \u0631\u062f \u0645\u0628\u0644\u063a \u0645\u0643\u062a\u0645\u0644 \u062e\u0627\u0631\u062c \u0627\u0644\u0645\u062a\u062c\u0631 \u0639\u0645\u0644\u064a\u0629 \u062a\u0645\u062a \u062e\u0627\u0631\u062c\u0647\u060c \u0648\u0644\u0627 \u064a\u0646\u0641\u0630 \u062a\u062d\u0648\u064a\u0644\u0627\u064b \u0639\u0628\u0631 \u0627\u0644\u0628\u0637\u0627\u0642\u0629 \u0623\u0648 \u0627\u0644\u0628\u0646\u0643. \u064a\u062a\u0637\u0644\u0628 \u0627\u0644\u0625\u0631\u062c\u0627\u0639 \u0648\u062a\u0633\u062c\u064a\u0644 \u0631\u062f \u0627\u0644\u0645\u0628\u0627\u0644\u063a \u0627\u062a\u0635\u0627\u0644\u0627\u064b. \u0644\u0627 \u064a\u062a\u0627\u062d \u0627\u0644\u0625\u0631\u062c\u0627\u0639 \u0627\u0644\u062c\u0632\u0626\u064a \u0644\u0644\u0645\u0628\u064a\u0639\u0627\u062a \u0627\u0644\u062a\u0627\u0631\u064a\u062e\u064a\u0629 \u0627\u0644\u062a\u064a \u0644\u0627 \u062a\u062a\u0648\u0641\u0631 \u0644\u0647\u0627 \u0633\u062c\u0644\u0627\u062a \u0623\u0635\u0644\u064a\u0629 \u0643\u0627\u0641\u064a\u0629."
+        "en": "Returns use the original sale’s prices, discounts and taxes. Shop reduces that invoice’s outstanding amount first, then allocates any excess to the original payments. Choose resellable or damaged stock; service returns do not restore consumed materials. Cash refunds are recorded after cash handover. Recording an externally completed refund documents a refund made outside Shop; it does not initiate a card or bank transfer. Returns and refund recording require a connection. Historical sales without sufficient original records are unavailable for partial returns.",
+        "ar": "تستخدم المرتجعات أسعار البيع الأصلية وخصوماته وضرائبه. يخفض المتجر المستحق على الفاتورة نفسها أولاً، ثم يوزع أي فائض على الدفعات الأصلية. اختر مخزونًا صالحًا للبيع أو تالفًا؛ ولا تعيد مرتجعات الخدمات المواد المستهلكة. يُسجل رد النقد بعد تسليمه فعليًا. يوثق تسجيل رد مبلغ مكتمل خارج المتجر عملية تمت خارجه، ولا ينفذ تحويلاً عبر البطاقة أو البنك. يتطلب الإرجاع وتسجيل رد المبالغ اتصالاً. لا يتاح الإرجاع الجزئي للمبيعات التاريخية التي لا تتوفر لها سجلات أصلية كافية."
       }
     },
     "evidence": [
@@ -236,15 +274,15 @@
     "notes": {
       "title": {
         "en": "Receipt images",
-        "ar": "\u0635\u0648\u0631 \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a"
+        "ar": "صور الإيصالات"
       },
       "summary": {
         "en": "Copy an issued receipt as a clear image for pasting into WhatsApp, with an image download option when copying is unavailable.",
-        "ar": "\u0627\u0646\u0633\u062e \u0627\u0644\u0625\u064a\u0635\u0627\u0644 \u0627\u0644\u0645\u064f\u0635\u062f\u0631 \u0643\u0635\u0648\u0631\u0629 \u0648\u0627\u0636\u062d\u0629 \u0644\u0644\u0635\u0642\u0647\u0627 \u0641\u064a \u0648\u0627\u062a\u0633\u0627\u0628\u060c \u0645\u0639 \u0625\u0645\u0643\u0627\u0646\u064a\u0629 \u062a\u0646\u0632\u064a\u0644 \u0627\u0644\u0635\u0648\u0631\u0629 \u0639\u0646\u062f \u062a\u0639\u0630\u0631 \u0627\u0644\u0646\u0633\u062e."
+        "ar": "انسخ الإيصال المُصدر كصورة واضحة للصقها في واتساب، مع إمكانية تنزيل الصورة عند تعذر النسخ."
       },
       "details": {
         "en": "Arabic and English receipts share a monochrome thermal layout for preview, printing and images. Merchant and branch names, issued amounts and payment references are retained. Existing thermal and A4 print sizes remain available.",
-        "ar": "\u062a\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0648\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629 \u062a\u0646\u0633\u064a\u0642\u064b\u0627 \u062d\u0631\u0627\u0631\u064a\u064b\u0627 \u0623\u062d\u0627\u062f\u064a \u0627\u0644\u0644\u0648\u0646 \u0644\u0644\u0645\u0639\u0627\u064a\u0646\u0629 \u0648\u0627\u0644\u0637\u0628\u0627\u0639\u0629 \u0648\u0627\u0644\u0635\u0648\u0631\u060c \u0645\u0639 \u0627\u0644\u0627\u062d\u062a\u0641\u0627\u0638 \u0628\u0623\u0633\u0645\u0627\u0621 \u0627\u0644\u0645\u062a\u062c\u0631 \u0648\u0627\u0644\u0641\u0631\u0639 \u0648\u0627\u0644\u0645\u0628\u0627\u0644\u063a \u0627\u0644\u0645\u064f\u0635\u062f\u0631\u0629 \u0648\u0645\u0631\u0627\u062c\u0639 \u0627\u0644\u062f\u0641\u0639. \u062a\u0638\u0644 \u0645\u0642\u0627\u0633\u0627\u062a \u0627\u0644\u0637\u0628\u0627\u0639\u0629 \u0627\u0644\u062d\u0631\u0627\u0631\u064a\u0629 \u0648A4 \u0645\u062a\u0627\u062d\u0629."
+        "ar": "تستخدم الإيصالات العربية والإنجليزية تنسيقًا حراريًا أحادي اللون للمعاينة والطباعة والصور، مع الاحتفاظ بأسماء المتجر والفرع والمبالغ المُصدرة ومراجع الدفع. تظل مقاسات الطباعة الحرارية وA4 متاحة."
       }
     },
     "evidence": [
@@ -275,15 +313,15 @@
     "notes": {
       "title": {
         "en": "Privacy choices and public-page improvements",
-        "ar": "\u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0648\u062a\u062d\u0633\u064a\u0646\u0627\u062a \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0639\u0627\u0645\u0629"
+        "ar": "خيارات الخصوصية وتحسينات الصفحات العامة"
       },
       "summary": {
         "en": "Choose whether to allow optional visitor analytics and review clearer privacy information.",
-        "ar": "\u0627\u062e\u062a\u0631 \u0627\u0644\u0633\u0645\u0627\u062d \u0628\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0632\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0623\u0648 \u0631\u0641\u0636\u0647\u0627\u060c \u0648\u0631\u0627\u062c\u0639 \u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0623\u0648\u0636\u062d \u0639\u0646 \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629."
+        "ar": "اختر السماح بتحليلات الزيارات الاختيارية أو رفضها، وراجع معلومات أوضح عن الخصوصية."
       },
       "details": {
         "en": "Privacy settings let you accept, reject or change optional analytics choices. Analytics stays off until configured and accepted, and business records are excluded. Public pages gain sharing information and a sitemap; payment activation is not measured.",
-        "ar": "\u062a\u062a\u064a\u062d \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0642\u0628\u0648\u0644 \u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0623\u0648 \u0631\u0641\u0636\u0647\u0627 \u0623\u0648 \u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631 \u0644\u0627\u062d\u0642\u0627\u064b. \u062a\u0638\u0644 \u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0645\u062a\u0648\u0642\u0641\u0629 \u062d\u062a\u0649 \u062a\u0647\u064a\u0626\u062a\u0647\u0627 \u0648\u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0639\u0644\u064a\u0647\u0627\u060c \u0648\u062a\u064f\u0633\u062a\u0628\u0639\u062f \u0633\u062c\u0644\u0627\u062a \u0627\u0644\u0639\u0645\u0644 \u0645\u0646\u0647\u0627. \u062a\u062a\u0636\u0645\u0646 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0639\u0627\u0645\u0629 \u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0644\u0644\u0645\u0634\u0627\u0631\u0643\u0629 \u0648\u062e\u0631\u064a\u0637\u0629 \u0644\u0644\u0645\u0648\u0642\u0639\u060c \u0648\u0644\u0627 \u064a\u062a\u0645 \u0642\u064a\u0627\u0633 \u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u062f\u0641\u0639."
+        "ar": "تتيح إعدادات الخصوصية قبول التحليلات الاختيارية أو رفضها أو تغيير الاختيار لاحقاً. تظل التحليلات متوقفة حتى تهيئتها والموافقة عليها، وتُستبعد سجلات العمل منها. تتضمن الصفحات العامة معلومات للمشاركة وخريطة للموقع، ولا يتم قياس تفعيل الدفع."
       }
     },
     "evidence": [
@@ -314,15 +352,15 @@
     "notes": {
       "title": {
         "en": "ETA submission preparation",
-        "ar": "\u062a\u062c\u0647\u064a\u0632 \u0625\u0631\u0633\u0627\u0644 \u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u0636\u0631\u0627\u0626\u0628 \u0627\u0644\u0645\u0635\u0631\u064a\u0629"
+        "ar": "تجهيز إرسال مستندات الضرائب المصرية"
       },
       "summary": {
         "en": "Prepare eligible tax documents and review submission attempts and status.",
-        "ar": "\u062a\u062c\u0647\u064a\u0632 \u0627\u0644\u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u0636\u0631\u064a\u0628\u064a\u0629 \u0627\u0644\u0645\u0624\u0647\u0644\u0629 \u0648\u0645\u0631\u0627\u062c\u0639\u0629 \u0645\u062d\u0627\u0648\u0644\u0627\u062a \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0648\u062d\u0627\u0644\u062a\u0647\u0627."
+        "ar": "تجهيز المستندات الضريبية المؤهلة ومراجعة محاولات الإرسال وحالتها."
       },
       "details": {
         "en": "Preparation is not an activated or certified compliant integration. Live submission requires separately verified issuer configuration, signing, credentials and explicit server-side enablement.",
-        "ar": "\u0644\u0627 \u064a\u0639\u0646\u064a \u0627\u0644\u062a\u062c\u0647\u064a\u0632 \u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u062a\u0643\u0627\u0645\u0644 \u0623\u0648 \u0627\u0639\u062a\u0645\u0627\u062f\u0647 \u0645\u062a\u0648\u0627\u0641\u0642\u0627\u064b. \u064a\u062a\u0637\u0644\u0628 \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0641\u0639\u0644\u064a \u0627\u0644\u062a\u062d\u0642\u0642 \u0628\u0634\u0643\u0644 \u0645\u0646\u0641\u0635\u0644 \u0645\u0646 \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0645\u0645\u0648\u0644 \u0648\u0627\u0644\u062a\u0648\u0642\u064a\u0639 \u0648\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0627\u0639\u062a\u0645\u0627\u062f \u0648\u0627\u0644\u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u0635\u0631\u064a\u062d \u0639\u0644\u0649 \u0627\u0644\u062e\u0627\u062f\u0645."
+        "ar": "لا يعني التجهيز تفعيل التكامل أو اعتماده متوافقاً. يتطلب الإرسال الفعلي التحقق بشكل منفصل من إعدادات الممول والتوقيع وبيانات الاعتماد والتفعيل الصريح على الخادم."
       }
     },
     "evidence": [
@@ -354,15 +392,15 @@
     "notes": {
       "title": {
         "en": "One upcoming release",
-        "ar": "\u0625\u0635\u062f\u0627\u0631 \u0642\u0627\u062f\u0645 \u0648\u0627\u062d\u062f"
+        "ar": "إصدار قادم واحد"
       },
       "summary": {
         "en": "Review the combined changes awaiting production in English or Arabic.",
-        "ar": "\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u062a\u063a\u064a\u064a\u0631\u0627\u062a \u0627\u0644\u0645\u062c\u0645\u0639\u0629 \u0627\u0644\u062a\u064a \u062a\u0646\u062a\u0638\u0631 \u0627\u0644\u0646\u0634\u0631 \u0627\u0644\u0641\u0639\u0644\u064a \u0628\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629 \u0623\u0648 \u0627\u0644\u0639\u0631\u0628\u064a\u0629."
+        "ar": "مراجعة التغييرات المجمعة التي تنتظر النشر الفعلي بالإنجليزية أو العربية."
       },
       "details": {
         "en": "The upcoming release refreshes from the current production-to-staging difference. Its version and notes freeze only after production deployment succeeds.",
-        "ar": "\u064a\u062a\u062d\u062f\u062b \u0627\u0644\u0625\u0635\u062f\u0627\u0631 \u0627\u0644\u0642\u0627\u062f\u0645 \u0648\u0641\u0642 \u0627\u0644\u0641\u0631\u0642 \u0627\u0644\u062d\u0627\u0644\u064a \u0628\u064a\u0646 \u0641\u0631\u0639 \u0627\u0644\u0625\u0646\u062a\u0627\u062c \u0648\u0628\u064a\u0626\u0629 \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631. \u064a\u062b\u0628\u062a \u0625\u0635\u062f\u0627\u0631\u0647 \u0648\u0645\u0644\u0627\u062d\u0638\u0627\u062a\u0647 \u0628\u0639\u062f \u0646\u062c\u0627\u062d \u0627\u0644\u0646\u0634\u0631 \u0627\u0644\u0641\u0639\u0644\u064a \u0641\u0642\u0637."
+        "ar": "يتحدث الإصدار القادم وفق الفرق الحالي بين فرع الإنتاج وبيئة الاختبار. يثبت إصداره وملاحظاته بعد نجاح النشر الفعلي فقط."
       }
     },
     "evidence": [
@@ -397,15 +435,15 @@
     "notes": {
       "title": {
         "en": "Permissions follow the menu",
-        "ar": "\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u062a\u062a\u0628\u0639 \u0627\u0644\u0642\u0627\u0626\u0645\u0629"
+        "ar": "الصلاحيات تتبع القائمة"
       },
       "summary": {
         "en": "Role permissions use the same page names and order as the Arabic and English menus.",
-        "ar": "\u062a\u0633\u062a\u062e\u062f\u0645 \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0623\u062f\u0648\u0627\u0631 \u0623\u0633\u0645\u0627\u0621 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0648\u062a\u0631\u062a\u064a\u0628\u0647\u0627 \u0646\u0641\u0633\u0647 \u0641\u064a \u0627\u0644\u0642\u0627\u0626\u0645\u062a\u064a\u0646 \u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0648\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629."
+        "ar": "تستخدم صلاحيات الأدوار أسماء الصفحات وترتيبها نفسه في القائمتين العربية والإنجليزية."
       },
       "details": {
         "en": "Actions are grouped under their relevant pages. Shared capabilities stay synchronized, locked grants remain protected, and existing saved permissions are retained.",
-        "ar": "\u062a\u064f\u062c\u0645\u0639 \u0627\u0644\u0625\u062c\u0631\u0627\u0621\u0627\u062a \u062a\u062d\u062a \u0635\u0641\u062d\u0627\u062a\u0647\u0627 \u0627\u0644\u0645\u0646\u0627\u0633\u0628\u0629\u060c \u0648\u062a\u0638\u0644 \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u0634\u062a\u0631\u0643\u0629 \u0645\u062a\u0632\u0627\u0645\u0646\u0629 \u0648\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u0642\u064a\u062f\u0629 \u0645\u062d\u0645\u064a\u0629\u060c \u0645\u0639 \u0627\u0644\u0627\u062d\u062a\u0641\u0627\u0638 \u0628\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629."
+        "ar": "تُجمع الإجراءات تحت صفحاتها المناسبة، وتظل الصلاحيات المشتركة متزامنة والصلاحيات المقيدة محمية، مع الاحتفاظ بالصلاحيات المحفوظة."
       }
     },
     "sources": [
@@ -457,15 +495,15 @@
     "notes": {
       "title": {
         "en": "View your appointments securely",
-        "ar": "\u0639\u0631\u0636 \u0645\u0648\u0627\u0639\u064a\u062f\u0643 \u0628\u0623\u0645\u0627\u0646"
+        "ar": "عرض مواعيدك بأمان"
       },
       "summary": {
         "en": "Customers can verify access to their appointments and service history at a shop.",
-        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0639\u0645\u0644\u0627\u0621 \u0627\u0644\u062a\u062d\u0642\u0642 \u0645\u0646 \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0645\u0648\u0627\u0639\u064a\u062f\u0647\u0645 \u0648\u0633\u062c\u0644 \u062e\u062f\u0645\u0627\u062a\u0647\u0645 \u0644\u062f\u0649 \u0627\u0644\u0645\u062a\u062c\u0631."
+        "ar": "يمكن للعملاء التحقق من الوصول إلى مواعيدهم وسجل خدماتهم لدى المتجر."
       },
       "details": {
         "en": "Short-lived access shows appointment times, service, staff display name, status and explicitly public locations. Walk-in access covers one appointment. Expiry, revocation and logout clear the view; private notes and financial data stay excluded.",
-        "ar": "\u064a\u0639\u0631\u0636 \u0627\u0644\u0648\u0635\u0648\u0644 \u0642\u0635\u064a\u0631 \u0627\u0644\u0645\u062f\u0629 \u0623\u0648\u0642\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f \u0648\u0627\u0644\u062e\u062f\u0645\u0629 \u0648\u0627\u0633\u0645 \u0627\u0644\u0645\u0648\u0638\u0641 \u0648\u0627\u0644\u062d\u0627\u0644\u0629 \u0648\u0627\u0644\u0645\u0648\u0627\u0642\u0639 \u0627\u0644\u0639\u0627\u0645\u0629 \u0627\u0644\u0645\u062d\u062f\u062f\u0629. \u064a\u0642\u062a\u0635\u0631 \u0648\u0635\u0648\u0644 \u0627\u0644\u0632\u0627\u0626\u0631 \u0639\u0644\u0649 \u0645\u0648\u0639\u062f \u0648\u0627\u062d\u062f. \u064a\u0645\u0633\u062d \u0627\u0646\u062a\u0647\u0627\u0621 \u0627\u0644\u0648\u0635\u0648\u0644 \u0623\u0648 \u0625\u0644\u063a\u0627\u0624\u0647 \u0627\u0644\u0639\u0631\u0636\u060c \u0648\u062a\u0628\u0642\u0649 \u0627\u0644\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0627\u0644\u062e\u0627\u0635\u0629 \u0648\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u0645\u0633\u062a\u0628\u0639\u062f\u0629."
+        "ar": "يعرض الوصول قصير المدة أوقات المواعيد والخدمة واسم الموظف والحالة والمواقع العامة المحددة. يقتصر وصول الزائر على موعد واحد. يمسح انتهاء الوصول أو إلغاؤه العرض، وتبقى الملاحظات الخاصة والبيانات المالية مستبعدة."
       }
     },
     "sources": [
@@ -497,15 +535,15 @@
     "notes": {
       "title": {
         "en": "Book and manage appointments online",
-        "ar": "\u062d\u062c\u0632 \u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f \u0648\u0625\u062f\u0627\u0631\u062a\u0647\u0627 \u0639\u0628\u0631 \u0627\u0644\u0645\u0648\u0642\u0639"
+        "ar": "حجز المواعيد وإدارتها عبر الموقع"
       },
       "summary": {
         "en": "Shops can explicitly enable booking for published services, locations and staff.",
-        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u062a\u0627\u062c\u0631 \u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u062d\u062c\u0632 \u0635\u0631\u0627\u062d\u0629\u064b \u0644\u0644\u062e\u062f\u0645\u0627\u062a \u0648\u0627\u0644\u0645\u0648\u0627\u0642\u0639 \u0648\u0627\u0644\u0645\u0648\u0638\u0641\u064a\u0646 \u0627\u0644\u0645\u0646\u0634\u0648\u0631\u064a\u0646."
+        "ar": "يمكن للمتاجر تفعيل الحجز صراحةً للخدمات والمواقع والموظفين المنشورين."
       },
       "details": {
         "en": "Customers choose available times and can reschedule or cancel within shop rules. Guest access covers one appointment; verified customers retain their own scope. Concurrent bookings are checked transactionally. Reminders stay disabled until an approved messaging channel is configured.",
-        "ar": "\u064a\u062e\u062a\u0627\u0631 \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0623\u0648\u0642\u0627\u062a\u0627\u064b \u0645\u062a\u0627\u062d\u0629 \u0648\u064a\u0645\u0643\u0646\u0647\u0645 \u062a\u0639\u062f\u064a\u0644 \u0627\u0644\u0645\u0648\u0639\u062f \u0623\u0648 \u0625\u0644\u063a\u0627\u0624\u0647 \u0648\u0641\u0642 \u0633\u064a\u0627\u0633\u0629 \u0627\u0644\u0645\u062a\u062c\u0631. \u064a\u0642\u062a\u0635\u0631 \u0648\u0635\u0648\u0644 \u0627\u0644\u0632\u0627\u0626\u0631 \u0639\u0644\u0649 \u0645\u0648\u0639\u062f \u0648\u0627\u062d\u062f\u060c \u0648\u064a\u062d\u062a\u0641\u0638 \u0627\u0644\u0639\u0645\u064a\u0644 \u0627\u0644\u0645\u0648\u062b\u0651\u0642 \u0628\u0646\u0637\u0627\u0642\u0647 \u0627\u0644\u062e\u0627\u0635. \u062a\u064f\u0641\u062d\u0635 \u0627\u0644\u062d\u062c\u0648\u0632\u0627\u062a \u0627\u0644\u0645\u062a\u0632\u0627\u0645\u0646\u0629 \u062f\u0627\u062e\u0644 \u0627\u0644\u0645\u0639\u0627\u0645\u0644\u0629\u060c \u0648\u062a\u0628\u0642\u0649 \u0627\u0644\u062a\u0630\u0643\u064a\u0631\u0627\u062a \u0645\u0639\u0637\u0644\u0629 \u062d\u062a\u0649 \u0625\u0639\u062f\u0627\u062f \u0642\u0646\u0627\u0629 \u0631\u0633\u0627\u0626\u0644 \u0645\u0639\u062a\u0645\u062f\u0629."
+        "ar": "يختار العملاء أوقاتاً متاحة ويمكنهم تعديل الموعد أو إلغاؤه وفق سياسة المتجر. يقتصر وصول الزائر على موعد واحد، ويحتفظ العميل الموثّق بنطاقه الخاص. تُفحص الحجوزات المتزامنة داخل المعاملة، وتبقى التذكيرات معطلة حتى إعداد قناة رسائل معتمدة."
       }
     },
     "sources": [
@@ -537,15 +575,15 @@
     "notes": {
       "title": {
         "en": "Publish a website for your shop",
-        "ar": "\u0646\u0634\u0631 \u0645\u0648\u0642\u0639 \u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0644\u0645\u062a\u062c\u0631\u0643"
+        "ar": "نشر موقع إلكتروني لمتجرك"
       },
       "summary": {
         "en": "Choose a shop address and publish an independent profile with selected products and services.",
-        "ar": "\u0627\u062e\u062a\u0631 \u0639\u0646\u0648\u0627\u0646\u0627\u064b \u0644\u0644\u0645\u062a\u062c\u0631 \u0648\u0627\u0646\u0634\u0631 \u0645\u0644\u0641\u0627\u064b \u0639\u0627\u0645\u0627\u064b \u0645\u0633\u062a\u0642\u0644\u0627\u064b \u0645\u0639 \u0645\u0646\u062a\u062c\u0627\u062a \u0648\u062e\u062f\u0645\u0627\u062a \u0645\u062d\u062f\u062f\u0629."
+        "ar": "اختر عنواناً للمتجر وانشر ملفاً عاماً مستقلاً مع منتجات وخدمات محددة."
       },
       "details": {
         "en": "Owners explicitly opt in after adding a logo, public contact, visible location and a published item. Public pages show selected descriptions, prices, opening hours and contact actions; visitor inquiries reach the shop privately. Unpublishing hides the website immediately while retaining its configuration. Operational and private data stay excluded.",
-        "ar": "\u064a\u0648\u0627\u0641\u0642 \u0627\u0644\u0645\u0627\u0644\u0643 \u0635\u0631\u0627\u062d\u0629\u064b \u0639\u0644\u0649 \u0627\u0644\u0646\u0634\u0631 \u0628\u0639\u062f \u0625\u0636\u0627\u0641\u0629 \u0634\u0639\u0627\u0631 \u0648\u0648\u0633\u064a\u0644\u0629 \u0627\u062a\u0635\u0627\u0644 \u0639\u0627\u0645\u0629 \u0648\u0645\u0648\u0642\u0639 \u0638\u0627\u0647\u0631 \u0648\u0639\u0646\u0635\u0631 \u0645\u0646\u0634\u0648\u0631. \u062a\u0639\u0631\u0636 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0623\u0648\u0635\u0627\u0641 \u0648\u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0648\u0633\u0627\u0639\u0627\u062a \u0627\u0644\u0639\u0645\u0644 \u0648\u0648\u0633\u0627\u0626\u0644 \u0627\u0644\u062a\u0648\u0627\u0635\u0644 \u0627\u0644\u0645\u062d\u062f\u062f\u0629\u060c \u0648\u062a\u0635\u0644 \u0627\u0633\u062a\u0641\u0633\u0627\u0631\u0627\u062a \u0627\u0644\u0632\u0648\u0627\u0631 \u0625\u0644\u0649 \u0627\u0644\u0645\u062a\u062c\u0631 \u0628\u0634\u0643\u0644 \u062e\u0627\u0635. \u064a\u062e\u0641\u064a \u0625\u0644\u063a\u0627\u0621 \u0627\u0644\u0646\u0634\u0631 \u0627\u0644\u0645\u0648\u0642\u0639 \u0641\u0648\u0631\u0627\u064b \u0645\u0639 \u0627\u0644\u0627\u062d\u062a\u0641\u0627\u0638 \u0628\u0625\u0639\u062f\u0627\u062f\u0627\u062a\u0647\u060c \u0648\u062a\u0628\u0642\u0649 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u062a\u0634\u063a\u064a\u0644\u064a\u0629 \u0648\u0627\u0644\u062e\u0627\u0635\u0629 \u0645\u0633\u062a\u0628\u0639\u062f\u0629."
+        "ar": "يوافق المالك صراحةً على النشر بعد إضافة شعار ووسيلة اتصال عامة وموقع ظاهر وعنصر منشور. تعرض الصفحات الأوصاف والأسعار وساعات العمل ووسائل التواصل المحددة، وتصل استفسارات الزوار إلى المتجر بشكل خاص. يخفي إلغاء النشر الموقع فوراً مع الاحتفاظ بإعداداته، وتبقى البيانات التشغيلية والخاصة مستبعدة."
       }
     },
     "sources": [
@@ -588,15 +626,15 @@
     "notes": {
       "title": {
         "en": "Manage private appointment access",
-        "ar": "\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0648\u0635\u0648\u0644 \u0627\u0644\u062e\u0627\u0635 \u0644\u0644\u0645\u0648\u0627\u0639\u064a\u062f"
+        "ar": "إدارة الوصول الخاص للمواعيد"
       },
       "summary": {
         "en": "Authorized staff can issue, rotate and revoke appointment access codes.",
-        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u0648\u0638\u0641 \u0627\u0644\u0645\u062e\u0648\u0651\u0644 \u0625\u0635\u062f\u0627\u0631 \u0631\u0645\u0648\u0632 \u0627\u0644\u0648\u0635\u0648\u0644 \u0644\u0644\u0645\u0648\u0627\u0639\u064a\u062f \u0648\u062a\u063a\u064a\u064a\u0631\u0647\u0627 \u0648\u0625\u0644\u063a\u0627\u0624\u0647\u0627."
+        "ar": "يمكن للموظف المخوّل إصدار رموز الوصول للمواعيد وتغييرها وإلغاؤها."
       },
       "details": {
         "en": "Codes appear once and require the saved phone number to verify. Access sessions are short-lived and scoped to the customer or one walk-in appointment. Revocation and phone changes end prior access. No messages are sent automatically.",
-        "ar": "\u064a\u0638\u0647\u0631 \u0627\u0644\u0631\u0645\u0632 \u0645\u0631\u0629 \u0648\u0627\u062d\u062f\u0629 \u0648\u064a\u062a\u0637\u0644\u0628 \u0631\u0642\u0645 \u0627\u0644\u0647\u0627\u062a\u0641 \u0627\u0644\u0645\u062d\u0641\u0648\u0638 \u0644\u0644\u062a\u062d\u0642\u0642. \u062c\u0644\u0633\u0627\u062a \u0627\u0644\u0648\u0635\u0648\u0644 \u0642\u0635\u064a\u0631\u0629 \u0648\u0645\u062d\u062f\u062f\u0629 \u0628\u0646\u0637\u0627\u0642 \u0627\u0644\u0639\u0645\u064a\u0644 \u0623\u0648 \u0645\u0648\u0639\u062f \u0627\u0644\u0632\u0627\u0626\u0631 \u0627\u0644\u0648\u0627\u062d\u062f. \u064a\u0646\u0647\u064a \u0625\u0644\u063a\u0627\u0621 \u0627\u0644\u0631\u0645\u0632 \u0623\u0648 \u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0647\u0627\u062a\u0641 \u0627\u0644\u0648\u0635\u0648\u0644 \u0627\u0644\u0633\u0627\u0628\u0642\u060c \u0648\u0644\u0627 \u062a\u064f\u0631\u0633\u0644 \u0631\u0633\u0627\u0626\u0644 \u062a\u0644\u0642\u0627\u0626\u064a\u0627\u064b."
+        "ar": "يظهر الرمز مرة واحدة ويتطلب رقم الهاتف المحفوظ للتحقق. جلسات الوصول قصيرة ومحددة بنطاق العميل أو موعد الزائر الواحد. ينهي إلغاء الرمز أو تغيير الهاتف الوصول السابق، ولا تُرسل رسائل تلقائياً."
       }
     },
     "sources": [
@@ -628,15 +666,15 @@
     "notes": {
       "title": {
         "en": "Control appointment email reminders",
-        "ar": "\u0627\u0644\u062a\u062d\u0643\u0645 \u0641\u064a \u062a\u0630\u0643\u064a\u0631\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f \u0628\u0627\u0644\u0628\u0631\u064a\u062f"
+        "ar": "التحكم في تذكيرات المواعيد بالبريد"
       },
       "summary": {
         "en": "Owners can opt in, and eligible customers can request or stop one private reminder per appointment.",
-        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u0627\u0644\u0643 \u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u062e\u064a\u0627\u0631 \u0648\u0644\u0644\u0639\u0645\u064a\u0644 \u0627\u0644\u0645\u0624\u0647\u0644 \u0637\u0644\u0628 \u062a\u0630\u0643\u064a\u0631 \u062e\u0627\u0635 \u0644\u0643\u0644 \u0645\u0648\u0639\u062f \u0623\u0648 \u0625\u064a\u0642\u0627\u0641\u0647."
+        "ar": "يمكن للمالك تفعيل الخيار وللعميل المؤهل طلب تذكير خاص لكل موعد أو إيقافه."
       },
       "details": {
         "en": "Reminders use the saved customer email, respect the appointment timezone and stop on cancellation or contact changes. Operators can activate the dormant scheduler and test or live delivery through approved configuration; sending defaults disabled.",
-        "ar": "\u062a\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u062a\u0630\u0643\u064a\u0631\u0627\u062a \u0628\u0631\u064a\u062f \u0627\u0644\u0639\u0645\u064a\u0644 \u0627\u0644\u0645\u062d\u0641\u0648\u0638 \u0648\u062a\u0631\u0627\u0639\u064a \u0627\u0644\u0645\u0646\u0637\u0642\u0629 \u0627\u0644\u0632\u0645\u0646\u064a\u0629 \u0644\u0644\u0645\u0648\u0639\u062f \u0648\u062a\u062a\u0648\u0642\u0641 \u0639\u0646\u062f \u0627\u0644\u0625\u0644\u063a\u0627\u0621 \u0623\u0648 \u062a\u063a\u064a\u064a\u0631 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u062a\u0648\u0627\u0635\u0644. \u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u0634\u063a\u0644 \u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u062c\u062f\u0648\u0644\u0629 \u0627\u0644\u062e\u0627\u0645\u0644\u0629 \u0648\u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062a\u062c\u0631\u064a\u0628\u064a \u0623\u0648 \u0627\u0644\u0641\u0639\u0644\u064a \u0639\u0628\u0631 \u0625\u0639\u062f\u0627\u062f \u0645\u0639\u062a\u0645\u062f\u060c \u0648\u064a\u0638\u0644 \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0645\u0639\u0637\u0644\u0627\u064b \u0627\u0641\u062a\u0631\u0627\u0636\u064a\u0627\u064b."
+        "ar": "تستخدم التذكيرات بريد العميل المحفوظ وتراعي المنطقة الزمنية للموعد وتتوقف عند الإلغاء أو تغيير بيانات التواصل. يمكن للمشغل تفعيل الجدولة الخاملة والإرسال التجريبي أو الفعلي عبر إعداد معتمد، ويظل الإرسال معطلاً افتراضياً."
       }
     },
     "sources": [
@@ -759,15 +797,15 @@
     "notes": {
       "title": {
         "en": "Use settings from the keyboard",
-        "ar": "\u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0628\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d"
+        "ar": "استخدام الإعدادات بلوحة المفاتيح"
       },
       "summary": {
         "en": "Move between language and theme choices and return focus when closing settings.",
-        "ar": "\u062a\u0646\u0642\u0651\u0644 \u0628\u064a\u0646 \u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u0644\u063a\u0629 \u0648\u0627\u0644\u0645\u0638\u0647\u0631 \u0648\u0623\u0639\u062f \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0646\u062f \u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a."
+        "ar": "تنقّل بين خيارات اللغة والمظهر وأعد التركيز عند إغلاق الإعدادات."
       },
       "details": {
         "en": "Opening settings focuses the first choice. Arrow keys, Home and End navigate the menu; Escape or choosing a language returns focus to the settings control. The control waits for client handlers before accepting the first activation.",
-        "ar": "\u064a\u0636\u0639 \u0641\u062a\u062d \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0644\u0649 \u0627\u0644\u062e\u064a\u0627\u0631 \u0627\u0644\u0623\u0648\u0644. \u062a\u062a\u0646\u0642\u0644 \u0645\u0641\u0627\u062a\u064a\u062d \u0627\u0644\u0623\u0633\u0647\u0645 \u0648Home \u0648End \u062f\u0627\u062e\u0644 \u0627\u0644\u0642\u0627\u0626\u0645\u0629\u060c \u0648\u064a\u0639\u064a\u062f Escape \u0623\u0648 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0644\u063a\u0629 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0625\u0644\u0649 \u0632\u0631 \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a. \u064a\u0646\u062a\u0638\u0631 \u0627\u0644\u0632\u0631 \u062c\u0627\u0647\u0632\u064a\u0629 \u0645\u0639\u0627\u0644\u062c\u0627\u062a\u0647 \u0642\u0628\u0644 \u0642\u0628\u0648\u0644 \u0623\u0648\u0644 \u062a\u0646\u0634\u064a\u0637."
+        "ar": "يضع فتح الإعدادات التركيز على الخيار الأول. تتنقل مفاتيح الأسهم وHome وEnd داخل القائمة، ويعيد Escape أو اختيار اللغة التركيز إلى زر الإعدادات. ينتظر الزر جاهزية معالجاته قبل قبول أول تنشيط."
       }
     },
     "evidence": [
@@ -1355,15 +1393,15 @@
     "notes": {
       "title": {
         "en": "Clarify website address reservation",
-        "ar": "\u062a\u0648\u0636\u064a\u062d \u062d\u062c\u0632 \u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0645\u0648\u0642\u0639"
+        "ar": "توضيح حجز عنوان الموقع"
       },
       "summary": {
         "en": "Address settings now point to Public shop profile for publication status.",
-        "ar": "\u062a\u0634\u064a\u0631 \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0622\u0646 \u0625\u0644\u0649 \u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0639\u0627\u0645 \u0644\u0644\u0645\u062a\u062c\u0631 \u0644\u0645\u0639\u0631\u0641\u0629 \u062d\u0627\u0644\u0629 \u0627\u0644\u0646\u0634\u0631."
+        "ar": "تشير إعدادات العنوان الآن إلى الملف العام للمتجر لمعرفة حالة النشر."
       },
       "details": {
         "en": "Saving an address no longer incorrectly says an already public website is unpublished. Address reservation wording is neutral in English and Arabic; publication remains controlled by Public shop profile.",
-        "ar": "\u0644\u0645 \u064a\u0639\u062f \u062d\u0641\u0638 \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u064a\u0639\u0631\u0636 \u0631\u0633\u0627\u0644\u0629 \u062e\u0627\u0637\u0626\u0629 \u0628\u0623\u0646 \u0627\u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u0645\u0646\u0634\u0648\u0631 \u063a\u064a\u0631 \u0645\u0646\u0634\u0648\u0631. \u0623\u0635\u0628\u062d\u062a \u0635\u064a\u0627\u063a\u0629 \u062d\u062c\u0632 \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0645\u062d\u0627\u064a\u062f\u0629 \u0628\u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0648\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629\u060c \u0648\u062a\u0638\u0644 \u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0646\u0634\u0631 \u0641\u064a \u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0639\u0627\u0645 \u0644\u0644\u0645\u062a\u062c\u0631."
+        "ar": "لم يعد حفظ العنوان يعرض رسالة خاطئة بأن الموقع المنشور غير منشور. أصبحت صياغة حجز العنوان محايدة بالعربية والإنجليزية، وتظل إدارة النشر في الملف العام للمتجر."
       }
     },
     "sources": [
@@ -1376,7 +1414,7 @@
       },
       {
         "path": "apps/shop-suit/app/composables/useWebsiteAddress.ts",
-        "contains": "\u0627\u062d\u062c\u0632 \u0627\u0644\u0639\u0646\u0648\u0627\u0646 \u0647\u0646\u0627\u060c \u0648\u0631\u0627\u062c\u0639 \u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0639\u0627\u0645 \u0644\u0644\u0645\u062a\u062c\u0631 \u0644\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0646\u0634\u0631 \u0648\u0645\u0639\u0631\u0641\u0629 \u062d\u0627\u0644\u062a\u0647."
+        "contains": "احجز العنوان هنا، وراجع الملف العام للمتجر لإدارة النشر ومعرفة حالته."
       }
     ]
   },
@@ -1396,15 +1434,15 @@
     "notes": {
       "title": {
         "en": "Resume Google signup safely",
-        "ar": "\u0643\u0645\u0651\u0644 \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u0628\u0627\u0633\u062a\u062e\u062f\u0627\u0645 Google \u0628\u0623\u0645\u0627\u0646"
+        "ar": "كمّل التسجيل باستخدام Google بأمان"
       },
       "summary": {
         "en": "Keep your verified Google identity while completing your shop details.",
-        "ar": "\u0627\u062d\u062a\u0641\u0638 \u0628\u0628\u064a\u0627\u0646\u0627\u062a Google \u0627\u0644\u0645\u0624\u0643\u062f\u0629 \u0623\u062b\u0646\u0627\u0621 \u0627\u0633\u062a\u0643\u0645\u0627\u0644 \u0628\u064a\u0627\u0646\u0627\u062a \u0645\u062a\u062c\u0631\u0643."
+        "ar": "احتفظ ببيانات Google المؤكدة أثناء استكمال بيانات متجرك."
       },
       "details": {
         "en": "Callback refresh resumes your authenticated session. Incomplete signup retains shop details, and unavailable account checks block duplicate creation. Signing out returns to one login form.",
-        "ar": "\u064a\u0633\u062a\u0643\u0645\u0644 \u062a\u062d\u062f\u064a\u062b \u0635\u0641\u062d\u0629 \u0627\u0644\u0639\u0648\u062f\u0629 \u0627\u0644\u062c\u0644\u0633\u0629 \u0627\u0644\u0645\u0624\u0643\u062f\u0629. \u064a\u062d\u062a\u0641\u0638 \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u063a\u064a\u0631 \u0627\u0644\u0645\u0643\u062a\u0645\u0644 \u0628\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0645\u062a\u062c\u0631\u060c \u0648\u064a\u062a\u0648\u0642\u0641 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u062d\u0633\u0627\u0628 \u0639\u0646\u062f \u062a\u0639\u0630\u0631 \u0627\u0644\u062a\u062d\u0642\u0642 \u0644\u062a\u062c\u0646\u0628 \u0627\u0644\u062a\u0643\u0631\u0627\u0631. \u064a\u0639\u064a\u062f \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c \u0646\u0645\u0648\u0630\u062c \u062f\u062e\u0648\u0644 \u0648\u0627\u062d\u062f\u0627\u064b."
+        "ar": "يستكمل تحديث صفحة العودة الجلسة المؤكدة. يحتفظ التسجيل غير المكتمل ببيانات المتجر، ويتوقف إنشاء الحساب عند تعذر التحقق لتجنب التكرار. يعيد تسجيل الخروج نموذج دخول واحداً."
       }
     },
     "sources": [
@@ -1440,15 +1478,15 @@
     "notes": {
       "title": {
         "en": "Choose your subscription currency",
-        "ar": "\u0627\u062e\u062a\u0631 \u0639\u0645\u0644\u0629 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643"
+        "ar": "اختر عملة الاشتراك"
       },
       "summary": {
         "en": "Compare fixed EGP and USD subscription prices with explicit currency selection.",
-        "ar": "\u0642\u0627\u0631\u0646 \u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643 \u0627\u0644\u062b\u0627\u0628\u062a\u0629 \u0628\u0627\u0644\u062c\u0646\u064a\u0647 \u0627\u0644\u0645\u0635\u0631\u064a \u0648\u0627\u0644\u062f\u0648\u0644\u0627\u0631 \u0645\u0639 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0639\u0645\u0644\u0629 \u0628\u0648\u0636\u0648\u062d."
+        "ar": "قارن أسعار الاشتراك الثابتة بالجنيه المصري والدولار مع اختيار العملة بوضوح."
       },
       "details": {
         "en": "Existing EGP payments are preserved. USD checkout stays unavailable until merchant eligibility is verified. Quotes, credit and refund history retain their original currency.",
-        "ar": "\u064a\u0633\u062a\u0645\u0631 \u0627\u0644\u062f\u0641\u0639 \u0627\u0644\u062d\u0627\u0644\u064a \u0628\u0627\u0644\u062c\u0646\u064a\u0647 \u0627\u0644\u0645\u0635\u0631\u064a. \u064a\u0638\u0644 \u0627\u0644\u062f\u0641\u0639 \u0628\u0627\u0644\u062f\u0648\u0644\u0627\u0631 \u063a\u064a\u0631 \u0645\u062a\u0627\u062d \u062d\u062a\u0649 \u0627\u0644\u062a\u062d\u0642\u0642 \u0645\u0646 \u0623\u0647\u0644\u064a\u0629 \u062d\u0633\u0627\u0628 \u0627\u0644\u062a\u0627\u062c\u0631. \u062a\u062d\u062a\u0641\u0638 \u0639\u0631\u0648\u0636 \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0648\u0627\u0644\u0623\u0631\u0635\u062f\u0629 \u0648\u0633\u062c\u0644\u0627\u062a \u0627\u0644\u0627\u0633\u062a\u0631\u062f\u0627\u062f \u0628\u0639\u0645\u0644\u062a\u0647\u0627 \u0627\u0644\u0623\u0635\u0644\u064a\u0629."
+        "ar": "يستمر الدفع الحالي بالجنيه المصري. يظل الدفع بالدولار غير متاح حتى التحقق من أهلية حساب التاجر. تحتفظ عروض الأسعار والأرصدة وسجلات الاسترداد بعملتها الأصلية."
       }
     },
     "sources": [
@@ -1490,15 +1528,15 @@
     "notes": {
       "title": {
         "en": "A ready-to-scroll introduction",
-        "ar": "\u0645\u0642\u062f\u0645\u0629 \u062c\u0627\u0647\u0632\u0629 \u0644\u0644\u062a\u0635\u0641\u062d"
+        "ar": "مقدمة جاهزة للتصفح"
       },
       "summary": {
         "en": "The Shop Suit story opens with a branded loader, fills the screen and keeps its laptop visible through the closing scene.",
-        "ar": "\u062a\u0628\u062f\u0623 \u062d\u0643\u0627\u064a\u0629 Shop Suit \u0628\u0645\u0624\u0634\u0631 \u062a\u062d\u0645\u064a\u0644 \u064a\u062d\u0645\u0644 \u0627\u0644\u0634\u0639\u0627\u0631\u060c \u0648\u062a\u0645\u0644\u0623 \u0627\u0644\u0634\u0627\u0634\u0629 \u0645\u0639 \u0628\u0642\u0627\u0621 \u0627\u0644\u062d\u0627\u0633\u0648\u0628 \u0638\u0627\u0647\u0631\u064b\u0627 \u0641\u064a \u0627\u0644\u0645\u0634\u0647\u062f \u0627\u0644\u062e\u062a\u0627\u0645\u064a."
+        "ar": "تبدأ حكاية Shop Suit بمؤشر تحميل يحمل الشعار، وتملأ الشاشة مع بقاء الحاسوب ظاهرًا في المشهد الختامي."
       },
       "details": {
         "en": "Wait for page assets before the illustrated transaction begins. Follow the saved sample sale forward or backward, reach the changelog from navigation, and retain the separate tenant website entry.",
-        "ar": "\u0627\u0646\u062a\u0638\u0631 \u0627\u0643\u062a\u0645\u0627\u0644 \u0623\u0635\u0648\u0644 \u0627\u0644\u0635\u0641\u062d\u0629 \u0642\u0628\u0644 \u0628\u062f\u0621 \u0627\u0644\u0645\u0639\u0627\u0645\u0644\u0629 \u0627\u0644\u062a\u0648\u0636\u064a\u062d\u064a\u0629\u060c \u0648\u062a\u0627\u0628\u0639 \u0627\u0644\u0628\u064a\u0639 \u0627\u0644\u062a\u062c\u0631\u064a\u0628\u064a \u0644\u0644\u0623\u0645\u0627\u0645 \u0623\u0648 \u0627\u0644\u062e\u0644\u0641\u060c \u0648\u0627\u0641\u062a\u062d \u0633\u062c\u0644 \u0627\u0644\u062a\u062d\u062f\u064a\u062b\u0627\u062a \u0645\u0646 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0645\u0639 \u0627\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u0627\u0644\u0645\u062f\u062e\u0644 \u0627\u0644\u0645\u0633\u062a\u0642\u0644 \u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u0645\u062a\u062c\u0631."
+        "ar": "انتظر اكتمال أصول الصفحة قبل بدء المعاملة التوضيحية، وتابع البيع التجريبي للأمام أو الخلف، وافتح سجل التحديثات من القائمة مع الحفاظ على المدخل المستقل لموقع المتجر."
       }
     },
     "evidence": [
@@ -1537,15 +1575,15 @@
     "notes": {
       "title": {
         "en": "Easier appointment date navigation",
-        "ar": "\u062a\u0646\u0642\u0644 \u0623\u0633\u0647\u0644 \u0628\u064a\u0646 \u062a\u0648\u0627\u0631\u064a\u062e \u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f"
+        "ar": "تنقل أسهل بين تواريخ المواعيد"
       },
       "summary": {
         "en": "Use a compact month picker and clearer calendar controls when reviewing appointments.",
-        "ar": "\u0627\u0633\u062a\u062e\u062f\u0645 \u062a\u0642\u0648\u064a\u0645\u064b\u0627 \u0634\u0647\u0631\u064a\u064b\u0627 \u0645\u0635\u063a\u0631\u064b\u0627 \u0648\u0639\u0646\u0627\u0635\u0631 \u062a\u0646\u0642\u0644 \u0623\u0648\u0636\u062d \u0639\u0646\u062f \u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f."
+        "ar": "استخدم تقويمًا شهريًا مصغرًا وعناصر تنقل أوضح عند مراجعة المواعيد."
       },
       "details": {
         "en": "Choose the displayed date from the appointment calendar and review the selected day with the existing staff, location and appointment controls.",
-        "ar": "\u0627\u062e\u062a\u0631 \u0627\u0644\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0645\u0639\u0631\u0648\u0636 \u0645\u0646 \u062a\u0642\u0648\u064a\u0645 \u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f \u0648\u0631\u0627\u062c\u0639 \u0627\u0644\u064a\u0648\u0645 \u0627\u0644\u0645\u062d\u062f\u062f \u0645\u0639 \u0639\u0646\u0627\u0635\u0631 \u0627\u0644\u0645\u0648\u0638\u0641 \u0648\u0627\u0644\u0645\u0648\u0642\u0639 \u0648\u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f \u0627\u0644\u062d\u0627\u0644\u064a\u0629."
+        "ar": "اختر التاريخ المعروض من تقويم المواعيد وراجع اليوم المحدد مع عناصر الموظف والموقع والمواعيد الحالية."
       }
     },
     "evidence": [
@@ -1579,15 +1617,15 @@
     "notes": {
       "title": {
         "en": "Preview your recent counter receipts",
-        "ar": "\u0645\u0639\u0627\u064a\u0646\u0629 \u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u0627\u0644\u0623\u062e\u064a\u0631\u0629"
+        "ar": "معاينة إيصالات نقطة البيع الأخيرة"
       },
       "summary": {
         "en": "Open saved counter receipts in a preview with language, paper-size, printing and image-sharing controls.",
-        "ar": "\u0627\u0641\u062a\u062d \u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629 \u0641\u064a \u0645\u0639\u0627\u064a\u0646\u0629 \u062a\u062a\u0636\u0645\u0646 \u0627\u0644\u0644\u063a\u0629 \u0648\u062d\u062c\u0645 \u0627\u0644\u0648\u0631\u0642 \u0648\u0627\u0644\u0637\u0628\u0627\u0639\u0629 \u0648\u0645\u0634\u0627\u0631\u0643\u0629 \u0627\u0644\u0635\u0648\u0631\u0629."
+        "ar": "افتح إيصالات نقطة البيع المحفوظة في معاينة تتضمن اللغة وحجم الورق والطباعة ومشاركة الصورة."
       },
       "details": {
         "en": "Review recent receipts within your own shop, location and staff access. The counter also presents clearer payment choices and quantity editing; receipt access remains authorized by the server.",
-        "ar": "\u0631\u0627\u062c\u0639 \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0627\u0644\u0623\u062e\u064a\u0631\u0629 \u0636\u0645\u0646 \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0645\u062a\u062c\u0631\u0643 \u0648\u0645\u0648\u0642\u0639\u0643 \u0648\u0645\u0648\u0638\u0641\u0643\u060c \u0645\u0639 \u062e\u064a\u0627\u0631\u0627\u062a \u062f\u0641\u0639 \u0648\u062a\u062d\u0631\u064a\u0631 \u0643\u0645\u064a\u0627\u062a \u0623\u0648\u0636\u062d \u0641\u064a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639. \u064a\u0638\u0644 \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u062e\u0627\u0636\u0639\u064b\u0627 \u0644\u062a\u0641\u0648\u064a\u0636 \u0627\u0644\u062e\u0627\u062f\u0645."
+        "ar": "راجع الإيصالات الأخيرة ضمن صلاحيات متجرك وموقعك وموظفك، مع خيارات دفع وتحرير كميات أوضح في نقطة البيع. يظل الوصول إلى الإيصالات خاضعًا لتفويض الخادم."
       }
     },
     "evidence": [
@@ -1624,15 +1662,15 @@
     "notes": {
       "title": {
         "en": "Reopen privacy preferences from the policy",
-        "ar": "\u0625\u0639\u0627\u062f\u0629 \u0641\u062a\u062d \u062a\u0641\u0636\u064a\u0644\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0645\u0646 \u0627\u0644\u0633\u064a\u0627\u0633\u0629"
+        "ar": "إعادة فتح تفضيلات الخصوصية من السياسة"
       },
       "summary": {
         "en": "Open privacy settings directly from the Shop Suit privacy policy.",
-        "ar": "\u0627\u0641\u062a\u062d \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0646 \u0633\u064a\u0627\u0633\u0629 \u062e\u0635\u0648\u0635\u064a\u0629 Shop Suit."
+        "ar": "افتح إعدادات الخصوصية مباشرة من سياسة خصوصية Shop Suit."
       },
       "details": {
         "en": "Review and change optional analytics preferences using the policy page action, with the existing consent and keyboard-focus behavior.",
-        "ar": "\u0631\u0627\u062c\u0639 \u062a\u0641\u0636\u064a\u0644\u0627\u062a \u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0648\u0639\u062f\u0644\u0647\u0627 \u0645\u0646 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0627\u0644\u0645\u0648\u062c\u0648\u062f \u0641\u064a \u0635\u0641\u062d\u0629 \u0627\u0644\u0633\u064a\u0627\u0633\u0629\u060c \u0645\u0639 \u0627\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u0633\u0644\u0648\u0643 \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0648\u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d."
+        "ar": "راجع تفضيلات التحليلات الاختيارية وعدلها من الإجراء الموجود في صفحة السياسة، مع الحفاظ على سلوك الموافقة وتركيز لوحة المفاتيح."
       }
     },
     "evidence": [
@@ -1713,15 +1751,15 @@
     "notes": {
       "title": {
         "en": "Workspace controls stay within reach",
-        "ar": "\u0623\u062f\u0648\u0627\u062a \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0641\u064a \u0645\u062a\u0646\u0627\u0648\u0644\u0643"
+        "ar": "أدوات مساحة العمل في متناولك"
       },
       "summary": {
         "en": "Use workspace controls beside the working page, with account and settings actions grouped in the shared sidebar.",
-        "ar": "\u0627\u0633\u062a\u062e\u062f\u0645 \u0623\u062f\u0648\u0627\u062a \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0628\u062c\u0627\u0646\u0628 \u0627\u0644\u0635\u0641\u062d\u0629\u060c \u0645\u0639 \u062a\u062c\u0645\u064a\u0639 \u0625\u062c\u0631\u0627\u0621\u0627\u062a \u0627\u0644\u062d\u0633\u0627\u0628 \u0648\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0641\u064a \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062c\u0627\u0646\u0628\u064a\u0629 \u0627\u0644\u0645\u0634\u062a\u0631\u0643\u0629."
+        "ar": "استخدم أدوات مساحة العمل بجانب الصفحة، مع تجميع إجراءات الحساب والإعدادات في القائمة الجانبية المشتركة."
       },
       "details": {
         "en": "Navigation retains its collapsible rail, mobile drawer, theme and language controls. Shop catalogue filters stay specific to the shop; workspace and account actions keep their existing permissions.",
-        "ar": "\u064a\u062d\u062a\u0641\u0638 \u0627\u0644\u062a\u0646\u0642\u0644 \u0628\u0627\u0644\u0634\u0631\u064a\u0637 \u0627\u0644\u0642\u0627\u0628\u0644 \u0644\u0644\u0637\u064a \u0648\u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0639\u0644\u0649 \u0627\u0644\u0647\u0627\u062a\u0641 \u0648\u0623\u062f\u0648\u0627\u062a \u0627\u0644\u0645\u0638\u0647\u0631 \u0648\u0627\u0644\u0644\u063a\u0629. \u062a\u0628\u0642\u0649 \u0641\u0644\u0627\u062a\u0631 \u0627\u0644\u0643\u062a\u0627\u0644\u0648\u062c \u062e\u0627\u0635\u0629 \u0628\u0627\u0644\u0645\u062a\u062c\u0631\u060c \u0648\u062a\u062d\u062a\u0641\u0638 \u0625\u062c\u0631\u0627\u0621\u0627\u062a \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0648\u0627\u0644\u062d\u0633\u0627\u0628 \u0628\u0635\u0644\u0627\u062d\u064a\u0627\u062a\u0647\u0627 \u0627\u0644\u062d\u0627\u0644\u064a\u0629."
+        "ar": "يحتفظ التنقل بالشريط القابل للطي والقائمة على الهاتف وأدوات المظهر واللغة. تبقى فلاتر الكتالوج خاصة بالمتجر، وتحتفظ إجراءات مساحة العمل والحساب بصلاحياتها الحالية."
       }
     },
     "sources": [
@@ -1765,6 +1803,209 @@
     ]
   },
   {
+    "id": "shared-auth-form-feedback",
+    "task": "DOS-M1-006",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsAuthForm.vue",
+      "packages/ui/src/organisms/BsSignupWizard.vue",
+      "packages/ui/src/templates/BsSignInPage.vue",
+      "packages/ux/src/composables/useSignupWizard.ts"
+    ],
+    "reason": "Shared auth feedback forwards the supplied pending label, focuses the editable field after a signup step and rejects late advances after reset. Checked-email presentation closes revoked password approval; existing product adapters retain identity and validation ownership.",
+    "notes": {
+      "title": {
+        "en": "Smoother signup steps",
+        "ar": "خطوات تسجيل أكثر سلاسة"
+      },
+      "summary": {
+        "en": "Move between signup steps with clearer focus and progress feedback.",
+        "ar": "تنقّل بين خطوات التسجيل بتركيز أوضح وإشعارات تقدم مناسبة."
+      },
+      "details": {
+        "en": "New signup steps receive initial keyboard focus without interrupting a field you already started editing. Pending feedback uses the form’s label, and an old validation response cannot advance a reset wizard.",
+        "ar": "تتلقى خطوات التسجيل الجديدة التركيز الأولي للوحة المفاتيح دون مقاطعة حقل بدأت تحريره. وتستخدم حالة الانتظار نص النموذج، ولا تنقل استجابة تحقق قديمة معالجاً أُعيد ضبطه."
+      }
+    },
+    "sources": [
+      "shared-auth-form-feedback",
+      "shared-signup-focus-retention"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsAuthForm.vue",
+        "contains": ":pending-label=\"pendingLabel\""
+      },
+      {
+        "path": "packages/ui/src/organisms/BsSignupWizard.vue",
+        "contains": "@after-enter=\"focusSignupStage\""
+      },
+      {
+        "path": "packages/ux/src/composables/useSignupWizard.ts",
+        "contains": "captured !== generation"
+      },
+      {
+        "path": "packages/ux/src/composables/useSignupWizard.ts",
+        "contains": "if (active && element.contains(active)) return"
+      }
+    ]
+  },
+  {
+    "id": "doctor-registration-wizard",
+    "task": "DOS-M1-006",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "apps/shop-suit/package.json",
+      "apps/shop-suit/server/utils/inquiryRateLimit.ts",
+      "packages/auth",
+      "packages/ux",
+      "packages/ui",
+      "apps/building-suit-docs/app/pages/components.vue",
+      ".github/workflows/ci.yml",
+      "pnpm-lock.yaml",
+      "docs/work-packages/doctor-suit/registration-evidence.md",
+      "release-changes/items.json",
+      "tooling/git/tests/ci-workflow-efficiency.test.mjs"
+    ],
+    "reason": "Synthetic Doctor checked-email registration, required practice wizard, explicit duplicate/uncertain outcomes and bounded non-secret resume with verified identity binding. Use a bounded shared request limiter with the existing Shop quota pattern; leave Shop-owned files unchanged. Preserve SID/admission/subscription/clinical safeguards and user-managed connections; no operational Doctor activation. Retain pending CI jobs in the existing serialized workspace validation group after an observed staging cancellation. Shared customer-visible form feedback is independently covered by shared-auth-form-feedback.",
+    "sources": [
+      "doctor-registration-wizard"
+    ]
+  },
+  {
+    "id": "doctor-brand-slots",
+    "task": "DOS-AE-010",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/brand",
+      "packages/ui/src/atoms/BsProductLogo.vue",
+      "packages/ui/tests/product-logo.test.mjs",
+      "apps/building-suit-docs/app/pages/components.vue",
+      ".github/workflows/doctor-disposable.yml",
+      "pnpm-lock.yaml",
+      "release-changes/items.json"
+    ],
+    "reason": "Register passive canonical Doctor asset slots and one product brand adapter for existing shared landing/auth/workspace consumers. Discover supplied files on normal builds, retain the monogram without artwork, and emit only supplied icon metadata. No final artwork, automatic rasterization, operational activation, clinical claim, provider setting or deployment is created. Existing registered product brands are unchanged; shared missing-image behavior is separately covered by shared-product-logo-fallback.",
+    "sources": [
+      "doctor-brand-slots"
+    ]
+  },
+  {
+    "id": "shared-product-logo-fallback",
+    "task": "DOS-AE-010",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/atoms/BsProductLogo.vue",
+      "packages/brand/src/productAssets.ts"
+    ],
+    "reason": "The existing shared product logo uses an available sibling variant after an image fails and retains its accessible monogram when both fail. Late image errors cannot affect a replacement product or collapsed mark.",
+    "notes": {
+      "title": {
+        "en": "Keep product logos visible",
+        "ar": "استمرار ظهور شعار المنتج"
+      },
+      "summary": {
+        "en": "Use the available logo variant when an image cannot load.",
+        "ar": "استخدم نسخة الشعار المتاحة عند تعذر تحميل صورة."
+      },
+      "details": {
+        "en": "If both variants are unavailable, the familiar product initial remains visible. Accessible names and responsive logo sizes stay consistent.",
+        "ar": "إذا تعذر تحميل النسختين يبقى الحرف المميز للمنتج ظاهراً، مع الحفاظ على الاسم المقروء وأحجام الشعار المتجاوبة."
+      }
+    },
+    "sources": [
+      "shared-product-logo-fallback"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/atoms/BsProductLogo.vue",
+        "contains": "@error=\"failedImage(image.src, image.variant)\""
+      },
+      {
+        "path": "packages/brand/src/productAssets.ts",
+        "contains": "variants.find(candidate => !failed.includes(candidate))"
+      }
+    ]
+  },
+  {
+    "id": "doctor-annual-pricing-32",
+    "task": "DOS-AE-004",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "docs/work-packages/doctor-suit/early-administrative-edition",
+      "release-changes/items.json"
+    ],
+    "reason": "Owner-authorized 32 percent annual discount for new Doctor catalogue quotes, unchanged monthly prices and capacities, exact minor-unit server validation and existing shared Shop pricing-card presentation. Preserve original immutable catalogue, issued terms/quotes/intents/notices, paid periods, receipts and audit history. CI-only migration-upgrade snapshot acceptance; no live payment, legal approval, operational activation or Shop USD change.",
+    "sources": [
+      "doctor-annual-pricing-32"
+    ]
+  },
+  {
+    "id": "doctor-bilingual-policy-drafts",
+    "task": "DOS-M1-005",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/doctor-suit",
+      "packages/ui/src/templates/BsManualPaymentPage.vue",
+      "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/work-packages/doctor-suit/policy-draft-review.md",
+      "release-changes/items.json"
+    ],
+    "reason": "Six bilingual Doctor policy review drafts with pinned version/content digest, public shared-template routes and signup/footer/billing links. Preserve exact approved SaaS version acceptance while refusing to misrepresent unapproved drafts as a live contract or health-data consent. Operator/jurisdiction/contact, qualified legal/clinical and live payment/data prerequisites remain explicit; no provider settings, migration, activation, Shop USD or financial-history change.",
+    "sources": [
+      "doctor-bilingual-policy-drafts"
+    ]
+  },
+  {
     "id": "shop-storefront-builder-offers-20261020",
     "task": "SHOP-STOREFRONT-BUILDER-OFFERS-20261020",
     "suits": [
@@ -1781,15 +2022,15 @@
     "notes": {
       "title": {
         "en": "Custom storefronts and bundle offers",
-        "ar": "\u062a\u0635\u0645\u064a\u0645 \u0645\u0648\u0642\u0639 \u0627\u0644\u0645\u062a\u062c\u0631 \u0648\u0639\u0631\u0648\u0636 \u0627\u0644\u0628\u0627\u0642\u0627\u062a"
+        "ar": "تصميم موقع المتجر وعروض الباقات"
       },
       "summary": {
         "en": "Team and Multi shops can publish a banner, gallery and team; bundle offers appear on the storefront and apply automatically at the counter.",
-        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0645\u062a\u0627\u062c\u0631 Team \u0648Multi \u0646\u0634\u0631 \u0628\u0627\u0646\u0631 \u0648\u0645\u0639\u0631\u0636 \u0635\u0648\u0631 \u0648\u0641\u0631\u064a\u0642\u060c \u0648\u062a\u0638\u0647\u0631 \u0627\u0644\u0628\u0627\u0642\u0627\u062a \u0639\u0644\u0649 \u0627\u0644\u0645\u0648\u0642\u0639 \u0648\u062a\u0637\u0628\u0642 \u062a\u0644\u0642\u0627\u0626\u064a\u064b\u0627 \u0641\u064a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639."
+        "ar": "يمكن لمتاجر Team وMulti نشر بانر ومعرض صور وفريق، وتظهر الباقات على الموقع وتطبق تلقائيًا في نقطة البيع."
       },
       "details": {
         "en": "Keep layout drafts separate from published content, show bundle savings, select complete bundles in POS and retain their names on saved receipts. Public basket requests still require merchant confirmation.",
-        "ar": "\u0627\u062d\u062a\u0641\u0638 \u0628\u0645\u0633\u0648\u062f\u0627\u062a \u0627\u0644\u062a\u0635\u0645\u064a\u0645 \u0645\u0646\u0641\u0635\u0644\u0629 \u0639\u0646 \u0627\u0644\u0645\u062d\u062a\u0648\u0649 \u0627\u0644\u0645\u0646\u0634\u0648\u0631\u060c \u0648\u0627\u0639\u0631\u0636 \u062a\u0648\u0641\u064a\u0631 \u0627\u0644\u0628\u0627\u0642\u0627\u062a \u0648\u0623\u0636\u0641\u0647\u0627 \u0643\u0627\u0645\u0644\u0629 \u0641\u064a \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u0645\u0639 \u062d\u0641\u0638 \u0623\u0633\u0645\u0627\u0626\u0647\u0627 \u0641\u064a \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a. \u062a\u0638\u0644 \u0637\u0644\u0628\u0627\u062a \u0633\u0644\u0629 \u0627\u0644\u0645\u0648\u0642\u0639 \u0628\u062d\u0627\u062c\u0629 \u0625\u0644\u0649 \u062a\u0623\u0643\u064a\u062f \u0627\u0644\u0645\u062a\u062c\u0631."
+        "ar": "احتفظ بمسودات التصميم منفصلة عن المحتوى المنشور، واعرض توفير الباقات وأضفها كاملة في نقطة البيع مع حفظ أسمائها في الإيصالات. تظل طلبات سلة الموقع بحاجة إلى تأكيد المتجر."
       }
     },
     "sources": [
@@ -1851,15 +2092,15 @@
     "notes": {
       "title": {
         "en": "Edit business settings directly on the page",
-        "ar": "\u062a\u0639\u062f\u064a\u0644 \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0646\u0634\u0627\u0637 \u0645\u0628\u0627\u0634\u0631\u0629 \u0641\u064a \u0627\u0644\u0635\u0641\u062d\u0629"
+        "ar": "تعديل إعدادات النشاط مباشرة في الصفحة"
       },
       "summary": {
         "en": "Update shop details, business mode, locations and receipt settings without opening an editor dialog.",
-        "ar": "\u0639\u062f\u0651\u0644 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0645\u062a\u062c\u0631 \u0648\u0637\u0631\u064a\u0642\u0629 \u0627\u0644\u062a\u0634\u063a\u064a\u0644 \u0648\u0627\u0644\u0641\u0631\u0648\u0639 \u0648\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0625\u064a\u0635\u0627\u0644 \u062f\u0648\u0646 \u0641\u062a\u062d \u0646\u0627\u0641\u0630\u0629 \u062a\u062d\u0631\u064a\u0631."
+        "ar": "عدّل بيانات المتجر وطريقة التشغيل والفروع وإعدادات الإيصال دون فتح نافذة تحرير."
       },
       "details": {
         "en": "Profile, location and receipt editors appear inline. Cashier policy and business currency use the same Save and Cancel actions. Unsaved drafts are retained during background refreshes, and navigation prompts before discarding changes. Existing permissions, quotas and saving commands are preserved.",
-        "ar": "\u062a\u0638\u0647\u0631 \u0646\u0645\u0627\u0630\u062c \u0645\u0644\u0641 \u0627\u0644\u0645\u062a\u062c\u0631 \u0648\u0627\u0644\u0641\u0631\u0648\u0639 \u0648\u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u062f\u0627\u062e\u0644 \u0627\u0644\u0635\u0641\u062d\u0629. \u062a\u0633\u062a\u062e\u062f\u0645 \u0633\u064a\u0627\u0633\u0629 \u0648\u0631\u062f\u064a\u0627\u062a \u0627\u0644\u062e\u0632\u0646\u0629 \u0648\u0639\u0645\u0644\u0629 \u0627\u0644\u0646\u0634\u0627\u0637 \u0625\u062c\u0631\u0627\u0621\u0627\u062a \u0627\u0644\u062d\u0641\u0638 \u0648\u0627\u0644\u0625\u0644\u063a\u0627\u0621 \u0646\u0641\u0633\u0647\u0627. \u062a\u0628\u0642\u0649 \u0627\u0644\u0645\u0633\u0648\u062f\u0627\u062a \u063a\u064a\u0631 \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629 \u0623\u062b\u0646\u0627\u0621 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0641\u064a \u0627\u0644\u062e\u0644\u0641\u064a\u0629\u060c \u0648\u064a\u0637\u0644\u0628 \u0627\u0644\u062a\u0646\u0642\u0644 \u062a\u0623\u0643\u064a\u062f \u062a\u062c\u0627\u0647\u0644 \u0627\u0644\u062a\u063a\u064a\u064a\u0631\u0627\u062a. \u062a\u0638\u0644 \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0648\u0627\u0644\u062d\u0635\u0635 \u0648\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u062d\u0641\u0638 \u0627\u0644\u062d\u0627\u0644\u064a\u0629 \u0645\u062d\u0641\u0648\u0638\u0629."
+        "ar": "تظهر نماذج ملف المتجر والفروع والإيصالات داخل الصفحة. تستخدم سياسة ورديات الخزنة وعملة النشاط إجراءات الحفظ والإلغاء نفسها. تبقى المسودات غير المحفوظة أثناء تحديث البيانات في الخلفية، ويطلب التنقل تأكيد تجاهل التغييرات. تظل الصلاحيات والحصص وأوامر الحفظ الحالية محفوظة."
       }
     },
     "sources": [
@@ -1902,6 +2143,189 @@
     ]
   },
   {
+    "id": "shared-language-names-20261022",
+    "task": "DOCTOR-WORKSPACE-ENTRY",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/organisms/BsSettingsMenu.vue"
+    ],
+    "reason": "Display configured language names in the shared sidebar control already used by Shop.",
+    "notes": {
+      "title": {
+        "en": "Recognizable language choices",
+        "ar": "خيارات لغة واضحة"
+      },
+      "summary": {
+        "en": "The sidebar language control displays English and العربية.",
+        "ar": "يعرض زر اللغة في القائمة الجانبية English والعربية."
+      },
+      "details": {
+        "en": "Language switching retains the existing shared keyboard, focus and theme behavior.",
+        "ar": "يحتفظ تبديل اللغة بسلوك لوحة المفاتيح والتركيز والمظهر المشترك."
+      }
+    },
+    "sources": [
+      "shared-language-names-20261022"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
+        "contains": "<span v-else class=\"bs-settings-menu__language\" :lang=\"locale\">{{ languageLabel }}</span>"
+      }
+    ]
+  },
+  {
+    "id": "doctor-workspace-entry-20261022",
+    "task": "DOCTOR-WORKSPACE-ENTRY",
+    "suits": [
+      "doctor-suit",
+      "automation-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "README.md",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/doctor-suit/README.md",
+      "apps/doctor-suit/app/composables/useDoctorRegistration.ts",
+      "apps/doctor-suit/app/pages/account.vue",
+      "apps/doctor-suit/app/pages/onboarding.vue",
+      "apps/doctor-suit/app/pages/sign-up.vue",
+      "apps/doctor-suit/app/pages/workspace.vue",
+      "apps/doctor-suit/app/utils/practicePresentation.ts",
+      "apps/doctor-suit/app/utils/registrationCompletion.ts",
+      "apps/doctor-suit/app/utils/timezoneChoices.ts",
+      "apps/doctor-suit/app/utils/workspaceEntry.ts",
+      "apps/doctor-suit/nuxt.config.ts",
+      "apps/doctor-suit/tests/e2e/dos-m1-007.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/registration.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/workspace-entry.auth.fixture.ts",
+      "apps/doctor-suit/tests/unit/registration-flow.test.mjs",
+      "apps/doctor-suit/tests/unit/workspace-entry.test.mjs",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/doctor-suit/implementation/workspace-entry-flow-verification.json",
+      "docs/work-packages/doctor-suit/implementation/workspace-entry-flow.md",
+      "package.json",
+      "packages/brand/README.md",
+      "packages/brand/assets/doctor-suit-mark-dark.svg",
+      "packages/brand/assets/doctor-suit-mark-light.svg",
+      "packages/brand/assets/doctor-suit-wordmark-dark.svg",
+      "packages/brand/assets/doctor-suit-wordmark-light.svg",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ui/src/organisms/BsSignupEnrollment.vue",
+      "packages/ui/src/templates/BsAccountSessionPage.vue",
+      "packages/ui/src/types/signupPresentation.ts",
+      "tooling/git/dev-worktrees.mjs",
+      "tooling/git/dev.mjs",
+      "tooling/git/tests/dev-worktrees.test.mjs"
+    ],
+    "reason": "Doctor synthetic enrollment/dashboard continuation, canonical generated artwork, named timezone choices and active-worktree preview selection; opt-in shared signup/account projections preserve existing consumer defaults. Internal consumers of the shared language label remain unregistered; no operational activation or production baseline is invented.",
+    "sources": [
+      "doctor-workspace-entry-20261022"
+    ]
+  },
+  {
+    "id": "doctor-workspace-entry-shop-support-20261022",
+    "task": "DOCTOR-WORKSPACE-ENTRY",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "README.md",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/doctor-suit/README.md",
+      "apps/doctor-suit/app/composables/useDoctorRegistration.ts",
+      "apps/doctor-suit/app/pages/account.vue",
+      "apps/doctor-suit/app/pages/onboarding.vue",
+      "apps/doctor-suit/app/pages/sign-up.vue",
+      "apps/doctor-suit/app/pages/workspace.vue",
+      "apps/doctor-suit/app/utils/practicePresentation.ts",
+      "apps/doctor-suit/app/utils/registrationCompletion.ts",
+      "apps/doctor-suit/app/utils/timezoneChoices.ts",
+      "apps/doctor-suit/app/utils/workspaceEntry.ts",
+      "apps/doctor-suit/nuxt.config.ts",
+      "apps/doctor-suit/tests/e2e/dos-m1-007.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/registration.auth.fixture.ts",
+      "apps/doctor-suit/tests/e2e/workspace-entry.auth.fixture.ts",
+      "apps/doctor-suit/tests/unit/registration-flow.test.mjs",
+      "apps/doctor-suit/tests/unit/workspace-entry.test.mjs",
+      "docs/shared/ui-ownership-manifest.json",
+      "docs/work-packages/doctor-suit/implementation/workspace-entry-flow-verification.json",
+      "docs/work-packages/doctor-suit/implementation/workspace-entry-flow.md",
+      "package.json",
+      "packages/brand/README.md",
+      "packages/brand/assets/doctor-suit-mark-dark.svg",
+      "packages/brand/assets/doctor-suit-mark-light.svg",
+      "packages/brand/assets/doctor-suit-wordmark-dark.svg",
+      "packages/brand/assets/doctor-suit-wordmark-light.svg",
+      "packages/ui/src/organisms/BsSettingsMenu.vue",
+      "packages/ui/src/organisms/BsSignupEnrollment.vue",
+      "packages/ui/src/templates/BsAccountSessionPage.vue",
+      "packages/ui/src/types/signupPresentation.ts",
+      "tooling/git/dev-worktrees.mjs",
+      "tooling/git/dev.mjs",
+      "tooling/git/tests/dev-worktrees.test.mjs"
+    ],
+    "reason": "Record Shop as an affected dependency consumer of root developer documentation and opt-in shared signup/account contracts. Existing Shop signup/session defaults and business flows are preserved; the actual visible language-control change has its own public fragment and inventory item.",
+    "sources": [
+      "doctor-workspace-entry-shop-support-20261022"
+    ]
+  },
+  {
+    "id": "doctor-android-synthetic-shell-20261022",
+    "task": "DOS-M4-002",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      ".github/workflows/doctor-disposable.yml",
+      "pnpm-workspace.yaml",
+      "pnpm-lock.yaml",
+      "tooling/checks/application-roots.mjs",
+      "tooling/checks/application-roots.test.mjs",
+      "tooling/checks/workspace.mjs",
+      "tooling/checks/suit-template-boundaries.mjs",
+      "tooling/checks/atomic-template-architecture.mjs",
+      "packages/contracts/src/doctorMobile.ts",
+      "packages/contracts/src/index.ts",
+      "packages/ui/src/templates/BsMobileAccessPage.vue",
+      "packages/ui/package.json",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/ui-ownership-manifest.json",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "apps/doctor-suit/mobile/doctor",
+      "apps/doctor-suit/tests/unit/dos-m4-002.test.mjs",
+      "docs/work-packages/doctor-suit/implementation/dos-m4-002.md",
+      "docs/work-packages/doctor-suit/implementation/dos-m4-002-device-evidence.json",
+      "docs/work-packages/doctor-suit/implementation/dos-m4-002-verification.json",
+      ".github/workflows/doctor-android.yml"
+    ],
+    "reason": "Register the owner's separate nested Doctor Android client in the existing workspace and strict UI checks, add a typed synthetic access template and shared contract, and configure owned debug/emulator CI. Existing applications retain their dependency nodes and strict boundaries. All shared consumers are classified; no operational mobile, clinical or release activation is implied.",
+    "sources": [
+      "dos-m4-002",
+      "dos-m4-002-support",
+      "dos-m4-002-android-ci"
+    ]
+  },
+  {
     "id": "shop-plan-website-feature-20261022",
     "task": "SHOP-PLAN-WEBSITE-FEATURE-20261022",
     "suits": [
@@ -1916,15 +2340,15 @@
     "notes": {
       "title": {
         "en": "Website inclusion is clear on plan cards",
-        "ar": "\u062a\u0648\u0636\u064a\u062d \u062a\u0636\u0645\u064a\u0646 \u0627\u0644\u0645\u0648\u0642\u0639 \u0641\u064a \u0628\u0637\u0627\u0642\u0627\u062a \u0627\u0644\u0628\u0627\u0642\u0627\u062a"
+        "ar": "توضيح تضمين الموقع في بطاقات الباقات"
       },
       "summary": {
         "en": "Team and Multi show the shop website as included; Solo shows it as not included.",
-        "ar": "\u062a\u0639\u0631\u0636 \u0628\u0627\u0642\u062a\u0627 \u062a\u064a\u0645 \u0648\u0645\u0627\u0644\u062a\u064a \u0645\u0648\u0642\u0639 \u0627\u0644\u0645\u062a\u062c\u0631 \u0643\u0645\u064a\u0632\u0629 \u0645\u0634\u0645\u0648\u0644\u0629\u060c \u0648\u062a\u0639\u0631\u0636\u0647 \u0628\u0627\u0642\u0629 \u0633\u0648\u0644\u0648 \u0643\u0645\u064a\u0632\u0629 \u063a\u064a\u0631 \u0645\u0634\u0645\u0648\u0644\u0629."
+        "ar": "تعرض باقتا تيم ومالتي موقع المتجر كميزة مشمولة، وتعرضه باقة سولو كميزة غير مشمولة."
       },
       "details": {
         "en": "The English and Arabic feature row appears in public pricing and Subscription & billing, for monthly and yearly plan variants. Pricing and subscription access rules are unchanged.",
-        "ar": "\u064a\u0638\u0647\u0631 \u0635\u0641 \u0627\u0644\u0645\u064a\u0632\u0629 \u0628\u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0648\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629 \u0641\u064a \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0639\u0627\u0645\u0629 \u0648\u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643 \u0648\u0627\u0644\u0641\u0648\u062a\u0631\u0629\u060c \u0644\u0644\u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u0634\u0647\u0631\u064a\u0629 \u0648\u0627\u0644\u0633\u0646\u0648\u064a\u0629. \u062a\u0638\u0644 \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0648\u0642\u0648\u0627\u0639\u062f \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643 \u062f\u0648\u0646 \u062a\u063a\u064a\u064a\u0631."
+        "ar": "يظهر صف الميزة بالعربية والإنجليزية في الأسعار العامة والاشتراك والفوترة، للخيارات الشهرية والسنوية. تظل الأسعار وقواعد الوصول إلى الاشتراك دون تغيير."
       }
     },
     "sources": [
@@ -2014,15 +2438,15 @@
     "notes": {
       "title": {
         "en": "Sell and receive products by unit or package",
-        "ar": "\u0628\u064a\u0639 \u0648\u0627\u0633\u062a\u0644\u0627\u0645 \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0628\u0627\u0644\u0648\u062d\u062f\u0629 \u0623\u0648 \u0627\u0644\u0639\u0628\u0648\u0629"
+        "ar": "بيع واستلام المنتجات بالوحدة أو العبوة"
       },
       "summary": {
         "en": "Set product units and allowed increments, define product-specific packaging, and use them in purchasing and sales.",
-        "ar": "\u062d\u062f\u062f \u0648\u062d\u062f\u0627\u062a \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0648\u0623\u0635\u063a\u0631 \u0643\u0645\u064a\u0629 \u0645\u0633\u0645\u0648\u062d\u0629\u060c \u0648\u0639\u0631\u0651\u0641 \u0639\u0628\u0648\u0627\u062a \u0643\u0644 \u0645\u0646\u062a\u062c \u0648\u0627\u0633\u062a\u062e\u062f\u0645\u0647\u0627 \u0641\u064a \u0627\u0644\u0645\u0634\u062a\u0631\u064a\u0627\u062a \u0648\u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a."
+        "ar": "حدد وحدات المنتجات وأصغر كمية مسموحة، وعرّف عبوات كل منتج واستخدمها في المشتريات والمبيعات."
       },
       "details": {
         "en": "Measured sales show their base quantity and preserve entered units and prices on receipts. Stock, counts and eligible returns use the same canonical quantity; used products retain their historical unit.",
-        "ar": "\u062a\u0639\u0631\u0636 \u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a \u0627\u0644\u0645\u0642\u0627\u0633\u0629 \u0627\u0644\u0643\u0645\u064a\u0629 \u0627\u0644\u0623\u0633\u0627\u0633\u064a\u0629 \u0648\u062a\u062d\u0641\u0638 \u0627\u0644\u0648\u062d\u062f\u0627\u062a \u0648\u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0645\u062f\u062e\u0644\u0629 \u0639\u0644\u0649 \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a. \u064a\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0648\u0627\u0644\u062c\u0631\u062f \u0648\u0627\u0644\u0645\u0631\u062a\u062c\u0639\u0627\u062a \u0627\u0644\u0645\u0624\u0647\u0644\u0629 \u0627\u0644\u0643\u0645\u064a\u0629 \u0627\u0644\u0623\u0633\u0627\u0633\u064a\u0629 \u0646\u0641\u0633\u0647\u0627\u060c \u0648\u062a\u062d\u062a\u0641\u0638 \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0629 \u0628\u0648\u062d\u062f\u062a\u0647\u0627 \u0627\u0644\u062a\u0627\u0631\u064a\u062e\u064a\u0629."
+        "ar": "تعرض المبيعات المقاسة الكمية الأساسية وتحفظ الوحدات والأسعار المدخلة على الإيصالات. يستخدم المخزون والجرد والمرتجعات المؤهلة الكمية الأساسية نفسها، وتحتفظ المنتجات المستخدمة بوحدتها التاريخية."
       }
     },
     "sources": [
@@ -2061,15 +2485,15 @@
     "notes": {
       "title": {
         "en": "Recover safely from failed reads",
-        "ar": "\u0627\u0633\u062a\u0639\u0627\u062f\u0629 \u0627\u0644\u0639\u0631\u0636 \u0628\u0639\u062f \u062a\u0639\u0630\u0631 \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a"
+        "ar": "استعادة العرض بعد تعذر تحميل البيانات"
       },
       "summary": {
         "en": "Failed reads can render their error and retry state during server rendering.",
-        "ar": "\u064a\u0645\u0643\u0646 \u0639\u0631\u0636 \u062d\u0627\u0644\u0629 \u0627\u0644\u062e\u0637\u0623 \u0648\u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0645\u062d\u0627\u0648\u0644\u0629 \u0639\u0646\u062f \u062a\u0639\u0630\u0631 \u0642\u0631\u0627\u0621\u0629 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0623\u062b\u0646\u0627\u0621 \u0639\u0631\u0636 \u0627\u0644\u0635\u0641\u062d\u0629 \u0639\u0644\u0649 \u0627\u0644\u062e\u0627\u062f\u0645."
+        "ar": "يمكن عرض حالة الخطأ وإعادة المحاولة عند تعذر قراءة البيانات أثناء عرض الصفحة على الخادم."
       },
       "details": {
         "en": "Read failures retain their error code across hydration without retaining provider requests or credentials in page state.",
-        "ar": "\u062a\u064f\u062d\u0641\u0638 \u0631\u0645\u0648\u0632 \u0623\u062e\u0637\u0627\u0621 \u0627\u0644\u0642\u0631\u0627\u0621\u0629 \u0639\u0646\u062f \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0635\u0641\u062d\u0629 \u062f\u0648\u0646 \u0627\u0644\u0627\u062d\u062a\u0641\u0627\u0638 \u0628\u0637\u0644\u0628\u0627\u062a \u0627\u0644\u0645\u0632\u0648\u062f \u0623\u0648 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0627\u0639\u062a\u0645\u0627\u062f \u0641\u064a \u062d\u0627\u0644\u0629 \u0627\u0644\u0635\u0641\u062d\u0629."
+        "ar": "تُحفظ رموز أخطاء القراءة عند تحميل الصفحة دون الاحتفاظ بطلبات المزود أو بيانات الاعتماد في حالة الصفحة."
       }
     },
     "sources": [
@@ -2123,15 +2547,15 @@
     "notes": {
       "title": {
         "en": "Keep sign-in fields labeled",
-        "ar": "\u0627\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u062a\u0633\u0645\u064a\u0627\u062a \u062d\u0642\u0648\u0644 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644"
+        "ar": "الحفاظ على تسميات حقول تسجيل الدخول"
       },
       "summary": {
         "en": "Email and password labels stay linked to their controls after the page loads.",
-        "ar": "\u062a\u0628\u0642\u0649 \u062a\u0633\u0645\u064a\u0627\u062a \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0648\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u0645\u0631\u062a\u0628\u0637\u0629 \u0628\u062d\u0642\u0648\u0644\u0647\u0627 \u0628\u0639\u062f \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0635\u0641\u062d\u0629."
+        "ar": "تبقى تسميات البريد الإلكتروني وكلمة المرور مرتبطة بحقولها بعد تحميل الصفحة."
       },
       "details": {
         "en": "Stable sign-in control IDs preserve keyboard and assistive-technology access across server rendering and hydration.",
-        "ar": "\u062a\u062d\u0627\u0641\u0638 \u0645\u0639\u0631\u0641\u0627\u062a \u062d\u0642\u0648\u0644 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0627\u0644\u062b\u0627\u0628\u062a\u0629 \u0639\u0644\u0649 \u0627\u0644\u0648\u0635\u0648\u0644 \u0628\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0648\u0627\u0644\u062a\u0642\u0646\u064a\u0627\u062a \u0627\u0644\u0645\u0633\u0627\u0639\u062f\u0629 \u0623\u062b\u0646\u0627\u0621 \u0639\u0631\u0636 \u0627\u0644\u0635\u0641\u062d\u0629 \u0648\u062a\u062d\u0645\u064a\u0644\u0647\u0627."
+        "ar": "تحافظ معرفات حقول تسجيل الدخول الثابتة على الوصول بلوحة المفاتيح والتقنيات المساعدة أثناء عرض الصفحة وتحميلها."
       }
     },
     "sources": [
@@ -2160,15 +2584,15 @@
     "notes": {
       "title": {
         "en": "Track cable reels and electrical specifications",
-        "ar": "\u062a\u062a\u0628\u0639 \u0628\u0643\u0631\u0627\u062a \u0627\u0644\u0643\u0627\u0628\u0644\u0627\u062a \u0648\u0627\u0644\u0645\u0648\u0627\u0635\u0641\u0627\u062a \u0627\u0644\u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629"
+        "ar": "تتبع بكرات الكابلات والمواصفات الكهربائية"
       },
       "summary": {
         "en": "Record individual reels, sell continuous cable or explicit separate pieces, and maintain electrical specifications for each SKU.",
-        "ar": "\u0633\u062c\u0644 \u0627\u0644\u0628\u0643\u0631\u0627\u062a \u0627\u0644\u0641\u0631\u062f\u064a\u0629 \u0648\u0628\u0639 \u0627\u0644\u0643\u0627\u0628\u0644\u0627\u062a \u0643\u0642\u0637\u0639 \u0645\u062a\u0635\u0644\u0629 \u0623\u0648 \u0645\u0646\u0641\u0635\u0644\u0629 \u0628\u0627\u062e\u062a\u064a\u0627\u0631 \u0648\u0627\u0636\u062d\u060c \u0648\u0627\u062d\u062a\u0641\u0638 \u0628\u0627\u0644\u0645\u0648\u0627\u0635\u0641\u0627\u062a \u0627\u0644\u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629 \u0644\u0643\u0644 \u0635\u0646\u0641."
+        "ar": "سجل البكرات الفردية وبع الكابلات كقطع متصلة أو منفصلة باختيار واضح، واحتفظ بالمواصفات الكهربائية لكل صنف."
       },
       "details": {
-        "en": "Cuts record source barcodes, requested length and cutting loss. Reels support counts, remnant pricing, damage, scrap and history; eligible cable returns create separate pieces under the sale\u2019s frozen policy.",
-        "ar": "\u062a\u0633\u062c\u0644 \u0639\u0645\u0644\u064a\u0627\u062a \u0627\u0644\u0642\u0635 \u0628\u0627\u0631\u0643\u0648\u062f \u0627\u0644\u0645\u0635\u062f\u0631 \u0648\u0627\u0644\u0637\u0648\u0644 \u0627\u0644\u0645\u0637\u0644\u0648\u0628 \u0648\u0641\u0627\u0642\u062f \u0627\u0644\u0642\u0635. \u062a\u062f\u0639\u0645 \u0627\u0644\u0628\u0643\u0631\u0627\u062a \u0627\u0644\u062c\u0631\u062f \u0648\u062a\u0633\u0639\u064a\u0631 \u0627\u0644\u0628\u0648\u0627\u0642\u064a \u0648\u0627\u0644\u062a\u0644\u0641 \u0648\u0627\u0644\u062e\u0631\u062f\u0629 \u0648\u0627\u0644\u0633\u062c\u0644\u060c \u0648\u062a\u0646\u0634\u0626 \u0645\u0631\u062a\u062c\u0639\u0627\u062a \u0627\u0644\u0643\u0627\u0628\u0644\u0627\u062a \u0627\u0644\u0645\u0624\u0647\u0644\u0629 \u0642\u0637\u0639\u064b\u0627 \u0645\u0646\u0641\u0635\u0644\u0629 \u0648\u0641\u0642 \u0633\u064a\u0627\u0633\u0629 \u0627\u0644\u0628\u064a\u0639 \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629."
+        "en": "Cuts record source barcodes, requested length and cutting loss. Reels support counts, remnant pricing, damage, scrap and history; eligible cable returns create separate pieces under the sale’s frozen policy.",
+        "ar": "تسجل عمليات القص باركود المصدر والطول المطلوب وفاقد القص. تدعم البكرات الجرد وتسعير البواقي والتلف والخردة والسجل، وتنشئ مرتجعات الكابلات المؤهلة قطعًا منفصلة وفق سياسة البيع المحفوظة."
       }
     },
     "sources": [
@@ -2274,15 +2698,15 @@
     "notes": {
       "title": {
         "en": "Keep workspace state scoped to its context",
-        "ar": "\u062d\u0641\u0638 \u062d\u0627\u0644\u0629 \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0636\u0645\u0646 \u0633\u064a\u0627\u0642\u0647\u0627"
+        "ar": "حفظ حالة مساحة العمل ضمن سياقها"
       },
       "summary": {
         "en": "Public storefront pages omit counter receipt-selection state. Account and location changes clear prior workspace snapshots immediately.",
-        "ar": "\u0644\u0627 \u062a\u062a\u0636\u0645\u0646 \u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0645\u062a\u062c\u0631 \u0627\u0644\u0639\u0627\u0645\u0629 \u062d\u0627\u0644\u0629 \u0627\u062e\u062a\u064a\u0627\u0631 \u0625\u064a\u0635\u0627\u0644 \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639\u060c \u0648\u062a\u064f\u0645\u0633\u062d \u0644\u0642\u0637\u0627\u062a \u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0641\u0648\u0631 \u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u062d\u0633\u0627\u0628 \u0623\u0648 \u0627\u0644\u0641\u0631\u0639."
+        "ar": "لا تتضمن صفحات المتجر العامة حالة اختيار إيصال نقطة البيع، وتُمسح لقطات مساحة العمل السابقة فور تغيير الحساب أو الفرع."
       },
       "details": {
         "en": "Cancelled reads cannot restore a prior context after its consumers move. Current receipt selection is still cleared on sign-out.",
-        "ar": "\u0644\u0627 \u062a\u0639\u064a\u062f \u0627\u0644\u0642\u0631\u0627\u0621\u0627\u062a \u0627\u0644\u0645\u0644\u063a\u0627\u0629 \u0628\u064a\u0627\u0646\u0627\u062a \u0633\u064a\u0627\u0642 \u0633\u0627\u0628\u0642 \u0628\u0639\u062f \u0627\u0646\u062a\u0642\u0627\u0644 \u0627\u0644\u0648\u0627\u062c\u0647\u0629\u060c \u0648\u064a\u0638\u0644 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0625\u064a\u0635\u0627\u0644 \u0627\u0644\u062d\u0627\u0644\u064a \u064a\u064f\u0645\u0633\u062d \u0639\u0646\u062f \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062e\u0631\u0648\u062c."
+        "ar": "لا تعيد القراءات الملغاة بيانات سياق سابق بعد انتقال الواجهة، ويظل اختيار الإيصال الحالي يُمسح عند تسجيل الخروج."
       }
     },
     "sources": [
@@ -2310,15 +2734,15 @@
     "notes": {
       "title": {
         "en": "Review storefront permissions with their pages",
-        "ar": "\u0645\u0631\u0627\u062c\u0639\u0629 \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u062a\u062c\u0631 \u0628\u062c\u0648\u0627\u0631 \u0635\u0641\u062d\u0627\u062a\u0647\u0627"
+        "ar": "مراجعة صلاحيات المتجر بجوار صفحاتها"
       },
       "summary": {
         "en": "The role editor groups existing offer and website-builder permissions under their current page names.",
-        "ar": "\u064a\u062c\u0645\u0639 \u0645\u062d\u0631\u0631 \u0627\u0644\u0623\u062f\u0648\u0627\u0631 \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0639\u0631\u0648\u0636 \u0648\u0645\u0646\u0634\u0626 \u0627\u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u062d\u0627\u0644\u064a\u0629 \u062a\u062d\u062a \u0623\u0633\u0645\u0627\u0621 \u0635\u0641\u062d\u0627\u062a\u0647\u0627."
+        "ar": "يجمع محرر الأدوار صلاحيات العروض ومنشئ الموقع الحالية تحت أسماء صفحاتها."
       },
       "details": {
         "en": "Saved and ungrantable permissions retain their existing behavior; backend permission keys are unchanged.",
-        "ar": "\u062a\u062d\u062a\u0641\u0638 \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629 \u0648\u063a\u064a\u0631 \u0627\u0644\u0642\u0627\u0628\u0644\u0629 \u0644\u0644\u0645\u0646\u062d \u0628\u0633\u0644\u0648\u0643\u0647\u0627 \u0627\u0644\u062d\u0627\u0644\u064a\u060c \u062f\u0648\u0646 \u062a\u063a\u064a\u064a\u0631 \u0645\u0641\u0627\u062a\u064a\u062d \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0641\u064a \u0627\u0644\u062e\u0627\u062f\u0645."
+        "ar": "تحتفظ الصلاحيات المحفوظة وغير القابلة للمنح بسلوكها الحالي، دون تغيير مفاتيح الصلاحيات في الخادم."
       }
     },
     "sources": [
@@ -2413,15 +2837,15 @@
     "notes": {
       "title": {
         "en": "Restore optional pricing-link measurement",
-        "ar": "\u0627\u0633\u062a\u0639\u0627\u062f\u0629 \u0627\u0644\u0642\u064a\u0627\u0633 \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a \u0644\u0631\u0648\u0627\u0628\u0637 \u0627\u0644\u0623\u0633\u0639\u0627\u0631"
+        "ar": "استعادة القياس الاختياري لروابط الأسعار"
       },
       "summary": {
         "en": "Pricing-card clicks forward the existing anonymous event when optional analytics is accepted.",
-        "ar": "\u062a\u0631\u0633\u0644 \u0646\u0642\u0631\u0627\u062a \u0628\u0637\u0627\u0642\u0627\u062a \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u062d\u062f\u062b \u0627\u0644\u0645\u062c\u0647\u0648\u0644 \u0627\u0644\u062d\u0627\u0644\u064a \u0639\u0646\u062f \u0642\u0628\u0648\u0644 \u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629."
+        "ar": "ترسل نقرات بطاقات الأسعار الحدث المجهول الحالي عند قبول التحليلات الاختيارية."
       },
       "details": {
         "en": "The existing consent and deduplication checks still apply; no plan, customer or form identifiers are sent.",
-        "ar": "\u062a\u0638\u0644 \u0641\u062d\u0648\u0635 \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0648\u0645\u0646\u0639 \u0627\u0644\u062a\u0643\u0631\u0627\u0631 \u0633\u0627\u0631\u064a\u0629\u060c \u0648\u0644\u0627 \u062a\u064f\u0631\u0633\u0644 \u0645\u0639\u0631\u0651\u0641\u0627\u062a \u0627\u0644\u062e\u0637\u0637 \u0623\u0648 \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0623\u0648 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0646\u0645\u0627\u0630\u062c."
+        "ar": "تظل فحوص الموافقة ومنع التكرار سارية، ولا تُرسل معرّفات الخطط أو العملاء أو بيانات النماذج."
       }
     },
     "sources": [
@@ -2460,15 +2884,15 @@
     "notes": {
       "title": {
         "en": "Prices for customer groups and larger quantities",
-        "ar": "\u0623\u0633\u0639\u0627\u0631 \u0645\u062c\u0645\u0648\u0639\u0627\u062a \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0648\u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0627\u0644\u0643\u0628\u064a\u0631\u0629"
+        "ar": "أسعار مجموعات العملاء والكميات الكبيرة"
       },
       "summary": {
         "en": "Assign customer groups and use effective customer contracts, group prices and quantity breaks for measured and ordinary products.",
-        "ar": "\u0639\u064a\u0651\u0646 \u0645\u062c\u0645\u0648\u0639\u0627\u062a \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0648\u0627\u0633\u062a\u062e\u062f\u0645 \u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u062a\u0639\u0627\u0642\u062f \u0648\u0627\u0644\u0645\u062c\u0645\u0648\u0639\u0627\u062a \u0648\u0634\u0631\u0627\u0626\u062d \u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0627\u0644\u0633\u0627\u0631\u064a\u0629 \u0644\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0627\u0644\u0645\u0642\u0627\u0633\u0629 \u0648\u0627\u0644\u0639\u0627\u062f\u064a\u0629."
+        "ar": "عيّن مجموعات العملاء واستخدم أسعار التعاقد والمجموعات وشرائح الكميات السارية للمنتجات المقاسة والعادية."
       },
       "details": {
         "en": "POS and sales resolve prices on the server, keep trade prices separate from bundle discounts and preserve issued price approvals and revision history.",
-        "ar": "\u062a\u062d\u0633\u0628 \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u0648\u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0641\u064a \u0627\u0644\u062e\u0627\u062f\u0645\u060c \u0648\u0644\u0627 \u062a\u062c\u0645\u0639 \u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u062a\u0639\u0627\u0642\u062f \u0645\u0639 \u062e\u0635\u0648\u0645\u0627\u062a \u0627\u0644\u0628\u0627\u0642\u0627\u062a\u060c \u0648\u062a\u062d\u0641\u0638 \u062a\u0641\u0648\u064a\u0636\u0627\u062a \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0635\u0627\u062f\u0631\u0629 \u0648\u0633\u062c\u0644 \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0627\u062a."
+        "ar": "تحسب نقطة البيع والمبيعات الأسعار في الخادم، ولا تجمع أسعار التعاقد مع خصومات الباقات، وتحفظ تفويضات الأسعار الصادرة وسجل المراجعات."
       }
     },
     "sources": [
@@ -2530,15 +2954,15 @@
     "notes": {
       "title": {
         "en": "Keep sign-up labels connected to their fields",
-        "ar": "\u0631\u0628\u0637 \u0639\u0646\u0627\u0648\u064a\u0646 \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u0628\u062d\u0642\u0648\u0644\u0647\u0627"
+        "ar": "ربط عناوين التسجيل بحقولها"
       },
       "summary": {
         "en": "Account and workspace field labels retain their input associations after the sign-up form loads.",
-        "ar": "\u062a\u062d\u062a\u0641\u0638 \u0639\u0646\u0627\u0648\u064a\u0646 \u062d\u0642\u0648\u0644 \u0627\u0644\u062d\u0633\u0627\u0628 \u0648\u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0639\u0645\u0644 \u0628\u0627\u0631\u062a\u0628\u0627\u0637\u0647\u0627 \u0628\u0627\u0644\u0645\u062f\u062e\u0644\u0627\u062a \u0628\u0639\u062f \u062a\u062d\u0645\u064a\u0644 \u0646\u0645\u0648\u0630\u062c \u0627\u0644\u062a\u0633\u062c\u064a\u0644."
+        "ar": "تحتفظ عناوين حقول الحساب ومساحة العمل بارتباطها بالمدخلات بعد تحميل نموذج التسجيل."
       },
       "details": {
         "en": "Keyboard and assistive technology can identify the existing fields without changing enrollment or verification behavior.",
-        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0648\u0627\u0644\u062a\u0642\u0646\u064a\u0627\u062a \u0627\u0644\u0645\u0633\u0627\u0639\u062f\u0629 \u062a\u062d\u062f\u064a\u062f \u0627\u0644\u062d\u0642\u0648\u0644 \u0627\u0644\u062d\u0627\u0644\u064a\u0629 \u062f\u0648\u0646 \u062a\u063a\u064a\u064a\u0631 \u0633\u0644\u0648\u0643 \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u0623\u0648 \u0627\u0644\u062a\u062d\u0642\u0642."
+        "ar": "يمكن للوحة المفاتيح والتقنيات المساعدة تحديد الحقول الحالية دون تغيير سلوك التسجيل أو التحقق."
       }
     },
     "sources": [
@@ -2581,7 +3005,11 @@
     "id": "ss-electrical-cycle-keyboard-focus-20261023",
     "task": "SS-ELECTRICAL-001",
     "suits": [
-      "shop-suit"
+      "automation-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
     ],
     "classification": "patch",
     "disposition": "public",
@@ -2593,19 +3021,20 @@
     "notes": {
       "title": {
         "en": "Keep keyboard focus after changing language",
-        "ar": "\u0627\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0628\u0639\u062f \u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0644\u063a\u0629"
+        "ar": "الحفاظ على تركيز لوحة المفاتيح بعد تغيير اللغة"
       },
       "summary": {
         "en": "The language button keeps keyboard focus when the selected language finishes loading.",
-        "ar": "\u064a\u062d\u062a\u0641\u0638 \u0632\u0631 \u0627\u0644\u0644\u063a\u0629 \u0628\u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0628\u0639\u062f \u0627\u0643\u062a\u0645\u0627\u0644 \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0644\u063a\u0629 \u0627\u0644\u0645\u062e\u062a\u0627\u0631\u0629."
+        "ar": "يحتفظ زر اللغة بتركيز لوحة المفاتيح بعد اكتمال تحميل اللغة المختارة."
       },
       "details": {
         "en": "Focus stays with a different control if you move away while the language is loading.",
-        "ar": "\u064a\u0628\u0642\u0649 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0644\u0649 \u0623\u064a \u062d\u0642\u0644 \u0622\u062e\u0631 \u062a\u0646\u062a\u0642\u0644 \u0625\u0644\u064a\u0647 \u0623\u062b\u0646\u0627\u0621 \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0644\u063a\u0629."
+        "ar": "يبقى التركيز على أي حقل آخر تنتقل إليه أثناء تحميل اللغة."
       }
     },
     "sources": [
-      "ss-electrical-cycle-keyboard-focus-20261023"
+      "ss-electrical-cycle-keyboard-focus-20261023",
+      "ls-ci-qual-001-language-focus"
     ],
     "evidence": [
       {
@@ -2701,19 +3130,20 @@
     "notes": {
       "title": {
         "en": "Return to appointment details after editing",
-        "ar": "\u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0645\u0648\u0639\u062f \u0628\u0639\u062f \u0627\u0644\u062a\u0639\u062f\u064a\u0644"
+        "ar": "العودة إلى تفاصيل الموعد بعد التعديل"
       },
       "summary": {
         "en": "Appointment details stay available while you edit, and keyboard focus returns to Reschedule when you close the editor.",
-        "ar": "\u062a\u0628\u0642\u0649 \u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0645\u0648\u0639\u062f \u0645\u062a\u0627\u062d\u0629 \u0623\u062b\u0646\u0627\u0621 \u0627\u0644\u062a\u0639\u062f\u064a\u0644\u060c \u0648\u064a\u0639\u0648\u062f \u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0625\u0644\u0649 \u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u062c\u062f\u0648\u0644\u0629 \u0639\u0646\u062f \u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0645\u062d\u0631\u0631."
+        "ar": "تبقى تفاصيل الموعد متاحة أثناء التعديل، ويعود تركيز لوحة المفاتيح إلى إعادة الجدولة عند إغلاق المحرر."
       },
       "details": {
         "en": "Unsaved-change confirmation, pending-write protection and cancellation confirmations retain their existing behavior.",
-        "ar": "\u062a\u062d\u062a\u0641\u0638 \u062a\u0623\u0643\u064a\u062f\u0627\u062a \u0627\u0644\u062a\u063a\u064a\u064a\u0631\u0627\u062a \u063a\u064a\u0631 \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629 \u0648\u062d\u0645\u0627\u064a\u0629 \u0627\u0644\u062d\u0641\u0638 \u0627\u0644\u062c\u0627\u0631\u064a \u0648\u062a\u0623\u0643\u064a\u062f\u0627\u062a \u0627\u0644\u0625\u0644\u063a\u0627\u0621 \u0628\u0633\u0644\u0648\u0643\u0647\u0627 \u0627\u0644\u062d\u0627\u0644\u064a."
+        "ar": "تحتفظ تأكيدات التغييرات غير المحفوظة وحماية الحفظ الجاري وتأكيدات الإلغاء بسلوكها الحالي."
       }
     },
     "sources": [
-      "ss-electrical-appointment-editor-context-20261023"
+      "ss-electrical-appointment-editor-context-20261023",
+      "ls-ci-qual-003-appointment-focus"
     ],
     "evidence": [
       {
@@ -2765,15 +3195,15 @@
     "notes": {
       "title": {
         "en": "Formal quotations with saved versions",
-        "ar": "\u0639\u0631\u0648\u0636 \u0623\u0633\u0639\u0627\u0631 \u0631\u0633\u0645\u064a\u0629 \u0628\u0625\u0635\u062f\u0627\u0631\u0627\u062a \u0645\u062d\u0641\u0648\u0638\u0629"
+        "ar": "عروض أسعار رسمية بإصدارات محفوظة"
       },
       "summary": {
         "en": "Prepare measured material offers, review their server prices and taxes, and record issue, customer acceptance or rejection with validity rules.",
-        "ar": "\u062c\u0647\u0651\u0632 \u0639\u0631\u0648\u0636 \u0627\u0644\u0645\u0648\u0627\u062f \u0627\u0644\u0645\u0642\u0627\u0633\u0629 \u0648\u0631\u0627\u062c\u0639 \u0623\u0633\u0639\u0627\u0631\u0647\u0627 \u0648\u0636\u0631\u0627\u0626\u0628\u0647\u0627 \u0645\u0646 \u0627\u0644\u062e\u0627\u062f\u0645\u060c \u0648\u0633\u062c\u0651\u0644 \u0627\u0644\u0625\u0635\u062f\u0627\u0631 \u0648\u0642\u0628\u0648\u0644 \u0627\u0644\u0639\u0645\u064a\u0644 \u0623\u0648 \u0631\u0641\u0636\u0647 \u0645\u0639 \u0642\u0648\u0627\u0639\u062f \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0629."
+        "ar": "جهّز عروض المواد المقاسة وراجع أسعارها وضرائبها من الخادم، وسجّل الإصدار وقبول العميل أو رفضه مع قواعد الصلاحية."
       },
       "details": {
         "en": "Saved versions and state history remain available when catalog prices change. Print an offer, prepare an explicit new version, and retry an unconfirmed action safely without creating a sale or reserving stock.",
-        "ar": "\u062a\u0628\u0642\u0649 \u0627\u0644\u0625\u0635\u062f\u0627\u0631\u0627\u062a \u0648\u0633\u062c\u0644\u0627\u062a \u0627\u0644\u062d\u0627\u0644\u0627\u062a \u0645\u062d\u0641\u0648\u0638\u0629 \u0639\u0646\u062f \u062a\u063a\u064a\u0631 \u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0643\u062a\u0627\u0644\u0648\u062c. \u0627\u0637\u0628\u0639 \u0627\u0644\u0639\u0631\u0636 \u0648\u062c\u0647\u0651\u0632 \u0625\u0635\u062f\u0627\u0631\u064b\u0627 \u062c\u062f\u064a\u062f\u064b\u0627 \u0635\u0631\u064a\u062d\u064b\u0627 \u0648\u0623\u0639\u062f \u0645\u062d\u0627\u0648\u0644\u0629 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u063a\u064a\u0631 \u0627\u0644\u0645\u0624\u0643\u062f \u0628\u0623\u0645\u0627\u0646\u060c \u062f\u0648\u0646 \u0625\u0646\u0634\u0627\u0621 \u0628\u064a\u0639 \u0623\u0648 \u062d\u062c\u0632 \u0645\u062e\u0632\u0648\u0646."
+        "ar": "تبقى الإصدارات وسجلات الحالات محفوظة عند تغير أسعار الكتالوج. اطبع العرض وجهّز إصدارًا جديدًا صريحًا وأعد محاولة الإجراء غير المؤكد بأمان، دون إنشاء بيع أو حجز مخزون."
       }
     },
     "sources": [
@@ -2839,15 +3269,15 @@
     "notes": {
       "title": {
         "en": "Turn accepted quotations into customer orders",
-        "ar": "\u062a\u062d\u0648\u064a\u0644 \u0639\u0631\u0648\u0636 \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0645\u0642\u0628\u0648\u0644\u0629 \u0625\u0644\u0649 \u0623\u0648\u0627\u0645\u0631 \u0639\u0645\u0644\u0627\u0621"
+        "ar": "تحويل عروض الأسعار المقبولة إلى أوامر عملاء"
       },
       "summary": {
         "en": "Create a customer order from an accepted offer while retaining its agreed measurements, prices and tax amounts.",
-        "ar": "\u0623\u0646\u0634\u0626 \u0623\u0645\u0631 \u0639\u0645\u064a\u0644 \u0645\u0646 \u0639\u0631\u0636 \u0645\u0642\u0628\u0648\u0644 \u0645\u0639 \u0627\u0644\u0627\u062d\u062a\u0641\u0627\u0638 \u0628\u0627\u0644\u0642\u064a\u0627\u0633\u0627\u062a \u0648\u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0648\u0645\u0628\u0627\u0644\u063a \u0627\u0644\u0636\u0631\u0627\u0626\u0628 \u0627\u0644\u0645\u062a\u0641\u0642 \u0639\u0644\u064a\u0647\u0627."
+        "ar": "أنشئ أمر عميل من عرض مقبول مع الاحتفاظ بالقياسات والأسعار ومبالغ الضرائب المتفق عليها."
       },
       "details": {
         "en": "Repeated conversions return the same order. Agreed history remains unchanged when catalog prices change, and exact money remains readable in quote and order history. Creating an order does not reserve stock or record payment.",
-        "ar": "\u062a\u0639\u064a\u062f \u0645\u062d\u0627\u0648\u0644\u0627\u062a \u0627\u0644\u062a\u062d\u0648\u064a\u0644 \u0627\u0644\u0645\u062a\u0643\u0631\u0631\u0629 \u0627\u0644\u0623\u0645\u0631 \u0646\u0641\u0633\u0647. \u064a\u0628\u0642\u0649 \u0627\u0644\u0627\u062a\u0641\u0627\u0642 \u0645\u062d\u0641\u0648\u0638\u064b\u0627 \u0639\u0646\u062f \u062a\u063a\u064a\u0631 \u0627\u0644\u0643\u062a\u0627\u0644\u0648\u062c\u060c \u0648\u062a\u0628\u0642\u0649 \u0627\u0644\u0645\u0628\u0627\u0644\u063a \u0627\u0644\u062f\u0642\u064a\u0642\u0629 \u0642\u0627\u0628\u0644\u0629 \u0644\u0644\u0642\u0631\u0627\u0621\u0629 \u0641\u064a \u0633\u062c\u0644 \u0627\u0644\u0639\u0631\u0636 \u0648\u0627\u0644\u0623\u0645\u0631. \u0644\u0627 \u064a\u062d\u062c\u0632 \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0623\u0645\u0631 \u0645\u062e\u0632\u0648\u0646\u064b\u0627 \u0648\u0644\u0627 \u064a\u0633\u062c\u0644 \u062f\u0641\u0639\u0629."
+        "ar": "تعيد محاولات التحويل المتكررة الأمر نفسه. يبقى الاتفاق محفوظًا عند تغير الكتالوج، وتبقى المبالغ الدقيقة قابلة للقراءة في سجل العرض والأمر. لا يحجز إنشاء الأمر مخزونًا ولا يسجل دفعة."
       }
     },
     "sources": [
@@ -2964,15 +3394,15 @@
     "notes": {
       "title": {
         "en": "Reserve stock for contractor orders",
-        "ar": "\u062d\u062c\u0632 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0644\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0645\u0642\u0627\u0648\u0644\u064a\u0646"
+        "ar": "حجز المخزون لأوامر المقاولين"
       },
       "summary": {
         "en": "Protect agreed material quantities and physical cable sources while showing on-hand, reserved and available stock.",
-        "ar": "\u0627\u062d\u0641\u0638 \u0643\u0645\u064a\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u062f \u0648\u0645\u0635\u0627\u062f\u0631 \u0627\u0644\u0643\u0627\u0628\u0644\u0627\u062a \u0627\u0644\u0641\u0639\u0644\u064a\u0629 \u0627\u0644\u0645\u062a\u0641\u0642 \u0639\u0644\u064a\u0647\u0627 \u0645\u0639 \u0639\u0631\u0636 \u0627\u0644\u0645\u0648\u062c\u0648\u062f \u0648\u0627\u0644\u0645\u062d\u062c\u0648\u0632 \u0648\u0627\u0644\u0645\u062a\u0627\u062d."
+        "ar": "احفظ كميات المواد ومصادر الكابلات الفعلية المتفق عليها مع عرض الموجود والمحجوز والمتاح."
       },
       "details": {
         "en": "Replace or release order holds with a reason and deadline. Expired or cancelled holds return stock to availability. Cashier availability excludes active holds, and competing reservations cannot claim the same stock. Reservations create no invoice or payment.",
-        "ar": "\u0627\u0633\u062a\u0628\u062f\u0644 \u062d\u062c\u0648\u0632\u0627\u062a \u0627\u0644\u0623\u0645\u0631 \u0623\u0648 \u062d\u0631\u0651\u0631\u0647\u0627 \u0645\u0639 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u0633\u0628\u0628 \u0648\u0627\u0644\u0645\u0648\u0639\u062f. \u062a\u0639\u064a\u062f \u0627\u0644\u062d\u062c\u0648\u0632\u0627\u062a \u0627\u0644\u0645\u0646\u062a\u0647\u064a\u0629 \u0623\u0648 \u0627\u0644\u0645\u0644\u063a\u0627\u0629 \u0627\u0644\u0643\u0645\u064a\u0629 \u0625\u0644\u0649 \u0627\u0644\u0645\u062a\u0627\u062d. \u064a\u0633\u062a\u0628\u0639\u062f \u0627\u0644\u0645\u062a\u0627\u062d \u0644\u0644\u0643\u0627\u0634\u064a\u0631 \u0627\u0644\u062d\u062c\u0648\u0632\u0627\u062a \u0627\u0644\u0646\u0634\u0637\u0629\u060c \u0648\u0644\u0627 \u062a\u0633\u062a\u0637\u064a\u0639 \u0627\u0644\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0645\u062a\u0646\u0627\u0641\u0633\u0629 \u062d\u062c\u0632 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0646\u0641\u0633\u0647. \u0644\u0627 \u064a\u0646\u0634\u0626 \u0627\u0644\u062d\u062c\u0632 \u0641\u0627\u062a\u0648\u0631\u0629 \u0623\u0648 \u062f\u0641\u0639\u0629."
+        "ar": "استبدل حجوزات الأمر أو حرّرها مع تسجيل السبب والموعد. تعيد الحجوزات المنتهية أو الملغاة الكمية إلى المتاح. يستبعد المتاح للكاشير الحجوزات النشطة، ولا تستطيع الأوامر المتنافسة حجز المخزون نفسه. لا ينشئ الحجز فاتورة أو دفعة."
       }
     },
     "sources": [
@@ -3035,15 +3465,15 @@
     "notes": {
       "title": {
         "en": "Keep the public landing page visible after loading",
-        "ar": "\u0628\u0642\u0627\u0621 \u0635\u0641\u062d\u0629 \u0627\u0644\u0645\u062a\u062c\u0631 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629 \u0638\u0627\u0647\u0631\u0629 \u0628\u0639\u062f \u0627\u0644\u062a\u062d\u0645\u064a\u0644"
+        "ar": "بقاء صفحة المتجر الرئيسية ظاهرة بعد التحميل"
       },
       "summary": {
         "en": "Landing headings and privacy controls remain visible when the changelog loads asynchronously.",
-        "ar": "\u062a\u0628\u0642\u0649 \u0639\u0646\u0627\u0648\u064a\u0646 \u0627\u0644\u0635\u0641\u062d\u0629 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629 \u0648\u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0638\u0627\u0647\u0631\u0629 \u0639\u0646\u062f \u062a\u062d\u0645\u064a\u0644 \u0633\u062c\u0644 \u0627\u0644\u062a\u062d\u062f\u064a\u062b\u0627\u062a \u0628\u0634\u0643\u0644 \u063a\u064a\u0631 \u0645\u062a\u0632\u0627\u0645\u0646."
+        "ar": "تبقى عناوين الصفحة الرئيسية وخيارات الخصوصية ظاهرة عند تحميل سجل التحديثات بشكل غير متزامن."
       },
       "details": {
         "en": "The loading marker now has an explicit completed state, and loading styles apply only while it is active. Release history, upcoming notes and consent choices keep their existing behavior.",
-        "ar": "\u0623\u0635\u0628\u062d\u062a \u0639\u0644\u0627\u0645\u0629 \u0627\u0644\u062a\u062d\u0645\u064a\u0644 \u062a\u062d\u062f\u062f \u0627\u0643\u062a\u0645\u0627\u0644\u0647 \u0635\u0631\u0627\u062d\u0629\u060c \u0648\u062a\u064f\u0637\u0628\u0651\u0642 \u0623\u0646\u0645\u0627\u0637 \u0627\u0644\u062a\u062d\u0645\u064a\u0644 \u0623\u062b\u0646\u0627\u0621 \u0646\u0634\u0627\u0637\u0647\u0627 \u0641\u0642\u0637. \u064a\u062d\u062a\u0641\u0638 \u0633\u062c\u0644 \u0627\u0644\u0625\u0635\u062f\u0627\u0631\u0627\u062a \u0648\u0627\u0644\u062a\u062d\u062f\u064a\u062b\u0627\u062a \u0627\u0644\u0642\u0627\u062f\u0645\u0629 \u0648\u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0628\u0633\u0644\u0648\u0643\u0647\u0627 \u0627\u0644\u062d\u0627\u0644\u064a."
+        "ar": "أصبحت علامة التحميل تحدد اكتماله صراحة، وتُطبّق أنماط التحميل أثناء نشاطها فقط. يحتفظ سجل الإصدارات والتحديثات القادمة وخيارات الموافقة بسلوكها الحالي."
       }
     },
     "sources": [
@@ -3095,15 +3525,15 @@
     "notes": {
       "title": {
         "en": "Deposits and partial order collections",
-        "ar": "\u0627\u0644\u0639\u0631\u0628\u0648\u0646 \u0648\u0627\u0644\u062a\u0633\u0644\u064a\u0645 \u0627\u0644\u062c\u0632\u0626\u064a \u0644\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0639\u0645\u0644\u0627\u0621"
+        "ar": "العربون والتسليم الجزئي لأوامر العملاء"
       },
       "summary": {
         "en": "Receive, apply and refund order deposits, then invoice reserved goods as customers collect them.",
-        "ar": "\u0633\u062c\u0651\u0644 \u0639\u0631\u0628\u0648\u0646 \u0627\u0644\u0623\u0645\u0631 \u0648\u062e\u0635\u0651\u0635\u0647 \u0623\u0648 \u0631\u062f\u0647\u060c \u062b\u0645 \u0623\u0635\u062f\u0631 \u0641\u0648\u0627\u062a\u064a\u0631 \u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0627\u0644\u0645\u062d\u062c\u0648\u0632\u0629 \u0639\u0646\u062f \u0627\u0633\u062a\u0644\u0627\u0645 \u0627\u0644\u0639\u0645\u064a\u0644 \u0644\u0647\u0627."
+        "ar": "سجّل عربون الأمر وخصّصه أو رده، ثم أصدر فواتير الكميات المحجوزة عند استلام العميل لها."
       },
       "details": {
         "en": "Partial collections retain the accepted prices and taxes and preserve the pending stock reservation. Deposits use the existing customer receipt history, and applying them to a delivery invoice records no new receipt. Permissions, whole packages and cut-return approvals remain enforced.",
-        "ar": "\u064a\u062d\u0641\u0638 \u0627\u0644\u062a\u0633\u0644\u064a\u0645 \u0627\u0644\u062c\u0632\u0626\u064a \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0648\u0627\u0644\u0636\u0631\u0627\u0626\u0628 \u0627\u0644\u0645\u062a\u0641\u0642 \u0639\u0644\u064a\u0647\u0627 \u0648\u062d\u062c\u0632 \u0627\u0644\u0643\u0645\u064a\u0629 \u0627\u0644\u0645\u062a\u0628\u0642\u064a\u0629. \u064a\u0638\u0647\u0631 \u0627\u0644\u0639\u0631\u0628\u0648\u0646 \u0641\u064a \u0633\u062c\u0644 \u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0627\u0644\u0639\u0645\u064a\u0644 \u0627\u0644\u062d\u0627\u0644\u064a\u060c \u0648\u0644\u0627 \u064a\u0624\u062f\u064a \u062a\u062e\u0635\u064a\u0635\u0647 \u0644\u0641\u0627\u062a\u0648\u0631\u0629 \u0627\u0644\u062a\u0633\u0644\u064a\u0645 \u0625\u0644\u0649 \u062a\u0633\u062c\u064a\u0644 \u062a\u062d\u0635\u064a\u0644 \u062c\u062f\u064a\u062f. \u062a\u0628\u0642\u0649 \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0648\u0627\u0644\u0639\u0628\u0648\u0627\u062a \u0627\u0644\u0643\u0627\u0645\u0644\u0629 \u0648\u0645\u0648\u0627\u0641\u0642\u0627\u062a \u0625\u0631\u062c\u0627\u0639 \u0627\u0644\u0645\u0642\u0627\u0637\u0639 \u0645\u0644\u0632\u0645\u0629."
+        "ar": "يحفظ التسليم الجزئي الأسعار والضرائب المتفق عليها وحجز الكمية المتبقية. يظهر العربون في سجل إيصالات العميل الحالي، ولا يؤدي تخصيصه لفاتورة التسليم إلى تسجيل تحصيل جديد. تبقى الصلاحيات والعبوات الكاملة وموافقات إرجاع المقاطع ملزمة."
       }
     },
     "sources": [
@@ -3178,15 +3608,15 @@
     "notes": {
       "title": {
         "en": "Restore focus after nested confirmations",
-        "ar": "\u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0628\u0639\u062f \u0646\u0648\u0627\u0641\u0630 \u0627\u0644\u062a\u0623\u0643\u064a\u062f \u0627\u0644\u0645\u062a\u062f\u0627\u062e\u0644\u0629"
+        "ar": "إعادة التركيز بعد نوافذ التأكيد المتداخلة"
       },
       "summary": {
         "en": "Keyboard focus returns to the action that opened a confirmation, including while its parent window is still appearing.",
-        "ar": "\u064a\u0639\u0648\u062f \u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0625\u0644\u0649 \u0632\u0631 \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0627\u0644\u0630\u064a \u0641\u062a\u062d \u0627\u0644\u062a\u0623\u0643\u064a\u062f\u060c \u062d\u062a\u0649 \u0623\u062b\u0646\u0627\u0621 \u0638\u0647\u0648\u0631 \u0627\u0644\u0646\u0627\u0641\u0630\u0629 \u0627\u0644\u0623\u0635\u0644\u064a\u0629."
+        "ar": "يعود تركيز لوحة المفاتيح إلى زر الإجراء الذي فتح التأكيد، حتى أثناء ظهور النافذة الأصلية."
       },
       "details": {
         "en": "Cancelling a confirmation no longer lets the parent window move focus to its close button afterward. A different active dialog keeps its focus, while dirty-form protection and pending command locks retain their behavior.",
-        "ar": "\u0644\u0627 \u064a\u0624\u062f\u064a \u0625\u0644\u063a\u0627\u0621 \u0627\u0644\u062a\u0623\u0643\u064a\u062f \u0625\u0644\u0649 \u0627\u0646\u062a\u0642\u0627\u0644 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0644\u0627\u062d\u0642\u064b\u0627 \u0625\u0644\u0649 \u0632\u0631 \u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0646\u0627\u0641\u0630\u0629 \u0627\u0644\u0623\u0635\u0644\u064a\u0629. \u062a\u062d\u062a\u0641\u0638 \u0627\u0644\u0646\u0627\u0641\u0630\u0629 \u0627\u0644\u0646\u0634\u0637\u0629 \u0627\u0644\u0623\u062e\u0631\u0649 \u0628\u062a\u0631\u0643\u064a\u0632\u0647\u0627\u060c \u0648\u062a\u0633\u062a\u0645\u0631 \u062d\u0645\u0627\u064a\u0629 \u0627\u0644\u0646\u0645\u0627\u0630\u062c \u0627\u0644\u0645\u0639\u062f\u0651\u0644\u0629 \u0648\u0642\u0641\u0644 \u0627\u0644\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0645\u0639\u0644\u0651\u0642\u0629 \u0643\u0645\u0627 \u0647\u064a."
+        "ar": "لا يؤدي إلغاء التأكيد إلى انتقال التركيز لاحقًا إلى زر إغلاق النافذة الأصلية. تحتفظ النافذة النشطة الأخرى بتركيزها، وتستمر حماية النماذج المعدّلة وقفل الأوامر المعلّقة كما هي."
       }
     },
     "sources": [
@@ -3249,15 +3679,15 @@
     "notes": {
       "title": {
         "en": "Supplier orders and partial receiving",
-        "ar": "\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0645\u0648\u0631\u062f\u064a\u0646 \u0648\u0627\u0644\u0627\u0633\u062a\u0644\u0627\u0645 \u0627\u0644\u062c\u0632\u0626\u064a"
+        "ar": "أوامر الموردين والاستلام الجزئي"
       },
       "summary": {
         "en": "Order measured goods, receive part of an order and keep the outstanding quantities visible.",
-        "ar": "\u0627\u0637\u0644\u0628 \u0627\u0644\u0623\u0635\u0646\u0627\u0641 \u0627\u0644\u0645\u0642\u0627\u0633\u0629 \u0648\u0627\u0633\u062a\u0644\u0645 \u062c\u0632\u0621\u064b\u0627 \u0645\u0646 \u0627\u0644\u0623\u0645\u0631 \u0645\u0639 \u0645\u062a\u0627\u0628\u0639\u0629 \u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0627\u0644\u0645\u062a\u0628\u0642\u064a\u0629."
+        "ar": "اطلب الأصناف المقاسة واستلم جزءًا من الأمر مع متابعة الكميات المتبقية."
       },
       "details": {
         "en": "An order records the agreement without adding stock or supplier debt. Each confirmed receipt creates an ordinary purchase at the original agreed unit and cost, including six reels now and four later. Receipt history, invoice links, exact quantities and retry protection remain available.",
-        "ar": "\u064a\u0633\u062c\u0651\u0644 \u0627\u0644\u0623\u0645\u0631 \u0627\u0644\u0627\u062a\u0641\u0627\u0642 \u062f\u0648\u0646 \u0632\u064a\u0627\u062f\u0629 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0623\u0648 \u0645\u062f\u064a\u0648\u0646\u064a\u0629 \u0627\u0644\u0645\u0648\u0631\u062f. \u064a\u0646\u0634\u0626 \u0643\u0644 \u0627\u0633\u062a\u0644\u0627\u0645 \u0645\u0624\u0643\u062f \u0641\u0627\u062a\u0648\u0631\u0629 \u0634\u0631\u0627\u0621 \u0639\u0627\u062f\u064a\u0629 \u0628\u0627\u0644\u0648\u062d\u062f\u0629 \u0648\u0627\u0644\u062a\u0643\u0644\u0641\u0629 \u0627\u0644\u0645\u062a\u0641\u0642 \u0639\u0644\u064a\u0647\u0645\u0627\u060c \u0645\u062b\u0644 \u0627\u0633\u062a\u0644\u0627\u0645 \u0633\u062a \u0628\u0643\u0631\u0627\u062a \u0627\u0644\u0622\u0646 \u0648\u0623\u0631\u0628\u0639 \u0644\u0627\u062d\u0642\u064b\u0627. \u062a\u062a\u0648\u0641\u0631 \u0633\u062c\u0644\u0627\u062a \u0627\u0644\u0627\u0633\u062a\u0644\u0627\u0645 \u0648\u0631\u0648\u0627\u0628\u0637 \u0627\u0644\u0641\u0648\u0627\u062a\u064a\u0631 \u0648\u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0627\u0644\u062f\u0642\u064a\u0642\u0629 \u0648\u0627\u0644\u062d\u0645\u0627\u064a\u0629 \u0645\u0646 \u062a\u0643\u0631\u0627\u0631 \u0627\u0644\u0639\u0645\u0644\u064a\u0629."
+        "ar": "يسجّل الأمر الاتفاق دون زيادة المخزون أو مديونية المورد. ينشئ كل استلام مؤكد فاتورة شراء عادية بالوحدة والتكلفة المتفق عليهما، مثل استلام ست بكرات الآن وأربع لاحقًا. تتوفر سجلات الاستلام وروابط الفواتير والكميات الدقيقة والحماية من تكرار العملية."
       }
     },
     "sources": [
@@ -3330,15 +3760,15 @@
     "notes": {
       "title": {
         "en": "Storage positions and supplier planning",
-        "ar": "\u0623\u0645\u0627\u0643\u0646 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0648\u062a\u062e\u0637\u064a\u0637 \u0627\u0644\u062a\u0648\u0631\u064a\u062f"
+        "ar": "أماكن المخزون وتخطيط التوريد"
       },
       "summary": {
         "en": "Locate products and reels, retain supplier references and compare original purchase costs before reviewing reorder suggestions.",
-        "ar": "\u062d\u062f\u0651\u062f \u0623\u0645\u0627\u0643\u0646 \u0627\u0644\u0623\u0635\u0646\u0627\u0641 \u0648\u0627\u0644\u0628\u0643\u0631\u0627\u062a \u0648\u0627\u062d\u0641\u0638 \u0645\u0631\u0627\u062c\u0639 \u0627\u0644\u0645\u0648\u0631\u062f\u064a\u0646 \u0648\u0642\u0627\u0631\u0646 \u062a\u0643\u0627\u0644\u064a\u0641 \u0627\u0644\u0634\u0631\u0627\u0621 \u0627\u0644\u0623\u0635\u0644\u064a\u0629 \u0642\u0628\u0644 \u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0642\u062a\u0631\u0627\u062d\u0627\u062a \u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0637\u0644\u0628."
+        "ar": "حدّد أماكن الأصناف والبكرات واحفظ مراجع الموردين وقارن تكاليف الشراء الأصلية قبل مراجعة اقتراحات إعادة الطلب."
       },
       "details": {
         "en": "Bins and shelf placements describe existing stock. Supplier item references retain purchase units, packages and lead times, while purchase history keeps original currencies and costs separate. Reorder suggestions explain net sales, held and free stock, incoming orders and supplier timing; staff review them before placing an order.",
-        "ar": "\u062a\u0635\u0641 \u0627\u0644\u062e\u0627\u0646\u0627\u062a \u0648\u0627\u0644\u0623\u0631\u0641\u0641 \u0645\u0648\u0627\u0636\u0639 \u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0627\u0644\u062d\u0627\u0644\u064a. \u062a\u062d\u0641\u0638 \u0645\u0631\u0627\u062c\u0639 \u0623\u0635\u0646\u0627\u0641 \u0627\u0644\u0645\u0648\u0631\u062f\u064a\u0646 \u0648\u062d\u062f\u0627\u062a \u0627\u0644\u0634\u0631\u0627\u0621 \u0648\u0627\u0644\u0639\u0628\u0648\u0627\u062a \u0648\u0645\u062f\u062f \u0627\u0644\u062a\u0648\u0631\u064a\u062f\u060c \u0648\u064a\u0639\u0631\u0636 \u0633\u062c\u0644 \u0627\u0644\u0634\u0631\u0627\u0621 \u0627\u0644\u0639\u0645\u0644\u0627\u062a \u0648\u0627\u0644\u062a\u0643\u0627\u0644\u064a\u0641 \u0627\u0644\u0623\u0635\u0644\u064a\u0629 \u0645\u0646\u0641\u0635\u0644\u0629. \u062a\u0648\u0636\u0651\u062d \u0627\u0642\u062a\u0631\u0627\u062d\u0627\u062a \u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0637\u0644\u0628 \u0635\u0627\u0641\u064a \u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a \u0648\u0627\u0644\u0645\u062e\u0632\u0648\u0646 \u0627\u0644\u0645\u062d\u062c\u0648\u0632 \u0648\u0627\u0644\u0645\u062a\u0627\u062d \u0648\u0627\u0644\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0648\u0627\u0631\u062f\u0629 \u0648\u0645\u062f\u062f \u0627\u0644\u0645\u0648\u0631\u062f\u061b \u064a\u0631\u0627\u062c\u0639\u0647\u0627 \u0627\u0644\u0645\u0648\u0638\u0641 \u0642\u0628\u0644 \u0625\u0635\u062f\u0627\u0631 \u0623\u064a \u0623\u0645\u0631."
+        "ar": "تصف الخانات والأرفف مواضع المخزون الحالي. تحفظ مراجع أصناف الموردين وحدات الشراء والعبوات ومدد التوريد، ويعرض سجل الشراء العملات والتكاليف الأصلية منفصلة. توضّح اقتراحات إعادة الطلب صافي المبيعات والمخزون المحجوز والمتاح والأوامر الواردة ومدد المورد؛ يراجعها الموظف قبل إصدار أي أمر."
       }
     },
     "sources": [
@@ -3406,15 +3836,15 @@
     "notes": {
       "title": {
         "en": "Verified weight-label scanning",
-        "ar": "\u0645\u0633\u062d \u0645\u0644\u0635\u0642\u0627\u062a \u0627\u0644\u0648\u0632\u0646 \u0627\u0644\u0645\u0639\u062a\u0645\u062f\u0629"
+        "ar": "مسح ملصقات الوزن المعتمدة"
       },
       "summary": {
         "en": "Scan supported GS1 kilogram labels with verified product identity and retain the original weight through checkout.",
-        "ar": "\u0627\u0645\u0633\u062d \u0645\u0644\u0635\u0642\u0627\u062a \u0627\u0644\u0643\u064a\u0644\u0648\u063a\u0631\u0627\u0645 \u0627\u0644\u0645\u062f\u0639\u0648\u0645\u0629 \u0648\u0641\u0642 GS1 \u0645\u0639 \u0627\u0644\u062a\u062d\u0642\u0642 \u0645\u0646 \u0647\u0648\u064a\u0629 \u0627\u0644\u0635\u0646\u0641 \u0648\u062d\u0641\u0638 \u0627\u0644\u0648\u0632\u0646 \u0627\u0644\u0623\u0635\u0644\u064a \u062d\u062a\u0649 \u0625\u062a\u0645\u0627\u0645 \u0627\u0644\u0628\u064a\u0639."
+        "ar": "امسح ملصقات الكيلوغرام المدعومة وفق GS1 مع التحقق من هوية الصنف وحفظ الوزن الأصلي حتى إتمام البيع."
       },
       "details": {
         "en": "Online scanning verifies the GTIN checksum and exact kilogram or gram quantity. Each captured label keeps its own line and original evidence; staff remove and rescan to change its weight. Existing fixed barcodes retain their meaning, and unsupported national or price-encoded formats require ordinary manual entry. Selecting the cart reveals enough space for payment controls when offers appear above it.",
-        "ar": "\u064a\u062a\u062d\u0642\u0642 \u0627\u0644\u0645\u0633\u062d \u0623\u062b\u0646\u0627\u0621 \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0645\u0646 \u0631\u0642\u0645 \u062a\u062d\u0642\u0642 GTIN \u0648\u0627\u0644\u0643\u0645\u064a\u0629 \u0627\u0644\u062f\u0642\u064a\u0642\u0629 \u0628\u0627\u0644\u0643\u064a\u0644\u0648\u063a\u0631\u0627\u0645 \u0623\u0648 \u0627\u0644\u063a\u0631\u0627\u0645. \u064a\u062d\u062a\u0641\u0638 \u0643\u0644 \u0645\u0644\u0635\u0642 \u0628\u0628\u0646\u062f \u0645\u0633\u062a\u0642\u0644 \u0648\u062f\u0644\u064a\u0644\u0647 \u0627\u0644\u0623\u0635\u0644\u064a\u061b \u064a\u064f\u062d\u0630\u0641 \u0627\u0644\u0628\u0646\u062f \u0648\u064a\u064f\u0639\u0627\u062f \u0627\u0644\u0645\u0633\u062d \u0644\u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0648\u0632\u0646. \u062a\u062d\u062a\u0641\u0638 \u0627\u0644\u0628\u0627\u0631\u0643\u0648\u062f\u0627\u062a \u0627\u0644\u062b\u0627\u0628\u062a\u0629 \u0628\u0645\u0639\u0646\u0627\u0647\u0627\u060c \u0648\u062a\u064f\u062f\u062e\u0644 \u0627\u0644\u0643\u0645\u064a\u0629 \u064a\u062f\u0648\u064a\u064b\u0627 \u0644\u0644\u062a\u0646\u0633\u064a\u0642\u0627\u062a \u0627\u0644\u0645\u062d\u0644\u064a\u0629 \u0623\u0648 \u0627\u0644\u0645\u0634\u0641\u0651\u0631\u0629 \u0628\u0627\u0644\u0633\u0639\u0631 \u063a\u064a\u0631 \u0627\u0644\u0645\u062f\u0639\u0648\u0645\u0629. \u064a\u064f\u0638\u0647\u0631 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0633\u0644\u0629 \u0645\u0633\u0627\u062d\u0629 \u0643\u0627\u0641\u064a\u0629 \u0644\u0623\u0632\u0631\u0627\u0631 \u0648\u062d\u0642\u0648\u0644 \u0627\u0644\u062f\u0641\u0639 \u0639\u0646\u062f \u0648\u062c\u0648\u062f \u0639\u0631\u0648\u0636 \u0641\u0648\u0642\u0647\u0627."
+        "ar": "يتحقق المسح أثناء الاتصال من رقم تحقق GTIN والكمية الدقيقة بالكيلوغرام أو الغرام. يحتفظ كل ملصق ببند مستقل ودليله الأصلي؛ يُحذف البند ويُعاد المسح لتغيير الوزن. تحتفظ الباركودات الثابتة بمعناها، وتُدخل الكمية يدويًا للتنسيقات المحلية أو المشفّرة بالسعر غير المدعومة. يُظهر اختيار السلة مساحة كافية لأزرار وحقول الدفع عند وجود عروض فوقها."
       }
     },
     "sources": [
@@ -3484,15 +3914,15 @@
     "notes": {
       "title": {
         "en": "Approved scale readings for counter sales",
-        "ar": "\u0642\u0631\u0627\u0621\u0627\u062a \u0645\u064a\u0632\u0627\u0646 \u0645\u0639\u062a\u0645\u062f\u0629 \u0644\u0644\u0628\u064a\u0639 \u0645\u0646 \u0627\u0644\u0643\u0627\u0648\u0646\u062a\u0631"
+        "ar": "قراءات ميزان معتمدة للبيع من الكاونتر"
       },
       "summary": {
         "en": "Confirm supported scale readings and convert weight using an approved relationship for the selected product.",
-        "ar": "\u0623\u0643\u0651\u062f \u0642\u0631\u0627\u0621\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u0632\u064a\u0646 \u0627\u0644\u0645\u062f\u0639\u0648\u0645\u0629 \u0648\u062d\u0648\u0651\u0644 \u0627\u0644\u0648\u0632\u0646 \u0628\u0639\u0644\u0627\u0642\u0629 \u0645\u0639\u062a\u0645\u062f\u0629 \u062a\u062e\u0635 \u0627\u0644\u0635\u0646\u0641 \u0627\u0644\u0645\u062e\u062a\u0627\u0631."
+        "ar": "أكّد قراءات الموازين المدعومة وحوّل الوزن بعلاقة معتمدة تخص الصنف المختار."
       },
       "details": {
         "en": "Managers approve each device and product factor with a reference and immutable history. Staff connect explicitly, review stable net, tare, gross and stock quantity, then confirm a separate locked sale line. Unknown results retry the same request. Manual measured sales remain available without a scale; actual device approval and supported protocol settings are required.",
-        "ar": "\u064a\u0639\u062a\u0645\u062f \u0627\u0644\u0645\u062f\u064a\u0631 \u0643\u0644 \u062c\u0647\u0627\u0632 \u0648\u0645\u0639\u0627\u0645\u0644 \u0635\u0646\u0641 \u0628\u0645\u0631\u062c\u0639 \u0648\u0633\u062c\u0644 \u062b\u0627\u0628\u062a. \u064a\u0648\u0635\u0651\u0644 \u0627\u0644\u0645\u0648\u0638\u0641 \u0627\u0644\u062c\u0647\u0627\u0632 \u0635\u0631\u0627\u062d\u0629\u064b \u0648\u064a\u0631\u0627\u062c\u0639 \u0627\u0644\u0635\u0627\u0641\u064a \u0648\u0648\u0632\u0646 \u0627\u0644\u0648\u0639\u0627\u0621 \u0648\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a \u0648\u0643\u0645\u064a\u0629 \u0627\u0644\u0645\u062e\u0632\u0648\u0646\u060c \u062b\u0645 \u064a\u0624\u0643\u062f \u0628\u0646\u062f \u0628\u064a\u0639 \u0645\u0633\u062a\u0642\u0644\u064b\u0627 \u0628\u0643\u0645\u064a\u0629 \u0645\u0642\u0641\u0644\u0629. \u062a\u064f\u0639\u0627\u062f \u0627\u0644\u0646\u062a\u064a\u062c\u0629 \u063a\u064a\u0631 \u0627\u0644\u0645\u0624\u0643\u062f\u0629 \u0628\u0627\u0644\u0637\u0644\u0628 \u0646\u0641\u0633\u0647. \u064a\u0638\u0644 \u0627\u0644\u0628\u064a\u0639 \u0628\u0627\u0644\u0643\u0645\u064a\u0629 \u0627\u0644\u0645\u062f\u062e\u0644\u0629 \u064a\u062f\u0648\u064a\u064b\u0627 \u0645\u062a\u0627\u062d\u064b\u0627 \u062f\u0648\u0646 \u0645\u064a\u0632\u0627\u0646\u061b \u0648\u064a\u0644\u0632\u0645 \u0627\u0639\u062a\u0645\u0627\u062f \u0627\u0644\u062c\u0647\u0627\u0632 \u0627\u0644\u0641\u0639\u0644\u064a \u0648\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0628\u0631\u0648\u062a\u0648\u0643\u0648\u0644 \u0627\u0644\u0645\u062f\u0639\u0648\u0645."
+        "ar": "يعتمد المدير كل جهاز ومعامل صنف بمرجع وسجل ثابت. يوصّل الموظف الجهاز صراحةً ويراجع الصافي ووزن الوعاء والإجمالي وكمية المخزون، ثم يؤكد بند بيع مستقلًا بكمية مقفلة. تُعاد النتيجة غير المؤكدة بالطلب نفسه. يظل البيع بالكمية المدخلة يدويًا متاحًا دون ميزان؛ ويلزم اعتماد الجهاز الفعلي وإعدادات البروتوكول المدعوم."
       }
     },
     "sources": [
@@ -3567,15 +3997,15 @@
     "notes": {
       "title": {
         "en": "Approved commodity reference prices",
-        "ar": "\u0623\u0633\u0639\u0627\u0631 \u0645\u0648\u0627\u062f \u0645\u0631\u062c\u0639\u064a\u0629 \u0645\u0639\u062a\u0645\u062f\u0629"
+        "ar": "أسعار مواد مرجعية معتمدة"
       },
       "summary": {
         "en": "Price selected products from a documented source quote, approved material content and a stock-unit premium.",
-        "ar": "\u0633\u0639\u0651\u0631 \u0623\u0635\u0646\u0627\u0641\u064b\u0627 \u0645\u062e\u062a\u0627\u0631\u0629 \u0628\u0633\u0639\u0631 \u0645\u0635\u062f\u0631 \u0645\u0648\u062b\u0642 \u0648\u0645\u062d\u062a\u0648\u0649 \u0645\u0627\u062f\u0629 \u0645\u0639\u062a\u0645\u062f \u0648\u0625\u0636\u0627\u0641\u0629 \u0644\u0643\u0644 \u0648\u062d\u062f\u0629 \u0645\u062e\u0632\u0648\u0646."
+        "ar": "سعّر أصنافًا مختارة بسعر مصدر موثق ومحتوى مادة معتمد وإضافة لكل وحدة مخزون."
       },
       "details": {
         "en": "Managers approve source currency and validity and retain immutable terms and history. Existing customer agreements, fixed packages, remnants and authorized staff prices keep their precedence. Issued sales and accepted orders retain the original source evidence. Checkout retains the reviewed amount while the draft is saved; no live feed or exchange rate is assumed.",
-        "ar": "\u064a\u0639\u062a\u0645\u062f \u0627\u0644\u0645\u062f\u064a\u0631 \u0639\u0645\u0644\u0629 \u0627\u0644\u0645\u0635\u062f\u0631 \u0648\u0633\u0631\u064a\u0627\u0646\u0647 \u0645\u0639 \u062d\u0641\u0638 \u0634\u0631\u0648\u0637\u0647 \u0648\u0633\u062c\u0644\u0647. \u062a\u062d\u062a\u0641\u0638 \u062a\u0639\u0627\u0642\u062f\u0627\u062a \u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0648\u0627\u0644\u0639\u0628\u0648\u0627\u062a \u0630\u0627\u062a \u0627\u0644\u0633\u0639\u0631 \u0627\u0644\u0645\u062d\u062f\u062f \u0648\u0627\u0644\u0628\u0648\u0627\u0642\u064a \u0648\u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u0645\u0641\u0648\u0651\u0636\u0629 \u0628\u0623\u0648\u0644\u0648\u064a\u062a\u0647\u0627. \u062a\u062d\u0641\u0638 \u0627\u0644\u0645\u0628\u064a\u0639\u0627\u062a \u0627\u0644\u0635\u0627\u062f\u0631\u0629 \u0648\u0627\u0644\u0623\u0648\u0627\u0645\u0631 \u0627\u0644\u0645\u0642\u0628\u0648\u0644\u0629 \u062f\u0644\u064a\u0644 \u0627\u0644\u0645\u0635\u062f\u0631 \u0627\u0644\u0623\u0635\u0644\u064a. \u064a\u062d\u062a\u0641\u0638 \u0627\u0644\u062f\u0641\u0639 \u0628\u0627\u0644\u0645\u0628\u0644\u063a \u0627\u0644\u0630\u064a \u062a\u0645\u062a \u0645\u0631\u0627\u062c\u0639\u062a\u0647 \u0623\u062b\u0646\u0627\u0621 \u062d\u0641\u0638 \u0627\u0644\u0645\u0633\u0648\u062f\u0629\u060c \u062f\u0648\u0646 \u0627\u0641\u062a\u0631\u0627\u0636 \u062a\u063a\u0630\u064a\u0629 \u0633\u0639\u0631\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0623\u0648 \u0633\u0639\u0631 \u0635\u0631\u0641."
+        "ar": "يعتمد المدير عملة المصدر وسريانه مع حفظ شروطه وسجله. تحتفظ تعاقدات العملاء والعبوات ذات السعر المحدد والبواقي والأسعار المفوّضة بأولويتها. تحفظ المبيعات الصادرة والأوامر المقبولة دليل المصدر الأصلي. يحتفظ الدفع بالمبلغ الذي تمت مراجعته أثناء حفظ المسودة، دون افتراض تغذية سعرية مباشرة أو سعر صرف."
       }
     },
     "sources": [
@@ -3642,15 +4072,15 @@
     "notes": {
       "title": {
         "en": "Find products by electrical specifications",
-        "ar": "\u0627\u0644\u0639\u062b\u0648\u0631 \u0639\u0644\u0649 \u0627\u0644\u0623\u0635\u0646\u0627\u0641 \u0628\u0627\u0644\u0645\u0648\u0627\u0635\u0641\u0627\u062a \u0627\u0644\u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629"
+        "ar": "العثور على الأصناف بالمواصفات الكهربائية"
       },
       "summary": {
         "en": "Technical searches return matching products on every page.",
-        "ar": "\u062a\u0639\u0631\u0636 \u0639\u0645\u0644\u064a\u0627\u062a \u0627\u0644\u0628\u062d\u062b \u0628\u0627\u0644\u0645\u0648\u0627\u0635\u0641\u0627\u062a \u0627\u0644\u0623\u0635\u0646\u0627\u0641 \u0627\u0644\u0645\u0637\u0627\u0628\u0642\u0629 \u0641\u064a \u0643\u0644 \u0635\u0641\u062d\u0629."
+        "ar": "تعرض عمليات البحث بالمواصفات الأصناف المطابقة في كل صفحة."
       },
       "details": {
         "en": "Product results and their total now use the same technical specification filter, including searches that do not match the product name or SKU. Existing permissions and page limits apply.",
-        "ar": "\u062a\u0633\u062a\u062e\u062f\u0645 \u0646\u062a\u0627\u0626\u062c \u0627\u0644\u0623\u0635\u0646\u0627\u0641 \u0648\u0639\u062f\u062f\u0647\u0627 \u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a \u0645\u0631\u0634\u062d \u0627\u0644\u0645\u0648\u0627\u0635\u0641\u0627\u062a \u0646\u0641\u0633\u0647\u060c \u0628\u0645\u0627 \u064a\u0634\u0645\u0644 \u0627\u0644\u0628\u062d\u062b \u0627\u0644\u0630\u064a \u0644\u0627 \u064a\u0637\u0627\u0628\u0642 \u0627\u0633\u0645 \u0627\u0644\u0635\u0646\u0641 \u0623\u0648 \u0631\u0645\u0632\u0647. \u062a\u0638\u0644 \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0648\u062d\u062f\u0648\u062f \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u062d\u0627\u0644\u064a\u0629 \u0645\u0637\u0628\u0642\u0629."
+        "ar": "تستخدم نتائج الأصناف وعددها الإجمالي مرشح المواصفات نفسه، بما يشمل البحث الذي لا يطابق اسم الصنف أو رمزه. تظل الصلاحيات وحدود الصفحات الحالية مطبقة."
       }
     },
     "sources": [
@@ -3704,7 +4134,7 @@
       "tooling/releases/docker-harness.test.mjs",
       "release-changes/items.json"
     ],
-    "reason": "Unblock required combined staging qualification when a public pinned image pull has an unclassified registry response. Use only the caller\u2019s already configured same-version mirror; keep known local resource and daemon failures fatal, preserve redacted diagnostics and every catalog assertion. No publisher, credential, registration, migration or readiness policy changes.",
+    "reason": "Unblock required combined staging qualification when a public pinned image pull has an unclassified registry response. Use only the caller’s already configured same-version mirror; keep known local resource and daemon failures fatal, preserve redacted diagnostics and every catalog assertion. No publisher, credential, registration, migration or readiness policy changes.",
     "sources": [
       "shop-staging-disposable-image-qualification-20261029"
     ]
@@ -3713,7 +4143,11 @@
     "id": "shared-mobile-navigation-focus-20261029",
     "task": "SS-ELECTRICAL-001",
     "suits": [
-      "shop-suit"
+      "automation-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
     ],
     "classification": "patch",
     "disposition": "public",
@@ -3728,19 +4162,20 @@
     "notes": {
       "title": {
         "en": "Keep keyboard focus inside mobile navigation",
-        "ar": "\u0625\u0628\u0642\u0627\u0621 \u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u062f\u0627\u062e\u0644 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062a\u0646\u0642\u0644 \u0639\u0644\u0649 \u0627\u0644\u0647\u0627\u062a\u0641"
+        "ar": "إبقاء تركيز لوحة المفاتيح داخل قائمة التنقل على الهاتف"
       },
       "summary": {
         "en": "Opening the mobile menu moves focus to its close control.",
-        "ar": "\u064a\u0646\u062a\u0642\u0644 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0625\u0644\u0649 \u0632\u0631 \u0627\u0644\u0625\u063a\u0644\u0627\u0642 \u0639\u0646\u062f \u0641\u062a\u062d \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0647\u0627\u062a\u0641."
+        "ar": "ينتقل التركيز إلى زر الإغلاق عند فتح قائمة الهاتف."
       },
       "details": {
-        "en": "Focus waits for the menu\u2019s own finite entrance motion, so Escape dismisses it and returns focus to the opening button. Closing or navigating away cancels pending focus. Access-status logos also remain above their actions instead of covering retry controls.",
-        "ar": "\u064a\u0646\u062a\u0638\u0631 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0646\u062a\u0647\u0627\u0621 \u062d\u0631\u0643\u0629 \u0638\u0647\u0648\u0631 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0645\u062d\u062f\u0648\u062f\u0629\u060c \u0644\u064a\u063a\u0644\u0642\u0647\u0627 \u0645\u0641\u062a\u0627\u062d Escape \u0648\u064a\u0639\u064a\u062f \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0625\u0644\u0649 \u0632\u0631 \u0627\u0644\u0641\u062a\u062d. \u064a\u0644\u063a\u064a \u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0623\u0648 \u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0645\u0646\u0647\u0627 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u0645\u0639\u0644\u0651\u0642. \u0648\u062a\u0628\u0642\u0649 \u0634\u0639\u0627\u0631\u0627\u062a \u062d\u0627\u0644\u0627\u062a \u0627\u0644\u0648\u0635\u0648\u0644 \u0623\u0639\u0644\u0649 \u0625\u062c\u0631\u0627\u0621\u0627\u062a\u0647\u0627 \u0628\u062f\u0644\u064b\u0627 \u0645\u0646 \u062d\u062c\u0628 \u0623\u0632\u0631\u0627\u0631 \u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0645\u062d\u0627\u0648\u0644\u0629."
+        "en": "Focus waits for the menu’s own finite entrance motion, so Escape dismisses it and returns focus to the opening button. Closing or navigating away cancels pending focus. Access-status logos also remain above their actions instead of covering retry controls.",
+        "ar": "ينتظر التركيز انتهاء حركة ظهور القائمة المحدودة، ليغلقها مفتاح Escape ويعيد التركيز إلى زر الفتح. يلغي إغلاق القائمة أو الانتقال منها التركيز المعلّق. وتبقى شعارات حالات الوصول أعلى إجراءاتها بدلًا من حجب أزرار إعادة المحاولة."
       }
     },
     "sources": [
-      "shared-mobile-navigation-focus-20261029"
+      "shared-mobile-navigation-focus-20261029",
+      "ls-browser-001-mobile-focus"
     ],
     "evidence": [
       {
@@ -3899,15 +4334,15 @@
     "notes": {
       "title": {
         "en": "Exact amounts in financial reports",
-        "ar": "\u0645\u0628\u0627\u0644\u063a \u062f\u0642\u064a\u0642\u0629 \u0641\u064a \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631 \u0627\u0644\u0645\u0627\u0644\u064a\u0629"
+        "ar": "مبالغ دقيقة في التقارير المالية"
       },
       "summary": {
         "en": "Large financial amounts retain their exact minor units in reports and cash-flow allocations.",
-        "ar": "\u062a\u062d\u062a\u0641\u0638 \u0627\u0644\u0645\u0628\u0627\u0644\u063a \u0627\u0644\u0645\u0627\u0644\u064a\u0629 \u0627\u0644\u0643\u0628\u064a\u0631\u0629 \u0628\u0648\u062d\u062f\u0627\u062a\u0647\u0627 \u0627\u0644\u0635\u063a\u0631\u0649 \u0627\u0644\u062f\u0642\u064a\u0642\u0629 \u0641\u064a \u0627\u0644\u062a\u0642\u0627\u0631\u064a\u0631 \u0648\u062a\u0648\u0632\u064a\u0639\u0627\u062a \u0627\u0644\u062a\u062f\u0641\u0642\u0627\u062a \u0627\u0644\u0646\u0642\u062f\u064a\u0629."
+        "ar": "تحتفظ المبالغ المالية الكبيرة بوحداتها الصغرى الدقيقة في التقارير وتوزيعات التدفقات النقدية."
       },
       "details": {
         "en": "Profit and loss, General Ledger, financial overview and cash-flow reports preserve exact decimal digits. Cash-flow allocation saves and retries preserve the same exact amounts.",
-        "ar": "\u062a\u062d\u0641\u0638 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062f\u062e\u0644 \u0648\u0627\u0644\u0623\u0633\u062a\u0627\u0630 \u0627\u0644\u0639\u0627\u0645 \u0648\u0627\u0644\u0645\u0644\u062e\u0635 \u0627\u0644\u0645\u0627\u0644\u064a \u0648\u062a\u0642\u0627\u0631\u064a\u0631 \u0627\u0644\u062a\u062f\u0641\u0642\u0627\u062a \u0627\u0644\u0646\u0642\u062f\u064a\u0629 \u0627\u0644\u0623\u0631\u0642\u0627\u0645 \u0627\u0644\u0639\u0634\u0631\u064a\u0629 \u0627\u0644\u062f\u0642\u064a\u0642\u0629\u060c \u0648\u062a\u062d\u0627\u0641\u0638 \u0639\u0645\u0644\u064a\u0627\u062a \u062d\u0641\u0638 \u062a\u0648\u0632\u064a\u0639\u0627\u062a \u0627\u0644\u062a\u062f\u0641\u0642\u0627\u062a \u0648\u0625\u0639\u0627\u062f\u0629 \u0645\u062d\u0627\u0648\u0644\u062a\u0647\u0627 \u0639\u0644\u0649 \u0627\u0644\u0645\u0628\u0627\u0644\u063a \u0646\u0641\u0633\u0647\u0627."
+        "ar": "تحفظ قائمة الدخل والأستاذ العام والملخص المالي وتقارير التدفقات النقدية الأرقام العشرية الدقيقة، وتحافظ عمليات حفظ توزيعات التدفقات وإعادة محاولتها على المبالغ نفسها."
       }
     },
     "sources": [
@@ -3960,15 +4395,15 @@
     "notes": {
       "title": {
         "en": "Reliable private document uploads",
-        "ar": "\u0631\u0641\u0639 \u0645\u0648\u062b\u0648\u0642 \u0644\u0644\u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u062e\u0627\u0635\u0629"
+        "ar": "رفع موثوق للمستندات الخاصة"
       },
       "summary": {
         "en": "Upload transaction attachments and import source documents with their exact file size and type.",
-        "ar": "\u0631\u0641\u0639 \u0645\u0631\u0641\u0642\u0627\u062a \u0627\u0644\u0645\u0639\u0627\u0645\u0644\u0627\u062a \u0648\u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u0627\u0633\u062a\u064a\u0631\u0627\u062f \u0628\u062d\u062c\u0645 \u0627\u0644\u0645\u0644\u0641 \u0648\u0646\u0648\u0639\u0647 \u0627\u0644\u062f\u0642\u064a\u0642\u064a\u0646."
+        "ar": "رفع مرفقات المعاملات ومستندات الاستيراد بحجم الملف ونوعه الدقيقين."
       },
       "details": {
         "en": "Private document uploads preserve their original bytes while tenant permissions, file-type validation and storage quotas remain enforced.",
-        "ar": "\u062a\u062d\u0641\u0638 \u0639\u0645\u0644\u064a\u0627\u062a \u0631\u0641\u0639 \u0627\u0644\u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u062e\u0627\u0635\u0629 \u0628\u0627\u064a\u062a\u0627\u062a \u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0623\u0635\u0644\u064a\u0629 \u0645\u0639 \u062a\u0637\u0628\u064a\u0642 \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u0646\u0634\u0623\u0629 \u0648\u0627\u0644\u062a\u062d\u0642\u0642 \u0645\u0646 \u0646\u0648\u0639 \u0627\u0644\u0645\u0644\u0641 \u0648\u062d\u0635\u0635 \u0627\u0644\u062a\u062e\u0632\u064a\u0646."
+        "ar": "تحفظ عمليات رفع المستندات الخاصة بايتات الملف الأصلية مع تطبيق صلاحيات المنشأة والتحقق من نوع الملف وحصص التخزين."
       }
     },
     "sources": [
@@ -4023,15 +4458,15 @@
     "notes": {
       "title": {
         "en": "Reliable payment receipt links",
-        "ar": "\u0631\u0648\u0627\u0628\u0637 \u0645\u0648\u062b\u0648\u0642\u0629 \u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0627\u0644\u062f\u0641\u0639"
+        "ar": "روابط موثوقة لإيصالات الدفع"
       },
       "summary": {
         "en": "Authorized reviewers can reliably open private payment receipts.",
-        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u0631\u0627\u062c\u0639\u064a\u0646 \u0627\u0644\u0645\u0635\u0631\u062d \u0644\u0647\u0645 \u0641\u062a\u062d \u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0627\u0644\u062f\u0641\u0639 \u0627\u0644\u062e\u0627\u0635\u0629 \u0628\u0634\u0643\u0644 \u0645\u0648\u062b\u0648\u0642."
+        "ar": "يمكن للمراجعين المصرح لهم فتح إيصالات الدفع الخاصة بشكل موثوق."
       },
       "details": {
         "en": "Receipt links use the configured service address while retaining their short expiry and existing access checks.",
-        "ar": "\u062a\u0633\u062a\u062e\u062f\u0645 \u0631\u0648\u0627\u0628\u0637 \u0627\u0644\u0625\u064a\u0635\u0627\u0644\u0627\u062a \u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u062e\u062f\u0645\u0629 \u0627\u0644\u0645\u0647\u064a\u0623 \u0645\u0639 \u0627\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u0645\u062f\u0629 \u0635\u0644\u0627\u062d\u064a\u062a\u0647\u0627 \u0627\u0644\u0642\u0635\u064a\u0631\u0629 \u0648\u0641\u062d\u0648\u0635 \u0627\u0644\u0648\u0635\u0648\u0644 \u0627\u0644\u062d\u0627\u0644\u064a\u0629."
+        "ar": "تستخدم روابط الإيصالات عنوان الخدمة المهيأ مع الحفاظ على مدة صلاحيتها القصيرة وفحوص الوصول الحالية."
       }
     },
     "sources": [
@@ -4070,47 +4505,6 @@
     ]
   },
   {
-    "id": "ls-browser-001-mobile-focus",
-    "task": "LS-BROWSER-001",
-    "suits": [
-      "automation-suit",
-      "inventory-suit",
-      "ledger-suit",
-      "shop-suit",
-      "super-admin-suit"
-    ],
-    "classification": "patch",
-    "disposition": "public",
-    "paths": [
-      "packages/ux/src/composables/useSideNavigation.ts",
-      "packages/ux/tests/menu-share.test.mjs"
-    ],
-    "reason": "Focus the visible mobile navigation close control after its CSS transition permits focus, and cancel pending focus after closing or disposal.",
-    "notes": {
-      "title": {
-        "en": "Reliable keyboard focus in mobile navigation",
-        "ar": "\u062a\u0631\u0643\u064a\u0632 \u0645\u0648\u062b\u0648\u0642 \u0644\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0641\u064a \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0647\u0627\u062a\u0641"
-      },
-      "summary": {
-        "en": "Opening mobile navigation moves keyboard focus into the drawer so Escape can close it.",
-        "ar": "\u064a\u0646\u0642\u0644 \u0641\u062a\u062d \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0647\u0627\u062a\u0641 \u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0625\u0644\u0649 \u062f\u0627\u062e\u0644\u0647\u0627 \u0643\u064a \u064a\u063a\u0644\u0642\u0647\u0627 \u0632\u0631 Escape."
-      },
-      "details": {
-        "en": "Focus waits for the control to become visible and is cancelled if the drawer closes or is removed.",
-        "ar": "\u064a\u0646\u062a\u0638\u0631 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0638\u0647\u0648\u0631 \u0639\u0646\u0635\u0631 \u0627\u0644\u062a\u062d\u0643\u0645 \u0648\u064a\u064f\u0644\u063a\u0649 \u0625\u0630\u0627 \u0623\u064f\u063a\u0644\u0642\u062a \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0623\u0648 \u0623\u064f\u0632\u064a\u0644\u062a."
-      }
-    },
-    "sources": [
-      "ls-browser-001-mobile-focus"
-    ],
-    "evidence": [
-      {
-        "path": "packages/ux/src/composables/useSideNavigation.ts",
-        "contains": "await Promise.allSettled(animations.map(animation => animation.finished))\n    if (!cancelled && open()) panel.value?.querySelector<HTMLElement>('[data-side-menu-close]')?.focus()"
-      }
-    ]
-  },
-  {
     "id": "ls-browser-001-admin-sorting",
     "task": "LS-BROWSER-001",
     "suits": [
@@ -4126,15 +4520,15 @@
     "notes": {
       "title": {
         "en": "Correct sorting in administration tables",
-        "ar": "\u062a\u0631\u062a\u064a\u0628 \u0635\u062d\u064a\u062d \u0641\u064a \u062c\u062f\u0627\u0648\u0644 \u0627\u0644\u0625\u062f\u0627\u0631\u0629"
+        "ar": "ترتيب صحيح في جداول الإدارة"
       },
       "summary": {
         "en": "Administrators can sort displayed resource rows in both directions.",
-        "ar": "\u064a\u0645\u0643\u0646 \u0644\u0644\u0645\u0634\u0631\u0641\u064a\u0646 \u062a\u0631\u062a\u064a\u0628 \u0635\u0641\u0648\u0641 \u0627\u0644\u0645\u0648\u0627\u0631\u062f \u0627\u0644\u0645\u0639\u0631\u0648\u0636\u0629 \u0641\u064a \u0627\u0644\u0627\u062a\u062c\u0627\u0647\u064a\u0646."
+        "ar": "يمكن للمشرفين ترتيب صفوف الموارد المعروضة في الاتجاهين."
       },
       "details": {
         "en": "Mouse and keyboard sorting use the displayed values within the currently loaded result scope.",
-        "ar": "\u064a\u0633\u062a\u062e\u062f\u0645 \u062a\u0631\u062a\u064a\u0628 \u0627\u0644\u0641\u0623\u0631\u0629 \u0648\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0627\u0644\u0642\u064a\u0645 \u0627\u0644\u0645\u0639\u0631\u0648\u0636\u0629 \u0636\u0645\u0646 \u0646\u0637\u0627\u0642 \u0627\u0644\u0646\u062a\u0627\u0626\u062c \u0627\u0644\u0645\u062d\u0645\u0644\u0629 \u062d\u0627\u0644\u064a\u064b\u0627."
+        "ar": "يستخدم ترتيب الفأرة ولوحة المفاتيح القيم المعروضة ضمن نطاق النتائج المحملة حاليًا."
       }
     },
     "sources": [
@@ -4199,15 +4593,15 @@
     "notes": {
       "title": {
         "en": "Safer session changes and menu access",
-        "ar": "\u062a\u0628\u062f\u064a\u0644 \u0623\u0643\u062b\u0631 \u0623\u0645\u0627\u0646\u064b\u0627 \u0644\u0644\u062c\u0644\u0633\u0627\u062a \u0648\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0642\u0648\u0627\u0626\u0645"
+        "ar": "تبديل أكثر أمانًا للجلسات وصلاحيات القوائم"
       },
       "summary": {
         "en": "Shop clears previous account and location snapshots during scope changes and respects permissions for offers and website settings.",
-        "ar": "\u062a\u0645\u0633\u062d \u062d\u0632\u0645\u0629 \u0627\u0644\u0645\u062a\u062c\u0631 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u062d\u0633\u0627\u0628 \u0648\u0627\u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u0633\u0627\u0628\u0642\u064a\u0646 \u0639\u0646\u062f \u062a\u0628\u062f\u064a\u0644 \u0627\u0644\u0646\u0637\u0627\u0642 \u0648\u062a\u062d\u062a\u0631\u0645 \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0639\u0631\u0648\u0636 \u0648\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0645\u0648\u0642\u0639."
+        "ar": "تمسح حزمة المتجر بيانات الحساب والموقع السابقين عند تبديل النطاق وتحترم صلاحيات العروض وإعدادات الموقع."
       },
       "details": {
         "en": "Public pages avoid initializing private counter state. Cancelled queries hide old results immediately, and command failures keep provider details out of cached state. Public pages remain usable when plan prices cannot be loaded.",
-        "ar": "\u062a\u062a\u062c\u0646\u0628 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0639\u0627\u0645\u0629 \u062a\u0647\u064a\u0626\u0629 \u062d\u0627\u0644\u0629 \u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u064a\u0639 \u0627\u0644\u062e\u0627\u0635\u0629. \u062a\u062e\u0641\u064a \u0627\u0644\u0627\u0633\u062a\u0639\u0644\u0627\u0645\u0627\u062a \u0627\u0644\u0645\u0644\u063a\u0627\u0629 \u0627\u0644\u0646\u062a\u0627\u0626\u062c \u0627\u0644\u0642\u062f\u064a\u0645\u0629 \u0641\u0648\u0631\u064b\u0627 \u0648\u062a\u0628\u0642\u064a \u0623\u062e\u0637\u0627\u0621 \u0627\u0644\u0623\u0648\u0627\u0645\u0631 \u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0645\u0648\u0641\u0651\u0631 \u062e\u0627\u0631\u062c \u0627\u0644\u062d\u0627\u0644\u0629 \u0627\u0644\u0645\u062e\u0632\u0646\u0629 \u0645\u0624\u0642\u062a\u064b\u0627. \u062a\u0628\u0642\u0649 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0639\u0627\u0645\u0629 \u0642\u0627\u0628\u0644\u0629 \u0644\u0644\u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0639\u0646\u062f \u062a\u0639\u0630\u0631 \u062a\u062d\u0645\u064a\u0644 \u0623\u0633\u0639\u0627\u0631 \u0627\u0644\u062e\u0637\u0637."
+        "ar": "تتجنب الصفحات العامة تهيئة حالة نقطة البيع الخاصة. تخفي الاستعلامات الملغاة النتائج القديمة فورًا وتبقي أخطاء الأوامر تفاصيل الموفّر خارج الحالة المخزنة مؤقتًا. تبقى الصفحات العامة قابلة للاستخدام عند تعذر تحميل أسعار الخطط."
       }
     },
     "sources": [
@@ -4237,50 +4631,6 @@
     ]
   },
   {
-    "id": "ls-ci-qual-001-language-focus",
-    "task": "LS-CI-QUAL-001",
-    "suits": [
-      "automation-suit",
-      "inventory-suit",
-      "ledger-suit",
-      "shop-suit",
-      "super-admin-suit"
-    ],
-    "classification": "patch",
-    "disposition": "public",
-    "paths": [
-      "packages/ui/src/organisms/BsSettingsMenu.vue"
-    ],
-    "reason": "Keep keyboard focus on the language cycle control while the locale update is pending; aria-disabled/busy and the existing pending guard prevent duplicate activation without disabling the focused native button.",
-    "notes": {
-      "title": {
-        "en": "Keep focus when changing language",
-        "ar": "\u0627\u0644\u062d\u0641\u0627\u0638 \u0639\u0644\u0649 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0646\u062f \u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0644\u063a\u0629"
-      },
-      "summary": {
-        "en": "Keyboard users keep their position when switching the navigation language.",
-        "ar": "\u064a\u062d\u062a\u0641\u0638 \u0645\u0633\u062a\u062e\u062f\u0645\u0648 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0628\u0645\u0648\u0636\u0639\u0647\u0645 \u0639\u0646\u062f \u062a\u0628\u062f\u064a\u0644 \u0644\u063a\u0629 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062a\u0646\u0642\u0644."
-      },
-      "details": {
-        "en": "The language control announces pending work and ignores repeated activation while the update completes.",
-        "ar": "\u064a\u0639\u0644\u0646 \u0639\u0646\u0635\u0631 \u062a\u0628\u062f\u064a\u0644 \u0627\u0644\u0644\u063a\u0629 \u0623\u0646 \u0627\u0644\u062a\u062d\u062f\u064a\u062b \u062c\u0627\u0631\u064d \u0648\u064a\u062a\u062c\u0627\u0647\u0644 \u0627\u0644\u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u0645\u062a\u0643\u0631\u0631 \u062d\u062a\u0649 \u064a\u0643\u062a\u0645\u0644."
-      }
-    },
-    "sources": [
-      "ls-ci-qual-001-language-focus"
-    ],
-    "evidence": [
-      {
-        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
-        "contains": ":aria-disabled=\"cycle === 'language' && languagePending ? true : undefined\""
-      },
-      {
-        "path": "packages/ui/src/organisms/BsSettingsMenu.vue",
-        "contains": ":disabled=\"!hydrated || (cycle === 'language' && available.length < 2)\""
-      }
-    ]
-  },
-  {
     "id": "ls-ci-qual-001-auth-field-labels",
     "task": "LS-CI-QUAL-001",
     "suits": [
@@ -4297,15 +4647,15 @@
     "notes": {
       "title": {
         "en": "Keep account fields accessible after loading",
-        "ar": "\u0625\u0628\u0642\u0627\u0621 \u062d\u0642\u0648\u0644 \u0627\u0644\u062d\u0633\u0627\u0628 \u0645\u062a\u0627\u062d\u0629 \u0628\u0639\u062f \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0635\u0641\u062d\u0629"
+        "ar": "إبقاء حقول الحساب متاحة بعد تحميل الصفحة"
       },
       "summary": {
         "en": "Email, password and signup identity fields keep their labels when account pages become interactive.",
-        "ar": "\u062a\u062d\u062a\u0641\u0638 \u062d\u0642\u0648\u0644 \u0627\u0644\u0628\u0631\u064a\u062f \u0648\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u0648\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u0628\u062a\u0633\u0645\u064a\u0627\u062a\u0647\u0627 \u0639\u0646\u062f \u0627\u0643\u062a\u0645\u0627\u0644 \u062a\u0641\u0627\u0639\u0644 \u0635\u0641\u062d\u0627\u062a \u0627\u0644\u062d\u0633\u0627\u0628."
+        "ar": "تحتفظ حقول البريد وكلمة المرور وبيانات التسجيل بتسمياتها عند اكتمال تفاعل صفحات الحساب."
       },
       "details": {
         "en": "Screen readers and label-based navigation can identify the fields consistently in English and Arabic.",
-        "ar": "\u062a\u062a\u0639\u0631\u0641 \u0642\u0627\u0631\u0626\u0627\u062a \u0627\u0644\u0634\u0627\u0634\u0629 \u0648\u0627\u0644\u062a\u0646\u0642\u0644 \u0639\u0628\u0631 \u0627\u0644\u062a\u0633\u0645\u064a\u0627\u062a \u0639\u0644\u0649 \u0627\u0644\u062d\u0642\u0648\u0644 \u0628\u0635\u0648\u0631\u0629 \u0645\u062a\u0633\u0642\u0629 \u0628\u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0648\u0627\u0644\u0625\u0646\u062c\u0644\u064a\u0632\u064a\u0629."
+        "ar": "تتعرف قارئات الشاشة والتنقل عبر التسميات على الحقول بصورة متسقة بالعربية والإنجليزية."
       }
     },
     "sources": [
@@ -4345,15 +4695,15 @@
     "notes": {
       "title": {
         "en": "Keep public pages usable after loading",
-        "ar": "\u0625\u0628\u0642\u0627\u0621 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0639\u0627\u0645\u0629 \u0645\u062a\u0627\u062d\u0629 \u0628\u0639\u062f \u0627\u0644\u062a\u062d\u0645\u064a\u0644"
+        "ar": "إبقاء الصفحات العامة متاحة بعد التحميل"
       },
       "summary": {
         "en": "Headings and privacy choices stay available when the landing loader closes.",
-        "ar": "\u062a\u0628\u0642\u0649 \u0627\u0644\u0639\u0646\u0627\u0648\u064a\u0646 \u0648\u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0645\u062a\u0627\u062d\u0629 \u0628\u0639\u062f \u0625\u063a\u0644\u0627\u0642 \u0634\u0627\u0634\u0629 \u0627\u0644\u062a\u062d\u0645\u064a\u0644."
+        "ar": "تبقى العناوين وخيارات الخصوصية متاحة بعد إغلاق شاشة التحميل."
       },
       "details": {
         "en": "The loading state clears reliably when the page becomes interactive, including with reduced motion.",
-        "ar": "\u062a\u0646\u062a\u0647\u064a \u062d\u0627\u0644\u0629 \u0627\u0644\u062a\u062d\u0645\u064a\u0644 \u0628\u0635\u0648\u0631\u0629 \u0645\u0648\u062b\u0648\u0642\u0629 \u0639\u0646\u062f \u062a\u0641\u0627\u0639\u0644 \u0627\u0644\u0635\u0641\u062d\u0629\u060c \u0628\u0645\u0627 \u0641\u064a \u0630\u0644\u0643 \u0639\u0646\u062f \u062a\u0642\u0644\u064a\u0644 \u0627\u0644\u062d\u0631\u0643\u0629."
+        "ar": "تنتهي حالة التحميل بصورة موثوقة عند تفاعل الصفحة، بما في ذلك عند تقليل الحركة."
       }
     },
     "sources": [
@@ -4387,15 +4737,15 @@
     "notes": {
       "title": {
         "en": "Exact large amounts in journals and the dashboard",
-        "ar": "\u0645\u0628\u0627\u0644\u063a \u0643\u0628\u064a\u0631\u0629 \u062f\u0642\u064a\u0642\u0629 \u0641\u064a \u0627\u0644\u064a\u0648\u0645\u064a\u0629 \u0648\u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629"
+        "ar": "مبالغ كبيرة دقيقة في اليومية ولوحة المتابعة"
       },
       "summary": {
         "en": "Large journals open reliably and retain their exact digits in details, dashboard totals and amount filters.",
-        "ar": "\u062a\u064f\u0641\u062a\u062d \u0627\u0644\u0642\u064a\u0648\u062f \u0627\u0644\u0643\u0628\u064a\u0631\u0629 \u0628\u0635\u0648\u0631\u0629 \u0645\u0648\u062b\u0648\u0642\u0629 \u0648\u062a\u062d\u062a\u0641\u0638 \u0628\u0623\u0631\u0642\u0627\u0645\u0647\u0627 \u0627\u0644\u062f\u0642\u064a\u0642\u0629 \u0641\u064a \u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644 \u0648\u0625\u062c\u0645\u0627\u0644\u064a\u0627\u062a \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0648\u0641\u0644\u0627\u062a\u0631 \u0627\u0644\u0645\u0628\u0627\u0644\u063a."
+        "ar": "تُفتح القيود الكبيرة بصورة موثوقة وتحتفظ بأرقامها الدقيقة في التفاصيل وإجماليات لوحة المتابعة وفلاتر المبالغ."
       },
       "details": {
         "en": "Journal lines, recent transactions, dashboard balances and commitment totals preserve exact minor units, including when filtering by a one-cent difference.",
-        "ar": "\u062a\u062d\u0641\u0638 \u0628\u0646\u0648\u062f \u0627\u0644\u0642\u064a\u0648\u062f \u0648\u0622\u062e\u0631 \u0627\u0644\u0645\u0639\u0627\u0645\u0644\u0627\u062a \u0648\u0623\u0631\u0635\u062f\u0629 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0648\u0625\u062c\u0645\u0627\u0644\u064a\u0627\u062a \u0627\u0644\u0627\u0644\u062a\u0632\u0627\u0645\u0627\u062a \u0648\u062d\u062f\u0627\u062a\u0647\u0627 \u0627\u0644\u0635\u063a\u0631\u0649 \u0627\u0644\u062f\u0642\u064a\u0642\u0629\u060c \u0628\u0645\u0627 \u0641\u064a \u0630\u0644\u0643 \u0639\u0646\u062f \u0627\u0644\u062a\u0635\u0641\u064a\u0629 \u0628\u0641\u0627\u0631\u0642 \u0642\u0631\u0634 \u0648\u0627\u062d\u062f."
+        "ar": "تحفظ بنود القيود وآخر المعاملات وأرصدة لوحة المتابعة وإجماليات الالتزامات وحداتها الصغرى الدقيقة، بما في ذلك عند التصفية بفارق قرش واحد."
       }
     },
     "sources": [
@@ -4494,15 +4844,15 @@
     "notes": {
       "title": {
         "en": "Keep privacy settings available",
-        "ar": "\u0625\u0628\u0642\u0627\u0621 \u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u062e\u0635\u0648\u0635\u064a\u0629 \u0645\u062a\u0627\u062d\u0629"
+        "ar": "إبقاء إعدادات الخصوصية متاحة"
       },
       "summary": {
         "en": "Reopen optional analytics choices from the public footer.",
-        "ar": "\u0623\u0639\u062f \u0641\u062a\u062d \u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0645\u0646 \u062a\u0630\u064a\u064a\u0644 \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0639\u0627\u0645\u0629."
+        "ar": "أعد فتح خيارات التحليلات الاختيارية من تذييل الصفحات العامة."
       },
       "details": {
         "en": "Optional analytics remains consent-gated, and its existing pricing event follows the selected link without including business data.",
-        "ar": "\u062a\u0628\u0642\u0649 \u0627\u0644\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631\u064a\u0629 \u0645\u0634\u0631\u0648\u0637\u0629 \u0628\u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0648\u0644\u0627 \u062a\u062a\u0636\u0645\u0646 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0639\u0645\u0644."
+        "ar": "تبقى التحليلات الاختيارية مشروطة بالموافقة ولا تتضمن بيانات العمل."
       }
     },
     "sources": [
@@ -4545,46 +4895,6 @@
       "apps/ledger-suit/docs/integration-check-recovery-20261029.md"
     ],
     "reason": "Classify all six consumers of optional shared footer/settings props and landing link events. Only Shop connects product consent/analytics; other consumers retain their existing behavior and receive build/type compatibility qualification. Docs demonstrates the opt-in footer action. No Doctor public activation or hosted change."
-  },
-  {
-    "id": "ls-ci-qual-003-appointment-focus",
-    "task": "LS-CI-QUAL-003",
-    "suits": [
-      "shop-suit"
-    ],
-    "classification": "patch",
-    "disposition": "public",
-    "paths": [
-      "packages/ui/src/templates/BsAppointmentsPage.vue"
-    ],
-    "reason": "Retain a surviving calendar origin when appointment details hand off to the editor; closing a clean or discarded editor restores keyboard focus without keeping two modals open. Creation retains its own opener; pending and dirty guards remain.",
-    "notes": {
-      "title": {
-        "en": "Return to the appointment after editing",
-        "ar": "\u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u0627\u0644\u0645\u0648\u0639\u062f \u0628\u0639\u062f \u0627\u0644\u062a\u0639\u062f\u064a\u0644"
-      },
-      "summary": {
-        "en": "Keyboard focus returns to the calendar appointment when its editor closes.",
-        "ar": "\u064a\u0639\u0648\u062f \u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0625\u0644\u0649 \u0645\u0648\u0639\u062f \u0627\u0644\u062a\u0642\u0648\u064a\u0645 \u0639\u0646\u062f \u0625\u063a\u0644\u0627\u0642 \u0645\u062d\u0631\u0631\u0647."
-      },
-      "details": {
-        "en": "The editor preserves pending-save and unsaved-change protections while returning to a control that remains on the page.",
-        "ar": "\u064a\u062d\u0627\u0641\u0638 \u0627\u0644\u0645\u062d\u0631\u0631 \u0639\u0644\u0649 \u062d\u0645\u0627\u064a\u0629 \u0627\u0644\u062d\u0641\u0638 \u0648\u0627\u0644\u062a\u063a\u064a\u064a\u0631\u0627\u062a \u063a\u064a\u0631 \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629 \u0648\u064a\u0639\u0648\u062f \u0625\u0644\u0649 \u0639\u0646\u0635\u0631 \u0645\u0627 \u0632\u0627\u0644 \u0645\u0648\u062c\u0648\u062f\u064b\u0627 \u0628\u0627\u0644\u0635\u0641\u062d\u0629."
-      }
-    },
-    "sources": [
-      "ls-ci-qual-003-appointment-focus"
-    ],
-    "evidence": [
-      {
-        "path": "packages/ui/src/templates/BsAppointmentsPage.vue",
-        "contains": "editorOrigin.value = appointmentTrigger.value; closeAppointment(); emit('edit', id)"
-      },
-      {
-        "path": "packages/ui/src/templates/BsAppointmentsPage.vue",
-        "contains": ":return-focus=\"editorReturnFocus\""
-      }
-    ]
   },
   {
     "id": "ls-ci-qual-003-dialog-support",
@@ -4640,6 +4950,47 @@
     ]
   },
   {
+    "id": "doctor-consolidation-interaction-readiness-20261029",
+    "task": "DOCTOR-CONSOLIDATION-20261029",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/molecules/BsSelect.vue",
+      "packages/ui/src/organisms/BsLandingTopHeader.vue"
+    ],
+    "reason": "Make shared selection and landing-menu controls unavailable until their existing handlers can respond; only Shop has verified public registration in this initiative. Doctor remains synthetic and separately gated.",
+    "notes": {
+      "title": {
+        "en": "Controls wait until they can respond",
+        "ar": "انتظار جاهزية عناصر التحكم قبل استخدامها"
+      },
+      "summary": {
+        "en": "Selection controls stay disabled while choices load, and the mobile menu waits until it is ready.",
+        "ar": "تبقى عناصر الاختيار معطلة أثناء تحميل الخيارات، وتنتظر قائمة الهاتف حتى تصبح جاهزة."
+      },
+      "details": {
+        "en": "Loading choices no longer looks like an available selection, and an early tap on the mobile menu is not silently lost. Existing permissions and form validation remain unchanged.",
+        "ar": "لا يظهر اختيار قيد التحميل كأنه متاح، ولا تضيع ضغطة مبكرة على قائمة الهاتف دون استجابة. تبقى الصلاحيات والتحقق من النماذج كما هي."
+      }
+    },
+    "sources": [
+      "doctor-consolidation-interaction-readiness-20261029"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/molecules/BsSelect.vue",
+        "contains": ":loading=\"loading\" :disabled=\"disabled || loading\""
+      },
+      {
+        "path": "packages/ui/src/organisms/BsLandingTopHeader.vue",
+        "contains": ":disabled=\"!hydrated\""
+      }
+    ]
+  },
+  {
     "id": "ls-sec-dep-007-i18n-runtime",
     "task": "LS-SEC-DEP-007",
     "suits": [
@@ -4678,15 +5029,15 @@
     "notes": {
       "title": {
         "en": "Pay by InstaPay with manual review",
-        "ar": "\u0627\u0644\u062f\u0641\u0639 \u0628\u0625\u0646\u0633\u062a\u0627\u0628\u0627\u064a \u0645\u0639 \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u064a\u062f\u0648\u064a\u0629"
+        "ar": "الدفع بإنستاباي مع المراجعة اليدوية"
       },
       "summary": {
         "en": "Choose a plan, review its payment instructions and submit a receipt for authorized review.",
-        "ar": "\u0627\u062e\u062a\u0631 \u0628\u0627\u0642\u0629 \u0648\u0631\u0627\u062c\u0639 \u062a\u0639\u0644\u064a\u0645\u0627\u062a \u0627\u0644\u062f\u0641\u0639 \u062b\u0645 \u0623\u0631\u0633\u0644 \u0627\u0644\u0625\u064a\u0635\u0627\u0644 \u0644\u0644\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0645\u062e\u0648\u0651\u0644\u0629."
+        "ar": "اختر باقة وراجع تعليمات الدفع ثم أرسل الإيصال للمراجعة المخوّلة."
       },
       "details": {
         "en": "A transfer or receipt submission does not activate access. Prices and instructions come from the server quote; missing instructions block payment preparation. Existing payment records are preserved.",
-        "ar": "\u0627\u0644\u062a\u062d\u0648\u064a\u0644 \u0623\u0648 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0625\u064a\u0635\u0627\u0644 \u0644\u0627 \u064a\u0641\u0639\u0651\u0644 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643. \u062a\u0635\u062f\u0631 \u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0648\u0627\u0644\u062a\u0639\u0644\u064a\u0645\u0627\u062a \u0645\u0646 \u0639\u0631\u0636 \u0627\u0644\u0633\u0639\u0631 \u0628\u0627\u0644\u0646\u0638\u0627\u0645\u060c \u0648\u064a\u062a\u0639\u0630\u0631 \u0625\u0639\u062f\u0627\u062f \u0627\u0644\u062f\u0641\u0639 \u0639\u0646\u062f \u063a\u064a\u0627\u0628 \u0627\u0644\u062a\u0639\u0644\u064a\u0645\u0627\u062a. \u062a\u0638\u0644 \u0633\u062c\u0644\u0627\u062a \u0627\u0644\u062f\u0641\u0639 \u0627\u0644\u0633\u0627\u0628\u0642\u0629 \u0645\u062d\u0641\u0648\u0638\u0629."
+        "ar": "التحويل أو إرسال الإيصال لا يفعّل الاشتراك. تصدر الأسعار والتعليمات من عرض السعر بالنظام، ويتعذر إعداد الدفع عند غياب التعليمات. تظل سجلات الدفع السابقة محفوظة."
       }
     },
     "sources": [
@@ -4699,7 +5050,7 @@
       },
       {
         "path": "apps/ledger-suit/i18n/locales/en.json",
-        "contains": "\"manualPaymentNotice\": \"InstaPay transfer \u2014 reviewed manually; no automatic renewal\""
+        "contains": "\"manualPaymentNotice\": \"InstaPay transfer — reviewed manually; no automatic renewal\""
       },
       {
         "path": "apps/ledger-suit/app/composables/useManualPayment.ts",

@@ -1,0 +1,17 @@
+{
+  "id": "doctor-independent-lookup-readiness-20261029",
+  "task": "DOCTOR-CONSOLIDATION-20261029",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/composables/useDoctorAppointmentsPage.ts",
+    "apps/doctor-suit/tests/unit/appointment-editor-readiness.test.mjs",
+    "packages/testing/e2e/atomic-signup-parity.spec.ts",
+    "packages/testing/browser-foundation.ts",
+    "docs/work-packages/doctor-suit/implementation/appointment-preparation-2026-10-29.md"
+  ],
+  "reason": "Restore independent synthetic appointment lookup readiness after catalogue preparation and retain bounded failure-only shared signup phase diagnostics for an unresolved CI capture failure. Doctor remains unregistered and synthetic-only; clinical/legal/provider/release gates and fresh owned browser acceptance remain required. No public product behavior or acceptance is claimed for the diagnostic."
+}

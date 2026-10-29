@@ -1,0 +1,42 @@
+{
+  "task": "DOS-M3-007",
+  "decision": "DOS-M3-GATE-PROVIDER",
+  "state": "open",
+  "external_delivery_enabled": false,
+  "provider_dependent_implementation": "blocked",
+  "data_mode": "synthetic",
+  "evidence": {
+    "accountable_reviewer_approval": null,
+    "provider_and_api_version": null,
+    "account_and_channel_owner": null,
+    "permitted_healthcare_use_and_jurisdiction": null,
+    "consent_and_guardian_rules": null,
+    "cost_owner_and_spend_limits": null,
+    "credential_custody_rotation_and_revocation_route": null,
+    "sandbox_and_synthetic_recipient_authorization": null,
+    "callback_signature_timestamp_replay_contract": null,
+    "acceptance_lookup_and_idempotency_contract": null,
+    "data_minimization_retention_and_processor_terms": null,
+    "separate_outreach_authorization": null
+  },
+  "required_future_review": [
+    "Bind approval to exact provider, account, channel, environment, API version and permitted purpose; no approval by credential presence.",
+    "Validate request idempotency, acceptance lookup and ambiguous timeout semantics behind the neutral outbox.",
+    "Verify callback raw-body signature, key rotation, bounded timestamp tolerance, event identity and exact message/account binding before state mutation.",
+    "Reject forged, replayed, out-of-order and conflicting callbacks; never downgrade delivered or map acceptance to delivery.",
+    "Demonstrate revoked credentials, rate limits, definite rejection and timeout without exposing payloads or credentials.",
+    "Use sandbox synthetic recipients only; outreach and live data require separate accountable authorization."
+  ],
+  "unavailable_acceptance": [
+    "provider sandbox timeout and acceptance reconciliation",
+    "actual callback signature and replay acceptance",
+    "provider credential revocation and cost controls",
+    "real delivery and legal guardian qualification"
+  ],
+  "dependency_amendment": {
+    "source": "m3-continuation.md",
+    "authorized_scope": "independent synthetic M3-008, M3-009 and M3-010",
+    "provider_acceptance_waived": false,
+    "historical_graph_rewritten": false
+  }
+}

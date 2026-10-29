@@ -1,5 +1,6 @@
 packages:
   - apps/*
+  - apps/doctor-suit/mobile/*
   - packages/*
 onlyBuiltDependencies:
   - esbuild

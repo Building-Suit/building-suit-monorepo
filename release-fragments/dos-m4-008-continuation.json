@@ -1,0 +1,14 @@
+{
+  "id": "dos-m4-008-continuation",
+  "task": "DOS-M4-008",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/m4-continuation.md"
+  ],
+  "reason": "Record the current synthetic task leaf, actual checks and held acceptance while continuing the remaining canonical tasks."
+}

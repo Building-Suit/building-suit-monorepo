@@ -1,0 +1,64 @@
+{
+  "task_id": "DOS-M5-012",
+  "scope": "independent-synthetic-appointment-and-released-result-projection",
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "patient_native_scaffold": false,
+  "private_offline_cache": false,
+  "external_notifications": false,
+  "approvals": {
+    "patient_identity": null,
+    "caregiver_legal": null,
+    "platform_command_mapping": null,
+    "reminder_interpretation": null,
+    "privacy": null
+  },
+  "unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m5-012.test.mjs"
+    ],
+    "exit_code": 0,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0
+  },
+  "combined_patient_units": {
+    "passed": 93,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full_root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2435,
+    "passed": 2358,
+    "failed": 54,
+    "skipped": 23,
+    "all_failure_locations": "apps/shop-suit/tests"
+  },
+  "native_cases": [],
+  "actual_server_authorization": "unimplemented-unqualified",
+  "criterion_status": {
+    "C01": "synthetic-projection-only-actual-authorization-and-ui-unqualified",
+    "C02": "synthetic-release-denial-and-operational-separation-only",
+    "C03": "synthetic-scoped-current-version-and-stale-reader-cases-only",
+    "C04": "blocked-approved-patient-platform-commands-and-native-device-receipts-absent"
+  },
+  "source_files": {
+    "apps/doctor-suit/app/utils/patientAppointmentsResultsPreview.ts": "cf34fa051905d40a924a7b5a4c0ff2706dcc1d1ae16c59f5eb2537406be50fe6",
+    "apps/doctor-suit/tests/unit/dos-m5-012.test.mjs": "a30ab0c0cdedf41d564440fcb216599a10a9e10e635a2bb9d53cdcc848499265"
+  },
+  "document_sha256": "c3122bc177d81ec7df4db12197d207ca4af3f55b61b4f4bf4e70a5f14d1c48d4",
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-record",
+  "limitations": [
+    "No actual patient Auth/legal/consent/release gateway",
+    "No patient-native route, physical or accessibility qualification",
+    "Memory-only clear requires actual lifecycle/revocation wiring",
+    "Release hash is provenance, not verified clinical signature or bytes"
+  ]
+}

@@ -1,0 +1,282 @@
+{
+  "task": "DOS-M4-008",
+  "status": "synthetic source implementation verified; device/qualified acceptance held",
+  "parent_pr": 461,
+  "parent_sha": "60b322725c336dcc0eaaefdca40996c369438446",
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "physical_device": false,
+  "offline_chart_approval": false,
+  "provider_activation": false,
+  "executed_native_schedule_cases": [],
+  "planned_native_cases": [
+    "two-device-reschedule-checkin-conflict",
+    "narrow-rtl-denied-action-stale-queue",
+    "independent-secretary-location-revocation",
+    "unknown-acknowledgement-no-duplicate"
+  ],
+  "incorporated_parent": "b7940821386a237c3079042f9601e231d90b9de4",
+  "owned_units_passed": 14,
+  "combined_mobile_units_passed": 110,
+  "focused_units_passed": 49,
+  "source_checks": {
+    "mobile_lint": "passed",
+    "mobile_types": "passed",
+    "static_bundle": "passed",
+    "post_build_capacitor_sync": "passed",
+    "boundaries": "passed;138 templates",
+    "canonical_packets": "9 passed/104 task fingerprints unchanged",
+    "all_app_types": "8 passed serially/0 cached",
+    "changed_file_lint": "native/contracts/web facades passed"
+  },
+  "runtime": "exact integrated source needs CI; inherited shell/vault checks are not signed-in schedule evidence",
+  "initial_broad_failure": "duplicate overloaded export in availability facade; corrected without changing implementation or assertions",
+  "full_root_source_phase": {
+    "tests": 2314,
+    "passed": 2237,
+    "failed": 54,
+    "skipped": 23,
+    "failure_locations": "all Shop",
+    "later_owned_regression": "final destination-revocation case passes in owned14/combined110 command"
+  },
+  "executed_native_followup": {
+    "source": "68e76b372895913b62fcd72b9c961aa363535cd8",
+    "run": 40037410442,
+    "receipts": [
+      {
+        "version": 1,
+        "sourceHead": "68e76b372895913b62fcd72b9c961aa363535cd8",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "1c608ca338b16274951523f970045a925d18ec137bda41f2169ad5be86990ed8",
+        "api": 29,
+        "accepted": false,
+        "stage": "cold-deep-link-signed-out",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 74,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "lifecycle": {
+          "backgroundObserved": false,
+          "resumeObserved": false
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "failed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "unrun"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "unrun"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "task": "DOS-M4-003",
+        "sourceHead": "68e76b372895913b62fcd72b9c961aa363535cd8",
+        "apkSha256": "1c608ca338b16274951523f970045a925d18ec137bda41f2169ad5be86990ed8",
+        "testApkSha256": "7d26a75a34a33507a39e506c19632abfa3d13bc1dfc2d209e00f5957164a5b58",
+        "api": 29,
+        "cases": [
+          {
+            "id": "fresh-install-empty",
+            "status": "passed"
+          },
+          {
+            "id": "ciphertext-roundtrip",
+            "status": "passed"
+          },
+          {
+            "id": "tamper-denied",
+            "status": "passed"
+          },
+          {
+            "id": "namespace-denied",
+            "status": "passed"
+          },
+          {
+            "id": "purge-marker",
+            "status": "passed"
+          },
+          {
+            "id": "seed-before-reinstall",
+            "status": "passed"
+          },
+          {
+            "id": "fresh-after-reinstall",
+            "status": "passed"
+          }
+        ],
+        "stage": "complete",
+        "cleanup": "passed",
+        "issues": [],
+        "accepted": true,
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineChartApproval": false
+      },
+      {
+        "version": 1,
+        "sourceHead": "68e76b372895913b62fcd72b9c961aa363535cd8",
+        "appId": "com.buildingsuit.doctor.synthetic",
+        "apkSha256": "1c608ca338b16274951523f970045a925d18ec137bda41f2169ad5be86990ed8",
+        "api": 36,
+        "accepted": false,
+        "stage": "cold-deep-link-signed-out",
+        "cleanup": "passed",
+        "runtime": {
+          "webviewMajor": 133,
+          "clientIssues": [],
+          "webviewVisible": true,
+          "syntheticPackageVisible": true
+        },
+        "lifecycle": {
+          "backgroundObserved": false,
+          "resumeObserved": false
+        },
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "cases": [
+          {
+            "id": "cold-launch-signed-out",
+            "status": "passed"
+          },
+          {
+            "id": "cold-deep-link-signed-out",
+            "status": "failed"
+          },
+          {
+            "id": "hardware-back-workspace",
+            "status": "unrun"
+          },
+          {
+            "id": "background-resume-signed-out",
+            "status": "unrun"
+          },
+          {
+            "id": "unknown-deep-link-denied",
+            "status": "unrun"
+          }
+        ],
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineClinicalApproval": false,
+        "storeUpload": false
+      },
+      {
+        "version": 1,
+        "task": "DOS-M4-003",
+        "sourceHead": "68e76b372895913b62fcd72b9c961aa363535cd8",
+        "apkSha256": "1c608ca338b16274951523f970045a925d18ec137bda41f2169ad5be86990ed8",
+        "testApkSha256": "7d26a75a34a33507a39e506c19632abfa3d13bc1dfc2d209e00f5957164a5b58",
+        "api": 36,
+        "cases": [
+          {
+            "id": "fresh-install-empty",
+            "status": "passed"
+          },
+          {
+            "id": "ciphertext-roundtrip",
+            "status": "passed"
+          },
+          {
+            "id": "tamper-denied",
+            "status": "passed"
+          },
+          {
+            "id": "namespace-denied",
+            "status": "passed"
+          },
+          {
+            "id": "purge-marker",
+            "status": "passed"
+          },
+          {
+            "id": "seed-before-reinstall",
+            "status": "passed"
+          },
+          {
+            "id": "fresh-after-reinstall",
+            "status": "passed"
+          }
+        ],
+        "stage": "complete",
+        "cleanup": "passed",
+        "issues": [],
+        "accepted": true,
+        "runner": "owned-disposable-android-emulator",
+        "physicalDevice": false,
+        "syntheticOnly": true,
+        "clinicalApproval": false,
+        "offlineChartApproval": false
+      }
+    ],
+    "scope": "Both stock APIs pass first shell case and all7 vault cases; cold schedule entry fails before later shell cases. This is a signed-out entry presentation regression, not a qualified native schedule pass.",
+    "correction": "Preserve the existing schedule title/signed-out message in the shared page, with an optional sign-in continuation and tokenless validated next destination. All5 harness cases/assertions remain."
+  },
+  "entry_correction_validation": {
+    "all_app_types": "8 passed serially;0 cached",
+    "mobile_units": 110,
+    "native_and_changed_shared_lint": "passed",
+    "docs_lint": "0errors/5 inherited warnings",
+    "bundle_and_post_build_sync": "passed",
+    "workspace": "138 templates/80 historical migrations unchanged",
+    "new_runtime": "pending exact-source CI; retain all5 existing shell assertions"
+  },
+  "entry_action_wiring_followup": {
+    "diagnosis": "Shared BsStateSurface has no default slot; the prior child button is ignored.",
+    "correction": "Use its existing actionLabel/action API for the product-owned sign-in continuation.",
+    "cold_deep_link": "still failing at child2a9f3b4c; separate fixed-cue diagnostics pending; no resolution claimed",
+    "validation": {
+      "mobile_and_changed_shared_lint": "passed",
+      "current_direct_consumers_types": "Doctor web and native passed",
+      "boundaries": "138 templates/80 historical migrations unchanged",
+      "runtime": "pending owned CI; remaining deep-link failure diagnosed separately"
+    }
+  },
+  "cold_launch_handoff_followup": {
+    "executed_source": "cd050b4031d77df921ac9b8729c8af540c02ce60",
+    "run": 40219145721,
+    "api_matrix": [
+      29,
+      36
+    ],
+    "failure_cue": "schedule-title",
+    "practice_title_present": true,
+    "schedule_title_present": false,
+    "cold_launch_passed": true,
+    "cold_schedule_failed": true,
+    "later_shell_cases": "unrun",
+    "vault_cases_passed_per_api": 7,
+    "native_policy_cases_passed_per_api": 5,
+    "correction": "Defer native URL handling until Nuxt mount; serialize navigation, keep latest pending, reject stale launch after event, clear pending on dispose; use captured app router and existing denied catch-all.",
+    "owned_units": 20,
+    "combined_native_units": 116,
+    "source_checks": "native lint/types/static bundle/post-build sync/138-template boundaries passed",
+    "new_device_execution": "pending-exact-source-owned-CI",
+    "task_acceptance": false
+  }
+}

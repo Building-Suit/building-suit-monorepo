@@ -1,0 +1,16 @@
+{
+  "id": "dos-m4-009",
+  "task": "DOS-M4-009",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/mobile/doctor",
+    "apps/doctor-suit/tests/unit/dos-m4-009.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-009.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m4-009-device-evidence.json"
+  ],
+  "reason": "Implement explicit online-only synthetic connectivity and memory invalidation without granting offline chart, clinical, provider or device acceptance."
+}

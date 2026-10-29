@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parse } from '@vue/compiler-sfc'
 import ts from 'typescript'
+import { discoverApplicationRoots } from './application-roots.mjs'
 
 const defaultRoot = fileURLToPath(new URL('../../', import.meta.url))
 async function walk(directory) {
@@ -21,7 +22,7 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
   const registry = JSON.parse(await readFile(path.join(root, 'docs/shared/atomic-template-route-inventory.json'), 'utf8'))
   const ui = JSON.parse(await readFile(path.join(root, 'packages/ui/package.json'), 'utf8'))
   const templateOwners = new Map(Object.entries(ui.exports).filter(([, target]) => /^\.\/src\/templates\/Bs[A-Z]\w*\.vue$/.test(target)).map(([specifier, target]) => [path.basename(target, '.vue'), { specifier: `@building-suit/ui${specifier.slice(1)}`, source: `packages/ui/${target.slice(2)}` }]))
-  const suits = (await readdir(path.join(root, 'apps'), { withFileTypes: true })).filter(entry => entry.isDirectory() && entry.name.endsWith('-suit')).map(entry => entry.name)
+  const { applications: suits } = await discoverApplicationRoots(root)
   // Resolve callable aliases across real source imports and re-exports instead of
   // trusting the identifier chosen by an adapter or presentation helper.
   const moduleAsts = new Map()
@@ -29,10 +30,10 @@ export async function validateAtomicTemplateArchitecture({ root = defaultRoot } 
     let target
     if (specifier.startsWith('.')) target = path.resolve(path.dirname(from), specifier)
     else if (/^(?:~|@)\//.test(specifier)) {
-      const app = from.match(/^(.*\/apps\/[^/]+)\/app\//)?.[1]
+      const app = from.match(/^(.*\/apps\/[^/]+(?:\/mobile\/[^/]+)?)\/app\//)?.[1]
       if (app) target = path.join(app, 'app', specifier.slice(2))
     } else if (specifier.startsWith('~~/')) {
-      const app = from.match(/^(.*\/apps\/[^/]+)\/app\//)?.[1]
+      const app = from.match(/^(.*\/apps\/[^/]+(?:\/mobile\/[^/]+)?)\/app\//)?.[1]
       if (app) target = path.join(app, specifier.slice(3))
     } else if (specifier.startsWith('@building-suit/')) {
       const [name, ...subpath] = specifier.slice('@building-suit/'.length).split('/')
