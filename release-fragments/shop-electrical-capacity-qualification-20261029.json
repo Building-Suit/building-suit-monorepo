@@ -1,0 +1,16 @@
+{
+  "id": "shop-electrical-capacity-qualification-20261029",
+  "task": "SS-ELEC-601",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/supabase/tests/shop_electrical_capacity_audit.sql",
+    "apps/shop-suit/docs/electrical-supply/CAPACITY-QUALIFICATION-2026-10-29.md",
+    "apps/shop-suit/docs/electrical-supply/TASKS.md",
+    "apps/shop-suit/docs/electrical-supply/capacity-schema-2026-10-29.log"
+  ],
+  "reason": "Maintain rollback-only approved product quota and retained catalog qualification, recording current integrated schema execution without changing plans, commercial terms, runtime behavior or readiness gates. Ten thousand retained records contain two thousand active products; full active catalog and external acceptance remain open."
+}

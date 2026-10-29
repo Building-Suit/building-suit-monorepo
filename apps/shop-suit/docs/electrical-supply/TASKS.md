@@ -715,15 +715,15 @@ Dependencies on blocked hosted SS-ELEC-001 are waived only for independent local
 
 - Epic / priority / owner: E6 / P2 / QA.
 - Dependencies: SS-ELEC-000.
-- Status: NOT_STARTED.
+- Status: IN_PROGRESS.
 - Scope: apps/shop-suit; its public/shop_private schema and app contracts; packages/ui and packages/ux only where shared presentation/interaction requires extension.
 - Objective / acceptance: Review 1000s-SKU plan capacity and performance without changing approved commercial prices/entitlements.
 - Security / compatibility: preserve tenant/location authorization, subscription checks, idempotency, original financial/FIFO/service history and legacy contracts; no direct browser financial writes.
 - Automated tests: Review 1000s-SKU plan capacity and performance without changing approved commercial prices/entitlements. See TEST-MATRIX.md for the applicable unit, full-schema SQL, concurrency and browser gates. Execution evidence: VERIFICATION.md; absent evidence means unrun.
 - Manual tests: representative merchant steps for this feature, bilingual/accessible UI where applicable; provider/device/native-speaker acceptance separately recorded.
-- Evidence: No completion evidence yet; inspect VERIFICATION.md for subsequent execution.
+- Evidence: CAPACITY-QUALIFICATION-2026-10-29.md: current integrated81cdcc60 replays120 migrations and passes approved-cap boundaries, rollback, archive/replacement, pagination, tenant denial and10000 retained/2000 active records. Full active10000 suitability, native/browser/performance and external acceptance remain open.
 - PR / commit: draft [#441](https://github.com/Building-Suit/building-suit-monorepo/pull/441); tracker/foundation commit `ce62100b`. NOT_STARTED tasks have no feature implementation commit.
-- Blocker: Dependent implementations and required gates above remain pending.
+- Blocker: Largest approved public plan remains2000 active products;10000-active suitability is unproved and no entitlement change is authorized. Native/browser/performance and real merchant/device gates remain pending.
 - Completion notes / release fragment: no fully verified completion claim; new fragment will classify exact delivered scope. Draft release IDs are in RELEASE-PLAN.md.
 
 ## SS-ELEC-602 — Authorization and tenant-isolation verification
