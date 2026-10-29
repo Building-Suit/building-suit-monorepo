@@ -30,13 +30,20 @@ watch(() => [props.presentation.exists, props.presentation.locationId, props.pre
 watch(selectedBlock, value => { if (!value) closeBlock() })
 const { open: appointmentOpen, show: openAppointment, close: closeAppointment } = useOverlayState()
 const appointmentId = ref<string | null>(null)
+const appointmentTrigger = shallowRef<HTMLElement | null>(null)
+const editorOrigin = shallowRef<HTMLElement | null>(null)
+const editorReturnFocus = () => editorOrigin.value
+watch(showForm, shown => { if (!shown) editorOrigin.value = null })
+function createAppointment(walkIn: boolean) { editorOrigin.value = null; emit('create', walkIn) }
 const selectedAppointment = computed(() => [...props.presentation.days.flatMap(day => day.appointments), ...props.presentation.queue].find(appointment => appointment.id === appointmentId.value))
 function showAppointment(id: string) {
   if (props.presentation.loading || props.presentation.failed) return
+  const active = document.activeElement
+  if (active instanceof HTMLElement) appointmentTrigger.value = active
   appointmentId.value = id
   if (selectedAppointment.value) openAppointment()
 }
-function editSelectedAppointment() { const id = selectedAppointment.value?.id; if (id) { closeAppointment(); emit('edit', id) } }
+function editSelectedAppointment() { const id = selectedAppointment.value?.id; if (id) { editorOrigin.value = appointmentTrigger.value; closeAppointment(); emit('edit', id) } }
 function accessSelectedAppointment() { const id = selectedAppointment.value?.id; if (id) { closeAppointment(); emit('access', id) } }
 watch(() => [props.presentation.exists, props.presentation.locationId, props.selectedDate, staffId.value], () => { closeAppointment(); appointmentId.value = null })
 watch(selectedAppointment, value => { if (!value) closeAppointment() })
@@ -49,8 +56,8 @@ const ui = useUiCopy()
     <BsPageHeader :title="copy.title" :subtitle="copy.subtitle">
       <template #actions>
         <BsButton v-if="presentation.canSchedule" severity="secondary" :disabled="presentation.scheduleDisabled" @click="emit('openSchedule')"><BsIcon name="settings" :size="16" />{{ copy.schedule }}</BsButton>
-        <BsButton v-if="presentation.canManage" :disabled="!presentation.canCreate" @click="emit('create', true)">{{ copy.walkIn }}</BsButton>
-        <BsButton v-if="presentation.canManage" variant="primary" :disabled="!presentation.canCreate" @click="emit('create', false)"><BsIcon name="add" :size="18" />{{ copy.add }}</BsButton>
+        <BsButton v-if="presentation.canManage" :disabled="!presentation.canCreate" @click="createAppointment(true)">{{ copy.walkIn }}</BsButton>
+        <BsButton v-if="presentation.canManage" variant="primary" :disabled="!presentation.canCreate" @click="createAppointment(false)"><BsIcon name="add" :size="18" />{{ copy.add }}</BsButton>
       </template>
     </BsPageHeader>
     <BsPanel v-if="!presentation.exists && !presentation.shopLoading" padding="md">{{ copy.noShop }}</BsPanel>
@@ -96,7 +103,7 @@ const ui = useUiCopy()
         <div v-else-if="presentation.failed" class="bs-appointments__state" role="alert"><BsText>{{ presentation.failureMessage }}</BsText><BsButton severity="secondary" @click="emit('retry')">{{ copy.retry }}</BsButton></div>
         <div v-else-if="!presentation.locationId" class="bs-appointments__state">{{ copy.noLocation }}</div>
         <template v-else>
-          <BsAppointmentCalendar variant="calendar" :days="presentation.days" :view="view" :copy="copy" :can-create="presentation.canManage && presentation.canCreate" :transitioning="presentation.transitioning" @appointment="showAppointment" @block="showBlock" @day="date => { emit('date', date); view = 'day' }" @create="(date, time) => emit('createSlot', date, time)" />
+          <BsAppointmentCalendar variant="calendar" :days="presentation.days" :view="view" :copy="copy" :can-create="presentation.canManage && presentation.canCreate" :transitioning="presentation.transitioning" @appointment="showAppointment" @block="showBlock" @day="date => { emit('date', date); view = 'day' }" @create="(date, time) => { editorOrigin = null; emit('createSlot', date, time) }" />
           <p v-if="presentation.visibleAppointmentCount === 0" class="bs-appointments__empty" role="status">{{ presentation.filtersActive ? copy.calendarEmpty || copy.empty : copy.empty }}</p>
         </template>
         <p v-if="presentation.noStaff" class="bs-appointments__notice" role="status">{{ copy.noStaff }}</p>
@@ -152,7 +159,7 @@ const ui = useUiCopy()
       </BsDescriptionList>
       <template #footer><BsButton @click="closeBlock">{{ ui('close') }}</BsButton></template>
     </BsDialog>
-    <BsRecordActionDialog v-model:visible="showForm" pinned-actions :title="presentation.formTitle" :dirty="presentation.formDirty" :pending="presentation.saving" :error="presentation.error" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('save')">
+    <BsRecordActionDialog v-model:visible="showForm" :return-focus="editorReturnFocus" pinned-actions :title="presentation.formTitle" :dirty="presentation.formDirty" :pending="presentation.saving" :error="presentation.error" :submit-label="copy.save" :cancel-label="copy.cancel" @submit="emit('save')">
       <BsField v-slot="field" :label="copy.service">
         <BsSelect :model-value="form.serviceId" :input-id="field.id" :aria-describedby="field.describedby" :label="copy.service" :options="choices.services" option-label="label" option-value="value" filter virtual :aria-required="true" @update:model-value="updateForm('serviceId', $event)"/>
       </BsField>

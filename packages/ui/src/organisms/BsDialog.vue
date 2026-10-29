@@ -3,7 +3,7 @@ import Dialog from 'primevue/dialog'
 import { interactionPolicy } from '@building-suit/ux'
 defineOptions({ inheritAttrs: false })
 const visible = defineModel<boolean>('visible', { default: false })
-const props = withDefaults(defineProps<{ title: string; dirty?: boolean; pending?: boolean; size?: 'sm' | 'md' | 'lg' }>(), { dirty: false, pending: false, size: 'md' })
+const props = withDefaults(defineProps<{ title: string; returnFocus?: () => HTMLElement | null; dirty?: boolean; pending?: boolean; size?: 'sm' | 'md' | 'lg' }>(), { dirty: false, pending: false, size: 'md' })
 const ui = useUiCopy()
 const slots = useSlots()
 const { confirmDiscard, discardPrompt, requestClose, discard, handleKeydown } = useDialogInteraction(props, visible)

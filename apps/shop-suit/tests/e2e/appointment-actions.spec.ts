@@ -18,8 +18,9 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
       return undefined
     })
     await fixtureGoto(page, '/appointments?from=2026-10-13')
-    const event = page.locator('.bs-appointment-event')
-    await event.locator('summary').click()
+    const appointmentButton = page.getByRole('button', { name: new RegExp(item.customerName) }).first()
+    const event = page.getByRole('dialog', { name: item.customerName, exact: true })
+    await appointmentButton.click()
     const reschedule = event.getByRole('button', { name: ar ? 'إعادة الجدولة' : 'Reschedule', exact: true })
     await reschedule.click()
     const form = page.getByRole('dialog', { name: ar ? 'تعديل الموعد' : 'Edit appointment', exact: true })
@@ -64,18 +65,19 @@ for (const [locale, theme, width] of [['en', 'light', 1440], ['ar', 'dark', 390]
     releaseSave()
     await expect(form).toHaveCount(0)
     await fixtureUnroute(page, '**/rest/v1/rpc/save_appointment')
-    await event.locator('summary').click()
+    await appointmentButton.click()
     await reschedule.click()
     await expect(starts).toHaveValue('2026-10-13T11:00')
     await form.getByLabel(ar ? 'ملاحظات' : 'Notes', { exact: true }).fill('Discard this change')
     await page.keyboard.press('Escape')
     await discard.getByRole('button', { name: ar ? 'تأكيد' : 'Confirm', exact: true }).click()
     await expect(form).toHaveCount(0)
-    await expect(reschedule).toBeFocused()
+    await expect(appointmentButton).toBeFocused()
+    await appointmentButton.click()
     expect(item.notes).toBe('Keep original note')
 
     for (const [status, label] of [['cancelled', ar ? 'إلغاء الموعد' : 'Cancel appointment'], ['no_show', ar ? 'لم يحضر' : 'No-show']] as const) {
-      if (status === 'no_show') { item.status = 'booked'; await fixtureGoto(page, '/appointments?from=2026-10-13'); await event.locator('summary').click() }
+      if (status === 'no_show') { item.status = 'booked'; await fixtureGoto(page, '/appointments?from=2026-10-13'); await appointmentButton.click() }
       const action = event.getByRole('button', { name: label, exact: true })
       await action.click()
       const confirmation = page.getByRole('dialog', { name: label, exact: true })

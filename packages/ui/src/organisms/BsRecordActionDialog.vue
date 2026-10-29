@@ -2,6 +2,7 @@
 const visible = defineModel<boolean>('visible', { default: false })
 const props = withDefaults(defineProps<{
   title: string
+  returnFocus?: () => HTMLElement | null
   dirty?: boolean
   pending?: boolean
   error?: string | null
@@ -37,7 +38,7 @@ const formId = useId()
 </script>
 
 <template>
-  <BsDialog v-model:visible="visible" :title="title" :dirty="dirty" :pending="pending" :size="size">
+  <BsDialog v-model:visible="visible" :title="title" :return-focus="returnFocus" :dirty="dirty" :pending="pending" :size="size">
     <template #default="{ close }">
       <BsForm :id="formId" :pending="pending" :error="error" :layout="formLayout" :columns="formColumns" @submit="emit('submit', $event)">
         <slot :close="close" />

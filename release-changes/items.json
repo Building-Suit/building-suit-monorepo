@@ -2648,5 +2648,76 @@
       "apps/ledger-suit/docs/integration-check-recovery-20261029.md"
     ],
     "reason": "Classify all six consumers of optional shared footer/settings props and landing link events. Only Shop connects product consent/analytics; other consumers retain their existing behavior and receive build/type compatibility qualification. Docs demonstrates the opt-in footer action. No Doctor public activation or hosted change."
+  },
+  {
+    "id": "ls-ci-qual-003-appointment-focus",
+    "task": "LS-CI-QUAL-003",
+    "suits": [
+      "shop-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ui/src/templates/BsAppointmentsPage.vue"
+    ],
+    "reason": "Retain a surviving calendar origin when appointment details hand off to the editor; closing a clean or discarded editor restores keyboard focus without keeping two modals open. Creation retains its own opener; pending and dirty guards remain.",
+    "notes": {
+      "title": {
+        "en": "Return to the appointment after editing",
+        "ar": "\u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u0627\u0644\u0645\u0648\u0639\u062f \u0628\u0639\u062f \u0627\u0644\u062a\u0639\u062f\u064a\u0644"
+      },
+      "summary": {
+        "en": "Keyboard focus returns to the calendar appointment when its editor closes.",
+        "ar": "\u064a\u0639\u0648\u062f \u062a\u0631\u0643\u064a\u0632 \u0644\u0648\u062d\u0629 \u0627\u0644\u0645\u0641\u0627\u062a\u064a\u062d \u0625\u0644\u0649 \u0645\u0648\u0639\u062f \u0627\u0644\u062a\u0642\u0648\u064a\u0645 \u0639\u0646\u062f \u0625\u063a\u0644\u0627\u0642 \u0645\u062d\u0631\u0631\u0647."
+      },
+      "details": {
+        "en": "The editor preserves pending-save and unsaved-change protections while returning to a control that remains on the page.",
+        "ar": "\u064a\u062d\u0627\u0641\u0638 \u0627\u0644\u0645\u062d\u0631\u0631 \u0639\u0644\u0649 \u062d\u0645\u0627\u064a\u0629 \u0627\u0644\u062d\u0641\u0638 \u0648\u0627\u0644\u062a\u063a\u064a\u064a\u0631\u0627\u062a \u063a\u064a\u0631 \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629 \u0648\u064a\u0639\u0648\u062f \u0625\u0644\u0649 \u0639\u0646\u0635\u0631 \u0645\u0627 \u0632\u0627\u0644 \u0645\u0648\u062c\u0648\u062f\u064b\u0627 \u0628\u0627\u0644\u0635\u0641\u062d\u0629."
+      }
+    },
+    "sources": [
+      "ls-ci-qual-003-appointment-focus"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ui/src/templates/BsAppointmentsPage.vue",
+        "contains": "editorOrigin.value = appointmentTrigger.value; closeAppointment(); emit('edit', id)"
+      },
+      {
+        "path": "packages/ui/src/templates/BsAppointmentsPage.vue",
+        "contains": ":return-focus=\"editorReturnFocus\""
+      }
+    ]
+  },
+  {
+    "id": "ls-ci-qual-003-dialog-support",
+    "task": "LS-CI-QUAL-003",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "packages/ui/src/organisms/BsDialog.vue",
+      "packages/ui/src/organisms/BsRecordActionDialog.vue",
+      "packages/ui/src/templates/BsAppointmentsPage.vue",
+      "packages/ux/src/composables/useDialogInteraction.ts",
+      "packages/ux/tests/form-dialog.test.mjs",
+      "apps/shop-suit/tests/e2e/appointment-actions.spec.ts",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "docs/shared/interactions.md",
+      "apps/ledger-suit/docs/integration-check-recovery-20261029.md",
+      "release-changes/items.json",
+      "apps/shop-suit/tests/e2e/marketing-privacy.spec.ts"
+    ],
+    "reason": "Add an optional surviving focus-origin resolver to the shared dialog contract; default behavior, dirty/pending guards and all authorization remain. Qualify current appointment actions through accessible calendar/details controls without dropping focus, error recovery, pending or confirmation assertions. Other consumers receive compatibility only; Doctor remains synthetic/private. The synthetic HTTP forwarder closes each source connection explicitly across reload/prefetch cancellation; it does not retry or suppress request failures.",
+    "sources": [
+      "ls-ci-qual-003-dialog-support"
+    ]
   }
 ]

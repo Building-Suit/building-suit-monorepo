@@ -50,7 +50,7 @@ async function fixture(context: BrowserContext, port = 4337, host = origin) {
   await context.exposeBinding('__recordSyntheticAnalytics', (_source, event: unknown[]) => { recorded.push(event) })
   await context.route(`${host}/**`, route => fixtureRoute(context, route, async () => {
     const url = new URL(route.request().url())
-    const response = await route.fetch({ url: `http://127.0.0.1:${port}${url.pathname}${url.search}`, headers: { ...route.request().headers(), host: new URL(host).host, 'x-forwarded-proto': 'https' } })
+    const response = await route.fetch({ url: `http://127.0.0.1:${port}${url.pathname}${url.search}`, headers: { ...route.request().headers(), host: new URL(host).host, 'x-forwarded-proto': 'https', connection: 'close' } })
     await fulfillFetchedResponse(route, response)
   }))
   await context.route(/https:\/\/[^/]*(googletagmanager|google-analytics)\.com\//, async route => {

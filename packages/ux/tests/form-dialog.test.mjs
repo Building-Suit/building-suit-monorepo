@@ -66,3 +66,25 @@ test('dialog protects dirty values, excludes pending dismissals and restores the
     if (previousHTMLElement === undefined) delete globalThis.HTMLElement; else globalThis.HTMLElement = previousHTMLElement
   }
 })
+
+for (const connected of [true, false]) test(`dialog handoff restores a surviving explicit origin only: ${connected}`, async () => {
+  const previousDocument = globalThis.document, previousHTMLElement = globalThis.HTMLElement
+  let returned = 0, transient = 0
+  class Element { isConnected = connected; focus() { returned++ } }
+  const origin = new Element()
+  globalThis.HTMLElement = Element
+  globalThis.document = { activeElement: Object.assign(new Element(), { focus() { transient++ } }) }
+  const scope = effectScope(), visible = ref(false)
+  try {
+    const dialog = scope.run(() => useDialogInteraction({ pending: false, dirty: false, returnFocus: () => origin }, visible))
+    visible.value = true
+    dialog.requestClose(false)
+    await nextTick()
+    assert.equal(returned, connected ? 1 : 0)
+    assert.equal(transient, 0, 'The closing parent dialog is not the child editor return target')
+  } finally {
+    scope.stop()
+    if (previousDocument === undefined) delete globalThis.document; else globalThis.document = previousDocument
+    if (previousHTMLElement === undefined) delete globalThis.HTMLElement; else globalThis.HTMLElement = previousHTMLElement
+  }
+})

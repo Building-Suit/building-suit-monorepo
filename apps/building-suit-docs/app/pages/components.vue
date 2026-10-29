@@ -604,6 +604,7 @@ const invitationPreviewCopy={
     <BsButton @click="privacyExampleOpen = true">Privacy settings / إعدادات الخصوصية</BsButton>
     <BsLandingFooter :legal-links="[]" footer="Privacy controls / إعدادات الخصوصية" navigation-label="Footer / التذييل" :privacy-settings-label="privacyExample.copy.settings" @privacy-settings="privacyExample.open" />
     <BsPrivacyConsent :model="privacyExample" />
+    <BsDescriptionList><BsDescriptionItem term="Dialog returnFocus">{{ isArabic ? 'يمكن تسليم محرر الموعد إلى زر التقويم الأصلي عند إغلاق نافذة التفاصيل؛ يظل الإغلاق محميًا أثناء الحفظ ومع التغييرات غير المحفوظة.' : 'A dialog handoff can return an appointment editor to its surviving calendar button. Pending and dirty-form dismissal protection remains active.' }}</BsDescriptionItem></BsDescriptionList>
   </BsContentSection>
   </div>
 </template>

@@ -2,12 +2,12 @@ import { nextTick, ref, shallowRef, watch, onScopeDispose, type Ref } from 'vue'
 import { interactionPolicy } from '../index.ts'
 
 /** Shared dirty protection, pending exclusion, Escape and focus restoration. */
-export function useDialogInteraction(props: { readonly pending: boolean; readonly dirty: boolean }, visible: Ref<boolean>) {
+export function useDialogInteraction(props: { readonly pending: boolean; readonly dirty: boolean; readonly returnFocus?: () => HTMLElement | null }, visible: Ref<boolean>) {
   const confirmDiscard = ref(false)
   const discardPrompt = ref<HTMLElement | null>(null)
   const opener = shallowRef<HTMLElement | null>(null)
   function rememberOpener() {
-    const active = document.activeElement
+    const active = props.returnFocus?.() ?? document.activeElement
     if (active instanceof HTMLElement) opener.value = active
 }
 function restoreFocus() {
