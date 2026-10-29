@@ -1,6 +1,6 @@
 # Doctor and Shop reconciliation rehearsal — 2026-10-29
 
-This is an isolated local integration rehearsal, not a publication or staging merge. Doctor PR401 remains published at `d9eac6e5a2a8944a99b84658f79184a9c4bf8037`. The other source is Shop PR441 at `54515e83853fe2cb047f2bcb8bdc693b4741f622`. Shop remains first staging integrator; reconcile its actual final staging commit, recheck all source changes, and obtain exact-candidate required CI before coordinated Doctor integration. A later Shop head cannot inherit this rehearsal's results automatically.
+The initial isolated rehearsal combined published Doctor PR401 `d9eac6e5a2a8944a99b84658f79184a9c4bf8037` and Shop PR441 `54515e83853fe2cb047f2bcb8bdc693b4741f622`. It performed no staging merge. The subsequent prepared combined-root publication is recorded below. Shop remains first staging integrator; reconcile its actual final staging commit, recheck all source changes, and obtain exact-candidate required CI before coordinated Doctor integration. A later Shop head cannot inherit this rehearsal's results automatically.
 
 ## Reviewed conflict resolutions
 
@@ -29,3 +29,9 @@ Shared job123520622182 passed48 auth-parity browser cases, including the new cho
 No prior intermittent Doctor onboarding/signup failure recurred. Their original cause remains unconfirmed; the independently reproduced and fixed wizard focus defect has its own passing shared regression/browser evidence. These receipts certify only the stated published Doctor source and must not be reused as actual-service acceptance of this combined rehearsal.
 
 The original49 Doctor heads remain preserved. Retained legal gate PR502 and unfinished privacy PR505 remain open; expanded privacy checkpoint `6174e0dbd31a1299e63e2a8a52f86a3d6b8061d6` remains separately preserved and unpublished. The cloud executor briefly disconnected and then recovered; the original candidate and privacy worktrees were rechecked clean, with no duplicated publication.
+
+## Prepared combined-root publication
+
+After the initial rehearsal, merge `351ff70e99e5e51f70f71010f8798cd61b80eefb` incorporates Shop's published76976761 historical fixture correction without conflict. Each of the three changed fixture scripts passes syntax and lint checks. Root tests pass again:2,620 total/2,597 passed/zero failed/23 existing skips. App/package runtime sources, dependency lockfile and build/type configuration are unchanged from the eight passing typechecks and builds at rehearsal8c8703a9; no new static runtime acceptance is invented for the database fixture change. Actual native qualification remains in the owned CI workflows.
+
+The authorized publication target is the existing Doctor root branch/PR401, still targeting `stg`; no cross-stack PR parent or replacement PR is created. Publish the reviewed combined candidate for required CI while Shop continues its first staging integration, then reconcile the resulting final staging before any coordinated Doctor merge. Root publication is not a staging merge, passing full CI or domain approval. Current exact publication and run IDs belong in PR401's description; this record preserves the source-specific preceding evidence.
