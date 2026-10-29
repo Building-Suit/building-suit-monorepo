@@ -45,6 +45,8 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       const email = page.locator('input[type=email]')
       const password = page.locator('input[type=password]')
       await expect(email).toBeVisible()
+      await expect(email).toHaveAccessibleName(locale === 'ar' ? 'البريد الإلكتروني' : 'Email')
+      expect(await email.evaluate(input => (input as HTMLInputElement).labels?.length)).toBe(1)
       await expect(password).toHaveCount(0)
       await expectNoPageOverflow(page)
       await email.focus()
@@ -64,6 +66,8 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
       // synthetic address through its own endpoint; Ledger advances locally.
       await email.press('Enter')
       await expect(password).toBeVisible()
+      await expect(password).toHaveAccessibleName(locale === 'ar' ? 'كلمة المرور' : 'Password')
+      expect(await password.evaluate(input => (input as HTMLInputElement).labels?.length)).toBe(1)
       await expect(password).toBeFocused()
       await expect(email).toHaveAttribute('readonly', '')
       await expect(email).not.toBeFocused()

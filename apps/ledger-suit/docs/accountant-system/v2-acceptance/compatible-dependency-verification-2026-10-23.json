@@ -1,0 +1,232 @@
+{
+  "task": "LS-SEC-DEP-002",
+  "date": "2026-10-23",
+  "parent_pr": 459,
+  "parent_sha": "e7ef6b374310b6a1c65bfb27816c84b3948d9bce",
+  "scope": "Shared build/development dependency graph; no production deployment or financial migration.",
+  "audit_command": "pnpm audit --prod --json",
+  "before": {
+    "info": 0,
+    "low": 4,
+    "moderate": 14,
+    "high": 9,
+    "critical": 0
+  },
+  "after": {
+    "info": 0,
+    "low": 2,
+    "moderate": 6,
+    "high": 2,
+    "critical": 0
+  },
+  "changed_versions": {
+    "vite": [
+      "8.3.0",
+      "8.3.5"
+    ],
+    "launch-editor": [
+      "2.14.1",
+      "2.14.2"
+    ],
+    "source-map-js": [
+      "1.2.1",
+      "1.2.2"
+    ],
+    "serialize-javascript": [
+      "7.1.1",
+      "7.1.2"
+    ],
+    "@modelcontextprotocol/client": [
+      "2.0.0",
+      "2.3.0"
+    ],
+    "@modelcontextprotocol/server": [
+      "2.0.0",
+      "2.3.0"
+    ],
+    "@modelcontextprotocol/core": [
+      "2.0.0",
+      "2.3.0"
+    ],
+    "zod_v4": [
+      "4.6.5",
+      "4.6.7"
+    ],
+    "rolldown": [
+      "1.2.9",
+      "1.2.15"
+    ]
+  },
+  "remaining_advisories": [
+    {
+      "module_name": "node-forge",
+      "severity": "high",
+      "title": "node-forge RSA PKCS#1 v1.5 signature verification accepts extra nested DigestAlgorithm elements",
+      "vulnerable_versions": "<=1.4.0",
+      "patched_versions": "<0.0.0",
+      "url": "https://github.com/advisories/GHSA-86w9-cpqp-85rv"
+    },
+    {
+      "module_name": "@nuxt/nitro-server",
+      "severity": "moderate",
+      "title": "Nuxt: Server-side route rules (`redirect`, `headers`, `proxy`, `ssr`) are skipped for case-variant paths when routing is case-insensitive",
+      "vulnerable_versions": ">=4.2.0 <4.6.2",
+      "patched_versions": ">=4.6.2",
+      "url": "https://github.com/advisories/GHSA-vjh5-4x84-xrqp"
+    },
+    {
+      "module_name": "nuxt",
+      "severity": "moderate",
+      "title": "Nuxt: Server-side route rules (`redirect`, `headers`, `proxy`, `ssr`) are skipped for case-variant paths when routing is case-insensitive",
+      "vulnerable_versions": ">=4.0.0 <4.6.2",
+      "patched_versions": ">=4.6.2",
+      "url": "https://github.com/advisories/GHSA-vjh5-4x84-xrqp"
+    },
+    {
+      "module_name": "nuxt",
+      "severity": "moderate",
+      "title": "Nuxt server islands render `useHeadSafe` input without sanitisation",
+      "vulnerable_versions": ">=3.13.0 <4.6.2",
+      "patched_versions": ">=4.6.2",
+      "url": "https://github.com/advisories/GHSA-xfq5-w38q-pc2x"
+    },
+    {
+      "module_name": "nuxt",
+      "severity": "low",
+      "title": "Nuxt: Incomplete fix for GHSA-934w-87qh-qr26: a `javascript:` URL prefixed with an ASCII control character executes from `<NuxtLink>` when `pages` is disabled",
+      "vulnerable_versions": "<4.6.0",
+      "patched_versions": ">=4.6.0",
+      "url": "https://github.com/advisories/GHSA-jjm6-p2m9-9w4x"
+    },
+    {
+      "module_name": "zod",
+      "severity": "high",
+      "title": "Zod can exhaust memory while validating oversized constrained collections",
+      "vulnerable_versions": "<4.6.6",
+      "patched_versions": ">=4.6.6",
+      "url": "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5"
+    }
+  ],
+  "behavior": {
+    "test": "tooling/checks/runtime-toolchain-security.test.mjs",
+    "consumer_resolution": "Nuxt ESLint/config-inspector/agentic MCP and Vite/PostCSS source-map-js",
+    "parent": {
+      "pass": 1,
+      "fail": 2,
+      "legitimate_same_origin_pass": true,
+      "old_MCP_follows_cross_origin": true,
+      "old_source_map_accepts_excessive_offsets": true
+    },
+    "updated": {
+      "pass": 3,
+      "fail": 0,
+      "same_origin_request_pass": true,
+      "cross_origin_custom_header_and_body_leak_denied": true,
+      "ordinary_mapping_pass": true,
+      "excessive_nested_or_invalid_offsets_rejected": true
+    },
+    "existing_Git_editor_shell_guards": {
+      "pass": 4,
+      "fail": 0
+    }
+  },
+  "verification": {
+    "prepare_apps": 7,
+    "workspace": "pass",
+    "scoped_eslint": "pass",
+    "all_app_types": {
+      "pass": 7,
+      "fail": 0,
+      "command": "pnpm exec turbo run typecheck --concurrency=2 --continue"
+    },
+    "all_app_builds": {
+      "pass": 7,
+      "fail": 0,
+      "command": "pnpm exec turbo run build --concurrency=2 --continue"
+    },
+    "browser": {
+      "system_browser": "Chromium154",
+      "pass": 4,
+      "fail": 7,
+      "passed": [
+        "Shared component catalogue table/modal/wizard/confirmation",
+        "EN light390 sign-in parity for Ledger and Shop",
+        "AR dark1440 sign-in parity for Ledger and Shop",
+        "Ledger responsive Arabic public/auth layout"
+      ],
+      "failed": [
+        {
+          "scope": "Shop public landing",
+          "cases": 1,
+          "cause": "Unavailable local pricing backend leaves Error in Pinia Colada SSR state; devalue returns HTTP500",
+          "same_HTTP500_and_devalue_path_reproduced_in_actual_parent_build": true
+        },
+        {
+          "scope": "Doctor preview EN/AR",
+          "cases": 2,
+          "cause": "Existing test waits for retired combined Language · Theme button; current shell has separate controls",
+          "product_and_fixture_sources_unchanged": true
+        },
+        {
+          "scope": "Automation and Inventory/Super Admin EN/AR",
+          "cases": 4,
+          "cause": "Existing geometry fixture waits for absent header element in current shared sidebar shell",
+          "product_and_fixture_sources_unchanged": true
+        }
+      ],
+      "whole_browser_acceptance": "not_passed; retained inherited follow-ups, not waived"
+    },
+    "lint": {
+      "pass_apps": 6,
+      "failed_apps": [
+        "shop-suit"
+      ],
+      "existing_errors": [
+        "app/composables/useShopMutation.ts preserve-caught-error",
+        "tests/unit/landing-journey.test.mjs no-unused-vars"
+      ],
+      "same_errors_reproduced_on_parent": true
+    },
+    "full_root_units": {
+      "tests": 2028,
+      "pass": 1947,
+      "fail": 58,
+      "skipped": 23,
+      "all_failures_reproduced_on_parent": true,
+      "baseline": {
+        "Shop": {
+          "tests": 444,
+          "pass": 390,
+          "fail": 54
+        },
+        "shared_receipt_and_Automation_health": {
+          "tests": 14,
+          "pass": 10,
+          "fail": 4
+        }
+      },
+      "identical_failure_names_verified": true
+    },
+    "initial_unbounded_checks": "Concurrent all-app build/type workloads exhausted managed memory; no successful result claimed. Rerun uses the maintained CI concurrency of two, sequential build/type phases.",
+    "release_check": "pass before commit; parent-aware committed comparison required before push"
+  },
+  "shared_consumers": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "building-suit-docs"
+  ],
+  "source_sha256": {
+    "pnpm-workspace.yaml": "6fd0d9457d99ed7ab1518235ec26c45a4fd1a315510d5bfd41dbaa1b7a17b0d3",
+    "pnpm-lock.yaml": "eea5109f0d10d70022de0d4cf7b2dca9e7ee08bb51c523ad3112e288573b8cb8",
+    "tooling/checks/runtime-toolchain-security.test.mjs": "49704a7bc280361f5aa32bfb391956213505004c16b080f92373bf484ee1736a"
+  },
+  "limits": [
+    "No audit ignore list; direct Zod v3, Nuxt/Nitro and node-forge findings remain open.",
+    "Graph counts are not proof of deployed reachability.",
+    "No full-CI, hosted configuration, live Automation reconciliation, accountant UAT or sale-ready claim."
+  ]
+}

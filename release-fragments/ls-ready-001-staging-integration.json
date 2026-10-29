@@ -1,0 +1,9 @@
+{
+  "id": "ls-ready-001-staging-integration",
+  "task": "LS-READY-001",
+  "suits": ["ledger-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/ledger-suit/docs/accountant-system/work-packages/LS-READY-001.md"],
+  "reason": "Record the owner-authorized combined Ledger staging candidate, preserved task ancestry, actual validation scope and unresolved external release gates."
+}

@@ -8,7 +8,11 @@
 -- totals are text so downstream tooling never coerces PostgreSQL bigint values
 -- through a JavaScript Number.
 \set ON_ERROR_STOP on
-begin read only;
+begin isolation level repeatable read read only;
+
+-- Operator metadata is captured before assuming the customer's read boundary.
+select md5(coalesce(string_agg(to_jsonb(history)::text, E'\n' order by version), ''))
+  as migration_history_digest from supabase_migrations.schema_migrations history \gset
 
 select set_config(
   'request.jwt.claims',
@@ -17,8 +21,22 @@ select set_config(
 ) as claims \gset
 set local role authenticated;
 
+with storage_metadata as (
+  select 'attachments'::text source_table, row_value.storage_bucket, row_value.storage_key,
+    row_value.size_bytes, to_jsonb(row_value) metadata
+  from public.attachments row_value where organization_id = :'organization_id'::uuid
+  union all
+  select 'manual_payment_evidence', 'manual-payment-receipts', row_value.storage_key,
+    row_value.size_bytes, to_jsonb(row_value)
+  from public.manual_payment_evidence row_value where organization_id = :'organization_id'::uuid
+), storage_objects as (
+  select storage_bucket, storage_key, min(size_bytes) size_bytes,
+    min(size_bytes) <> max(size_bytes) conflicting_size
+  from storage_metadata group by storage_bucket, storage_key
+)
 select jsonb_build_object(
-  'schema_version', 'ls-ops-001-v1',
+  'schema_version', 'ls-ops-001-v2',
+  'migration_history_digest', :'migration_history_digest',
   'environment_id', :'environment_id',
   'organization_id', :'organization_id',
   'from_date', :'from_date',
@@ -207,20 +225,18 @@ select jsonb_build_object(
   ),
   'attachments', jsonb_build_object(
     'count', (
-      select count(*)::text from public.attachments
-      where organization_id = :'organization_id'::uuid
+      select count(*)::text from storage_objects
     ),
     'bytes', (
-      select coalesce(sum(size_bytes), 0)::text from public.attachments
-      where organization_id = :'organization_id'::uuid
+      select coalesce(sum(size_bytes), 0)::text from storage_objects
     ),
+    'metadata_count', (select count(*)::text from storage_metadata),
+    'receipt_metadata_count', (select count(*)::text from storage_metadata where source_table='manual_payment_evidence'),
+    'metadata_conflicts', (select count(*)::text from storage_objects where conflicting_size),
     'metadata_digest', (
-      select md5(coalesce(string_agg(jsonb_build_array(
-        id, entity_type, entity_id, file_name, mime_type, size_bytes::text,
-        storage_bucket, storage_key, checksum, uploaded_by, created_at
-      )::text, E'\n' order by storage_bucket, storage_key), ''))
-      from public.attachments
-      where organization_id = :'organization_id'::uuid
+      select md5(coalesce(string_agg(jsonb_build_array(source_table, metadata)::text,
+        E'\n' order by storage_bucket, storage_key, source_table), ''))
+      from storage_metadata
     )
   )
 );

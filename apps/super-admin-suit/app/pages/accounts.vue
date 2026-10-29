@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { navigateTo } from '#app'
 import type { AccountOutcome, AccountRow, ActivationAttempt, AccountScope, PlanOption, SubscriptionSnapshot } from '../types/account-workflow'
 import { attemptKey, restoreAttempt } from '../utils/activation-attempt'
 

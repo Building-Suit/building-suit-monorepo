@@ -1,5 +1,7 @@
 # Customer accrual subledger — V2-IMP-008
 
+2026-10-22 update: native independent-session **AR retries and overlapping allocations passed**. See [the current verification and boundaries](native-concurrency-verification.md) and [native SQL evidence](native-financial-verification.md). Historical blocked results below retain their original dates; this does not establish HTTP/Storage, provider, deployment or accountant acceptance.
+
 Status: implemented locally; independent Supabase/browser/concurrency verification and accountant acceptance remain pending. No deployment or hosted migration has occurred.
 
 The control-plane task supplied approved V2-D05 on 2026-09-25: recognize receivables on issue; allow many-to-many receipt allocation; require full allocation; reject overpayments; retain linked immutable credits/corrections; privilege and explain write-offs; reverse accounting and allocations append-only. This approval supersedes the baseline's earlier pending D05 entry. Multi-currency AR is excluded.

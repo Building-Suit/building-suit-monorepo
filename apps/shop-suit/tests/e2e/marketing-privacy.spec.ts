@@ -50,7 +50,7 @@ async function fixture(context: BrowserContext, port = 4337, host = origin) {
   await context.exposeBinding('__recordSyntheticAnalytics', (_source, event: unknown[]) => { recorded.push(event) })
   await context.route(`${host}/**`, route => fixtureRoute(context, route, async () => {
     const url = new URL(route.request().url())
-    const response = await route.fetch({ url: `http://127.0.0.1:${port}${url.pathname}${url.search}`, headers: { ...route.request().headers(), host: new URL(host).host, 'x-forwarded-proto': 'https' } })
+    const response = await route.fetch({ url: `http://127.0.0.1:${port}${url.pathname}${url.search}`, headers: { ...route.request().headers(), host: new URL(host).host, 'x-forwarded-proto': 'https', connection: 'close' } })
     await fulfillFetchedResponse(route, response)
   }))
   await context.route(/https:\/\/[^/]*(googletagmanager|google-analytics)\.com\//, async route => {
@@ -92,7 +92,8 @@ test('no pre-consent network, equally usable choices, safe URLs, reload, withdra
   await expect.poll(() => requests.length).toBe(2)
   await context.addCookies([{ name: '_ga', value: 'synthetic', url: origin }, { name: '_ga_TESTONLY', value: 'synthetic', url: origin }, { name: 'bs-shop-production-auth-token', value: 'synthetic-not-a-session', url: origin }])
   await page.getByRole('link', { name: 'Privacy Policy', exact: true }).click()
-  await page.getByRole('button', { name: 'Privacy settings', exact: true }).click()
+  await expect(page).toHaveURL(origin + '/privacy')
+  await page.getByRole('main').getByRole('button', { name: 'Privacy settings', exact: true }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Reject optional' }).click()
   await expect(page.locator('iframe[title="Optional analytics"]')).toHaveCount(0)
   const cookies = await context.cookies()
@@ -215,7 +216,8 @@ test('conversion transport remains scoped, deduplicated and separate from signup
   await dispatch()
   expect((await events(page)).filter(event => event[1] === 'sign_up')).toHaveLength(1)
   await page.goto(origin + '/privacy')
-  await page.getByRole('button', { name: 'Privacy settings', exact: true }).click()
+  // The policy action and footer are both valid reopening entries; exercise the policy control here.
+  await page.getByRole('main').getByRole('button', { name: 'Privacy settings', exact: true }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Reject optional' }).click()
   await expect(page.locator('iframe[title="Optional analytics"]')).toHaveCount(0)
   expect(await page.evaluate(() => sessionStorage.getItem('bs-shop.analytics.signup'))).toBe(null)

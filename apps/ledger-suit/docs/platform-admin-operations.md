@@ -1,5 +1,7 @@
 # LS-ADMIN-002 — Platform administration operations
 
+2026-10-26 native follow-up: [LS-BILL-NATIVE-001](accountant-system/work-packages/LS-BILL-NATIVE-001.md) now verifies actual Auth/Edge/Storage/SQL, receipt expiry, quota/correction/renewal and mobile customer → desktop operator browser paths. It fixes receipt links through the configured public project origin. Earlier unrun/local-only statements below are historical; hosted configuration and accountant UAT remain separate.
+
 Implements ADM-02, ADM-03, ADM-04, BILL-MAN-03 and SUP-03 under approved
 LS-D-ADMIN. It builds on LS-ADMIN-001 without adding raw SQL, financial-history
 editing, user impersonation, or authority derived from tenant roles.

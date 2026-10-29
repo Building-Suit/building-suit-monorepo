@@ -1,10 +1,14 @@
 import { scopedQueryKey } from '@building-suit/data-access'
 import type { Database } from '~~/types/database.types'
+import type { ExactJournalRpcDatabase } from '~~/types/exact-journal-rpc.types'
+import { JOURNAL_SEARCH_COLUMNS } from '../utils/journalTransport'
+import { MAX_DATABASE_MONEY_MINOR } from '../utils/money'
 
 export const TRANSACTION_STATUSES = ['draft', 'scheduled', 'pending', 'pending_approval', 'posted', 'voided', 'reversed', 'failed'] as const
 export const TRANSACTION_TYPES = ['income', 'expense', 'transfer', 'asset_purchase', 'liability_created', 'liability_payment', 'owner_contribution', 'owner_withdrawal', 'adjustment', 'opening_balance', 'reversal'] as const
 export const TRANSACTION_SOURCES = ['manual', 'import', 'recurring', 'commitment', 'reversal', 'opening_balance', 'api', 'year_end_close'] as const
-type TransactionRow = Database['public']['Functions']['search_transactions']['Returns'][number]
+type NumericTransactionRow = Database['public']['Functions']['search_transactions']['Returns'][number]
+type TransactionRow = Omit<NumericTransactionRow, 'debit_minor' | 'credit_minor' | 'base_debit_minor' | 'base_credit_minor'> & { debit_minor: string; credit_minor: string; base_debit_minor: string; base_credit_minor: string }
 type Status = typeof TRANSACTION_STATUSES[number]
 type Type = typeof TRANSACTION_TYPES[number]
 type Source = typeof TRANSACTION_SOURCES[number]
@@ -28,7 +32,7 @@ export function useTransactionWorkspace() {
   const router = useRouter()
   const user = useSupabaseUser()
   const config = useRuntimeConfig()
-  const supabase = useSupabaseClient<Database>()
+  const supabase = useSupabaseClient<ExactJournalRpcDatabase>()
   const { currentId, baseCurrency, can } = useTenant()
   const { revision } = useAddTransaction()
   const filters = reactive<JournalFilterState>({ search: '', from: '', to: '', status: '', type: '', source: '', categoryId: '', tagId: '', accountId: '', minAmount: '', maxAmount: '' })
@@ -100,7 +104,7 @@ export function useTransactionWorkspace() {
     try {
       const min = filters.minAmount ? parseMoneyToMinor(filters.minAmount, baseCurrency.value) : undefined
       const max = filters.maxAmount ? parseMoneyToMinor(filters.maxAmount, baseCurrency.value) : undefined
-      if ((min !== undefined && (min < 0n || min > BigInt(Number.MAX_SAFE_INTEGER))) || (max !== undefined && (max < 0n || max > BigInt(Number.MAX_SAFE_INTEGER))) || (min !== undefined && max !== undefined && min > max)) return 'amounts'
+      if ((min !== undefined && (min < 0n || min > MAX_DATABASE_MONEY_MINOR)) || (max !== undefined && (max < 0n || max > MAX_DATABASE_MONEY_MINOR)) || (min !== undefined && max !== undefined && min > max)) return 'amounts'
     }
     catch { return 'amounts' }
     return ''
@@ -111,7 +115,7 @@ export function useTransactionWorkspace() {
     const org = currentId.value
     if (!org || !can('transactions.read') || validation.value) return { key: requestKey, rows: [] as TransactionRow[], total: 0 }
     const optional = (value: string) => value.trim() || undefined
-    const amount = (value: string) => value ? Number(parseMoneyToMinor(value, baseCurrency.value)) : undefined
+    const amount = (value: string) => value ? parseMoneyToMinor(value, baseCurrency.value).toString() : undefined
     const { data: result, error: failure } = await supabase.rpc('search_transactions', {
       p_organization_id: org, p_search: optional(search.value), p_from_date: optional(filters.from), p_to_date: optional(filters.to),
       p_statuses: filters.status ? [filters.status] : undefined, p_types: filters.type ? [filters.type] : undefined,
@@ -120,7 +124,7 @@ export function useTransactionWorkspace() {
       p_category_ids: filters.categoryId ? [filters.categoryId] : undefined, p_account_ids: filters.accountId ? [filters.accountId] : undefined,
       p_min_amount_minor: amount(filters.minAmount), p_max_amount_minor: amount(filters.maxAmount),
       p_sort: sort.column, p_direction: sort.direction, p_limit: pageSize, p_offset: (page.value - 1) * pageSize,
-    }).abortSignal(signal)
+    }).select(JOURNAL_SEARCH_COLUMNS).abortSignal(signal)
     if (failure) throw failure
     const rows = result ?? []
     return { key: requestKey, rows, total: rows.length ? Number(rows[0]!.total_count) : 0 }

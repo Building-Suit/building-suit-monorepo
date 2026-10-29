@@ -11,7 +11,8 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   expect: { timeout: process.env.CI ? 15_000 : 5_000 },
-  use: { baseURL: process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`, trace: 'on-first-retry' },
+  use: { baseURL: process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`, trace: 'on-first-retry',
+    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {} },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: 'node .output/server/index.mjs',
