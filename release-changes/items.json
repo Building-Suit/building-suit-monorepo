@@ -3708,5 +3708,72 @@
     "sources": [
       "shop-staging-disposable-image-qualification-20261029"
     ]
+  },
+  {
+    "id": "shared-mobile-navigation-focus-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "automation-suit"
+    ],
+    "classification": "patch",
+    "disposition": "public",
+    "paths": [
+      "packages/ux/src/composables/useSideNavigation.ts",
+      "packages/testing",
+      "docs/shared/interactions.md",
+      "apps/building-suit-docs/app/pages/components.vue",
+      "packages/ui/src/templates/BsAuthLayout.vue"
+    ],
+    "reason": "Restore initial keyboard focus after the canonical mobile navigation becomes visible, preserving Escape dismissal and focus return across Suit shells. Qualify current shared shell, settings, landing and appointment contracts without increasing assertion deadlines. Keep logos in ordinary document flow for access/loading states without an auth card, preventing blocked retry controls without changing glass form presentation.",
+    "notes": {
+      "title": {
+        "en": "Keep keyboard focus inside mobile navigation",
+        "ar": "إبقاء تركيز لوحة المفاتيح داخل قائمة التنقل على الهاتف"
+      },
+      "summary": {
+        "en": "Opening the mobile menu moves focus to its close control.",
+        "ar": "ينتقل التركيز إلى زر الإغلاق عند فتح قائمة الهاتف."
+      },
+      "details": {
+        "en": "Focus waits for the menu’s own finite entrance motion, so Escape dismisses it and returns focus to the opening button. Closing or navigating away cancels pending focus. Access-status logos also remain above their actions instead of covering retry controls.",
+        "ar": "ينتظر التركيز انتهاء حركة ظهور القائمة المحدودة، ليغلقها مفتاح Escape ويعيد التركيز إلى زر الفتح. يلغي إغلاق القائمة أو الانتقال منها التركيز المعلّق. وتبقى شعارات حالات الوصول أعلى إجراءاتها بدلًا من حجب أزرار إعادة المحاولة."
+      }
+    },
+    "sources": [
+      "shared-mobile-navigation-focus-20261029"
+    ],
+    "evidence": [
+      {
+        "path": "packages/ux/src/composables/useSideNavigation.ts",
+        "contains": "if (!cancelled && open())"
+      },
+      {
+        "path": "packages/ui/src/templates/BsAuthLayout.vue",
+        "contains": ":not(:has(.bs-auth-form)) .bs-auth-layout__mobile-logo"
+      }
+    ]
+  },
+  {
+    "id": "shop-staging-ledger-access-history-20261029",
+    "task": "SS-ELECTRICAL-001",
+    "suits": [
+      "ledger-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/ledger-suit/supabase/migrations/20261022182716_explicit_data_api_access.sql",
+      "apps/ledger-suit/supabase/tests",
+      "apps/shop-suit/docs/electrical-supply/STAGING-INTEGRATION-2026-10-29.md"
+    ],
+    "reason": "Restore the already applied historical Ledger access migration byte-for-byte from published PR440, as verified again in Ledger439. Include only the twelve access-contract assertions and explicit execution for seven existing temporary test helpers. No Ledger feature-stack import, hosted write or migration metadata edit.",
+    "sources": [
+      "shop-staging-ledger-access-history-20261029"
+    ]
   }
 ]

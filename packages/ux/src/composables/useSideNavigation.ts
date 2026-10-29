@@ -12,10 +12,19 @@ export function useSideNavigation(open: () => boolean, path: () => string, close
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
   }
-  watch(open, async value => {
+  watch(open, async (value, _previous, onCleanup) => {
     if (!value) return
+    let cancelled = false
+    onCleanup(() => { cancelled = true })
     await nextTick()
-    panel.value?.querySelector<HTMLElement>('[data-side-menu-close]')?.focus()
+    // The opening visibility transition can still hide the close control at
+    // nextTick. Settle this panel's finite motion before transferring focus.
+    const animations = (panel.value?.getAnimations() ?? []).filter(animation => {
+      const end = animation.effect?.getComputedTiming().endTime
+      return typeof end === 'number' && Number.isFinite(end)
+    })
+    await Promise.allSettled(animations.map(animation => animation.finished))
+    if (!cancelled && open()) panel.value?.querySelector<HTMLElement>('[data-side-menu-close]')?.focus()
   })
   return { panel, isActive, onKeydown }
 }

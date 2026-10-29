@@ -29,3 +29,5 @@ Messages sent to `useToasts` are already translated. Display safe product/domain
 `normalizeDecimalText` normalizes Arabic/Persian digits and the Arabic decimal separator for exact text-based quantity or money entry. It preserves every decimal digit and leaves grouping, exponent notation and hidden controls for the caller to reject. Business precision, limits and arithmetic remain in product validation and the server.
 
 Nested dialog cancellation restores its opening control after finite entrance motion on the containing dialog has settled, so late initial autofocus cannot steal the restored keyboard position. A newly active different dialog retains focus. Reopening invalidates a pending restoration; unrelated or infinite animations do not delay it.
+
+Mobile navigation transfers initial focus only after its own finite entrance motion settles. Closing the panel invalidates pending focus; Escape closes it and returns focus to its opener. Unrelated or infinite animation does not delay menu focus.
