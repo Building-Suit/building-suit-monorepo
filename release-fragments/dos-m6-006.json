@@ -48,7 +48,8 @@
     "apps/doctor-suit/tests/financial-browser-acceptance.mjs",
     "apps/doctor-suit/tests/manual-payments-browser.mjs",
     "apps/doctor-suit/tests/manual-payments-actual-provider.mjs",
-    "apps/doctor-suit/tests/practice-billing-actual-provider.mjs"
+    "apps/doctor-suit/tests/practice-billing-actual-provider.mjs",
+    "apps/doctor-suit/tests/e2e/tsconfig.financial.json"
   ],
   "reason": "Doctor synthetic practice billing and new shared complete-page contract/catalogue provenance; all shared consumers classified, no operational Doctor registration, live collection or tax authority."
 }

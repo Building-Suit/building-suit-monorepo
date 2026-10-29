@@ -1,7 +1,7 @@
 {
   "task_id": "DOS-M6-010",
   "parent_pr": 499,
-  "parent_head": "0648206b2df8a57369165d1a1ba6781b74f4e2b6",
+  "parent_head": "0dd0abf6df135b541022025e76f4887a86874afd",
   "candidate_binding": "evaluated-committed-head",
   "synthetic_only": true,
   "commercial_launch_approved": false,
