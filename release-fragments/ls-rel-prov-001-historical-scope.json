@@ -21,7 +21,8 @@
     "tooling/releases/supersessions.mjs",
     "tooling/releases/supersessions.test.mjs",
     "tooling/releases/check.mjs",
-    "release-changes/supersessions.json"
+    "release-changes/supersessions.json",
+    "docs/work-packages/brand-provenance-source-split.md"
   ],
-  "reason": "Verify immutable historical task consumers and exact accepted integration/corrective receipts when later source supersedes behavior. Preserve current semantic coverage, private consumer qualification, publication scope and all deployment/registry/baseline gates; no hosted or runtime change."
+  "reason": "Verify immutable historical fragment consumers while preserving accepted current semantic inventory, strict release/registry/baseline gates and original brand history. No database/access-policy or hosted change."
 }

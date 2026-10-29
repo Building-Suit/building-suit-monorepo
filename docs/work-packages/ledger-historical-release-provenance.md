@@ -1,5 +1,8 @@
 # Historical task scope during production release review
 
+Current local source split retains staging `c4497c3d` and original PR437 without PR440 access changes. See [the current split record](brand-provenance-source-split.md). The sections below record earlier diagnosis and qualification at their named historical heads. Accepted Doctor staging subsequently retired the three obsolete focus inventory rows; the active supersession list is now empty, and current public scopes follow that accepted inventory. Strict verification code/tests remain with no active mapping or new public claim. Hosted IPA/catalog gates are unchanged.
+
+
 LS-REL-PROV-001. Unpublished local candidate based on staged6a662776; no competing CI, provider access retry, hosted configuration or main mutation.
 
 Production check originally rejects immutable accepted fragment ss-web-hostname-suffix-001: its activation-anchor-to-staging net paths now affect only Shop, after its shared workflow was removed. Its exact origin0f1e9143902b32847823a56dae4458037a7c620e, parentc583754dc329b1ae5ad88f073556884b01a380db, actually changed the declared workflow and proves all five declared consumers using the workspace dependency graph at that source.
