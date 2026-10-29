@@ -1,0 +1,22 @@
+{
+  "id": "baseline-auth-fixture-and-profile-projection",
+  "task": "CI-AUTH-REGRESSION-REPAIR",
+  "suits": [
+    "doctor-suit",
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/e2e",
+    "packages/ui/src/organisms/BsSignupEnrollment.vue",
+    "packages/ui/tests/signup-identity-projection.test.mjs",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/work-packages/ci-auth-regression-repair.md"
+  ],
+  "reason": "Reuse only existing baseline fixture sign-in helper calls from Doctor-owner e556574f, retaining all protocol/security assertions. Separate the synthetic professional profile-name projection from verified account identity controls; preserve provider identity locks for Shop and defaults for other consumers. No administrative aggregate, provider, schema or operational authority is imported."
+}

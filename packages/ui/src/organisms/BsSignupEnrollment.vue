@@ -26,16 +26,16 @@ function updateText(key: Exclude<keyof BsSignupForm, 'fiscalMonth'>, value: stri
         <BsField v-if="!view.existingAccount" v-slot="field" :label="copy.password" :hint="copy.passwordHint || undefined" required><BsInput :id="field.id" :model-value="form.password" type="password" autocomplete="new-password" dir="ltr" :minlength="features.passwordMinLength" required @update:model-value="updateText('password', $event)" /></BsField>
       </BsGrid>
       <BsStack v-else>
-        <!-- Verified Supabase identity is not editable. Google supplies only
-             name/email; shop details still require normal owner onboarding. -->
-        <section v-if="view.existingAccount" class="bs-signup-verified-identity">
+        <!-- Identity details are separate from editable professional/profile setup.
+             A profile-name field must not duplicate the account-name control. -->
+        <section v-if="view.existingAccount && !features.profileName" class="bs-signup-verified-identity">
           <BsGrid :columns="2">
             <BsField v-slot="field" :label="copy.name"><BsInput :id="field.id" :model-value="form.name" type="text" readonly aria-readonly="true" autocomplete="off" tabindex="-1" /></BsField>
             <BsField v-slot="field" :label="copy.email"><BsInput :id="field.id" :model-value="form.email" type="email" readonly aria-readonly="true" dir="ltr" autocomplete="off" tabindex="-1" /></BsField>
           </BsGrid>
         </section>
         <BsGrid :columns="2">
-          <BsField v-if="features.profileName" v-slot="field" :label="copy.name" required><BsInput :id="field.id" :model-value="form.name" :readonly="view.nameLocked ?? (view.existingAccount && Boolean(form.name.trim()))" autocomplete="name" required :maxlength="features.profileNameMaxLength" @update:model-value="updateText('name', $event)" /></BsField>
+          <BsField v-if="features.profileName" v-slot="field" :label="copy.name" required><BsInput :id="field.id" :model-value="form.name" :readonly="view.nameLocked ?? false" autocomplete="name" required :maxlength="features.profileNameMaxLength" @update:model-value="updateText('name', $event)" /></BsField>
           <BsField v-if="features.standaloneTimezone && !features.organizationDetails" v-slot="field" :label="copy.timezone" required><BsInput :id="field.id" :model-value="form.timezone" dir="ltr" required @update:model-value="updateText('timezone', $event)" /></BsField>
           <BsField v-slot="field" :label="copy.workspaceName" required><BsInput :id="field.id" :model-value="form.workspaceName" :minlength="features.workspaceMinLength ?? undefined" :maxlength="features.workspaceMaxLength ?? undefined" required @update:model-value="updateText('workspaceName', $event)" /></BsField>
           <template v-if="features.organizationDetails">

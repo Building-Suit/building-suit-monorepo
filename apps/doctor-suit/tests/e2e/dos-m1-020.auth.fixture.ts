@@ -1,3 +1,4 @@
+import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { test,expect,type Page,type BrowserContext } from '@playwright/test'
 import { doctorPatientsCopy } from '../../app/utils/patientsPresentation'
 import { doctorAppointmentsCopy } from '../../app/utils/appointmentsPresentation'
@@ -8,7 +9,7 @@ import { localRealtimeProtocol } from './realtimeProtocol'
 const fixture = 'http://127.0.0.1:4338/__fixture'
 test.use({ actionTimeout: 10000 })
 async function prepare(context: BrowserContext,ar: boolean) { await context.addCookies([{ name: 'building-suit-locale',value: ar ? 'ar' : 'en',url: 'http://127.0.0.1:4337' }]);await context.addInitScript(theme => localStorage.setItem('building-suit.theme',theme),ar ? 'light' : 'dark');await context.route('**/*',route => ['127.0.0.1','localhost'].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort()) }
-async function login(page: Page,email: string,ar: boolean,path='/account') { await page.goto(path);await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill(email);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only');await page.getByRole('button',{ name: ar ? 'تسجيل الدخول' : 'Sign in',exact: true }).click();await expect(page).toHaveURL(url => url.pathname===path) }
+async function login(page: Page,email: string,ar: boolean,path='/account') { await page.goto(path);await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill(email);await doctorPasswordStep(page);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only');await page.getByRole('button',{ name: ar ? 'تسجيل الدخول' : 'Sign in',exact: true }).click();await expect(page).toHaveURL(url => url.pathname===path) }
 async function choose(page: Page,name: string,ar: boolean) { const select = page.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true });await select.click();await page.getByRole('option',{ name: new RegExp(` · ${name}$`) }).click();await expect(select).toContainText(name);await expect(select).toBeEnabled() }
 async function patient(page: Page,name: string,ar: boolean) { const copy = doctorPatientsCopy(ar);await page.goto('/patients');await page.getByRole('button',{ name: copy.create,exact: true }).click();const dialog = page.getByRole('dialog',{ name: copy.create,exact: true });await dialog.getByLabel(new RegExp(`^${copy.name}`)).fill(name);await dialog.getByRole('button',{ name: copy.save,exact: true }).click();await expect(dialog).toBeHidden();await expect(page.getByRole('link',{ name,exact: true })).toBeVisible() }
 async function invite(page: Page,name: string,ar: boolean,capabilities: string[]) {

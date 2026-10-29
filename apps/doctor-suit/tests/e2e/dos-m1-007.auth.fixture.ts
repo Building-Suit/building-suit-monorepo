@@ -1,3 +1,4 @@
+import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { doctorDashboardCopy } from '../../app/utils/dashboardPresentation'
 import { test, expect, type Page, type BrowserContext } from '@playwright/test'
 const fixture = 'http://127.0.0.1:4338/__fixture'
@@ -9,7 +10,7 @@ async function prepare(context: BrowserContext, ar: boolean) {
 async function signIn(page: Page, ar = false) {
   await page.goto('/sign-in')
   await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill('synthetic@example.test')
-  await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
+  await doctorPasswordStep(page);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
   await page.getByRole('button', { name: ar ? 'تسجيل الدخول' : 'Sign in', exact: true }).click()
   await expect(page).toHaveURL(/\/account$/)
 }

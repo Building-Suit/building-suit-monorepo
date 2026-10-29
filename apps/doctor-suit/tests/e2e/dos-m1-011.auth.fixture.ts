@@ -1,3 +1,4 @@
+import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { test,expect,type BrowserContext,type Page } from '@playwright/test'
 import { doctorPatientsCopy } from '../../app/utils/patientsPresentation'
 import { doctorDelegationCopy } from '../../app/utils/delegationPresentation'
@@ -10,7 +11,7 @@ async function local(context: BrowserContext,ar: boolean) {
 }
 async function login(page: Page,email: string,ar: boolean) {
   await page.goto('/patients'); await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill(email)
-  await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
+  await doctorPasswordStep(page);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
   await page.getByRole('button',{ name: ar ? 'تسجيل الدخول' : 'Sign in',exact: true }).click()
   await expect(page).toHaveURL(/\/patients$/)
 }

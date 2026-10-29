@@ -1,3 +1,4 @@
+import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { test, expect, type Page } from '@playwright/test'
 const fixture = 'http://127.0.0.1:4338/__fixture'
 const practiceId = '73000000-0000-0000-0000-000000000001'
@@ -16,7 +17,7 @@ for (const ar of [false, true]) test(`DOS-M1-008 ${ar ? 'AR mobile' : 'EN deskto
   await context.addCookies([{ name: 'building-suit-locale', value: ar ? 'ar' : 'en', url: 'http://127.0.0.1:4337' }])
   await page.goto('/sign-in')
   await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill('synthetic@example.test')
-  await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
+  await doctorPasswordStep(page);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
   await page.getByRole('button', { name: ar ? 'تسجيل الدخول' : 'Sign in', exact: true }).click()
   await expect(page).toHaveURL(/\/account$/)
   await page.getByRole('link', { name: ar ? 'مواقع العمل' : 'Working locations', exact: true }).click()
@@ -61,7 +62,7 @@ test('DOS-M1-008 protocol fixture: an owner with every location archived retains
   await request.post(fixture, { data: { locations: [{ ...location(1, 'Archived clinic', 'Africa/Cairo'), archived_at: '2026-10-16T00:00:00Z', version: 2 }] } })
   await page.goto('/sign-in')
   await page.getByLabel(/^Email/).fill('synthetic@example.test')
-  await page.getByLabel(/^Password/).fill('synthetic-password-only')
+  await doctorPasswordStep(page);await page.getByLabel(/^Password/).fill('synthetic-password-only')
   await page.getByRole('button', { name: 'Sign in', exact: true }).click()
   await expect(page).toHaveURL(/\/account$/)
   await page.getByRole('link', { name: 'Working locations', exact: true }).click()

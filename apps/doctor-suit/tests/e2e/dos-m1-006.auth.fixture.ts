@@ -1,3 +1,4 @@
+import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { test, expect } from '@playwright/test'
 const provider = 'http://127.0.0.1:4338/__fixture'
 test.beforeEach(async ({ request, page }) => {
@@ -6,7 +7,7 @@ test.beforeEach(async ({ request, page }) => {
 })
 async function signIn(page: import('@playwright/test').Page, ar = false) {
   await page.getByLabel(ar ? /^البريد الإلكتروني/ : /^Email/).fill('synthetic@example.test')
-  await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
+  await doctorPasswordStep(page);await page.getByLabel(ar ? /^كلمة المرور/ : /^Password/).fill('synthetic-password-only')
   await page.getByRole('button', { name: ar ? 'تسجيل الدخول' : 'Sign in', exact: true }).click()
 }
 for (const ar of [false, true]) test(`DOS-M1-006 protocol fixture ${ar ? 'AR mobile light' : 'EN desktop dark'}: sign-in, safe redirect, isolated cookies and logout`, async ({ page, context }) => {
@@ -34,7 +35,7 @@ test('DOS-M1-006 protocol fixture: signup, expired OTP, resend and verified acco
   await page.goto('/sign-up')
   await page.getByLabel(/^Display name/).fill('Synthetic doctor')
   await page.getByLabel(/^Email/).fill('synthetic@example.test')
-  await page.getByLabel(/^Password/).fill('synthetic-password-only')
+  await doctorPasswordStep(page);await page.getByLabel(/^Password/).fill('synthetic-password-only')
   await page.getByRole('button', { name: 'Create synthetic account', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Verify account', exact: true })).toBeVisible()
   const digits = page.locator('input[autocomplete="one-time-code"], input[inputmode="numeric"]')
@@ -57,7 +58,7 @@ test('DOS-M1-006 protocol fixture: recovery uses same-browser PKCE and removes c
   expect(outbox.pkceChallengeProvided).toBe(true)
   await page.goto(`/recover?code=synthetic-recovery-code${outbox.flowId ? `&sb_flow_id=${encodeURIComponent(outbox.flowId)}` : ''}`)
   await expect(page).toHaveURL(/\/recover$/)
-  await page.getByLabel(/^Password/).fill('new-synthetic-password')
+  await doctorPasswordStep(page);await page.getByLabel(/^Password/).fill('new-synthetic-password')
   await page.getByLabel(/^Confirm password/).fill('new-synthetic-password')
   await page.getByRole('button', { name: 'Set password', exact: true }).click()
   await expect(page.getByText('Password updated', { exact: true })).toBeVisible()

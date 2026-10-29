@@ -135,3 +135,22 @@ helper/import/call to the baseline fixture; the aggregate already has those.
 Resolve any overlapping fixture hunk in favor of the aggregate's complete file.
 Canonical release guards/tests are shared with 9b07fdf8; retain the quantified
 regex spacing corrections required by root lint.
+
+
+## Complete baseline auth-fixture reconciliation
+
+The Doctor protocol job exercises every baseline `*.auth.fixture.ts`. Its old
+password assumptions kept timing out after the common sign-in UI became
+email-first. The existing-file subset (16 fixtures) reuses owner commit e556574f's
+helper calls, always after email entry and immediately before password entry;
+aggregate-only administrative fixtures are not added. A local reproduction
+failed on a missing password input before the change; the core EN/AR protocol
+group then passed all seven cases.
+
+The resumed onboarding case also exposed two duplicate professional-name
+inputs introduced by the unconditional verified-identity summary. Shared signup
+presentation now separates professional-profile setup from provider identity:
+one editable profile-name input, no duplicate account/email inputs, and explicit
+nameLocked still honored. Normal Shop verified-account onboarding retains the
+read-only provider name/email summary. Rendered-control regressions cover both
+projections; original professional onboarding assertions remain intact.
