@@ -39,7 +39,6 @@ function update(key:keyof BsPracticeReportFilters,value:unknown){filters.value={
    <BsDescriptionItem v-if="view.source.loading" :term="copy.source">{{copy.loading}}</BsDescriptionItem>
    <BsDescriptionItem v-else-if="view.source.error" :term="copy.source">{{copy.sourceError}}</BsDescriptionItem>
    <BsDescriptionItem v-for="item in view.source.items" :key="item.term" :term="item.term">{{item.value}}</BsDescriptionItem>
-   <template #footer><BsButton @click="emit('closeSource')">{{copy.close}}</BsButton></template>
   </BsDetailDialog>
  </BsStack>
 </template>

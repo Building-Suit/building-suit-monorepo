@@ -32,7 +32,16 @@ insert into results values('notice',pg_temp.notice(1));
 select is(public.doctor_saas_status()->>'state','unconfigured','checkout claim alone grants no subscription');
 select is((select value->>'amount_minor'from results where name='notice'),'29900','synthetic checkout binds frozen plan amount');
 select is((select value->>'currency'from results where name='notice'),'EGP','quote currency cannot come from editable browser metadata');
-select throws_ok($$select public.doctor_activate_manual_payment((select(value->>'id')::uuid from results where name='notice'),1,pg_temp.id(701))$$,'42501','DOCTOR_INDEPENDENT_REVIEW_REQUIRED','customer cannot promote own checkout claim');
+select throws_ok($$select public.doctor_activate_manual_payment((select(value->>'id')::uuid from results where name='notice'),1,pg_temp.id(701))$$,'42501','DOCTOR_MANUAL_REVIEW_AUTHORITY_REQUIRED','customer without reviewer authority cannot promote own checkout claim');
+-- Separately exercise self-review denial after the first authority guard passes.
+-- This temporary role grant is synthetic, rollback-only and revoked before continuation.
+reset role;
+insert into public.doctor_manual_payment_reviewers(user_id,enabled,revision,approval_ref,valid_until)values(pg_temp.id(1),true,1,'SYNTHETIC_SELF_REVIEW_DENIAL_NOT_REAL_APPROVAL',clock_timestamp()+interval'1 hour');
+set local role authenticated;select pg_temp.claim(1);
+select throws_ok($$select public.doctor_activate_manual_payment((select(value->>'id')::uuid from results where name='notice'),1,pg_temp.id(716))$$,'42501','DOCTOR_INDEPENDENT_REVIEW_REQUIRED','authorized reviewer still cannot activate their own checkout claim');
+reset role;
+update public.doctor_manual_payment_reviewers set enabled=false,revision=2 where user_id=pg_temp.id(1);
+set local role authenticated;
 select pg_temp.claim(2);
 select throws_ok($$select public.doctor_activate_manual_payment((select(value->>'id')::uuid from results where name='notice'),1,pg_temp.id(702))$$,'40001','DOCTOR_MANUAL_REVIEW_CONFLICT','out-of-order activation cannot invent independent funds');
 insert into results values('verified',pg_temp.confirm('notice',703));
@@ -101,5 +110,5 @@ select is((select count(*)::integer from public.doctor_saas_periods where kind='
 select is((select count(*)::integer from public.doctor_manual_received_funds),1,'SaaS funds evidence is independent of practice receipts');
 select is((select count(*)::integer from public.doctor_practice_ledger_entries),2,'one collection and one original-linked reversal only');
 select is((select count(*)::integer from doctor_private.synthetic_practice_payment_acceptances),2,'retries and report reads never duplicate synthetic transport acceptance');
-select ok(not exists(select 1 from doctor_private.command_receipts where command_key in(pg_temp.id(701),pg_temp.id(702),pg_temp.id(709),pg_temp.id(711))),'denied/out-of-order operations leave no successful receipt');
+select ok(not exists(select 1 from doctor_private.command_receipts where command_key in(pg_temp.id(701),pg_temp.id(702),pg_temp.id(709),pg_temp.id(711),pg_temp.id(716))),'denied/out-of-order operations leave no successful receipt');
 select * from finish();rollback;
