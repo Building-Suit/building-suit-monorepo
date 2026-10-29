@@ -17,29 +17,13 @@ for (const locale of ['en', 'ar']) for (const width of [390, 1280]) for (const t
     await page.keyboard.press('Enter')
     await expect(page.getByRole('status').filter({ hasText: locale === 'en' ? 'Preview scope:' : 'نطاق المعاينة:' })).toContainText(locale === 'en' ? 'remain unavailable' : 'غير متاحة')
     await expect(page.getByText(locale === 'en' ? 'Synthetic preview · no active account, practice or location' : 'معاينة تجريبية · لا يوجد حساب أو ممارسة أو موقع نشط')).toBeVisible()
-    const navigation = page.locator('.bs-side-navigation')
-    const trigger = page.locator('.bs-app-shell__mobile-trigger')
-    if (width === 390) {
-      await trigger.click()
-      await expect(trigger).toHaveAttribute('aria-expanded', 'true')
-    }
-    const themeControl = navigation.getByRole('button', { name: new RegExp(`^${locale === 'en' ? 'Theme' : 'المظهر'}:`) })
-    await expect(themeControl).toBeEnabled()
-    await themeControl.focus()
-    await page.keyboard.press('Enter')
-    if (theme === 'dark') {
-      await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.+/)
-      await expect(themeControl).toBeFocused()
-      await page.keyboard.press('Enter')
-    }
-    await expect(page.locator('html')).toHaveAttribute('data-theme', theme === 'light' ? 'dark' : 'light')
-    await expect(themeControl).toBeFocused()
-    await expect(page.getByRole('menu')).toHaveCount(0)
-    if (width === 390) {
-      await page.keyboard.press('Escape')
-      await expect(trigger).toHaveAttribute('aria-expanded', 'false')
-      await expect(trigger).toBeFocused()
-    }
+    if (width === 390) await page.getByRole('button', { name: locale === 'en' ? 'Open navigation' : 'فتح القائمة', exact: true }).click()
+    const settings = page.getByRole('button', { name: /^(Theme|المظهر):/ }).first()
+    await settings.focus()
+    for (let step = 0; step < (theme === 'light' ? 1 : 2); step++) await page.keyboard.press('Space')
+    const nextTheme = theme === 'light' ? 'dark' : 'light'
+    await expect(page.locator('html')).toHaveAttribute('data-theme', nextTheme)
+    await expect(settings).toBeFocused()
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
   })
 }

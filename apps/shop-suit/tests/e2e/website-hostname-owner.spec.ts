@@ -7,10 +7,12 @@ for(const locale of ['en','ar'])test(`staging owner address, aliases and profile
   if(name==='shop_website_profile')return{draft:{},slug:'alpha-tools',state:'draft',logoDataUrl:null,catalog:{integration:'pending',publishedItemCount:0},missing:['publicName','description','logo','contact','location','publishedItem'],ownerOptedIn:false}
   return undefined
  })
- await fixtureGoto(page,'/settings')
+ await fixtureGoto(page,'/settings/website-address')
  await expect(page.locator('#website-address')).toContainText('https://alpha-tools.stg.shops.building-suit.com')
  await expect(page.locator('#website-address')).toContainText('https://old-tools.stg.shops.building-suit.com')
+ expect(await page.locator('#website-address').textContent()).not.toMatch(/https:\/\/[a-z-]+\.shops\.building-suit\.com/)
+ await fixtureGoto(page,'/settings/website-profile')
  await expect(page.locator('#website-profile')).toContainText('https://alpha-tools.stg.shops.building-suit.com')
- for(const id of ['#website-address','#website-profile'])expect(await page.locator(id).textContent()).not.toMatch(/https:\/\/[a-z-]+\.shops\.building-suit\.com/)
+ expect(await page.locator('#website-profile').textContent()).not.toMatch(/https:\/\/[a-z-]+\.shops\.building-suit\.com/)
  expect(calls.some(call=>/shop_website_.*(save|publish|replace)$/.test(call.name))).toBe(false)
 })

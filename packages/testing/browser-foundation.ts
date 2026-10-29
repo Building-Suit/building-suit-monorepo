@@ -1,5 +1,9 @@
 import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test'
 
+export async function waitForNuxtHydration(page: Page) {
+  await page.waitForFunction(() => Boolean((document.querySelector('#__nuxt') as HTMLElement & { __vue_app__?: unknown } | null)?.__vue_app__))
+}
+
 /** Geometry assertions complement roles and interactions; screenshots are review evidence. */
 export async function expectNoPageOverflow(page: Page) {
   try {
@@ -72,11 +76,11 @@ export function trackRouteCoverage(page: Page) {
 }
 
 /** Compare shared chrome only; product content and branding remain configurable. */
-export async function recordShellGeometry(page: Page, chrome: Locator = page.locator('header').first()) {
+export async function recordShellGeometry(page: Page) {
  const url = new URL(page.url())
  const suit = routeProducts[url.port]
  if (!suit) throw new Error('Unregistered Suit shell')
- const geometry = await chrome.evaluate(element => {
+ const geometry = await page.locator('.bs-side-navigation').first().evaluate(element => {
   const box = element.getBoundingClientRect(), style = getComputedStyle(element)
   return { width: Math.round(box.width), height: Math.round(box.height), background: style.backgroundColor, border: style.borderColor, radius: style.borderRadius, font: style.fontFamily }
  })

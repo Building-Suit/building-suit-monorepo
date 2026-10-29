@@ -18,6 +18,7 @@ const emit = defineEmits<{
   interval: [value: string]
   variant: [planId: string, value: string]
   action: [planId: string]
+  linkAction: [planId: string]
   secondaryAction: [planId: string]
   retry: []
   changelogRetry: []
@@ -51,7 +52,7 @@ html[data-shop-landing-loading="true"] body>* { visibility:visible!important; }
 html[data-shop-landing-loading="true"] .bs-landing-loader { display:none!important; }
 `
 useHead(() => ({
-  htmlAttrs: { 'data-shop-landing-loading': props.journey && isLoading.value ? 'true' : 'false' },
+  htmlAttrs: { 'data-shop-landing-loading': props.journey ? String(isLoading.value) : undefined },
   style: props.journey ? [{ key: 'shop-landing-loader-critical', innerHTML: loaderCss, tagPriority: 'critical' }] : [],
   link: props.journey ? [{ key: 'shop-landing-loader-logo', rel: 'preload', as: 'image', href: '/brand/shop-suit-wordmark-light.svg', fetchpriority: 'high' }] : [],
   noscript: props.journey ? [{ key: 'shop-landing-loader-no-script', innerHTML: `<style>${noScriptCss}</style>`, tagPosition: 'head' }] : [],
@@ -84,7 +85,7 @@ useHead(() => ({
       </BsLandingHero>
       <BsLandingSection v-if="!journey" id="features" :eyebrow="content.featuresEyebrow" :title="content.featuresTitle" :body="content.featuresBody"><BsFeatureGrid :features="content.features" /></BsLandingSection>
       <BsLandingSection v-if="!journey" id="workflow" :eyebrow="content.workflowEyebrow" :title="content.workflowTitle" tone="muted" layout="workflow"><BsWorkflowSteps :steps="content.workflow" /></BsLandingSection>
-      <BsLandingSection id="pricing" :eyebrow="content.pricingEyebrow" :title="content.pricingTitle" :body="content.pricingBody"><BsBox :data-testid="pricing.sectionTestId"><BsMarketingPricing :variant="pricing.variant" :plans="pricing.plans" :currency-selection="pricing.currencySelection" :interval="pricing.interval" :interval-options="pricing.intervalOptions" :copy="pricing.copy" :annual-saving="pricing.annualSaving" :intro="pricing.intro" :loading="pricing.loading" :error="pricing.error" :columns="pricing.columns" :test-id="pricing.testId" @update:currency="emit('currency', $event)" @update:interval="emit('interval', $event)" @update:variant="(planId, value) => emit('variant', planId, value)" @action="emit('action', $event)" @secondary-action="emit('secondaryAction', $event)" @retry="emit('retry')"/><BsText v-if="pricing.notice" :data-testid="pricing.noticeTestId" role="note" size="sm" tone="muted">{{ pricing.notice }}</BsText></BsBox></BsLandingSection>
+      <BsLandingSection id="pricing" :eyebrow="content.pricingEyebrow" :title="content.pricingTitle" :body="content.pricingBody"><BsBox :data-testid="pricing.sectionTestId"><BsMarketingPricing :variant="pricing.variant" :plans="pricing.plans" :currency-selection="pricing.currencySelection" :interval="pricing.interval" :interval-options="pricing.intervalOptions" :copy="pricing.copy" :annual-saving="pricing.annualSaving" :intro="pricing.intro" :loading="pricing.loading" :error="pricing.error" :columns="pricing.columns" :test-id="pricing.testId" @update:currency="emit('currency', $event)" @update:interval="emit('interval', $event)" @update:variant="(planId, value) => emit('variant', planId, value)" @action="emit('action', $event)" @link-action="emit('linkAction', $event)" @secondary-action="emit('secondaryAction', $event)" @retry="emit('retry')"/><BsText v-if="pricing.notice" :data-testid="pricing.noticeTestId" role="note" size="sm" tone="muted">{{ pricing.notice }}</BsText></BsBox></BsLandingSection>
       <BsWhatsNewSection v-if="changelog" :content="changelog" @retry="emit('changelogRetry')" />
     </main>
   </div>

@@ -1,17 +1,11 @@
 import { discardShopQuery } from '~/utils/shopQueryCleanup'
-import { shopQueryPayload } from '~/utils/shopQueryPayload'
 import { useMutationCache, useQueryCache } from '@pinia/colada'
 import { useShopScopeStore } from '~/stores/scope'
 import { usePosReceiptStore } from '~/stores/posReceipt'
 
 export default defineNuxtPlugin({
   name: 'shop-query-scope', dependsOn: ['Pinia Colada'],
-  setup(nuxtApp) {
-    if (import.meta.server) nuxtApp.hook('app:rendered', ({ ssrContext }) => {
-      // Colada's dependency hook has produced its payload and cleared the cache.
-      // Project that payload without serializing arbitrary provider Error objects.
-      if (ssrContext?.payload.pinia_colada) ssrContext.payload.pinia_colada = shopQueryPayload(ssrContext.payload.pinia_colada as Record<string, unknown[]>)
-    })
+  setup() {
     const user = useSupabaseUser()
     const session = useSupabaseSession()
     const scope = useShopScopeStore()

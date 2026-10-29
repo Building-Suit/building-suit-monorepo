@@ -113,3 +113,18 @@ test('versioned adapter emits the same wire format despite source property order
  b.branch.address=Object.fromEntries(Object.entries(b.branch.address).reverse())
  assert.deepEqual(await buildReceipt(a),await buildReceipt(b))
 })
+
+test('measured exports require an explicit frozen stock-unit mapping and never round unsupported quantity precision', async () => {
+ const input = source()
+ input.tax.lines[0].measurement = { baseUnitCode: 'm', baseQuantity: '12.5' }
+ input.tax.lines[0].originalQuantity = 12.5
+ await assert.rejects(buildReceipt(input), /ETA_MEASUREMENT_UNIT_MAPPING_REQUIRED/)
+ input.items[0].stockUnitCode = 'kg'
+ await assert.rejects(buildReceipt(input), /ETA_MEASUREMENT_UNIT_MAPPING_REQUIRED/)
+ input.items[0].stockUnitCode = 'm'; input.items[0].unitType = 'MTR'
+ const result = await buildReceipt(input)
+ assert.equal(result.receipt.itemData[0].quantity, 12.5)
+ assert.equal(result.receipt.itemData[0].unitType, 'MTR')
+ input.tax.lines[0].originalQuantity = .000001
+ await assert.rejects(buildReceipt(input), /ETA_COMPONENT_PRECISION_UNSUPPORTED/)
+})

@@ -1,0 +1,30 @@
+{
+  "id": "ss-shop-query-error-recovery-20261022",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/composables",
+    "apps/shop-suit/app/plugins",
+    "apps/shop-suit/app/utils/shopQueryError.ts",
+    "apps/shop-suit/tests/unit/query-error-payload.test.mjs"
+  ],
+  "reason": "A failed server read must render its retry state without breaking SSR serialization or retaining provider request secrets.",
+  "notes": {
+    "title": {
+      "en": "Recover safely from failed reads",
+      "ar": "استعادة العرض بعد تعذر تحميل البيانات"
+    },
+    "summary": {
+      "en": "Failed reads can render their error and retry state during server rendering.",
+      "ar": "يمكن عرض حالة الخطأ وإعادة المحاولة عند تعذر قراءة البيانات أثناء عرض الصفحة على الخادم."
+    },
+    "details": {
+      "en": "Read failures retain their error code across hydration without retaining provider requests or credentials in page state.",
+      "ar": "تُحفظ رموز أخطاء القراءة عند تحميل الصفحة دون الاحتفاظ بطلبات المزود أو بيانات الاعتماد في حالة الصفحة."
+    }
+  }
+}

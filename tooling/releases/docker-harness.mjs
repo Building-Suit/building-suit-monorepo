@@ -18,11 +18,10 @@ export function ensureDisposableImage(image, mirror, run = spawnSync) {
   const primary=invoke(['pull',image])
   if(primary.status===0) return
   const reason=dockerFailureReason(primary.stderr)
-  // A registry/proxy can reject a pull with an unclassified transport message.
-  // The caller supplies an explicit official same-version mirror; both pulls
-  // remain real Docker operations. Local daemon/storage failures are not pulls
-  // that a mirror can repair.
-  if(mirror && !['DOCKER_STORAGE_EXHAUSTED','DOCKER_DAEMON_UNAVAILABLE','DOCKER_PORT_UNAVAILABLE','DOCKER_CONTAINER_NAME_CONFLICT'].includes(reason) && !primary.error) {
+  // This failure occurred during pull, not container startup. An unclassified
+  // registry/transport response may still be served by the caller's explicit
+  // same-version mirror. Known local resource/daemon failures remain fatal.
+  if(mirror && ['DOCKER_REGISTRY_RATE_LIMIT','DOCKER_IMAGE_ACCESS_DENIED','DOCKER_IMAGE_NOT_FOUND','DOCKER_START_FAILED'].includes(reason)) {
     if(invoke(['pull',mirror]).status===0 && invoke(['tag',mirror,image]).status===0) return
   }
   throw new Error(`Disposable image unavailable: ${reason}; raw output omitted`)

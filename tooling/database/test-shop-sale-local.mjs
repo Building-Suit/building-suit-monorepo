@@ -1,3 +1,5 @@
+// Race fixtures execute the real public command before their held-commit pause;
+// they must not acquire business locks ahead of the command authorization gate.
 import { readFile } from 'node:fs/promises'
 import { spawn, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
@@ -45,7 +47,7 @@ let shopId
 try {
   await runSql(`insert into auth.users (id,email,encrypted_password,aud,role,raw_app_meta_data,raw_user_meta_data,created_at,updated_at) values ('${ownerId}','${ownerId}@sale-concurrency.invalid','x','authenticated','authenticated','{}','{}',now(),now());`)
   shopId = lastLine((await runSql(authenticated(ownerId,
-    `select public.create_owner_shop('Sale concurrency fixture','pro','mixed'::public.business_mode);`))).stdout)
+    `select public.create_owner_shop('Sale concurrency fixture','multi','mixed'::public.business_mode);`))).stdout)
   const customerId = lastLine((await runSql(authenticated(ownerId,
     `select public.save_customer('${shopId}',null,'Concurrency Customer',null,null,null,null);`))).stdout)
   const productId = lastLine((await runSql(authenticated(ownerId,
@@ -61,7 +63,7 @@ try {
   const draftTwo = lastLine((await runSql(authenticated(ownerId,
     `select public.save_sale_draft('${randomUUID()}','${shopId}',null,'${customerId}',null,'${productLines}'::jsonb);`))).stdout)
 
-  const issueOne = `begin; select 1 from public.products where id='${productId}' for update; select pg_sleep(0.4); set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.issue_sale('${randomUUID()}','${shopId}','${draftOne}'); commit;`
+  const issueOne = `begin; set local role authenticated; select set_config('request.jwt.claim.sub','${ownerId}',true); select public.issue_sale('${randomUUID()}','${shopId}','${draftOne}'); select pg_sleep(0.4); commit;`
   const first = runSql(issueOne, { allowFailure: true })
   await new Promise(resolve => setTimeout(resolve, 50))
   const second = runSql(authenticated(ownerId,
