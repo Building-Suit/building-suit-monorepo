@@ -507,5 +507,36 @@
     "Doctor_typecheck": "passed",
     "repaired_actual_browser": "pending owned CI",
     "focused_comparison": "119/119 pass across financial003\u2013007/009 and shared foundation; final merged-parent total will include new ancestor readiness case"
+  },
+  "oct29_source_dialog_diagnosis": {
+    "observed_runs": [
+      40355163190,
+      40357141312
+    ],
+    "actual_failure_coordinates": {
+      "009": {
+        "file": "dos-m6-009.spec.ts",
+        "line": 17,
+        "column": 282
+      },
+      "010": {
+        "file": "dos-m6-010.spec.ts",
+        "line": 14,
+        "column": 481
+      }
+    },
+    "reproduction": "shared SSR with actual pinned PrimeVue Dialog; no Doctor runtime",
+    "before": {
+      "EN_close_buttons": 2,
+      "AR_close_buttons": 2,
+      "single_action_assertion": "failed"
+    },
+    "after": {
+      "EN_AR_ready_loading_error": "passed",
+      "canonical_header_close": "retained"
+    },
+    "browser_assertions_retries_timeouts": "unchanged",
+    "actual_repaired_browser": "pending-owned-CI",
+    "full_task_acceptance": false
   }
 }
