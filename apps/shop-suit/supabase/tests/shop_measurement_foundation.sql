@@ -8,6 +8,8 @@ language plpgsql as $$begin
  end;
  raise exception 'Expected rejection %: %',expected_message,statement;
 end;$$;
+-- Role-switched assertions explicitly execute this temporary helper under secure defaults.
+grant execute on function pg_temp.measurement_reject(text,text,text) to authenticated;
 
 do $$declare example record;begin
  for example in select * from (values

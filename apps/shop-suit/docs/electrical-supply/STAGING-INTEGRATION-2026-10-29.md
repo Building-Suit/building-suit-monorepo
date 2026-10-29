@@ -78,3 +78,29 @@ contrast, geometry and overflow assertions against its approved October 19
 transparent toolbar, muted period track and raised active period. Team tabs are
 scoped separately from sidebar filtering tabs; generated navigation IDs are
 resolved through the canonical side menu.
+
+## Additional applied-source reconciliation
+
+The current `stg` GitHub Supabase check (`120018638314`) reports remote migration
+versions missing from source. PR440’s published audit also records Shop
+`20261022182717` and Super Admin `20261022182719` as already applied on October 22;
+both were absent from this candidate. Their exact published bytes are restored,
+without importing the rest of the shared or Ledger feature stacks. Hashes and
+byte lengths are recorded in `evidence/applied-access-source-20261029.json`.
+Existing published migrations are unchanged. The complete remote version list
+remains unavailable; source restoration is not a claim of hosted reconciliation.
+
+With the restored Super Admin file present, the full migrated SAS/PostgREST/
+pg-safeupdate and retrospective protocols pass without changing any catalog
+guard, registry, baseline or production release. With the restored Shop file,
+all 120 Shop application migrations replay, the foundation and both merchant
+journeys pass, all 22 selected SQL suites pass, and the existing configuration,
+reel, order, supplier, scale and commodity concurrency groups pass. Generated
+Shop database contracts match exactly. These schema checks use explicit provider
+stand-ins; the exact final head still requires native Supabase CI.
+
+One additional temporary helper (`pg_temp.measurement_reject(text,text,text)`)
+needed explicit execution for `authenticated` under the historical defaults. Its
+assertions, expected SQLSTATEs and all production ACLs remain unchanged. No
+hosted SQL, migration metadata edit, provider setting or new security policy was
+introduced. Only supported CI may reconcile the restored source with staging.
