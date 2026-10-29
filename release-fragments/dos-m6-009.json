@@ -50,7 +50,8 @@
     "packages/ui/package.json",
     "packages/ui/src/organisms/BsPracticeLedgerReportsWorkspace.vue",
     "packages/ui/src/templates/BsReportsPage.vue",
-    "packages/ui/src/utils/practiceLedgerReportPresentation.ts"
+    "packages/ui/src/utils/practiceLedgerReportPresentation.ts",
+    "packages/ui/tests/foundation.test.mjs"
   ],
   "reason": "Doctor-only synthetic ledger reporting and additive shared report/catalogue contracts. All shared consumers classified; no existing operational-consumer behavior change, Doctor activation, legal/tax or actual funds approval."
 }

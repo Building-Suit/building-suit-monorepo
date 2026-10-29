@@ -296,5 +296,24 @@
     "typecheck": "passed",
     "scoped_lint": "passed",
     "runtime_acceptance": "pending owned disposable CI; no local runtime"
+  },
+  "diagnostic_symbol_followup": {
+    "actual_source": "2349c0de0e267ee806100e906315634ef5b89ade",
+    "actual_run": 40354399829,
+    "prior_SQL": {
+      "suites": 66,
+      "assertions": 2120
+    },
+    "financial_browser": {
+      "003": "EN/AR passed",
+      "004": "EN/AR passed",
+      "006": "EN/AR failed before readonly navigation at undefined diagnostic variable",
+      "007": "EN/AR passed"
+    },
+    "introduced_error": "Earlier diagnostic assignment was copied into parent006 where its variable is not defined; later009 defines it. Remove it only on parent006 and preserve later009 own scoped diagnostic during propagation.",
+    "static_reproduction": "Dedicated financial e2e Vue TypeScript project reports one TS2304 Cannot find name diagnosticPage before correction, zero afterward;26/26 own unit cases pass.",
+    "owned_CI_prevention": "Existing owned financial runner now runs bounded120s static type check before browser execution; no browser budget/assertion/retry weakened, raw type errors not published.",
+    "provenance": "Add new type-project path to this open task fragment; accepted ancestor fragments unchanged.",
+    "repaired_actual_acceptance": "pending owned CI; full CI/domain approval not claimed"
   }
 }
