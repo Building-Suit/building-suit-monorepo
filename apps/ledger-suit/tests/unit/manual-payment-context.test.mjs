@@ -46,3 +46,34 @@ test('manual requests reload after workspace changes and ignore an obsolete work
   assert.equal(controller.pending.value, false)
   scope.stop()
 })
+
+test('unconfigured new quotes clear selected beneficiary instructions while retaining historical requests', async () => {
+  const approved = { id: 'historical-approved', organization_id: 'workspace', status: 'approved', instructions: 'Historical recipient; not a new quote' }
+  const client = {
+    from(table) {
+      let single = false
+      const query = { select() { return query }, eq() { return query }, order() { return query }, limit() { return query }, single() { single = true; return query },
+        then(resolve) { return Promise.resolve(resolve({ data: table === 'manual_payment_requests' ? single ? approved : [approved] : [], error: null })) },
+      }
+      return query
+    },
+    async rpc(name) { assert.equal(name, 'prepare_manual_payment'); return { data: null, error: { message: 'MANUAL_PAYMENT_NOT_CONFIGURED' } } },
+  }
+  const source = readFileSync(new URL('../../app/composables/useManualPayment.ts', import.meta.url), 'utf8')
+  const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
+  const module = { exports: {} }
+  const globals = { ref: vue.ref, watch: vue.watch, onBeforeUnmount: vue.onScopeDispose, useSupabaseClient: () => client, useTenant: () => ({ currentId: vue.ref('workspace'), can: () => true }), useSupabaseUser: () => vue.ref({ id: 'owner' }), useErrorMessage: () => error => error.message, useI18n: () => ({ t: key => key }) }
+  new Function('require', 'module', 'exports', ...Object.keys(globals), code)(name => name === '@building-suit/ux' ? { downloadBlob() {} } : require(name), module, module.exports, ...Object.values(globals))
+  const scope = vue.effectScope()
+  try {
+    const controller = scope.run(() => module.exports.useManualPayment())
+    await controller.load()
+    assert.equal(controller.selected.value.instructions, approved.instructions)
+    await controller.load('solo', 'yearly', 'new-quote')
+    assert.equal(controller.error.value, 'billing.manual.notConfigured')
+    assert.equal(controller.selected.value, null)
+    assert.deepEqual(controller.evidence.value, [])
+    assert.deepEqual(controller.history.value, [])
+    assert.equal(controller.requests.value[0].id, approved.id, 'Historical paid records remain available without becoming the new transfer instructions')
+  } finally { scope.stop() }
+})

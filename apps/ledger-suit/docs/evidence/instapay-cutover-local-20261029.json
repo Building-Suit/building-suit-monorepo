@@ -1,0 +1,93 @@
+{
+  "task": "LS-BILL-INSTAPAY-001",
+  "scope": "local unpublished qualification only",
+  "staging_base": "81cdcc608519f538a2dec85c3d6d6c2bd4e4687d",
+  "security_parent": "50d0ca37e20af745bbda5f642bb28000fd6dad2f",
+  "durable_implementation_checkpoint": "5ccc0734b94849e7bc4498263f3d301ce1aac130",
+  "tests": {
+    "ledger_typecheck": "pass",
+    "ledger_build": "pass",
+    "ledger_and_security_units": {
+      "pass": 141,
+      "fail": 0
+    },
+    "maintained_billing_browser": {
+      "pass": 30,
+      "fail": 0,
+      "coverage": [
+        "EN/AR",
+        "light/dark",
+        "390/768/1440 viewports",
+        "annual quote identity",
+        "no online provider calls",
+        "private evidence identity",
+        "unconfigured instructions",
+        "viewer denial",
+        "no automatic activation"
+      ]
+    },
+    "deno": {
+      "version": "2.5.6",
+      "sdk_resolved": "2.118.0",
+      "check": "pass",
+      "trust": "existing system CA store, command scoped; TLS verification remained enabled"
+    },
+    "workspace": "pass",
+    "tokens": "pass",
+    "changed_application_and_browser_lint": {
+      "errors": 0,
+      "warnings": 12,
+      "note": "Includes ignored unit files; unit files executed independently."
+    },
+    "native_browser_selector_syntax": "pass",
+    "legacy_crypto_and_receipt_deno": {
+      "pass": 10,
+      "fail": 0,
+      "checks": [
+        "receipt signatures/MIME and streamed byte limit",
+        "legacy 30/360-day cadence and server-only mapping",
+        "signed metadata tamper denial",
+        "transaction HMAC tamper denial",
+        "subscription HMAC identity tamper denial"
+      ],
+      "runtime_network_permission": false,
+      "environment_permissions": [
+        "PAYMOB_HMAC_SECRET",
+        "PAYMOB_STARTER_YEARLY_PLAN_ID"
+      ],
+      "persistent_environment_changes": false
+    },
+    "exact_committed_release_policy": {
+      "head": "744732b27fb3624694085113ba88e00d004264f4",
+      "base": "81cdcc608519f538a2dec85c3d6d6c2bd4e4687d",
+      "result": "pass"
+    }
+  },
+  "unchanged_security_blobs": {
+    "apps/ledger-suit/supabase/functions/paymob-webhook/index.ts": "4df5d0859dceba831bcc37fedf952a3537a9413b",
+    "apps/ledger-suit/supabase/functions/_shared/paymob.ts": "4350b14f34c8a9e37dfe88f9998e7bdecbb9686e",
+    "apps/ledger-suit/supabase/functions/_shared/paymob-checkout-contract.ts": "cc43ebed5fd9d7c3ad82eb8ea5bae1c3a7bbd9f2",
+    "apps/ledger-suit/supabase/config.toml": "d78ea9943d27231a1f4f6be2362f76bd6db838b4"
+  },
+  "sql_migrations_changed": false,
+  "historical_provider_callbacks_changed": false,
+  "historical_payment_rows_rewritten": false,
+  "provider_side_subscriptions_cancelled": false,
+  "persistent_credentials_or_security_settings_changed": false,
+  "live_recipient_verified": false,
+  "live_recipient_seeded": false,
+  "hosted_payment_ready": false,
+  "native_full_service_rerun": "not performed; no owned billing fixture instantiated here",
+  "legacy_browser_files": "expectations adapted, not selected by maintained suite",
+  "publication": "must bind fresh exact committed head to valid same-stack PR and fresh combined checks after Doctor coordination; no competing CI queued",
+  "minimum_input": "No further customer destination field is required by the existing contract. User-approved IPA building-suit@instapay supports valid IPA-only public instructions. A bank-displayed recipient name is optional and pending; do not invent it. Hosted configuration and release qualification remain outstanding.",
+  "production": "held; parent owns denied SAS baseline evidence; no retry, acknowledgment or release history mutation",
+  "approved_public_destination": {
+    "ipa": "building-suit@instapay",
+    "authority": "Explicit user reply forwarded by parent, 2026-10-29 17:00:36; not inferred from test fixtures",
+    "recipient_name": null,
+    "instructions_configured": false,
+    "recipient_name_required": false,
+    "prepared_instructions": "InstaPay: building-suit@instapay. Transfer the exact amount and currency shown in this checkout, then upload your payment receipt for manual review. Your subscription activates only after approval."
+  }
+}
