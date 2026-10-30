@@ -1,0 +1,15 @@
+{
+  "id": "dos-m6-007-refresh-authority",
+  "task": "DOS-M6-007",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/practiceMoneyController.ts",
+    "apps/doctor-suit/app/utils/practiceMoneyPresentation.ts",
+    "apps/doctor-suit/tests/unit/dos-m6-007.test.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m6-007.spec.ts",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-007-refresh-authority.md"
+  ],
+  "reason": "Correct synthetic Doctor financial refresh freshness: failed reads cannot retain new-command authority, while historical receipts and exact-key uncertain recovery remain available. Doctor is not operationally registered; no shared consumer, financial authorization, live payment, schema or release activation changes."
+}

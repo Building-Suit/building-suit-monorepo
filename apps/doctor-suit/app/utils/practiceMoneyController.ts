@@ -21,7 +21,9 @@ export function createPracticeMoneyController(repo: PracticeMoneyRepository | nu
  async function load(page = state.data?.page ?? 1) {
   const q = query ? { ...query } : null, g = generation, selected = selection(), r = ++reads, sentAt = timers?.now() ?? 0
   if (!repo || !q || !selected || state.pending || q.userId !== identity()?.userId || q.practiceId !== identity()?.practiceId) return false
-  state.loading = true; state.error = null; deadline.clear()
+  // Retained history is not current write authority. A failed/late refresh
+  // must not restore commands after the previous deadline has been cleared.
+  loadedActor = null; state.loading = true; state.error = null; deadline.clear()
   try {
    const result = await repo.read(q, page, signal())
    if (!active(g, selected) || r !== reads) return false
@@ -38,7 +40,8 @@ export function createPracticeMoneyController(repo: PracticeMoneyRepository | nu
   if (JSON.stringify(q) !== JSON.stringify(query)) { clear(); query = Object.freeze({ ...q }) }
   return load(1)
  }
- const editable = () => !disposed && loadedActor === actorKey() && Boolean(state.scope && state.data?.canWrite && selection()) && !state.loading && !state.pending && !operation
+ const hasCurrentRead = () => !disposed && loadedActor !== null && loadedActor === actorKey() && Boolean(state.scope && state.data && selection())
+ const editable = () => hasCurrentRead() && Boolean(state.data?.canWrite) && !state.loading && !state.pending && !operation
  function open(originalId?: string) {
   if (!editable()) return false
   const original = originalId ? state.data?.items.find(i => i.entry?.id === originalId && i.kind === 'collection' && i.state === 'posted') : null
@@ -77,5 +80,5 @@ export function createPracticeMoneyController(repo: PracticeMoneyRepository | nu
   const owner = Object.freeze({ ...state.scope }), prior = Object.freeze({ ...item, entry: item.entry ? Object.freeze({ ...item.entry }) : null }), k = key()
   operation = { selected: selection()!, run: s => repo.advance(owner, prior, action, outcome, k, s) }; return perform()
  }
- return { state, clear, select, refresh: load, open, save, advance, retry: perform, editable, valid: () => { try { input(); return true } catch { return false } }, visible: (value: boolean) => { if (!state.pending) state.visible = value }, page: (value: number) => Number.isSafeInteger(value) && value > 0 && value <= 1000000 ? load(value) : Promise.resolve(false), dispose: () => { clear(); disposed = true } }
+ return { state, clear, select, refresh: load, open, save, advance, retry: perform, hasCurrentRead, editable, valid: () => { try { input(); return true } catch { return false } }, visible: (value: boolean) => { if (!state.pending) state.visible = value }, page: (value: number) => Number.isSafeInteger(value) && value > 0 && value <= 1000000 ? load(value) : Promise.resolve(false), dispose: () => { clear(); disposed = true } }
 }
