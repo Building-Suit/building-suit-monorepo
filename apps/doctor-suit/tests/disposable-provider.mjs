@@ -17,11 +17,15 @@ import { verifyDoctorMilestoneProvider } from './milestone-actual-provider.mjs'
 import { doctorOversizedResponse } from './oversized-http.mjs'
 import { validateLocalDoctorTarget } from './local-lifecycle.mjs'
 import { DoctorProviderFailure,doctorProviderFailureSummary } from './provider-diagnostics.mjs'
+import { verifyDoctorIncidentProvider } from './incident-actual-provider.mjs'
+import { beginDoctorIncidentEvidence,createDoctorIncidentTrace } from './incident-evidence.mjs'
 const root = fileURLToPath(new URL('../../../',import.meta.url))
 const app = path.join(root,'apps/doctor-suit')
 const api = 'http://127.0.0.1:65321'; const origin = 'http://127.0.0.1:4341'
 const project = 'building-suit-doctor'; const bucket = 'doctor-private-documents'
 let appointmentAcceptance;let stage = 'guard'; let owned = false; let functions; let functionsOutput = ''
+let incidentExecution
+const incidentTrace = createDoctorIncidentTrace()
 const scratch = await mkdtemp(path.join(tmpdir(),'doctor-provider-'))
 const environment = { ...process.env,SUPABASE_HOME: process.env.SUPABASE_HOME || path.join(scratch,'cli') }
 const wait = ms => new Promise(resolve => setTimeout(resolve,ms))
@@ -94,6 +98,7 @@ async function bootstrap(publicKey,label,beforeContext,timezone='Africa/Cairo'){
 }
 try {
   validateLocalDoctorTarget(JSON.parse(await readFile(path.join(root,'docs/architecture/environments.json'),'utf8')),await readFile(path.join(app,'supabase/config.toml'),'utf8'),process.env)
+  incidentExecution = await beginDoctorIncidentEvidence(root)
   try { await access(path.join(app,'supabase/.temp/project-ref')); throw new Error('Linked Doctor CLI directory is forbidden') } catch (error) { if (error.code!=='ENOENT') throw error }
   expect(!docker(['ps','-a','--format','{{.Names}}']).some(name => name.endsWith(`_${project}`)),'Existing project container is not owned by this run')
   expect(!docker(['volume','ls','--format','{{.Name}}']).some(name => name.endsWith(`_${project}`)),'Existing project volume is not owned by this run')
@@ -111,6 +116,7 @@ try {
   if (existingBucket.error) expect(!(await storageAdmin.storage.createBucket(bucket,{ public: false,fileSizeLimit: 5242880,allowedMimeTypes: ['application/pdf','image/png','image/jpeg'] })).error,'Supported local Storage bucket creation failed')
   stage = 'real Auth and owner onboarding'; const a = await bootstrap(status.ANON_KEY,'doctor-a'); const b = await bootstrap(status.ANON_KEY,'doctor-b')
   console.log('Actual Auth: captured local confirmation email, unconfirmed denial, verified session and two independent owner practices passed')
+  await verifyDoctorIncidentProvider({ publicKey: status.ANON_KEY,bootstrap,rpc,trace: incidentTrace,setStage: value => { stage = value } })
   await verifyDoctorAccountProvider({ root,api,key: status.ANON_KEY,serviceKey:status.SERVICE_ROLE_KEY,project,expect,setStage: value => { stage = value } })
   expect((await rpc(b.client,'doctor_account_settings')).in_app_confirmations===false,'Independent account preference changed')
   const pdf = new TextEncoder().encode('%PDF-1.7\nSynthetic administrative attachment\n%%EOF\n')
@@ -200,4 +206,9 @@ try {
   functionsOutput = ''
   if (owned) { try { await cli(['stop','--no-backup'],60000) } catch { console.error('Owned Doctor local cleanup failed'); process.exitCode = 1 } }
   await rm(scratch,{ recursive: true,force: true })
+  if (incidentExecution) {
+    const receipt = await incidentExecution.finish(incidentTrace,process.exitCode ?? 0)
+    console.log('DOS-M7-007-C03 receipt',JSON.stringify(receipt))
+    if (!receipt.accepted) process.exitCode = 1
+  }
 }
