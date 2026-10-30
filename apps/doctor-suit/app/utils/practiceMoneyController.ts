@@ -27,7 +27,7 @@ export function createPracticeMoneyController(repo: PracticeMoneyRepository | nu
    if (!active(g, selected) || r !== reads) return false
    loadedActor = actorKey(); state.scope = result.scope; state.data = result.model
    deadline.arm(result.model.entitlement, sentAt, () => { if (state.data) state.data = { ...state.data, canWrite: false } }, () => active(g, selected) && r === reads)
-   for (const status of ['pending', 'unknown', 'failed', 'posted'] as const) if (result.model.items.some(item => item.state === status)) observeDoctorOperation(observe, status === 'posted' ? 'practice_money.posted_synthetic_observed' : `practice_money.${status}_observed`)
+   if (observe) for (const status of ['pending', 'unknown', 'failed', 'posted'] as const) if (result.model.items.some(item => item.state === status)) observeDoctorOperation(observe, status === 'posted' ? 'practice_money.posted_synthetic_observed' : `practice_money.${status}_observed`)
    return true
   } catch (error) { if (active(g, selected) && r === reads) { const p = problem(error); if (p === 'denied') clear(); state.error = p } return false }
   finally { if (active(g, selected) && r === reads) state.loading = false }

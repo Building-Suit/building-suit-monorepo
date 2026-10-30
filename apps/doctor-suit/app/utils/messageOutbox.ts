@@ -21,7 +21,7 @@ export function createMessageOutboxReader(load:((practice:string,location:string
   try{const result=await load(s.practiceId,s.locationId,patient,page,AbortSignal.any([abort.signal,AbortSignal.timeout(10000)]));if(rev!==revision||key!==scopeKey())return false;state.directory=messageDirectory(result,patient,page)
    // One observation per state present in this authorized page; never a unique
    // message/delivery count, and never emitted for a stale or invalid response.
-   for(const status of messageStates)if(state.directory.rows.some(row=>row.state===status))observeDoctorOperation(observe,status==='delivered'?'outbox.delivered_synthetic_observed':`outbox.${status}_observed`)
+   if(observe)for(const status of messageStates)if(state.directory.rows.some(row=>row.state===status))observeDoctorOperation(observe,status==='delivered'?'outbox.delivered_synthetic_observed':`outbox.${status}_observed`)
    return true}
   catch(e){if(rev===revision&&key===scopeKey()){state.directory=null;state.error=e&&typeof e==='object'&&'code'in e&&e.code==='42501'?'denied':'unavailable';observeDoctorOperation(observe,state.error==='denied'?'outbox.access_rejected':'outbox.unavailable')}return false}
   finally{if(rev===revision&&key===scopeKey())state.loading=false}

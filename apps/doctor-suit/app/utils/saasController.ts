@@ -27,8 +27,8 @@ export function createDoctorSubscriptionController(repository:ReturnType<typeof 
    const document=terms?await repository.document(terms,signal):null
    if(captured!==generation||expected!==scope()||signal.aborted)return false
    state.readiness=readiness.status==='fulfilled'?readiness.value:null;state.document=document;state.offer=offer.status==='fulfilled'?offer.value:null;state.status=status.value;loadedScope=expected;attempt=null
-   if(state.readiness?.operations.unknownReview)observeDoctorOperation(observe,'saas_reconciliation.unknown_observed')
-   if(state.readiness?.operations.discrepancyReview)observeDoctorOperation(observe,'saas_reconciliation.discrepancy_observed')
+   if(observe&&state.readiness?.operations?.unknownReview)observeDoctorOperation(observe,'saas_reconciliation.unknown_observed')
+   if(observe&&state.readiness?.operations?.discrepancyReview)observeDoctorOperation(observe,'saas_reconciliation.discrepancy_observed')
    const value=status.value
    if(value.period&&value.observedAt)expiry.arm({state:value.state,revision:value.revision,writesAllowed:value.periodActive,canAddStaff:false,canAddClinic:false,overLimit:false,validUntil:value.period.endsAt,observedAt:value.observedAt},sentAt,()=>{clear();const cleared=generation;void changed().then(()=>{if(cleared===generation&&expected===scope())void load()})},()=>captured===generation&&expected===scope())
    return true
