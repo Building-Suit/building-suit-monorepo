@@ -1,4 +1,5 @@
 import { installDoctorEntryValidity, readDoctorEntryValidity } from './helpers/entry-validity.mjs'
+import { doctorAccountReadObservation, doctorAccountAssertion } from './helpers/account-read-observation.mjs'
 import{doctorPasswordStep}from'./helpers/password-step.mjs'
 // Owned loopback-only browser against real GoTrue/Mailpit/PostgREST. No artifacts or error text.
 import { chromium,expect as browserExpect } from '@playwright/test'
@@ -7,6 +8,7 @@ import { spawn,spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 export async function verifyDoctorAccountProvider({ root,api,key,serviceKey,project,expect,setStage,admitEmail,expectedHome='/onboarding',expectVersionDocument=false }) {
   const origin = 'http://127.0.0.1:4341';let server;let browser;let context;let page;let token = '';let changedPolicy = false
+  let lastSettingsRead=null,settingsReadReturned=false,freshnessStartedAt=null,freshnessFinishedAt=null,freshnessReads=0
   const pause = milliseconds => new Promise(resolve => setTimeout(resolve,milliseconds))
   function policy(seconds) {
     expect([20,900].includes(seconds),'Owned account policy fixture rejected')
@@ -27,7 +29,7 @@ export async function verifyDoctorAccountProvider({ root,api,key,serviceKey,proj
     });return result
   }
   function client(accessToken) { return createClient(api,key,{ global: { headers: { Authorization: `Bearer ${accessToken}` } },auth: { persistSession: false,autoRefreshToken: false,detectSessionInUrl: false } }) }
-  async function settings(accessToken=token) { const result = await client(accessToken).rpc('doctor_account_settings');expect(!result.error,'Real account settings read rejected');return result.data }
+  async function settings(accessToken=token) { lastSettingsRead=null;settingsReadReturned=false;const result = await client(accessToken).rpc('doctor_account_settings');settingsReadReturned=true;lastSettingsRead=doctorAccountReadObservation(result);expect(!result.error,'Real account settings read rejected');return result.data }
   try {
     setStage('actual web app readiness')
     server = spawn(process.execPath,['apps/doctor-suit/.output/server/index.mjs'],{ cwd: root,env: { ...process.env,NITRO_HOST: '127.0.0.1',NITRO_PORT: '4341',APP_URL: origin,NUXT_PUBLIC_DOCTOR_AUTH_CONFIGURED: 'true',NUXT_PUBLIC_DOCTOR_AUTH_ENVIRONMENT: 'local',NUXT_PUBLIC_DOCTOR_AUTH_ORIGIN: origin,NUXT_PUBLIC_DOCTOR_AUTH_URL: api,NUXT_PUBLIC_DOCTOR_AUTH_KEY: key,NUXT_DOCTOR_AUTH_EMAIL_LOOKUP_KEY: serviceKey },detached: true,stdio: 'ignore' })
@@ -58,7 +60,9 @@ export async function verifyDoctorAccountProvider({ root,api,key,serviceKey,proj
     setStage('actual personal settings authoritative defaults');const initialSettings=await settings();expect(initialSettings.in_app_confirmations===false && initialSettings.version===0,'Actual personal settings must start unchanged and opted out')
     setStage('actual personal settings dialog opens');await page.getByRole('button',{ name: 'Edit account details',exact: true }).click();let dialog = page.getByRole('dialog',{ name: 'Edit account details',exact: true });setStage('actual personal preference checkbox mounted');const confirmations=dialog.getByRole('checkbox',{ name: 'Show in-app account update confirmations',exact: true });await browserExpect(confirmations).toBeAttached();setStage('actual personal preference defaults off');await browserExpect(confirmations).not.toBeChecked();setStage('actual personal settings input and save');await dialog.getByLabel('Personal name',{ exact: true }).fill('Synthetic private personal name');await dialog.getByRole('checkbox',{ name: 'Show in-app account update confirmations' }).check();await dialog.getByRole('button',{ name: 'Save account details',exact: true }).click();await dialog.waitFor({ state: 'hidden' });setStage('actual personal settings committed version');expect((await settings()).version===1,'Actual personal write was not persisted')
     setStage('actual sensitive contact database freshness expires')
-    await until(async () => !(await settings()).can_change_contact,30000)
+    freshnessStartedAt=performance.now()
+    await until(async () => {freshnessReads=Math.min(1000,freshnessReads+1);return !(await settings()).can_change_contact},30000)
+    freshnessFinishedAt=performance.now()
     setStage('actual expired contact editor and server denial');await page.getByRole('button',{ name: 'Edit account details',exact: true }).click();dialog = page.getByRole('dialog',{ name: 'Edit account details',exact: true });await dialog.getByLabel('Unverified personal contact phone',{ exact: true }).fill('+12025550123');await dialog.getByRole('button',{ name: 'Save account details',exact: true }).click();await dialog.getByText('Sign in again, then re-enter and save the phone change. A fresh sign-in within 15 minutes is required.',{ exact: true }).waitFor();setStage('actual expired contact retains committed version');expect((await settings()).version===1,'Expired sensitive change mutated actual settings')
     setStage('actual contact reauthentication navigation');await dialog.getByRole('button',{ name: 'Sign in again',exact: true }).click();await page.waitForURL(url => url.pathname==='/sign-in');await page.getByLabel(/^Email/).fill(email);await doctorPasswordStep(page);await page.getByLabel(/^Password/).fill(password);await page.getByRole('button',{ name: 'Sign in',exact: true }).click();await page.waitForURL(`${origin}/account`);await page.getByRole('button',{ name: 'Edit account details',exact: true }).click();dialog = page.getByRole('dialog',{ name: 'Edit account details',exact: true });setStage('actual reauthentication clears sensitive draft');expect(await dialog.getByLabel('Unverified personal contact phone',{ exact: true }).inputValue()==='','Reauthentication retained sensitive draft');await dialog.getByLabel('Unverified personal contact phone',{ exact: true }).fill('+12025550123');await dialog.getByRole('button',{ name: 'Save account details',exact: true }).click();await dialog.waitFor({ state: 'hidden' })
     setStage('actual contact reauthentication new SID');const currentIdentity = await client(token).rpc('doctor_session_context');expect(!currentIdentity.error && currentIdentity.data.session_id!==firstSid,'Reauthentication reused old provider SID');setStage('actual fresh contact persisted');expect((await settings()).contact_phone==='+12025550123','Fresh actual sign-in did not admit sensitive change');setStage('actual frozen prior SID denied');expect((await client(firstToken).rpc('doctor_account_settings')).error?.code==='42501','Frozen signed-out SID retained account access');policy(900);changedPolicy = false
@@ -74,6 +78,7 @@ export async function verifyDoctorAccountProvider({ root,api,key,serviceKey,proj
     setStage('actual reused recovery code denial');await page.goto(callback.href);await page.getByText('The recovery link is invalid or expired. Request another link.',{ exact: true }).waitFor();expect(await page.getByLabel('Password',{ exact: true }).count()===0,'Reused PKCE code exposed reset form')
     console.log('Actual browser Auth: signup PKCE, URL scrubbing, expired contact denial, new-SID reauthentication, frozen SID denial, same-browser recovery, wrong-browser/reused-code denial and password replacement passed')
   } catch(error) {
+    console.log('Actual account freshness observation:',JSON.stringify({lastRead:lastSettingsRead,readReturned:settingsReadReturned,freshnessStarted:freshnessStartedAt!==null,freshnessReads,freshnessElapsedMs:freshnessStartedAt===null?null:Math.min(1000000,Math.max(0,Math.round((freshnessFinishedAt??performance.now())-freshnessStartedAt))),assertion:doctorAccountAssertion(error)}))
     if(page&&!page.isClosed())try{console.log('Actual account entry native validity:',JSON.stringify(await readDoctorEntryValidity(page)))}catch{/* Fixed-state diagnostic unavailable. */}
     // Whitelisted state only: no account IDs, addresses, credentials, values or DOM text.
     if(page)try{console.log('Actual account safe readiness diagnostic:',JSON.stringify(await page.evaluate(()=>{
