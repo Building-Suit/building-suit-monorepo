@@ -1,0 +1,18 @@
+{
+  "id": "doctor-queue-activation-diagnostic-20261029",
+  "task": "DOCTOR-QUEUE-ACTIVATION-AUDIT-20261029",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts",
+    "apps/doctor-suit/tests/helpers/queue-activation-diagnostic.ts",
+    "apps/doctor-suit/tests/unit/queue-activation-diagnostic.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/queue-activation-diagnostic-2026-10-29.md",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/work-packages/doctor-suit/implementation/queue-activation-before-2026-10-30.json"
+  ],
+  "reason": "Correct demonstrated native queue activation interruption during retained same-scope reads in the gated synthetic Doctor preview. Preserve pending writes, loading, authority/version/tenant checks and original deadlines; retain failed before evidence, bounded diagnostics and controlled regressions without claiming historical intermittent causality or domain readiness."
+}
