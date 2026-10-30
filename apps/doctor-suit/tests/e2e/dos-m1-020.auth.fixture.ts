@@ -20,11 +20,12 @@ async function invite(page: Page,name: string,ar: boolean,capabilities: string[]
   await dialog.getByRole('button',{ name: copy.create,exact: true }).click();const credential = await dialog.getByLabel(copy.credentialLabel,{ exact: true }).inputValue();expect(/^[0-9a-f-]{36}\.[0-9a-f]{64}$/.test(credential)).toBe(true);await dialog.getByRole('button',{ name: copy.cancel,exact: true }).filter({ hasText: copy.cancel }).click();return credential
 }
 async function accept(page: Page,credential: string,ar: boolean) { const copy = doctorDelegationCopy(ar);await page.goto('/invitations/accept');await page.getByLabel(copy.codeLabel,{ exact: true }).fill(credential);await page.getByRole('button',{ name: copy.review,exact: true }).click();await page.getByRole('button',{ name: copy.accept,exact: true }).click();await expect(page.getByText(copy.acceptedNotice,{ exact: true })).toBeVisible();await page.getByRole('button',{ name: copy.continue,exact: true }).click();await expect(page).toHaveURL(/\/workspace$/) }
-for(const ar of [false,true])test(`DOS-M1-020-C01/C02 ${ar ? 'AR mobile light' : 'EN desktop dark'}: doctor-alone setup through two-doctor secretary revocation`,async ({ browser,request }) => {
+for(const ar of [false,true])for(const interruptQueue of [false,true])test(`DOS-M1-020-C01/C02 ${ar ? 'AR mobile light' : 'EN desktop dark'}: doctor-alone setup through two-doctor secretary revocation${interruptQueue ? ' with queue pointer refresh' : ''}`,async ({ browser,request }) => {
   test.setTimeout(150000);await request.post(fixture,{ data: { reset: true } });await request.post(fixture,{ data: { delegation: true,milestone: true,patients: true,documents: true,availability: true,appointments: true } })
   const setupDiagnostic={saveRequests:0,saveAcknowledged:0,completeRequests:0,completeAcknowledged:0}
   const secretaryRpc:{rpc:string;status:number}[]=[]
   let queueActivation: JSHandle<ReturnType<typeof observeQueueActivation>> | null = null
+  let releaseQueueRefresh: (() => void) | undefined
   const contexts: BrowserContext[] = [];const stage = (value: string) => console.info(`Doctor M1 combined stage: ${value}`)
   try {
     for(let n=0;n<4;n++) { const context = await browser.newContext({ viewport: { width: ar ? 390 : 1280,height: 1000 },reducedMotion: 'reduce' });contexts.push(context);await prepare(context,ar) }
@@ -45,7 +46,30 @@ for(const ar of [false,true])test(`DOS-M1-020-C01/C02 ${ar ? 'AR mobile light' :
     await a.goto('/appointments');await a.getByRole('button',{ name: appointments.create,exact: true }).click();const booking = a.getByRole('dialog',{ name: appointments.create,exact: true });await booking.getByRole('combobox',{ name: appointments.patient,exact: true }).click();await a.getByRole('option',{ name: 'Synthetic combined A patient',exact: true }).click();await booking.getByRole('combobox',{ name: appointments.slot,exact: true }).click();await a.getByRole('option',{ name: '14:00',exact: true }).click();await booking.getByRole('button',{ name: appointments.save,exact: true }).evaluate((button: HTMLButtonElement) => { button.click();button.click() });await expect(booking).toBeHidden();const card = a.locator('.bs-appointment-event').filter({ hasText: 'Synthetic combined A patient' });await expect(card).toHaveCount(1);await card.getByText(appointments.calendar.actions,{ exact: true }).click();await card.getByRole('button',{ name: appointments.actions.checked_in,exact: true }).click();const checkin = a.getByRole('dialog',{ name: appointments.actions.checked_in,exact: true });await checkin.getByRole('button',{ name: appointments.actions.checked_in,exact: true }).click();await expect(checkin).toBeHidden();await expect(a.getByRole('region',{ name: appointments.queue,exact: true }).first()).toContainText('Synthetic combined A patient')
     stage('independent invitations and shared secretary');await login(b,'synthetic-doctor-b@example.test',ar);await b.goto('/patients');await choose(b,'Clinic B1',ar);await patient(b,'Synthetic combined B patient',ar);const codeA = await invite(a,'Clinic A1',ar,['patients.read','appointments.read','queue.manage']);const codeB = await invite(b,'Clinic B1',ar,['patients.read','appointments.read'])
     await login(s,'synthetic-secretary@example.test',ar);await accept(s,codeA,ar);await accept(s,codeB,ar);await s.goto('/appointments');await choose(s,'Clinic A1',ar);await s.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true }).click();await expect(s.getByRole('option',{ name: /Clinic A2/ })).toHaveCount(0);await s.keyboard.press('Escape');await expect(s.getByRole('button',{ name: appointments.create,exact: true })).toHaveCount(0)
-    const queue = s.getByRole('region',{ name: appointments.queue,exact: true }).first();const startAction = queue.getByRole('row').filter({ hasText: 'Synthetic combined A patient' }).getByRole('button',{ name: appointments.actions.in_progress,exact: true });queueActivation = await startAction.evaluateHandle(observeQueueActivation).catch(()=>null);await startAction.click();const start = s.getByRole('dialog',{ name: appointments.actions.in_progress,exact: true });await start.getByRole('button',{ name: appointments.actions.in_progress,exact: true }).click();await expect(start).toBeHidden()
+    const queue = s.getByRole('region',{ name: appointments.queue,exact: true }).first();const startAction = queue.getByRole('row').filter({ hasText: 'Synthetic combined A patient' }).getByRole('button',{ name: appointments.actions.in_progress,exact: true });queueActivation = await startAction.evaluateHandle(observeQueueActivation).catch(()=>null);
+    if(interruptQueue) {
+      let captured = 0
+      const held = new Promise<void>(resolve => { releaseQueueRefresh = resolve })
+      await s.route('**/rest/v1/rpc/doctor_appointment_board', async route => {
+        const response = await route.fetch();captured++;await held;await route.fulfill({ response })
+      })
+      await expect(startAction).toBeEnabled();await startAction.scrollIntoViewIfNeeded()
+      const bounds = await startAction.boundingBox();expect(bounds).not.toBeNull()
+      await s.mouse.move(bounds!.x+bounds!.width/2,bounds!.y+bounds!.height/2);await s.mouse.down()
+      await s.evaluate(() => window.dispatchEvent(new Event('focus')))
+      await expect.poll(() => captured).toBeGreaterThan(0)
+      await expect(s.locator('main').getByLabel(appointments.date,{exact:true})).toBeDisabled()
+      await s.mouse.up()
+    } else await startAction.click();const start = s.getByRole('dialog',{ name: appointments.actions.in_progress,exact: true });
+    if(interruptQueue) {
+      await expect(start).toBeVisible()
+      const delivered = s.waitForResponse('**/rest/v1/rpc/doctor_appointment_board');releaseQueueRefresh!()
+      const response = await delivered;expect(response.ok()).toBe(true);expect(await response.finished()).toBeNull()
+      await expect(s.locator('main').getByLabel(appointments.date,{exact:true})).toBeEnabled()
+      await expect(start).toBeVisible()
+      await s.unrouteAll({behavior:'wait'})
+    }
+    await start.getByRole('button',{ name: appointments.actions.in_progress,exact: true }).click();await expect(start).toBeHidden()
     await s.goto('/patients');await choose(s,'Clinic B1',ar);await expect(s.getByRole('link',{ name: 'Synthetic combined B patient',exact: true })).toBeVisible();await expect(s.getByRole('link',{ name: 'Synthetic combined A patient',exact: true })).toHaveCount(0);await expect(s.getByRole('button',{ name: doctorPatientsCopy(ar).create,exact: true })).toHaveCount(0);await s.getByRole('link',{ name: 'Synthetic combined B patient',exact: true }).click();await expect(s.getByRole('heading',{ name: 'Synthetic combined B patient',exact: true })).toBeVisible()
     stage('revocation and explicit independent reselection');await s.goto('/appointments');await choose(s,'Clinic A1',ar);await a.reload();await a.getByRole('row',{ name: /synthetic-secretary@example.test/ }).getByRole('button',{ name: access.revoke,exact: true }).click();await a.getByRole('dialog',{ name: access.actionTitle,exact: true }).getByRole('button',{ name: access.confirm,exact: true }).click();await s.bringToFront();await s.evaluate(() => window.dispatchEvent(new Event('focus')));await expect(s.locator('.bs-appointment-event').filter({ hasText: 'Synthetic combined A patient' })).toHaveCount(0);await choose(s,'Clinic B1',ar);await s.goto('/patients');await expect(s.getByRole('link',{ name: 'Synthetic combined B patient',exact: true })).toBeVisible()
     await login(o,'synthetic-outsider@example.test',ar);await o.goto('/patients');await expect(o.getByRole('link',{ name: /Synthetic combined [AB] patient/ })).toHaveCount(0);await expect(o.getByRole('button',{ name: doctorPatientsCopy(ar).create,exact: true })).toHaveCount(0)
@@ -85,5 +109,5 @@ for(const ar of [false,true])test(`DOS-M1-020-C01/C02 ${ar ? 'AR mobile light' :
       console.info('Doctor M1 secretary readiness diagnostic '+JSON.stringify(cue))
     }catch{console.info('Doctor M1 secretary readiness diagnostic '+JSON.stringify({unavailable:true}))}
     throw error
-  } finally { if(queueActivation)try{await queueActivation.evaluate(observer=>observer.dispose());await queueActivation.dispose()}catch{/* Context teardown still owns final cleanup. */}await Promise.allSettled(contexts.map(async context => { try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() } })) }
+  } finally { releaseQueueRefresh?.();await contexts[2]?.pages()[0]?.unrouteAll({behavior:'wait'});if(queueActivation)try{await queueActivation.evaluate(observer=>observer.dispose());await queueActivation.dispose()}catch{/* Context teardown still owns final cleanup. */}await Promise.allSettled(contexts.map(async context => { try { await context.unrouteAll({ behavior: 'ignoreErrors' }) } finally { await context.close() } })) }
 })

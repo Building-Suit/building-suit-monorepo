@@ -27,3 +27,7 @@ An independent static fixture defect was corrected: the availability-dialog loca
 - No push, PR, CI dispatch, hosted operation, merge or deployment.
 
 Next: coordinate the validation slot, refresh staging and qualify the exact candidate before publication. Use the normal owned runner to establish event-time behavior, then repair only a demonstrated defect. Do not add blind retries or increase deadlines. All clinical/legal/privacy/security and production/catalog gates remain unchanged.
+
+## Controlled owned-runner reproduction candidate
+
+The two original EN/AR journeys remain unchanged in behavior. Two additional variants hold the actual synthetic board response between native pointer-down and pointer-up on the already permitted secretary queue action. They require the confirmation to open while the same-scope read is held, remain open after the response is applied, and complete the original exact single-transition/revocation assertions. Original deadlines and zero-retry runner configuration remain unchanged. Cleanup releases the held response and drains the page interceptor. This is an unexecuted hypothesis test until exact-head GitHub evidence is available; a controlled reproduction would not alone prove the historical intermittent cause.
