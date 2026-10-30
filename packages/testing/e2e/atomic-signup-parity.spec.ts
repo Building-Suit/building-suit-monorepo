@@ -8,6 +8,13 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
     const controls = []
     for (const product of [{ name: 'ledger', port: ledgerPort, path: '/signup' }, { name: 'shop', port: shopPort, path: '/auth/signup' }]) {
       let phase = 'context', crashed = false, failed = false
+      let captureStartedAt: number | null = null, captureFinishedAt: number | null = null
+      const captureElapsedMs = () => captureStartedAt === null ? null : Math.min(1_000_000, Math.max(0, Math.round((captureFinishedAt ?? performance.now()) - captureStartedAt)))
+      let captureGeometry: {
+        viewportWidth: number | null; viewportHeight: number | null
+        documentWidth: number | null; documentHeight: number | null
+        visible: boolean; focused: boolean
+      } | null = null
       const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce' })
       try {
         await context.addCookies([{ name: 'building-suit-locale', value: locale, domain: '127.0.0.1', path: '/' }])
@@ -76,8 +83,23 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
         await expectNoPageOverflow(page)
         await mkdir('.local/atomic-template-evidence/screenshots', { recursive: true })
         const screenshot = `.local/atomic-template-evidence/screenshots/${product.name}-signup-workspace-${locale}-${theme}-${width}.png`
+        phase = 'workspace-capture-geometry'
+        // Optional bounded measurements for capture comparison; never page content.
+        captureGeometry = await page.evaluate(() => {
+          const bounded = (value: number) => Number.isFinite(value) ? Math.min(1_000_000, Math.max(0, Math.round(value))) : null
+          const body = document.body, root = document.documentElement
+          return {
+            viewportWidth: bounded(window.innerWidth), viewportHeight: bounded(window.innerHeight),
+            documentWidth: body && root ? bounded(Math.max(body.scrollWidth, body.offsetWidth, body.clientWidth, root.scrollWidth, root.offsetWidth, root.clientWidth)) : null,
+            documentHeight: body && root ? bounded(Math.max(body.scrollHeight, body.offsetHeight, body.clientHeight, root.scrollHeight, root.offsetHeight, root.clientHeight)) : null,
+            visible: document.visibilityState === 'visible', focused: document.hasFocus(),
+          }
+        }).catch(() => null)
         phase = 'workspace-capture'
+        captureStartedAt = performance.now()
         await page.screenshot({ path: screenshot, fullPage: true, animations: 'disabled' })
+        captureFinishedAt = performance.now()
+        console.info('Shared signup capture completed:', JSON.stringify({ product: product.name, locale, theme, width, captureGeometry, captureElapsedMs: captureElapsedMs() }))
         phase = 'workspace-attachment'
         await testInfo.attach(`${product.name}-workspace`, { path: screenshot, contentType: 'image/png' })
         await page.locator('form button[type=submit]').click()
@@ -98,7 +120,7 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
         failed = true
         // Fixed case dimensions and process state only: never form values,
         // requests, storage, errors, URLs or DOM contents from the auth page.
-        console.error('Shared signup phase failure:', JSON.stringify({ product: product.name, locale, theme, width, phase, crashed, browserConnected: browser.isConnected() }))
+        console.error('Shared signup phase failure:', JSON.stringify({ product: product.name, locale, theme, width, phase, crashed, browserConnected: browser.isConnected(), captureGeometry, captureElapsedMs: captureElapsedMs() }))
         throw error
       } finally {
         await context.close().catch(error => { if (!failed) throw error })
