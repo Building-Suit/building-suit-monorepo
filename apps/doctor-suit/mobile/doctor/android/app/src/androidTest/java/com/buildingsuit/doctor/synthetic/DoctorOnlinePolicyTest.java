@@ -61,4 +61,14 @@ public final class DoctorOnlinePolicyTest {
             });
         }
     }
+    @Test public void absentBridgeCachePolicySafe() {
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(activity -> {
+                MainActivity.applyWebViewCachePolicy(null);
+                assertEquals(WebSettings.LOAD_NO_CACHE, activity.getBridge().getWebView().getSettings().getCacheMode());
+                assertTrue((activity.getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_SECURE) != 0);
+                assertNull(ResponseCache.getDefault());
+            });
+        }
+    }
 }
