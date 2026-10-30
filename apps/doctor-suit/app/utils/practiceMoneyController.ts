@@ -35,7 +35,10 @@ export function createPracticeMoneyController(repo: PracticeMoneyRepository | nu
   finally { if (active(g, selected) && r === reads) state.loading = false }
  }
  async function select(q: PracticeMoneyQuery | null) {
-  if (disposed || state.pending || operation) return false
+  if (disposed || state.pending) return false
+  // The page uses select() for an explicit refresh. Unknown outcomes allow
+  // rereading the same bound source, never replacing its retained command.
+  if (operation && (operation.selected !== selection() || JSON.stringify(q) !== JSON.stringify(query))) return false
   if (!q || q.userId !== identity()?.userId || q.practiceId !== identity()?.practiceId) { clear(); state.error = 'denied'; return false }
   if (JSON.stringify(q) !== JSON.stringify(query)) { clear(); query = Object.freeze({ ...q }) }
   return load(1)

@@ -53,6 +53,8 @@ test('unknown prepare retains its exact key/source/input and blocks a second mov
  const h=harness();await h.controller.select(query());h.controller.open();h.state.form={amount:'100.00',reason:'Synthetic original intent'};let attempt=0,original
  h.repo.prepare=async(s,input,key)=>{h.calls.push({input:structuredClone(input),key});if(attempt++===0){original=structuredClone(input);throw Error('Lost accepted prepare acknowledgement')}return practicePaymentIntent({...intent(),amount_minor:original.amountMinor,reason:original.reason},s)}
  assert.equal(await h.controller.save(),false);assert.equal(h.state.uncertain,true);assert.equal(h.controller.open(),false);assert.equal(await h.controller.select({...query(),chargeId:id(99)}),false)
+ assert.equal(await h.controller.select(query()),true,'the page refresh command must allow the unchanged scope while retaining uncertain recovery')
+ assert.equal(h.state.uncertain,true);assert.equal(h.calls.length,1)
  h.state.form={amount:'1.00',reason:'Changed input must not resend'};assert.equal(await h.controller.retry(),true);assert.deepEqual(h.calls[0],h.calls[1]);assert.equal(h.calls[1].input.amountMinor,'10000');assert.equal(h.state.uncertain,false);assert.equal(h.calls.length,2)
 })
 test('unknown dispatch retries only its original command and never automatically reconciles or sends a second movement',async()=>{
@@ -129,6 +131,12 @@ test('failed refresh retains uncertain-command identity for explicit same-key re
  assert.equal(await h.controller.refresh(),false);assert.equal(h.state.uncertain,true);assert.equal(h.controller.open(),false)
  assert.equal(await h.controller.retry(),true);assert.equal(h.calls.length,2);assert.deepEqual(h.calls[0],h.calls[1]);assert.equal(h.state.uncertain,false)
  assert.equal(h.controller.open(),false);assert.equal(await h.controller.retry(),false);h.controller.dispose()
+})
+test('same-query refresh cannot reuse an uncertain command after session replacement',async()=>{
+ const h=harness({prepare:async()=>{throw Error('Synthetic lost acknowledgement')}});await h.controller.select(query());h.controller.open();h.state.form={amount:'100.00',reason:'Synthetic original session'}
+ assert.equal(await h.controller.save(),false);let reads=0;h.repo.read=async()=>{reads++;return{scope:{...scope},model:practiceMoneyState(board(),scope,1)}}
+ h.setActor({...identity(),sessionId:id(99)})
+ assert.equal(await h.controller.select(query()),false);assert.equal(reads,0);assert.equal(await h.controller.retry(),false);h.controller.dispose()
 })
 test('an older successful refresh cannot restore write eligibility after a newer read failed',async()=>{
  const h=harness();await h.controller.select(query());let resolve
