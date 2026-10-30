@@ -1,0 +1,15 @@
+{
+  "id": "dos-m7-007",
+  "task": "DOS-M7-007",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/supabase/functions/_shared/operational-signals.ts",
+    "apps/doctor-suit/supabase/functions/doctor-documents/handler.ts",
+    "apps/doctor-suit/supabase/functions/doctor-payment-evidence/handler.ts",
+    "apps/doctor-suit/tests/unit/dos-m7-007.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-007.md"
+  ],
+  "reason": "Implement partial M7-007 C01 synthetic file-service authorization/availability observation with fixed bounded counters. Default runtime observation remains disabled; no hosted telemetry, incident/legal acceptance, operational registration, payment settlement authority or public release claim is introduced."
+}
