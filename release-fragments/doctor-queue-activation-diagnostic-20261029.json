@@ -11,7 +11,6 @@
     "apps/doctor-suit/tests/helpers/queue-activation-diagnostic.ts",
     "apps/doctor-suit/tests/unit/queue-activation-diagnostic.test.mjs",
     "docs/work-packages/doctor-suit/implementation/queue-activation-diagnostic-2026-10-29.md",
-    "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
     "apps/building-suit-docs/app/pages/components.vue",
     "docs/work-packages/doctor-suit/implementation/queue-activation-before-2026-10-30.json"
   ],

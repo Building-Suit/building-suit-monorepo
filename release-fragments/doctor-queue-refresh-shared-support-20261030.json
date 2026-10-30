@@ -1,0 +1,18 @@
+{
+  "id": "doctor-queue-refresh-shared-support-20261030",
+  "task": "DOCTOR-QUEUE-ACTIVATION-AUDIT-20261029",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/templates/BsPracticeAppointmentsPage.vue"
+  ],
+  "reason": "Shared template support for retained queue activation in the synthetic Doctor administrative preview, its only current Suit route consumer. Explicitly cover the shared package dependency graph without claiming other product behavior changed. Preserve pending-write, initial-loading and product authorization guards; no runtime activation or independent domain acceptance."
+}
