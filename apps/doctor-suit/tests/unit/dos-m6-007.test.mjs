@@ -53,6 +53,8 @@ test('unknown prepare retains its exact key/source/input and blocks a second mov
  const h=harness();await h.controller.select(query());h.controller.open();h.state.form={amount:'100.00',reason:'Synthetic original intent'};let attempt=0,original
  h.repo.prepare=async(s,input,key)=>{h.calls.push({input:structuredClone(input),key});if(attempt++===0){original=structuredClone(input);throw Error('Lost accepted prepare acknowledgement')}return practicePaymentIntent({...intent(),amount_minor:original.amountMinor,reason:original.reason},s)}
  assert.equal(await h.controller.save(),false);assert.equal(h.state.uncertain,true);assert.equal(h.controller.open(),false);assert.equal(await h.controller.select({...query(),chargeId:id(99)}),false)
+ assert.equal(await h.controller.select(query()),true,'the page refresh command must allow the unchanged scope while retaining uncertain recovery')
+ assert.equal(h.state.uncertain,true);assert.equal(h.calls.length,1)
  h.state.form={amount:'1.00',reason:'Changed input must not resend'};assert.equal(await h.controller.retry(),true);assert.deepEqual(h.calls[0],h.calls[1]);assert.equal(h.calls[1].input.amountMinor,'10000');assert.equal(h.state.uncertain,false);assert.equal(h.calls.length,2)
 })
 test('unknown dispatch retries only its original command and never automatically reconciles or sends a second movement',async()=>{
@@ -65,6 +67,7 @@ test('unknown dispatch retries only its original command and never automatically
 test('known acknowledgement followed by failed read cannot be replayed as another command',async()=>{
  const h=harness();await h.controller.select(query());h.controller.open();h.state.form={amount:'100.00',reason:'Synthetic known request'};h.repo.read=async()=>{throw Error('Read unavailable')}
  assert.equal(await h.controller.save(),true);assert.equal(h.state.error,'network');assert.equal(h.state.uncertain,false);assert.equal(await h.controller.retry(),false);assert.equal(h.calls.length,1)
+ assert.equal(h.controller.open(),false,'failed follow-up read must not authorize a new collection from the old balance')
 })
 test('a newer charge version requires explicit form review before using another financial source',async()=>{
  const h=harness();await h.controller.select(query());h.controller.open();h.state.form={amount:'100.00',reason:'Synthetic selected original source'}
@@ -96,4 +99,57 @@ test('monotonic expiry removes new dispatch and refund affordances while retaini
  const {practiceMoneyView}=await import('../../app/utils/practiceMoneyPresentation.ts');let now=0,callback
  const timers={now:()=>now,set:fn=>{callback=fn;return 1},clear:()=>{}},h=harness({},timers),raw=board();raw.edition='administrative_candidate';raw.entitlement={...raw.entitlement,state:'paid',revision:1,valid_until:'2026-10-26T12:00:01Z'};raw.items=[{...intent(),revision:2,state:'unknown',reason_code:'attempt_reconciliation_required'}];h.setRaw(raw);await h.controller.select(query());now=1001;callback()
  assert.equal(h.state.data.canWrite,false);assert.equal(h.controller.open(),false);const view=practiceMoneyView(h.controller,false,true);assert.equal(view.readonly,true);assert.equal(view.rows[0].reconcile,true);assert.equal(view.rows[0].dispatch,false);assert.equal(view.rows[0].refundable,false);assert.equal(h.calls.length,0)
+})
+test('failed refresh cannot leave new financial commands enabled after cancelling the previous entitlement deadline',async()=>{
+ const {practiceMoneyView}=await import('../../app/utils/practiceMoneyPresentation.ts');let now=0,callback
+ const timers={now:()=>now,set:fn=>{callback=fn;return 1},clear:()=>{}},h=harness({},timers),raw=board()
+ raw.edition='administrative_candidate';raw.entitlement={...raw.entitlement,state:'paid',revision:1,valid_until:'2026-10-26T12:00:01Z'}
+ h.setRaw(raw);await h.controller.select(query());const receipt=h.state.data.items[0].entry.receiptLabel
+ h.repo.read=async()=>{throw Error('Synthetic refresh interrupted')};assert.equal(await h.controller.refresh(),false)
+ now=1001;callback()
+ assert.equal(h.controller.editable(),false,'failed refresh must invalidate the previous read authority')
+ assert.equal(h.controller.open(),false);assert.equal(h.controller.open(id(81)),false)
+ assert.equal(h.state.data.items[0].entry.receiptLabel,receipt,'historical receipt remains visible')
+ for(const ar of[false,true]){const view=practiceMoneyView(h.controller,ar,true);assert.equal(view.blocked,true);assert.ok(view.error);assert.equal(view.rows[0].receipt,receipt)}
+ assert.equal(h.calls.length,0);h.controller.dispose()
+})
+test('new dispatch, cancellation and reconciliation require a current read after failure; an explicit successful refresh restores eligibility',async()=>{
+ for(const state of['pending','unknown']){
+  const h=harness(),raw=board();raw.items=[state==='pending'?intent():{...intent(),revision:2,state:'unknown',reason_code:'attempt_reconciliation_required'}];h.setRaw(raw)
+  await h.controller.select(query());const read=h.repo.read;h.repo.read=async()=>{throw Error('Synthetic unavailable history')}
+  assert.equal(await h.controller.refresh(),false);assert.equal(h.controller.hasCurrentRead(),false)
+  for(const [action,outcome]of state==='pending'?[['dispatch','accepted'],['cancel',null]]:[['reconcile',null]])assert.equal(await h.controller.advance(id(70),state==='pending'?1:2,action,outcome),false)
+  assert.equal(h.calls.length,0)
+  h.repo.read=read;assert.equal(await h.controller.refresh(),true);assert.equal(h.controller.hasCurrentRead(),true);assert.equal(h.controller.editable(),true)
+  h.controller.dispose()
+ }
+})
+test('failed refresh retains uncertain-command identity for explicit same-key recovery but never unlocks another movement',async()=>{
+ const h=harness();await h.controller.select(query());h.controller.open();h.state.form={amount:'100.00',reason:'Synthetic unchanged recovery'};let attempt=0
+ h.repo.prepare=async(s,input,key)=>{h.calls.push({input:structuredClone(input),key});if(attempt++===0)throw Error('Synthetic lost acknowledgement');return practicePaymentIntent({...intent(),amount_minor:input.amountMinor,reason:input.reason},s)}
+ assert.equal(await h.controller.save(),false);h.repo.read=async()=>{throw Error('Synthetic unavailable read')}
+ assert.equal(await h.controller.refresh(),false);assert.equal(h.state.uncertain,true);assert.equal(h.controller.open(),false)
+ assert.equal(await h.controller.retry(),true);assert.equal(h.calls.length,2);assert.deepEqual(h.calls[0],h.calls[1]);assert.equal(h.state.uncertain,false)
+ assert.equal(h.controller.open(),false);assert.equal(await h.controller.retry(),false);h.controller.dispose()
+})
+test('same-query refresh cannot reuse an uncertain command after session replacement',async()=>{
+ const h=harness({prepare:async()=>{throw Error('Synthetic lost acknowledgement')}});await h.controller.select(query());h.controller.open();h.state.form={amount:'100.00',reason:'Synthetic original session'}
+ assert.equal(await h.controller.save(),false);let reads=0;h.repo.read=async()=>{reads++;return{scope:{...scope},model:practiceMoneyState(board(),scope,1)}}
+ h.setActor({...identity(),sessionId:id(99)})
+ assert.equal(await h.controller.select(query()),false);assert.equal(reads,0);assert.equal(await h.controller.retry(),false);h.controller.dispose()
+})
+test('an older successful refresh cannot restore write eligibility after a newer read failed',async()=>{
+ const h=harness();await h.controller.select(query());let resolve
+ h.repo.read=()=>new Promise(r=>{resolve=r});const older=h.controller.refresh()
+ h.repo.read=async()=>{throw Error('Synthetic newer failure')};assert.equal(await h.controller.refresh(),false)
+ resolve({scope:{...scope},model:practiceMoneyState(board(),scope,1)});assert.equal(await older,false)
+ assert.equal(h.controller.hasCurrentRead(),false);assert.equal(h.controller.editable(),false);assert.equal(h.state.error,'network');h.controller.dispose()
+})
+test('fresh inactive history still permits reconciliation without granting new collections or dispatch',async()=>{
+ const {practiceMoneyView}=await import('../../app/utils/practiceMoneyPresentation.ts'),h=harness(),raw=board()
+ raw.items=[{...intent(),revision:2,state:'unknown',reason_code:'attempt_reconciliation_required'}];raw.edition='administrative_candidate';raw.can_write=false
+ raw.entitlement={...raw.entitlement,state:'expired',revision:1,writes_allowed:false,can_add_staff:false,can_add_clinic:false,valid_until:'2026-10-26T11:00:00Z'}
+ h.setRaw(raw);await h.controller.select(query());assert.equal(h.controller.hasCurrentRead(),true);assert.equal(h.controller.editable(),false)
+ for(const ar of[false,true]){const view=practiceMoneyView(h.controller,ar,true);assert.equal(view.blocked,false);assert.equal(view.readonly,true);assert.equal(view.rows[0].reconcile,true);assert.equal(view.canCollect,false)}
+ assert.equal(h.controller.open(),false);assert.equal(await h.controller.advance(id(70),2,'reconcile',null),true);assert.equal(h.calls.length,1);assert.equal(h.calls[0].action,'reconcile');h.controller.dispose()
 })
