@@ -1,4 +1,5 @@
 import {doctorScopeKey,type DoctorContextScope} from './contextScope.ts'
+import {observeDoctorOperation,type DoctorOperationalObserver} from '../../supabase/functions/_shared/operational-signals.ts'
 export const messageStates=['queued','claimed','sent','delivered','failed','unknown'] as const
 export interface MessageStatus{id:string;patient_id:string;state:typeof messageStates[number];version:number;attempts:number;blocker:string|null;purpose:string;recipient_kind:string;template:string;expires_at:string;created_at:string;data_mode:'synthetic';external_delivery:false}
 const keys=['id','patient_id','state','version','attempts','blocker','purpose','recipient_kind','template','expires_at','created_at','data_mode','external_delivery']
@@ -12,13 +13,17 @@ export function messageDirectory(raw:unknown,patient:string,page:number):{rows:M
  return{rows,total:Number(d.total),page}
 }
 export function messageOutboxState(){return{loading:false,error:null as 'denied'|'unavailable'|null,directory:null as ReturnType<typeof messageDirectory>|null}}
-export function createMessageOutboxReader(load:((practice:string,location:string,patient:string,page:number,signal:AbortSignal)=>Promise<unknown>)|null,state:ReturnType<typeof messageOutboxState>,scope:()=>DoctorContextScope|null){
+export function createMessageOutboxReader(load:((practice:string,location:string,patient:string,page:number,signal:AbortSignal)=>Promise<unknown>)|null,state:ReturnType<typeof messageOutboxState>,scope:()=>DoctorContextScope|null,observe?:DoctorOperationalObserver){
  let revision=0,abort=new AbortController()
  const scopeKey=()=>{const s=scope();return s?doctorScopeKey(s,'message-outbox'):null}
  function clear(){revision++;abort.abort();abort=new AbortController();Object.assign(state,messageOutboxState())}
  async function read(patient:string,page=0){clear();const rev=revision,key=scopeKey(),s=scope();if(!s?.locationId||!load){state.error='denied';return false}state.loading=true
-  try{const result=await load(s.practiceId,s.locationId,patient,page,AbortSignal.any([abort.signal,AbortSignal.timeout(10000)]));if(rev!==revision||key!==scopeKey())return false;state.directory=messageDirectory(result,patient,page);return true}
-  catch(e){if(rev===revision&&key===scopeKey()){state.directory=null;state.error=e&&typeof e==='object'&&'code'in e&&e.code==='42501'?'denied':'unavailable'}return false}
+  try{const result=await load(s.practiceId,s.locationId,patient,page,AbortSignal.any([abort.signal,AbortSignal.timeout(10000)]));if(rev!==revision||key!==scopeKey())return false;state.directory=messageDirectory(result,patient,page)
+   // One observation per state present in this authorized page; never a unique
+   // message/delivery count, and never emitted for a stale or invalid response.
+   if(observe)for(const status of messageStates)if(state.directory.rows.some(row=>row.state===status))observeDoctorOperation(observe,status==='delivered'?'outbox.delivered_synthetic_observed':`outbox.${status}_observed`)
+   return true}
+  catch(e){if(rev===revision&&key===scopeKey()){state.directory=null;state.error=e&&typeof e==='object'&&'code'in e&&e.code==='42501'?'denied':'unavailable';observeDoctorOperation(observe,state.error==='denied'?'outbox.access_rejected':'outbox.unavailable')}return false}
   finally{if(rev===revision&&key===scopeKey())state.loading=false}
  }
  return{state,scopeKey,clear,read}
