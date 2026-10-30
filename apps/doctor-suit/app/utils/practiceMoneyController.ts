@@ -3,12 +3,13 @@ import { createDoctorEntitlementDeadline, type DoctorEntitlementTimers } from '.
 import { parsePracticeMinor } from './practiceBilling.ts'
 import type { PracticeMoneyScope, PracticeMoneyState, PracticePaymentIntent } from './practiceMoney.ts'
 import type { PracticeMoneyRepository, PracticeMoneyQuery, PaymentAction, PaymentPrepare } from './practiceMoneyRepository'
+import { observeDoctorOperation, type DoctorOperationalObserver } from '../../supabase/functions/_shared/operational-signals.ts'
 export interface PracticeMoneyForm { amount: string; reason: string }
 export type MoneyFailure = 'denied' | 'conflict' | 'inactive' | 'invalid' | 'network'
 export interface PracticeMoneyControllerState { epoch: number; loading: boolean; pending: boolean; uncertain: boolean; error: MoneyFailure | null; scope: PracticeMoneyScope | null; data: PracticeMoneyState | null; visible: boolean; form: PracticeMoneyForm; initial: string; kind: 'collection' | 'refund'; original: PracticePaymentIntent | null; formChargeVersion: string | null; formExponent: number | null }
 export const practiceMoneyControllerState = (): PracticeMoneyControllerState => ({ epoch: 0, loading: false, pending: false, uncertain: false, error: null, scope: null, data: null, visible: false, form: { amount: '', reason: '' }, initial: '', kind: 'collection', original: null, formChargeVersion: null, formExponent: null })
 function problem(error: unknown): MoneyFailure { const c = error && typeof error === 'object' && 'code' in error ? String(error.code) : ''; return c === '42501' ? 'denied' : c === '40001' || c === '23505' ? 'conflict' : ['DS001', 'DS006', 'DS007'].includes(c) ? 'inactive' : ['22023', '22P02', '23514'].includes(c) ? 'invalid' : 'network' }
-export function createPracticeMoneyController(repo: PracticeMoneyRepository | null, state: PracticeMoneyControllerState, identity: () => DoctorIdentity | null, environment: string, timers?: DoctorEntitlementTimers, key = () => crypto.randomUUID()) {
+export function createPracticeMoneyController(repo: PracticeMoneyRepository | null, state: PracticeMoneyControllerState, identity: () => DoctorIdentity | null, environment: string, timers?: DoctorEntitlementTimers, key = () => crypto.randomUUID(), observe?: DoctorOperationalObserver) {
  let generation = 0, reads = 0, disposed = false, loadedActor: string | null = null, query: PracticeMoneyQuery | null = null, abort = new AbortController()
  const deadline = createDoctorEntitlementDeadline(timers)
  let operation: { selected: string; run: (signal: AbortSignal) => Promise<unknown> } | null = null
@@ -26,6 +27,7 @@ export function createPracticeMoneyController(repo: PracticeMoneyRepository | nu
    if (!active(g, selected) || r !== reads) return false
    loadedActor = actorKey(); state.scope = result.scope; state.data = result.model
    deadline.arm(result.model.entitlement, sentAt, () => { if (state.data) state.data = { ...state.data, canWrite: false } }, () => active(g, selected) && r === reads)
+   for (const status of ['pending', 'unknown', 'failed', 'posted'] as const) if (result.model.items.some(item => item.state === status)) observeDoctorOperation(observe, status === 'posted' ? 'practice_money.posted_synthetic_observed' : `practice_money.${status}_observed`)
    return true
   } catch (error) { if (active(g, selected) && r === reads) { const p = problem(error); if (p === 'denied') clear(); state.error = p } return false }
   finally { if (active(g, selected) && r === reads) state.loading = false }

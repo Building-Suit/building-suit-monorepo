@@ -8,8 +8,14 @@
     "apps/doctor-suit/supabase/functions/_shared/operational-signals.ts",
     "apps/doctor-suit/supabase/functions/doctor-documents/handler.ts",
     "apps/doctor-suit/supabase/functions/doctor-payment-evidence/handler.ts",
+    "apps/doctor-suit/app/utils/messageOutbox.ts",
+    "apps/doctor-suit/app/utils/practiceMoneyController.ts",
+    "apps/doctor-suit/app/utils/saasController.ts",
+    "apps/doctor-suit/tests/recovery-isolated.mjs",
     "apps/doctor-suit/tests/unit/dos-m7-007.test.mjs",
+    "apps/doctor-suit/tests/unit/dos-m7-007-producers.test.mjs",
+    "apps/doctor-suit/supabase/tests/dos-m7-007.sql",
     "docs/work-packages/doctor-suit/implementation/dos-m7-007.md"
   ],
-  "reason": "Implement partial M7-007 C01 synthetic file-service authorization/availability observation with fixed bounded counters. Default runtime observation remains disabled; no hosted telemetry, incident/legal acceptance, operational registration, payment settlement authority or public release claim is introduced."
+  "reason": "Implement M7-007 C01 synthetic authorization/file, outbox, separate SaaS/practice reconciliation and isolated-recovery observations with fixed bounded counters and source-scope tests. Default runtime observation remains disabled; no hosted telemetry, incident/legal acceptance, operational registration, payment settlement authority or public release claim is introduced."
 }
