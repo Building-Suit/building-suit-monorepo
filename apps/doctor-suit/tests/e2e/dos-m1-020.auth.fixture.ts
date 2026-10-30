@@ -48,14 +48,15 @@ for(const ar of [false,true])for(const interruptQueue of [false,true])test(`DOS-
     await login(s,'synthetic-secretary@example.test',ar);await accept(s,codeA,ar);await accept(s,codeB,ar);await s.goto('/appointments');await choose(s,'Clinic A1',ar);await s.getByRole('combobox',{ name: ar ? 'الممارسة والموقع' : 'Practice and location',exact: true }).click();await expect(s.getByRole('option',{ name: /Clinic A2/ })).toHaveCount(0);await s.keyboard.press('Escape');await expect(s.getByRole('button',{ name: appointments.create,exact: true })).toHaveCount(0)
     const queue = s.getByRole('region',{ name: appointments.queue,exact: true }).first();const startAction = queue.getByRole('row').filter({ hasText: 'Synthetic combined A patient' }).getByRole('button',{ name: appointments.actions.in_progress,exact: true });queueActivation = await startAction.evaluateHandle(observeQueueActivation).catch(()=>null);
     if(interruptQueue) {
-      let captured = 0
+      let captured = 0, holding = false
       const held = new Promise<void>(resolve => { releaseQueueRefresh = resolve })
       await s.route('**/rest/v1/rpc/doctor_appointment_board', async route => {
+        if(!holding)return route.continue()
         const response = await route.fetch();captured++;await held;await route.fulfill({ response })
       })
       await expect(startAction).toBeEnabled();await startAction.scrollIntoViewIfNeeded()
       const bounds = await startAction.boundingBox();expect(bounds).not.toBeNull()
-      await s.mouse.move(bounds!.x+bounds!.width/2,bounds!.y+bounds!.height/2);await s.mouse.down()
+      await s.mouse.move(bounds!.x+bounds!.width/2,bounds!.y+bounds!.height/2);await s.mouse.down();holding = true
       await s.evaluate(() => window.dispatchEvent(new Event('focus')))
       await expect.poll(() => captured).toBeGreaterThan(0)
       await expect(s.locator('main').getByLabel(appointments.date,{exact:true})).toBeDisabled()
