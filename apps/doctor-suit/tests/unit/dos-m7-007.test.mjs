@@ -121,3 +121,24 @@ test('C01 partial: rejected or stalled observers cannot delay an unavailable res
   observeDoctorFileFailure(buffer.record, marker, 503)
   assert(buffer.snapshot().counts.every(row => row.count === 0))
 })
+
+test('C01 partial: synthetic observation has no implicit network, console or client-selected sink', async () => {
+  const originalFetch = globalThis.fetch, originals = {}, calls = { network: 0, console: 0 }
+  globalThis.fetch = async () => { calls.network++; throw new Error('Unexpected external delivery') }
+  for (const method of ['log', 'warn', 'error', 'info', 'debug']) {
+    originals[method] = console[method]; console[method] = () => { calls.console++ }
+  }
+  try {
+    for (const surface of ['documents', 'payment_evidence']) {
+      const buffer = createDoctorFileSignalBuffer(), f = await fixture(surface, buffer.record); f.outage()
+      const response = await f.handler(f.request('upload', { 'x-doctor-observer': 'https://unapproved.example.test', 'x-debug-token': marker }))
+      assert.equal(response.status, 503)
+      assert.equal(count(buffer, `${surface}.unavailable`), 1)
+      assert(!JSON.stringify(buffer.snapshot()).includes('unapproved'))
+    }
+    assert.deepEqual(calls, { network: 0, console: 0 })
+  } finally {
+    globalThis.fetch = originalFetch
+    for (const [method, original] of Object.entries(originals)) console[method] = original
+  }
+})
