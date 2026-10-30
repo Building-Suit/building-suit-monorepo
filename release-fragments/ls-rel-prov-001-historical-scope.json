@@ -1,0 +1,28 @@
+{
+  "id": "ls-rel-prov-001-historical-scope",
+  "task": "LS-REL-PROV-001",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "tooling/releases/fragments.mjs",
+    "tooling/releases/candidate.mjs",
+    "tooling/releases/historical-fragment-scope.test.mjs",
+    "docs/work-packages/ledger-historical-release-provenance.md",
+    "release-changes/items.json",
+    "tooling/releases/mobile-focus-evidence.test.mjs",
+    "tooling/releases/supersessions.mjs",
+    "tooling/releases/supersessions.test.mjs",
+    "tooling/releases/check.mjs",
+    "release-changes/supersessions.json",
+    "docs/work-packages/brand-provenance-source-split.md"
+  ],
+  "reason": "Verify immutable historical fragment consumers while preserving accepted current semantic inventory, strict release/registry/baseline gates and original brand history. No database/access-policy or hosted change."
+}
