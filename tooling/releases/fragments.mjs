@@ -53,7 +53,30 @@ export function affectedSuits(files, graph) {
   while (changed) { changed = false; for (const node of graph) if (!affected.has(node.name) && node.dependencies.some(dep => affected.has(dep))) { affected.add(node.name); changed = true } }
   return graph.filter(node => node.suit && affected.has(node.name)).map(node => node.suit).sort()
 }
-export function validateCoverage(fragments, files, graph, historicalScope = () => null) {
+export function workspaceGraphAt(ref, run = git) {
+  return run('ls-tree','-r','--name-only',ref,'--','apps','packages').split('\n').filter(file=>/^(apps|packages)\/[^/]+\/package.json$/.test(file)).map(file=>{
+    const manifest=JSON.parse(run('show',`${ref}:${file}`)), dir=file.slice(0,-'/package.json'.length)
+    return {dir,name:manifest.name,suit:dir.startsWith('apps/')&&dir.endsWith('-suit')?dir.slice(5):null,dependencies:Object.keys({...manifest.dependencies,...manifest.devDependencies})}
+  })
+}
+// A net revert can remove a former shared path without invalidating its immutable
+// task receipt. Trust only the exact original row and actual original task edits.
+export function historicalFragmentScope(ref, file, row, run = git) {
+  const additions = run('log','--diff-filter=A','--format=%H',ref,'--',file).split('\n').filter(Boolean)
+  if (additions.length !== 1) throw new Error('Ambiguous historical fragment origin')
+  const source = additions[0]
+  if (canonical(JSON.parse(run('show',`${source}:${file}`))) !== canonical(row)) throw new Error('Historical fragment differs from its origin')
+  const parents = run('show','-s','--format=%P',source).split(' ').filter(Boolean)
+  if (parents.length !== 1) throw new Error('Historical fragment requires an unambiguous task parent')
+  const graph = workspaceGraphAt(source, run)
+  validateFragment(row, graph.filter(node=>node.suit).map(node=>node.suit))
+  const files = run('diff','--name-only',parents[0],source).split('\n').filter(Boolean)
+    .filter(path=>row.paths.some(prefix=>path===prefix || path.startsWith(`${prefix}/`)))
+  const affected = affectedSuits(files, graph)
+  if (!affected.length || row.suits.some(suit=>!affected.includes(suit))) throw new Error('Unrelated Suit in historical fragment origin')
+  return affected
+}
+export function validateCoverage(fragments, files, graph, historicalScope) {
   const registry = graph.filter(node => node.suit).map(node => node.suit)
   const ids = new Set()
   for (const row of fragments) { validateFragment(row, registry); if (ids.has(row.id)) throw new Error('Duplicate fragment'); ids.add(row.id) }
@@ -68,17 +91,14 @@ export function validateCoverage(fragments, files, graph, historicalScope = () =
     const scope = files.filter(file => row.paths.some(prefix => file === prefix || file.startsWith(`${prefix}/`)))
     const affected = affectedSuits(scope, graph)
     if (affected.length && row.suits.some(suit => !affected.includes(suit))) {
-      // An append-only task receipt can outlive a reverted path or consolidated
-      // workflow. Its original consumer claim still needs committed evidence;
-      // the surviving net diff alone cannot reconstruct that historical scope.
-      const source = historicalScope(row)
-      const original = source && affectedSuits(source.files, source.graph)
-      if (!original?.length || row.suits.some(suit => !original.includes(suit))) throw new Error('Unrelated Suit in fragment')
+      const receipt = historicalScope?.(row)
+      const original = Array.isArray(receipt) ? receipt : receipt && affectedSuits(receipt.files, receipt.graph)
+      if (!original?.length || row.suits.some(suit=>!original.includes(suit))) throw new Error('Unrelated Suit in fragment')
     }
   }
 }
-export function fragmentTree(ref) {
-  return git('ls-tree', '-r', '--name-only', ref, '--', 'release-fragments').split('\n').filter(file => file.endsWith('.json')).map(file => ({ file, row: JSON.parse(git('show', `${ref}:${file}`)) }))
+export function fragmentTree(ref, run = git) {
+  return run('ls-tree', '-r', '--name-only', ref, '--', 'release-fragments').split('\n').filter(file => file.endsWith('.json')).map(file => ({ file, row: JSON.parse(run('show', `${ref}:${file}`)) }))
 }
 export function fragmentSourceScope(ref, file, row, run = git) {
   const introductions = run('log', '--format=%H', '--diff-filter=A', ref, '--', file).split('\n').filter(Boolean)
@@ -97,16 +117,17 @@ export function fragmentSourceScope(ref, file, row, run = git) {
     })
   return { files, graph }
 }
-export function collectBatch(ref, parent, graph) {
-  const prior = new Map(fragmentTree(parent).map(({ file, row }) => [file, row]))
-  const current = fragmentTree(ref)
+export function collectBatch(ref, parent, graph, run = git) {
+  const prior = new Map(fragmentTree(parent, run).map(({ file, row }) => [file, row]))
+  const current = fragmentTree(ref, run)
   for (const [file, row] of prior) {
     const next = current.find(item => item.file === file)
     if (!next || JSON.stringify(next.row) !== JSON.stringify(row)) throw new Error(`Accepted fragments are append-only: ${file}`)
   }
-  const fragments = current.filter(({ file }) => !prior.has(file)).map(({ row }) => row)
-  const files = git('diff', '--name-only', parent, ref).split('\n').filter(Boolean)
-  validateCoverage(fragments, files, graph, row => fragmentSourceScope(ref, current.find(item => item.row.id === row.id).file, row))
+  const added = current.filter(({ file }) => !prior.has(file))
+  const fragments = added.map(({ row }) => row)
+  const files = run('diff', '--name-only', parent, ref).split('\n').filter(Boolean)
+  validateCoverage(fragments, files, graph, row=>historicalFragmentScope(ref, added.find(item=>item.row===row).file, row, run))
   const allIds = current.map(({ row }) => row.id)
   if (new Set(allIds).size !== allIds.length) throw new Error('Duplicate fragment ID in history')
   return fragments.sort((a, b) => a.id.localeCompare(b.id))
