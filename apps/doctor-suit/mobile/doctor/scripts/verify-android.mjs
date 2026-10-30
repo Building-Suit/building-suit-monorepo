@@ -5,6 +5,7 @@ import {createHash} from 'node:crypto'
 import {resolve} from 'node:path'
 import {androidRuntimeDiagnostics} from './android-diagnostics.mjs'
 import {androidForeground} from './android-lifecycle.mjs'
+import {androidLaunchObservation} from './android-launch-observations.mjs'
 
 if (process.env.GITHUB_ACTIONS !== 'true' || process.env.CI !== 'true') throw new Error('Owned CI emulator required')
 const api = Number(process.env.DOCTOR_ANDROID_API)
@@ -50,12 +51,23 @@ const cases = ['cold-launch-signed-out', 'cold-deep-link-signed-out', 'hardware-
   .map(id => ({id, status: 'unrun'}))
 let stage = 'install', installed = false, cleanup
 const lifecycle={backgroundObserved:false,resumeObserved:false}
+const coldLaunch={attempted:false,completed:false,exitCode:null,output:null,errorOutput:null}
 try {
   adb(['install', '-r', apk]); installed = true
   adb(['shell', 'pm', 'clear', app])
   adb(['logcat', '-c'])
   stage = cases[0].id
-  adb(['shell', 'am', 'start', '-n', app + '/.MainActivity'])
+  coldLaunch.attempted=true
+  try {
+    coldLaunch.output=adb(['shell', 'am', 'start', '-n', app + '/.MainActivity'])
+    coldLaunch.completed=true; coldLaunch.exitCode=0
+  } catch(error) {
+    coldLaunch.exitCode=error?.status
+    // Keep stdout/stderr private until the bounded projection in finally.
+    coldLaunch.output=typeof error?.stdout==='string' ? error.stdout.slice(0,8193) : null
+    coldLaunch.errorOutput=typeof error?.stderr==='string' ? error.stderr.slice(0,8193) : null
+    throw error
+  }
   await visibleText('You are signed out'); await visibleText('Your practice, on Android'); cases[0].status = 'passed'
   stage = cases[1].id
   adb(['shell', 'am', 'force-stop', app])
@@ -81,6 +93,9 @@ try {
   console.error('Synthetic Android verification failed at ' + stage)
 } finally {
   const diagnosticRead = args => {try {return adb(args)} catch {return null}}
+  // Observe only after the outcome is decided, before cleanup. This is not
+  // evidence of foreground throughout the original readiness interval.
+  const failureForeground=stage==='complete'?null:androidForeground(diagnosticRead(['shell','dumpsys','activity','activities']))
   const hierarchy=diagnosticRead(['shell', 'cat', '/sdcard/doctor-shell.xml'])
   const runtime = androidRuntimeDiagnostics(diagnosticRead(['shell', 'dumpsys', 'webviewupdate']), diagnosticRead(['logcat', '-d', '-t', '300', 'chromium:I', 'Capacitor/Console:I', 'Capacitor:I', 'AndroidRuntime:E', '*:S']), hierarchy)
   try {
@@ -93,7 +108,7 @@ try {
   const receipt = {
     version: 1, sourceHead: head, appId: app, apkSha256: metadata.apkSha256, api,
     accepted: stage === 'complete' && cleanup === 'passed' && cases.every(item => item.status === 'passed'),
-    stage, cleanup, runtime, lifecycle, failureCue:stage==='complete'?null:lastExpectedCue,shellObservation:androidShellObservations(hierarchy),runner: 'owned-disposable-android-emulator', physicalDevice: false, cases,
+    stage, cleanup, runtime, lifecycle, coldLaunch:androidLaunchObservation(coldLaunch),failureForeground,failureCue:stage==='complete'?null:lastExpectedCue,shellObservation:androidShellObservations(hierarchy),runner: 'owned-disposable-android-emulator', physicalDevice: false, cases,
     syntheticOnly: true, clinicalApproval: false, offlineClinicalApproval: false, storeUpload: false,
   }
   await writeFile('test-results/doctor-mobile/device-' + api + '.json', JSON.stringify(receipt, null, 2) + '\n')

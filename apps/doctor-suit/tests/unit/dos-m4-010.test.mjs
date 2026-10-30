@@ -1,3 +1,4 @@
+import {androidLaunchObservation} from '../../mobile/doctor/scripts/android-launch-observations.mjs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {inspectNativeCandidate} from '../../mobile/doctor/scripts/candidate-evidence.mjs'
@@ -23,3 +24,23 @@ test('malformed build/input and foreign task labels yield fixed failures without
 const {androidShellObservations}=await import('../../mobile/doctor/scripts/shell-observations.mjs')
 test('public shell diagnostics distinguish whitespace fragments without retaining the private hierarchy',()=>{const secret='synthetic-private-value';const xml='<node text="You are signed out"/><node text="Your schedule,&#10;on Android"/><node content-desc="'+secret+'"/>';const result=androidShellObservations(xml);assert.equal(result.rawSignedOut,true);assert.equal(result.rawScheduleTitle,false);assert.equal(result.accessibleScheduleTitle,true);assert.equal(JSON.stringify(result).includes(secret),false);assert.equal(Object.values(result).every(value=>typeof value==='boolean'),true);assert.equal(androidShellObservations(null).available,false);assert.equal(androidShellObservations('x'.repeat(2097153)).available,false)})
 test('public shell diagnostics cannot carry arbitrary fields or a failed cue as accepted evidence',()=>{for(const value of[{private:'synthetic-private-value'},{available:'synthetic-private-value'}]){const input=fixture();input.emulators[29].shell.shellObservation=value;const result=inspectNativeCandidate(build,input);assert.equal(result.consistentSyntheticSubset,false);assert.equal(JSON.stringify(result).includes('synthetic-private-value'),false)}const input=fixture();input.emulators[29].shell.failureCue='schedule-title';assert.equal(inspectNativeCandidate(build,input).consistentSyntheticSubset,false)})
+test('bounded cold-launch diagnostics preserve historical receipts and cannot certify launch failures',()=>{
+ const input=fixture()
+ input.emulators[29].shell.coldLaunch=androidLaunchObservation({attempted:true,completed:true,exitCode:0,output:'Starting: Intent { cmp=com.buildingsuit.doctor.synthetic/.MainActivity }'})
+ input.emulators[29].shell.failureForeground=null
+ assert.equal(inspectNativeCandidate(build,input).consistentSyntheticSubset,true)
+ for(const change of[
+  value=>value.emulators[29].shell.coldLaunch.private='private.sentinel',
+  value=>value.emulators[29].shell.coldLaunch.startReported='private.sentinel',
+  value=>value.emulators[29].shell.coldLaunch.exitCode=256,
+  value=>value.emulators[29].shell.coldLaunch.commandCompleted=false,
+  value=>value.emulators[29].shell.coldLaunch.activityMissing=true,
+  value=>value.emulators[29].shell.failureForeground={known:true,syntheticForeground:true},
+ ]){
+  const changed=structuredClone(input);change(changed)
+  const result=inspectNativeCandidate(build,changed)
+  assert.equal(result.consistentSyntheticSubset,false)
+  assert.equal(JSON.stringify(result).includes('private.sentinel'),false)
+ }
+ assert.equal(inspectNativeCandidate(build,fixture()).consistentSyntheticSubset,true)
+})
