@@ -1,0 +1,25 @@
+{
+  "id": "dos-m6-004",
+  "task": "DOS-M6-004",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/manualPaymentRepository.ts",
+    "apps/doctor-suit/tests/unit/dos-m6-004.test.mjs",
+    "apps/doctor-suit/supabase/tests/dos-m6-004.sql",
+    "apps/doctor-suit/tests/e2e/dos-m6-004.spec.ts",
+    "apps/doctor-suit/tests/e2e/playwright.financial.config.ts",
+    "apps/doctor-suit/tests/e2e/financial-reporter.mjs",
+    "apps/doctor-suit/tests/e2e/playwright.config.ts",
+    "apps/doctor-suit/tests/financial-browser-acceptance.mjs",
+    "apps/doctor-suit/tests/manual-payments-browser.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-004.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-004-verification.json",
+    "docs/work-packages/doctor-suit/implementation/m6-continuation.md",
+    "docs/work-packages/doctor-suit/implementation/all-milestones-continuation.md"
+  ],
+  "reason": "Verify existing persisted synthetic funds review/receipt/activation separation and diagnose immutable notice response binding; no actual payment-provider or live approval."
+}

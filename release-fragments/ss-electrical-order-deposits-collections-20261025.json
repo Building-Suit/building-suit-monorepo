@@ -1,0 +1,34 @@
+{
+  "id": "ss-electrical-order-deposits-collections-20261025",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/composables/useOrderFunding.ts",
+    "apps/shop-suit/app/composables/useOrderDelivery.ts",
+    "apps/shop-suit/app/pages/orders.vue",
+    "apps/shop-suit/app/pages/customers/[id].vue",
+    "apps/shop-suit/supabase/migrations/20261025164827_order_deposits_and_partial_fulfillment.sql",
+    "packages/ui/src/organisms/BsOrderFundingPanel.vue",
+    "packages/ui/src/organisms/BsOrderDeliveryPanel.vue",
+    "packages/ui/src/templates/BsTradeOrdersPage.vue"
+  ],
+  "reason": "Record order advances in the existing receipt ledger, transfer them to normal invoices and collect reserved agreed quantities over multiple visits without duplicate stock or funds. Preserve accepted prices/taxes, FIFO sources and remaining holds.",
+  "notes": {
+    "title": {
+      "en": "Deposits and partial order collections",
+      "ar": "العربون والتسليم الجزئي لأوامر العملاء"
+    },
+    "summary": {
+      "en": "Receive, apply and refund order deposits, then invoice reserved goods as customers collect them.",
+      "ar": "سجّل عربون الأمر وخصّصه أو رده، ثم أصدر فواتير الكميات المحجوزة عند استلام العميل لها."
+    },
+    "details": {
+      "en": "Partial collections retain the accepted prices and taxes and preserve the pending stock reservation. Deposits use the existing customer receipt history, and applying them to a delivery invoice records no new receipt. Permissions, whole packages and cut-return approvals remain enforced.",
+      "ar": "يحفظ التسليم الجزئي الأسعار والضرائب المتفق عليها وحجز الكمية المتبقية. يظهر العربون في سجل إيصالات العميل الحالي، ولا يؤدي تخصيصه لفاتورة التسليم إلى تسجيل تحصيل جديد. تبقى الصلاحيات والعبوات الكاملة وموافقات إرجاع المقاطع ملزمة."
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "doctor-native-startup-null-bridge-20261030",
+  "task": "DOCTOR-NATIVE-STARTUP-NULL-BRIDGE-AUDIT-20261030",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/mobile/doctor/android/app/src/main/java/com/buildingsuit/doctor/synthetic/MainActivity.java",
+    "apps/doctor-suit/mobile/doctor/android/app/src/androidTest/java/com/buildingsuit/doctor/synthetic/DoctorOnlinePolicyTest.java",
+    "apps/doctor-suit/mobile/doctor/scripts/policy-case-manifest.mjs",
+    "apps/doctor-suit/tests/unit/dos-m4-010.test.mjs",
+    "apps/doctor-suit/tests/helpers/native-startup-boundary.py",
+    "docs/work-packages/doctor-suit/implementation/native-startup-null-bridge-2026-10-30.md",
+    "docs/work-packages/doctor-suit/implementation/native-startup-null-bridge-2026-10-30-unit.json"
+  ],
+  "reason": "Correct a demonstrated nullable startup contract in the existing internal synthetic Android client, retaining privacy and shell acceptance guards. Add controlled JVM and owned native regression coverage without inferring the historical API29 failure cause, operational mobile activation or physical/clinical/release acceptance."
+}

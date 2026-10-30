@@ -1,0 +1,19 @@
+{
+  "id": "ss-electrical-public-website-links-20261023",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/app/composables/usePublicWebsite.ts",
+    "packages/ui/src/templates/BsShopWebsitePage.vue"
+  ],
+  "reason": "Preserve existing main-branch public permalink, locale/canonical and section-anchor contracts while qualifying the newer storefront composition. These links already work on main; restoring them in this open feature stack creates no separate public release capability."
+}

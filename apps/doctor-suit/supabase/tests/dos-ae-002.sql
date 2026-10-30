@@ -24,7 +24,7 @@ insert into public.appointment_events(practice_id,appointment_id,actor_user_id,l
 create function pg_temp.claim(n integer)returns text language sql as $$select set_config('request.jwt.claims',jsonb_build_object('sub',pg_temp.id(n),'session_id',pg_temp.id(n+10),'role','authenticated','user_metadata',jsonb_build_object('edition','synthetic_preview','role','owner'))::text,true)$$;
 
 select is(doctor_private.edition_mode(),'synthetic_preview','C01 default retains the explicit synthetic preview');
-select is(cardinality(doctor_private.administrative_capabilities()),12,'static historical grant domain remains unchanged');
+select is(cardinality(doctor_private.administrative_capabilities()),14,'static grant domain includes the additive synthetic worklist capabilities');
 select ok('documents.read'=any(doctor_private.edition_capabilities()),'preview document regression remains supported');
 select ok(not has_function_privilege('anon','public.doctor_administrative_edition()','execute'),'anonymous cannot read authenticated edition context');
 select ok(not has_table_privilege('authenticated','public.doctor_edition_policy','SELECT'),'policy rows are not client-readable');

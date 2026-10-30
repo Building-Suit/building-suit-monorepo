@@ -1,6 +1,7 @@
 import { DOCTOR_DOCUMENT_MAX_BYTES,DoctorDocumentFailure,doctorDocumentBytes,doctorDocumentDisposition,doctorDocumentFilename,doctorDocumentHash,doctorDocumentMime } from './files.ts'
 import { doctorDocumentRequest,type DoctorDocumentBackend } from './contracts.ts'
-export function createDoctorDocumentHandler(backend: (authorization: string) => DoctorDocumentBackend,origins: readonly string[]) {
+import { observeDoctorFileFailure,type DoctorFileObserver } from '../_shared/operational-signals.ts'
+export function createDoctorDocumentHandler(backend: (authorization: string) => DoctorDocumentBackend,origins: readonly string[],observe?: DoctorFileObserver) {
   return async (request: Request): Promise<Response> => {
     const headers = new Headers({ 'Cache-Control': 'no-store, private','X-Content-Type-Options': 'nosniff','X-Robots-Tag': 'noindex, nofollow','Referrer-Policy': 'no-referrer',Vary: 'Origin' })
     const json = (value: unknown,status = 200) => { headers.set('Content-Type','application/json'); return new Response(JSON.stringify(value),{ status,headers }) }
@@ -47,6 +48,7 @@ export function createDoctorDocumentHandler(backend: (authorization: string) => 
       return new Response(new Uint8Array(bytes),{ status: 200,headers })
     } catch (error) {
       const safe = error instanceof DoctorDocumentFailure ? error : new DoctorDocumentFailure(503,'unavailable')
+      observeDoctorFileFailure(observe,'documents',safe.status)
       return json({ error: safe.code },safe.status)
     }
   }

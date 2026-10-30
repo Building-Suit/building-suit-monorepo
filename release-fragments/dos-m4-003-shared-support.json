@@ -1,0 +1,22 @@
+{
+  "id": "dos-m4-003-shared-support",
+  "task": "DOS-M4-003",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/templates/BsPasswordRecoveryPage.vue",
+    "packages/ui/src/templates/BsMobileAccessPage.vue",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json"
+  ],
+  "reason": "Classify all shared consumers for optional entered-code recovery and semantic access actions, canonical native auth/account route reuse and catalogue ownership. Existing consumer defaults remain unchanged and inactive products are not activated."
+}

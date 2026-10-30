@@ -1,0 +1,9 @@
+{
+  "id": "ls-ready-review-001-requirement-dispositions",
+  "task": "LS-READY-REVIEW-001",
+  "suits": ["ledger-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/ledger-suit"],
+  "reason": "Link all 138 original criteria to one current disposition, primary repository task and actual evidence, guard coverage/criterion drift and preserve unverified live Automation, deployment and accountant state. Only natively proven PER-08 is promoted."
+}

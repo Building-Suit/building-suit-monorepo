@@ -1,0 +1,27 @@
+{
+  "id": "ls-ci-qual-003-appointment-focus",
+  "task": "LS-CI-QUAL-003",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/templates/BsAppointmentsPage.vue"
+  ],
+  "reason": "Retain a surviving calendar origin when appointment details hand off to the editor; closing a clean or discarded editor restores keyboard focus without keeping two modals open. Creation retains its own opener; pending and dirty guards remain.",
+  "notes": {
+    "title": {
+      "en": "Return to the appointment after editing",
+      "ar": "العودة إلى الموعد بعد التعديل"
+    },
+    "summary": {
+      "en": "Keyboard focus returns to the calendar appointment when its editor closes.",
+      "ar": "يعود تركيز لوحة المفاتيح إلى موعد التقويم عند إغلاق محرره."
+    },
+    "details": {
+      "en": "The editor preserves pending-save and unsaved-change protections while returning to a control that remains on the page.",
+      "ar": "يحافظ المحرر على حماية الحفظ والتغييرات غير المحفوظة ويعود إلى عنصر ما زال موجودًا بالصفحة."
+    }
+  }
+}

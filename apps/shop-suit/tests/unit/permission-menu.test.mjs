@@ -10,7 +10,7 @@ function load(path) {
   new Function('exports', 'require', code)(exports, name => load(`../../app/utils/${name.replace('./', '')}.ts`))
   return exports
 }
-const { shopNavigation } = load('../../app/utils/shopNavigation.ts')
+const { shopNavigation, shopSettingsNavigation } = load('../../app/utils/shopNavigation.ts')
 const { SHOP_PAGE_PERMISSIONS, shopPermissionMenu } = load('../../app/utils/shopPermissionMenu.ts')
 const { permissionSelection } = load('../../../../packages/ux/src/permissionSelection.ts')
 const translate = locale => key => ({ 'customers.title': locale === 'ar' ? 'العملاء' : 'Customers', 'sales.title': locale === 'ar' ? 'المبيعات' : 'Sales' })[key]
@@ -19,7 +19,7 @@ const catalog = [...readFileSync(new URL('../../supabase/migrations/202609292100
 for (const locale of ['en', 'ar']) {
   test(`${locale}: permission sections follow canonical navigation names and order`, () => {
     const menu = shopNavigation('mixed', locale, translate(locale))
-    assert.deepEqual(menu.flatMap(group => group.links.map(page => page.to)), Object.keys(SHOP_PAGE_PERMISSIONS))
+    assert.deepEqual(menu.flatMap(group => group.links.map(page => page.to)), Object.keys(SHOP_PAGE_PERMISSIONS).filter(path => !['/billing','/settings'].includes(path)))
     const rows = shopPermissionMenu(catalog, catalog, locale, translate(locale), key => key)
     const sections = [...new Map(rows.map(row => [row.section, row.sectionLabel]))]
     assert.deepEqual(sections, menu.flatMap(group => group.links.filter(page => SHOP_PAGE_PERMISSIONS[page.to].length).map(page => [page.to, `${group.label} / ${page.label}`])))
@@ -61,14 +61,18 @@ test('page delegates presentation while preserving saved key and owner contracts
 })
 
 test('website stack keeps existing settings and appointment grants under their actual menu pages', () => {
-  const settings = readFileSync(new URL('../../app/pages/settings.vue', import.meta.url), 'utf8')
+  const settings = readFileSync(new URL('../../app/pages/settings/[[section]].vue', import.meta.url), 'utf8')
   assert.match(settings, /p_permission_keys: \['settings.manage'\]/)
-  for (const adapter of ['useWebsiteAddress', 'useWebsiteProfile', 'useWebsiteCatalog', 'useWebsiteInquiries']) assert.match(settings, new RegExp(`${adapter}\\(canManage`))
+  for (const adapter of ['useWebsiteAddress', 'useWebsiteProfile', 'useWebsiteCatalog', 'useWebsiteInquiries']) assert.match(settings, new RegExp(`${adapter}\\(computed\\(\\(\\) => canManage\\.value && section\\.value ===`))
   assert.ok(SHOP_PAGE_PERMISSIONS['/settings'].includes('settings.manage'))
   assert.ok(SHOP_PAGE_PERMISSIONS['/appointments'].includes('appointments.manage'))
   const access = readFileSync(new URL('../../supabase/migrations/20261016020824_shop_appointment_access_credentials.sql', import.meta.url), 'utf8')
   assert.match(access, /appointments\.manage/)
   const pages = shopNavigation('mixed', 'en', translate('en')).flatMap(group => group.links.map(page => page.to))
-  assert.ok(!pages.some(page => page.startsWith('/website')), 'website controls remain inside Business settings')
-  assert.equal(pages.at(-1), '/settings')
+  assert.ok(pages.includes('/website-builder'))
+  assert.ok(!pages.some(page => /^\/website-(address|profile|catalog|inquiries)$/.test(page)), 'publishing controls remain under their scoped Settings pages')
+  const settingsPages = shopSettingsNavigation(false,true).map(page => page.to)
+  assert.ok(settingsPages.includes('/settings/website-profile'))
+  assert.ok(settingsPages.includes('/settings/locations'))
+  assert.equal(settingsPages.at(-1), '/billing')
 })

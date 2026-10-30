@@ -6,6 +6,7 @@ export function csvCell(value: unknown): string {
 
 export type BsDataTableRowAction = 'edit' | 'delete' | 'archive' | 'void'
 export { useRecordAction } from './composables/useRecordAction.ts'
+export { useInlineForm, useUnsavedFormGuard } from './composables/useInlineForm.ts'
 export type BsDataTableAlign = 'start' | 'center' | 'end'
 export type BsDataTableWidth = 'selection' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'content'
 export type BsDataTableSticky = 'start' | 'end'
@@ -226,6 +227,9 @@ export type { CalendarView } from './composables/useCalendarNavigation.ts'
 export { useFileUpload } from './composables/useFileUpload.ts'
 
 export { useViewportSpace } from './composables/useViewportSpace.ts'
+export { createSicsScale } from './controllers/createSicsScale.ts'
+export type { ScaleSerialOptions, ScaleSerialPort, ScaleSerialAccess, SicsReading, SicsScaleState } from './controllers/createSicsScale.ts'
+export { parseSicsWeight, parseSicsIdentity, parseSicsCapability, sicsNetReading } from './utils/mtSics.js'
 export { usePointOfSaleSections } from './composables/usePointOfSaleSections.ts'
 export { boundedQuantity, steppedQuantity, restoreQuantityInput } from './utils/quantity.ts'
 
@@ -248,6 +252,9 @@ export { usePageExitCleanup } from './composables/usePageExitCleanup.ts'
 export { usePrivateSessionLifecycle } from './composables/usePrivateSessionLifecycle.ts'
 export { usePageRevalidation } from './composables/usePageRevalidation.ts'
 export { useBlobUrl } from './composables/useBlobUrl.ts'
+export{createEmailStepController,emailStepState,emailStepDelay,normalizedAuthEmail,validAuthEmail}from'./controllers/emailStep.ts'
+export type{EmailStepState,EmailStepError}from'./controllers/emailStep.ts'
+export { useSignupWizard, focusSignupStage } from './composables/useSignupWizard.ts'
 
 export { useGuardedChoice } from './composables/useGuardedChoice.ts'
 export { useControlledRadioGroup } from './composables/useControlledRadioGroup.ts'
@@ -258,3 +265,10 @@ export type { CalendarInterval } from './utils/calendarIntervals.ts'
 export { useCalendarSlotNavigation } from './composables/useCalendarSlotNavigation.ts'
 export { usePointOfSaleCheckout } from './composables/usePointOfSaleCheckout.ts'
 export { useElementPrint } from './composables/useElementPrint.ts'
+
+export { useNavigationChamber } from './composables/useNavigationChamber.ts'
+
+export { readWebsiteImage } from './utils/readWebsiteImage.ts'
+
+export { scrollRegionKey } from './scrollRegion.ts'
+export { normalizeDecimalText } from './utils/decimalText.js'

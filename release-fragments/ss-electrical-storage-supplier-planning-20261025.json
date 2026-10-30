@@ -1,0 +1,37 @@
+{
+  "id": "ss-electrical-storage-supplier-planning-20261025",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/pages/supply-planning.vue",
+    "apps/shop-suit/app/composables/useSupplyPlanning.ts",
+    "apps/shop-suit/app/composables/usePlanningPlacementPicker.ts",
+    "apps/shop-suit/app/utils/supplyPlanningCopy.ts",
+    "apps/shop-suit/app/utils/shopNavigation.ts",
+    "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+    "apps/shop-suit/app/utils/businessMode.ts",
+    "apps/shop-suit/app/pages/reports/index.vue",
+    "apps/shop-suit/supabase/migrations/20261025204604_inventory_positions_supplier_references_and_reorder.sql",
+    "packages/ui/src/templates/BsSupplyPlanningPage.vue",
+    "apps/shop-suit/app/pages/inventory/reels.vue"
+  ],
+  "reason": "Locate existing inventory without a competing stock balance, retain supplier item codes and versioned purchase units with lead times, read original purchase-price history and derive reviewable canonical reorder suggestions through existing operational reports.",
+  "notes": {
+    "title": {
+      "en": "Storage positions and supplier planning",
+      "ar": "أماكن المخزون وتخطيط التوريد"
+    },
+    "summary": {
+      "en": "Locate products and reels, retain supplier references and compare original purchase costs before reviewing reorder suggestions.",
+      "ar": "حدّد أماكن الأصناف والبكرات واحفظ مراجع الموردين وقارن تكاليف الشراء الأصلية قبل مراجعة اقتراحات إعادة الطلب."
+    },
+    "details": {
+      "en": "Bins and shelf placements describe existing stock. Supplier item references retain purchase units, packages and lead times, while purchase history keeps original currencies and costs separate. Reorder suggestions explain net sales, held and free stock, incoming orders and supplier timing; staff review them before placing an order.",
+      "ar": "تصف الخانات والأرفف مواضع المخزون الحالي. تحفظ مراجع أصناف الموردين وحدات الشراء والعبوات ومدد التوريد، ويعرض سجل الشراء العملات والتكاليف الأصلية منفصلة. توضّح اقتراحات إعادة الطلب صافي المبيعات والمخزون المحجوز والمتاح والأوامر الواردة ومدد المورد؛ يراجعها الموظف قبل إصدار أي أمر."
+    }
+  }
+}

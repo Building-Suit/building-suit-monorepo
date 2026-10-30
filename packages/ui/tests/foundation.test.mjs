@@ -9,7 +9,10 @@ import * as vue from 'vue'
 import ts from 'typescript'
 import { useTableQueryInteraction } from '../../ux/src/composables/useTableQueryInteraction.ts'
 import { useFormInteraction } from '../../ux/src/composables/useFormInteraction.ts'
+import { useDialogInteraction } from '../../ux/src/composables/useDialogInteraction.ts'
+import { interactionPolicy } from '../../ux/src/index.ts'
 import { useControlFocus } from '../../ux/src/composables/useControlFocus.ts'
+import { focusSignupStage } from '../../ux/src/composables/useSignupWizard.ts'
 import { useNavigationDisclosure } from '../../ux/src/composables/useNavigationDisclosure.ts'
 
 const require = createRequire(import.meta.url)
@@ -19,13 +22,16 @@ function component(file, language = 'en', imports = {}) {
   const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
   const module = { exports: {} }
   const copy = language === 'ar' ? { close: 'إغلاق', saving: 'جارٍ الحفظ…', search: 'بحث', empty: 'لا توجد سجلات' } : { close: 'Close', saving: 'Saving…', search: 'Search', empty: 'No records found' }
-  const globals = { useControlFocus, useFormInteraction, useNavigationDisclosure, ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
+  const globals = { useDialogInteraction, useControlFocus, useFormInteraction, useNavigationDisclosure, useRoute: () => ({ fullPath: '/' }), ref: vue.ref, computed: vue.computed, watch: vue.watch, watchEffect: vue.watchEffect, nextTick: vue.nextTick, onMounted: vue.onMounted, onBeforeUnmount: vue.onBeforeUnmount, useId: vue.useId, useAttrs: vue.useAttrs, useSlots: vue.useSlots, useI18n: () => ({ t: key => key, te: () => false }), useToasts: () => ({ toasts: vue.ref([{ id: 1, title: 'Saved', tone: 'success' }]), dismiss: () => {} }), useUiCopy: () => key => copy[key] }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(name => imports[name] ?? require(name), module, module.exports, ...Object.values(globals))
   return module.exports.default
 }
 async function render(file, props, slot, language) {
   const app = vue.createSSRApp({ render: () => vue.h(component(file, language), props, slot ? () => slot : undefined) })
   app.component('BsIcon', { render: () => vue.h('svg', { 'aria-hidden': 'true' }) })
+  if (file === 'templates/BsAdministrationShell.vue') app.component('BsAppShell', {
+    setup(_, { slots }) { return () => vue.h('div', [slots.mark?.(), slots['navigation-title']?.(), slots['rail-navigation']?.(), slots.navigation?.({ collapsed: false, close: () => {} }), slots.header?.(), slots.default?.()]) },
+  })
   app.config.globalProperties.$primevue = { config: { unstyled: true, locale: { emptySelectionMessage: 'No selection', selectionMessage: '{0} selected' } } }
   return renderToString(app)
 }
@@ -204,6 +210,25 @@ test('primitive inventory centrally owns fields, choices, states, navigation, an
   assert.doesNotMatch(empty, /<button\b/)
 })
 
+test('loading select exposes the same disabled state that its click handler enforces', async () => {
+  const props = { modelValue: null, label: 'Patient', options: [], optionLabel: 'label', optionValue: 'value', loading: true }
+  const html = await render('molecules/BsSelect.vue', props)
+  const control = html.match(/<[^>]+role="combobox"[^>]*>/)?.[0]
+  assert.ok(control)
+  assert.match(control, /aria-disabled="true"/)
+  const native = await render('molecules/BsSelect.vue', { ...props, native: true })
+  assert.match(native.match(/<select\b[^>]*>/)?.[0] ?? '', /\bdisabled(?:\s|>|=)/)
+  const ready = await render('molecules/BsSelect.vue', { ...props, loading: false })
+  assert.match(ready.match(/<[^>]+role="combobox"[^>]*>/)?.[0] ?? '', /aria-disabled="false"/)
+})
+
+test('landing navigation cannot accept a server-rendered click before hydration', async () => {
+  const html = await render('organisms/BsLandingTopHeader.vue', { navigation: [], labels: { home: 'Home', navigation: 'Navigation', openApp: 'Workspace', signIn: 'Sign in', startTrial: 'Sign up', close: 'Close menu', open: 'Open menu' } })
+  const trigger = html.match(/<button\b[^>]*aria-controls="marketing-mobile-navigation"[^>]*>/)?.[0]
+  assert.ok(trigger)
+  assert.match(trigger, /\bdisabled(?:\s|>|=)/)
+})
+
 test('shared marketing owns the landing frame and Ledger-derived pricing presentation', () => {
   const landing = readFileSync(new URL('../src/templates/BsLandingPage.vue', import.meta.url), 'utf8')
   const frame = readFileSync(new URL('../src/templates/BsMarketingLayout.vue', import.meta.url), 'utf8')
@@ -264,6 +289,30 @@ test('shared auth owns split geometry, form shells, wizard controls, and verific
   assert.match(verification, /@click="emit\('resend'\)"/)
 })
 
+
+test('wizard transition completion preserves a field the user already focused', async () => {
+  let afterEnter
+  const Transition = vue.defineComponent({
+    inheritAttrs: false, props: ['onAfterEnter'],
+    setup(props, { slots }) { afterEnter = props.onAfterEnter; return () => slots.default?.() },
+  })
+  const Wizard = component('organisms/BsSignupWizard.vue', 'en', { vue: { ...vue, Transition }, '@building-suit/ux': { focusSignupStage } })
+  const app = vue.createSSRApp({ render: () => vue.h(Wizard, {
+    step: 2, steps: [{ id: 'account', title: 'Account' }, { id: 'practice', title: 'Practice' }], submitLabel: 'Continue',
+  }, () => vue.h('input')) })
+  app.component('BsButton', { render: () => vue.h('button') })
+  await renderToString(app)
+  assert.equal(typeof afterEnter, 'function')
+  let firstFocus = 0
+  const first = { focus: () => { firstFocus++ } }, chosen = {}, outside = {}
+  const stage = { ownerDocument: { activeElement: chosen }, contains: node => node === first || node === chosen, querySelector: () => first }
+  afterEnter(stage)
+  assert.equal(firstFocus, 0, 'finishing an animation must not move focus away from the field already being edited')
+  stage.ownerDocument.activeElement = outside
+  afterEnter(stage)
+  assert.equal(firstFocus, 1, 'a new step still receives initial focus when the user has not entered it')
+})
+
 test('authenticated chrome is composed from canonical shared organisms', () => {
   const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
   for (const name of ['BsSideMenu', 'BsTopHeader', 'BsUserMenu', 'BsSettingsMenu', 'BsContextSwitcher', 'BsScopeSwitcher', 'BsNotificationMenu', 'BsTrialCountdown', 'BsReadOnlyBanner', 'BsAccessGate', 'BsAppShell']) {
@@ -274,16 +323,32 @@ test('authenticated chrome is composed from canonical shared organisms', () => {
   const topHeader = readFileSync(new URL('../src/organisms/BsTopHeader.vue', import.meta.url), 'utf8')
   const userMenu = readFileSync(new URL('../src/organisms/BsUserMenu.vue', import.meta.url), 'utf8')
   assert.match(shell, /<BsSideMenu\b/)
-  assert.match(shell, /<BsTopHeader\b/)
+  assert.doesNotMatch(shell, /<BsTopHeader\b/)
+  assert.match(shell, /:collapsed="collapsed"/)
+  assert.match(shell, /bs-app-shell__scope-actions/)
+  assert.doesNotMatch(shell, /variant === 'shop'/)
   assert.doesNotMatch(shell, /<aside\b|<header\b/)
-  assert.match(sideMenu, /id="bs-primary-navigation"/)
+  assert.match(sideMenu, /:id="navigationId"/)
   assert.match(sideMenu, /useSideNavigation/)
-  assert.match(sideMenu, /class="fixed inset-0 z-30 ls-scrim lg:hidden"/)
+  assert.match(sideMenu, /class="fixed inset-0 z-30 ls-scrim bs-side-navigation__scrim lg:hidden"/)
   assert.match(topHeader, /aria-controls="bs-primary-navigation"/)
   assert.match(userMenu, /<BsUserIdentity\b/)
-  assert.match(userMenu, /<BsSettingsMenu embedded/)
+  assert.match(userMenu, /<BsSettingsMenu\b[^>]*embedded/)
   assert.match(userMenu, /v-for="action in actions"/)
   assert.match(userMenu, /@click="emit\('signOut'\)"/)
+})
+
+test('all workspace consumers share rail chrome and retain product-owned context controls', () => {
+  const workspace = readFileSync(new URL('../src/templates/BsWorkspaceShell.vue', import.meta.url), 'utf8')
+  const administration = readFileSync(new URL('../src/templates/BsAdministrationShell.vue', import.meta.url), 'utf8')
+  assert.match(workspace, /<BsSidebarAccount v-if="account"/)
+  assert.doesNotMatch(workspace, /variant === 'shop'|variant !== 'shop'/)
+  for (const control of ['BsContextSwitcher', 'BsScopeSwitcher', 'BsNotificationMenu', 'BsTrialCountdown']) assert.ok(workspace.includes(`<${control}`))
+  assert.match(administration, /<BsAppShell\b/)
+  assert.match(administration, /#rail-navigation/)
+  assert.match(administration, /#navigation=/)
+  assert.match(administration, /item.disabled/)
+  assert.doesNotMatch(administration, /<header\b/)
 })
 
 test('status badges expose written labels and semantic tone instead of color alone', async () => {
@@ -666,4 +731,45 @@ test('shared permission occurrences have distinct row identities and preserve th
   controls[1].onNativeChange({ target: { checked: false } })
   assert.deepEqual(toggles, [{ key: 'shared.manage', checked: false }])
   assert.ok(items.every(item => !('rowId' in item)))
+})
+
+test('practice ledger report rows expose the exact source and financial amount through the canonical table contract', async () => {
+  const row = { id: 'synthetic-ledger-1', source: 'Synthetic charge · version 2', amount: '100.00 EGP (2)', recorded: '26 Oct 2026 UTC', issued: '25 Oct 2026 UTC', state: 'Posted', to: '/financial-reports?source=synthetic' }
+  const view = { ready: true, loading: false, denied: false, error: false, totals: [], rows: [row], clinics: [], statuses: [], metrics: [], groups: [], source: { visible: false, items: [] } }
+  const copy = { title: 'Synthetic report', source: 'Source', amount: 'Amount', recorded: 'Recorded', issued: 'Issued', state: 'State' }
+  let tableKey
+  const app = vue.createSSRApp({ render: () => vue.h(component('organisms/BsPracticeLedgerReportsWorkspace.vue'), { view, copy, filters: { location: '', from: '', until: '', status: 'all', metric: 'collections', group: '' } }) })
+  for (const name of ['BsStack', 'BsGrid', 'BsFilterBar', 'BsText', 'BsPanel', 'BsHeading', 'BsInline', 'BsMetricGrid', 'BsButton', 'BsLink']) app.component(name, { setup: (_, { slots }) => () => vue.h('div', slots.default?.()) })
+  for (const name of ['BsPageHeader', 'BsSelect', 'BsInput', 'BsDetailDialog']) app.component(name, { render: () => null })
+  app.component('BsField', { setup: (_, { slots }) => () => vue.h('div', slots.default?.({ id: 'synthetic-field', describedby: undefined })) })
+  // Preserve BsDataTable's explicit field/value contract and custom source slot; no implicit key-to-field fallback.
+  app.component('BsDataTable', { props: ['value', 'columns', 'rowKey'], setup(props, { slots }) { tableKey = props.rowKey; return () => vue.h('section', props.value.flatMap(item => props.columns.map(column => slots['cell-' + column.key]?.({ row: item }) ?? vue.h('span', column.value ? column.value(item) : column.field ? item[column.field] : undefined)))) } })
+  const html = await renderToString(app)
+  for (const value of [row.source, row.amount, row.recorded, row.issued, row.state]) assert.ok(html.includes(value), 'Report must expose its source and monetary evidence')
+  assert.equal(tableKey, 'id')
+})
+
+// Shared SSR composition only: no Doctor app, service, browser or private data.
+test('financial source dialogs expose one localized close action through the canonical dialog', async () => {
+  for (const language of ['en', 'ar']) for (const state of ['ready', 'loading', 'error']) {
+    const close = language === 'ar' ? 'إغلاق' : 'Close'
+    const copy = { title: 'Synthetic report', sourceTitle: 'Synthetic source', close, source: 'Source', loading: 'Loading', sourceError: 'Unavailable' }
+    const view = { ready: false, loading: false, denied: false, error: false, totals: [], rows: [], clinics: [], statuses: [], metrics: [], groups: [], source: { visible: true, loading: state === 'loading', error: state === 'error', items: [] } }
+    const filters = { location: '', from: '', until: '', status: 'all', metric: 'collections', group: '' }
+    const detail = component('organisms/BsDetailDialog.vue', language)
+    const app = vue.createSSRApp({ render: () => vue.h(component('organisms/BsPracticeLedgerReportsWorkspace.vue', language), { view, copy, filters }) })
+    for (const name of ['BsStack', 'BsGrid', 'BsFilterBar', 'BsText', 'BsPanel', 'BsHeading', 'BsInline', 'BsMetricGrid', 'BsLink', 'BsDescriptionList', 'BsDescriptionItem', 'BsFormActions']) app.component(name, { setup: (_, { slots }) => () => vue.h('div', slots.default?.()) })
+    for (const name of ['BsPageHeader', 'BsSelect', 'BsInput', 'BsKpiCard', 'BsDataTable']) app.component(name, { render: () => null })
+    app.component('BsField', { setup: (_, { slots }) => () => vue.h('div', slots.default?.({ id: 'synthetic-field', describedby: undefined })) })
+    app.component('BsButton', { setup: (_, { slots }) => () => vue.h('button', slots.default?.()) })
+    app.component('BsDialog', component('organisms/BsDialog.vue', language, { '@building-suit/ux': { interactionPolicy } }))
+    // Inline the real PrimeVue portal for SSR inspection; preserve the actual header/close button.
+    app.component('BsDetailDialog', { setup: (_, { attrs, slots }) => () => vue.h(detail, { ...attrs, appendTo: 'self' }, slots) })
+    app.config.globalProperties.$primevue = { config: { unstyled: true, locale: { aria: { close } } } }
+    const html = await renderToString(app)
+    assert.ok(html.includes('role="dialog"'))
+    const matches = [...html.matchAll(/<button\b[^>]*>[\s\S]*?<\/button>/gi)].filter(([button]) => button.includes(`aria-label="${close}"`) || button.includes(`>${close}</button>`))
+    assert.equal(matches.length, 1, `${language}/${state}: source close must resolve to one accessible action`)
+    assert.ok(matches[0][0].includes('data-pc-name="pcclosebutton"'), 'Keep canonical dialog dismissal and focus handling')
+  }
 })

@@ -89,7 +89,29 @@
     "BsSubscriptionStatusPage": "packages/ui/src/templates/BsSubscriptionStatusPage.vue",
     "BsPrivacyRequestsPage": "packages/ui/src/templates/BsPrivacyRequestsPage.vue",
     "BsManualPaymentPage": "packages/ui/src/templates/BsManualPaymentPage.vue",
-    "BsPaymentReconciliationPage": "packages/ui/src/templates/BsPaymentReconciliationPage.vue"
+    "BsPaymentReconciliationPage": "packages/ui/src/templates/BsPaymentReconciliationPage.vue",
+    "BsStorefrontBuilderPage": "packages/ui/src/templates/BsStorefrontBuilderPage.vue",
+    "BsCatalogOffersPage": "packages/ui/src/templates/BsCatalogOffersPage.vue",
+    "BsClinicalWorkspacePage": "packages/ui/src/templates/BsClinicalWorkspacePage.vue",
+    "BsReleasedClinicalPage": "packages/ui/src/templates/BsReleasedClinicalPage.vue",
+    "BsConsultationTypesPage": "packages/ui/src/templates/BsConsultationTypesPage.vue",
+    "BsWaitlistPage": "packages/ui/src/templates/BsWaitlistPage.vue",
+    "BsFollowUpWorklistPage": "packages/ui/src/templates/BsFollowUpWorklistPage.vue",
+    "BsPatientContactPreferencesPage": "packages/ui/src/templates/BsPatientContactPreferencesPage.vue",
+    "BsMessageOutboxPage": "packages/ui/src/templates/BsMessageOutboxPage.vue",
+    "BsFulfillmentTrackingPage": "packages/ui/src/templates/BsFulfillmentTrackingPage.vue",
+    "BsSyntheticImportPreviewPage": "packages/ui/src/templates/BsSyntheticImportPreviewPage.vue",
+    "BsMobileAccessPage": "packages/ui/src/templates/BsMobileAccessPage.vue",
+    "BsPracticeBillingPage": "packages/ui/src/templates/BsPracticeBillingPage.vue",
+    "BsPracticeMoneyPage": "packages/ui/src/templates/BsPracticeMoneyPage.vue",
+    "BsPhysicalStockPage": "packages/ui/src/templates/BsPhysicalStockPage.vue",
+    "BsTradePricingPage": "packages/ui/src/templates/BsTradePricingPage.vue",
+    "BsTradeQuotationsPage": "packages/ui/src/templates/BsTradeQuotationsPage.vue",
+    "BsTradeOrdersPage": "packages/ui/src/templates/BsTradeOrdersPage.vue",
+    "BsSupplierOrdersPage": "packages/ui/src/templates/BsSupplierOrdersPage.vue",
+    "BsSupplyPlanningPage": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
+    "BsWeighingSetupPage": "packages/ui/src/templates/BsWeighingSetupPage.vue",
+    "BsCommodityPricingPage": "packages/ui/src/templates/BsCommodityPricingPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -97,11 +119,11 @@
     "routes": 74
   },
   "currentInventory": {
-    "suitVueFiles": 94,
+    "suitVueFiles": 172,
     "localComponents": 0,
-    "routes": 78,
-    "layouts": 10,
-    "roots": 6
+    "routes": 149,
+    "layouts": 16,
+    "roots": 7
   },
   "acceptance": "verified-local: all 76 routes, strict zero-debt architecture, cross-Suit parity and regressions; publication pending provider suppression verification",
   "entries": [
@@ -2928,6 +2950,515 @@
       "status": "implemented; candidate acceptance pending",
       "verification": "not-yet-accepted",
       "dependencies": []
+    },
+    {
+      "source": "apps/shop-suit/app/pages/website-builder.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsStorefrontBuilderPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsStorefrontBuilderPage"
+      ],
+      "destination": "packages/ui/src/templates/BsStorefrontBuilderPage.vue",
+      "status": "implemented-source",
+      "domainAdapter": "apps/shop-suit/app/pages/website-builder.vue",
+      "dependencies": [
+        "@building-suit/ui/types/storefrontBuilderPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "Static validation pending; browser/database tests unrun at user instruction.",
+      "purpose": "shop-storefront-builder"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/offers.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCatalogOffersPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsCatalogOffersPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCatalogOffersPage.vue",
+      "status": "implemented-source",
+      "domainAdapter": "apps/shop-suit/app/pages/offers.vue",
+      "dependencies": [
+        "@building-suit/ui/types/storefrontBuilderPresentation",
+        "~/types/shopCrmRpc"
+      ],
+      "verification": "Static validation pending; browser/database tests unrun at user instruction.",
+      "purpose": "shop-catalog-offers"
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/terms.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/terms.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/privacy.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/privacy.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/subscription.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/subscription.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/payments.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/payments.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/cancellation-refunds.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/cancellation-refunds.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/policies/health-data.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPublicLegalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/policies/health-data.vue",
+      "purpose": "bilingual-draft-policy-review-with-no-live-or-contract-approval",
+      "status": "implemented; CI acceptance and qualified policy approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/clinical.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsClinicalWorkspacePage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/clinical.vue",
+      "purpose": "synthetic-clinical-encounters-and-immutable-entered-records",
+      "status": "implemented; synthetic clinical checks in progress; qualified approval pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/clinical-releases/[id].vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsReleasedClinicalPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/clinical-releases/[id].vue",
+      "purpose": "authenticated-recipient-specific-synthetic-record-release",
+      "status": "implemented; verification in progress; no clinical approval",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/layouts/clinical-recipient.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "domainAdapter": "apps/doctor-suit/app/layouts/clinical-recipient.vue",
+      "purpose": "authenticated-recipient-access-without-practice-membership",
+      "status": "implemented; synthetic recipient verification pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/appointment-types.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsConsultationTypesPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/appointment-types.vue",
+      "purpose": "synthetic-consultation-configuration",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/waitlist.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsWaitlistPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/waitlist.vue",
+      "purpose": "synthetic-waitlist-offers-and-expiry",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/worklists.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsFollowUpWorklistPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/worklists.vue",
+      "purpose": "synthetic-administrative-assignment-worklist",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/contact-preferences.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPatientContactPreferencesPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/contact-preferences.vue",
+      "purpose": "synthetic-patient-contact-consent-and-guardian-review",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/messages.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsMessageOutboxPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/messages.vue",
+      "purpose": "synthetic-message-status",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/fulfillment.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsFulfillmentTrackingPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/fulfillment.vue",
+      "purpose": "synthetic-operational-fulfillment",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/import-preview.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsSyntheticImportPreviewPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/import-preview.vue",
+      "purpose": "synthetic-import-preview",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/operational-reports.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsReportsPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/operational-reports.vue",
+      "purpose": "scoped-synthetic-operational-reports",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/app.vue",
+      "kind": "root",
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/app.vue",
+      "status": "synthetic engineering; device acceptance pending",
+      "verification": "source and unit checks pending",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/layouts/default.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/layouts/default.vue",
+      "status": "synthetic engineering; device acceptance pending",
+      "verification": "source and unit checks pending",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/[[...path]].vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsMobileAccessPage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/[[...path]].vue",
+      "status": "synthetic engineering; device acceptance pending",
+      "verification": "source and unit checks pending",
+      "dependencies": [],
+      "purpose": "doctor-mobile-guarded-shell"
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/sign-in.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsSignInPage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/sign-in.vue",
+      "status": "synthetic native session engineering; security/device acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "sign-in"
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/recover.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPasswordRecoveryPage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/recover.vue",
+      "status": "synthetic native session engineering; security/device acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "password-recovery"
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/account.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsAccountSessionPage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/account.vue",
+      "status": "synthetic native session engineering; security/device acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": [],
+      "purpose": "verified-account-session"
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/layouts/auth.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsProductAuthFrame.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/layouts/auth.vue",
+      "status": "synthetic native session engineering; security/device acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/patients/index.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPatientDirectoryPage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/patients/index.vue",
+      "purpose": "patient-directory",
+      "status": "implemented synthetic read-only native adapter; qualified device/document acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/patients/[id].vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPatientProfilePage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/patients/[id].vue",
+      "purpose": "administrative-patient-profile-private-documents",
+      "status": "implemented synthetic read-only native adapter; qualified device/document acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/encounters.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsClinicalWorkspacePage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/encounters.vue",
+      "purpose": "synthetic-clinical-encounters-and-immutable-entered-records",
+      "status": "implemented native synthetic notes editor; device and qualified acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/mobile/doctor/app/pages/schedule.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
+      "domainAdapter": "apps/doctor-suit/mobile/doctor/app/pages/schedule.vue",
+      "purpose": "native-synthetic-schedule-and-queue",
+      "status": "implemented synthetic native adapter; qualified device acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/practice-billing.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPracticeBillingPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/practice-billing.vue",
+      "purpose": "synthetic-owner-practice-prices-and-immutable-visit-charge-history",
+      "status": "implemented-source; SQL/browser acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/practice-payments.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsPracticeMoneyPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/practice-payments.vue",
+      "purpose": "synthetic-owner-collections-refund-reservations-and-stored-acceptance-reconciliation",
+      "status": "implemented-source; SQL/browser acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/doctor-suit/app/pages/financial-reports.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsReportsPage.vue",
+      "domainAdapter": "apps/doctor-suit/app/pages/financial-reports.vue",
+      "purpose": "owner-synthetic-practice-ledger-reports",
+      "status": "implemented; acceptance in progress",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/shop-suit/app/pages/inventory/reels.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsPhysicalStockPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsPhysicalStockPage"
+      ],
+      "destination": "packages/ui/src/templates/BsPhysicalStockPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/pages/inventory/reels.vue",
+      "dependencies": [
+        "@building-suit/ui/types/physicalInventoryPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/electrical"
+      ],
+      "verification": "SS-ELEC-303/305/306/308: local schema107 and two-session cashier race PASS; EN desktop/light and AR mobile/dark browser count/history/cut scenarios PASS; native-provider CI and merchant hardware acceptance pending",
+      "purpose": "physical-reel-inventory"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/trade-pricing.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsTradePricingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsTradePricingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsTradePricingPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/pages/trade-pricing.vue",
+      "dependencies": [
+        "@building-suit/ui/types/tradePricingPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/tradePricing",
+        "~/types/measurement"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/VERIFICATION.md.",
+      "purpose": "shop-trade-pricing"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/quotations.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsTradeQuotationsPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsTradeQuotationsPage"
+      ],
+      "destination": "packages/ui/src/templates/BsTradeQuotationsPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/pages/quotations.vue",
+      "dependencies": [
+        "@building-suit/ui/types/tradePricingPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/tradePricing",
+        "~/types/measurement"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/VERIFICATION.md.",
+      "purpose": "shop-formal-quotations"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/orders.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsTradeOrdersPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsTradeOrdersPage"
+      ],
+      "destination": "packages/ui/src/templates/BsTradeOrdersPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/pages/orders.vue",
+      "dependencies": [
+        "@building-suit/ui/types/tradePricingPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/tradePricing",
+        "~/types/measurement"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/VERIFICATION.md.",
+      "purpose": "shop-contractor-orders"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/purchase-orders.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSupplierOrdersPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSupplierOrdersPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSupplierOrdersPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/composables/useSupplierOrders.ts",
+      "dependencies": [
+        "@building-suit/ui/types/supplierOrderPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/supplierOrders",
+        "~/types/measurement"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/PURCHASING.md.",
+      "purpose": "shop-supplier-orders"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/supply-planning.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsSupplyPlanningPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsSupplyPlanningPage"
+      ],
+      "destination": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/composables/useSupplyPlanning.ts",
+      "dependencies": [
+        "@building-suit/ui/types/supplyPlanningPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/supplyPlanning"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/SUPPLY-PLANNING.md.",
+      "purpose": "shop-supply-planning"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/weighing-setup.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsWeighingSetupPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsWeighingSetupPage"
+      ],
+      "destination": "packages/ui/src/templates/BsWeighingSetupPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/composables/useWeighingSetup.ts",
+      "dependencies": [
+        "@building-suit/ui/types/weighingSetupPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/scales"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/SCALES.md.",
+      "purpose": "shop-weighing-setup"
+    },
+    {
+      "source": "apps/shop-suit/app/pages/commodity-pricing.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsCommodityPricingPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsCommodityPricingPage"
+      ],
+      "destination": "packages/ui/src/templates/BsCommodityPricingPage.vue",
+      "status": "implemented-local",
+      "domainAdapter": "apps/shop-suit/app/composables/useCommodityPricing.ts",
+      "dependencies": [
+        "@building-suit/ui/types/commodityPricingPresentation",
+        "~/types/shopCrmRpc",
+        "~/types/commodityPricing"
+      ],
+      "verification": "Implementation qualification in progress; see electrical-supply/COMMODITY-PRICING.md.",
+      "purpose": "shop-commodity-pricing"
     }
   ],
   "verifiedSharedHeads": [
@@ -3065,6 +3596,28 @@
     "BsSubscriptionStatusPage",
     "BsPrivacyRequestsPage",
     "BsManualPaymentPage",
-    "BsPaymentReconciliationPage"
+    "BsPaymentReconciliationPage",
+    "BsClinicalWorkspacePage",
+    "BsReleasedClinicalPage",
+    "BsConsultationTypesPage",
+    "BsWaitlistPage",
+    "BsStorefrontBuilderPage",
+    "BsCatalogOffersPage",
+    "BsFollowUpWorklistPage",
+    "BsPatientContactPreferencesPage",
+    "BsMessageOutboxPage",
+    "BsFulfillmentTrackingPage",
+    "BsSyntheticImportPreviewPage",
+    "BsMobileAccessPage",
+    "BsPracticeBillingPage",
+    "BsPracticeMoneyPage",
+    "BsPhysicalStockPage",
+    "BsTradePricingPage",
+    "BsTradeQuotationsPage",
+    "BsTradeOrdersPage",
+    "BsSupplierOrdersPage",
+    "BsSupplyPlanningPage",
+    "BsWeighingSetupPage",
+    "BsCommodityPricingPage"
   ]
 }

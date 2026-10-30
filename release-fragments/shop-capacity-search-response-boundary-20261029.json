@@ -1,0 +1,17 @@
+{
+  "id": "shop-capacity-search-response-boundary-20261029",
+  "task": "SS-ELEC-601",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/shop-suit/tests/e2e/catalog-capacity.spec.ts",
+    "apps/shop-suit/docs/electrical-supply/CAPACITY-SEARCH-ORDERING-2026-10-29.md",
+    "apps/shop-suit/docs/electrical-supply/capacity-search-ordering-before-20261029.txt",
+    "apps/shop-suit/docs/electrical-supply/capacity-search-ordering-after-20261029.txt",
+    "apps/shop-suit/docs/electrical-supply/capacity-search-ordering-final-20261029.txt"
+  ],
+  "reason": "Correct synthetic capacity qualification to correlate the current page-1 search response instead of the last global legacy fallback call. Deterministically deliver an obsolete page-25 response last and retain stronger request/response/UI isolation assertions in EN/AR, original caps, payload limits, deadlines and retries0. No runtime, financial authority or entitlement change."
+}

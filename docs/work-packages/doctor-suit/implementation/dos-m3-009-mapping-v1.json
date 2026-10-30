@@ -1,0 +1,23 @@
+{
+  "mapping_version": "patient-appointment-v1",
+  "mode": "synthetic-preview-only",
+  "encoding": "strict UTF-8 JSON; no replacement characters or unpaired surrogates",
+  "limits": { "rows": 500, "source_bytes": 262144, "chunk_rows": 50, "read_page_rows": 20 },
+  "source_identity": "source_id is an opaque case-sensitive source key, preserved verbatim; duplicate keys are invalid",
+  "columns": {
+    "source_id": "Required ASCII letters/digits/underscore/hyphen, 1–64 characters; never a canonical patient ID",
+    "kind": "patient or appointment",
+    "patient_source_id": "null for patient; exact source patient key for appointment",
+    "display_name": "Synthetic-prefixed demonstration name for patient; null for appointment",
+    "birth_date": "Explicit ISO calendar date or null for patient; null for appointment",
+    "phone": "empty or +1555000 followed by four digits for patient; empty for appointment",
+    "email": "empty or example.test address for patient; normalized lower case in preview; empty for appointment",
+    "starts_at": "null for patient; explicit ISO timestamp with UTC offset for appointment",
+    "state": "null for patient; booked/cancelled/completed/no_show for appointment"
+  },
+  "target": "synthetic_import_rows.preview_target only; canonical practice_patients/appointments are never written",
+  "identity_rule": "Contact equality only creates duplicate_candidate review rows; it never merges identities or grants cross-practice access",
+  "reconciliation": "Persist complete source manifest and server SHA-256 before processing. Resume by saved batch UUID/version/cursor. Finalize only after exactly expected_rows exist; report valid/invalid/review totals and exact source ordinals.",
+  "custody_approval": null,
+  "real_import_enabled": false
+}

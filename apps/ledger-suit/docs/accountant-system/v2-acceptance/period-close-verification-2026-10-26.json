@@ -1,0 +1,404 @@
+{
+  "task": "LS-REL-CLOSE-001",
+  "date": "2026-10-26",
+  "parent_pr": 494,
+  "parent_sha": "25b667e7b1b46c713c0b636845e7704408d47df1",
+  "native": {
+    "task": "LS-REL-CLOSE-001",
+    "date": "2026-10-26",
+    "run": "67a81646-cc15-424a-9c2c-8bbca349a34e",
+    "source_matrix": [
+      {
+        "source": "manual",
+        "order": "post_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 1,
+          "entries": 2,
+          "debit": "100",
+          "credit": "100"
+        },
+        "rejected_source_rows_preserved": false,
+        "result": "pass"
+      },
+      {
+        "source": "manual",
+        "order": "close_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 0,
+          "entries": 0,
+          "debit": "0",
+          "credit": "0"
+        },
+        "rejected_source_rows_preserved": true,
+        "result": "pass"
+      },
+      {
+        "source": "opening",
+        "order": "post_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 1,
+          "entries": 2,
+          "debit": "1000",
+          "credit": "1000"
+        },
+        "rejected_source_rows_preserved": false,
+        "result": "pass"
+      },
+      {
+        "source": "opening",
+        "order": "close_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 0,
+          "entries": 0,
+          "debit": "0",
+          "credit": "0"
+        },
+        "rejected_source_rows_preserved": true,
+        "result": "pass"
+      },
+      {
+        "source": "bank",
+        "order": "post_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 1,
+          "entries": 2,
+          "debit": "100",
+          "credit": "100"
+        },
+        "rejected_source_rows_preserved": false,
+        "result": "pass"
+      },
+      {
+        "source": "bank",
+        "order": "close_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 0,
+          "entries": 0,
+          "debit": "0",
+          "credit": "0"
+        },
+        "rejected_source_rows_preserved": true,
+        "result": "pass"
+      },
+      {
+        "source": "vat",
+        "order": "post_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 1,
+          "entries": 3,
+          "debit": "114",
+          "credit": "114"
+        },
+        "rejected_source_rows_preserved": false,
+        "result": "pass"
+      },
+      {
+        "source": "vat",
+        "order": "close_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 0,
+          "entries": 0,
+          "debit": "0",
+          "credit": "0"
+        },
+        "rejected_source_rows_preserved": true,
+        "result": "pass"
+      },
+      {
+        "source": "ar",
+        "order": "post_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 1,
+          "entries": 2,
+          "debit": "100",
+          "credit": "100"
+        },
+        "rejected_source_rows_preserved": false,
+        "result": "pass"
+      },
+      {
+        "source": "ar",
+        "order": "close_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 0,
+          "entries": 0,
+          "debit": "0",
+          "credit": "0"
+        },
+        "rejected_source_rows_preserved": true,
+        "result": "pass"
+      },
+      {
+        "source": "ap",
+        "order": "post_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 1,
+          "entries": 2,
+          "debit": "100",
+          "credit": "100"
+        },
+        "rejected_source_rows_preserved": false,
+        "result": "pass"
+      },
+      {
+        "source": "ap",
+        "order": "close_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 0,
+          "entries": 0,
+          "debit": "0",
+          "credit": "0"
+        },
+        "rejected_source_rows_preserved": true,
+        "result": "pass"
+      },
+      {
+        "source": "asset",
+        "order": "post_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 2,
+          "entries": 4,
+          "debit": "1085",
+          "credit": "1085"
+        },
+        "rejected_source_rows_preserved": false,
+        "result": "pass"
+      },
+      {
+        "source": "asset",
+        "order": "close_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 1,
+          "entries": 2,
+          "debit": "1000",
+          "credit": "1000"
+        },
+        "rejected_source_rows_preserved": true,
+        "result": "pass"
+      },
+      {
+        "source": "inventory",
+        "order": "post_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 1,
+          "entries": 2,
+          "debit": "10000",
+          "credit": "10000"
+        },
+        "rejected_source_rows_preserved": false,
+        "result": "pass"
+      },
+      {
+        "source": "inventory",
+        "order": "close_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 0,
+          "entries": 0,
+          "debit": "0",
+          "credit": "0"
+        },
+        "rejected_source_rows_preserved": true,
+        "result": "pass"
+      },
+      {
+        "source": "dimensioned",
+        "order": "post_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 1,
+          "entries": 2,
+          "debit": "100",
+          "credit": "100"
+        },
+        "rejected_source_rows_preserved": false,
+        "result": "pass"
+      },
+      {
+        "source": "dimensioned",
+        "order": "close_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 0,
+          "entries": 0,
+          "debit": "0",
+          "credit": "0"
+        },
+        "rejected_source_rows_preserved": true,
+        "result": "pass"
+      },
+      {
+        "source": "year_close",
+        "order": "post_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 2,
+          "entries": 4,
+          "debit": "200",
+          "credit": "200"
+        },
+        "rejected_source_rows_preserved": false,
+        "result": "pass"
+      },
+      {
+        "source": "year_close",
+        "order": "close_first",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "financial": {
+          "journals": 1,
+          "entries": 2,
+          "debit": "100",
+          "credit": "100"
+        },
+        "rejected_source_rows_preserved": true,
+        "result": "pass"
+      },
+      {
+        "source": "annual_close",
+        "order": "parallel_retry",
+        "observed_wait": {
+          "type": "Lock",
+          "event": "transactionid"
+        },
+        "journals": 2,
+        "closing_journals": 1,
+        "net_income_minor": "100",
+        "historical_profit_loss_minor": "100",
+        "result": "pass"
+      }
+    ],
+    "native_paired_cases": 21,
+    "assertions": "Actual public RPCs; observed pg_stat_activity Lock waits; restricted source rows, numbering and ledger unchanged after rejection.",
+    "fixture_preserved": true,
+    "result": "pass"
+  },
+  "sql": {
+    "task": "LS-REL-CLOSE-001",
+    "checks": [
+      {
+        "file": "35_accounting_periods_test.sql",
+        "assertions": 34,
+        "result": "pass"
+      },
+      {
+        "file": "39_opening_balance_migrations_test.sql",
+        "assertions": 27,
+        "result": "pass"
+      },
+      {
+        "file": "42_bank_reconciliation_test.sql",
+        "assertions": 28,
+        "result": "pass"
+      },
+      {
+        "file": "45_approved_egypt_vat_test.sql",
+        "assertions": 21,
+        "result": "pass"
+      }
+    ],
+    "preserved_tables": 122,
+    "before_after_sha256": "8c34ab095f59b20cfec6cd7ef0be5b4dc9631ffa92f59ea904ed5e5ce503bd8f",
+    "execution": "Original pgTAP SQL through native PostgreSQL/psql; not the CLI pg_prove runner.",
+    "result": "pass"
+  },
+  "source": {
+    "migrations": 107,
+    "manifest_format": "sorted filename + space + file sha256 + newline",
+    "migration_manifest_sha256": "96e373a1199d6e4303ecc57bb799669d5f7356bd86aa17c97ef65669ce4ed651",
+    "helper_sha256": {
+      "apps/ledger-suit/scripts/native-period-close-runtime.mjs": "bd78ed57a765a39013749336e33509a72fde082b6dc196c62020918a5a9174a8",
+      "apps/ledger-suit/scripts/test-period-close-concurrency.mjs": "5dc9e0106c60a0da482c41e2b1cde32a783ecd00ebbbd18a55f4d474b0e6f231",
+      "apps/ledger-suit/scripts/test-native-period-close-sql.mjs": "4d62b020d3907292e60a7ce381e0e1f367c3c46786a573b1dcba91ab25eba0c5"
+    }
+  },
+  "checks": {
+    "ledger_units": {
+      "tests": 130,
+      "passed": 130,
+      "failed": 0
+    },
+    "helper_lint": "pass",
+    "workspace": "pass"
+  },
+  "limits": [
+    "Local native source candidate only; no hosted or Automation database changed.",
+    "No accountant UAT, production promotion, offsite schedule or full browser/CI pass inferred.",
+    "Older dblink fixtures 36/40 not counted; original 36 attempt failed before setup writes when a Unix socket supplied no inet_server_addr."
+  ],
+  "retention": "Task fixtures and every older financial volume preserved."
+}

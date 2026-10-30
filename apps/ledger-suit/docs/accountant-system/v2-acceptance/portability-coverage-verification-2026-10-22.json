@@ -1,0 +1,89 @@
+{
+  "task": "LS-OPS-PORT-002",
+  "observed_at": "2026-10-22",
+  "parent_pr": 448,
+  "parent_sha": "bab1492091231e6a0eeabf99f1c45ddd11a9c9ad",
+  "scope": "Complete current customer-readable financial export inventory and versioned recovery-file validation; actual Storage transfer and native second-instance restoration remain pending.",
+  "inventory": {
+    "before_tables": 64,
+    "after_tables": 103,
+    "additional_tables": 39,
+    "native_direct_tenant_relations_accounted": 103,
+    "groups_added": [
+      "FX",
+      "ETA B2B",
+      "ETA B2C",
+      "Migration center",
+      "Manual payments"
+    ],
+    "explicit_direct_tenant_exclusions": [
+      "audit_logs",
+      "billing_events",
+      "dimension_value_requests",
+      "support_requests"
+    ],
+    "storage_buckets": [
+      "attachments",
+      "manual-payment-receipts"
+    ]
+  },
+  "schemas": {
+    "database_evidence": "ls-ops-001-v2",
+    "portability": "ls-ops-001-portability-v2",
+    "objects": "ls-ops-001-attachments-v2",
+    "object_path": "objects/<encoded-bucket>/<tenant-key>",
+    "legacy": "Version-1 artifacts are retained historical evidence; recapture for the current recovery contract."
+  },
+  "native": {
+    "result": "pass",
+    "tables": 103,
+    "reports": 4,
+    "actual_postgrest": "16.1",
+    "migration_files": 105,
+    "exact_minor_units": true,
+    "file_digests": "match",
+    "second_readable_tenant": "excluded",
+    "outsider_and_viewer_export": "denied",
+    "internal_request_table": "403",
+    "tenant_relations_accounted": 103,
+    "captured_schema": "ls-ops-001-v2",
+    "two_metadata_sources": "2 objects / 7 bytes / 1 receipt verified",
+    "storage_bytes": "not_exercised"
+  },
+  "verification": {
+    "ledger_units": {
+      "pass": 128,
+      "fail": 0,
+      "skip": 0
+    },
+    "focused_final": {
+      "pass": 11,
+      "fail": 0,
+      "skip": 0
+    },
+    "native_api": "pass: 103 tables, four real CSVs, exact large money, tenant exclusion and denied unauthorized exports",
+    "native_sql_capture": "pass: repeatable-read/read-only v2 captures migration history and both metadata sources; same key in separate buckets gives 2 objects, 7 bytes, one receipt",
+    "metadata_phase_boundary": "Metadata-only synthetic rows were added after the API export phase; this is not a complete backup pair or a provider-byte transfer.",
+    "binary_files": "Controlled local HTTP fixture: distinct bytes at the same key in two buckets; actual file hashes/row counts verified and tampering rejected",
+    "changed_app_eslint": "pass",
+    "workspace_check": "pass",
+    "committed_parent_aware_release_check": "Recorded in PR validation after committing",
+    "full_ci": "Parent combined CI has unrelated Shop baseline unit failures; no waiver or whole-repository green claim."
+  },
+  "source_sha256": {
+    "scripts/export-organization-portability.mjs": "dab8f6839549bf2339688ea5e2bff13708c4ffcbc83970327c056abd51a62289",
+    "scripts/compare-restore-evidence.mjs": "2d0716bed313618eaa23ad04ecd0a8c8afd5e2f1ce1d79530fd574ebb43d3ced",
+    "scripts/capture-restore-evidence.sql": "fd3e6c3c58303d9d876fe7c10e8f74587393371cbc06ec8d5ca6cdc3788705ea",
+    "scripts/test-portability-native.mjs": "6019087a9bfed0c063716d2b5ac7a38a11d240ae8be0600b459d961e36198614",
+    "tests/unit/restore-evidence.test.mjs": "1ddcc52b8cbc62ea594a3260c58ac6482630159c9927e79d6f1b8afd04848fcb",
+    "tests/unit/portability-export.test.mjs": "87d19b96f4e72384ae67428db3cd3c0d78c1493ee45eaecef831aea3fb0e8054"
+  },
+  "pending": [
+    "Native Storage-provider byte upload/download",
+    "Actual timed two-instance restoration with current six-file comparison",
+    "Operating off-site backup destination/schedule and owner",
+    "Live Automation reconciliation",
+    "Hosted configuration and exact candidate identity",
+    "Accountant UAT"
+  ]
+}

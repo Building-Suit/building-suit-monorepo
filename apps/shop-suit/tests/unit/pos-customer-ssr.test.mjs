@@ -15,11 +15,12 @@ const service = { id: 'service-1', name: 'Haircut', itemType: 'service', unitPri
 function component(file, globals) {
   const { descriptor } = parse(readFileSync(file, 'utf8'))
   const script = compileScript(descriptor, { id: file.pathname, inlineTemplate: true })
-  const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText.replaceAll('import.meta.client', 'false')
+  const code = ts.transpileModule(script.content, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText.replaceAll('import.meta.client', 'false').replaceAll('import.meta.server', 'true')
   const module = { exports: {} }
   const localRequire = name => {
+    if (name.startsWith('#shared/')) return require(new URL(`../../shared/${name.slice(8)}.ts`, import.meta.url).pathname)
     if (!name.startsWith('~/')) return require(name)
-    const extension = /\/(businessMode|shopCommandErrorMessage)$/.test(name) ? '.ts' : /\/(pos|posCustomer|saleCopy)$/.test(name) ? '.js' : ''
+    const extension = /\/(businessMode|shopCommandErrorMessage|tradePricing|scaleCaptureCopy|commodityPricingCopy)$/.test(name) ? '.ts' : /\/(pos|posCustomer|saleCopy)$/.test(name) ? '.js' : ''
     return require(new URL(`../../app/${name.slice(2)}${extension}`, import.meta.url).pathname)
   }
   new Function('require', 'module', 'exports', ...Object.keys(globals), code)(localRequire, module, module.exports, ...Object.values(globals))
@@ -41,24 +42,33 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
     preloadRouteComponents: async () => {},
     useOfflineCounter: () => ({ online: vue.ref(true), ready: vue.ref(false), scope: vue.ref(''), busy: vue.ref(false), records: vue.ref([]), shiftClosing: vue.ref(false), cached: async () => null, cache: async () => {}, retry: async () => {} }),
     useOfflineCounterView: () => vue.ref(undefined),
-    useSaleTaxQuote: () => ({ data: vue.ref({ total: 100, tax: 0, net: 100, calculationEnabled: false }), pending: vue.ref(false), error: vue.ref(null) }),
+    // This appointment fixture isolates the service-only POS projection. The
+    // optional hardware adapter remains closed and unavailable in that mode.
+    useScaleCounter: () => ({ open:vue.ref(false),form:vue.ref({profileId:'',productId:''}),view:vue.ref({available:false}),copy:vue.ref({}),...Object.fromEntries(['show','profile','product','query','more','retry','connect','disconnect','read','tare','submit'].map(name=>[name,()=>{}])) }),
+    useSaleTaxQuote: () => ({ data: vue.ref({ total: 100, tax: 0, net: 100, calculationEnabled: false, lines: [] }), pending: vue.ref(false), error: vue.ref(null) }),
     useCatalogMedia: () => ({ request: (_action, _args, fallback) => fallback() }),
     useI18n: () => ({ locale: vue.ref('en'), t: key => key }),
     useConfirmation: () => ({ current: vue.ref(null), ask: async () => false }), useToasts: () => ({ push: () => {} }),
     useShop: () => ({ businessCurrency: vue.ref('EGP'), current: vue.ref({ business_mode: 'service' }), currentId: vue.ref('shop-1'), currentLocationId: vue.ref('location-1'), currentLocation: vue.ref({ name: 'Main' }), currentMembership: vue.ref({ id: 'membership-1' }), loading: vue.ref(false) }),
-    useSupabaseClient: () => ({ schema: () => ({ rpc: async name => ({ data: name === 'pos_checkout_context' ? context : name === 'list_catalog_categories' ? [] : { items: [service], total: 1, pageSize: 30 }, error: null }) }) }),
+    reactive: vue.reactive,
+    useSupabaseUser: () => vue.ref({ id: 'owner-1' }),
+    useShopInvalidation: () => ({ refreshShopQueries: async () => {}, clearShopQueries: () => {} }),
+    usePosReceipt: () => ({ visible: vue.ref(false), recentOpen: vue.ref(false), open: () => {}, completed: async () => {}, overlay: { open: vue.ref(false) }, view: vue.ref({}) }),
+    useShopClient: () => ({ schema: () => ({ rpc: async name => ({ data: name === 'pos_checkout_context' ? context : name === 'list_catalog_categories' ? [] : { items: [service], total: 1, pageSize: 30 }, error: null }) }) }),
     // Match Nuxt's SSR contract: data starts at its default, is populated during
     // server prefetch, and the returned promise can be awaited by page setup.
-    useAsyncData: (key, handler, options) => {
-      const data = vue.shallowRef(options.default()), pending = vue.ref(true), error = vue.ref(null)
-      const promise = Promise.resolve().then(handler).then(value => { data.value = value; pending.value = false })
+    useShopQuery: (key, handler, options) => {
+      const data = vue.shallowRef(options.default()), pending = vue.ref(options.server !== false), error = vue.ref(null)
+      const promise = options.server === false ? Promise.resolve() : Promise.resolve().then(handler).then(value => { data.value = value; pending.value = false })
       vue.onServerPrefetch(() => promise)
-      const result = { data, pending, error, refresh: () => promise }
+      const result = { data, pending, isLoading: pending, error, refresh: () => promise, ensure: () => promise }
       return Object.assign(promise.then(() => result), result)
     },
   }
   const app = vue.createSSRApp(component(new URL('../../app/pages/pos.vue', import.meta.url), globals))
-  app.component('BsPointOfSalePage', component(new URL('../../../../packages/ui/src/templates/BsPointOfSalePage.vue', import.meta.url), globals))
+  let projection
+  const sharedPage = component(new URL('../../../../packages/ui/src/templates/BsPointOfSalePage.vue', import.meta.url), globals)
+  app.component('BsPointOfSalePage', { ...sharedPage, setup(props, context) { projection = props; return sharedPage.setup(props,context) } })
   app.component('BsButton', component(new URL('../../../../packages/ui/src/atoms/BsButton.vue', import.meta.url), globals))
   // Render the shared field and repeating-row owners so scoped slots receive
   // their real contract; unresolved custom elements cannot emulate that API.
@@ -69,9 +79,11 @@ for (const customerId of ['customer-1', null]) test(`SSR locks appointment custo
   app.component('NuxtLink', { setup: (_, { slots }) => () => vue.h('a', {}, slots.default?.()) })
   app.config.globalProperties.$primevue = { config: { unstyled: true } }
   const html = await renderToString(app)
-  assert.match(html, /aria-disabled="true"[^>]*>.*Booked customer/)
-  const action = html.match(/<button\b[^>]*>[\s\S]*?<\/button>/gi)?.find(button => button.includes(customerId ? 'pos.clearCustomer' : 'pos.noCustomer'))
-  assert.ok(action, 'Appointment customer action must be rendered')
-  assert.match(action, /\sdisabled(?:\s|>)/)
+  assert.equal(projection.scale.available, false)
+  assert.equal(projection.view.appointmentLocked, true)
+  assert.equal(projection.view.customerDisabled, true)
+  assert.equal(projection.view.customerDisplay, 'Booked customer')
+  assert.equal(projection.customerId, customerId ?? '')
+  assert.equal(projection.appointmentId, 'appointment-1')
   assert.match(html, /EGP.*100\.00/, 'Appointment service must already be in the SSR cart')
 })

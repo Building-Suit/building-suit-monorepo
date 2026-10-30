@@ -1,3 +1,4 @@
+import { doctorPolicyLinks } from './policyPresentation.ts'
 import type { LandingContent } from '@building-suit/contracts'
 /** Implemented administrative preview with owner-approved launch list prices. */
 export function doctorLandingContent(ar: boolean): LandingContent {
@@ -39,10 +40,10 @@ export function doctorLandingContent(ar: boolean): LandingContent {
 }
 export function doctorMarketingCopy(ar: boolean) {
   return ar ? {
-    navigation:[{to:'/#features',label:'المزايا'},{to:'/#workflow',label:'طريقة العمل'},{to:'/#pricing',label:'الأسعار'}],legalLinks:[{to:'/preview',label:'نطاق المعاينة'}],
+    navigation:[{to:'/#features',label:'المزايا'},{to:'/#workflow',label:'طريقة العمل'},{to:'/#pricing',label:'الأسعار'}],legalLinks:[{to:'/preview',label:'نطاق المعاينة'},...doctorPolicyLinks(true)],
     labels:{home:'الرئيسية',navigation:'التنقل',openApp:'مساحة العمل',signIn:'تسجيل الدخول',startTrial:'إنشاء حساب',close:'إغلاق',open:'فتح القائمة',footer:'Doctor Suit من Building Suit · معاينة إدارية ببيانات تجريبية.',footerNavigation:'روابط Doctor Suit'},
   } : {
-    navigation:[{to:'/#features',label:'Features'},{to:'/#workflow',label:'How it works'},{to:'/#pricing',label:'Pricing'}],legalLinks:[{to:'/preview',label:'Preview scope'}],
+    navigation:[{to:'/#features',label:'Features'},{to:'/#workflow',label:'How it works'},{to:'/#pricing',label:'Pricing'}],legalLinks:[{to:'/preview',label:'Preview scope'},...doctorPolicyLinks(false)],
     labels:{home:'Home',navigation:'Navigation',openApp:'Open workspace',signIn:'Sign in',startTrial:'Create an account',close:'Close',open:'Open menu',footer:'Doctor Suit by Building Suit · Administrative preview with synthetic data.',footerNavigation:'Doctor Suit links'},
   }
 }

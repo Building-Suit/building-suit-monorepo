@@ -1,3 +1,4 @@
+import{doctorAdministrativeCapabilities}from'../../app/utils/locationContext'
 import{doctorPasswordStep}from'../helpers/password-step.mjs'
 import { test, expect, type Page, type BrowserContext } from '@playwright/test'
 import { doctorDelegationCopy } from '../../app/utils/delegationPresentation'
@@ -47,7 +48,7 @@ async function issue(page: Page,ar: boolean,clinic: string,all = false,two = fal
   await dialog.getByRole('combobox',{ name: copy.preset,exact: true }).click()
   await page.getByRole('option',{ name: all ? copy.all : copy.read,exact: true }).click()
   const group = dialog.getByRole('group',{ name: `${copy.permissions}: ${clinic}`,exact: true })
-  await expect(group.getByRole('checkbox')).toHaveCount(12)
+  await expect(group.getByRole('checkbox')).toHaveCount(doctorAdministrativeCapabilities.length)
   await expect(group.getByRole('checkbox',{ name: copy.capabilityLabels['audit.read'],exact: true })).toHaveCount(1)
   if (!all) await group.getByRole('checkbox',{ name: copy.capabilityLabels['locations.read'],exact: true }).check()
   if (two) {

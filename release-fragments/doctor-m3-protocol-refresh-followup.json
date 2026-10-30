@@ -1,0 +1,19 @@
+{
+  "id": "doctor-m3-protocol-refresh-followup",
+  "task": "DOS-M3-003",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/e2e/booking-focus.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-m1-014.auth.fixture.ts",
+    "apps/doctor-suit/tests/e2e/dos-ae-002.auth.fixture.ts",
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci.md",
+    "docs/work-packages/doctor-suit/implementation/m3-acceptance-ci-verification.json",
+    "apps/doctor-suit/tests/operations-browser-evidence.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts"
+  ],
+  "reason": "Record the actual all-ten M3 pass and correct retained-DOM/disclosure fixture assumptions without removing focus, business, variant or action assertions; preserve unresolved onboarding and shared-settings failures."
+}

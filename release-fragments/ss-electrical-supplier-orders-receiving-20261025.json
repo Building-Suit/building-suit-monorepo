@@ -1,0 +1,34 @@
+{
+  "id": "ss-electrical-supplier-orders-receiving-20261025",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "minor",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/composables/useSupplierOrders.ts",
+    "apps/shop-suit/app/pages/purchase-orders.vue",
+    "apps/shop-suit/app/utils/supplierOrderCopy.ts",
+    "apps/shop-suit/app/utils/shopNavigation.ts",
+    "apps/shop-suit/app/utils/shopPermissionMenu.ts",
+    "apps/shop-suit/app/utils/businessMode.ts",
+    "apps/shop-suit/supabase/migrations/20261025185907_supplier_orders_and_partial_receiving.sql",
+    "packages/ui/src/templates/BsSupplierOrdersPage.vue"
+  ],
+  "reason": "Issue supplier purchase orders without creating stock or debt, then receive measured quantities through existing purchases, physical sources and supplier balances. Preserve original package and cost snapshots, remaining quantities and immutable receipt links.",
+  "notes": {
+    "title": {
+      "en": "Supplier orders and partial receiving",
+      "ar": "أوامر الموردين والاستلام الجزئي"
+    },
+    "summary": {
+      "en": "Order measured goods, receive part of an order and keep the outstanding quantities visible.",
+      "ar": "اطلب الأصناف المقاسة واستلم جزءًا من الأمر مع متابعة الكميات المتبقية."
+    },
+    "details": {
+      "en": "An order records the agreement without adding stock or supplier debt. Each confirmed receipt creates an ordinary purchase at the original agreed unit and cost, including six reels now and four later. Receipt history, invoice links, exact quantities and retry protection remain available.",
+      "ar": "يسجّل الأمر الاتفاق دون زيادة المخزون أو مديونية المورد. ينشئ كل استلام مؤكد فاتورة شراء عادية بالوحدة والتكلفة المتفق عليهما، مثل استلام ست بكرات الآن وأربع لاحقًا. تتوفر سجلات الاستلام وروابط الفواتير والكميات الدقيقة والحماية من تكرار العملية."
+    }
+  }
+}

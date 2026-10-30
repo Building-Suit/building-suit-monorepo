@@ -1,0 +1,67 @@
+{
+  "task_id": "DOS-M5-010",
+  "scope": "independent-synthetic-audit-and-minimal-history-projection",
+  "task_acceptance": false,
+  "clinical_approval": false,
+  "clinically_verified_administration": false,
+  "qualified_sharing": false,
+  "actual_doctor_sharing_enabled": false,
+  "patient_native_scaffold": false,
+  "external_notifications": false,
+  "patient_identity_approval": null,
+  "caregiver_legal_approval": null,
+  "doctor_release_consent_approval": null,
+  "patient_platform_approval": null,
+  "native_cases": [],
+  "sql_status": "blocked-unrun-no-approved-implemented-patient-server-identity-sharing-boundary",
+  "blocked_outputs": [
+    "apps/doctor-suit/supabase/tests/dos-m5-010.sql"
+  ],
+  "unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m5-010.test.mjs"
+    ],
+    "exit_code": 0,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0
+  },
+  "combined_patient_units": {
+    "passed": 74,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full_root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2416,
+    "passed": 2339,
+    "failed": 54,
+    "skipped": 23,
+    "all_failure_locations": "apps/shop-suit/tests"
+  },
+  "provenance_followup": {
+    "initial_focused_command_exit": 1,
+    "failed_assertion": "A mutated aliased event/history source was not rejected.",
+    "correction": "Validate algorithm/release/version/hash/prescription/segment/occurrence event identity as well as matching references.",
+    "final_owned_passed": 9
+  },
+  "source_files": {
+    "apps/doctor-suit/app/utils/patientReportHistoryPreview.ts": "504c37426e2e2a38f76ac12851a960e91ef81284283b4abcdf62eb37447bff85",
+    "apps/doctor-suit/tests/unit/dos-m5-010.test.mjs": "9e75e060320636c80a18987fbda28b35dc7cd071504277293adecc638d96915c"
+  },
+  "document_sha256": "d8c1227fd96eb1619e1e12d47c056163c04b7e2da30fc2d05a146e70c98bd1de",
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-record",
+  "limitations": [
+    "No actual Auth/patient/caregiver/consent or sharing authority",
+    "No persisted server/RLS/crash or approved SQL fixture implementation",
+    "No patient native/UI/device/physical/privacy/security qualification",
+    "No clinical byte/signature verification, diagnostic score or treatment change",
+    "Fixture grant matching and projection do not replace fresh authorized server decisions or UI privacy clearing"
+  ]
+}

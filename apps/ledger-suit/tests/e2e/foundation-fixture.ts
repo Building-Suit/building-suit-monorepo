@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test'
+import { completePasswordSignIn } from './password-sign-in'
 
 const organizationId = '00000000-0000-4000-8000-000000000010'
 const account = (index: number) => ({ organization_id: organizationId, account_id: `account-${index}`, code: String(100 + index),
@@ -37,8 +38,10 @@ export async function ledgerFoundationFixture(page: Page, catalog: unknown[], ac
       case 'mark_notification_read': notificationRead = true; data = null; break
       case 'read_account_balances': data = Array.from({ length: 27 }, (_, index) => account(index)); break
       case 'read_account_activity': data = { account: { id: args.p_account_id, name: 'Branch cash 01', code: '101', type: 'asset', normal_balance: 'debit', is_archived: false }, currency: 'EGP', from_date: '2026-10-01', to_date: '2026-10-31', opening_minor: '0', debit_minor: '1000', credit_minor: '0', closing_minor: '1000', total: 0, rows: [] }; break
-      case 'search_transactions': data = [{ id: 'transaction-1', organization_id: organizationId, description: 'Foundation receipt', transaction_date: '2026-10-01', type: 'income', status: 'posted', amount_minor: 1000, currency_code: 'EGP', total_count: 1 }]; break
-      case 'dashboard_summary': data = { base_currency: 'EGP', total_assets_minor: 1000, total_liabilities_minor: 0, net_worth_minor: 1000, cash_and_bank_minor: 1000, accounts_receivable_minor: 0, accounts_payable_minor: 0, revenue_this_month_minor: 1000, expenses_this_month_minor: 0, net_profit_this_month_minor: 1000, revenue_previous_month_minor: 0, expenses_previous_month_minor: 0, net_profit_previous_month_minor: 0 }; break
+      case 'search_transactions': data = [{ id: 'transaction-1', organization_id: organizationId, description: 'Foundation receipt', transaction_date: '2026-10-01', type: 'income', status: 'posted', debit_minor: '1000', credit_minor: '1000', currency_code: 'EGP', total_count: 1 }]; break
+      case 'report_monthly_series': data = [{ month: '2026-10-01', revenue_minor: '1000', expense_minor: '0', net_minor: '1000' }]; break
+      case 'dashboard_liquid_accounts': data = [{ account_id: 'account-1', name: 'Branch cash 01', net_debit_minor: '1000' }]; break
+      case 'read_exact_dashboard_summary': data = { base_currency: 'EGP', total_assets_minor: '1000', total_liabilities_minor: '0', net_worth_minor: '1000', cash_and_bank_minor: '1000', accounts_receivable_minor: '0', accounts_payable_minor: '0', revenue_this_month_minor: '1000', expenses_this_month_minor: '0', net_profit_this_month_minor: '1000', revenue_previous_month_minor: '0', expenses_previous_month_minor: '0', net_profit_previous_month_minor: '0' }; break
       case 'plan_has_feature': data = false; break
       case 'organization_invitations': data = access ? [{ id: 'invite-1', email: 'invite@example.test', role: 'viewer', role_id: null, status: 'pending', created_at: '2026-10-01', expires_at: '2026-10-08', inviter: { full_name: 'Foundation owner', job_title: null } }] : []; break
       case 'capabilities': data = access ? [{ key: 'organization.read', domain: 'organization', description: 'Read workspace', description_ar: 'قراءة مساحة العمل' }, { key: 'members.read', domain: 'members', description: 'Read members', description_ar: 'قراءة الأعضاء' }] : []; break
@@ -48,10 +51,7 @@ export async function ledgerFoundationFixture(page: Page, catalog: unknown[], ac
     await route.fulfill({ json: data })
   })
   await page.goto('/login')
-  await expect(page.locator('form')).toHaveAttribute('data-hydrated', 'true')
-  await page.getByLabel(/^Email\s*\*?$/).fill(user.email)
-  await page.getByLabel(/^Password\s*\*?$/).fill('synthetic-password')
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await completePasswordSignIn(page, user.email, 'synthetic-password')
   await expect(page).toHaveURL('/dashboard')
   await expect(page.getByRole('main')).toContainText('Foundation receipt')
   return { calls }

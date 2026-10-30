@@ -36,11 +36,12 @@ for (const app of [
 ]) {
   test(`${app.name}: shared Ledger palette reaches rendered UI and theme changes`, async ({ page, context }) => {
     await context.addCookies([{ name: 'building-suit-locale', value: 'en', domain: '127.0.0.1', path: '/' }])
+    await page.addInitScript(() => { if (!localStorage.getItem('building-suit.theme')) localStorage.setItem('building-suit.theme', 'light') })
     await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
     await page.goto(`http://127.0.0.1:${app.port}${app.path}`)
     // Catalogue examples may include their own settings control. Exercise the
-    // Docs site's header control; standalone product auth pages have no banner.
-    const settings = (app.product ? page : page.getByRole('banner')).getByRole('button', { name: 'Language · Theme', exact: true })
+    // Docs site's outer navigation control; standalone product auth pages have no banner.
+    const settings = app.product ? page.getByRole('button', { name: 'Language · Theme', exact: true }) : page.locator('.bs-side-navigation').first().getByRole('button', { name: /^Theme:/ })
     const primary = page.locator('.ls-btn-primary').first()
     const input = page.locator('.ls-input').first()
     await expect(primary).toBeVisible()
@@ -61,8 +62,10 @@ for (const app of [
     await page.screenshot({ path: `.local/screenshots/${app.name.toLowerCase()}-palette-light.png`, fullPage: true })
 
     await settings.click()
-    await page.getByRole('menuitemradio', { name: 'Dark', exact: true }).click()
-    await settings.click()
+    if (app.product) {
+      await page.getByRole('menuitemradio', { name: 'Dark', exact: true }).click()
+      await settings.click()
+    }
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(11, 11, 13)')
     await expect(page.locator('body')).toHaveCSS('color', 'rgb(250, 250, 250)')
     // Approved glass identity fields mix 88% raised #27272A and 12% #141416;
@@ -80,8 +83,10 @@ for (const app of [
     await page.screenshot({ path: `.local/screenshots/${app.name.toLowerCase()}-palette-dark.png`, fullPage: true })
 
     await settings.click()
-    await page.getByRole('menuitemradio', { name: 'System', exact: true }).click()
-    await settings.click()
+    if (app.product) {
+      await page.getByRole('menuitemradio', { name: 'System', exact: true }).click()
+      await settings.click()
+    }
     await page.emulateMedia({ colorScheme: 'dark' })
     await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.+/)
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(11, 11, 13)')
@@ -90,9 +95,14 @@ for (const app of [
 
     if (app.product) {
       await page.goto(`http://127.0.0.1:${app.port}/`)
-      // Landing previews intentionally stay charcoal, including on light pages.
-      await expect(page.locator('.ls-hero-preview').first()).toHaveCSS('background-color', 'rgb(20, 20, 22)')
-      await expect(page.locator('.ls-hero-preview .bg-surface-muted, .ls-hero-preview .bs-box--surface-muted, .ls-hero-preview .ls-card-flat').first()).toHaveCSS('background-color', 'rgb(28, 28, 31)')
+      // Preserve painted surfaces in each registered landing presentation.
+      if (app.name === 'Shop') {
+        await expect(page.locator('.bs-film')).toHaveCSS('background-color', 'rgb(13, 27, 40)')
+        await expect(page.locator('.bs-film__stage')).toHaveCSS('background-color', 'rgb(10, 17, 26)')
+      } else {
+        await expect(page.locator('.ls-hero-preview').first()).toHaveCSS('background-color', 'rgb(20, 20, 22)')
+        await expect(page.locator('.ls-hero-preview .bg-surface-muted, .ls-hero-preview .bs-box--surface-muted, .ls-hero-preview .ls-card-flat').first()).toHaveCSS('background-color', 'rgb(28, 28, 31)')
+      }
 
       // Preserve the ordinary primary palette assertions on actual product
       // landing actions, alongside the explicitly branded glass auth arrow.

@@ -1,0 +1,14 @@
+{
+  "id": "dos-m2-014-regression-maintenance",
+  "task": "DOS-M2-014",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/e2e/dos-m1-004.spec.ts",
+    "docs/work-packages/doctor-suit/implementation/m2-continuation.md"
+  ],
+  "reason": "Align the inherited synthetic-preview keyboard test with the current shared rail theme/language cycle controls. Preserve locale, keyboard focus, mobile Escape/focus restoration and persisted theme behavior after reload; seed the initial preference only once. Test/evidence maintenance only, without changing product behavior or clinical approval."
+}

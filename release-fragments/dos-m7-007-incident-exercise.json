@@ -1,0 +1,15 @@
+{
+  "id": "dos-m7-007-incident-exercise",
+  "task": "DOS-M7-007",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/incident-evidence.mjs",
+    "apps/doctor-suit/tests/incident-actual-provider.mjs",
+    "apps/doctor-suit/tests/disposable-provider.mjs",
+    "apps/doctor-suit/tests/unit/dos-m7-007-incident.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-007-c03.md"
+  ],
+  "reason": "Continue M7-007 C03 with a GitHub-owned synthetic timeout/authorization incident exercise and source-bound, payload-free captured-alert receipts. Preserve accepted C01 provenance, default-disabled runtime signals and all incident/legal/provider/release gates; no production incident authority or external delivery is inferred."
+}

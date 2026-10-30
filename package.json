@@ -4,7 +4,7 @@
   "type": "module",
   "packageManager": "pnpm@10.33.0",
   "engines": {
-    "node": ">=22",
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0",
     "pnpm": "10.33.0"
   },
   "scripts": {
@@ -45,14 +45,14 @@
     "test:built-assets": "node --test apps/shop-suit/tests/integration/ss-launch-brand-production.test.mjs",
     "check:atomic-template": "node tooling/checks/atomic-template-architecture.mjs",
     "db:test:shop:commission": "node tooling/database/test-shop-commissions-local.mjs",
-    "dev:doctor": "pnpm --filter @building-suit/doctor-suit dev --host 127.0.0.1 --port 3006",
+    "dev:doctor": "node tooling/git/dev.mjs doctor",
     "doctor:auth-check": "node tooling/doctor/auth-preflight.mjs"
   },
   "devDependencies": {
-    "@vue/compiler-sfc": "3.5.43",
-    "nuxt": "4.5.2",
-    "vue": "3.5.42",
-    "vue-router": "5.3.0",
+    "@vue/compiler-sfc": "3.5.44",
+    "nuxt": "4.6.2",
+    "vue": "3.5.44",
+    "vue-router": "5.4.0",
     "@nuxtjs/i18n": "10.6.0",
     "@nuxtjs/supabase": "1.6.2",
     "@primevue/nuxt-module": "4.5.5",
@@ -65,13 +65,13 @@
     "@fontsource/ibm-plex-sans-arabic": "5.3.0",
     "@hugeicons/core-free-icons": "4.2.1",
     "@hugeicons/vue": "1.0.6",
-    "zod": "3.25.76",
-    "turbo": "2.8.20",
+    "zod": "4.6.7",
+    "turbo": "2.9.14",
     "typescript": "5.9.3",
     "vue-tsc": "3.3.11",
     "eslint": "9.39.5",
     "@playwright/test": "1.62.1",
     "supabase": "2.116.0",
-    "markdown-it": "14.1.0"
+    "markdown-it": "14.3.3"
   }
 }

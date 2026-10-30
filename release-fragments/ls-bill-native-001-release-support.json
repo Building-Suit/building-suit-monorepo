@@ -1,0 +1,18 @@
+{
+  "id": "ls-bill-native-001-release-support",
+  "task": "LS-BILL-NATIVE-001",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "release-changes/items.json"
+  ],
+  "reason": "Maintain private bilingual release inventory for the Ledger receipt-link correction; no other Suit behavior changes."
+}

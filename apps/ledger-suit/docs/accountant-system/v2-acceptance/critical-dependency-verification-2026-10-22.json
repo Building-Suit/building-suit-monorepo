@@ -1,0 +1,329 @@
+{
+  "task": "LS-SEC-DEP-001",
+  "observed_at": "2026-10-22",
+  "parent_pr": 443,
+  "scope": "Workspace dependency graph; critical findings in Nuxt development tooling. Not a production reachability determination.",
+  "audit_command": "pnpm audit --prod --json",
+  "before": {
+    "critical": 3,
+    "high": 10,
+    "moderate": 14,
+    "low": 4
+  },
+  "after": {
+    "info": 0,
+    "low": 4,
+    "moderate": 14,
+    "high": 8,
+    "critical": 0
+  },
+  "remediated": [
+    {
+      "package": "simple-git",
+      "before": "3.36.0",
+      "after": "4.0.2",
+      "critical_advisory": "GHSA-x6jw-m9v5-85vh",
+      "behavior": "Trailer command configuration rejects before process execution"
+    },
+    {
+      "package": "@simple-git/argv-parser",
+      "before": "1.1.1",
+      "after": "2.0.1",
+      "critical_advisory": "GHSA-v5rq-49vh-5v5c",
+      "behavior": "VISUAL command rejected by default environment guard"
+    },
+    {
+      "package": "shell-quote",
+      "before": "1.10.0",
+      "after": "1.11.0",
+      "critical_advisory": "GHSA-pqg4-j6r4-53mv",
+      "behavior": "Comment/newline token cannot execute an extra shell command"
+    }
+  ],
+  "compatibility": {
+    "devtools": "3.4.2",
+    "patch": "One-line supported named simpleGit ESM import; pnpm verifies patch hash",
+    "nuxt": "4.5.2",
+    "vue": "3.5.42",
+    "vue_router": "5.3.0",
+    "unrelated_peer_graph": "Preserved from parent lockfile"
+  },
+  "verification": {
+    "behavior_before": {
+      "legitimate_git_pass": 1,
+      "security_regressions_fail": 3,
+      "synthetic_marker_scope": "Owned automatically removed temporary directories"
+    },
+    "behavior_after": {
+      "pass": 4,
+      "fail": 0,
+      "skip": 0,
+      "commands": "node --test tooling/checks/toolchain-command-security.test.mjs"
+    },
+    "combined_ledger_tooling_units": {
+      "pass": 193,
+      "fail": 0,
+      "skip": 0,
+      "commands": "node --test apps/ledger-suit/tests/unit/*.test.mjs tooling/checks/*.test.mjs"
+    },
+    "frozen_install_and_all_seven_app_prepares": "pass",
+    "ledger_typecheck": "pass",
+    "ledger_build": "pass",
+    "changed_tooling_eslint": "pass",
+    "workspace_check": "pass",
+    "release_check": "pass",
+    "full_workspace_test": "Not rerun; parent CI has unrelated baseline Shop fixture failures. No full-CI success claim.",
+    "native_sql": "Parent PR443 evidence unchanged; no financial runtime or SQL edit."
+  },
+  "remaining_advisories": [
+    {
+      "id": 1241338,
+      "package": "@modelcontextprotocol/client",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-6qxp-vccf-f47h",
+      "affected": ">=2.0.0 <2.2.0",
+      "patched": ">=2.2.0",
+      "installed_versions": [
+        "2.0.0"
+      ]
+    },
+    {
+      "id": 1242629,
+      "package": "@modelcontextprotocol/client",
+      "severity": "moderate",
+      "url": "https://github.com/advisories/GHSA-6prh-2h8m-c8cw",
+      "affected": ">=2.0.0 <2.3.0",
+      "patched": ">=2.3.0",
+      "installed_versions": [
+        "2.0.0"
+      ]
+    },
+    {
+      "id": 1242647,
+      "package": "@modelcontextprotocol/server",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-jm63-cq47-j5jp",
+      "affected": ">=2.0.0 <2.3.0",
+      "patched": ">=2.3.0",
+      "installed_versions": [
+        "2.0.0"
+      ]
+    },
+    {
+      "id": 1242648,
+      "package": "@modelcontextprotocol/server",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-46jr-4wx8-v453",
+      "affected": ">=2.0.0 <2.3.0",
+      "patched": ">=2.3.0",
+      "installed_versions": [
+        "2.0.0"
+      ]
+    },
+    {
+      "id": 1242666,
+      "package": "@modelcontextprotocol/server",
+      "severity": "moderate",
+      "url": "https://github.com/advisories/GHSA-rvq5-wwqv-78pq",
+      "affected": ">=2.0.0 <2.3.0",
+      "patched": ">=2.3.0",
+      "installed_versions": [
+        "2.0.0"
+      ]
+    },
+    {
+      "id": 1242828,
+      "package": "@nuxt/nitro-server",
+      "severity": "moderate",
+      "url": "https://github.com/advisories/GHSA-vjh5-4x84-xrqp",
+      "affected": ">=4.2.0 <4.6.2",
+      "patched": ">=4.6.2",
+      "installed_versions": [
+        "4.5.2"
+      ]
+    },
+    {
+      "id": 1240992,
+      "package": "braces",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+      "affected": "<=3.0.3",
+      "patched": "<0.0.0",
+      "installed_versions": [
+        "3.0.3"
+      ]
+    },
+    {
+      "id": 1242627,
+      "package": "launch-editor",
+      "severity": "moderate",
+      "url": "https://github.com/advisories/GHSA-698v-4r3x-3vcv",
+      "affected": "<=2.14.1",
+      "patched": ">=2.14.2",
+      "installed_versions": [
+        "2.14.1"
+      ]
+    },
+    {
+      "id": 1242656,
+      "package": "launch-editor",
+      "severity": "moderate",
+      "url": "https://github.com/advisories/GHSA-r825-w8mm-5pxw",
+      "affected": "<=2.14.1",
+      "patched": ">=2.14.2",
+      "installed_versions": [
+        "2.14.1"
+      ]
+    },
+    {
+      "id": 1242663,
+      "package": "launch-editor",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-587h-7wmj-h5pm",
+      "affected": "<=2.14.1",
+      "patched": ">=2.14.2",
+      "installed_versions": [
+        "2.14.1"
+      ]
+    },
+    {
+      "id": 1240912,
+      "package": "node-forge",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-86w9-cpqp-85rv",
+      "affected": "<=1.4.0",
+      "patched": "<0.0.0",
+      "installed_versions": [
+        "1.4.0"
+      ]
+    },
+    {
+      "id": 1242830,
+      "package": "nuxt",
+      "severity": "moderate",
+      "url": "https://github.com/advisories/GHSA-vjh5-4x84-xrqp",
+      "affected": ">=4.0.0 <4.6.2",
+      "patched": ">=4.6.2",
+      "installed_versions": [
+        "4.5.2"
+      ]
+    },
+    {
+      "id": 1242831,
+      "package": "nuxt",
+      "severity": "moderate",
+      "url": "https://github.com/advisories/GHSA-xfq5-w38q-pc2x",
+      "affected": ">=3.13.0 <4.6.2",
+      "patched": ">=4.6.2",
+      "installed_versions": [
+        "4.5.2"
+      ]
+    },
+    {
+      "id": 1242832,
+      "package": "nuxt",
+      "severity": "low",
+      "url": "https://github.com/advisories/GHSA-jjm6-p2m9-9w4x",
+      "affected": "<4.6.0",
+      "patched": ">=4.6.0",
+      "installed_versions": [
+        "4.5.2"
+      ]
+    },
+    {
+      "id": 1240620,
+      "package": "serialize-javascript",
+      "severity": "low",
+      "url": "https://github.com/advisories/GHSA-gfhx-hw2g-v5hg",
+      "affected": ">=7.1.1 <7.1.2",
+      "patched": ">=7.1.2",
+      "installed_versions": [
+        "7.1.1"
+      ]
+    },
+    {
+      "id": 1241209,
+      "package": "source-map-js",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q",
+      "affected": ">=1.0.0 <1.2.2",
+      "patched": ">=1.2.2",
+      "installed_versions": [
+        "1.2.1"
+      ]
+    },
+    {
+      "id": 1242626,
+      "package": "vite",
+      "severity": "moderate",
+      "url": "https://github.com/advisories/GHSA-698v-4r3x-3vcv",
+      "affected": ">=8.3.0 <=8.3.2",
+      "patched": ">=8.3.3",
+      "installed_versions": [
+        "8.3.0"
+      ]
+    },
+    {
+      "id": 1242655,
+      "package": "vite",
+      "severity": "moderate",
+      "url": "https://github.com/advisories/GHSA-r825-w8mm-5pxw",
+      "affected": ">=8.3.0 <=8.3.2",
+      "patched": ">=8.3.3",
+      "installed_versions": [
+        "8.3.0"
+      ]
+    },
+    {
+      "id": 1242662,
+      "package": "vite",
+      "severity": "high",
+      "url": "https://github.com/advisories/GHSA-587h-7wmj-h5pm",
+      "affected": ">=8.3.0 <=8.3.2",
+      "patched": ">=8.3.3",
+      "installed_versions": [
+        "8.3.0"
+      ]
+    },
+    {
+      "id": 1242728,
+      "package": "vite",
+      "severity": "low",
+      "url": "https://github.com/advisories/GHSA-9jrq-w75r-8gcw",
+      "affected": ">=8.3.0 <=8.3.2",
+      "patched": ">=8.3.3",
+      "installed_versions": [
+        "8.3.0"
+      ]
+    },
+    {
+      "id": 1242734,
+      "package": "vite",
+      "severity": "moderate",
+      "url": "https://github.com/advisories/GHSA-rq7h-c2jc-7f22",
+      "affected": ">=8.3.0 <=8.3.2",
+      "patched": ">=8.3.3",
+      "installed_versions": [
+        "8.3.0"
+      ]
+    },
+    {
+      "id": 1242737,
+      "package": "vite",
+      "severity": "moderate",
+      "url": "https://github.com/advisories/GHSA-vfpm-58rq-9qcg",
+      "affected": ">=8.3.0 <=8.3.2",
+      "patched": ">=8.3.3",
+      "installed_versions": [
+        "8.3.0"
+      ]
+    }
+  ],
+  "unverified": [
+    "Remaining advisory reachability/remediation",
+    "Authenticated hosted/provider configuration",
+    "Live Automation database reconciliation",
+    "Named accountant UAT",
+    "Production promotion"
+  ]
+}

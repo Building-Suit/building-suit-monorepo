@@ -1,3 +1,5 @@
+import { verifySaasLifecycleRequestsProvider } from './saas-lifecycle-requests-actual-provider.mjs'
+import {verifyDoctorClinicalProvider} from './clinical-actual-provider.mjs'
 import{verifyDoctorManualPaymentProvider}from'./manual-payments-actual-provider.mjs'
 import{verifyDoctorAdministrativeCandidateProvider}from'./administrative-candidate-actual-provider.mjs'
 // Actual disposable Supabase Auth/Storage/Functions acceptance. No hosted target.
@@ -15,11 +17,15 @@ import { verifyDoctorMilestoneProvider } from './milestone-actual-provider.mjs'
 import { doctorOversizedResponse } from './oversized-http.mjs'
 import { validateLocalDoctorTarget } from './local-lifecycle.mjs'
 import { DoctorProviderFailure,doctorProviderFailureSummary } from './provider-diagnostics.mjs'
+import { verifyDoctorIncidentProvider } from './incident-actual-provider.mjs'
+import { beginDoctorIncidentEvidence,createDoctorIncidentTrace } from './incident-evidence.mjs'
 const root = fileURLToPath(new URL('../../../',import.meta.url))
 const app = path.join(root,'apps/doctor-suit')
 const api = 'http://127.0.0.1:65321'; const origin = 'http://127.0.0.1:4341'
 const project = 'building-suit-doctor'; const bucket = 'doctor-private-documents'
 let appointmentAcceptance;let stage = 'guard'; let owned = false; let functions; let functionsOutput = ''
+let incidentExecution
+const incidentTrace = createDoctorIncidentTrace()
 const scratch = await mkdtemp(path.join(tmpdir(),'doctor-provider-'))
 const environment = { ...process.env,SUPABASE_HOME: process.env.SUPABASE_HOME || path.join(scratch,'cli') }
 const wait = ms => new Promise(resolve => setTimeout(resolve,ms))
@@ -92,6 +98,7 @@ async function bootstrap(publicKey,label,beforeContext,timezone='Africa/Cairo'){
 }
 try {
   validateLocalDoctorTarget(JSON.parse(await readFile(path.join(root,'docs/architecture/environments.json'),'utf8')),await readFile(path.join(app,'supabase/config.toml'),'utf8'),process.env)
+  incidentExecution = await beginDoctorIncidentEvidence(root)
   try { await access(path.join(app,'supabase/.temp/project-ref')); throw new Error('Linked Doctor CLI directory is forbidden') } catch (error) { if (error.code!=='ENOENT') throw error }
   expect(!docker(['ps','-a','--format','{{.Names}}']).some(name => name.endsWith(`_${project}`)),'Existing project container is not owned by this run')
   expect(!docker(['volume','ls','--format','{{.Name}}']).some(name => name.endsWith(`_${project}`)),'Existing project volume is not owned by this run')
@@ -102,16 +109,16 @@ try {
   expect(status.API_URL===api && status.ANON_KEY && status.SERVICE_ROLE_KEY,'Actual local target/status mismatch')
   // Never print captured CLI output, status keys, mail bodies, auth tokens or passwords.
   await writeFile(path.join(scratch,'function.env'),`DOCTOR_LOCAL_PROVIDER=1\nDOCTOR_WEB_ORIGIN=${origin}\n`,{ mode: 0o600 })
-  functions = spawn('pnpm',['exec','supabase','--workdir',app,'functions','serve','--env-file',path.join(scratch,'function.env')],{ cwd: root,env: environment,detached: true,stdio: ['ignore','pipe','pipe'] })
+  functions = spawn(path.join(root,'node_modules/.bin/supabase'),['--workdir',app,'functions','serve','--env-file',path.join(scratch,'function.env')],{ cwd: root,env: environment,detached: true,stdio: ['ignore','pipe','pipe'] })
   functions.stdout.on('data',data => { functionsOutput=(functionsOutput+data).slice(-20000) }); functions.stderr.on('data',data => { functionsOutput=(functionsOutput+data).slice(-20000) })
   stage = 'configured private Storage bucket'; const storageAdmin = createClient(api,status.SERVICE_ROLE_KEY,options)
   const existingBucket = await storageAdmin.storage.getBucket(bucket)
   if (existingBucket.error) expect(!(await storageAdmin.storage.createBucket(bucket,{ public: false,fileSizeLimit: 5242880,allowedMimeTypes: ['application/pdf','image/png','image/jpeg'] })).error,'Supported local Storage bucket creation failed')
   stage = 'real Auth and owner onboarding'; const a = await bootstrap(status.ANON_KEY,'doctor-a'); const b = await bootstrap(status.ANON_KEY,'doctor-b')
   console.log('Actual Auth: captured local confirmation email, unconfirmed denial, verified session and two independent owner practices passed')
-  await verifyDoctorAccountProvider({ root,api,key: status.ANON_KEY,project,expect,setStage: value => { stage = value } })
+  await verifyDoctorIncidentProvider({ publicKey: status.ANON_KEY,bootstrap,rpc,trace: incidentTrace,setStage: value => { stage = value } })
+  await verifyDoctorAccountProvider({ root,api,key: status.ANON_KEY,serviceKey:status.SERVICE_ROLE_KEY,project,expect,setStage: value => { stage = value } })
   expect((await rpc(b.client,'doctor_account_settings')).in_app_confirmations===false,'Independent account preference changed')
-  stage = 'actual appointment lifecycle and scoped Realtime';appointmentAcceptance = await verifyDoctorAppointmentProvider({ api,key: status.ANON_KEY,a,b,rpc,expect,probe: realtimeProbe,advanceRevision,independentWire: realtimeWire,setStage: value => { stage = value } })
   const pdf = new TextEncoder().encode('%PDF-1.7\nSynthetic administrative attachment\n%%EOF\n')
   async function endpoint(actor,operation,data = {},bytes) {
     return fetch(`${api}/functions/v1/doctor-documents?op=${operation}`,{ method: 'POST',headers: { apikey: status.ANON_KEY,authorization: `Bearer ${actor.session.access_token}`,origin,'content-type': 'application/pdf','x-doctor-document': encodeURIComponent(JSON.stringify({ ...actor.scope,key: randomUUID(),...data })) },body: bytes,signal: AbortSignal.timeout(30000) })
@@ -132,8 +139,11 @@ try {
     }
   }
   stage = 'actual function startup'; let ready = false
-  for (let attempt=0;attempt<60;attempt++) { const response = await endpoint(a,'status').catch(() => null); if (response?.status===200) { ready = true; break } await wait(500) }
+  for (let attempt=0;attempt<60;attempt++) { expect(functions.exitCode===null,'Owned Edge Function runner exited; captured logs withheld'); const response = await endpoint(a,'status').catch(() => null); if (response?.status===200) { ready = true; break } await wait(500) }
   expect(ready,'Actual authenticated Edge Function failed readiness; captured logs withheld')
+  // Independent clinical checks run before Realtime; inherited checks still remain mandatory.
+  await verifyDoctorClinicalProvider({root,api,origin,publicKey:status.ANON_KEY,serviceKey:status.SERVICE_ROLE_KEY,bootstrap,confirmedActor,rpc,sql:ownedCandidateSql,endpoint,pdf,expect,setStage:value=>{stage=value}})
+  stage = 'actual appointment lifecycle and scoped Realtime';appointmentAcceptance = await verifyDoctorAppointmentProvider({ api,key: status.ANON_KEY,a,b,rpc,expect,probe: realtimeProbe,advanceRevision,independentWire: realtimeWire,setStage: value => { stage = value } })
   stage = 'private upload and stable retry'; const key = randomUUID(); const result = await endpoint(a,'upload',{ key,filename: 'synthetic.pdf' },pdf); expect(result.status===200,'Real private upload failed'); const outcome = await result.json()
   const retry = await endpoint(a,'upload',{ key,filename: 'synthetic.pdf' },pdf); expect(retry.status===200 && JSON.stringify(await retry.json())===JSON.stringify(outcome),'Real upload retry changed identity')
   const directory = await rpc(a.client,'doctor_patient_documents',{ p_practice: a.scope.practiceId,p_location: a.scope.locationId,p_patient: a.scope.patientId }); expect(directory.total===1,'Actual upload must publish exactly one logical document')
@@ -169,6 +179,7 @@ try {
   expect(personalAudit.total===1 && personalAudit.items[0].actor_user_id===a.user.id && (await rpc(b.client,'doctor_personal_account_audit')).total===0,'Actual personal audit was not account-local');
   console.log('Actual audit: attributed document requests, safe projection, cross-practice/mutation denial and independent personal account history passed');
   await verifyDoctorManualPaymentProvider({root,api,origin,key:status.ANON_KEY,serviceKey:status.SERVICE_ROLE_KEY,a,b,rpc,sql:ownedCandidateSql,expect,setStage:value=>{stage=value}})
+  await verifySaasLifecycleRequestsProvider({a,b,rpc,expect,setStage:value=>{stage=value}})
   stage = 'actual session revocation'; const frozen = { ...a,session: { ...a.session } }; expect(!(await a.client.auth.signOut({ scope: 'local' })).error,'Actual local session signout failed')
   const revoked = await endpoint(frozen,'download',{ documentId: outcome.documentId }); expect([401,403].includes(revoked.status),'Revoked JWT was admitted by document endpoint')
   expect((await endpoint(b,'status')).status===200,'Independent Doctor B was changed by A signout')
@@ -177,7 +188,7 @@ try {
   await verifyDoctorMilestoneProvider({ api,origin,publicKey: status.ANON_KEY,mail,options,setStage: value => { stage = value } })
   await appointmentAcceptance.cleanup()
   function ownedCandidateSql(input){expect(owned,'Actual candidate fixture requires run-owned services');const result=spawnSync('docker',['exec','-i',`supabase_db_${project}`,'psql','-X','-U','postgres','-d','postgres','-qAt','-v','ON_ERROR_STOP=1'],{input,encoding:'utf8',timeout:15000,maxBuffer:65536});expect(result.status===0,'Owned actual-candidate fixture SQL failed');return result.stdout.trim()}
-  await verifyDoctorAdministrativeCandidateProvider({publicKey:status.ANON_KEY,bootstrap,confirmedActor,sql:ownedCandidateSql,rpc,endpoint,legacyLocator:locator,expect,setStage:value=>{stage=value},verifyQueue:(a,b,rescheduleReason)=>verifyDoctorAppointmentProvider({api,key:status.ANON_KEY,a,b,rpc,expect,probe:realtimeProbe,advanceRevision,independentWire:realtimeWire,rescheduleReason,setStage:value=>{stage=value}}),verifyAccount:admitEmail=>verifyDoctorAccountProvider({root,api,key:status.ANON_KEY,project,expect,admitEmail,expectedHome:'/subscription',expectVersionDocument:true,setStage:value=>{stage=value}})})
+  await verifyDoctorAdministrativeCandidateProvider({publicKey:status.ANON_KEY,bootstrap,confirmedActor,sql:ownedCandidateSql,rpc,endpoint,legacyLocator:locator,expect,setStage:value=>{stage=value},verifyQueue:(a,b,rescheduleReason)=>verifyDoctorAppointmentProvider({api,key:status.ANON_KEY,a,b,rpc,expect,probe:realtimeProbe,advanceRevision,independentWire:realtimeWire,rescheduleReason,setStage:value=>{stage=value}}),verifyAccount:admitEmail=>verifyDoctorAccountProvider({root,api,key:status.ANON_KEY,serviceKey:status.SERVICE_ROLE_KEY,project,expect,admitEmail,expectedHome:'/subscription',expectVersionDocument:true,setStage:value=>{stage=value}})})
   console.log('Synthetic actual-provider acceptance passed. Actual browser Auth recovery/PKCE, account reauthentication, Storage, Functions and scoped Realtime paths passed; hosted connections remain UNRUN.')
 } catch (error) {
   console.error(`Doctor actual-provider acceptance failed at ${stage}: ${doctorProviderFailureSummary(error)}`)
@@ -195,4 +206,9 @@ try {
   functionsOutput = ''
   if (owned) { try { await cli(['stop','--no-backup'],60000) } catch { console.error('Owned Doctor local cleanup failed'); process.exitCode = 1 } }
   await rm(scratch,{ recursive: true,force: true })
+  if (incidentExecution) {
+    const receipt = await incidentExecution.finish(incidentTrace,process.exitCode ?? 0)
+    console.log('DOS-M7-007-C03 receipt',JSON.stringify(receipt))
+    if (!receipt.accepted) process.exitCode = 1
+  }
 }

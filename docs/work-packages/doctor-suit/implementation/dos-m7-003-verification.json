@@ -1,0 +1,909 @@
+{
+  "task_id": "DOS-M7-003",
+  "pr": 504,
+  "parent_pr": 503,
+  "parent_head": "70a38324c72a6365aafe4b9163f4ed180a465654",
+  "initial_exact_source_receipt": {
+    "schema": "doctor-clinical-governance-restrictions/v1",
+    "execution_id": "950a7f9f-4944-447b-88f2-cb94229f4865",
+    "task_id": "DOS-M7-003",
+    "case_id": "DOS-M7-003-C03",
+    "exact_base": "70a38324c72a6365aafe4b9163f4ed180a465654",
+    "exact_candidate": "99852342beb07ef171ed0376031894a5426dcd25",
+    "started_at_utc": "2026-10-26T16:15:43.768Z",
+    "ended_at_utc": "2026-10-26T16:15:44.123Z",
+    "argv": [
+      "node",
+      "/workspace/doctor-m7-003/docs/work-packages/doctor-suit/implementation/dos-m7-003-verify.mjs",
+      "--base",
+      "70a38324c72a6365aafe4b9163f4ed180a465654",
+      "--head",
+      "99852342beb07ef171ed0376031894a5426dcd25"
+    ],
+    "node": "26.8.1",
+    "evaluated_input_sha256": {
+      "docs/work-packages/doctor-suit/implementation/dos-m7-003-verify.mjs": "4014562ee642221d015417bd184d456faac8b4d752a8c7c8a99097e60313497d",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-003.md": "ed6bf7ee5fea1e400047ad830601d6a5b4e93340a7e82925791eaceb63085e76",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-003-packet.json": "37c5609013907f6384121138fd7bdc84274cf284af862eb94d5fed2eda140b11",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-001-packet.json": "62ad7dab68466e4337fe21bb0ecc68691ed982b7c13dd896db31259c508f574a",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-002-packet.json": "b1b2abddd09284ceb7c032e41674ec749ddd57d6b49ee4ac4bf9b1c44d81afb9",
+      "packages/contracts/src/doctorClinical.ts": "891cf1c455f31052bde214fe19b653080e88d9d45de81e77d8ce85ddfa0af0cf",
+      "apps/doctor-suit/app/utils/administrativeEdition.ts": "f7cf04a7b6db73e22bef8b180e32d5dfe7e1ff9879d7ac9585633533d3ffd54c",
+      "apps/doctor-suit/app/utils/patientCaregiverProtocol.ts": "5d148e6f9494f7bc5f74499d85ac08c015aab80479fbd26d97611cd89c358379",
+      "docs/work-packages/doctor-suit/implementation/dos-m2-001-continuation.md": "c13eb54f337791af099e88cbdc9a2f3441f13040487bee24c937bd147e6352ce",
+      "apps/doctor-suit/supabase/migrations/20261019234429_clinical_encounter_foundation.sql": "73d2e825c8215890409b25d7c47c80d5b3c8751ac56681635c4b9dc422bc2eff",
+      "docs/architecture/environments.json": "02bdd1787747093cb8563142005bf385c957273072206ba4f8514a9472aaf8e2",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json": "8881c8b68172d75bc9827e910864c3fdd6c056119b0575e24bd49c5a87755a23",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json": "b442acff9a25ecbadbcf7d5f21f6fd672ae7ac10e6a5d186013cd253856f1125",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json": "7caf1851066eb8b2c4741be514ce4f7ee612a2570e76f94b8db3538815cf606f",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json": "041145f78b703fda51a0185744c7f6b2e900fbca7c7ff5dc129ad2170ed5634d",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json": "6ddb7b1ec6310bf2dfbbf562028c47ad1300eb6eb8e01f4cf94a54ed2b280e2b",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json": "eea1e06584bcd599fa13ea8a65400344e660055a7b75e4d817a0f04fe0a09240",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json": "9d937de32c9062852f228f79ea6f89887f39c15b20e7dc7cb485b17a273c1a0c",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json": "24dc2b7d993036671e2958751410e491fad1623910b08ce6418f1b702eca62a6",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json": "fde4ee5825fa131a2bd61a565e7c6a746a8a4e3ec74c6f53f878dbe818b8f418"
+    },
+    "assertions": [
+      {
+        "id": "candidate-is-current-head",
+        "status": "passed"
+      },
+      {
+        "id": "parent-is-ancestor",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-003-verify.mjs",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-003.md",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-003-packet.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-task-parent-and-decision",
+        "status": "passed"
+      },
+      {
+        "id": "clinical-review-and-real-data-approval-not-invented",
+        "status": "passed"
+      },
+      {
+        "id": "governance-mandates-not-inferred",
+        "status": "passed"
+      },
+      {
+        "id": "pilot-not-run-or-population-invented",
+        "status": "passed"
+      },
+      {
+        "id": "stop-thresholds-and-accountable-owners-unapproved",
+        "status": "passed"
+      },
+      {
+        "id": "workflow-exact-source-bound",
+        "status": "passed"
+      },
+      {
+        "id": "synthetic-only-boundaries-retained",
+        "status": "passed"
+      },
+      {
+        "id": "domain-review-obligations-unavailable",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-001-packet.json",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-002-packet.json",
+        "status": "passed"
+      },
+      {
+        "id": "existing-legal-hosting-authority-absent",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:packages/contracts/src/doctorClinical.ts",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:packages/contracts/src/doctorClinical.ts",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:apps/doctor-suit/app/utils/administrativeEdition.ts",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:apps/doctor-suit/app/utils/administrativeEdition.ts",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:apps/doctor-suit/app/utils/patientCaregiverProtocol.ts",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:apps/doctor-suit/app/utils/patientCaregiverProtocol.ts",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m2-001-continuation.md",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:docs/work-packages/doctor-suit/implementation/dos-m2-001-continuation.md",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:apps/doctor-suit/supabase/migrations/20261019234429_clinical_encounter_foundation.sql",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:apps/doctor-suit/supabase/migrations/20261019234429_clinical_encounter_foundation.sql",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/architecture/environments.json",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:docs/architecture/environments.json",
+        "status": "passed"
+      },
+      {
+        "id": "actual-pure-contract-accepts-unavailable-synthetic-directory",
+        "status": "passed"
+      },
+      {
+        "id": "actual-clinical-decoder-rejects:data_mode",
+        "status": "passed"
+      },
+      {
+        "id": "actual-clinical-decoder-rejects:clinical_approval",
+        "status": "passed"
+      },
+      {
+        "id": "actual-clinical-decoder-rejects:live_prescribing",
+        "status": "passed"
+      },
+      {
+        "id": "syntactic-entered-snapshot-is-not-clinical-efficacy",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:automatic_diagnosis",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:automatic_prescribing",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:recommended_dose",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:medication_substitution",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:clinical_efficacy_claim",
+        "status": "passed"
+      },
+      {
+        "id": "actual-edition-contract-rejects:live",
+        "status": "passed"
+      },
+      {
+        "id": "actual-edition-contract-rejects:production_clinical",
+        "status": "passed"
+      },
+      {
+        "id": "actual-edition-contract-rejects:qualified_prescribing",
+        "status": "passed"
+      },
+      {
+        "id": "absent-caregiver-authority-remains-denied",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:1",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:2",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:3",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:4",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:5",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:6",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:7",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:8",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:9",
+        "status": "passed"
+      },
+      {
+        "id": "nine-packets-104-tasks-preserved",
+        "status": "passed"
+      },
+      {
+        "id": "only-canonical-document-and-own-fragment-diff",
+        "status": "passed"
+      }
+    ],
+    "control_passes": 62,
+    "control_failures": 0,
+    "exit_code": 0,
+    "result": "passed-synthetic-restriction-comparison-only",
+    "runtime_or_pilot_executed": false,
+    "clinical_or_legal_authority_granted": false,
+    "full_task_acceptance": false
+  },
+  "domain_criteria": {
+    "C01": "unavailable-accountable-clinical-review",
+    "C02": "unavailable-approved-pilot-and-explicit-authorization",
+    "C04": "unavailable-real-data-gate"
+  },
+  "full_task_acceptance": false,
+  "actual_pilot_executed": false,
+  "runtime_tests": "not run; docs-only restriction comparison, no dummy human-review test",
+  "required_ci": "blocked;54 inherited Shop failures preserved",
+  "initial_negative_real_parent_receipt": {
+    "schema": "doctor-clinical-governance-restrictions/v1",
+    "execution_id": "582a106e-7717-4743-89fe-0560af51389e",
+    "task_id": "DOS-M7-003",
+    "case_id": "DOS-M7-003-C03",
+    "exact_base": "95a9092efb1a73c0c301ca7cd9a9b07957a0a179",
+    "exact_candidate": "99852342beb07ef171ed0376031894a5426dcd25",
+    "started_at_utc": "2026-10-26T16:17:00.360Z",
+    "ended_at_utc": "2026-10-26T16:17:00.755Z",
+    "argv": [
+      "node",
+      "/workspace/doctor-m7-003/docs/work-packages/doctor-suit/implementation/dos-m7-003-verify.mjs",
+      "--base",
+      "95a9092efb1a73c0c301ca7cd9a9b07957a0a179",
+      "--head",
+      "99852342beb07ef171ed0376031894a5426dcd25"
+    ],
+    "node": "26.8.1",
+    "evaluated_input_sha256": {
+      "docs/work-packages/doctor-suit/implementation/dos-m7-003-verify.mjs": "4014562ee642221d015417bd184d456faac8b4d752a8c7c8a99097e60313497d",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-003.md": "ed6bf7ee5fea1e400047ad830601d6a5b4e93340a7e82925791eaceb63085e76",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-003-packet.json": "37c5609013907f6384121138fd7bdc84274cf284af862eb94d5fed2eda140b11",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-001-packet.json": "62ad7dab68466e4337fe21bb0ecc68691ed982b7c13dd896db31259c508f574a",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-002-packet.json": "b1b2abddd09284ceb7c032e41674ec749ddd57d6b49ee4ac4bf9b1c44d81afb9",
+      "packages/contracts/src/doctorClinical.ts": "891cf1c455f31052bde214fe19b653080e88d9d45de81e77d8ce85ddfa0af0cf",
+      "apps/doctor-suit/app/utils/administrativeEdition.ts": "f7cf04a7b6db73e22bef8b180e32d5dfe7e1ff9879d7ac9585633533d3ffd54c",
+      "apps/doctor-suit/app/utils/patientCaregiverProtocol.ts": "5d148e6f9494f7bc5f74499d85ac08c015aab80479fbd26d97611cd89c358379",
+      "docs/work-packages/doctor-suit/implementation/dos-m2-001-continuation.md": "c13eb54f337791af099e88cbdc9a2f3441f13040487bee24c937bd147e6352ce",
+      "apps/doctor-suit/supabase/migrations/20261019234429_clinical_encounter_foundation.sql": "73d2e825c8215890409b25d7c47c80d5b3c8751ac56681635c4b9dc422bc2eff",
+      "docs/architecture/environments.json": "02bdd1787747093cb8563142005bf385c957273072206ba4f8514a9472aaf8e2",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json": "8881c8b68172d75bc9827e910864c3fdd6c056119b0575e24bd49c5a87755a23",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json": "b442acff9a25ecbadbcf7d5f21f6fd672ae7ac10e6a5d186013cd253856f1125",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json": "7caf1851066eb8b2c4741be514ce4f7ee612a2570e76f94b8db3538815cf606f",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json": "041145f78b703fda51a0185744c7f6b2e900fbca7c7ff5dc129ad2170ed5634d",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json": "6ddb7b1ec6310bf2dfbbf562028c47ad1300eb6eb8e01f4cf94a54ed2b280e2b",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json": "eea1e06584bcd599fa13ea8a65400344e660055a7b75e4d817a0f04fe0a09240",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json": "9d937de32c9062852f228f79ea6f89887f39c15b20e7dc7cb485b17a273c1a0c",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json": "24dc2b7d993036671e2958751410e491fad1623910b08ce6418f1b702eca62a6",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json": "fde4ee5825fa131a2bd61a565e7c6a746a8a4e3ec74c6f53f878dbe818b8f418"
+    },
+    "assertions": [
+      {
+        "id": "candidate-is-current-head",
+        "status": "passed"
+      },
+      {
+        "id": "parent-is-ancestor",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-003-verify.mjs",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-003.md",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-003-packet.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-task-parent-and-decision",
+        "status": "failed"
+      },
+      {
+        "id": "clinical-review-and-real-data-approval-not-invented",
+        "status": "passed"
+      },
+      {
+        "id": "governance-mandates-not-inferred",
+        "status": "passed"
+      },
+      {
+        "id": "pilot-not-run-or-population-invented",
+        "status": "passed"
+      },
+      {
+        "id": "stop-thresholds-and-accountable-owners-unapproved",
+        "status": "passed"
+      },
+      {
+        "id": "workflow-exact-source-bound",
+        "status": "passed"
+      },
+      {
+        "id": "synthetic-only-boundaries-retained",
+        "status": "passed"
+      },
+      {
+        "id": "domain-review-obligations-unavailable",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-001-packet.json",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-002-packet.json",
+        "status": "passed"
+      },
+      {
+        "id": "existing-legal-hosting-authority-absent",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:packages/contracts/src/doctorClinical.ts",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:packages/contracts/src/doctorClinical.ts",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:apps/doctor-suit/app/utils/administrativeEdition.ts",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:apps/doctor-suit/app/utils/administrativeEdition.ts",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:apps/doctor-suit/app/utils/patientCaregiverProtocol.ts",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:apps/doctor-suit/app/utils/patientCaregiverProtocol.ts",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m2-001-continuation.md",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:docs/work-packages/doctor-suit/implementation/dos-m2-001-continuation.md",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:apps/doctor-suit/supabase/migrations/20261019234429_clinical_encounter_foundation.sql",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:apps/doctor-suit/supabase/migrations/20261019234429_clinical_encounter_foundation.sql",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/architecture/environments.json",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:docs/architecture/environments.json",
+        "status": "passed"
+      },
+      {
+        "id": "actual-pure-contract-accepts-unavailable-synthetic-directory",
+        "status": "passed"
+      },
+      {
+        "id": "actual-clinical-decoder-rejects:data_mode",
+        "status": "passed"
+      },
+      {
+        "id": "actual-clinical-decoder-rejects:clinical_approval",
+        "status": "passed"
+      },
+      {
+        "id": "actual-clinical-decoder-rejects:live_prescribing",
+        "status": "passed"
+      },
+      {
+        "id": "syntactic-entered-snapshot-is-not-clinical-efficacy",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:automatic_diagnosis",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:automatic_prescribing",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:recommended_dose",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:medication_substitution",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:clinical_efficacy_claim",
+        "status": "passed"
+      },
+      {
+        "id": "actual-edition-contract-rejects:live",
+        "status": "passed"
+      },
+      {
+        "id": "actual-edition-contract-rejects:production_clinical",
+        "status": "passed"
+      },
+      {
+        "id": "actual-edition-contract-rejects:qualified_prescribing",
+        "status": "passed"
+      },
+      {
+        "id": "absent-caregiver-authority-remains-denied",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:1",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:2",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:3",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:4",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:5",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:6",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:7",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:8",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:9",
+        "status": "passed"
+      },
+      {
+        "id": "nine-packets-104-tasks-preserved",
+        "status": "passed"
+      },
+      {
+        "id": "only-canonical-document-and-own-fragment-diff",
+        "status": "failed"
+      }
+    ],
+    "control_passes": 60,
+    "control_failures": 2,
+    "exit_code": 1,
+    "result": "failed",
+    "runtime_or_pilot_executed": false,
+    "clinical_or_legal_authority_granted": false,
+    "full_task_acceptance": false
+  },
+  "oct29_parent_propagation": {
+    "schema": "doctor-clinical-governance-restrictions/v1",
+    "execution_id": "6a1ef452-58d0-47a3-8bb9-f6a599057167",
+    "task_id": "DOS-M7-003",
+    "case_id": "DOS-M7-003-C03",
+    "exact_base": "f93df5c463d9098b9a8c7462ba094085213b42fe",
+    "exact_candidate": "7554888a02d2a06fae2d56710c1bd9ed7bb88838",
+    "started_at_utc": "2026-10-29T13:05:38.447Z",
+    "ended_at_utc": "2026-10-29T13:05:38.753Z",
+    "argv": [
+      "node",
+      "/tmp/doctor-oct29-m7-003/docs/work-packages/doctor-suit/implementation/dos-m7-003-verify.mjs",
+      "--base",
+      "f93df5c463d9098b9a8c7462ba094085213b42fe",
+      "--head",
+      "7554888a02d2a06fae2d56710c1bd9ed7bb88838"
+    ],
+    "node": "26.8.1",
+    "evaluated_input_sha256": {
+      "docs/work-packages/doctor-suit/implementation/dos-m7-003-verify.mjs": "4014562ee642221d015417bd184d456faac8b4d752a8c7c8a99097e60313497d",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-003.md": "ff316e5b6e3bb472d2048f06ff21e19c809c0e2fcaac616ba695266b93569c31",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-003-packet.json": "2d918c3b333b375527334d723f0a1bb8ca8b0e4a15a5626cbfc0b0b73abcfc3f",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-001-packet.json": "708eb549a1dbb339dd2e80f82a1f58d45b0172e8baffb8ec4e1c5323b099d0d3",
+      "docs/work-packages/doctor-suit/implementation/dos-m7-002-packet.json": "552925a769a1c18a5a2a0ccd0119fcc82be7a077005f56693b3c9667880fdd1d",
+      "packages/contracts/src/doctorClinical.ts": "891cf1c455f31052bde214fe19b653080e88d9d45de81e77d8ce85ddfa0af0cf",
+      "apps/doctor-suit/app/utils/administrativeEdition.ts": "f7cf04a7b6db73e22bef8b180e32d5dfe7e1ff9879d7ac9585633533d3ffd54c",
+      "apps/doctor-suit/app/utils/patientCaregiverProtocol.ts": "5d148e6f9494f7bc5f74499d85ac08c015aab80479fbd26d97611cd89c358379",
+      "docs/work-packages/doctor-suit/implementation/dos-m2-001-continuation.md": "c13eb54f337791af099e88cbdc9a2f3441f13040487bee24c937bd147e6352ce",
+      "apps/doctor-suit/supabase/migrations/20261019234429_clinical_encounter_foundation.sql": "73d2e825c8215890409b25d7c47c80d5b3c8751ac56681635c4b9dc422bc2eff",
+      "docs/architecture/environments.json": "02bdd1787747093cb8563142005bf385c957273072206ba4f8514a9472aaf8e2",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json": "8881c8b68172d75bc9827e910864c3fdd6c056119b0575e24bd49c5a87755a23",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json": "b442acff9a25ecbadbcf7d5f21f6fd672ae7ac10e6a5d186013cd253856f1125",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json": "7caf1851066eb8b2c4741be514ce4f7ee612a2570e76f94b8db3538815cf606f",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json": "041145f78b703fda51a0185744c7f6b2e900fbca7c7ff5dc129ad2170ed5634d",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json": "6ddb7b1ec6310bf2dfbbf562028c47ad1300eb6eb8e01f4cf94a54ed2b280e2b",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json": "eea1e06584bcd599fa13ea8a65400344e660055a7b75e4d817a0f04fe0a09240",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json": "9d937de32c9062852f228f79ea6f89887f39c15b20e7dc7cb485b17a273c1a0c",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json": "24dc2b7d993036671e2958751410e491fad1623910b08ce6418f1b702eca62a6",
+      "docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json": "fde4ee5825fa131a2bd61a565e7c6a746a8a4e3ec74c6f53f878dbe818b8f418"
+    },
+    "assertions": [
+      {
+        "id": "candidate-is-current-head",
+        "status": "passed"
+      },
+      {
+        "id": "parent-is-ancestor",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-003-verify.mjs",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-003.md",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-003-packet.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-task-parent-and-decision",
+        "status": "passed"
+      },
+      {
+        "id": "clinical-review-and-real-data-approval-not-invented",
+        "status": "passed"
+      },
+      {
+        "id": "governance-mandates-not-inferred",
+        "status": "passed"
+      },
+      {
+        "id": "pilot-not-run-or-population-invented",
+        "status": "passed"
+      },
+      {
+        "id": "stop-thresholds-and-accountable-owners-unapproved",
+        "status": "passed"
+      },
+      {
+        "id": "workflow-exact-source-bound",
+        "status": "passed"
+      },
+      {
+        "id": "synthetic-only-boundaries-retained",
+        "status": "passed"
+      },
+      {
+        "id": "domain-review-obligations-unavailable",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-001-packet.json",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m7-002-packet.json",
+        "status": "passed"
+      },
+      {
+        "id": "existing-legal-hosting-authority-absent",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:packages/contracts/src/doctorClinical.ts",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:packages/contracts/src/doctorClinical.ts",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:apps/doctor-suit/app/utils/administrativeEdition.ts",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:apps/doctor-suit/app/utils/administrativeEdition.ts",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:apps/doctor-suit/app/utils/patientCaregiverProtocol.ts",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:apps/doctor-suit/app/utils/patientCaregiverProtocol.ts",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/implementation/dos-m2-001-continuation.md",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:docs/work-packages/doctor-suit/implementation/dos-m2-001-continuation.md",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:apps/doctor-suit/supabase/migrations/20261019234429_clinical_encounter_foundation.sql",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:apps/doctor-suit/supabase/migrations/20261019234429_clinical_encounter_foundation.sql",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/architecture/environments.json",
+        "status": "passed"
+      },
+      {
+        "id": "existing-product-policy-bytes-parent-identical:docs/architecture/environments.json",
+        "status": "passed"
+      },
+      {
+        "id": "actual-pure-contract-accepts-unavailable-synthetic-directory",
+        "status": "passed"
+      },
+      {
+        "id": "actual-clinical-decoder-rejects:data_mode",
+        "status": "passed"
+      },
+      {
+        "id": "actual-clinical-decoder-rejects:clinical_approval",
+        "status": "passed"
+      },
+      {
+        "id": "actual-clinical-decoder-rejects:live_prescribing",
+        "status": "passed"
+      },
+      {
+        "id": "syntactic-entered-snapshot-is-not-clinical-efficacy",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:automatic_diagnosis",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:automatic_prescribing",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:recommended_dose",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:medication_substitution",
+        "status": "passed"
+      },
+      {
+        "id": "actual-snapshot-shape-rejects:clinical_efficacy_claim",
+        "status": "passed"
+      },
+      {
+        "id": "actual-edition-contract-rejects:live",
+        "status": "passed"
+      },
+      {
+        "id": "actual-edition-contract-rejects:production_clinical",
+        "status": "passed"
+      },
+      {
+        "id": "actual-edition-contract-rejects:qualified_prescribing",
+        "status": "passed"
+      },
+      {
+        "id": "absent-caregiver-authority-remains-denied",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M1.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:1",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M2.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:2",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M3.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:3",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M4.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:4",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M5.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:5",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M6.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:6",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M7.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:7",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M8.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:8",
+        "status": "passed"
+      },
+      {
+        "id": "working-source:docs/work-packages/doctor-suit/planning-v0.4/DOS-M9.json",
+        "status": "passed"
+      },
+      {
+        "id": "canonical-packet-unchanged:9",
+        "status": "passed"
+      },
+      {
+        "id": "nine-packets-104-tasks-preserved",
+        "status": "passed"
+      },
+      {
+        "id": "only-canonical-document-and-own-fragment-diff",
+        "status": "passed"
+      }
+    ],
+    "control_passes": 62,
+    "control_failures": 0,
+    "exit_code": 0,
+    "result": "passed-synthetic-restriction-comparison-only",
+    "runtime_or_pilot_executed": false,
+    "clinical_or_legal_authority_granted": false,
+    "full_task_acceptance": false
+  }
+}

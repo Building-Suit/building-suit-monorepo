@@ -54,6 +54,8 @@ export function useManualPayment() {
   }
   async function load(plan?: LaunchPlanKey, interval?: BillingInterval, quoteId?: string) {
     await run(async (current) => {
+      // A failed new quote must not expose a previously selected request's instructions.
+      selected.value = null; evidence.value = []; history.value = []
       const result = await client.from('manual_payment_requests').select('*').eq('organization_id', currentId.value!).order('created_at', { ascending: false }).limit(50)
       if (result.error) throw result.error
       if (!current()) return

@@ -1,0 +1,16 @@
+{
+  "id": "dos-m7-001-ledger514-binding-20261029",
+  "task": "DOS-M7-001",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/work-packages/doctor-suit/implementation/dos-m7-001.md",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-001-packet.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-001-verify.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-001-ledger514-verification.json"
+  ],
+  "reason": "Bind current legal evidence to the Ledger-reconciled Doctor parent, preserving prior receipts and unavailable qualified legal authority. No product or domain approval change."
+}

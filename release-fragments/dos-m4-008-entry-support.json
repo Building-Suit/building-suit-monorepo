@@ -1,0 +1,19 @@
+{
+  "id": "dos-m4-008-entry-support",
+  "task": "DOS-M4-008",
+  "suits": [
+    "doctor-suit",
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/templates/BsPracticeAppointmentsPage.vue",
+    "apps/building-suit-docs/app/pages/components.vue"
+  ],
+  "reason": "Preserve the native schedule signed-out state and optional product-owned sign-in continuation in the canonical shared page without changing existing consumers."
+}

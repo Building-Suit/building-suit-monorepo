@@ -1,0 +1,19 @@
+{
+  "id": "dos-m4-005-route-support",
+  "task": "DOS-M4-005",
+  "suits": [
+    "doctor-suit",
+    "shop-suit",
+    "ledger-suit",
+    "inventory-suit",
+    "super-admin-suit",
+    "automation-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json"
+  ],
+  "reason": "Register native patient routes with the existing canonical full-page templates and exact purposes; no shared presentation changes or operational activation."
+}

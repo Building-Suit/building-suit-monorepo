@@ -1,0 +1,252 @@
+{
+  "task_id": "DOS-M6-003",
+  "scope": "existing-synthetic-manual-quote-stage-binding-fix-and-concrete-payment-evidence",
+  "task_acceptance": false,
+  "payment_gate": "open-actual-merchant-recipient-cost-refund-custody-approval-missing",
+  "clinical_approval": false,
+  "live_payment_acceptance": false,
+  "external_payment_provider_activated": false,
+  "hosted_configuration_inspected": false,
+  "selected_route": "instapay_manual-owner-direction-already-supplied",
+  "catalogue_reference": "apps/doctor-suit/config/introductory-plans.v2.json",
+  "missing_actual_route_evidence": {
+    "recipient_beneficiary_account": null,
+    "merchant_entity_jurisdictions_eligibility": null,
+    "cost_limit_settlement_refund_terms": null,
+    "independent_reviewer_authority_expiry": null,
+    "actual_activation_and_lifecycle_policy": null,
+    "credentials_custody": null,
+    "qualified_commercial_legal_tax_review": null,
+    "accountable_approval_date_scope_version_reference": null,
+    "live_go_no_go": null
+  },
+  "regression_phases": [
+    {
+      "phase": "original-code",
+      "owned_passed": 1,
+      "owned_failed": 4,
+      "cause": "Valid-looking quote/intent/instruction responses were not compared across frozen quote/configuration/money fields"
+    },
+    {
+      "phase": "first-binding-fix-before-snapshot",
+      "owned_passed": 5,
+      "owned_failed": 1,
+      "cause": "Caller quote mutation during RPC rewrote expected comparison"
+    },
+    {
+      "phase": "final-frozen-copy-and-controller-forwarding",
+      "owned_passed": 6,
+      "owned_failed": 0
+    }
+  ],
+  "unit": {
+    "argv": [
+      "node",
+      "--test",
+      "apps/doctor-suit/tests/unit/dos-m6-003.test.mjs"
+    ],
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "exit_code": 0
+  },
+  "focused_payment_units": {
+    "passed": 24,
+    "failed": 0,
+    "skipped": 0
+  },
+  "full_root": {
+    "argv": [
+      "pnpm",
+      "test"
+    ],
+    "exit_code": 1,
+    "total": 2458,
+    "passed": 2381,
+    "failed": 54,
+    "skipped": 23,
+    "all_failure_locations": "apps/shop-suit/tests",
+    "phase": "sourcee382-before-diagnostics-only-redaction-case-added-not-repeated"
+  },
+  "static_checks": {
+    "doctor_scoped_eslint": "pass",
+    "doctor_typecheck": "pass",
+    "workspace": "138-templates-80-preserved-migrations-pass",
+    "canonical": "9-packets-104-unchanged-task-fingerprints-pass"
+  },
+  "sql": {
+    "file": "apps/doctor-suit/supabase/tests/dos-m6-003.sql",
+    "planned_assertions": 24,
+    "runtime_status": "passed24-at-sourcee382-run40233821440",
+    "mock_business_tables": false
+  },
+  "browser": {
+    "file": "apps/doctor-suit/tests/e2e/dos-m6-003.spec.ts",
+    "case_ids": [
+      "DOS-M6-003-C02-EN",
+      "DOS-M6-003-C02-AR"
+    ],
+    "runtime_status": "failed-both-at-sourcee382; new-fixed-diagnostic-checkpoint-awaits-retest",
+    "mode": "existing-owned-actual-provider-manual-browser-lifecycle",
+    "reporter": "fixed-case-status-source-only-no-Auth-DOM-error-bodies",
+    "storage": "in-memory-session/environment-only-no-credential-file-artifact",
+    "trace_screenshot_video": "off"
+  },
+  "static_discovery": {
+    "financial_cases": 2,
+    "public_cases": 60,
+    "financial_cases_in_public": 0,
+    "reporter_override": "list",
+    "no_application_browser_fixture_or_actual_acceptance_receipt_executed": true
+  },
+  "parent_task002_ci_observation": {
+    "source_head": "1f28d24a8a8b80f423b70cc78e0de940b8e93e38",
+    "run_id": 40232320918,
+    "sql_job_id": 121286477290,
+    "sql_conclusion": "success",
+    "protocol_step_conclusion": "success",
+    "full_browser_status": "in_progress",
+    "settings_conclusion": "failure",
+    "borrowed_as_task003_qualification": false,
+    "owning_record_update_after_log_review": "pending"
+  },
+  "owned_task003_ci_receipts": [
+    {
+      "source_head": "e38268208278b2d2fbc7dc33d31e9131ec51eb87",
+      "run_id": 40233821440,
+      "sql_job_id": 121291003947,
+      "sql_conclusion": "success",
+      "own_sql_assertions": 24,
+      "full_sql_suites": 62,
+      "full_sql_assertions": 1935,
+      "browser_job_id": 121291004090,
+      "browser_conclusion": "failure",
+      "public_passed": 60,
+      "auth_protocol_passed": 86,
+      "auth_protocol_failed": 1,
+      "protocol_failure_source": "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts:33:885",
+      "onboarding_fixed_counters": {
+        "saveRequests": 0,
+        "saveAcknowledged": 0,
+        "completeRequests": 0,
+        "completeAcknowledged": 0
+      },
+      "M3_actual_cases_passed": 10,
+      "delegation_stress": "skipped-after-protocol-failure",
+      "financial_cases": [
+        {
+          "id": "DOS-M6-003-C02-EN",
+          "status": "failed"
+        },
+        {
+          "id": "DOS-M6-003-C02-AR",
+          "status": "failed"
+        }
+      ],
+      "financial_failure_phase_or_location": "not-produced-by-initial-reporter",
+      "actual_provider_final_conclusion": "failure-at-new-financial-cases",
+      "shared_settings_job_id": 121291003726,
+      "shared_auth_passed": 48,
+      "shared_settings_passed": 6,
+      "shared_settings_failed": 6,
+      "aggregate_workflow_conclusion": "failure",
+      "archive_sha256": "6eea2b59113c9371e1025a13f6c264b938be6e3eda85996731d1fd38a3ea1b1d",
+      "raw_logs_committed": false
+    }
+  ],
+  "source_files": {
+    "apps/doctor-suit/app/utils/manualPaymentRepository.ts": "f80e83a62bcff3bdc014e6ec784b34ac2ca4bbc91d41762900a78bb9eb00c523",
+    "apps/doctor-suit/app/utils/manualPaymentController.ts": "ef488f0170a3fe95a38a851616e3436455c311eafce436ff5102eed260d09300",
+    "apps/doctor-suit/tests/unit/dos-m6-003.test.mjs": "e44d2fc061408d14e6d8a6f2a7124e91eefe7ca6a40bbedc1766619ee6c99595",
+    "apps/doctor-suit/supabase/tests/dos-m6-003.sql": "1e026fa4bcfd2c8591781db5369b291104179048912e61838c08e4be66bb77ae",
+    "apps/doctor-suit/tests/e2e/dos-m6-003.spec.ts": "cc58e1c896330bb7f1057d2e3165b246200a262d23a090abadb153ad79fa85be",
+    "apps/doctor-suit/tests/e2e/playwright.financial.config.ts": "ab41e2ef67a7a1f07a64f5536a6f69134f7eb79115f76c080b889b5e733544cb",
+    "apps/doctor-suit/tests/e2e/financial-reporter.mjs": "dba2fdfad7b8177926735ffffb506e197474244919c857972d3c741648c9b563",
+    "apps/doctor-suit/tests/e2e/playwright.config.ts": "8f56522c4c60c84250bc793b4092dec848498e1ab6cc033702a1ab36413616f1",
+    "apps/doctor-suit/tests/financial-browser-acceptance.mjs": "1224e35ac5289804a590d083bb4dda385c4326204b413299e3eafd9b74d22540",
+    "apps/doctor-suit/tests/manual-payments-browser.mjs": "d86b4f0427f8abbcf15fa6cfc8c33e1d74551afe074c7333470b61f073db9452",
+    "apps/doctor-suit/tests/manual-payments-actual-provider.mjs": "e1907e4325a858741c82251c5d75737882e45420f174fa674a17b7913f43526a",
+    "apps/doctor-suit/config/introductory-plans.v2.json": "000914c32fd8d373bf903a425d6631ca51d6ce79e100f6abb6aa0ce9b7cd01c2",
+    "apps/doctor-suit/tests/e2e/dos-m1-020.auth.fixture.ts": "a4136abf1f09331423fadcb774f2654fdef5d6c869363e1f940e3c8c3f21b129"
+  },
+  "document_sha256": "fff08dd58556f0ac8b674d671f7ca663fde87d4f35e9a2bd40e8e94053c766ad",
+  "independent_candidate_receipt": "not-claimed-by-this-self-produced-packet",
+  "limitations": [
+    "Client DTO binding does not replace current server Auth/authorization/immutable receipt enforcement",
+    "SQL24 passes at e382; both financial browser cases and one onboarding protocol case fail; fixed diagnostics/retest still required",
+    "Existing owner route/price direction does not approve actual merchant/account/reviewer/live payments",
+    "No complete trial/grace/cancel/refund/tax/legal policy is invented",
+    "54 inherited Shop failures and required-CI staging consolidation hold remain"
+  ],
+  "source_bindings_by_phase": [
+    {
+      "source_head": "e38268208278b2d2fbc7dc33d31e9131ec51eb87",
+      "files": {
+        "apps/doctor-suit/app/utils/manualPaymentRepository.ts": "f80e83a62bcff3bdc014e6ec784b34ac2ca4bbc91d41762900a78bb9eb00c523",
+        "apps/doctor-suit/app/utils/manualPaymentController.ts": "ef488f0170a3fe95a38a851616e3436455c311eafce436ff5102eed260d09300",
+        "apps/doctor-suit/tests/unit/dos-m6-003.test.mjs": "ea65c2381831774cdf58482f2f6bb7cec00ffda68ea9d473232b9a22f271b775",
+        "apps/doctor-suit/supabase/tests/dos-m6-003.sql": "1e026fa4bcfd2c8591781db5369b291104179048912e61838c08e4be66bb77ae",
+        "apps/doctor-suit/tests/e2e/dos-m6-003.spec.ts": "5231020fec5d9cbe3ee2b1d961edc45b9184d478a6d858ff738e0b2abf506e14",
+        "apps/doctor-suit/tests/e2e/playwright.financial.config.ts": "ab41e2ef67a7a1f07a64f5536a6f69134f7eb79115f76c080b889b5e733544cb",
+        "apps/doctor-suit/tests/e2e/financial-reporter.mjs": "2298a15c29a59f2d024a7b429f10842bdf6dff76e442f23338ea2e5c111ffd1a",
+        "apps/doctor-suit/tests/e2e/playwright.config.ts": "8f56522c4c60c84250bc793b4092dec848498e1ab6cc033702a1ab36413616f1",
+        "apps/doctor-suit/tests/financial-browser-acceptance.mjs": "1224e35ac5289804a590d083bb4dda385c4326204b413299e3eafd9b74d22540",
+        "apps/doctor-suit/tests/manual-payments-browser.mjs": "d86b4f0427f8abbcf15fa6cfc8c33e1d74551afe074c7333470b61f073db9452",
+        "apps/doctor-suit/tests/manual-payments-actual-provider.mjs": "e1907e4325a858741c82251c5d75737882e45420f174fa674a17b7913f43526a",
+        "apps/doctor-suit/config/introductory-plans.v2.json": "000914c32fd8d373bf903a425d6631ca51d6ce79e100f6abb6aa0ce9b7cd01c2"
+      },
+      "document_sha256": "0009a4b5e49134748ea4328ab7248ea8b909ee5ac20dd6d094e5475db18f21b7",
+      "local_owned_passed": 6,
+      "local_focused_passed": 23
+    }
+  ],
+  "diagnostic_followup": {
+    "actual_causes_not_yet_claimed_fixed": true,
+    "changed_product_quote_binding_code": false,
+    "new_security_unit_passed": true,
+    "allowlisted_phase_and_known_source_coordinates": true,
+    "M1_validity_flags_no_values_or_Auth": true,
+    "assertions_retries_timeouts_unchanged": true,
+    "next_runtime_status": "pending-new-exact-source-CI"
+  },
+  "source_files_phase": "post-e382-static-diagnostic-checkpoint-not-runtime-qualified",
+  "diagnostic_actual_followup": {
+    "run_id": 40237907912,
+    "source_head": "5353b764b1f14df465ba3c3b226ef875dd60bb6f",
+    "aggregate_conclusion": "failure",
+    "doctor_sql_job": {
+      "id": 121303334724,
+      "conclusion": "success",
+      "own_assertions": 24,
+      "full_assertions": 1935,
+      "suites": 62,
+      "public_schema_generation": "CI producer success; local artifact acquisition/byte comparison not claimed"
+    },
+    "doctor_browser_job": {
+      "id": 121303334484,
+      "conclusion": "success",
+      "public_passed": 60,
+      "protocol_passed": 87,
+      "delegation_stress_passed": 4,
+      "own_financial_actual_service_cases_passed": 2,
+      "own_case_ids": [
+        "DOS-M6-003-C02-EN",
+        "DOS-M6-003-C02-AR"
+      ],
+      "m3_actual_tasks_passed": 10,
+      "m3_accepted": true,
+      "full_actual_provider_final_marker": true
+    },
+    "settings_job": {
+      "id": 121303334767,
+      "conclusion": "failure",
+      "shared_auth_passed": 48,
+      "settings_passed": 6,
+      "settings_failed": 6
+    },
+    "interpretation": "Exact-source Doctor technical subset passes; prior e382 runtime failures remain recorded. Diagnostic-only change does not identify or claim a repaired intermittent onboarding/financial root cause.",
+    "clinical_approval": false,
+    "live_payment_acceptance": false,
+    "task_acceptance": false
+  }
+}

@@ -1,5 +1,7 @@
 # Deployment
 
+Current cutover work: [InstaPay checkout](instapay-checkout-cutover.md) replaces new customer online enrollment with server-quoted manual InstaPay review. Historical provider callbacks, secrets and payment records are retained; no credential rotation or hosted configuration change is included. Do not use the legacy online-enrollment setup below to enable new payments. Verified live recipient instructions remain a release prerequisite.
+
 ## Database
 
 The intended repository workflow uses linked Supabase deployment to apply

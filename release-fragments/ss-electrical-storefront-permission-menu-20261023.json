@@ -1,0 +1,27 @@
+{
+  "id": "ss-electrical-storefront-permission-menu-20261023",
+  "task": "SS-ELECTRICAL-001",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "apps/shop-suit/app/utils/shopPermissionMenu.ts"
+  ],
+  "reason": "Map the existing sales/settings permissions to the current offers and website-builder navigation entries without adding backend authority.",
+  "notes": {
+    "title": {
+      "en": "Review storefront permissions with their pages",
+      "ar": "مراجعة صلاحيات المتجر بجوار صفحاتها"
+    },
+    "summary": {
+      "en": "The role editor groups existing offer and website-builder permissions under their current page names.",
+      "ar": "يجمع محرر الأدوار صلاحيات العروض ومنشئ الموقع الحالية تحت أسماء صفحاتها."
+    },
+    "details": {
+      "en": "Saved and ungrantable permissions retain their existing behavior; backend permission keys are unchanged.",
+      "ar": "تحتفظ الصلاحيات المحفوظة وغير القابلة للمنح بسلوكها الحالي، دون تغيير مفاتيح الصلاحيات في الخادم."
+    }
+  }
+}

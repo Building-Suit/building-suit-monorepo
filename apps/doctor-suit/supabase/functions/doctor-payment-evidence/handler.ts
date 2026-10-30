@@ -1,6 +1,7 @@
 import{DoctorDocumentFailure,doctorDocumentBytes,doctorDocumentDisposition,doctorDocumentFilename,doctorDocumentHash,doctorDocumentMime}from'../doctor-documents/files.ts'
 import{paymentFileRequest,type PaymentFileBackend}from'./contracts.ts'
-export function createPaymentEvidenceHandler(backend:(authorization:string)=>PaymentFileBackend,origins:readonly string[]){
+import{observeDoctorFileFailure,type DoctorFileObserver}from'../_shared/operational-signals.ts'
+export function createPaymentEvidenceHandler(backend:(authorization:string)=>PaymentFileBackend,origins:readonly string[],observe?:DoctorFileObserver){
  return async(request:Request):Promise<Response>=>{
   const headers=new Headers({'Cache-Control':'no-store, private','X-Content-Type-Options':'nosniff','X-Robots-Tag':'noindex, nofollow','Referrer-Policy':'no-referrer',Vary:'Origin'})
   const json=(value:unknown,status=200)=>{headers.set('Content-Type','application/json');return new Response(JSON.stringify(value),{status,headers})}
@@ -36,6 +37,6 @@ export function createPaymentEvidenceHandler(backend:(authorization:string)=>Pay
    if(latest.id!==plan.id||latest.object_path!==plan.object_path||latest.sha256!==plan.sha256)throw new DoctorDocumentFailure(503,'unavailable')
    headers.set('Content-Type',plan.mime_type);headers.set('Content-Disposition',doctorDocumentDisposition(plan.filename));headers.set('Content-Security-Policy',"default-src 'none'; frame-ancestors 'none'; sandbox")
    return new Response(new Uint8Array(bytes),{status:200,headers})
-  }catch(error){const safe=error instanceof DoctorDocumentFailure?error:new DoctorDocumentFailure(503,'unavailable');return json({error:safe.code},safe.status)}
+  }catch(error){const safe=error instanceof DoctorDocumentFailure?error:new DoctorDocumentFailure(503,'unavailable');observeDoctorFileFailure(observe,'payment_evidence',safe.status);return json({error:safe.code},safe.status)}
  }
 }

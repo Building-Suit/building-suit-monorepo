@@ -4,9 +4,10 @@ import type{doctorSaasRepository,DoctorSubscriptionReadiness}from'./saasReposito
 import type{DoctorSaasTermsProjection}from'./saasTerms'
 import{doctorSaasFailure,type DoctorSaasStatus,type DoctorSaasError}from'./saasStatus.ts'
 import{createDoctorEntitlementDeadline,type DoctorEntitlementTimers}from'./entitlement.ts'
+import{observeDoctorOperation,type DoctorOperationalObserver}from'../../supabase/functions/_shared/operational-signals.ts'
 export interface DoctorSubscriptionState{loading:boolean;pending:boolean;offer:DoctorSaasTermsProjection|null;status:DoctorSaasStatus|null;document:DoctorSaasTermsDocument|null;readiness:DoctorSubscriptionReadiness|null;accepted:boolean;error:DoctorSaasError|null}
 export const doctorSubscriptionState=():DoctorSubscriptionState=>({loading:false,pending:false,offer:null,status:null,document:null,readiness:null,accepted:false,error:null})
-export function createDoctorSubscriptionController(repository:ReturnType<typeof doctorSaasRepository>|null,state:DoctorSubscriptionState,identity:()=>DoctorIdentity|null,changed:()=>Promise<unknown>,timers?:DoctorEntitlementTimers,key=()=>crypto.randomUUID()){
+export function createDoctorSubscriptionController(repository:ReturnType<typeof doctorSaasRepository>|null,state:DoctorSubscriptionState,identity:()=>DoctorIdentity|null,changed:()=>Promise<unknown>,timers?:DoctorEntitlementTimers,key=()=>crypto.randomUUID(),observe?:DoctorOperationalObserver){
  let loadedScope:string|null=null;let generation=0;let abort=new AbortController();let attempt:{material:string;key:string}|null=null;const expiry=createDoctorEntitlementDeadline(timers)
  const scope=()=>{const actor=identity();return actor?JSON.stringify([actor.userId,actor.sessionId,actor.practiceId]):null}
  function clear(){loadedScope=null;generation++;abort.abort();abort=new AbortController();expiry.clear();attempt=null;Object.assign(state,doctorSubscriptionState())}
@@ -26,6 +27,8 @@ export function createDoctorSubscriptionController(repository:ReturnType<typeof 
    const document=terms?await repository.document(terms,signal):null
    if(captured!==generation||expected!==scope()||signal.aborted)return false
    state.readiness=readiness.status==='fulfilled'?readiness.value:null;state.document=document;state.offer=offer.status==='fulfilled'?offer.value:null;state.status=status.value;loadedScope=expected;attempt=null
+   if(observe&&state.readiness?.operations?.unknownReview)observeDoctorOperation(observe,'saas_reconciliation.unknown_observed')
+   if(observe&&state.readiness?.operations?.discrepancyReview)observeDoctorOperation(observe,'saas_reconciliation.discrepancy_observed')
    const value=status.value
    if(value.period&&value.observedAt)expiry.arm({state:value.state,revision:value.revision,writesAllowed:value.periodActive,canAddStaff:false,canAddClinic:false,overLimit:false,validUntil:value.period.endsAt,observedAt:value.observedAt},sentAt,()=>{clear();const cleared=generation;void changed().then(()=>{if(cleared===generation&&expected===scope())void load()})},()=>captured===generation&&expected===scope())
    return true

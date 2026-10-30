@@ -1,0 +1,27 @@
+{
+  "id": "shared-language-names-20261022",
+  "task": "DOCTOR-WORKSPACE-ENTRY",
+  "suits": [
+    "shop-suit"
+  ],
+  "classification": "patch",
+  "disposition": "public",
+  "paths": [
+    "packages/ui/src/organisms/BsSettingsMenu.vue"
+  ],
+  "reason": "Display configured language names in the shared sidebar control already used by Shop.",
+  "notes": {
+    "title": {
+      "en": "Recognizable language choices",
+      "ar": "خيارات لغة واضحة"
+    },
+    "summary": {
+      "en": "The sidebar language control displays English and العربية.",
+      "ar": "يعرض زر اللغة في القائمة الجانبية English والعربية."
+    },
+    "details": {
+      "en": "Language switching retains the existing shared keyboard, focus and theme behavior.",
+      "ar": "يحتفظ تبديل اللغة بسلوك لوحة المفاتيح والتركيز والمظهر المشترك."
+    }
+  }
+}

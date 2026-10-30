@@ -1,0 +1,18 @@
+{
+  "id": "doctor-m3-acceptance-ci-workflow",
+  "task": "DOS-M3-ACCEPTANCE-CI",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/doctor-disposable.yml"
+  ],
+  "reason": "Classify the shared root workflow for every discovered consumer while adding Doctor-owned synthetic actual-service execution. Existing SQL, protocol, shared-settings and provider checks remain mandatory; this is no product activation or public release."
+}

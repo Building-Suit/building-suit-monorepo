@@ -53,7 +53,7 @@ Fill each ignored app `.env` with its local API URL and browser-safe publishable
 
 Verified production/staging refs are recorded in `docs/architecture/environments.json`. Account membership roles, including the requested CEO Owner arrangement, still require verification against Supabase's Free-project quota rules in [manual setup](docs/shared/supabase-manual-setup.md). No paid resources or hosted changes are created by workspace setup.
 
-`pnpm dev:doctor` deliberately serves the current worktree on loopback port 3006; run it from the Doctor implementation worktree. Doctor browser checks use port 4336, while its independent local database/API use 65322/65321. Doctor production/staging refs remain blank.
+`pnpm dev:doctor` selects the latest active Doctor worktree on loopback port 3006, using the same live-PR selection as Shop. Use `--list` to inspect the source or `--current` to serve the current checkout. Restart an already running preview to select the new source. Doctor browser checks use port 4336, while its independent local database/API use 65322/65321. Doctor production/staging refs remain blank.
 
 ## Workspace commands
 
@@ -91,7 +91,7 @@ Set `BUILDING_TEST_BACKEND=1` when running browser tests to include Shop signup,
 - `supabase/environments`: blank deployment credential templates; `supabase/legacy`: preserved original Shop SQL.
 - [Shared specifications](docs/shared/README.md), [agent rules](AGENTS.md), [future-development workflows](docs/agent-workflows.md), [app-specific feature stacks](docs/shared/git-workflow.md).
 
-Each feature has a short-lived `codex/<stack>/<feature>` branch and review PR. Fixes remain on that branch; every new feature in the same stack starts from its latest verified active worktree tip and targets that parent. Different app/shared stacks may each have one active root PR into `stg`; cross-stack parenting is invalid. Always check live GitHub state before continuing after a manual merge. Feature pushes receive lightweight CI; each staging root receives full validation. See the branch workflow for provider filters and setup requirements.
+Each feature has a short-lived `codex/<stack>/<feature>` branch and review PR. Fixes remain on that branch; every new feature in the same stack starts from its latest verified active worktree tip and targets that parent. Different app/shared stacks may each have one active root PR into `stg`; cross-stack parenting is invalid. Always check live GitHub state before continuing after a manual merge. Feature pushes receive lightweight CI; each staging root receives full validation. See [CI ownership and consolidation](docs/shared/continuous-integration.md) before adding another feature workflow. See the branch workflow for provider filters and setup requirements.
 
 The finite [implementation plan](PLAN.md), [source audit](docs/source-audit.json) and `docs/migration` record one-time work. They do not add tasks to future agent work.
 

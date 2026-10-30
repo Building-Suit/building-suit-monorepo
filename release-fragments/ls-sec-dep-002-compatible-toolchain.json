@@ -1,0 +1,21 @@
+{
+  "id": "ls-sec-dep-002-compatible-toolchain",
+  "task": "LS-SEC-DEP-002",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "pnpm-workspace.yaml",
+    "pnpm-lock.yaml",
+    "tooling/checks",
+    "apps/ledger-suit/docs"
+  ],
+  "reason": "Patch shared build/development dependency advisories and verify real MCP origin isolation and bounded source-map parsing across the installed consumers; retain separate Nuxt/Zod-v3/node-forge findings and product acceptance gates."
+}

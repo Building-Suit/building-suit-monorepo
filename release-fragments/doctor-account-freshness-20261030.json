@@ -1,0 +1,14 @@
+{
+  "id":"doctor-account-freshness-20261030",
+  "task":"DOCTOR-ACCOUNT-FRESHNESS-AUDIT-20261030",
+  "suits":["doctor-suit"],
+  "classification":"internal",
+  "disposition":"internal",
+  "paths":[
+    "apps/doctor-suit/tests/account-actual-provider.mjs",
+    "apps/doctor-suit/tests/helpers/account-read-observation.mjs",
+    "apps/doctor-suit/tests/unit/account-read-observation.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/account-freshness-2026-10-30.md"
+  ],
+  "reason":"Distinguish rejected actual account reads from freshness polling timeout with bounded failure-only evidence. Preserve all authorization, policy, deadlines and assertions; no product fix or domain acceptance is inferred."
+}

@@ -1,0 +1,16 @@
+{
+  "id": "dos-m2-005-synthetic-engineering",
+  "task": "DOS-M2-005",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/supabase/migrations/20261019235503_clinical_m2_005.sql",
+    "apps/doctor-suit/supabase/tests/dos-m2-005.sql",
+    "apps/doctor-suit/tests/unit/dos-m2-005.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m2-005.md"
+  ],
+  "reason": "Implement synthetic medicine provenance contract for the unactivated synthetic Doctor workspace. Shared new typed contracts/templates have no existing operational product consumers. Preserve explicit fixture authority, qualified review and live-use boundaries; no hosted activation or professional approval."
+}

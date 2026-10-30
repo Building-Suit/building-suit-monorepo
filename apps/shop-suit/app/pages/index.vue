@@ -8,6 +8,7 @@ import type { ShopPlanOffer } from '~/types/plans'
 definePageMeta({ layout: false })
 function useMarketingEntry() {
   const { t, locale } = useI18n()
+  const analytics = useMarketingAnalytics()
   useHead({ title: 'Shop Suit · Building Suit', meta: [{ name: 'description', content: () => t('hero.description') }] })
   const content = computed<LandingContent>(() => ({
     eyebrow: 'Shop Suit', heroTitle: `${t('hero.title')} ${t('hero.subtitle')}`, heroBody: t('hero.description'),
@@ -137,7 +138,7 @@ function useMarketingEntry() {
   function chooseInterval(value: string) { if (value === 'monthly' || value === 'annual') publicPricing.interval = value }
   return {
     view: computed<BsShopPublicEntryView>(() => ({ kind: 'marketing', content: content.value, preview: { kind: 'features' }, pricing: landingPricing.value, changelog: landingChangelog.value })),
-    journey, chooseCurrency: subscriptionCurrency.choose, chooseInterval,
+    journey, trackPricing: () => analytics.track('pricing_cta'), chooseCurrency: subscriptionCurrency.choose, chooseInterval,
     chooseVariant: publicPricing.chooseVariant, choose: publicPricing.choose, refresh, refreshReleases,
   }
 }
@@ -152,7 +153,8 @@ else setPageLayout('landing')
 const view = computed<BsShopPublicEntryView>(() => website ? { kind: 'website', website: website.view.value } : marketing!.view.value)
 const journey = computed(() => marketing?.journey.value)
 const inquiry = website?.form ?? ref(emptyWebsiteInquiry())
+const basketContact = website?.basketForm ?? ref(emptyWebsiteInquiry())
 </script>
 <template>
-  <BsShopPublicEntryPage v-model:inquiry="inquiry" :view="view" :journey="journey" @submit-inquiry="website?.submit()" @currency="marketing?.chooseCurrency($event)" @interval="marketing?.chooseInterval($event)" @variant="(id, value) => marketing?.chooseVariant(id, value)" @action="marketing?.choose($event)" @retry="marketing?.refresh()" @changelog-retry="marketing?.refreshReleases()" />
+  <BsShopPublicEntryPage v-model:inquiry="inquiry" v-model:basket-contact="basketContact" :view="view" :journey="journey" @submit-basket="website?.submitBasket()" @add="website?.add($event)" @add-offer="website?.addOffer($event)" @quantity="(id, value) => website?.quantity(id, value)" @search="website?.setSearch($event)" @kind="website?.selectKind($event)" @sort="website?.selectSort($event)" @page="website?.selectPage($event)" @clear-filters="website?.clearFilters()" @retry-catalog="website?.retryCatalog()" @submit-inquiry="website?.submit()" @currency="marketing?.chooseCurrency($event)" @interval="marketing?.chooseInterval($event)" @variant="(id, value) => marketing?.chooseVariant(id, value)" @action="marketing?.choose($event)" @link-action="marketing?.trackPricing()" @retry="marketing?.refresh()" @changelog-retry="marketing?.refreshReleases()" />
 </template>

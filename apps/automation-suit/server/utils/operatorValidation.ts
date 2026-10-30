@@ -8,7 +8,7 @@ export function asOperatorJson(value: unknown): OperatorJsonValue {
 const slug = z.string().regex(/^[a-z][a-z0-9-]{1,63}$/)
 const profile = z.enum(['no_ai', 'fast', 'standard', 'deep', 'review'])
 const retryProfile = z.enum(['fast', 'standard', 'deep', 'review'])
-const jsonRecord = z.record(z.unknown()).default({})
+const jsonRecord = z.record(z.string(), z.unknown()).default(() => ({}))
 
 const workstreamSchema = z.object({
   slug,
@@ -63,7 +63,7 @@ export const retryPolicySchema = z.object({
   policy_id: slug,
   display_name: z.string().min(1),
   max_attempts: z.number().int().min(1).max(20),
-  attempt_profiles: z.array(retryProfile),
+  attempt_profiles: z.array(retryProfile).max(20),
   active: z.boolean().default(true),
   metadata: jsonRecord,
 }).superRefine((value, context) => {

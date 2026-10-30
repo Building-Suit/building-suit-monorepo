@@ -4,7 +4,7 @@ const MAX_IMPORT_BYTES = 5 * 1024 * 1024
 const MAX_IMPORT_ROWS = 1000
 
 export const importTemplates = {
-  products: ['name', 'sku', 'barcode', 'sale_price', 'opening_stock', 'opening_cost', 'category', 'supplier'],
+  products: ['name', 'sku', 'barcode', 'sale_price', 'opening_stock', 'opening_cost', 'category', 'supplier', 'base_unit_code', 'quantity_increment'],
   customers: ['name', 'phone', 'email', 'address', 'notes'],
   suppliers: ['name', 'contact_name', 'phone', 'email', 'address', 'tax_number', 'notes'],
 }

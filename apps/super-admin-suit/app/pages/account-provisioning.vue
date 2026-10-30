@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { navigateTo } from '#app'
 import type { AccountOutcome, AccountScope } from '../types/account-workflow'
 import type { ProvisionAttempt, ProvisionInput, ProvisionPlan, ProvisionProjection } from '../types/account-provisioning'
 import { provisionKey, restoreProvision } from '../utils/provision-attempt'

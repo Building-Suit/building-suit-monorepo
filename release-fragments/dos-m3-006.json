@@ -1,0 +1,42 @@
+{
+  "id": "dos-m3-006",
+  "task": "DOS-M3-006",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/building-suit-docs/app/pages/components.vue",
+    "apps/doctor-suit/app/composables/useDoctorMessagesPage.ts",
+    "apps/doctor-suit/app/layouts/practice.vue",
+    "apps/doctor-suit/app/pages/messages.vue",
+    "apps/doctor-suit/app/plugins/doctor-auth.ts",
+    "apps/doctor-suit/app/types/database.types.ts",
+    "apps/doctor-suit/app/types/doctorAuth.d.ts",
+    "apps/doctor-suit/app/utils/authConfiguration.ts",
+    "apps/doctor-suit/app/utils/messageOutbox.ts",
+    "apps/doctor-suit/app/utils/workspaceNavigation.ts",
+    "apps/doctor-suit/supabase/functions/_shared/database.types.ts",
+    "apps/doctor-suit/supabase/migrations/20261020174121_neutral_outbox.sql",
+    "apps/doctor-suit/supabase/tests/dos-m3-006.sql",
+    "apps/doctor-suit/tests/disposable-postgres.mjs",
+    "apps/doctor-suit/tests/e2e/dos-m3-006.spec.ts",
+    "apps/doctor-suit/tests/operations-actual-provider.mjs",
+    "apps/doctor-suit/tests/outbox-concurrency.mjs",
+    "apps/doctor-suit/tests/unit/dos-m3-006.test.mjs",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-006.md",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsMessageOutboxPage.vue",
+    "packages/ui/src/utils/messageOutboxPresentation.ts",
+    "docs/work-packages/doctor-suit/implementation/dos-m3-006-verification.json"
+  ],
+  "reason": "Doctor-only synthetic neutral outbox with durable separate acceptance and acknowledgement, fresh consent/guardian policy and redacted status. Only Doctor consumes the new template; all six Suits classified through the shared UI dependency graph. Doctor remains unregistered for operational publication; no provider or clinical/legal activation."
+}

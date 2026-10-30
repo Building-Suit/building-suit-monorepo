@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type{BsManualPaymentValues,BsManualPaymentView}from'../types/manualPaymentPresentation'
-const props=defineProps<{view:BsManualPaymentView;values:BsManualPaymentValues;reconciliationAction?:{to:string;label:string}}>()
+const props=defineProps<{policyNavigation?:{label:string;links:{to:string;label:string}[]};view:BsManualPaymentView;values:BsManualPaymentValues;reconciliationAction?:{to:string;label:string}}>()
 const emit=defineEmits<{'update:values':[values:BsManualPaymentValues];choose:[];prepare:[];submit:[];upload:[];skipReceipt:[];retry:[];retryOperation:[];select:[id:string];review:[action:'under_review'|'rejected'|'funds_verified'];activate:[];download:[id:string];page:[page:number]}>()
 const copy=computed(()=>props.view.copy)
 const columns=computed(()=>[{key:'id',field:'id' as const,header:copy.value.id},{key:'reference',field:'reference' as const,header:copy.value.reference},{key:'amount',field:'amount' as const,header:copy.value.amount},{key:'status',field:'status' as const,header:copy.value.status},{key:'open',header:copy.value.open}])
@@ -58,5 +58,6 @@ watch(()=>props.view.instructions.length,count=>{if(!count)submitVisible.value=f
    </BsStack></BsPanel>
   </template>
   <BsInline><BsButton :disabled="view.pending" @click="emit('retry')">{{ copy.retry }}</BsButton><BsLink to="/account">{{ copy.account }}</BsLink><BsLink v-if="view.canReview && !view.review" to="/payment-review">{{ copy.review }}</BsLink><BsLink v-if="view.review" to="/payment-notices">{{ copy.customer }}</BsLink></BsInline>
+  <BsInline v-if="policyNavigation" as="nav" :aria-label="policyNavigation.label"><BsLink v-for="link in policyNavigation.links" :key="link.to" :to="link.to">{{ link.label }}</BsLink></BsInline>
  </BsStack>
 </template>
