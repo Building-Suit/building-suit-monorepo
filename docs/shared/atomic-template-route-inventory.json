@@ -111,7 +111,8 @@
     "BsSupplierOrdersPage": "packages/ui/src/templates/BsSupplierOrdersPage.vue",
     "BsSupplyPlanningPage": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
     "BsWeighingSetupPage": "packages/ui/src/templates/BsWeighingSetupPage.vue",
-    "BsCommodityPricingPage": "packages/ui/src/templates/BsCommodityPricingPage.vue"
+    "BsCommodityPricingPage": "packages/ui/src/templates/BsCommodityPricingPage.vue",
+    "BsVideoStudioPage": "packages/ui/src/templates/BsVideoStudioPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -119,11 +120,11 @@
     "routes": 74
   },
   "currentInventory": {
-    "suitVueFiles": 172,
+    "suitVueFiles": 175,
     "localComponents": 0,
-    "routes": 149,
-    "layouts": 16,
-    "roots": 7
+    "routes": 150,
+    "layouts": 17,
+    "roots": 8
   },
   "acceptance": "verified-local: all 76 routes, strict zero-debt architecture, cross-Suit parity and regressions; publication pending provider suppression verification",
   "entries": [
@@ -3459,6 +3460,34 @@
       ],
       "verification": "Implementation qualification in progress; see electrical-supply/COMMODITY-PRICING.md.",
       "purpose": "shop-commodity-pricing"
+    },
+    {
+      "source": "apps/video-suit/app/app.vue",
+      "kind": "root",
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "domainAdapter": "apps/video-suit/app/app.vue",
+      "status": "generated; product acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/video-suit/app/layouts/default.vue",
+      "kind": "layout",
+      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
+      "domainAdapter": "apps/video-suit/app/layouts/default.vue",
+      "status": "generated; product acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
+    },
+    {
+      "source": "apps/video-suit/app/pages/index.vue",
+      "kind": "route",
+      "destination": "packages/ui/src/templates/BsVideoStudioPage.vue",
+      "domainAdapter": "apps/video-suit/app/pages/index.vue",
+      "purpose": "video-production-studio",
+      "status": "generated; product acceptance pending",
+      "verification": "not-yet-accepted",
+      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
@@ -3618,6 +3647,7 @@
     "BsSupplierOrdersPage",
     "BsSupplyPlanningPage",
     "BsWeighingSetupPage",
-    "BsCommodityPricingPage"
+    "BsCommodityPricingPage",
+    "BsVideoStudioPage"
   ]
 }
