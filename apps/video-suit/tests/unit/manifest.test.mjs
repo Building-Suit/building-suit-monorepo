@@ -16,3 +16,14 @@ test('actual scene timeline seeks identically after forward, rewind and replay',
  tl.totalTime(2);const first=snapshot();tl.totalTime(4);tl.totalTime(0);tl.totalTime(2);assert.equal(snapshot(),first)
  tl.totalTime(5);assert.equal(state.hero,1);tl.totalTime(0);assert.equal(state.hero,0);tl.kill()
 })
+
+test('download revisions preserve the selected project and reject invalid edits',async()=>{
+ const { reviseProject }=await import('../../scene/manifest.mjs')
+ const second={...p,id:'another-film',name:'Another film',assets:['assets/another.svg']}
+ const changed=reviseProject(second,{...p.parameters,goldIntensity:1.5})
+ assert.equal(changed.id,'another-film');assert.deepEqual(changed.assets,['assets/another.svg']);assert.equal(changed.scene,p.scene)
+ assert.equal(changed.revision,p.revision+1);assert.equal(second.revision,p.revision);assert.equal(changed.parameters.goldIntensity,1.5)
+ assert.throws(()=>reviseProject(p,{...p.parameters,goldIntensity:5}))
+})
+
+test('export contracts reject unsupported encoding dimensions and fractional frames',()=>{for(const patch of [{width:721},{height:1281},{duration:1.01},{assets:[]}])assert.throws(()=>validateProject({...p,...patch}))})

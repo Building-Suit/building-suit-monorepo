@@ -21,7 +21,7 @@ English/Arabic UI uses the shared locale shell. The first sample is a silent, fi
 ## Save and reuse
 
 - `videos/<video-name>/project.json`: versioned project definition, output contract and motion parameters.
-- `videos/<video-name>/assets/`: video-specific artwork. The sample receipt is an SVG.
+- `videos/<video-name>/assets/`: video-specific artwork. The first manifest asset supplies the receipt SVG; preparation checks each listed file exists. Output dimensions must be even and the duration must contain a whole number of frames.
 - `assets/shared/models/counter-kit.json`: reusable procedural geometry definitions for counter, tablet, boxes and receipts.
 - `assets/shared/svg/`: reusable record icons.
 - `scene/player.mjs`: reusable `counter-to-tablet-v1` scene and deterministic seek API.

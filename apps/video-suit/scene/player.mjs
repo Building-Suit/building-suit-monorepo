@@ -24,7 +24,7 @@ try {
  const tablet=box('tablet','#111820',[0,.12,-.8]);tablet.rotation.x=-.25
  const texture = new THREE.TextureLoader()
  const load = url=>new Promise((resolve,reject)=>texture.load(url,resolve,undefined,reject))
- const [logo,endorsement,receipt,icons]=await Promise.all(['/brand/shop-suit-wordmark-light.svg','/brand/building-suit-logo-light.png',`/videos/${id}/assets/receipt.svg`,'/shared/svg/records.svg'].map(load))
+ const [logo,endorsement,receipt,icons]=await Promise.all(['/brand/shop-suit-wordmark-light.svg','/brand/building-suit-logo-light.png',`/videos/${id}/${project.assets[0]}`,'/shared/svg/records.svg'].map(load))
  for(const t of [logo,endorsement,receipt,icons])t.colorSpace=THREE.SRGBColorSpace
  function panel(w,h,map,parent,x,y,z){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map,transparent:true,side:THREE.DoubleSide}));m.position.set(x,y,z);m.rotation.x=-Math.PI/2;parent.add(m);return m}
  const screen=new THREE.Mesh(new THREE.PlaneGeometry(2.28,3.12),material('#16293B')); screen.rotation.x=-Math.PI/2;screen.position.y=.075;tablet.add(screen)

@@ -7,6 +7,7 @@ const catalog = []
 for (const id of await readdir(`${root}videos`)) {
   const p = validateProject(JSON.parse(await readFile(`${root}videos/${id}/project.json`, 'utf8')))
   if (p.id !== id) throw new Error('Project directory/id mismatch')
+  for (const asset of p.assets) await readFile(`${root}videos/${id}/${asset}`)
   catalog.push(p)
   await cp(`${root}videos/${id}`, `${root}public/videos/${id}`, { recursive: true })
 }
