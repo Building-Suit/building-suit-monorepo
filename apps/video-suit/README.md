@@ -33,7 +33,7 @@ The editor changes a temporary preview. **Download project JSON**, replace the c
 
 ## Reproducible export
 
-Install FFmpeg and a Chromium installation with working sandbox and WebGL. Run the dev server above, then in a second terminal:
+Install FFmpeg and the official Playwright browser (`pnpm exec playwright install chromium`), with a host that supports browser sandboxing and WebGL. Run the dev server above, then in a second terminal:
 
 ```sh
 pnpm --filter @building-suit/video-suit render shop-suit-from-chaos-to-clarity 1
@@ -43,8 +43,10 @@ ffprobe -v error -show_entries stream=width,height,r_frame_rate,nb_frames -show_
 ffmpeg -v error -i apps/video-suit/renders/shop-suit-from-chaos-to-clarity/sample.mp4 -f null -
 ```
 
-`VIDEO_CHROMIUM_PATH` selects a supported installed browser; `VIDEO_BASE_URL` selects the server. The script keeps sandboxing enabled, reports missing WebGL/launch failures, proves repeated seeking yields identical screenshots, captures exactly 150 frames at `frame / 30`, and encodes H.264 MP4 at 720×1280. It does not substitute a different renderer after failure. Renders are ignored: attach verified outputs to PR/release artifacts or your artifact store rather than committing frame sequences. Keep selected approved thumbnails beside project source when actual frames are available.
+`VIDEO_CHROMIUM_PATH` optionally selects a supported installed browser instead of the official Playwright bundle; `VIDEO_BASE_URL` selects the server. The script keeps sandboxing enabled, reports missing WebGL/launch failures, proves repeated seeking yields identical screenshots, captures exactly 150 frames at `frame / 30`, and encodes H.264 MP4 at 720×1280. It does not substitute a different renderer after failure. Renders are ignored: attach verified outputs to PR/release artifacts or your artifact store rather than committing frame sequences. Keep selected approved thumbnails beside project source when actual frames are available.
 
 ## Current verification limitation
 
 In the October 31 cloud executor, system Chromium aborts because its SUID sandbox helper is not correctly configured (`chrome-sandbox` requires root ownership and mode 4755). No sandbox security was disabled. Thus the single-frame gate, ten-frame gate, full MP4 and visual QA are pending a supported renderer. This repository contains the real scene, not an invented replacement export.
+
+The official Playwright Chrome 151 and headless shell were also installed and tested with sandboxing enabled and unsafe default flags removed. Both terminate with `No usable sandbox!`. This is a host sandbox capability limitation, not just the system Chromium helper. An administrator must provide a supported browser environment with usable namespace/seccomp sandboxing, or correctly provision the sandbox helper. Changing host security policy or helper ownership/mode requires separate specific approval and was not attempted.

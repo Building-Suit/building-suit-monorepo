@@ -13,7 +13,11 @@ const output=`${root}renders/${id}`
 await mkdir(output,{recursive:true})
 let browser
 try {
- browser=await chromium.launch({executablePath:process.env.VIDEO_CHROMIUM_PATH || '/usr/bin/chromium',chromiumSandbox:true})
+ browser=await chromium.launch({
+   ...(process.env.VIDEO_CHROMIUM_PATH ? { executablePath: process.env.VIDEO_CHROMIUM_PATH } : {}),
+   chromiumSandbox: true,
+   ignoreDefaultArgs: ['--enable-unsafe-swiftshader', '--unsafely-disable-devtools-self-xss-warnings'],
+ })
  const page=await browser.newPage({viewport:{width:project.width,height:project.height},deviceScaleFactor:1})
  await page.goto(`${process.env.VIDEO_BASE_URL || 'http://localhost:3016'}/render.html?project=${id}`)
  await page.waitForFunction(()=>window.videoSuit!==undefined)
