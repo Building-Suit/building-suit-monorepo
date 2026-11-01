@@ -147,6 +147,9 @@ jobs:
           SUPABASE_KEY: local-development-publishable-key
       - run: pnpm exec playwright install --with-deps chromium
       - name: Verify existing shared auth and access presentation retains default behavior
+        env:
+          BS_CAPTURE_PROTOCOL_DIAGNOSTIC: 'true'
+          DEBUG: ''
         run: pnpm exec playwright test -c packages/testing/playwright.auth-parity.config.ts
       - name: Verify settings in existing consumers with local-only targets and no n8n access
         run: pnpm exec playwright test -c packages/testing/playwright.settings-focus.config.ts
