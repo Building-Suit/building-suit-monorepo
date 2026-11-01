@@ -1,0 +1,14 @@
+{
+  "id": "dos-m6-003-refresh-recovery",
+  "task": "DOS-M6-003",
+  "suits": ["doctor-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/app/utils/manualPaymentController.ts",
+    "apps/doctor-suit/tests/unit/manual-payment-controller.test.mjs",
+    "apps/doctor-suit/tests/manual-payments-browser.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m6-003-refresh-recovery.md"
+  ],
+  "reason": "Preserve synthetic Doctor manual-payment command recovery across explicit status refresh while rejecting stale reads and changed sessions. Doctor is not operationally registered. No shared presentation, schema, authorization, financial policy, hosted configuration or live activation changes."
+}

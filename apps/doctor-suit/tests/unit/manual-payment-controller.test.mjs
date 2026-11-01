@@ -7,7 +7,7 @@ const actor={userId:'10000000-0000-0000-0000-000000000001',sessionId:'10000000-0
 function fixture(overrides={}){
  let identity=actor,sequence=0
  const state=manualPaymentState(),terms={id:'terms',termsDocumentRef:'terms/v1'},plan={key:'starter',terms}
- const repo={capability:async()=>true,queue:async()=>({items:[],total:0,page:1,activationConfigured:true}),catalog:async()=>({revision:7,plans:[plan]}),configuration:async()=>({revision:8,configured:true}),status:async()=>({revision:0}),document:async()=>({termsId:'terms',english:'A synthetic version document',arabic:'وثيقة اصطناعية'}),quote:async()=>({id:'quote'}),intent:async()=>({id:'intent'}),instructions:async()=>({intentId:'intent',quoteId:'quote'}),submit:async()=>({id:'notice',intentId:'intent',evidence:[]}),...overrides}
+ const repo={capability:async()=>true,queue:async()=>({items:[],total:0,page:1,activationConfigured:true}),catalog:async()=>({revision:7,plans:[plan]}),configuration:async()=>({revision:8,configured:true}),status:async()=>({revision:0}),document:async()=>({termsId:'terms',english:'A synthetic version document',arabic:'وثيقة اصطناعية'}),quote:async()=>({id:'quote'}),intent:async()=>({id:'intent'}),instructions:async()=>({intentId:'intent',quoteId:'quote'}),submit:async()=>({id:'notice',intentId:'intent',status:'submitted',revision:0,evidence:[]}),...overrides}
  const controller=createManualPaymentController(repo,state,()=>identity,'local',()=>{},()=>`key-${++sequence}`)
  return{repo,state,controller,setIdentity:a=>{identity=a}}
 }
@@ -29,7 +29,7 @@ test('scope loss after quote blocks every later stage and clears retained comman
 })
 test('notice confirmation survives an upload failure without creating a new claim or period',async()=>{
  let notices=0,uploads=0;const uploadKeys=[]
- const f=fixture({submit:async()=>{notices++;return{id:'notice',evidence:[]}},upload:async(_id,_file,key)=>{uploadKeys.push(key);if(!uploads++)throw Error('uncertain');return{id:'evidence'}}})
+ const f=fixture({submit:async()=>{notices++;return{id:'notice',status:'submitted',revision:0,evidence:[]}},upload:async(_id,_file,key)=>{uploadKeys.push(key);if(!uploads++)throw Error('uncertain');return{id:'evidence'}}})
  await f.controller.load();await f.controller.choose();f.state.accepted=true;await f.controller.prepare();f.state.reference='synthetic';f.state.at='2026-10-18T09:00:00Z'
  assert.equal(await f.controller.submit(),true);assert.equal(f.state.uploadNotice,'notice');f.state.file=new File(['%PDF-synthetic'],'synthetic.pdf',{type:'application/pdf'})
  assert.equal(await f.controller.upload(),false);assert.equal(f.state.items[0].id,'notice');assert.equal(await f.controller.submit(),false)
@@ -64,4 +64,68 @@ test('receipt upload through an off-page source updates details without insertin
  const f=fixture({queue:async()=>({items:[listed],total:26,page:1,activationConfigured:true}),read:async()=>source,upload:async()=>evidence})
  await f.controller.load();await f.controller.open(source.id);f.state.file=new File(['%PDF-synthetic'],'synthetic-source.pdf',{type:'application/pdf'})
  assert.equal(await f.controller.upload(),true);assert.deepEqual(f.controller.selected().evidence,[evidence]);assert.deepEqual(f.state.items,[listed]);assert.equal(f.state.total,26);assert.equal(f.state.uploadNotice,null)
+})
+test('refresh after uncertain preparation preserves original keys and restores transfer instructions',async()=>{
+ const calls=[];let attempts=0
+ const f=fixture({quote:async(_a,input,key)=>{calls.push(['quote',key,input]);return{id:'quote'}},intent:async(_a,id,key)=>{calls.push(['intent',key,id]);if(!attempts++)throw Error('Synthetic lost acknowledgement');return{id:'intent'}}})
+ await f.controller.load();await f.controller.choose();f.state.accepted=true
+ assert.equal(await f.controller.prepare(),false);assert.equal(f.state.uncertain,true)
+ assert.equal(await f.controller.load(),true);assert.equal(f.state.uncertain,true);assert.equal(calls.length,2)
+ assert.equal(await f.controller.retry(),true);assert.equal(f.state.instructions.intentId,'intent');assert.equal(f.state.uncertain,false)
+ assert.deepEqual(calls[0],calls[2]);assert.deepEqual(calls[1],calls[3])
+})
+test('refresh after uncertain notice submission restores the confirmed notice without another intent',async()=>{
+ const calls=[];let attempts=0
+ const f=fixture({submit:async(_a,instructions,reference,at,key)=>{calls.push({instructions,reference,at,key});if(!attempts++)throw Error('Synthetic lost acknowledgement');return{id:'notice',status:'submitted',revision:0,evidence:[]}}})
+ await f.controller.load();await f.controller.choose();f.state.accepted=true;await f.controller.prepare();f.state.reference='synthetic original';f.state.at='2026-10-18T09:00:00Z'
+ assert.equal(await f.controller.submit(),false);assert.equal(await f.controller.load(),true)
+ f.state.reference='must not replace original';assert.equal(await f.controller.retry(),true)
+ assert.equal(f.state.uploadNotice,'notice');assert.equal(f.state.instructions,null);assert.equal(f.controller.selected().id,'notice');assert.equal(f.state.uncertain,false);assert.deepEqual(calls[0],calls[1])
+})
+test('failed refresh blocks retained retries until a current read succeeds without changing the original keys',async()=>{
+ let writes=0,readFails=false;const keys=[]
+ const f=fixture({queue:async()=>{if(readFails)throw Error('Synthetic unavailable read');return{items:[],total:0,page:1,activationConfigured:true}},intent:async(_a,_id,key)=>{keys.push(key);if(!writes++)throw Error('Synthetic lost acknowledgement');return{id:'intent'}}})
+ await f.controller.load();await f.controller.choose();f.state.accepted=true;assert.equal(await f.controller.prepare(),false)
+ readFails=true;assert.equal(await f.controller.load(),false);assert.equal(await f.controller.retry(),false);assert.equal(writes,1);assert.equal(f.state.uncertain,true)
+ readFails=false;assert.equal(await f.controller.load(),true);assert.equal(await f.controller.retry(),true);assert.deepEqual(keys,['key-2','key-2']);assert.equal(f.state.instructions.intentId,'intent')
+})
+test('session replacement discards the retained operation rather than replaying it after refresh',async()=>{
+ let writes=0
+ const f=fixture({intent:async()=>{writes++;throw Error('Synthetic unknown')}})
+ await f.controller.load();await f.controller.choose();f.state.accepted=true;assert.equal(await f.controller.prepare(),false)
+ f.setIdentity({...actor,sessionId:'replacement'});assert.equal(await f.controller.load(),true)
+ assert.equal(await f.controller.retry(),false);assert.equal(writes,1);assert.equal(f.state.instructions,null);assert.equal(f.state.uncertain,false)
+})
+test('newer refresh wins over a late queue read without overwriting current state',async()=>{
+ let finish,queues=0
+ const f=fixture({queue:async()=>{if(++queues===2)return new Promise(resolve=>{finish=resolve});return{items:[],total:queues,page:1,activationConfigured:true}}})
+ await f.controller.load();const stale=f.controller.load();await new Promise(resolve=>setImmediate(resolve))
+ assert.equal(await f.controller.load(),true);assert.equal(f.state.total,3)
+ finish({items:[],total:99,page:1,activationConfigured:true});assert.equal(await stale,false);assert.equal(f.state.total,3);assert.equal(f.state.loading,false)
+})
+test('refresh invalidates older notice and terms reads even when actor generation is unchanged',async()=>{
+ for(const kind of ['notice','terms']){
+  let finish
+  const f=fixture({read:async()=>new Promise(resolve=>{finish=resolve}),document:async()=>new Promise(resolve=>{finish=resolve})})
+  await f.controller.load();const old=kind==='notice'?f.controller.open('ae340000-0000-0000-0000-000000000012'):f.controller.choose()
+  assert.equal(await f.controller.load(),true)
+  finish(kind==='notice'?{id:'ae340000-0000-0000-0000-000000000012',evidence:[]}:{termsId:'old',english:'obsolete',arabic:'قديم'})
+  assert.equal(await old,false);assert.equal(f.state.detail,null);assert.equal(f.state.document,null);assert.equal(f.state.loading,false)
+ }
+})
+test('recovered submission preserves a newer terminal notice and does not reopen receipt upload',async()=>{
+ const original={id:'notice',status:'submitted',revision:0,evidence:[],history:[]},current={...original,status:'activated',revision:2,periodId:'period',history:[{revision:1},{revision:2}]}
+ let attempts=0,refreshed=false;const keys=[]
+ const f=fixture({queue:async()=>({items:refreshed?[current]:[],total:refreshed?1:0,page:1,activationConfigured:true}),submit:async(_a,_i,_r,_t,key)=>{keys.push(key);if(!attempts++)throw Error('Synthetic lost acknowledgement');return original}})
+ await f.controller.load();await f.controller.choose();f.state.accepted=true;await f.controller.prepare();f.state.reference='synthetic';f.state.at='2026-10-18T09:00:00Z'
+ assert.equal(await f.controller.submit(),false);refreshed=true;assert.equal(await f.controller.load(),true);assert.equal(await f.controller.retry(),true)
+ assert.deepEqual(f.controller.selected(),current);assert.equal(f.state.uploadNotice,null);assert.equal(f.state.instructions,null);assert.equal(f.state.uncertain,false);assert.equal(keys[0],keys[1])
+})
+test('same-revision submission acknowledgement retains receipt discovered by refresh',async()=>{
+ const original={id:'notice',status:'submitted',revision:0,evidence:[],history:[]},current={...original,evidence:[{id:'persisted-receipt'}]}
+ let attempts=0,refreshed=false
+ const f=fixture({queue:async()=>({items:refreshed?[current]:[],total:refreshed?1:0,page:1,activationConfigured:true}),submit:async()=>{if(!attempts++)throw Error('Synthetic lost acknowledgement');return original}})
+ await f.controller.load();await f.controller.choose();f.state.accepted=true;await f.controller.prepare();f.state.reference='synthetic';f.state.at='2026-10-18T09:00:00Z'
+ assert.equal(await f.controller.submit(),false);refreshed=true;await f.controller.load();assert.equal(await f.controller.retry(),true)
+ assert.deepEqual(f.controller.selected(),current);assert.equal(f.state.uploadNotice,null)
 })

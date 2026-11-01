@@ -1,5 +1,6 @@
 import { mkdir } from 'node:fs/promises'
-import { test, expect } from '@playwright/test'
+import { expect } from '@playwright/test'
+import { test, captureProtocol, captureProtocolEnabled } from '../capture-browser'
 import { atomicAuthPorts, expectNoPageOverflow, trackRouteCoverage } from '../browser-foundation'
 const [ledgerPort, shopPort] = atomicAuthPorts()
 
@@ -97,7 +98,12 @@ for (const locale of ['en', 'ar']) for (const theme of ['light', 'dark']) for (c
         }).catch(() => null)
         phase = 'workspace-capture'
         captureStartedAt = performance.now()
-        await page.screenshot({ path: screenshot, fullPage: true, animations: 'disabled' })
+        if (captureProtocolEnabled) captureProtocol.start()
+        try {
+          await page.screenshot({ path: screenshot, fullPage: true, animations: 'disabled' })
+        } finally {
+          if (captureProtocolEnabled) console.info('Shared signup capture protocol:', JSON.stringify({ product: product.name, locale, theme, width, ...captureProtocol.stop() }))
+        }
         captureFinishedAt = performance.now()
         console.info('Shared signup capture completed:', JSON.stringify({ product: product.name, locale, theme, width, captureGeometry, captureElapsedMs: captureElapsedMs() }))
         phase = 'workspace-attachment'

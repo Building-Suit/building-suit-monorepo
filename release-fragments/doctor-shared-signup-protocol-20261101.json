@@ -1,0 +1,23 @@
+{
+  "id": "doctor-shared-signup-protocol-20261101",
+  "task": "DOCTOR-SHARED-CAPTURE-AUDIT-20261101",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    ".github/workflows/doctor-disposable.yml",
+    "packages/testing/capture-browser.ts",
+    "packages/testing/capture-protocol.mjs",
+    "packages/testing/tests/capture-protocol.test.mjs",
+    "packages/testing/e2e/atomic-signup-parity.spec.ts",
+    "docs/work-packages/doctor-suit/implementation/shared-signup-protocol-2026-11-01.md"
+  ],
+  "reason": "Payload-free, bounded protocol timing for the unchanged shared signup screenshot in Doctor-owned CI. Distinguishes browser layout/capture/cleanup waits; no demonstrated historical cause repair, product presentation change, timeout/retry/assertion change, provider setting or live authority."
+}

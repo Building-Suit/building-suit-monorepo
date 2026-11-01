@@ -4156,7 +4156,8 @@
       "packages/testing",
       "docs/shared/interactions.md",
       "apps/building-suit-docs/app/pages/components.vue",
-      "packages/ui/src/templates/BsAuthLayout.vue"
+      "packages/ui/src/templates/BsAuthLayout.vue",
+      "packages/ui/src/templates/BsAppShell.vue"
     ],
     "reason": "Restore initial keyboard focus after the canonical mobile navigation becomes visible, preserving Escape dismissal and focus return across Suit shells. Qualify current shared shell, settings, landing and appointment contracts without increasing assertion deadlines. Keep logos in ordinary document flow for access/loading states without an auth card, preventing blocked retry controls without changing glass form presentation.",
     "notes": {
@@ -4169,13 +4170,14 @@
         "ar": "ينتقل التركيز إلى زر الإغلاق عند فتح قائمة الهاتف."
       },
       "details": {
-        "en": "Focus waits for the menu’s own finite entrance motion, so Escape dismisses it and returns focus to the opening button. Closing or navigating away cancels pending focus. Access-status logos also remain above their actions instead of covering retry controls.",
-        "ar": "ينتظر التركيز انتهاء حركة ظهور القائمة المحدودة، ليغلقها مفتاح Escape ويعيد التركيز إلى زر الفتح. يلغي إغلاق القائمة أو الانتقال منها التركيز المعلّق. وتبقى شعارات حالات الوصول أعلى إجراءاتها بدلًا من حجب أزرار إعادة المحاولة."
+        "en": "Focus waits for the menu’s own finite entrance motion, so Escape dismisses it and returns focus to the opening button. Closing or navigating away cancels pending focus. Access-status logos also remain above their actions instead of covering retry controls. The opening button stays disabled until its click handler is ready, so the first activation is not lost during page startup.",
+        "ar": "ينتظر التركيز انتهاء حركة ظهور القائمة المحدودة، ليغلقها مفتاح Escape ويعيد التركيز إلى زر الفتح. يلغي إغلاق القائمة أو الانتقال منها التركيز المعلّق. وتبقى شعارات حالات الوصول أعلى إجراءاتها بدلًا من حجب أزرار إعادة المحاولة. ويبقى زر الفتح معطّلًا حتى يصبح معالج النقر جاهزًا، فلا تضيع النقرة الأولى أثناء بدء الصفحة."
       }
     },
     "sources": [
       "shared-mobile-navigation-focus-20261029",
-      "ls-browser-001-mobile-focus"
+      "ls-browser-001-mobile-focus",
+      "shared-shell-navigation-readiness-20261101"
     ],
     "evidence": [
       {
@@ -4185,6 +4187,10 @@
       {
         "path": "packages/ui/src/templates/BsAuthLayout.vue",
         "contains": ":not(:has(.bs-auth-form)) .bs-auth-layout__mobile-logo"
+      },
+      {
+        "path": "packages/ui/src/templates/BsAppShell.vue",
+        "contains": ":disabled=\"!hydrated\""
       }
     ]
   },

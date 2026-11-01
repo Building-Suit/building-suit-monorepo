@@ -5,6 +5,8 @@ const navigationId = useId()
 const chamberId = `${navigationId}-chamber`
 const { collapsed, toggle: toggleSidebar } = useCollapsibleNavigation()
 const { mobileNavOpen, navigationTrigger, closeMobileNav, isActive } = useWorkspaceNavigation()
+const hydrated = ref(false)
+onMounted(() => { hydrated.value = true })
 </script>
 <template>
   <div class="min-h-dvh bg-background lg:grid" :class="['bs-app-shell', { 'bs-app-shell--collapsed': collapsed }]">
@@ -22,7 +24,7 @@ const { mobileNavOpen, navigationTrigger, closeMobileNav, isActive } = useWorksp
     <div class="flex min-w-0 flex-col">
       <main class="mx-auto w-full min-w-0 flex-1" :class="['bs-app-shell__workspace px-4 py-5 lg:px-6 2xl:px-8', floatingActions ? 'pb-40 lg:pb-24' : 'pb-24 lg:pb-6']">
         <div class="bs-app-shell__page-context">
-          <button ref="navigationTrigger" type="button" class="bs-app-shell__mobile-trigger lg:hidden" :aria-label="labels.open" :aria-expanded="mobileNavOpen" :aria-controls="navigationId" @click="mobileNavOpen = true"><BsIcon name="menu" /></button>
+          <button ref="navigationTrigger" type="button" class="bs-app-shell__mobile-trigger lg:hidden" :disabled="!hydrated" :aria-label="labels.open" :aria-expanded="mobileNavOpen" :aria-controls="navigationId" @click="mobileNavOpen = true"><BsIcon name="menu" /></button>
           <div class="bs-app-shell__scope-actions"><slot name="header" /></div>
         </div>
         <slot />

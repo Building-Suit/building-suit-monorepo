@@ -1,0 +1,29 @@
+# Shared signup capture protocol investigation
+
+Requested integration investigation, not a new canonical Doctor milestone. The manual-payment correction remains source0c7449037d3db683941ccffa2059193ece3b2311. Its unit review passed2741/0failed/23skipped, but actual shared auth qualification failed and is not waived.
+
+## Exact new evidence and hypothesis
+
+Staging1f5b3cc run41318925905/job124884815246 failed Ledger EN/light/768 workspace capture, while its same-source sibling41318930523 passed shared auth/settings. Candidate0c744903 run41320016833/job124888004115 failed Ledger EN/dark/768 at the same screenshot call. Both jobs passed47 other auth cases; later settings were skipped. Logs show fonts loaded, page visible/focused, browser connected, no crash and document768x1239. Candidate capture elapsed58832ms before the unchanged30-second test/teardown budgets completed. No failure is classified as infrastructure or repaired by the passing sibling.
+
+The pinned Playwright1.62.1 source still performs a full-page utility evaluation, `Page.getLayoutMetrics`, `Page.captureScreenshot` and utility cleanup after fonts are ready. Existing geometry/crash observations cannot distinguish a blocked browser capture response from a later layout/evaluation/cleanup wait. This is the explicit next hypothesis boundary; it is not a claim that Chromium or the application caused the failure. The workflow did not retain auth-parity traces. Historical denied artifact12936135747 remains untouched; no alternate access route is used.
+
+## Bounded diagnostic
+
+The supported Playwright launch-server logger runs only while the original screenshot is active. A worker-owned browser server binds127.0.0.1 in the cloud runner. The existing browser options, Chromium version, context options, exact original screenshot and test assertions remain. The additional browser-server connection can affect timing; later success alone cannot establish a repair.
+
+Only four fixed method names are observed: Runtime.callFunctionOn, Runtime.evaluate, Page.getLayoutMetrics and Page.captureScreenshot. Internal correlation IDs are kept only in a bounded in-memory map. Evidence contains send/receive/failure/pending counts and bounded monotonic durations. Params, result bytes, errors, URLs, form/DOM values, cookies and identifiers are neither retained nor emitted. Logger activation begins after account/password fields have left the page and ends immediately after capture. Incomplete/oversized/malformed observations are explicitly marked incomplete. The workflow explicitly clears DEBUG; the diagnostic refuses to initialize if a nonempty DEBUG value is present, before launching any browser. Raw protocol logs are not enabled. The observer cannot change, retry or complete a browser operation.
+
+The diagnostic flag is enabled only for the existing owned Doctor shared-auth workflow step. Default shared tests keep their normal browser fixture. The full EN/AR/light/dark/390/768/1440 Ledger/Shop matrix, full-page image, original test deadline and zero retries remain. Six pure observer tests cover pending layout/capture/cleanup distinction, sensitive payload rejection, inactive windows, bounded/invalid observations and clock anomalies. AST comparison preserves44 assertion-related calls, one screenshot call/options, two throws and all five loops.
+
+## Cloud qualification
+
+Managed cloud build with pinned Node26.8.1/pnpm10.33.0 and root lockfile: Ledger and Shop both built, concurrency2. The local two-server-only config starts no Doctor, n8n, hosted backend or personal-device service. Both paired runs disable trace/failure attachments to avoid credential-bearing artifacts while preserving the explicit workspace screenshot and all acceptance assertions. No screenshots are uploaded to Library.
+
+Observer disabled:12 passed in39.0s. Observer enabled:12 passed in37.3s,24 complete timing records, no pending requests. The supported logger therefore observes actual protocol boundaries, but this did not reproduce the historical failure. Six unit tests, scoped ESLint and strict TypeScript passed. The initial standalone TypeScript invocation lacked Node type resolution; retry used the existing pinned @types/node26.6.1, without dependency changes. Exact new-candidate owned execution remains unrun until publication. No arbitrary wait, deadline increase, retry, screenshot removal, assertion weakening, domain approval or production action is added.
+
+The combined local root suite passed2747 tests with0 failures and23 inherited skips; boundaries preserve80 migrations and149 templates with zero debt. This validates the source integration, not the unresolved historical capture cause.
+
+Release verification retained: the first committed diagnostic failed coverage because the root workflow change requires every consumer in the repository dependency model. The new fragment was corrected from the actual `affectedSuits` result: automation, Doctor, Inventory, Ledger, Shop and Super Admin; this internal provenance does not activate any product. Both explicit-parent and default release checks onfa2483a9 then reached the pre-existing shallow-history blocker (`67a9bf1b^1` absent), exiting1. Neither is reported passed; full-history CI must validate the new candidate. Existing accepted fragments and public inventory were not changed. Raw DEBUG initialization was independently tested and rejected before any browser launch.
+
+Before diagnostic publication, corrected payment source0c744903 completed full workspace41320019206 successfully: review/policy and verify124888704751 passed, including typecheck, lint, builds, assets, E2E and deployed-only discovery. Publisher was skipped. Doctor41320016833 remains failed because of the exact shared capture above; its doctor-browser and doctor-sql jobs passed. No current-source qualification is inferred for this diagnostic until its own checks execute.
