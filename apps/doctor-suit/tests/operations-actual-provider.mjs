@@ -1,3 +1,4 @@
+import {doctorOperationalWebReceipt} from './helpers/operational-support-evidence.mjs'
 // Run-owned local Auth/PostgREST/Storage only; no hosted configuration or real identities.
 import {spawn,spawnSync}from'node:child_process'
 import {once}from'node:events'
@@ -60,5 +61,6 @@ finally{
  if(owned)try{await cli(['stop','--no-backup'],120000)}catch{process.exitCode=1;console.error('Owned Doctor cleanup failed; preserve resources for inspection')}
  await rm(scratch,{recursive:true,force:true})
  await mkdir(path.join(root,'test-results/doctor-m3-actual'),{recursive:true});
- const finalHead=git(['rev-parse','HEAD']),finalDirty=git(['status','--porcelain']);const candidateVerified=initialDirty===''&&finalDirty===''&&sourceHead===finalHead&&baseVerified&&(process.exitCode??0)===0&&browserResult?.accepted===true;if(!candidateVerified)process.exitCode=1;await writeFile(path.join(root,'test-results/doctor-m3-actual/provider-receipt.json'),JSON.stringify({executionId,startedAt,finishedAt:new Date().toISOString(),sourceHead,baseSha,baseVerified,finalHead,sourceClean:initialDirty===''&&finalDirty==='',candidateVerified,nodeVersion:process.version,commandArgv:[process.execPath,...process.argv.slice(1)],exitCode:process.exitCode??0,stage,browserResult,ownedLocalProject:project,hostedOperations:false,professionalApproval:false,providerApproval:false},null,2)+'\n',{mode:0o600})
+ const finalHead=git(['rev-parse','HEAD']),finalDirty=git(['status','--porcelain']);const candidateVerified=initialDirty===''&&finalDirty===''&&sourceHead===finalHead&&baseVerified&&(process.exitCode??0)===0&&browserResult?.accepted===true;if(!candidateVerified)process.exitCode=1;const receipt={executionId,startedAt,finishedAt:new Date().toISOString(),sourceHead,baseSha,baseVerified,finalHead,sourceClean:initialDirty===''&&finalDirty==='',candidateVerified,nodeVersion:process.version,commandArgv:[process.execPath,...process.argv.slice(1)],exitCode:process.exitCode??0,stage,browserResult,ownedLocalProject:project,hostedOperations:false,professionalApproval:false,providerApproval:false};await writeFile(path.join(root,'test-results/doctor-m3-actual/provider-receipt.json'),JSON.stringify(receipt,null,2)+'\n',{mode:0o600});
+ const support=doctorOperationalWebReceipt(receipt);console.log('DOS-M7-008-C03 support receipt',JSON.stringify({...support,executionId,commandArgv:['node','apps/doctor-suit/tests/operations-actual-provider.mjs'],exitCode:support.comparisonPassed?0:1}));if(!support.comparisonPassed)process.exitCode=1
 }

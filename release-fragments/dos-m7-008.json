@@ -1,0 +1,16 @@
+{
+  "id": "dos-m7-008",
+  "task": "DOS-M7-008",
+  "suits": [
+    "doctor-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/doctor-suit/tests/helpers/operational-support-evidence.mjs",
+    "apps/doctor-suit/tests/operations-actual-provider.mjs",
+    "apps/doctor-suit/tests/unit/dos-m7-008.test.mjs",
+    "docs/work-packages/doctor-suit/implementation/dos-m7-008.md"
+  ],
+  "reason": "Compare supplied exact-source synthetic M3/native receipts with explicit support exclusions, and bind the web comparison to the existing owned M3 runner after cleanup. No inferred capacity, approved operating limits, rollback authority or full task acceptance. Doctor synthetic evidence only; no hosted/provider activation, schema, authorization or public consumer changes."
+}
