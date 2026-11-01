@@ -25,7 +25,14 @@ export function createManualPaymentController(repo:ManualPaymentRepository|null,
  const signal=()=>AbortSignal.any([abort.signal,AbortSignal.timeout(20000)])
  const selected=()=>state.detail?.id===state.selected?state.detail:state.items.find(n=>n.id===state.selected)??null
  function clear(){generation++;reads++;abort.abort();abort=new AbortController();loaded=null;operation=null;Object.assign(state,manualPaymentState())}
- function upsert(row:ManualPaymentNotice){if(state.detail?.id===row.id){state.detail=row;state.selected=row.id;return}state.items=[row,...state.items.filter(n=>n.id!==row.id)].slice(0,25);state.selected=row.id}
+ function upsert(row:ManualPaymentNotice,preserveCurrent=true){
+  const current=state.detail?.id===row.id?state.detail:state.items.find(n=>n.id===row.id)
+  // Idempotent acknowledgements describe the original command, not necessarily the latest notice.
+  const resolved=preserveCurrent&&current&&current.revision>=row.revision?current:row
+  if(state.detail?.id===row.id)state.detail=resolved
+  else state.items=[resolved,...state.items.filter(n=>n.id!==row.id)].slice(0,25)
+  state.selected=row.id;return resolved
+ }
  // Reads invalidate older reads; only scope/page disposal invalidates retained commands.
  async function load(review=state.review,page=state.page){
   if(state.pending)return false
@@ -77,11 +84,11 @@ export function createManualPaymentController(repo:ManualPaymentRepository|null,
  }
  async function submit(){
   if(!operation&&(!state.instructions||state.review||!state.reference.trim()||!state.at||state.uploadNotice))return false
-  return execute('submit',()=>{const instructions=state.instructions!,reference=state.reference.trim(),at=new Date(state.at).toISOString(),commandKey=key(),g=generation,s=scope();return async(actor,signal)=>{const row=await repo!.submit(actor,instructions,reference,at,commandKey,signal);if(active(g,s)){upsert(row);state.uploadNotice=row.id;state.instructions=null;state.reference='';state.at='';state.accepted=false}}})
+  return execute('submit',()=>{const instructions=state.instructions!,reference=state.reference.trim(),at=new Date(state.at).toISOString(),commandKey=key(),g=generation,s=scope();return async(actor,signal)=>{const row=await repo!.submit(actor,instructions,reference,at,commandKey,signal);if(active(g,s)){const resolved=upsert(row);state.uploadNotice=!resolved.evidence.length&&['submitted','under_review'].includes(resolved.status)?resolved.id:null;state.instructions=null;state.reference='';state.at='';state.accepted=false}}})
  }
  async function upload(){
   if(!operation&&(!state.uploadNotice||!state.file||state.review))return false
-  return execute('upload',()=>{const id=state.uploadNotice!,file=state.file!,commandKey=key(),g=generation,s=scope();return async(_actor,signal)=>{const evidence=await repo!.upload(id,file,commandKey,signal);if(active(g,s)){const row=state.detail?.id===id?state.detail:state.items.find(n=>n.id===id);if(row)upsert({...row,evidence:[evidence]});state.file=null;state.uploadNotice=null}}})
+  return execute('upload',()=>{const id=state.uploadNotice!,file=state.file!,commandKey=key(),g=generation,s=scope();return async(_actor,signal)=>{const evidence=await repo!.upload(id,file,commandKey,signal);if(active(g,s)){const row=state.detail?.id===id?state.detail:state.items.find(n=>n.id===id);if(row)upsert({...row,evidence:[evidence]},false);state.file=null;state.uploadNotice=null}}})
  }
  function select(id:string){if(state.pending||operation)return;state.selected=id;const row=selected();if(!state.review&&!state.instructions){state.uploadNotice=row&&!row.evidence.length&&['submitted','under_review'].includes(row.status)?id:null;state.file=null}state.reason='';state.receivedReference='';state.receivedAmount='';state.receivedCurrency='';state.receivedAt='';state.verification='';state.independent=false}
  async function review(action:ManualReviewInput['action']){
