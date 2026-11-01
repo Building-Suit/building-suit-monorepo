@@ -29,6 +29,9 @@ for (const app of [
         })
         await staticPage.goto(`http://127.0.0.1:${app.port}${app.path}`)
         if (shellCycles) {
+          // The static context retains its desktop viewport; inspect the mobile
+          // trigger's SSR state even though responsive CSS hides it there.
+          await expect(staticPage.getByRole('button', { name: 'Open navigation', exact: true, includeHidden: true }).first()).toBeDisabled()
           await expect(staticPage.getByRole('button', { name: /^Theme:/ }).first()).toBeDisabled()
           await expect(staticPage.getByRole('button', { name: /^Language:/ }).first()).toBeDisabled()
         } else await expect(staticPage.getByRole('button', { name: 'Language · Theme', exact: true }).first()).toBeDisabled()
