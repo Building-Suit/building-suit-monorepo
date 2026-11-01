@@ -16,41 +16,43 @@ export interface ManualPaymentState{
 export const manualPaymentState=():ManualPaymentState=>({ready:false,loading:false,pending:false,error:null,uncertain:false,review:false,canReview:false,activationConfigured:false,catalog:null,configuration:null,account:null,document:null,detail:null,items:[],page:1,total:0,selected:null,plan:'starter',interval:'monthly',accepted:false,instructions:null,reference:'',at:'',file:null,uploadNotice:null,reason:'',receivedReference:'',receivedAmount:'',receivedCurrency:'',receivedAt:'',verification:'',independent:false})
 function failure(e:unknown):ManualPaymentState['error']{const c=e&&typeof e==='object'&&'code'in e?String(e.code):'';return c==='42501'?'denied':['40001','DS008','DS009','DS010','23505'].includes(c)?'conflict':['22023','23514'].includes(c)?'invalid':'network'}
 export function createManualPaymentController(repo:ManualPaymentRepository|null,state:ManualPaymentState,identity:()=>DoctorIdentity|null,environment:string,afterActivation:()=>void,key=()=>crypto.randomUUID()){
- let generation=0,loaded:string|null=null,abort=new AbortController()
+ let generation=0,reads=0,loaded:string|null=null,abort=new AbortController()
  let pageOwner:symbol|null=null
  let operation:{scope:string;name:string;run:(actor:DoctorIdentity,signal:AbortSignal)=>Promise<void>}|null=null
  const scope=()=>{const a=identity();return a?JSON.stringify(['doctor-suit',environment,a.userId,a.sessionId,a.practiceId,'manual-payments']):null}
  const active=(g:number,s:string|null)=>g===generation&&s===scope()
+ const currentRead=(g:number,s:string|null,r:number)=>active(g,s)&&r===reads
  const signal=()=>AbortSignal.any([abort.signal,AbortSignal.timeout(20000)])
  const selected=()=>state.detail?.id===state.selected?state.detail:state.items.find(n=>n.id===state.selected)??null
- function clear(){generation++;abort.abort();abort=new AbortController();loaded=null;operation=null;Object.assign(state,manualPaymentState())}
+ function clear(){generation++;reads++;abort.abort();abort=new AbortController();loaded=null;operation=null;Object.assign(state,manualPaymentState())}
  function upsert(row:ManualPaymentNotice){if(state.detail?.id===row.id){state.detail=row;state.selected=row.id;return}state.items=[row,...state.items.filter(n=>n.id!==row.id)].slice(0,25);state.selected=row.id}
+ // Reads invalidate older reads; only scope/page disposal invalidates retained commands.
  async function load(review=state.review,page=state.page){
   if(state.pending)return false
-  if(loaded!==scope())clear();const actor=identity(),s=scope(),g=++generation;abort.abort();abort=new AbortController();state.loading=true;state.ready=false;state.error=null;state.review=review;state.items=[];state.detail=null;state.selected=null
+  if(loaded!==scope())clear();const actor=identity(),s=scope(),g=generation,r=++reads;abort.abort();abort=new AbortController();state.loading=true;state.ready=false;state.error=null;state.review=review;state.items=[];state.detail=null;state.selected=null
   if(!repo||!actor){state.loading=false;state.error='denied';return false}
   try{
    const canReview=await repo.capability(actor,signal());if(review&&!canReview)throw{code:'42501'}
    const queue=await repo.queue(actor,review,page,signal())
    const customer=review?null:await Promise.all([repo.catalog(signal()),repo.configuration(actor,signal()),repo.status(actor,signal())])
-   if(!active(g,s))return false
+   if(!currentRead(g,s,r))return false
    state.canReview=canReview;state.items=queue.items;state.total=queue.total;state.page=queue.page;state.activationConfigured=queue.activationConfigured
    if(customer)[state.catalog,state.configuration,state.account]=customer
    loaded=s;state.ready=true;return true
-  }catch(e){if(active(g,s))state.error=failure(e);return false}finally{if(active(g,s))state.loading=false}
+  }catch(e){if(currentRead(g,s,r))state.error=failure(e);return false}finally{if(currentRead(g,s,r))state.loading=false}
  }
  async function open(id:string){
   if(state.pending||operation||state.loading||!state.ready||loaded!==scope()||!repo)return false
   if(!doctorUuid(id)){state.error='invalid';return false}
-  const actor=identity(),s=scope(),g=generation;if(!actor)return false;state.loading=true;state.detail=null;state.selected=null
-  try{const row=await repo.read(actor,state.review,id,signal());if(!active(g,s))return false;state.detail=row;select(row.id);return true}catch(e){if(active(g,s))state.error=failure(e);return false}finally{if(active(g,s))state.loading=false}
+  const actor=identity(),s=scope(),g=generation,r=reads;if(!actor)return false;state.loading=true;state.detail=null;state.selected=null
+  try{const row=await repo.read(actor,state.review,id,signal());if(!currentRead(g,s,r))return false;state.detail=row;select(row.id);return true}catch(e){if(currentRead(g,s,r))state.error=failure(e);return false}finally{if(currentRead(g,s,r))state.loading=false}
  }
  async function choose(plan=state.plan,interval=state.interval){
   if(state.pending||state.loading||operation||!repo||!state.ready||state.review||state.instructions)return false
   state.plan=plan;state.interval=interval;state.accepted=false;state.document=null
   const terms=state.catalog?.plans.find(p=>p.key===plan)?.terms;if(!terms)return false
-  const g=generation,s=scope();state.loading=true
-  try{const doc=await repo.document(terms,signal());if(!active(g,s))return false;state.document=doc;return true}catch(e){if(active(g,s))state.error=failure(e);return false}finally{if(active(g,s))state.loading=false}
+  const g=generation,s=scope(),r=reads;state.loading=true
+  try{const doc=await repo.document(terms,signal());if(!currentRead(g,s,r))return false;state.document=doc;return true}catch(e){if(currentRead(g,s,r))state.error=failure(e);return false}finally{if(currentRead(g,s,r))state.loading=false}
  }
  async function execute(name:string,create:()=>((actor:DoctorIdentity,signal:AbortSignal)=>Promise<void>)){
   if(!repo||state.pending||state.loading||loaded!==scope()||!state.ready)return false
