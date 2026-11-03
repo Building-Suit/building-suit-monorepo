@@ -1,0 +1,9 @@
+{
+  "id": "hq-ceo-hr-runner-20261103",
+  "task": "HQ-CEO-HR-RUNNER-20261103",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq", "docs/work-packages/company-hq"],
+  "reason": "Implement an internal Company HQ four-role configuration and bounded SQLite workflow with explicit founder scope, independent evaluation, evidence, cancellation, retry-safe daily claims and atomic CEO inbox delivery. Preserve existing shared office presentation and legacy task ownership. Runner and scheduler remain disabled; no operational Suit activation, public release, hosted migration, paid inference or deployment is established."
+}

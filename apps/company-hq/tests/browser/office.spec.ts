@@ -74,3 +74,20 @@ test('MCP bridge exposes fixed-role tools, CEO proposals and founder-only approv
  const rejected=await call(ceo,'tools/call',{name:'approve_task',arguments:{}});expect((await rejected.json()).error.code).toBe(-32602)
  const forbidden=await call(hr,'tools/call',{name:'hq_reply',arguments:{requestKey:'forged-reply',text:'No'}});expect((await forbidden.json()).error.code).toBe(-32602)
 })
+test('workflow scope requires founder session and exact approved public inputs; authorization does not activate a worker',async({page,request})=>{
+ await login(page)
+ const command=async(body:Record<string,unknown>)=>page.request.post('/api/hq/action',{headers:{Origin:origin},data:{idempotencyKey:crypto.randomUUID(),...body}})
+ const proposed=await command({action:'create_task',title:'Synthetic workflow approval',brief:'Read synthetic evidence only',acceptance:'Independent review',allowedActions:'Approved read-only scope'})
+ const {id}=await proposed.json();expect((await command({action:'approve_task',id})).ok()).toBe(true)
+ const keys=['AG-CEO-001','AG-HR-001','AG-HR-002','AG-HR-003','playbook','bootstrap','charter','workingAgreement','registry','organization','hrCharter','workforceSkill','home','soul','milestones','mode']
+ const scope={action:'authorize_workflow',id,allowedTools:['public.search'],publicInputs:['Synthetic query'],brainFiles:Object.fromEntries(keys.map(k=>[k,'synthetic-'+k])),daily:false,timezoneConfirmed:false}
+ expect((await request.post('/api/hq/action',{headers:{Origin:origin,Authorization:'Bearer '+ceo},data:{...scope,idempotencyKey:'not-founder'}})).status()).toBe(401)
+ expect((await command({...scope,allowedTools:['send.email']})).status()).toBe(422)
+ expect((await command({...scope,daily:true})).status()).toBe(422)
+ expect((await command(scope)).ok()).toBe(true)
+ const state=(await(await page.request.get('/api/hq/state')).json()).state
+ expect(state.tasks.find((t:{id:string})=>t.id===id).status).toBe('queued')
+ expect(state.workforce.map((w:{name:string})=>w.name)).toEqual(['Steve','Maya','Noah','Iris'])
+ expect(state.workflowRuns).toEqual([])
+ expect((await command({action:'cancel_task',id})).ok()).toBe(true)
+})

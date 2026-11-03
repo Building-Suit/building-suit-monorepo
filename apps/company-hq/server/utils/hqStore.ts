@@ -20,10 +20,17 @@ export class HqStore {
   }
   read(): HqDocument { return JSON.parse((this.db.prepare('select document from hq_workspace where id=1').get() as { document: string }).document) }
   execute(actor: HqActor, command: HqCommand) {
+    return this.transaction(doc => {
+      const { document, result } = executeLocal(doc, actor, command)
+      return { document, result }
+    })
+  }
+  /** Server-only synchronous reducer. No I/O/await while holding the writer lock. */
+  transaction<T>(reduce: (doc: HqDocument) => { document: HqDocument; result: T }): T {
     // Approval, command, idempotency receipt and event commit under one writer lock.
     this.db.exec('begin immediate')
     try {
-      const { document, result } = executeLocal(this.read(), actor, command)
+      const { document, result } = reduce(this.read())
       const encoded = JSON.stringify(document)
       if (Buffer.byteLength(encoded) > 8_000_000) throw new HqProblem(507, 'HQ_CAPACITY', 'HQ storage is full. Export and archive records before continuing.')
       this.db.prepare('update hq_workspace set document=?, revision=revision+1 where id=1').run(encoded)
