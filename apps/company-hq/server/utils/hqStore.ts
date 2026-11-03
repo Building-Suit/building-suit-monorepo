@@ -32,7 +32,10 @@ export class HqStore {
     try {
       const { document, result } = reduce(this.read())
       const encoded = JSON.stringify(document)
-      if (Buffer.byteLength(encoded) > 8_000_000) throw new HqProblem(507, 'HQ_CAPACITY', 'HQ storage is full. Export and archive records before continuing.')
+      const budgets = Object.values(document.workflowRuns || {}).map(run => run.evidenceBudget ?? 0)
+      if (budgets.some(bytes => !Number.isSafeInteger(bytes) || bytes < 0)) throw new HqProblem(507, 'HQ_CAPACITY', 'Invalid evidence reservation.')
+      const reserved = budgets.reduce((total, bytes) => total + bytes, 0)
+      if (!Number.isSafeInteger(reserved) || reserved < 0 || Buffer.byteLength(encoded) + reserved > 8_000_000) throw new HqProblem(507, 'HQ_CAPACITY', 'HQ storage is full. Export and archive records before continuing.')
       this.db.prepare('update hq_workspace set document=?, revision=revision+1 where id=1').run(encoded)
       this.db.exec('commit')
       return result

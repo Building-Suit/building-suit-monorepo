@@ -1,5 +1,5 @@
 import { workforce, readTools, brainContextKeys } from './hqWorkforce'
-import type { WorkflowApproval, WorkflowRun } from './hqWorkforce'
+import type { WorkflowApproval, WorkflowRun, BrainSnapshot } from './hqWorkforce'
 export type HqRole = 'ceo' | 'hr'
 export type HqActor = { id: string; role: 'founder' | HqRole }
 export type HqTaskStatus = 'proposed' | 'queued' | 'running' | 'review' | 'completed' | 'blocked' | 'failed' | 'cancelled'
@@ -39,6 +39,7 @@ export interface HqDocument {
   events: HqEvent[]
   lastAgentSeen: string | null
   workflowRuns?: Record<string, WorkflowRun>
+  brainSnapshots?: Record<string, BrainSnapshot>
   receipts: Record<string, { payload: string; result: HqResult }>
 }
 export type HqCommandName = 'send_message' | 'create_task' | 'approve_task' | 'authorize_workflow' | 'cancel_task' | 'hq_reply' | 'hq_report' | 'hq_delegate_task' | 'hq_update_task' | 'hq_propose_task'
@@ -252,7 +253,7 @@ export function executeLocal(doc: HqDocument, actor: HqActor, command: HqCommand
   }
   if (name === 'cancel_task') {
     if (['completed', 'cancelled', 'failed'].includes(task.status)) return conflict('This task is already closed.')
-    for (const run of Object.values(next.workflowRuns || {})) if (run.taskId === task.id && run.status !== 'completed') { run.status = 'cancelled'; run.leaseUntil = 0 }
+    for (const run of Object.values(next.workflowRuns || {})) if (run.taskId === task.id && run.status !== 'completed') { run.status = 'cancelled'; run.leaseUntil = 0; run.evidenceBudget = 0 }
     task.status = 'cancelled'
     task.updatedAt = now
     addEvent(task.owner, 'cancel', 'Task cancelled', task.title, task.id)

@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { HqProblem } from './hqDomain'
 import type { HqDocument, HqTask } from './hqDomain'
 import { stages } from './hqWorkforce'
-import type { StageEvidence, WorkflowRun } from './hqWorkforce'
+import type { BrainFile, BrainReference, StageEvidence, WorkflowRun } from './hqWorkforce'
 
 export const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex')
 export function requireWorkflow(ok: unknown, code: string): asserts ok {
@@ -26,7 +26,7 @@ export function leasedRun(doc: HqDocument, lease: Lease, now: number) {
   requireWorkflow(run.contractDigest === contractDigest(approvedTask(doc, run.taskId)), 'CHANGED_APPROVAL')
   return run
 }
-export function claim(doc: HqDocument, taskId: string, owner: string, now: number, daily: boolean): Lease | null {
+export function claim(doc: HqDocument, taskId: string, owner: string, now: number, daily: boolean, leaseMs = 60_000): Lease | null {
   const existingTask = doc.tasks.find(t => t.id === taskId)
   if (existingTask && ['completed', 'cancelled'].includes(existingTask.status)) return null
   const task = approvedTask(doc, taskId), slot = dailySlot(now)
@@ -40,10 +40,44 @@ export function claim(doc: HqDocument, taskId: string, owner: string, now: numbe
     requireWorkflow(prior.taskId === taskId && prior.contractDigest === contractDigest(task), 'DAILY_OR_CONTRACT_CONFLICT')
     if (['completed', 'cancelled'].includes(prior.status) || prior.leaseUntil > now) return null
   }
-  const run: WorkflowRun = { ...prior, key, taskId, contractDigest: contractDigest(task), localDate: slot.localDate, status: 'running', owner, generation: (prior?.generation || 0) + 1, leaseUntil: now + 60_000, checkpoints: prior?.checkpoints || {}, attempts: prior?.attempts || [], failures: prior?.failures || [] }
+  const run: WorkflowRun = { ...prior, key, taskId, contractDigest: contractDigest(task), localDate: slot.localDate, status: 'running', owner, generation: (prior?.generation || 0) + 1, leaseUntil: now + leaseMs, evidenceBudget: 0, checkpoints: prior?.checkpoints || {}, attempts: prior?.attempts || [], failures: prior?.failures || [] }
   doc.workflowRuns[key] = run
   task.status = 'running'
   return { key, owner, generation: run.generation }
+}
+/** Renewal cannot revive an expired lease or overwrite a replacement owner. */
+export function renewLease(doc: HqDocument, lease: Lease, now: number, leaseMs: number) {
+  leasedRun(doc, lease, now).leaseUntil = now + leaseMs
+}
+/** Content-addressed snapshots omit only access time, which stays on every reference.
+ * Old inline evidence remains readable and is never rewritten or removed.
+ */
+export function retainBrain(doc: HqDocument, files: BrainFile[]): BrainReference[] {
+  doc.brainSnapshots ||= {}
+  return files.map(({ id, revision, text, accessedAt }) => {
+    const snapshot = { id, revision, text }, blob = digest(snapshot)
+    const prior = doc.brainSnapshots![blob]
+    requireWorkflow(!prior || digest(prior) === blob, 'BRAIN_SNAPSHOT_CORRUPT')
+    doc.brainSnapshots![blob] ||= snapshot
+    return { id, revision, accessedAt, blob }
+  })
+}
+export function reconstructBrain(doc: HqDocument, evidence: Pick<StageEvidence, 'brain'>): BrainFile[] {
+  return evidence.brain.map(file => {
+    if (!('blob' in file)) return { ...file }
+    const snapshot = doc.brainSnapshots?.[file.blob]
+    requireWorkflow(snapshot && digest(snapshot) === file.blob && snapshot.id === file.id && snapshot.revision === file.revision, 'BRAIN_SNAPSHOT_CORRUPT')
+    return { ...snapshot, accessedAt: file.accessedAt }
+  })
+}
+/** Reserve worst-case JSON-escaped result/tool/source bytes before allowance or inference.
+ * Every store writer honors this headroom. Never delete audit history to make room.
+ */
+export function reserveEvidence(doc: HqDocument, lease: Lease, files: BrainFile[], input: string, now: number) {
+  const run = leasedRun(doc, lease, now)
+  const brain = retainBrain(doc, files)
+  run.evidenceBudget = 2_400_000 + Buffer.byteLength(JSON.stringify(input))
+  return brain
 }
 export function checkpoint(doc: HqDocument, lease: Lease, evidence: StageEvidence, now: number) {
   const run = leasedRun(doc, lease, now)
@@ -58,6 +92,7 @@ export function checkpoint(doc: HqDocument, lease: Lease, evidence: StageEvidenc
   const prior = run.checkpoints[evidence.stage]
   requireWorkflow(!prior || digest(prior) === digest(evidence), 'CHECKPOINT_CONFLICT')
   run.checkpoints[evidence.stage] ||= evidence
+  run.evidenceBudget = 0
 }
 export function prepareReport(doc: HqDocument, lease: Lease, now: number) {
   const run = leasedRun(doc, lease, now), reply = run.checkpoints.reply

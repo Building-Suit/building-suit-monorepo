@@ -149,7 +149,7 @@ test('daily scheduler runs at most once per local date and rejects multiple stan
  a.brain.read=async id=>({id,revision:'v1',text:'Synthetic Brain',accessedAt:new Date(now).toISOString()})
  const r=new HqRunner(s,readiness,a.executor,a.brain,undefined,()=>now)
  assert.equal((await r.tick()).status,'completed');assert.equal((await r.tick()).status,'already_claimed_or_finished');assert.equal(s.read().messages.length,1)
- now+=86400000;a.refill();assert.equal((await r.tick()).status,'completed');assert.equal(s.read().messages.length,2)
+ now+=86400000;a.refill();assert.equal((await r.tick()).status,'completed');assert.equal(s.read().messages.length,2);assert.equal(Object.keys(s.read().brainSnapshots).length,16)
  setup(s,true);await assert.rejects(()=>r.tick(),/MULTIPLE_DAILY_APPROVALS/)
  action(s,{action:'cancel_task',id});s.close()
 })
@@ -193,4 +193,142 @@ test('revoked model access before delivery blocks outbox creation despite four s
  a.executor.verify=async signal=>({...await verify(signal),authenticated:a.calls.length<4})
  assert.equal((await runner(s,a).run(id)).code,'AUTH_OR_QUOTA_UNAVAILABLE')
  assert.equal(Object.keys(Object.values(s.read().workflowRuns)[0].checkpoints).length,4);assert.equal(s.read().messages.length,0);s.close()
+})
+
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+const configured = (s,a,limits,now=Date.now) => new HqRunner(s,readiness,a.executor,a.brain,undefined,now,limits)
+test('real adapter latency beyond 30 seconds completes while renewable leases exclude contenders', {timeout:65_000}, async()=>{
+ const {s,id}=setup();const a=adapters(),read=a.brain.read,invoke=a.executor.invoke;let reads=0,contenders=0
+ a.brain.read=async(...args)=>{if(++reads<=16)await delay(1500);return read(...args)}
+ a.executor.invoke=async input=>{if(input.stage==='research')await delay(11_000);return invoke(input)}
+ const start=Date.now()
+ const contender=setInterval(()=>{assert.equal(mutate(s,doc=>W.claim(doc,id,'contender',Date.now(),false,1000)),null);contenders++},1300)
+ try {
+  assert.equal((await configured(s,a,{stageMs:60_000,leaseMs:1000}).run(id)).status,'completed')
+  assert.ok(Date.now()-start>30_000);assert.ok(contenders>20);assert.equal(a.reads.length,80)
+  assert.equal(Object.values(s.read().workflowRuns)[0].generation,1)
+ } finally {clearInterval(contender);s.close()}
+})
+test('limits reject unbounded values and timeout noncooperative reads, auth, reservation and inference',async()=>{
+ const {s}=setup();const a=adapters()
+ for(const limits of [{stageMs:Infinity},{adapterMs:0},{inferenceMs:300001},{leaseMs:999},{stageMs:NaN}])assert.throws(()=>configured(s,a,limits),/INVALID_RUNNER_LIMITS/)
+ s.close()
+ for(const mode of ['read','verify','reserve','invoke','stage']) {
+  const fixture=setup(),b=adapters();let signal
+  const hang=async (...args)=>{signal=mode==='read'?args[1].signal:mode==='invoke'||mode==='stage'?args[0].signal:args[0];return new Promise(()=>{})}
+  if(mode==='read')b.brain.read=hang;else b.executor[mode==='stage'?'invoke':mode]=hang
+  const limits=mode==='stage'?{stageMs:100}:{adapterMs:100,inferenceMs:100}
+  const result=await configured(fixture.s,b,limits).run(fixture.id)
+  assert.equal(result.code,{read:'BRAIN_READ_TIMEOUT',verify:'ADAPTER_TIMEOUT',reserve:'RESERVATION_TIMEOUT',invoke:'INFERENCE_TIMEOUT',stage:'STAGE_TIMEOUT'}[mode])
+  assert.equal(signal.aborted,true);assert.equal(fixture.s.read().messages.length,0);fixture.s.close()
+ }
+})
+test('persistent cancellation during slow reads and inference prevents late continuation',async()=>{
+ for(const mode of ['read','invoke']) {
+  const {s,id}=setup(),a=adapters();const original=mode==='read'?a.brain.read:a.executor.invoke;let signal,lateFinished=false
+  const slow=async(...args)=>{signal=mode==='read'?args[1].signal:args[0].signal;setTimeout(()=>action(s,{action:'cancel_task',id}),120);await delay(400);lateFinished=true;return original(...args)}
+  if(mode==='read')a.brain.read=slow;else a.executor.invoke=slow
+  const result=await runner(s,a).run(id);assert.equal(result.status,'blocked');assert.equal(signal.aborted,true)
+  await delay(450);assert.equal(lateFinished,true)
+  const run=Object.values(s.read().workflowRuns)[0];assert.equal(run.status,'cancelled');assert.equal(run.evidenceBudget,0);assert.deepEqual(run.checkpoints,{});assert.equal(s.read().messages.length,0)
+  if(mode==='read')assert.equal(a.calls.length,0);s.close()
+ }
+})
+test('expired owner cannot renew or mutate a replacement run after a delayed adapter result',async()=>{
+ const {s,id}=setup(),a=adapters();let now=Date.now(),oldLease,newLease,resolveRead
+ a.brain.read=async source=>{
+  const run=Object.values(s.read().workflowRuns)[0];oldLease={key:run.key,owner:run.owner,generation:run.generation}
+  now+=1001
+  assert.throws(()=>mutate(s,doc=>W.renewLease(doc,oldLease,now,1000)),/STALE/)
+  newLease=mutate(s,doc=>W.claim(doc,id,'replacement',now,false,1000))
+  return new Promise(resolve=>{resolveRead=()=>resolve({id:source,revision:'v1',text:'Late',accessedAt:new Date(now).toISOString()})})
+ }
+ const result=await configured(s,a,{leaseMs:1000},()=>now).run(id)
+ assert.equal(result.code,'STALE_OR_CANCELLED_LEASE');assert.equal(newLease.generation,2)
+ const before=s.read();resolveRead();await delay(30)
+ assert.deepEqual(s.read(),before);assert.equal(a.calls.length,0)
+ assert.throws(()=>mutate(s,doc=>W.renewLease(doc,oldLease,now,1000)),/STALE/);s.close()
+})
+test('snapshot deduplication survives restart/replay and reconstructs every original access losslessly',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'hq-evidence-')),path=join(dir,'db.sqlite');let {s,id}=setup(new HqStore(path));const a=adapters(),read=a.brain.read,invoke=a.executor.invoke,observed=[]
+ a.brain.read=async(...args)=>{const file={...await read(...args),text:'Synthetic long Brain '+ 'x'.repeat(39_900)};observed.push(file);return file}
+ a.executor.invoke=async input=>{if(input.stage==='evaluate')throw Error('Synthetic restart');return invoke(input)}
+ assert.equal((await runner(s,a).run(id)).status,'blocked')
+ const before=s.read(),research=Object.values(before.workflowRuns)[0].checkpoints.research
+ assert.equal(Object.keys(before.brainSnapshots).length,16)
+ assert.ok(research.brain.every(f=>f.blob&&!('text' in f)))
+ assert.deepEqual(W.reconstructBrain(before,research),observed.slice(0,16))
+ s.close();s=new HqStore(path);a.executor.invoke=invoke;a.refill()
+ assert.equal((await runner(s,a).run(id)).status,'completed');assert.equal(a.calls.filter(c=>c.stage==='research').length,1)
+ const after=s.read(),run=Object.values(after.workflowRuns)[0]
+ assert.equal(Object.keys(after.brainSnapshots).length,16);assert.deepEqual(run.checkpoints.research,research)
+ for(const evidence of Object.values(run.checkpoints)){
+  const rebuilt=W.reconstructBrain(after,evidence);assert.equal(rebuilt.length,16)
+  for(const file of rebuilt)assert.ok(observed.some(o=>JSON.stringify(o)===JSON.stringify(file)))
+ }
+ assert.ok(Buffer.byteLength(JSON.stringify(after))<800_000)
+ assert.equal((await runner(s,a).run(id)).status,'already_claimed_or_finished');s.close();rmSync(dir,{recursive:true,force:true})
+})
+test('inline historical evidence remains readable and snapshot corruption or same-revision changes fail closed',async()=>{
+ const {s,id}=setup(),a=adapters(),invoke=a.executor.invoke
+ a.executor.invoke=async input=>{if(input.stage==='evaluate')throw Error('Synthetic pause');return invoke(input)}
+ assert.equal((await runner(s,a).run(id)).status,'blocked')
+ mutate(s,doc=>{const evidence=Object.values(doc.workflowRuns)[0].checkpoints.research;evidence.brain=W.reconstructBrain(doc,evidence)})
+ const original=s.read();const evidence=Object.values(original.workflowRuns)[0].checkpoints.research
+ assert.deepEqual(W.reconstructBrain(original,evidence),evidence.brain)
+ const read=a.brain.read;a.brain.read=async(...args)=>({...await read(...args),text:'Changed content with the same revision'})
+ a.executor.invoke=invoke;a.refill();assert.equal((await runner(s,a).run(id)).code,'BRAIN_CHANGED_REAPPROVAL_REQUIRED')
+ assert.deepEqual(Object.values(s.read().workflowRuns)[0].checkpoints.research,evidence)
+ const reference={brain:W.retainBrain(original,evidence.brain)};const key=reference.brain[0].blob
+ original.brainSnapshots[key].text='Tampered';assert.throws(()=>W.reconstructBrain(original,reference),/BRAIN_SNAPSHOT_CORRUPT/)
+ delete original.brainSnapshots[key];assert.throws(()=>W.reconstructBrain(original,reference),/BRAIN_SNAPSHOT_CORRUPT/);s.close()
+})
+test('capacity preflight prevents allowance reservation/inference without deleting historical evidence',async()=>{
+ const {s,id}=setup(),a=adapters();let reservations=0
+ a.executor.reserve=async()=>{reservations++;throw Error('Must not reserve')}
+ mutate(s,doc=>{doc.events.push({id:'history',agent:'ceo',type:'audit',title:'Historical evidence',detail:'x'.repeat(5_700_000),createdAt:'2026-11-03'})})
+ const history=s.read().events
+ assert.equal((await runner(s,a).run(id)).code,'HQ_CAPACITY');assert.equal(reservations,0);assert.equal(a.calls.length,0)
+ assert.deepEqual(s.read().events,history);assert.equal(s.read().brainSnapshots,undefined)
+ assert.equal(Object.values(s.read().workflowRuns)[0].evidenceBudget,0);s.close()
+})
+test('reserved result headroom excludes competing writes and persists across reopen until fenced reclaim',()=>{
+ const dir=mkdtempSync(join(tmpdir(),'hq-budget-')),path=join(dir,'db.sqlite');let {s,id}=setup(new HqStore(path));const now=Date.now()
+ const lease=mutate(s,doc=>W.claim(doc,id,'old',now,false))
+ const files=[{id:'synthetic',revision:'1',text:'Retained evidence',accessedAt:new Date(now).toISOString()}]
+ mutate(s,doc=>W.reserveEvidence(doc,lease,files,'Assignment',now))
+ s.close();s=new HqStore(path);assert.ok(Object.values(s.read().workflowRuns)[0].evidenceBudget>2_400_000)
+ const before=s.read()
+ assert.throws(()=>mutate(s,doc=>{doc.events.push({id:'fill',detail:'x'.repeat(5_700_000)})}),/storage is full/)
+ assert.deepEqual(s.read(),before)
+ const next=mutate(s,doc=>W.claim(doc,id,'new',now+60_001,false))
+ assert.equal(next.generation,2);assert.equal(Object.values(s.read().workflowRuns)[0].evidenceBudget,0)
+ assert.deepEqual(s.read().brainSnapshots,before.brainSnapshots)
+ assert.throws(()=>mutate(s,doc=>W.reserveEvidence(doc,lease,files,'Old writer',now+60_001)),/STALE/)
+ s.close();rmSync(dir,{recursive:true,force:true})
+})
+test('capacity reservation covers maximum JSON escaping, tools, sources and review without relaxing 8 MB',()=>{
+ const {s,id}=setup(),now=Date.now(),lease=mutate(s,doc=>W.claim(doc,id,'boundary',now,false))
+ const files=Object.values(brainFiles).map(id=>({id,revision:'\u0000'.repeat(1000),text:'\u0000'.repeat(40_000),accessedAt:new Date(now).toISOString()}))
+ const input='\u0000'.repeat(50_000),brain=mutate(s,doc=>W.reserveEvidence(doc,lease,files,input,now))
+ mutate(s,doc=>{
+  doc.events.push({id:'preserve',agent:'ceo',type:'audit',title:'Capacity boundary',detail:'',createdAt:'2026-11-03'})
+  const room=8_000_000-Buffer.byteLength(JSON.stringify(doc))-doc.workflowRuns[lease.key].evidenceBudget-1000
+  assert.ok(room>0);doc.events.at(-1).detail='x'.repeat(room)
+ })
+ const history=s.read().events
+ const evidence={stage:'research',agentId:'AG-HR-002',contextId:'context',principalId:'\u0000'.repeat(200),input,inputDigest:W.digest(input),brain,allowedTools:['public.read','public.search'],toolCalls:Array.from({length:6},()=>({name:'public.search',input:'\u0000'.repeat(4000),output:'\u0000'.repeat(20_000)})),output:'\u0000'.repeat(12_000),sources:Array.from({length:100},()=> 'https://'+ '\u0000'.repeat(1991)),review:{accepted:true,artifactDigest:'x'.repeat(64),evidence:'\u0000'.repeat(12_000)},startedAt:new Date(now).toISOString(),completedAt:new Date(now).toISOString()}
+ mutate(s,doc=>W.checkpoint(doc,lease,evidence,now))
+ const saved=s.read();assert.deepEqual(saved.events,history);assert.deepEqual(W.reconstructBrain(saved,saved.workflowRuns[lease.key].checkpoints.research),files)
+ assert.ok(Buffer.byteLength(JSON.stringify(saved))<8_000_000);assert.equal(saved.workflowRuns[lease.key].evidenceBudget,0);s.close()
+})
+test('elapsed deadlines are checked after a blocked writer lock before model dispatch',async()=>{
+ const {s,id}=setup(),a=adapters(),transaction=s.transaction.bind(s);let delayed=false
+ s.transaction=reduce=>transaction(doc=>{
+  const run=Object.values(doc.workflowRuns||{})[0]
+  if(run?.evidenceBudget&&!run.attempts.length&&!delayed){delayed=true;Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,200)}
+  return reduce(doc)
+ })
+ assert.equal((await configured(s,a,{stageMs:150}).run(id)).code,'STAGE_TIMEOUT')
+ assert.equal(delayed,true);assert.equal(a.calls.length,0);assert.equal(Object.values(s.read().workflowRuns)[0].attempts.length,0);s.close()
 })

@@ -27,6 +27,8 @@ export interface WorkflowApproval {
   approvedAt: string
 }
 export interface BrainFile { id: string; revision: string; text: string; accessedAt: string }
+export type BrainSnapshot = Pick<BrainFile, 'id' | 'revision' | 'text'>
+export interface BrainReference { id: string; revision: string; accessedAt: string; blob: string }
 export interface StageEvidence {
   stage: Stage
   agentId: AgentId
@@ -34,7 +36,7 @@ export interface StageEvidence {
   principalId: string
   input: string
   inputDigest: string
-  brain: BrainFile[]
+  brain: (BrainFile | BrainReference)[]
   allowedTools: ReadTool[]
   toolCalls: { name: ReadTool; input: string; output: string }[]
   output: string
@@ -52,6 +54,7 @@ export interface WorkflowRun {
   owner: string
   generation: number
   leaseUntil: number
+  evidenceBudget?: number
   checkpoints: Partial<Record<Stage, StageEvidence>>
   rejectedReviews?: StageEvidence[]
   attempts: { stage: Stage; contextId: string; reservationId: string; at: string }[]

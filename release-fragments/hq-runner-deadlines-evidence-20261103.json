@@ -1,0 +1,9 @@
+{
+  "id": "hq-runner-deadlines-evidence-20261103",
+  "task": "HQ-RUNNER-DEADLINES-EVIDENCE-20261103",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq", "docs/work-packages/company-hq"],
+  "reason": "Correct the unactivated internal HQ runner's short stage deadline and repeated Brain evidence storage. Add bounded host-configurable deadlines, fenced renewable leases, lossless snapshot deduplication and transactional evidence capacity reservations. Preserve historical evidence, the 8 MB guard and all disabled activation gates; no public release or operational Suit activation."
+}
