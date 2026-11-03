@@ -119,11 +119,11 @@
     "routes": 74
   },
   "currentInventory": {
-    "suitVueFiles": 175,
+    "suitVueFiles": 172,
     "localComponents": 0,
-    "routes": 150,
-    "layouts": 17,
-    "roots": 8
+    "routes": 149,
+    "layouts": 16,
+    "roots": 7
   },
   "acceptance": "verified-local: all 76 routes, strict zero-debt architecture, cross-Suit parity and regressions; publication pending provider suppression verification",
   "entries": [
