@@ -15,7 +15,7 @@ export default defineEventHandler(event => safe(async () => {
   const failure = (code:number,message:string) => ({ jsonrpc:'2.0', id:body.id??null, error:{code,message} })
   if (body.jsonrpc !== '2.0' || !['string','number'].includes(typeof body.id)) return failure(-32600,'Invalid request')
   if (body.method === 'initialize') {
-    return result({ protocolVersion:'2025-03-26', capabilities:{ tools:{} }, serverInfo:{ name:'building-suit-company-hq',version:'1.0.0' }, instructions:'Read the current authorized Company Brain before company work. Verify managed cloud. Only CEO replies to founder and delegates to HR. Proposals require founder approval. No paid APIs, new staff or fabricated progress. These tools record actual approved work; they do not run an AI model.' })
+    return result({ protocolVersion:'2025-03-26', capabilities:{ tools:{} }, serverInfo:{ name:'building-suit-company-hq',version:'1.0.0' }, instructions:'Read the current authorized Company Brain before company work. Only CEO replies to founder and delegates to HR. Proposals require founder approval. No paid APIs, new staff or fabricated progress. These tools record actual approved work; they do not run an AI model.' })
   }
   if (body.method === 'ping') return result({})
   const common = { requestKey:string }

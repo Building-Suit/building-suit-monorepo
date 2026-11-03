@@ -1,11 +1,11 @@
-Historical design handoff. Current instructions: ../CLOUD-HANDOFF.md. The standalone placement is superseded by the founder’s latest return-to-monorepo directive.
+# Retired HQ design handoff — 3 November 2026
 
-# HQ cloud handoff
+This document records the earlier standalone design handoff only. It supplies no active instructions. The founder later returned HQ to the monorepo and retired the Cloud Rule on 3 November 2026. Follow [the current handoff](../CLOUD-HANDOFF.md).
 
-Verify managed cloud execution before company work/team involvement; otherwise warn and stop. Read authorized live Brain START_HERE and this repository's AGENTS.md.
+The earlier handoff required verified managed cloud execution before company work or team involvement, with a warning and stop if verification failed. That requirement is retired. Authorized live Brain access and repository instructions remain governed by the current handoff.
 
-HQ is now independent by explicit founder correction on 3 November 2026. This source was extracted from monorepo checkpoint `2d689c6d7ee15c07a089f113e5cae584a950ec2c`; the old monorepo architecture requirement is superseded for HQ only.
+At that point, the founder’s 3 November 2026 correction placed HQ independently. Its source was extracted from monorepo checkpoint `2d689c6d7ee15c07a089f113e5cae584a950ec2c`. That standalone placement was subsequently superseded.
 
-Use the approved office image, runtime scene, original screenshot frames and the two videos linked in README.md. Stop and ask if those references are unavailable. Keep CEO/HR only, founder-to-CEO communication, CEO delegation, founder approval, real evidence and $0 budgets.
+The design references were the approved office image, runtime scene, original screenshot frames and the two videos linked in README.md. The handoff preserved CEO/HR-only staffing, founder-to-CEO communication, CEO delegation, founder approval, real evidence and $0 budgets; current safeguards are maintained in the current handoff.
 
-The backend is dedicated SQLite in the Node runtime, with founder sessions and distinct server bridge credentials; no external model or provider call is required. Non-loopback activation fails closed without an explicit verified hosting-cost gate. No hosted deployment is established. Read ../BACKEND-COST.md before any provisioning or deployment.
+The standalone backend used dedicated SQLite in the Node runtime, founder sessions and distinct server bridge credentials without requiring an external model call. Non-loopback activation failed closed without an explicit verified hosting-cost gate. No hosted deployment was established by this handoff. Current provisioning and deployment gates are maintained in [backend constraints](../BACKEND-COST.md).
