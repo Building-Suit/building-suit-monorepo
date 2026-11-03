@@ -1,9 +1,0 @@
-{
-  "OriginalSourceCommit": "d22317c798663df4a921ac67625aa4a57f3ff8e7",
-  "TrackedSourceVerified": true,
-  "DesignFilesVerified": 18,
-  "TrackedSourceArchive": "docs/work-packages/company-hq/legacy/site-source-v1.zip",
-  "PrivateRuntime": "Retained only in ignored .local/migration/company-hq-legacy",
-  "NewDesignRoot": "docs/work-packages/company-hq",
-  "LockedResidualFiles": []
-}

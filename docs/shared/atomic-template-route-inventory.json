@@ -3459,34 +3459,6 @@
       ],
       "verification": "Implementation qualification in progress; see electrical-supply/COMMODITY-PRICING.md.",
       "purpose": "shop-commodity-pricing"
-    },
-    {
-      "source": "apps/company-hq/app/app.vue",
-      "kind": "root",
-      "destination": "packages/ui/src/templates/BsAppRoot.vue",
-      "domainAdapter": "apps/company-hq/app/app.vue",
-      "status": "generated; product acceptance pending",
-      "verification": "not-yet-accepted",
-      "dependencies": []
-    },
-    {
-      "source": "apps/company-hq/app/layouts/default.vue",
-      "kind": "layout",
-      "destination": "packages/ui/src/templates/BsWorkspaceShell.vue",
-      "domainAdapter": "apps/company-hq/app/layouts/default.vue",
-      "status": "generated; product acceptance pending",
-      "verification": "not-yet-accepted",
-      "dependencies": []
-    },
-    {
-      "source": "apps/company-hq/app/pages/index.vue",
-      "kind": "route",
-      "destination": "packages/ui/src/templates/BsStarterWorkflowPage.vue",
-      "domainAdapter": "apps/company-hq/app/pages/index.vue",
-      "purpose": "starter-workflow",
-      "status": "generated; product acceptance pending",
-      "verification": "not-yet-accepted",
-      "dependencies": []
     }
   ],
   "verifiedSharedHeads": [
