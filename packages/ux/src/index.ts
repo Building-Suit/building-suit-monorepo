@@ -272,3 +272,5 @@ export { readWebsiteImage } from './utils/readWebsiteImage.ts'
 
 export { scrollRegionKey } from './scrollRegion.ts'
 export { normalizeDecimalText } from './utils/decimalText.js'
+
+export { useOfficeViewport } from './useOfficeViewport.ts'

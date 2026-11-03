@@ -46,7 +46,8 @@
     "check:atomic-template": "node tooling/checks/atomic-template-architecture.mjs",
     "db:test:shop:commission": "node tooling/database/test-shop-commissions-local.mjs",
     "dev:doctor": "node tooling/git/dev.mjs doctor",
-    "doctor:auth-check": "node tooling/doctor/auth-preflight.mjs"
+    "doctor:auth-check": "node tooling/doctor/auth-preflight.mjs",
+    "dev:hq": "node tooling/git/dev.mjs hq"
   },
   "devDependencies": {
     "@vue/compiler-sfc": "3.5.44",

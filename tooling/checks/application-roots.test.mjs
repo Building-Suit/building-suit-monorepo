@@ -6,15 +6,16 @@ import path from'node:path'
 import {discoverApplicationRoots}from'./application-roots.mjs'
 import {validateSuitTemplateBoundaries}from'./suit-template-boundaries.mjs'
 import {validateAtomicTemplateArchitecture}from'./atomic-template-architecture.mjs'
-async function fixture(t){
+async function fixture(t,{hq=false}={}){
  const root=await mkdtemp(path.join(tmpdir(),'doctor-mobile-boundary-'));t.after(()=>rm(root,{recursive:true,force:true}))
  async function put(file,body){const p=path.join(root,file);await mkdir(path.dirname(p),{recursive:true});await writeFile(p,typeof body==='string'?body:JSON.stringify(body))}
  const mobile='apps/example-suit/mobile/doctor'
  await put(mobile+'/package.json',{name:'@building-suit/example-mobile',buildingSuit:{kind:'mobile-client',product:'example-suit',renderer:'shared-web'}})
- for(const prefix of ['apps/example-suit',mobile])await put(prefix+'/app/pages/index.vue','<template><BsExamplePage/></template>')
+ const applications=['apps/example-suit',mobile,...(hq?['apps/company-hq']:[])]
+ for(const prefix of applications)await put(prefix+'/app/pages/index.vue','<template><BsExamplePage/></template>')
  await put('packages/ui/package.json',{exports:{'./templates/BsExamplePage':'./src/templates/BsExamplePage.vue'}})
  await put('packages/ui/src/templates/BsExamplePage.vue','<template><div/></template>')
- await put('docs/shared/atomic-template-route-inventory.json',{registeredTemplates:{BsExamplePage:'packages/ui/src/templates/BsExamplePage.vue'},pageTemplates:['BsExamplePage'],entries:['apps/example-suit',mobile].map(prefix=>({source:prefix+'/app/pages/index.vue',kind:'route',destination:'packages/ui/src/templates/BsExamplePage.vue',purpose:'fixture'}))})
+ await put('docs/shared/atomic-template-route-inventory.json',{registeredTemplates:{BsExamplePage:'packages/ui/src/templates/BsExamplePage.vue'},pageTemplates:['BsExamplePage'],entries:applications.map(prefix=>({source:prefix+'/app/pages/index.vue',kind:'route',destination:'packages/ui/src/templates/BsExamplePage.vue',purpose:'fixture'}))})
  return{root,put,mobile}
 }
 test('nested mobile is checked as an application without becoming a second Suit',async t=>{
@@ -39,4 +40,24 @@ test('nested aliases still resolve forbidden render factories',async t=>{
 test('unregistered renderers fail closed instead of silently excluding mobile source',async t=>{
  const{root,put,mobile}=await fixture(t);await put(mobile+'/package.json',{buildingSuit:{kind:'mobile-client',product:'example-suit',renderer:'unreviewed'}})
  await assert.rejects(discoverApplicationRoots(root),/Unregistered mobile application boundary/)
+})
+
+test('HQ is governed without becoming a Suit or widening application matching',async t=>{
+ const{root,put}=await fixture(t,{hq:true})
+ await put('apps/company-hq-preview/app/pages/index.vue','<template><button>Unrelated app</button></template>')
+ const discovered=await discoverApplicationRoots(root)
+ assert.deepEqual(discovered.suits,['example-suit'])
+ assert.deepEqual(discovered.applications,['company-hq','example-suit','example-suit/mobile/doctor'])
+ assert.deepEqual((await validateSuitTemplateBoundaries({root,strict:true})).failures,[])
+ assert.deepEqual((await validateAtomicTemplateArchitecture({root})).failures,[])
+})
+test('HQ cannot hide native markup, local styles/components or render factories',async t=>{
+ const{root,put}=await fixture(t,{hq:true})
+ await put('apps/company-hq/app/helpers.ts',"export {h as draw} from 'vue'")
+ await put('apps/company-hq/app/pages/index.vue',"<script setup>import {draw} from '~/helpers';draw('div')</script><template><button>unsafe</button></template><style>.unsafe{color:red}</style>")
+ await put('apps/company-hq/app/components/Local.vue','<template><BsExamplePage/></template>')
+ const boundary=await validateSuitTemplateBoundaries({root,strict:true})
+ for(const kind of ['native-tag','style-block','app-local-component-file'])assert.ok(boundary.failures.some(x=>x.includes('apps/company-hq/')&&x.includes(kind)),kind)
+ const architecture=await validateAtomicTemplateArchitecture({root})
+ assert.ok(architecture.failures.some(x=>x.includes('apps/company-hq/')&&x.includes('render factory')))
 })

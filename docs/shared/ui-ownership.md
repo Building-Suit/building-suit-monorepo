@@ -6,7 +6,7 @@ Before adding presentation, search the Atomic Design library and [canonical temp
 
 ## Mechanical contract
 
-Normal `pnpm check` executes the strict atomic architecture validator and discovers every `apps/*-suit`. There is no migration allowance or local-component exception. It requires:
+Normal `pnpm check` executes the strict atomic architecture validator and discovers every `apps/*-suit`, registered mobile renderer and the explicitly governed `apps/company-hq` internal application. There is no migration allowance or local-component exception. It requires:
 
 - Zero Suit-local Vue components or hidden render functions/JSX, including imported callable wrappers.
 - Every route mapped to one complete `packages/ui/src/templates` owner; every layout/root mapped to its shared shell/root. Same-purpose mappings must agree.

@@ -4,9 +4,12 @@ import path from 'node:path'
 // Mobile clients belong to an existing Suit; discovering them does not register
 // another operational product. Every discovered web renderer gets the same checks.
 export async function discoverApplicationRoots(root) {
-  const suits = (await readdir(path.join(root, 'apps'), {withFileTypes: true}))
-    .filter(entry => entry.isDirectory() && entry.name.endsWith('-suit')).map(entry => entry.name).sort()
+  const directories = (await readdir(path.join(root, 'apps'), {withFileTypes: true}))
+    .filter(entry => entry.isDirectory()).map(entry => entry.name).sort()
+  const suits = directories.filter(name => name.endsWith('-suit'))
   const applications = [...suits]
+  // HQ is governed by the same checks without becoming an operational Suit.
+  if (directories.includes('company-hq')) applications.push('company-hq')
   for (const suit of suits) {
     let entries
     try {entries = await readdir(path.join(root, 'apps', suit, 'mobile'), {withFileTypes: true})}

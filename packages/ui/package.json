@@ -434,7 +434,11 @@
     "./types/weighingSetupPresentation": "./src/types/weighingSetupPresentation.ts",
     "./templates/BsWeighingSetupPage": "./src/templates/BsWeighingSetupPage.vue",
     "./templates/BsCommodityPricingPage.vue": "./src/templates/BsCommodityPricingPage.vue",
-    "./types/commodityPricingPresentation": "./src/types/commodityPricingPresentation.ts"
+    "./types/commodityPricingPresentation": "./src/types/commodityPricingPresentation.ts",
+    "./templates/BsAgentOfficePage": "./src/templates/BsAgentOfficePage.vue",
+    "./templates/BsWorkspaceAccessPage": "./src/templates/BsWorkspaceAccessPage.vue",
+    "./atoms/BsOfficeIcon": "./src/atoms/BsOfficeIcon.vue",
+    "./types/agentOfficePresentation": "./src/types/agentOfficePresentation.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

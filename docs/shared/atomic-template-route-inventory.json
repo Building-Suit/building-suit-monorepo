@@ -111,7 +111,9 @@
     "BsSupplierOrdersPage": "packages/ui/src/templates/BsSupplierOrdersPage.vue",
     "BsSupplyPlanningPage": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
     "BsWeighingSetupPage": "packages/ui/src/templates/BsWeighingSetupPage.vue",
-    "BsCommodityPricingPage": "packages/ui/src/templates/BsCommodityPricingPage.vue"
+    "BsCommodityPricingPage": "packages/ui/src/templates/BsCommodityPricingPage.vue",
+    "BsAgentOfficePage": "packages/ui/src/templates/BsAgentOfficePage.vue",
+    "BsWorkspaceAccessPage": "packages/ui/src/templates/BsWorkspaceAccessPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -119,11 +121,11 @@
     "routes": 74
   },
   "currentInventory": {
-    "suitVueFiles": 172,
+    "suitVueFiles": 175,
     "localComponents": 0,
-    "routes": 149,
+    "routes": 151,
     "layouts": 16,
-    "roots": 7
+    "roots": 8
   },
   "acceptance": "verified-local: all 76 routes, strict zero-debt architecture, cross-Suit parity and regressions; publication pending provider suppression verification",
   "entries": [
@@ -3459,6 +3461,53 @@
       ],
       "verification": "Implementation qualification in progress; see electrical-supply/COMMODITY-PRICING.md.",
       "purpose": "shop-commodity-pricing"
+    },
+    {
+      "source": "apps/company-hq/app/app.vue",
+      "kind": "root",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAppRoot.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAppRoot"
+      ],
+      "destination": "packages/ui/src/templates/BsAppRoot.vue",
+      "status": "implemented-source-unverified",
+      "domainAdapter": "apps/company-hq/app/app.vue",
+      "dependencies": [],
+      "verification": "HQ migration registration; browser, screenshot and full acceptance verification pending."
+    },
+    {
+      "source": "apps/company-hq/app/pages/index.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsAgentOfficePage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsAgentOfficePage"
+      ],
+      "destination": "packages/ui/src/templates/BsAgentOfficePage.vue",
+      "status": "implemented-source-unverified",
+      "domainAdapter": "apps/company-hq/app/pages/index.vue",
+      "dependencies": [],
+      "verification": "HQ migration registration; browser, screenshot and full acceptance verification pending.",
+      "purpose": "agent-office"
+    },
+    {
+      "source": "apps/company-hq/app/pages/auth/login.vue",
+      "kind": "route",
+      "currentSharedTemplates": [
+        "packages/ui/src/templates/BsWorkspaceAccessPage.vue"
+      ],
+      "renderedBsComponents": [
+        "BsWorkspaceAccessPage"
+      ],
+      "destination": "packages/ui/src/templates/BsWorkspaceAccessPage.vue",
+      "status": "implemented-source-unverified",
+      "domainAdapter": "apps/company-hq/app/pages/auth/login.vue",
+      "dependencies": [],
+      "verification": "HQ migration registration; browser, screenshot and full acceptance verification pending.",
+      "purpose": "private-workspace-access"
     }
   ],
   "verifiedSharedHeads": [
@@ -3618,6 +3667,8 @@
     "BsSupplierOrdersPage",
     "BsSupplyPlanningPage",
     "BsWeighingSetupPage",
-    "BsCommodityPricingPage"
+    "BsCommodityPricingPage",
+    "BsAgentOfficePage",
+    "BsWorkspaceAccessPage"
   ]
 }

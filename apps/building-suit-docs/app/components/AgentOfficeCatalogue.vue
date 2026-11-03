@@ -1,0 +1,41 @@
+<script setup lang="ts">
+import type { AgentOfficeContent, AgentOfficeCopy, AgentOfficeRoom, AgentOfficeTask, AgentOfficeTaskDraft } from '@building-suit/ui/types/agentOfficePresentation'
+const { locale } = useI18n()
+const c = (en: string, ar: string) => locale.value === 'ar' ? ar : en
+const messageDraft = ref('')
+const taskDraft = ref<AgentOfficeTaskDraft>({ title: '', brief: '', acceptance: '', allowedActions: '' })
+const password = ref(''), feedback = ref('')
+const copy = computed<AgentOfficeCopy>(() => ({
+  office: c('Office', 'المكتب'), tasks: c('Tasks', 'المهام'), brain: c('Brain', 'المعرفة'), talkToCeo: c('Talk to CEO', 'تحدث مع المدير التنفيذي'),
+  workspace: c('Synthetic office example', 'مثال مكتب اصطناعي'), roomList: c('Rooms', 'الغرف'), sceneHint: c('Explore the rooms; zoom and pan with the shared viewport controls.', 'استكشف الغرف وكبّر المشهد وحركه بأدوات العرض المشتركة.'),
+  zoomIn: c('Zoom in', 'تكبير'), zoomOut: c('Zoom out', 'تصغير'), resetView: c('Reset view', 'إعادة العرض'), miniMap: c('Mini map', 'خريطة مصغرة'),
+  brainLabel: c('COMPANY BRAIN', 'معرفة الشركة'), brainSubtitle: c('Synthetic summary', 'ملخص اصطناعي'), connectionTitle: c('Connection', 'الاتصال'), loading: c('Loading', 'جار التحميل'), retry: c('Retry', 'إعادة المحاولة'),
+  readOnly: c('Catalogue only. No messages, approvals or data are saved.', 'مثال للمكتبة فقط؛ لا تُحفظ رسائل أو موافقات أو بيانات.'),
+  tasksTitle: c('Task plans', 'خطط المهام'), tasksIntro: c('A synthetic proposal illustrates the record detail. Approval belongs to the product server.', 'خطة اصطناعية لتوضيح تفاصيل السجل؛ يملك خادم المنتج الموافقات.'), newTask: c('Propose work', 'اقتراح عمل'), noTasks: c('No tasks', 'لا توجد مهام'), reviewPlan: c('Review plan', 'مراجعة الخطة'), viewTask: c('View task', 'عرض المهمة'),
+  conversationTitle: c('Founder and CEO', 'المؤسس والمدير التنفيذي'), conversationHint: c('Founder conversations use CEO only; this example has no assistant connection.', 'تكون محادثات المؤسس مع المدير التنفيذي فقط؛ هذا المثال غير متصل بمساعد.'), messageLabel: c('Message to CEO', 'رسالة إلى المدير التنفيذي'), messagePlaceholder: c('Read-only catalogue', 'مثال للمكتبة للقراءة فقط'), sendMessage: c('Send', 'إرسال'), noMessages: c('No conversation records', 'لا توجد سجلات محادثة'),
+  taskFormTitle: c('Propose an assignment', 'اقتراح مهمة'), taskTitle: c('Title', 'العنوان'), taskBrief: c('Outcome', 'النتيجة'), taskAcceptance: c('Definition of done', 'معايير الإنجاز'), taskScope: c('Allowed actions', 'الإجراءات المسموحة'), taskOwner: c('Owner', 'المسؤول'), taskOwnerValue: c('CEO', 'المدير التنفيذي'),
+  taskBudget: c('Budget', 'الميزانية'), taskBudgetValue: '$0', createProposal: c('Create proposal', 'إنشاء اقتراح'), cancel: c('Cancel', 'إلغاء'), close: c('Close', 'إغلاق'),
+  brief: c('Outcome', 'النتيجة'), acceptance: c('Acceptance', 'معايير القبول'), allowedActions: c('Allowed actions', 'الإجراءات المسموحة'), deliverable: c('Deliverable', 'المخرج'), reviewEvidence: c('Review evidence', 'دليل المراجعة'), budget: c('Budget', 'الميزانية'),
+  approvedScopeNotice: c('A proposal does not authorize execution. The server verifies identity, approval, budget and fresh evidence.', 'لا يمنح الاقتراح سلطة التنفيذ؛ يتحقق الخادم من الهوية والموافقة والميزانية والدليل الحديث.'), approvePlan: c('Approve plan', 'اعتماد الخطة'), cancelTask: c('Cancel task', 'إلغاء المهمة'), reviewTitle: c('Review', 'المراجعة'),
+  profile: c('Role profile', 'ملف الدور'), skills: c('Skills', 'المهارات'), reporting: c('Reports to', 'يرفع تقاريره إلى'), unassignedTitle: c('Unassigned', 'غير مخصص'), unassignedDescription: c('An unassigned room does not create an employee or department.', 'لا تُنشئ الغرفة غير المخصصة موظفاً أو قسماً.'),
+  brainTitle: c('Reviewed policy summary', 'ملخص السياسات المراجعة'), brainIntro: c('Synthetic content only, with no Drive read or live model connection.', 'محتوى اصطناعي فقط دون قراءة Drive أو اتصال بنموذج.'), noBrainNotes: c('No notes', 'لا توجد ملاحظات'), activityTitle: c('Recorded activity', 'النشاط المسجل'), noActivity: c('No work activity is simulated.', 'لا تتم محاكاة نشاط عمل.'),
+}))
+const scene = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941"><rect width="1672" height="941" fill="#1c1c1f"/><path d="M400 250L836 470L1150 260M836 470L836 760" fill="none" stroke="#71717a" stroke-width="8"/><rect x="250" y="180" width="260" height="160" rx="20" fill="#27272a"/><rect x="1020" y="180" width="260" height="160" rx="20" fill="#27272a"/><rect x="706" y="680" width="260" height="160" rx="20" fill="#27272a"/><circle cx="836" cy="470" r="95" fill="#141416" stroke="#d89b42" stroke-width="5"/></svg>')
+const content = computed<AgentOfficeContent>(() => ({ brandName: 'Building Suit HQ', brandSubtitle: c('Shared template example', 'مثال القالب المشترك'), logoSrc: '/brand/building-suit-logo-light.png', sceneSrc: scene, sceneAlt: c('Synthetic office canvas for the shared component catalogue', 'مشهد مكتب اصطناعي لمكتبة المكونات المشتركة'), copy: copy.value }))
+const rooms = computed<AgentOfficeRoom[]>(() => [
+  { id: 'ceo', label: c('CEO', 'المدير التنفيذي'), kind: 'executive', active: true, x: 69, y: 20, statusLabel: c('On demand', 'عند الطلب'), description: c('Founder conversation entry.', 'مدخل محادثات المؤسس.'), skills: [], reportingLabel: c('Founder', 'المؤسس') },
+  { id: 'hr', label: c('HR Lead', 'مسؤول الموارد البشرية'), kind: 'department', active: true, x: 24, y: 20, statusLabel: c('On demand', 'عند الطلب'), description: c('Receives assignments through CEO; profile only.', 'يتلقى المهام من المدير التنفيذي؛ ملف عرض فقط.'), skills: [], reportingLabel: c('CEO', 'المدير التنفيذي') },
+  { id: 'unassigned', label: copy.value.unassignedTitle, kind: 'unassigned', active: false, x: 50, y: 72, statusLabel: '', description: copy.value.unassignedDescription, skills: [] },
+])
+const tasks = computed<AgentOfficeTask[]>(() => [{ id: 'catalogue-proposal', title: c('Synthetic reviewed plan', 'خطة اصطناعية للمراجعة'), ownerLabel: c('CEO', 'المدير التنفيذي'), status: 'proposed', statusLabel: c('Example proposal', 'اقتراح توضيحي'), updatedLabel: c('Catalogue example', 'مثال للمكتبة'), brief: c('Demonstrate a controlled record detail.', 'توضيح تفاصيل سجل مضبوط.'), acceptance: c('No operation is executed.', 'لا يتم تنفيذ أي عملية.'), allowedActions: c('Inspect this catalogue example only.', 'فحص مثال المكتبة فقط.'), budgetLabel: '$0', canApprove: false, canCancel: false }])
+function submitExample() { password.value = ''; feedback.value = c('Synthetic access action only. No request, identity or session was created.', 'إجراء دخول اصطناعي فقط؛ لم يُنشأ طلب أو هوية أو جلسة.') }
+</script>
+
+<template>
+  <BsContentSection :title="c('Agent office and private workspace access', 'مكتب الوكلاء والدخول لمساحة خاصة')" :description="c('Complete shared layouts with synthetic inputs. Product adapters retain authority and commands.', 'تخطيطات مشتركة كاملة ببيانات اصطناعية؛ تبقى الصلاحيات والأوامر لدى المنتج.')">
+    <BsText>{{ copy.readOnly }}</BsText>
+    <BsAgentOfficePage v-model:message-draft="messageDraft" v-model:task-draft="taskDraft" :content="content" :rooms="rooms" :tasks="tasks" :messages="[]" :brain-notes="[]" :activity="[]" :account-label="c('Catalogue account', 'حساب المكتبة')" :language-label="locale === 'ar' ? 'العربية' : 'English'" :theme-label="c('Switch theme', 'تغيير المظهر')" :connection-label="c('Synthetic · no connection', 'اصطناعي · دون اتصال')" read-only />
+    <BsWorkspaceAccessPage v-model:password="password" :title="c('Synthetic workspace access', 'دخول اصطناعي لمساحة العمل')" :description="c('Do not enter a real password. This demonstration makes no request and immediately clears the sample.', 'لا تدخل كلمة مرور حقيقية؛ لا يرسل هذا المثال طلباً ويمسح القيمة مباشرة.')" logo-src="/brand/building-suit-logo-light.png" logo-alt="Building Suit" :password-label="c('Sample value only', 'قيمة تجريبية فقط')" :submit-label="c('Try synthetic action', 'تجربة الإجراء الاصطناعي')" @submit="submitExample" />
+    <BsText v-if="feedback" role="status">{{ feedback }}</BsText>
+  </BsContentSection>
+</template>

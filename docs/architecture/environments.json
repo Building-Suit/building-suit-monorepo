@@ -132,6 +132,34 @@
         "appUrl": "",
         "status": "unprovisioned; user-managed connections"
       }
+    },
+    "company-hq": {
+      "organizationId": "",
+      "ownerEmail": "",
+      "managementRole": "Owner",
+      "plan": "unverified",
+      "schema": "public",
+      "cliWorkdir": "apps/company-hq",
+      "appUrlVariable": "HQ_APP_ORIGIN",
+      "local": {
+        "projectId": "building-suit-company-hq",
+        "apiUrl": "http://127.0.0.1:58321",
+        "databasePort": 58322,
+        "emailInboxUrl": "http://127.0.0.1:58324",
+        "appUrl": "http://127.0.0.1:3101"
+      },
+      "production": {
+        "projectRef": "",
+        "requestedProjectRef": "dfeiuxsqhgzontefmrjc",
+        "appUrl": "",
+        "status": "founder-selected candidate only; project/organization, access, schema and zero-cost capacity unverified; no hosted migration or deployment"
+      },
+      "staging": {
+        "projectRef": "",
+        "requestedProjectRef": "lwecnmsosfwovlzxauml",
+        "appUrl": "",
+        "status": "founder-selected candidate conflicts with verified Super Admin staging mapping; scope/ownership resolution and authorized access required before any HQ mutation"
+      }
     }
   },
   "sources": {

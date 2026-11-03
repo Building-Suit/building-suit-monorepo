@@ -120,6 +120,16 @@ test('Inventory is a first-class dev target with an isolated port and package', 
   })
 })
 
+test('HQ preview selects its own active worktree and isolated app/port', async t => {
+  const f = await fixture(t)
+  const hq = f.tree('hq-office')
+  await writeFile(join(hq, 'apps/company-hq/page.vue'), 'HQ office feature')
+  assert.equal(selectWorktree((await f.inspect('hq')).trees, f.root).path, hq)
+  const output = execFileSync(process.execPath, [launcher, 'hq', '--worktree', hq, '--dry-run'], { cwd: f.root, encoding: 'utf8' })
+  assert.ok(output.includes('"@building-suit/company-hq"'))
+  assert.ok(output.includes('"3101"'))
+})
+
 test('Super Admin is a first-class dev target with an isolated port and package', () => {
   assert.deepEqual(applications['super-admin'], {
     directory: 'super-admin-suit',

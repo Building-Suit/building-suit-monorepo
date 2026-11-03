@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scope": "apps/*-suit/app/**/*.vue presentation ownership; components lists app-local Vue file ownership",
+  "scope": "apps/*-suit/app/**/*.vue and apps/company-hq/app/**/*.vue presentation ownership; components lists app-local Vue file ownership",
   "owner": "packages/ui",
   "interactionOwner": "packages/ux",
   "classifications": {
@@ -921,6 +921,19 @@
       ],
       "interactionOwner": "packages/ux",
       "notes": "Shared source-quote and product-rule approval presentation. Product owns permissions, exact source/currency/validity validation and authoritative financial pricing."
+    },
+    {
+      "family": "agent-office",
+      "owner": "packages/ui",
+      "interactionOwner": "packages/ux",
+      "components": [
+        "BsAgentOfficePage",
+        "BsWorkspaceAccessPage",
+        "BsOfficeIcon"
+      ],
+      "adapterBoundary": "HQ supplies typed room, task, message, policy-summary and activity projections plus semantic commands. Shared UI owns the complete office/access layouts and shared UX owns viewport/dialog/confirmation behavior. HQ server owns founder identity, fixed CEO/HR roles, approval, zero budgets, durable state and review evidence.",
+      "task": "HQ-OFFICE-MONOREPO-20261103",
+      "migrationStatus": "implemented-source: local/browser/screenshot acceptance pending; hosted operation remains unverified"
     }
   ]
 }
