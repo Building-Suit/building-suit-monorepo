@@ -1,0 +1,11 @@
+{
+  "product": {
+    "name": "Company HQ"
+  },
+  "welcome": "Welcome",
+  "description": "Configure this product’s content and authorized features.",
+  "feature": "Your workspace",
+  "featureBody": "Shared Building Suit components and behavior.",
+  "workflow": "Get started",
+  "workflowBody": "Configure your product before connecting live services."
+}
