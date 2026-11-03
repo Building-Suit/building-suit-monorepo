@@ -96,3 +96,7 @@ Each feature has a short-lived `codex/<stack>/<feature>` branch and review PR. F
 The finite [implementation plan](PLAN.md), [source audit](docs/source-audit.json) and `docs/migration` record one-time work. They do not add tasks to future agent work.
 
 After building Shop (or the workspace), `pnpm test:built-assets` verifies production public asset responses and rendered Shop favicon links. Run it after the build; ordinary `pnpm test` checks source inputs without requiring `.output`.
+
+## Video Suit
+
+`apps/video-suit` is the repository-backed Three.js/GSAP studio. Run `pnpm --filter @building-suit/video-suit dev` (port 3016). Project manifests, shared assets and reproducible export commands are described in [its README](apps/video-suit/README.md). No database is required.

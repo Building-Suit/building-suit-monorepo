@@ -5101,15 +5101,15 @@
     "notes": {
       "title": {
         "en": "Consistent catalog pagination",
-        "ar": "\u062a\u0646\u0642\u0644 \u0645\u062a\u0633\u0642 \u0628\u064a\u0646 \u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0643\u062a\u0627\u0644\u0648\u062c"
+        "ar": "تنقل متسق بين صفحات الكتالوج"
       },
       "summary": {
         "en": "Product and service catalogs keep page controls aligned with the records loaded from the server.",
-        "ar": "\u062a\u062d\u0627\u0641\u0638 \u0643\u062a\u0627\u0644\u0648\u062c\u0627\u062a \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0648\u0627\u0644\u062e\u062f\u0645\u0627\u062a \u0639\u0644\u0649 \u062a\u0637\u0627\u0628\u0642 \u0639\u0646\u0627\u0635\u0631 \u0627\u0644\u062a\u0646\u0642\u0644 \u0645\u0639 \u0627\u0644\u0633\u062c\u0644\u0627\u062a \u0627\u0644\u0645\u062d\u0645\u0651\u0644\u0629 \u0645\u0646 \u0627\u0644\u062e\u0627\u062f\u0645."
+        "ar": "تحافظ كتالوجات المنتجات والخدمات على تطابق عناصر التنقل مع السجلات المحمّلة من الخادم."
       },
       "details": {
         "en": "Catalogs show the supported page size so changing a page cannot use a different row count from the server query.",
-        "ar": "\u062a\u0639\u0631\u0636 \u0627\u0644\u0643\u062a\u0627\u0644\u0648\u062c\u0627\u062a \u062d\u062c\u0645 \u0627\u0644\u0635\u0641\u062d\u0629 \u0627\u0644\u0645\u062f\u0639\u0648\u0645 \u062d\u062a\u0649 \u0644\u0627 \u064a\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u062a\u0646\u0642\u0644 \u0639\u062f\u062f \u0635\u0641\u0648\u0641 \u0645\u062e\u062a\u0644\u0641\u064b\u0627 \u0639\u0646 \u0627\u0633\u062a\u0639\u0644\u0627\u0645 \u0627\u0644\u062e\u0627\u062f\u0645."
+        "ar": "تعرض الكتالوجات حجم الصفحة المدعوم حتى لا يستخدم التنقل عدد صفوف مختلفًا عن استعلام الخادم."
       }
     },
     "sources": [
@@ -5215,6 +5215,57 @@
     "reason": "Generated Ledger family artwork and canonical app icon aliases, brand catalogue documentation and exact artifact verification. Ledger remains an internal consumer with no invented operational registration or public production baseline; the actual visible Shop crop is independently covered by its public item.",
     "sources": [
       "brand-family-ledger-support-20261022"
+    ]
+  },
+  {
+    "id": "video-suit-studio-20261031",
+    "task": "VIDEO-STUDIO-001",
+    "suits": [
+      "automation-suit",
+      "doctor-suit",
+      "inventory-suit",
+      "ledger-suit",
+      "shop-suit",
+      "super-admin-suit",
+      "video-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      "apps/video-suit",
+      "packages/ui/src/templates/BsVideoStudioPage.vue",
+      "packages/ui/package.json",
+      "README.md",
+      "pnpm-lock.yaml",
+      "docs/shared/atomic-template-route-inventory.json",
+      "docs/shared/design-system.md",
+      "docs/shared/realtime-adoption.json"
+    ],
+    "reason": "Add the repository-backed video production studio, reusable scene sources, asset provenance and deterministic export tooling. Rendering and visual acceptance remain blocked by the cloud browser sandbox. Shared UI export and workspace documentation affect all consumers; no customer product workflow is changed and no completed film delivery is claimed.",
+    "sources": [
+      "video-suit-studio-20261031"
+    ]
+  },
+  {
+    "id": "video-suit-inherited-runtime-20261031",
+    "task": "VIDEO-STUDIO-001",
+    "suits": [
+      "video-suit"
+    ],
+    "classification": "internal",
+    "disposition": "internal",
+    "paths": [
+      ".github",
+      "tooling",
+      "packages",
+      "README.md",
+      "package.json",
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml"
+    ],
+    "reason": "Video Suit is a newly registered internal consumer of the existing shared runtime and workspace tooling in the current main-to-staging tree. Classify this inherited dependency surface without advertising customer product changes or altering existing public release notes. Rendering acceptance remains pending.",
+    "sources": [
+      "video-suit-studio-20261031"
     ]
   }
 ]

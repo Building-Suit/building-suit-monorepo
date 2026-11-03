@@ -1,0 +1,29 @@
+{
+  "name": "@building-suit/video-suit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/prepare.mjs && nuxt dev --port 3016",
+    "build": "node scripts/prepare.mjs && nuxt build",
+    "prepare": "node scripts/prepare.mjs && nuxt prepare",
+    "typecheck": "nuxt typecheck",
+    "lint": "eslint .",
+    "assets:prepare": "node scripts/prepare.mjs",
+    "test": "node --test tests/unit/*.test.mjs",
+    "render": "node scripts/render.mjs"
+  },
+  "dependencies": {
+    "@building-suit/nuxt-layer": "workspace:*",
+    "gsap": "3.15.0",
+    "nuxt": "4.6.2",
+    "three": "^0.187.0",
+    "vue": "3.5.44",
+    "vue-router": "5.4.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "esbuild": "^0.28.2",
+    "typescript": "5.9.3",
+    "vue-tsc": "3.3.11"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "shop-suit-from-chaos-to-clarity",
+  "name": "From chaos to clarity",
+  "scene": "counter-to-tablet-v1",
+  "revision": 1,
+  "duration": 5,
+  "fps": 30,
+  "width": 720,
+  "height": 1280,
+  "caption": "شغل محلك، في مكان واحد",
+  "parameters": {
+    "receiptLift": 1.1,
+    "cameraPush": 1,
+    "goldIntensity": 1
+  },
+  "assets": [
+    "assets/receipt.svg"
+  ],
+  "render": {
+    "status": "source-ready",
+    "file": null
+  }
+}
