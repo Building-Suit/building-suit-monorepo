@@ -1,5 +1,5 @@
 import { workforce, readTools, brainContextKeys } from './hqWorkforce'
-import type { WorkflowApproval, WorkflowRun, BrainSnapshot } from './hqWorkforce'
+import type { WorkflowApproval, WorkflowRun, BrainSnapshot, ProviderOperation } from './hqWorkforce'
 export type HqRole = 'ceo' | 'hr'
 export type HqActor = { id: string; role: 'founder' | HqRole }
 export type HqTaskStatus = 'proposed' | 'queued' | 'running' | 'review' | 'completed' | 'blocked' | 'failed' | 'cancelled'
@@ -40,6 +40,7 @@ export interface HqDocument {
   lastAgentSeen: string | null
   workflowRuns?: Record<string, WorkflowRun>
   brainSnapshots?: Record<string, BrainSnapshot>
+  providerOperations?: Record<string, ProviderOperation>
   receipts: Record<string, { payload: string; result: HqResult }>
 }
 export type HqCommandName = 'send_message' | 'create_task' | 'approve_task' | 'authorize_workflow' | 'cancel_task' | 'hq_reply' | 'hq_report' | 'hq_delegate_task' | 'hq_update_task' | 'hq_propose_task'

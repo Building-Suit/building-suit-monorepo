@@ -195,7 +195,7 @@ export class HqRunner {
           this.mutate(doc => {
             const live = leasedRun(doc, lease, this.now())
             requireWorkflow(!live.attempts.some(a => a.reservationId === reservation.id), 'RESERVATION_REUSED')
-            live.attempts.push({ stage, contextId, reservationId: reservation.id, at: startedAt })
+            live.attempts.push({ stage, contextId, reservationId: reservation.id, at: startedAt, owner: lease.owner, generation: lease.generation, inputDigest: digest(input), brain: brainEvidence })
           }, signal)
           let result
           try {
