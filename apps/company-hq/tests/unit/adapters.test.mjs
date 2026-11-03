@@ -9,6 +9,7 @@ const D=await load('../server/utils/hqDomain.ts')
 const {HqStore}=await load('../server/utils/hqStore.ts'),{HqRunner}=await load('../server/utils/hqRunner.ts')
 const {ResponsesProtocol,DisabledResponsesExecutor}=await load('../server/utils/hqResponsesProtocol.ts')
 const {DriveBrainAdapter}=await load('../server/utils/hqDriveBrain.ts'),{openDisabledHqHost}=await load('../server/utils/hqHostBootstrap.ts')
+const {protocolDeadline,protocolText}=await load('../server/utils/hqProtocolHttp.ts')
 const founder={id:'founder',role:'founder'},ready={enabled:true,backendScopeVerified:true,modelScopeVerified:true,persistentHostVerified:true,zeroCostHostVerified:true}
 const keys=['AG-CEO-001','AG-HR-001','AG-HR-002','AG-HR-003','playbook','bootstrap','charter','workingAgreement','registry','organization','hrCharter','workforceSkill','home','soul','milestones','mode']
 const files=Object.fromEntries(keys.map(k=>[k,'file-'+k]))
@@ -215,4 +216,49 @@ test('crashed dispatch journal survives without treating an unknown request as a
  mutate(f.s,doc=>{Object.values(doc.providerOperations)[0].state='dispatched'})
  assert.equal((await h.runner.run(f.id)).code,'RESPONSES_UNCERTAIN_OUTCOME')
  assert.equal(h.requests.length,1);assert.equal(Object.values(f.s.read().providerOperations)[0].accounting,'unreconciled');f.s.close()
+})
+function controlledBody() {
+ let pulls=0,cancels=0,notify
+ const cancelled=new Promise(resolve=>{notify=resolve})
+ const body=new ReadableStream({
+  pull(){pulls++},
+  cancel(){cancels++;notify();return new Promise(()=>{})},
+ },{highWaterMark:0})
+ return {response:new Response(body),cancelled,counts:()=>({pulls,cancels})}
+}
+async function promptly(promise) {
+ let timer
+ try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Synthetic cleanup did not settle promptly')),1000)})])}
+ finally{clearTimeout(timer)}
+}
+test('late transport bodies are cancelled without reads after deadline or parent cancellation, even if cleanup stalls',async()=>{
+ for(const mode of ['deadline','parent']) {
+  const body=controlledBody(),parent=new AbortController();let release,calls=0,transportSignal
+  const pending=new Promise(resolve=>{release=resolve})
+  const result=protocolDeadline(parent.signal,mode==='deadline'?50:500,async(signal,check)=>protocolText(async(url,init)=>{
+   calls++;transportSignal=init.signal;return pending
+  },'https://synthetic.example/body',{signal},1024,check))
+  // Let transport start; then cancel while its noncooperative promise is unresolved.
+  await Promise.resolve()
+  if(mode==='parent')parent.abort()
+  await promptly(assert.rejects(result,error=>error.code===(mode==='deadline'?'PROTOCOL_TIMEOUT':'PROTOCOL_CANCELLED')))
+  assert.equal(transportSignal.aborted,true);assert.deepEqual(body.counts(),{pulls:0,cancels:0})
+  release(body.response)
+  await promptly(body.cancelled)
+  await Promise.resolve()
+  assert.deepEqual(body.counts(),{pulls:0,cancels:1});assert.equal(calls,1)
+ }
+})
+test('redirect and URL-rejected bodies are cancelled without reads or follow-up requests when cleanup stalls',async()=>{
+ for(const mode of ['redirect','url']) {
+  const body=controlledBody();let calls=0
+  if(mode==='redirect')Object.defineProperty(body.response,'redirected',{value:true})
+  else Object.defineProperty(body.response,'url',{value:'https://unapproved.example/body'})
+  const result=protocolDeadline(new AbortController().signal,500,async(signal,check)=>protocolText(async()=>{
+   calls++;return body.response
+  },'https://synthetic.example/body',{signal},1024,check))
+  await promptly(assert.rejects(result,error=>error.code==='PROTOCOL_REDIRECT'))
+  await promptly(body.cancelled)
+  assert.deepEqual(body.counts(),{pulls:0,cancels:1});assert.equal(calls,1)
+ }
 })

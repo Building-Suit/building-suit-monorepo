@@ -27,22 +27,27 @@ export async function protocolDeadline<T>(parent: AbortSignal, ms: number, opera
 export async function protocolText(transport: ProtocolTransport, url: string, init: RequestInit, maxBytes: number, check: () => void) {
   check()
   const response = await transport(url, { ...init, redirect: 'error', cache: 'no-store', credentials: 'omit' })
-  check()
-  requireWorkflow(!response.redirected && (!response.url || response.url === url), 'PROTOCOL_REDIRECT')
-  if (!response.ok) {
-    void response.body?.cancel().catch(() => {})
-    throw new HqProblem(409, `PROTOCOL_HTTP_${response.status}`, 'Protocol request refused.')
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined
+  const chunks: Uint8Array[] = []; let bytes = 0, done = false, cancelled = false
+  // Own cleanup immediately after transport, including late or rejected responses.
+  // Never await cancellation: an uncooperative body must not delay rejection.
+  const cancel = () => {
+    if (done || cancelled) return
+    cancelled = true
+    try { void (reader ? reader.cancel() : response.body?.cancel())?.catch(() => {}) }
+    catch { /* Cleanup must not replace the original protocol failure. */ }
   }
-  const length = response.headers.get('content-length')
-  if (length !== null && (!/^\d+$/.test(length) || Number(length) > maxBytes)) {
-    void response.body?.cancel().catch(() => {})
-    throw new HqProblem(409, 'PROTOCOL_BODY_LIMIT', 'Protocol body exceeds its bound.')
-  }
-  requireWorkflow(response.body, 'PROTOCOL_BODY_MISSING')
-  const reader = response.body.getReader(), chunks: Uint8Array[] = []; let bytes = 0, done = false
-  const cancel = () => { void reader.cancel().catch(() => {}) }
-  init.signal?.addEventListener('abort', cancel, { once: true })
   try {
+    check()
+    requireWorkflow(!response.redirected && (!response.url || response.url === url), 'PROTOCOL_REDIRECT')
+    if (!response.ok) throw new HqProblem(409, `PROTOCOL_HTTP_${response.status}`, 'Protocol request refused.')
+    const length = response.headers.get('content-length')
+    if (length !== null && (!/^\d+$/.test(length) || Number(length) > maxBytes)) {
+      throw new HqProblem(409, 'PROTOCOL_BODY_LIMIT', 'Protocol body exceeds its bound.')
+    }
+    requireWorkflow(response.body, 'PROTOCOL_BODY_MISSING')
+    reader = response.body.getReader()
+    init.signal?.addEventListener('abort', cancel, { once: true })
     while (true) {
       check()
       const item = await reader.read(); check()
@@ -53,6 +58,6 @@ export async function protocolText(transport: ProtocolTransport, url: string, in
     return new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks))
   } finally {
     init.signal?.removeEventListener('abort', cancel)
-    if (!done) cancel()
+    cancel()
   }
 }

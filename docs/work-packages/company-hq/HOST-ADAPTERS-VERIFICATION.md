@@ -23,3 +23,21 @@ Activation requires a proven atomic no-charge allowance dispatcher, authorized d
 No Android tests, remote database tests, deployment checks or live-provider tests were run for this follow-up. The inherited parent Doctor Android API 29 emulator-runner failure in [run 41721252657](https://github.com/Building-Suit/building-suit-monorepo/actions/runs/41721252657) remains separate and unresolved here. The parent reported #529's existing [run 41735672142](https://github.com/Building-Suit/building-suit-monorepo/actions/runs/41735672142) passed review/branch-policy, with verify/publish-release skipped; that published-head result does not validate these unpublished changes.
 
 Nothing in this follow-up was pushed, merged, deployed or enabled. Local artifact paths are executor-local; separate bounded source messages provide the review transfer when persistent uploads are unavailable.
+
+## Response cleanup revision
+
+Independent review of `20098479fb38a2a24c6a40a0d48df828d85c8260` found that a late transport response or redirect/URL rejection could bypass body cleanup. `protocolText` now owns cleanup immediately after transport resolves, before deadline and response checks. Its single cancellation path covers both an unread body and an acquired reader, runs at most once, never awaits cancellation and preserves the original failure if cleanup rejects or throws. A transport that returns after the caller has already timed out is still cleaned up when it returns.
+
+Two new synthetic regression tests failed against the previous code, then passed after the correction. They cover deadline and parent cancellation before transport resolves, redirect and URL rejection, zero body pulls, one cancellation, one transport call and a cancellation promise that never settles. No response content is consumed and no retry is dispatched. Regression logs before and after the fix are retained.
+
+Final revised-code validation on 3 November 2026 supersedes the earlier run counts above:
+
+- Complete HQ suite: **62 passed**, zero failed/skipped.
+- Complete repository suite, now against final code: **2,835 tests; 2,812 passed, 23 skipped, zero failed**.
+- HQ lint, typecheck and production build: passed.
+- Workspace/token check and strict atomic-template architecture: passed.
+- Browser suite: five functional tests passed; exact screenshot initially failed with four differing pixels reported by Playwright. One isolated screenshot recheck passed exactly. Both logs and first-run failure artifacts are retained; no visual code, tolerance or baseline changed.
+- Preflight at `2026-11-03T23:26:20.690Z`: no errors; remote draft #529 remains `0aa29288`, parent #528 remains `e3345e50`. Work stays on the same runner branch.
+- Diff whitespace check passed. Post-commit release provenance result, exact revised commit and patch hashes are provided in the validation archive and handoff.
+
+All transports remain synthetic. This revision adds no live access, credentials, provider reconciliation, runtime activation, publication, merge or deployment. The existing funding/auth/hosting/timezone prerequisites and inherited Android API 29 caveat remain unchanged.
