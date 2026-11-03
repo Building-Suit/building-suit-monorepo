@@ -1,3 +1,5 @@
+import { workforce, readTools, brainContextKeys } from './hqWorkforce'
+import type { WorkflowApproval, WorkflowRun, BrainSnapshot } from './hqWorkforce'
 export type HqRole = 'ceo' | 'hr'
 export type HqActor = { id: string; role: 'founder' | HqRole }
 export type HqTaskStatus = 'proposed' | 'queued' | 'running' | 'review' | 'completed' | 'blocked' | 'failed' | 'cancelled'
@@ -17,6 +19,7 @@ export interface HqTask {
   approvalSource: string | null
   createdAt: string
   updatedAt: string
+  workflow?: WorkflowApproval
 }
 export interface HqMessage {
   id: string
@@ -35,9 +38,11 @@ export interface HqDocument {
   messages: HqMessage[]
   events: HqEvent[]
   lastAgentSeen: string | null
+  workflowRuns?: Record<string, WorkflowRun>
+  brainSnapshots?: Record<string, BrainSnapshot>
   receipts: Record<string, { payload: string; result: HqResult }>
 }
-export type HqCommandName = 'send_message' | 'create_task' | 'approve_task' | 'cancel_task' | 'hq_reply' | 'hq_report' | 'hq_delegate_task' | 'hq_update_task' | 'hq_propose_task'
+export type HqCommandName = 'send_message' | 'create_task' | 'approve_task' | 'authorize_workflow' | 'cancel_task' | 'hq_reply' | 'hq_report' | 'hq_delegate_task' | 'hq_update_task' | 'hq_propose_task'
 export interface HqCommand { name: HqCommandName; key: string; payload: Record<string, string> }
 export class HqProblem extends Error {
   constructor(public status: number, public code: string, message: string) { super(message) }
@@ -70,12 +75,12 @@ const TRANSITIONS: Record<HqTaskStatus, HqTaskStatus[]> = {
   failed: [], completed: [], cancelled: [],
 }
 export const roster = [
-  { id: 'ceo', name: 'CEO', role: 'Executive Office', onDemand: true, description: 'Plans with the founder, delegates approved work and reviews evidence.', skills: ['Planning', 'Delegation', 'Review'] },
-  { id: 'hr', name: 'HR Lead', role: 'HR & Agent Development', onDemand: true, description: 'Researches staffing and skills within work delegated by the CEO.', skills: ['Recruitment', 'Skill assessment', 'Workforce planning'] },
+  { id: 'ceo', agentId: 'AG-CEO-001', name: 'Steve', role: 'Executive Office', onDemand: true, description: 'Plans with the founder, delegates approved work and reviews evidence.', skills: ['Planning', 'Delegation', 'Review'] },
+  { id: 'hr', agentId: 'AG-HR-001', name: 'Maya', role: 'HR & Agent Development', onDemand: true, description: 'Researches staffing and skills within work delegated by the CEO.', skills: ['Recruitment', 'Skill assessment', 'Workforce planning'] },
 ] as const
 const notes = [
   { title: 'Founder authority', text: 'The founder approves execution and remains the final authority. Company conversations go through the CEO.' },
-  { title: 'Current workforce', text: 'CEO and HR Lead work on demand. Unassigned rooms do not represent departments or agents.' },
+  { title: 'Current workforce', text: 'Steve is CEO; Maya leads HR. Noah researches and Iris evaluates independently. Expanded workflow qualification is pending; no scheduled worker is active.' },
   { title: 'Company knowledge', text: 'Read the current authorized Brain before answering. Save work learning only from substantive work.' },
   { title: 'Completion and cost', text: 'Record the actual deliverable and fresh review evidence. All task budgets are zero.' },
 ]
@@ -97,9 +102,11 @@ export function projectState(doc: HqDocument, actor: HqActor, storageMode: Exclu
   return {
     ok: true as const, storageMode,
     agents: roster.map(agent => ({
-      ...agent, status: visibleTasks.some(t => t.owner === agent.id && t.status === 'running') ? 'working' as const
+      ...agent, status: visibleTasks.some(t => t.owner === agent.id && t.status === 'running' && (!t.workflow || Object.values(doc.workflowRuns || {}).some(r => r.taskId === t.id && r.status === 'running' && r.leaseUntil > Date.now()))) ? 'working' as const
         : visibleTasks.some(t => t.owner === agent.id && t.status === 'review') ? 'reviewing' as const : 'idle' as const,
     })),
+    workforce: workforce.map(worker => ({ ...worker, runtime: 'not_activated' as const })),
+    workflowRuns: Object.values(doc.workflowRuns || {}).filter(run => visibleTasks.some(t => t.id === run.taskId)).map(run => ({ key: run.key, taskId: run.taskId, status: run.status, stages: Object.keys(run.checkpoints), delivery: run.outbox?.status || 'not_prepared', failures: run.failures })),
     tasks, messages, events,
     ...(actor.role !== 'founder' ? { internalMessages: doc.messages.filter(m => m.channel === 'internal').slice(-120) } : {}),
     brain: { name: 'Company Brain', source: 'Founder’s maintained Drive Brain', connection: 'assistant_bridge' as const, updatedAt: '2026-11-03', notes },
@@ -125,6 +132,19 @@ export function parseFounderAction(body: unknown, actor: HqActor): HqCommand {
         title: field(input.title, 'Title', 180), brief: field(input.brief, 'Outcome', 5000),
         acceptance: field(input.acceptance, 'Definition of done', 3000), allowedActions: field(input.allowedActions, 'Allowed actions', 3000),
       } }
+    case 'authorize_workflow': {
+      only(input, [...common, 'id', 'allowedTools', 'publicInputs', 'brainFiles', 'daily', 'timezoneConfirmed'])
+      if (!Array.isArray(input.allowedTools) || input.allowedTools.length > readTools.length || input.allowedTools.some(t => !readTools.includes(t)) || new Set(input.allowedTools).size !== input.allowedTools.length) return inputError('Choose an explicit read-only tool scope.')
+      if (!Array.isArray(input.publicInputs) || input.publicInputs.length > 8 || input.publicInputs.some(v => typeof v !== 'string' || !v.trim() || v.length > 4000) || (input.allowedTools.length > 0 && input.publicInputs.length === 0)) return inputError('Approve up to eight exact public queries or URLs; private content must not enter public research.')
+      const files = object(input.brainFiles)
+      const required = [...workforce.map(w => w.agentId), 'playbook', ...brainContextKeys]
+      only(files, required)
+      const normalizedFiles = Object.fromEntries(required.map(key => [key, identifier(files[key], 'Authorized Brain file', 120)]))
+      if (new Set(Object.values(normalizedFiles)).size !== required.length) return inputError('Separate current role profiles and playbook are required.')
+      if (typeof input.daily !== 'boolean' || typeof input.timezoneConfirmed !== 'boolean') return inputError('Explicit schedule choices are required.')
+      if (input.daily && !input.timezoneConfirmed) return inputError('Confirm Africa/Cairo before authorizing daily work.')
+      return { name: 'authorize_workflow', key, payload: { id: identifier(input.id, 'Task', 120), workflow: JSON.stringify({ allowedTools: [...input.allowedTools].sort(), publicInputs: [...new Set(input.publicInputs.map(v => field(v, 'Public query or URL', 4000)))].sort(), brainFiles: normalizedFiles, daily: input.daily, timezone: 'Africa/Cairo', timezoneConfirmed: input.timezoneConfirmed }) } }
+    }
     case 'approve_task':
     case 'cancel_task':
       only(input, [...common, 'id'])
@@ -175,7 +195,7 @@ export function parseAgentAction(name: unknown, body: unknown, actor: HqActor): 
 }
 export function executeLocal(doc: HqDocument, actor: HqActor, command: HqCommand, now = new Date().toISOString()): { document: HqDocument; result: HqResult } {
   const { name, key, payload } = command
-  const founderCommand = ['send_message', 'create_task', 'approve_task', 'cancel_task'].includes(name)
+  const founderCommand = ['send_message', 'create_task', 'approve_task', 'authorize_workflow', 'cancel_task'].includes(name)
   if (founderCommand !== (actor.role === 'founder')) return denied('This command is not allowed for this identity.')
   if ((name === 'hq_reply' || name === 'hq_delegate_task' || name === 'hq_propose_task') && actor.role !== 'ceo') return denied('CEO authorization is required.')
   if (name === 'hq_report' && actor.role !== 'hr') return denied('HR authorization is required.')
@@ -224,13 +244,22 @@ export function executeLocal(doc: HqDocument, actor: HqActor, command: HqCommand
     addEvent('ceo', 'approval', 'Plan approved', task.title, task.id)
     return save(task.id, task.status)
   }
+  if (name === 'authorize_workflow') {
+    if (!task.approvedAt || task.status !== 'queued' || task.workflow) return conflict('Authorize the workflow once on an approved queued task; cancel and propose a new task to change scope.')
+    task.workflow = { ...JSON.parse(payload.workflow!), approvedAt: now }
+    task.updatedAt = now
+    addEvent('ceo', 'workflow-approval', 'Four-role workflow authorized', 'Explicit read-only tools and Brain file scope recorded; execution still requires verified runtime and allowance.', task.id)
+    return save(task.id, task.status)
+  }
   if (name === 'cancel_task') {
     if (['completed', 'cancelled', 'failed'].includes(task.status)) return conflict('This task is already closed.')
+    for (const run of Object.values(next.workflowRuns || {})) if (run.taskId === task.id && run.status !== 'completed') { run.status = 'cancelled'; run.leaseUntil = 0; run.evidenceBudget = 0 }
     task.status = 'cancelled'
     task.updatedAt = now
     addEvent(task.owner, 'cancel', 'Task cancelled', task.title, task.id)
     return save(task.id, task.status)
   }
+  if (task.workflow) return denied('Workflow-managed assignments require the bounded runner; founder cancellation remains available.')
   if (!task.approvedAt) return denied('Founder approval is required before work begins.')
   if (name === 'hq_delegate_task') {
     if (task.owner !== 'ceo' || task.status !== 'queued') return conflict('Only a queued CEO assignment can be delegated.')

@@ -13,3 +13,7 @@ Only CEO and HR are active. Founder speaks to CEO; CEO coordinates HR. Task exec
 Do not provision, migrate or deploy hosted infrastructure until the dedicated HQ scope and zero-cost path are verified. Requested staging `lwecnmsosfwovlzxauml` and production `dfeiuxsqhgzontefmrjc` remain unverified: during the 3 November 2026 review, the connection denied project access, and staging records associated the first ref with Super Admin. Keep runtime flags false and other products’ data/credentials untouched until these gates are satisfied. See [backend constraints](BACKEND-COST.md).
 
 The old `building-suit-hq-ec5b.tarekian99.chatgpt.site` version1 is historical. Cloud loopback URLs are not reachable as localhost from the founder’s own computer. Do not claim that either displays the new monorepo build without verifying that connection end to end.
+
+## CEO/HR integration child
+
+The local `codex/company-hq/ceo-hr-runner` child preserves this office implementation and adds explicit four-role configuration and a disabled bounded SQLite runner. Read [runner integration](RUNNER-INTEGRATION.md) and [verification](RUNNER-VERIFICATION.md). Historical statements above describe the parent checkpoint; four configured roles do not establish four active workers. No hosted activation or publication is implied.
