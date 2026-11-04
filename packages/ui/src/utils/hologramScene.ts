@@ -4,11 +4,12 @@ type Vector = [number, number, number]
 type Matrix = Float32Array
 interface Geometry { positions: number[]; normals: number[] }
 interface Mesh { position: WebGLBuffer; normal: WebGLBuffer; count: number; mode: number }
-interface OrbProjection { eye: Vector; right: Vector; up: Vector; forward: Vector; center: Vector; aspect: number }
+interface OrbProjection { eye: Vector; right: Vector; up: Vector; forward: Vector; center: Vector; radius: number; aspect: number }
 
-export interface HologramPalette { light: Vector; blue: Vector; metal: Vector }
+export interface HologramPalette { navy: Vector; surface: Vector; gold: Vector; steel: Vector; light: Vector; pearl: Vector }
+export interface HologramInteraction { open: number; excited: number }
 export interface HologramRenderer {
-  draw: (camera: Readonly<SpatialViewportCamera>, seconds: number) => void
+  draw: (camera: Readonly<SpatialViewportCamera>, seconds: number, interaction?: Readonly<HologramInteraction>) => void
   hitTestOrb: (clientX: number, clientY: number) => boolean
   dispose: () => void
 }
@@ -19,7 +20,6 @@ attribute vec3 aNormal;
 uniform mat4 uProjection;
 uniform mat4 uView;
 uniform mat4 uModel;
-uniform float uPointSize;
 varying vec3 vWorld;
 varying vec3 vNormal;
 void main() {
@@ -27,7 +27,6 @@ void main() {
   vWorld = world.xyz;
   vNormal = mat3(uModel) * aNormal;
   gl_Position = uProjection * uView * world;
-  gl_PointSize = uPointSize;
 }`
 
 const fragmentShader = `
@@ -43,24 +42,22 @@ void main() {
   vec3 normal = normalize(vNormal);
   vec3 view = normalize(uEye - vWorld);
   float facing = abs(dot(normal, view));
-  float rim = pow(1.0 - facing, 2.6);
+  float rim = pow(1.0 - facing, 2.8);
   float diffuse = max(dot(normal, normalize(vec3(-1.5, 3.0, 2.0))), 0.0);
   float specular = pow(max(dot(reflect(-normalize(vec3(-1.5, 3.0, 2.0)), normal), view), 0.0), 42.0);
-  vec3 color = uColor * (0.38 + 0.62 * diffuse) + vec3(specular * 0.4);
+  vec3 color = uColor * (0.65 + 0.55 * diffuse) + vec3(specular * 0.15 + rim * 0.025);
   float alpha = uOpacity;
   if (uMaterial > 0.5 && uMaterial < 1.5) {
-    float scan = pow(0.5 + 0.5 * sin(vWorld.y * 100.0 - uTime * 1.8), 13.0);
-    color = uColor * (0.65 + rim * 1.45 + scan * 0.25) + vec3(specular * 0.65);
-    alpha *= 0.38 + rim * 0.62;
+    color = uColor * 0.85 + vec3(specular * 0.18);
+    alpha *= 0.06 + rim * 0.4;
   } else if (uMaterial > 1.5 && uMaterial < 2.5) {
-    color = uColor * 1.35;
+    color = uColor;
   } else if (uMaterial > 2.5 && uMaterial < 3.5) {
-    float height = clamp((vWorld.y + 0.2) / 1.2, 0.0, 1.0);
-    color = uColor;
-    alpha *= pow(1.0 - height, 2.0) * (0.2 + rim * 0.8);
+    float impulse = pow(max(0.0, sin(uTime * 2.6 - vWorld.y * 8.0 - abs(vWorld.x) * 7.0)), 5.0);
+    color = uColor * (0.8 + impulse * 0.35);
+    alpha *= 0.5 + impulse * 0.5;
   } else if (uMaterial > 3.5) {
-    color = uColor;
-    alpha *= exp(-dot(vWorld.xz, vWorld.xz) * 0.7);
+    color = uColor * (0.55 + diffuse * 0.4) + rim * uColor * 0.12;
   }
   gl_FragColor = vec4(color, alpha);
 }`
@@ -77,15 +74,18 @@ function multiply(a: Matrix, b: Matrix): Matrix {
   }
   return result
 }
-function model(x = 0, y = 0, z = 0, tilt = 0, turn = 0): Matrix {
+function model(x = 0, y = 0, z = 0, tilt = 0, turn = 0, spin = 0, scale = 1): Matrix {
   const translation = identity()
   translation[12] = x; translation[13] = y; translation[14] = z
-  const rotationX = identity(), rotationZ = identity()
+  const rotationX = identity(), rotationZ = identity(), rotationY = identity(), scaling = identity()
   rotationX[5] = Math.cos(tilt); rotationX[6] = Math.sin(tilt)
   rotationX[9] = -Math.sin(tilt); rotationX[10] = Math.cos(tilt)
   rotationZ[0] = Math.cos(turn); rotationZ[1] = Math.sin(turn)
   rotationZ[4] = -Math.sin(turn); rotationZ[5] = Math.cos(turn)
-  return multiply(translation, multiply(rotationX, rotationZ))
+  rotationY[0] = Math.cos(spin); rotationY[2] = -Math.sin(spin)
+  rotationY[8] = Math.sin(spin); rotationY[10] = Math.cos(spin)
+  scaling[0] = scale; scaling[5] = scale; scaling[10] = scale
+  return multiply(translation, multiply(rotationY, multiply(rotationX, multiply(rotationZ, scaling))))
 }
 function dot(a: Vector, b: Vector): number { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] }
 function normalize(a: Vector): Vector { const length = Math.hypot(...a) || 1; return [a[0] / length, a[1] / length, a[2] / length] }
@@ -134,22 +134,98 @@ function cylinder(bottomRadius: number, topRadius: number, bottom: number, top: 
   }
   return geometry
 }
-function grid(): Geometry {
+function merge(...parts: Geometry[]): Geometry {
   const geometry: Geometry = { positions: [], normals: [] }
-  for (let i = -7; i <= 7; i++) {
-    geometry.positions.push(i, -0.7, -7, i, -0.7, 7, -7, -0.7, i, 7, -0.7, i)
-    for (let j = 0; j < 4; j++) geometry.normals.push(0, 1, 0)
+  for (const part of parts) {
+    // Avoid spreading entire meshes onto the call stack.
+    for (const value of part.positions) geometry.positions.push(value)
+    for (const value of part.normals) geometry.normals.push(value)
   }
   return geometry
 }
-function particles(): Geometry {
+function tube(path: Vector[], radius: number, sides = 5): Geometry {
   const geometry: Geometry = { positions: [], normals: [] }
-  for (let i = 0; i < 72; i++) {
-    const angle = i * 2.39996, radius = 0.85 + ((i * 17) % 23) / 32
-    geometry.positions.push(Math.cos(angle) * radius, -0.1 + ((i * 13) % 41) / 22, Math.sin(angle) * radius)
-    geometry.normals.push(0, 1, 0)
+  function vertex(index: number, edge: number) {
+    const point = path[index]!, before = path[Math.max(0, index - 1)]!, after = path[Math.min(path.length - 1, index + 1)]!
+    const tangent = normalize([after[0] - before[0], after[1] - before[1], after[2] - before[2]])
+    const side = normalize(cross(tangent, Math.abs(tangent[1]) > 0.85 ? [1, 0, 0] : [0, 1, 0]))
+    const up = cross(tangent, side), angle = edge / sides * Math.PI * 2
+    const normal: Vector = [0, 1, 2].map(axis => side[axis]! * Math.cos(angle) + up[axis]! * Math.sin(angle)) as Vector
+    geometry.positions.push(point[0] + normal[0] * radius, point[1] + normal[1] * radius, point[2] + normal[2] * radius)
+    geometry.normals.push(...normal)
+  }
+  for (let index = 0; index < path.length - 1; index++) for (let edge = 0; edge < sides; edge++) {
+    vertex(index, edge); vertex(index + 1, edge); vertex(index, edge + 1)
+    vertex(index + 1, edge); vertex(index + 1, edge + 1); vertex(index, edge + 1)
   }
   return geometry
+}
+function curve(points: [Vector, Vector, Vector, Vector], steps = 24): Vector[] {
+  return Array.from({ length: steps + 1 }, (_, index) => {
+    const t = index / steps, rest = 1 - t
+    return [0, 1, 2].map(axis => rest ** 3 * points[0][axis]! + 3 * rest ** 2 * t * points[1][axis]!
+      + 3 * rest * t ** 2 * points[2][axis]! + t ** 3 * points[3][axis]!) as Vector
+  })
+}
+function shieldPlate(angle: number): { body: Geometry; seam: Geometry; center: Vector } {
+  const center: Vector = [Math.cos(angle) * 0.55, 0, Math.sin(angle) * 0.55]
+  const radial = (u: number, v: number): Vector => {
+    const polar = Math.PI * (0.13 + v * 0.78)
+    const width = 0.46 * Math.PI / 3 * (0.74 + Math.sin(v * Math.PI) * 0.26)
+    const azimuth = angle + (u * 2 - 1) * width
+    return [Math.sin(polar) * Math.cos(azimuth), Math.cos(polar), Math.sin(polar) * Math.sin(azimuth)]
+  }
+  const point = (u: number, v: number, radius = 0.83): Vector => radial(u, v).map((value, axis) => value * radius - center[axis]!) as Vector
+  const outer = parametric(20, 26, (u, v) => point(u, v), radial)
+  const inner = parametric(20, 26, (u, v) => point(u, v, 0.793), (u, v) => radial(u, v).map(value => -value) as Vector)
+  const edges: Geometry[] = []
+  for (const side of [0, 1]) {
+    edges.push(parametric(1, 26, (u, v) => point(side, v, 0.793 + u * 0.037), (_u, v) => radial(side, v)))
+    edges.push(parametric(20, 1, (u, v) => point(u, side, 0.793 + v * 0.037), (u, _v) => radial(u, side)))
+  }
+  const seam = tube(Array.from({ length: 40 }, (_, index) => point(0, 0.08 + index / 39 * 0.82, 0.834)), 0.004, 4)
+  return { body: merge(outer, inner, ...edges), seam, center }
+}
+function brainPoint(side: number, u: number, v: number): Vector {
+  const azimuth = u * Math.PI * 2, polar = v * Math.PI
+  const fold = 1 + Math.sin(azimuth * 8 + Math.sin(polar * 6) * 0.8) * Math.sin(polar) ** 1.3 * 0.045
+    + Math.sin(polar * 15 + azimuth * 2) * Math.sin(polar) * 0.018
+  return [side * 0.22 + Math.sin(polar) * Math.cos(azimuth) * 0.20 * fold,
+    Math.cos(polar) * 0.33 * fold, Math.sin(polar) * Math.sin(azimuth) * 0.40 * fold]
+}
+function brainLobe(side: number): Geometry {
+  return parametric(64, 40, (u, v) => brainPoint(side, u, v), (u, v) => {
+    const safeV = Math.max(0.0001, Math.min(0.9998, v)), point = brainPoint(side, u, safeV)
+    const nextU = brainPoint(side, u + 0.0001, safeV), nextV = brainPoint(side, u, safeV + 0.0001)
+    return normalize(cross([nextU[0] - point[0], nextU[1] - point[1], nextU[2] - point[2]], [nextV[0] - point[0], nextV[1] - point[1], nextV[2] - point[2]]))
+  })
+}
+function brainFolds(): Geometry {
+  const folds: Geometry[] = []
+  for (const side of [-1, 1]) for (let index = 0; index < 7; index++) {
+    const path = Array.from({ length: 38 }, (_, step) => {
+      const v = 0.09 + step / 37 * 0.80, u = index / 7 + Math.sin(v * 14 + index * 1.7) * 0.025
+      const point = brainPoint(side, u, v)
+      return [point[0] + (point[0] - side * 0.22) * 0.015, point[1] * 1.015, point[2] * 1.015] as Vector
+    })
+    folds.push(tube(path, 0.005))
+  }
+  return merge(...folds)
+}
+function brainNerves(): Geometry {
+  const paths: [Vector, Vector, Vector, Vector][] = [
+    [[0.025, -0.28, 0.12], [0.08, -0.16, 0.30], [0.18, -0.04, 0.39], [0.25, 0.08, 0.37]],
+    [[0.16, -0.065, 0.37], [0.14, 0.05, 0.40], [0.13, 0.16, 0.35], [0.18, 0.27, 0.22]],
+    [[0.24, 0.055, 0.37], [0.31, 0.11, 0.33], [0.35, 0.17, 0.25], [0.34, 0.24, 0.12]],
+    [[0.10, -0.14, 0.31], [0.21, -0.17, 0.36], [0.32, -0.12, 0.31], [0.39, -0.06, 0.18]],
+    [[0.31, -0.12, 0.31], [0.34, -0.04, 0.28], [0.39, 0.02, 0.19], [0.41, 0.08, 0.04]],
+  ]
+  const nerves: Geometry[] = []
+  for (const side of [-1, 1]) for (const facing of [-1, 1]) for (const points of paths) {
+    const mirrored = points.map(point => [point[0] * side, point[1], point[2] * facing] as Vector) as [Vector, Vector, Vector, Vector]
+    nerves.push(tube(curve(mirrored), 0.004))
+  }
+  return merge(...nerves)
 }
 
 /** Pure presentation renderer: local geometry, no network, assets or product state. */
@@ -177,7 +253,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error('Hologram renderer unavailable')
     gl.useProgram(program)
     const position = gl.getAttribLocation(program, 'aPosition'), normal = gl.getAttribLocation(program, 'aNormal')
-    const uniforms = Object.fromEntries(['uProjection', 'uView', 'uModel', 'uEye', 'uColor', 'uOpacity', 'uTime', 'uMaterial', 'uPointSize'].map(name => [name, gl.getUniformLocation(program!, name)]))
+    const uniforms = Object.fromEntries(['uProjection', 'uView', 'uModel', 'uEye', 'uColor', 'uOpacity', 'uTime', 'uMaterial'].map(name => [name, gl.getUniformLocation(program!, name)]))
     const mesh = (geometry: Geometry, mode: number = gl.TRIANGLES): Mesh => {
       function buffer(data: number[]) {
         const result = gl!.createBuffer()
@@ -188,24 +264,20 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       }
       return { position: buffer(geometry.positions), normal: buffer(geometry.normals), count: geometry.positions.length / 3, mode }
     }
+    const plates = Array.from({ length: 6 }, (_, index) => {
+      const angle = index * Math.PI / 3, plate = shieldPlate(angle)
+      return { angle, center: plate.center, body: mesh(plate.body), seam: mesh(plate.seam) }
+    })
     const geometry = {
-      floor: mesh(cylinder(3.1, 3.1, -0.71, -0.705)),
-      grid: mesh(grid(), gl.LINES),
-      base: mesh(cylinder(1.53, 1.53, -0.65, -0.47)),
-      bevel: mesh(cylinder(1.53, 1.39, -0.47, -0.39)),
-      deck: mesh(cylinder(1.32, 1.32, -0.39, -0.31)),
-      inset: mesh(cylinder(0.94, 0.94, -0.31, -0.25)),
-      emitter: mesh(cylinder(0.43, 0.43, -0.25, -0.15)),
-      outerRing: mesh(torus(1.535, 0.012)),
-      ring: mesh(torus(1.27, 0.013)),
-      innerRing: mesh(torus(0.94, 0.009)),
-      emitterRing: mesh(torus(0.42, 0.012)),
-      halo: mesh(torus(1.26, 0.055)),
-      beam: mesh(cylinder(0.36, 0.56, -0.14, 0.86)),
-      core: mesh(sphere(0.57)),
-      shell: mesh(sphere(0.64)),
-      orbit: mesh(torus(0.76, 0.004)),
-      points: mesh(particles(), gl.POINTS),
+      base: mesh(cylinder(1.10, 1.10, -0.64, -0.53)),
+      deck: mesh(cylinder(1.10, 1.01, -0.53, -0.45)),
+      outerRing: mesh(torus(1.06, 0.008)),
+      innerRing: mesh(torus(0.80, 0.005)),
+      shell: mesh(sphere(0.69)),
+      lobes: mesh(merge(brainLobe(-1), brainLobe(1))),
+      folds: mesh(brainFolds()),
+      nerves: mesh(brainNerves()),
+      stem: mesh(tube(curve([[0, -0.23, 0.04], [0, -0.31, 0.08], [0.015, -0.38, 0.10], [0, -0.43, 0.08]]), 0.025, 8)),
     }
     let disposed = false
     let orbProjection: OrbProjection | null = null
@@ -220,7 +292,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       gl.drawArrays(shape.mode, 0, shape.count)
     }
     return {
-      draw(camera, seconds) {
+      draw(camera, seconds, interaction = { open: 0, excited: 0 }) {
         if (disposed || !gl || gl.isContextLost()) return
         const width = canvas.clientWidth, height = canvas.clientHeight
         if (!width || !height) return
@@ -237,27 +309,43 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         const eye: Vector = [target[0] + Math.sin(camera.yaw) * Math.cos(camera.pitch) * distance, target[1] + Math.sin(camera.pitch) * distance, target[2] + Math.cos(camera.yaw) * Math.cos(camera.pitch) * distance]
         gl.uniformMatrix4fv(uniforms.uProjection!, false, perspective(width / height))
         gl.uniformMatrix4fv(uniforms.uView!, false, lookAt(eye, target))
-        gl.uniform3fv(uniforms.uEye!, eye); gl.uniform1f(uniforms.uTime!, seconds); gl.uniform1f(uniforms.uPointSize!, 1.8 * ratio)
-        const time = seconds % 1000, float = Math.sin(time * 1.25) * 0.055
-        orbProjection = { eye, right, up, forward: normalize([target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]]), center: [0, 0.88 + float, 0], aspect: width / height }
-        drawMesh(geometry.grid, palette.blue, 4, 0.14)
-        drawMesh(geometry.floor, palette.blue, 4, 0.16, identity(), true)
-        drawMesh(geometry.base, palette.metal, 0)
-        drawMesh(geometry.bevel, palette.blue.map(value => value * 0.32) as Vector, 0)
-        drawMesh(geometry.deck, palette.metal.map(value => value * 1.5) as Vector, 0)
-        drawMesh(geometry.inset, palette.metal, 0)
-        drawMesh(geometry.emitter, palette.blue.map(value => value * 0.3) as Vector, 0)
-        drawMesh(geometry.outerRing, palette.blue, 2, 0.7, model(0, -0.48), true)
-        drawMesh(geometry.ring, palette.light, 2, 0.95, model(0, -0.3), true)
-        drawMesh(geometry.innerRing, palette.blue, 2, 0.65, model(0, -0.245), true)
-        drawMesh(geometry.emitterRing, palette.light, 2, 1, model(0, -0.145), true)
-        drawMesh(geometry.halo, palette.blue, 2, 0.06, model(0, -0.29), true)
-        drawMesh(geometry.beam, palette.blue, 3, 0.24, identity(), true)
-        drawMesh(geometry.core, palette.blue, 1, 0.74, model(0, 0.88 + float, 0, 0, time * 0.08), true)
-        drawMesh(geometry.shell, palette.light, 1, 0.38, model(0, 0.88 + float), true)
-        drawMesh(geometry.orbit, palette.light, 2, 0.4, model(0, 0.88 + float, 0, 0.48, time * 0.13), true)
-        drawMesh(geometry.orbit, palette.blue, 2, 0.3, model(0, 0.88 + float, 0, 1.12, -time * 0.09), true)
-        drawMesh(geometry.points, palette.light, 2, 0.48, model(0, Math.sin(time * 0.35) * 0.05, 0, 0, time * 0.025), true)
+        const time = seconds % 1000, open = Math.max(0, Math.min(1, interaction.open)), excited = Math.max(0, Math.min(1, interaction.excited))
+        const reveal = open * open * (3 - 2 * open), float = Math.sin(time * 0.9) * 0.028
+        const beat = 1 + Math.sin(time * 2.15) * 0.006, orbHeight = 0.98 + float
+        const shakeX = Math.sin(time * 31) * excited * 0.005
+        const shakeY = Math.sin(time * 37) * excited * 0.004
+        gl.uniform3fv(uniforms.uEye!, eye); gl.uniform1f(uniforms.uTime!, time)
+        orbProjection = {
+          eye, right, up, forward: normalize([target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]]),
+          center: [shakeX, orbHeight + shakeY, 0], radius: (0.84 - reveal * 0.14) * beat, aspect: width / height,
+        }
+        drawMesh(geometry.base, palette.navy, 0)
+        drawMesh(geometry.deck, palette.surface, 0)
+        drawMesh(geometry.outerRing, palette.steel, 2, 0.65, model(0, -0.49))
+        drawMesh(geometry.innerRing, palette.gold, 2, 0.34, model(0, -0.445))
+        for (let index = 0; index < plates.length; index++) {
+          const plate = plates[index]!, phase = index * 1.71
+          const vibration = excited * (1 - reveal * 0.5)
+          const radial = reveal * 0.88 + Math.sin(time * 33 + phase) * vibration * 0.014
+          const lift = reveal * (index % 2 ? 0.94 : -0.80) + Math.sin(time * 38 + phase) * vibration * 0.010
+          const tilt = reveal * 0.67 + Math.sin(time * 35 + phase) * vibration * 0.018
+          const transform = model(
+            plate.center[0] * beat + Math.cos(plate.angle) * radial + shakeX,
+            orbHeight + lift + shakeY,
+            plate.center[2] * beat + Math.sin(plate.angle) * radial,
+            -Math.sin(plate.angle) * tilt, Math.cos(plate.angle) * tilt, reveal * Math.sin(phase) * 0.18, beat,
+          )
+          drawMesh(plate.body, index % 2 ? palette.surface : palette.navy, 0, 1, transform)
+          drawMesh(plate.seam, palette.gold, 2, 0.38 + excited * 0.30, transform)
+        }
+        const brain = model(shakeX, orbHeight + shakeY, 0, 0, 0, 0, beat)
+        if (reveal > 0.001) {
+          drawMesh(geometry.lobes, palette.light, 4, reveal * 0.84, brain)
+          drawMesh(geometry.stem, palette.steel, 4, reveal * 0.85, brain)
+          drawMesh(geometry.folds, palette.steel, 2, reveal * 0.78, brain)
+          drawMesh(geometry.nerves, palette.gold, 3, reveal * 0.94, brain)
+        }
+        drawMesh(geometry.shell, palette.pearl, 1, 0.50, brain)
       },
       hitTestOrb(clientX, clientY) {
         if (disposed || !orbProjection || gl.isContextLost()) return false
@@ -269,7 +357,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         const direction = normalize([forward[0] + right[0] * horizontal + up[0] * vertical, forward[1] + right[1] * horizontal + up[1] * vertical, forward[2] + right[2] * horizontal + up[2] * vertical])
         const origin: Vector = [eye[0] - center[0], eye[1] - center[1], eye[2] - center[2]]
         const projection = dot(origin, direction)
-        const discriminant = projection * projection - dot(origin, origin) + 0.64 * 0.64
+        const discriminant = projection * projection - dot(origin, origin) + orbProjection.radius * orbProjection.radius
         return discriminant >= 0 && -projection + Math.sqrt(discriminant) > 0.05
       },
       dispose() {

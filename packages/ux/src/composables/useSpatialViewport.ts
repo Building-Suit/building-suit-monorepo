@@ -26,6 +26,11 @@ interface TouchGesture {
   distance: number
 }
 
+interface SpatialViewportFeedback {
+  onHover?: (clientX: number, clientY: number, active: boolean) => void
+  onHold?: (clientX: number, clientY: number, active: boolean) => void
+}
+
 export const SPATIAL_VIEWPORT_DEFAULT_CAMERA: Readonly<SpatialViewportCamera> = Object.freeze({ yaw: 0.55, pitch: 0.5, zoom: 1, panX: 0, panY: 0 })
 export const SPATIAL_VIEWPORT_MIN_ZOOM = 0.35
 export const SPATIAL_VIEWPORT_MAX_ZOOM = 3.5
@@ -33,19 +38,57 @@ const maximumPitch = Math.PI / 2 - 0.08
 const interactiveSelector = 'button, a, input, textarea, select, [role="button"], [contenteditable="true"], [data-spatial-controls]'
 
 /** Request-scoped orbit, pan and zoom mechanics for a shared spatial viewport. */
-export function useSpatialViewport(onActivate?: (clientX: number, clientY: number) => void) {
+export function useSpatialViewport(onActivate?: (clientX: number, clientY: number) => void, feedback: SpatialViewportFeedback = {}) {
   const viewportRef = shallowRef<HTMLElement | null>(null)
   const camera = reactive<SpatialViewportCamera>({ ...SPATIAL_VIEWPORT_DEFAULT_CAMERA })
   const pointerCount = ref(0)
   const resetVersion = ref(0)
   const pointers = new Map<number, SpatialPointer>()
   let touchGesture: TouchGesture | null = null
+  let cameraFrame = 0
+  let holdTimer: ReturnType<typeof setTimeout> | undefined
+
+  function stopCameraTransition() {
+    if (cameraFrame) cancelAnimationFrame(cameraFrame)
+    cameraFrame = 0
+  }
+
+  function clearFeedback() {
+    clearTimeout(holdTimer)
+    holdTimer = undefined
+    feedback.onHover?.(0, 0, false)
+    feedback.onHold?.(0, 0, false)
+  }
+
+  /** Move the same camera used by gestures; user input always interrupts it. */
+  function transitionTo(target: Readonly<SpatialViewportCamera>, duration = 650) {
+    stopCameraTransition()
+    endInteraction()
+    const next = { ...target, zoom: Math.max(SPATIAL_VIEWPORT_MIN_ZOOM, Math.min(SPATIAL_VIEWPORT_MAX_ZOOM, target.zoom)), pitch: Math.max(-maximumPitch, Math.min(maximumPitch, target.pitch)) }
+    if (!Object.values(next).every(Number.isFinite)) return
+    if (typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches || duration <= 0) {
+      Object.assign(camera, next)
+      return
+    }
+    const from = { ...camera }
+    // Choose the shorter turn across the zero/2π seam.
+    next.yaw = from.yaw + Math.atan2(Math.sin(next.yaw - from.yaw), Math.cos(next.yaw - from.yaw))
+    const started = performance.now()
+    const animate = (time: number) => {
+      const progress = Math.min(1, (time - started) / duration)
+      const eased = 1 - (1 - progress) ** 3
+      for (const key of ['yaw', 'pitch', 'zoom', 'panX', 'panY'] as const) camera[key] = from[key] + (next[key] - from[key]) * eased
+      cameraFrame = progress < 1 ? requestAnimationFrame(animate) : 0
+    }
+    cameraFrame = requestAnimationFrame(animate)
+  }
 
   function ignoresTarget(target: EventTarget | null) {
     return typeof Element !== 'undefined' && target instanceof Element && Boolean(target.closest(interactiveSelector))
   }
 
   function zoomBy(factor: number) {
+    stopCameraTransition()
     if (!Number.isFinite(factor) || factor <= 0) return
     camera.zoom = Math.max(SPATIAL_VIEWPORT_MIN_ZOOM, Math.min(SPATIAL_VIEWPORT_MAX_ZOOM, camera.zoom * factor))
   }
@@ -86,6 +129,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
   }
 
   function endInteraction() {
+    clearFeedback()
     const active = [...pointers.entries()]
     pointers.clear()
     pointerCount.value = 0
@@ -94,6 +138,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
   }
 
   function reset() {
+    stopCameraTransition()
     endInteraction()
     Object.assign(camera, SPATIAL_VIEWPORT_DEFAULT_CAMERA)
     resetVersion.value++
@@ -103,6 +148,8 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
     if (ignoresTarget(event.target) || (event.pointerType !== 'touch' && ![0, 1, 2].includes(event.button))) return
     const element = viewportRef.value
     if (!element) return
+    stopCameraTransition()
+    clearFeedback()
     event.preventDefault()
     element.focus({ preventScroll: true })
     pointers.set(event.pointerId, {
@@ -116,6 +163,14 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
       capture: element,
     })
     if (pointers.size > 1) for (const pointer of pointers.values()) pointer.activationEligible = false
+    if (event.pointerType === 'touch' && pointers.size === 1) {
+      holdTimer = setTimeout(() => {
+        const pointer = pointers.get(event.pointerId)
+        if (!pointer?.activationEligible || pointers.size !== 1) return
+        pointer.activationEligible = false
+        feedback.onHold?.(pointer.x, pointer.y, true)
+      }, 360)
+    }
     pointerCount.value = pointers.size
     touchGesture = currentTouchGesture()
     try { element.setPointerCapture(event.pointerId) }
@@ -124,12 +179,18 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
 
   function onPointerMove(event: PointerEvent) {
     const pointer = pointers.get(event.pointerId)
-    if (!pointer) return
+    if (!pointer) {
+      if (event.pointerType !== 'touch') feedback.onHover?.(event.clientX, event.clientY, event.buttons === 0 && !ignoresTarget(event.target))
+      return
+    }
     event.preventDefault()
     if (!pointer.touch && event.buttons === 0) { onPointerEnd(event); return }
     const x = event.clientX - pointer.x
     const y = event.clientY - pointer.y
-    if (Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) >= 6 || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) pointer.activationEligible = false
+    if (Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) >= 6 || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) {
+      pointer.activationEligible = false
+      clearFeedback()
+    }
     pointer.x = event.clientX
     pointer.y = event.clientY
     const nextGesture = currentTouchGesture()
@@ -147,6 +208,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
   function onPointerEnd(event: PointerEvent) {
     const pointer = pointers.get(event.pointerId)
     if (!pointer) return
+    clearFeedback()
     const activate = event.type === 'pointerup' && pointer.activationEligible && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey && Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) < 6
     pointers.delete(event.pointerId)
     pointerCount.value = pointers.size
@@ -158,6 +220,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
   function onWheel(event: WheelEvent) {
     if (ignoresTarget(event.target)) return
     event.preventDefault()
+    clearFeedback()
     for (const pointer of pointers.values()) pointer.activationEligible = false
     const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? (viewportRef.value?.clientHeight ?? 600) : 1
     const delta = Math.max(-160, Math.min(160, event.deltaY * unit))
@@ -166,6 +229,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
 
   function onKeydown(event: KeyboardEvent) {
     if (ignoresTarget(event.target) || event.ctrlKey || event.metaKey || event.altKey) return
+    stopCameraTransition()
     switch (event.key) {
       case 'ArrowLeft': event.shiftKey ? pan(-28, 0) : orbit(-12, 0); break
       case 'ArrowRight': event.shiftKey ? pan(28, 0) : orbit(12, 0); break
@@ -180,7 +244,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
   }
 
   function onVisibilityChange() {
-    if (document.hidden) endInteraction()
+    if (document.hidden) { stopCameraTransition(); endInteraction() }
   }
 
   onMounted(() => {
@@ -188,6 +252,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
     document.addEventListener('visibilitychange', onVisibilityChange)
   })
   onScopeDispose(() => {
+    stopCameraTransition()
     endInteraction()
     if (typeof window === 'undefined') return
     window.removeEventListener('blur', endInteraction)
@@ -205,9 +270,11 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
     onPointerDown,
     onPointerMove,
     onPointerEnd,
+    onPointerLeave: clearFeedback,
     onWheel,
     onKeydown,
     zoomBy,
     reset,
+    transitionTo,
   }
 }

@@ -5219,7 +5219,7 @@
   },
   {
     "id": "company-hq-internal-office",
-    "task": "HQ-CLOUD-BRAIN-20261104",
+    "task": "HQ-SHIELD-ORB-20261104",
     "suits": [
       "automation-suit",
       "doctor-suit",
@@ -5265,13 +5265,14 @@
       "packages/ui/src/utils/hologramScene.ts",
       "packages/ux/src/composables/useSpatialViewport.ts"
     ],
-    "reason": "Maintain the internal reference-header workspace, central floating 3D orb/base and shared camera/overview. Replace the local Insync reader with a private read-only Google Drive service-account adapter under a fixed authorized Brain root, verified descendant traversal, bounded paginated reads, no-store loopback/same-origin/header gates and escaped note presentation. Add visible/online polling, focus refresh, bounded failure backoff, source versions/last successful cloud check and honest setup/auth/error states. No filesystem fallback remains. Dedicated Google credentials/root-Viewer setup are pending; source, live connection and acceptance are untested under the founder no-autonomous-testing instruction. New HQ Supabase project metadata is verified, but schema/Auth/GitHub integration and runtime acceptance are not. Preserve historical migrations/evidence, canonical employee IDs and postponed office/CEO-proposal requirements. No operational product activation, public release, hosted database change, provider setup, deployment, Brain writes or staff/model execution is introduced.",
+    "reason": "Maintain the internal reference-header 3D workspace with a simple token-based navy shield orb, subtle beat and hover/touch-hold vibration. All Brain entry points share shield scatter, glass/brain/pulsing-nerve reveal, interruptible camera focus and a nonmodal read-only side panel; closing restores the prior camera and reset restores the closed/default state. Preserve original design in Git. Keep the private read-only Google Drive source under its fixed authorized root, verified descendants, bounded reads, source versions and visible/online polling, without filesystem fallback. Fix development Unix-socket request attestation at the actual loopback listener and bounded scan performance. Founder-requested restart/retry verified a complete 330-note index and one note read; visual, gesture, freshness and broad acceptance remain deferred. New HQ Supabase metadata is verified but Auth/schema/GitHub integration remains unconfigured or unverified. No operational product activation, public release, hosted database/provider mutation, deployment, app Brain writes, staff/model execution or spending.",
     "sources": [
       "hq-office-monorepo-20261103",
       "hq-static-layout-reset-20261104",
       "hq-spatial-orb-20261104",
       "hq-brain-connection-20261104",
-      "hq-cloud-brain-20261104"
+      "hq-cloud-brain-20261104",
+      "hq-shield-orb-20261104"
     ],
     "evidence": [
       {
@@ -5285,6 +5286,18 @@
       {
         "path": "apps/company-hq/app/composables/useCompanyBrain.ts",
         "contains": "const REFRESH_INTERVAL_MS = 15_000"
+      },
+      {
+        "path": "packages/ui/src/utils/hologramScene.ts",
+        "contains": "function shieldPlate(angle: number)"
+      },
+      {
+        "path": "packages/ui/src/templates/BsHqLayoutPage.vue",
+        "contains": "class=\"bs-hq-layout__brain-panel\""
+      },
+      {
+        "path": "packages/ux/src/composables/useSpatialViewport.ts",
+        "contains": "function transitionTo(target: Readonly<SpatialViewportCamera>"
       }
     ]
   }

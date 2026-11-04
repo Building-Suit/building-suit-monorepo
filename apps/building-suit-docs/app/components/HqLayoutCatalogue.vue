@@ -17,10 +17,10 @@ const content = computed<HqLayoutContent>(() => ({
   zoomOutLabel: c('Zoom out', 'تصغير'),
   zoomInLabel: c('Zoom in', 'تكبير'),
   fitViewLabel: c('Reset view: center, 100% zoom and default camera', 'إعادة العرض: توسيط وتكبير ١٠٠٪ وزاوية الكاميرا الافتراضية'),
-  hologramLabel: c('Floating holographic orb above its base', 'كرة هولوغرام عائمة فوق قاعدتها'),
+  hologramLabel: c('Shielded Company Brain orb above its base', 'كرة معرفة الشركة المحمية بدرع فوق قاعدتها'),
   sceneUnavailableLabel: c('3D rendering is unavailable in this browser. Enable hardware acceleration to show the hologram.', 'العرض ثلاثي الأبعاد غير متاح في هذا المتصفح. فعّل تسريع الأجهزة لعرض الهولوغرام.'),
-  mouseControlsLabel: c('Drag to rotate. Shift-drag or right-drag to move. Scroll to zoom.', 'اسحب للتدوير. اضغط Shift مع السحب أو اسحب بزر الفأرة الأيمن للتحريك. مرّر للتكبير.'),
-  touchControlsLabel: c('Drag to rotate. Use two fingers to move and pinch to zoom.', 'اسحب للتدوير. استخدم إصبعين للتحريك والتكبير بالقرص.'),
+  mouseControlsLabel: c('Hover to pulse. Click to open. Drag to rotate. Shift-drag or right-drag to move. Scroll to zoom.', 'اسحب للتدوير. اضغط Shift مع السحب أو اسحب بزر الفأرة الأيمن للتحريك. مرّر للتكبير.'),
+  touchControlsLabel: c('Hold to pulse. Tap to open. Drag to rotate. Use two fingers to move and pinch to zoom.', 'اسحب للتدوير. استخدم إصبعين للتحريك والتكبير بالقرص.'),
   keyboardControlsLabel: c('Arrow keys rotate. Shift + arrows move. Home resets.', 'الأسهم للتدوير. Shift مع الأسهم للتحريك. Home لإعادة العرض.'),
   zoomLabel: c('Zoom', 'التكبير'),
   companyBrain: {
@@ -50,7 +50,7 @@ const content = computed<HqLayoutContent>(() => ({
 </script>
 
 <template>
-  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Interactive 3D hologram with orbit, pan, zoom and reset. The Brain opens a read-only Google Drive note browser; this catalogue has no cloud credentials or connection.', 'هولوغرام ثلاثي الأبعاد تفاعلي مع التدوير والتحريك والتكبير وإعادة العرض. تفتح المعرفة مستعرض ملاحظات Google Drive للقراءة فقط، ولا يحتوي هذا المثال على بيانات اعتماد أو اتصال سحابي.')">
+  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Shielded 3D orb with hover or hold feedback, a brain reveal and camera focus. Every Brain entry opens the same read-only side panel. This catalogue has no cloud credentials or connection.', 'كرة محمية بدرع مع تفاعل بالتمرير أو اللمس المطول وكشف الدماغ وتقريب الكاميرا. تفتح جميع مداخل المعرفة اللوحة الجانبية نفسها للقراءة فقط. لا يحتوي هذا المثال على بيانات اعتماد أو اتصال سحابي.')">
     <BsHqLayoutPage :content="content" />
   </BsContentSection>
 </template>

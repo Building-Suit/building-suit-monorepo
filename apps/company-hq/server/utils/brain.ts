@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHash, timingSafeEqual } from 'node:crypto'
 import { createError, getHeader, setResponseHeaders, type H3Event } from 'h3'
 import type { BrainIndex, BrainNote, BrainNoteSummary } from '../../shared/types/brain'
 import { BrainCloudError, BrainCloudLimit, createDriveReader, MAX_NOTE_BYTES, type DriveReader, type GoogleBrainConfig } from './googleDriveAuth'
@@ -12,6 +12,7 @@ const MAX_DEPTH = 20
 const MAX_ENTRIES = 20_000
 const LOOPBACK_PEERS = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1'])
 const HOST_PATTERN = /^(?:127\.0\.0\.1|localhost|\[::1\])(?::([0-9]{1,5}))?$/i
+const DEV_PROXY_HEADER = 'x-hq-brain-dev-proxy'
 const FILE_ID_PATTERN = /^[A-Za-z0-9_-]{10,200}$/
 const PRIVATE_NAME = /(?:^|[\s._-])(?:secrets?|credentials?|passwords?|tokens?|private|(?:api|access|service)[\s._-]*keys?|answer[\s._-]*keys?|test[\s._-]*keys?)(?:$|[\s._-])/iu
 const SCRIPT_DIRECTORY = /(?:^|[\s._-])scripts?(?:$|[\s._-])/iu
@@ -54,7 +55,7 @@ interface ScanResult {
 }
 
 /** This local preview has no remote identity boundary: Brain routes stay loopback-only. */
-export function assertLocalBrainRequest(event: H3Event): void {
+export function assertLocalBrainRequest(event: H3Event, config: { hqBrainDevProxyToken?: unknown }): void {
   setResponseHeaders(event, {
     'Cache-Control': 'private, no-store, max-age=0',
     'Pragma': 'no-cache',
@@ -64,12 +65,18 @@ export function assertLocalBrainRequest(event: H3Event): void {
   })
 
   const peer = event.node.req.socket?.remoteAddress
+  const proxyToken = getHeader(event, DEV_PROXY_HEADER)
+  const expectedToken = config.hqBrainDevProxyToken
+  const trustedDevProxy = import.meta.dev && peer === undefined
+    && typeof expectedToken === 'string' && /^[a-f0-9]{64}$/.test(expectedToken)
+    && typeof proxyToken === 'string' && /^[a-f0-9]{64}$/.test(proxyToken)
+    && timingSafeEqual(Buffer.from(proxyToken, 'hex'), Buffer.from(expectedToken, 'hex'))
   const host = getHeader(event, 'host') ?? ''
   const match = HOST_PATTERN.exec(host)
   const port = match?.[1] ? Number(match[1]) : null
   const fetchSite = getHeader(event, 'sec-fetch-site')
 
-  if (!peer || !LOOPBACK_PEERS.has(peer) || !match || (port !== null && (port < 1 || port > 65_535))
+  if (!(peer !== undefined && LOOPBACK_PEERS.has(peer) || trustedDevProxy) || !match || (port !== null && (port < 1 || port > 65_535))
     || getHeader(event, 'x-hq-brain') !== '1'
     || (fetchSite !== undefined && fetchSite !== 'same-origin' && fetchSite !== 'none')) {
     throw createError({ statusCode: 403, statusMessage: 'Brain access unavailable' })
@@ -130,13 +137,18 @@ function validRoot(file: DriveFile): boolean {
 }
 
 /** Follow only folder IDs already established through the authorized root. */
-async function verifyFolderChain(reader: DriveReader, folder: VerifiedFolder, folders: Map<string, VerifiedFolder>): Promise<boolean> {
+async function verifyFolderChain(
+  reader: DriveReader,
+  folder: VerifiedFolder,
+  folders: Map<string, VerifiedFolder>,
+  observe: (id: string) => Promise<DriveFile> = id => metadata(reader, id),
+): Promise<boolean> {
   let current: VerifiedFolder | undefined = folder
   const visited = new Set<string>()
   while (current) {
     if (visited.has(current.id) || visited.size > MAX_DEPTH) return false
     visited.add(current.id)
-    const file = await metadata(reader, current.id)
+    const file = await observe(current.id)
     if (current.id === ROOT_FOLDER_ID) return validRoot(file)
     if (file.mimeType !== FOLDER_MIME || file.name !== current.name || !eligibleName(file.name, true)
       || file.parents.length !== 1 || file.parents[0] !== current.parentId) return false
@@ -160,7 +172,7 @@ function noteSummary(file: DriveFile, folder: VerifiedFolder): BrainNoteSummary 
   }
 }
 
-async function scanBrain(config: GoogleBrainConfig): Promise<ScanResult> {
+async function scanBrain(config: GoogleBrainConfig, requestedId?: string): Promise<ScanResult> {
   const folders = new Map<string, VerifiedFolder>()
   const files: IndexedNote[] = []
   let reader: DriveReader | null = null
@@ -168,7 +180,18 @@ async function scanBrain(config: GoogleBrainConfig): Promise<ScanResult> {
   try {
     reader = await createDriveReader(config)
     if (!reader) return unavailable('not-configured')
-    const root = await metadata(reader, ROOT_FOLDER_ID)
+    const activeReader = reader
+    // Share repeated ancestor observations only within this index scan. Note
+    // downloads keep fresh, uncached ancestry checks before and after reading.
+    const observations = new Map<string, Promise<DriveFile>>()
+    const observe = (id: string): Promise<DriveFile> => {
+      const existing = observations.get(id)
+      if (existing) return existing
+      const pending = metadata(activeReader, id)
+      observations.set(id, pending)
+      return pending
+    }
+    const root = await observe(ROOT_FOLDER_ID)
     if (!validRoot(root)) return unavailable('authorization-required')
     const rootFolder: VerifiedFolder = { id: ROOT_FOLDER_ID, name: ROOT_FOLDER_NAME, parentId: null, path: '', depth: 0 }
     folders.set(ROOT_FOLDER_ID, rootFolder)
@@ -178,59 +201,80 @@ async function scanBrain(config: GoogleBrainConfig): Promise<ScanResult> {
     let partial = false
     let stopped = false
 
-    try {
-      while (queue.length && !stopped) {
-        const folder = queue.shift()!
-        if (!await verifyFolderChain(reader, folder, folders)) { partial = true; continue }
-        let pageToken: string | undefined
-        const seenPages = new Set<string>()
-        do {
-          const data = await reader.json(null, {
-            q: `'${folder.id}' in parents and trashed = false`,
-            fields: `nextPageToken,incompleteSearch,files(${FILE_FIELDS})`,
-            spaces: 'drive', pageSize: '100', orderBy: 'name', includeItemsFromAllDrives: 'true',
-            ...(pageToken ? { pageToken } : {}),
-          })
-          if (!data || typeof data !== 'object') throw new BrainCloudError()
-          const page = data as Record<string, unknown>
-          if (!Array.isArray(page.files)) throw new BrainCloudError()
-          if (page.incompleteSearch === true) partial = true
-          for (const value of page.files) {
-            inspected += 1
-            if (inspected > MAX_ENTRIES) { partial = true; stopped = true; break }
-            const file = asDriveFile(value)
-            if (!file || file.parents.length !== 1 || file.parents[0] !== folder.id) continue
-            if (file.mimeType === FOLDER_MIME) {
-              if (!eligibleName(file.name, true) || folders.has(file.id)) continue
-              if (folder.depth >= MAX_DEPTH) { partial = true; continue }
-              const child: VerifiedFolder = {
-                id: file.id, name: file.name, parentId: folder.id, depth: folder.depth + 1,
-                path: folder.path ? `${folder.path}/${file.name}` : file.name,
-              }
-              folders.set(child.id, child)
-              queue.push(child)
-              continue
+    async function visitFolder(folder: VerifiedFolder): Promise<void> {
+      if (stopped) return
+      if (!await verifyFolderChain(activeReader, folder, folders, observe)) { partial = true; return }
+      let pageToken: string | undefined
+      const seenPages = new Set<string>()
+      do {
+        if (stopped) return
+        const data = await activeReader.json(null, {
+          q: `'${folder.id}' in parents and trashed = false`,
+          fields: `nextPageToken,incompleteSearch,files(${FILE_FIELDS})`,
+          spaces: 'drive', pageSize: '100', orderBy: 'name', includeItemsFromAllDrives: 'true',
+          ...(pageToken ? { pageToken } : {}),
+        })
+        if (stopped) return
+        if (!data || typeof data !== 'object') throw new BrainCloudError()
+        const page = data as Record<string, unknown>
+        if (!Array.isArray(page.files)) throw new BrainCloudError()
+        if (page.incompleteSearch === true) partial = true
+        for (const value of page.files) {
+          inspected += 1
+          if (inspected > MAX_ENTRIES) { partial = true; stopped = true; break }
+          const file = asDriveFile(value)
+          if (!file || file.parents.length !== 1 || file.parents[0] !== folder.id) continue
+          if (file.mimeType === FOLDER_MIME) {
+            if (!eligibleName(file.name, true) || folders.has(file.id)) continue
+            if (folder.depth >= MAX_DEPTH) { partial = true; continue }
+            const child: VerifiedFolder = {
+              id: file.id, name: file.name, parentId: folder.id, depth: folder.depth + 1,
+              path: folder.path ? `${folder.path}/${file.name}` : file.name,
             }
-            // Shortcuts and native/binary Drive objects never enter the note index.
-            if (!NOTE_MIMES.has(file.mimeType) || !eligibleName(file.name, false)) continue
-            const summary = noteSummary(file, folder)
-            if (!summary) { partial = true; continue }
-            if (indexedIds.has(file.id)) continue
-            if (files.length >= MAX_NOTES) { partial = true; stopped = true; break }
-            files.push({ fileId: file.id, parentId: folder.id, summary })
-            indexedIds.add(file.id)
+            folders.set(child.id, child)
+            queue.push(child)
+            continue
           }
-          pageToken = typeof page.nextPageToken === 'string' && page.nextPageToken ? page.nextPageToken : undefined
-          if (pageToken) {
-            if (seenPages.has(pageToken)) { partial = true; stopped = true; break }
-            seenPages.add(pageToken)
-          }
-        } while (pageToken && !stopped)
-      }
+          // Shortcuts and native/binary Drive objects never enter the note index.
+          if (!NOTE_MIMES.has(file.mimeType) || !eligibleName(file.name, false)) continue
+          const summary = noteSummary(file, folder)
+          if (!summary) { partial = true; continue }
+          if (indexedIds.has(file.id)) continue
+          if (files.length >= MAX_NOTES) { partial = true; stopped = true; break }
+          files.push({ fileId: file.id, parentId: folder.id, summary })
+          indexedIds.add(file.id)
+          // A selected-note request needs only its established descendant path,
+          // leaving time and HTTP budget for fresh content authorization checks.
+          if (summary.id === requestedId) { partial = true; stopped = true; break }
+        }
+        pageToken = typeof page.nextPageToken === 'string' && page.nextPageToken ? page.nextPageToken : undefined
+        if (pageToken) {
+          if (seenPages.has(pageToken)) { partial = true; stopped = true; break }
+          seenPages.add(pageToken)
+        }
+      } while (pageToken && !stopped)
     }
-    catch (error) {
-      if (!(error instanceof BrainCloudLimit)) throw error
-      partial = true
+
+    while (queue.length && !stopped) {
+      const wave = queue.splice(0, 4)
+      const results = await Promise.allSettled(wave.map(async folder => {
+        try {
+          await visitFolder(folder)
+        }
+        catch (error) {
+          stopped = true
+          throw error
+        }
+      }))
+      let failure: unknown
+      // Await and inspect every in-flight folder before returning or scheduling
+      // another wave; at most four folder operations can run concurrently.
+      for (const result of results) {
+        if (result.status !== 'rejected') continue
+        if (result.reason instanceof BrainCloudLimit) partial = true
+        else if (failure === undefined) failure = result.reason
+      }
+      if (failure !== undefined) throw failure
     }
 
     files.sort((a, b) => a.summary.path.localeCompare(b.summary.path, 'en'))
@@ -261,7 +305,7 @@ async function currentNote(reader: DriveReader, note: IndexedNote, folders: Map<
 export async function readBrainNote(config: GoogleBrainConfig, id: string | undefined): Promise<BrainNote> {
   const notFound = () => createError({ statusCode: 404, statusMessage: 'Brain note unavailable' })
   if (!id || !/^[A-Za-z0-9_-]{43}$/.test(id)) throw notFound()
-  const scan = await scanBrain(config)
+  const scan = await scanBrain(config, id)
   const note = scan.files.find(file => file.summary.id === id)
   if (!scan.reader || !note) throw notFound()
   try {

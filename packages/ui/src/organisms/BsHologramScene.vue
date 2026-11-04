@@ -4,7 +4,7 @@ import type { SpatialViewportCamera } from '@building-suit/ux'
 import { createHologramRenderer } from '../utils/hologramScene'
 import type { HologramPalette, HologramRenderer } from '../utils/hologramScene'
 
-const props = defineProps<{ camera: Readonly<SpatialViewportCamera>; resetVersion: number; label: string; unavailableLabel: string }>()
+const props = withDefaults(defineProps<{ camera: Readonly<SpatialViewportCamera>; resetVersion: number; label: string; unavailableLabel: string; opened?: boolean }>(), { opened: false })
 const emit = defineEmits<{ activate: [] }>()
 const canvasRef = shallowRef<HTMLCanvasElement | null>(null)
 const unavailable = ref(false)
@@ -12,14 +12,21 @@ let renderer: HologramRenderer | null = null
 let resizeObserver: ResizeObserver | null = null
 let intersectionObserver: IntersectionObserver | null = null
 let motion: MediaQueryList | null = null
-let frame = 0, visible = true, started = 0, disposed = false
+let frame = 0, visible = true, elapsed = 0, lastFrame = 0, disposed = false
+let openAmount = props.opened ? 1 : 0, excitedAmount = 0, excitedTarget = 0
 
 function activateAt(clientX: number, clientY: number) {
   if (disposed || unavailable.value || !visible || !renderer?.hitTestOrb(clientX, clientY)) return false
   emit('activate')
   return true
 }
-defineExpose({ activateAt })
+function setExcitedAt(clientX: number, clientY: number, active: boolean) {
+  const hit = active && !disposed && !unavailable.value && visible && Boolean(renderer?.hitTestOrb(clientX, clientY))
+  excitedTarget = hit ? 1 : 0
+  if (typeof window !== 'undefined') requestDraw()
+  return hit
+}
+defineExpose({ activateAt, setExcitedAt })
 
 function requestDraw() {
   if (!disposed && !frame && visible && !document.hidden && renderer) frame = requestAnimationFrame(draw)
@@ -27,13 +34,20 @@ function requestDraw() {
 function draw(time: number) {
   frame = 0
   if (!renderer || !visible || document.hidden) return
-  if (!started) started = time
-  renderer.draw(props.camera, motion?.matches ? 0 : (time - started) / 1000)
+  const reduced = motion?.matches ?? false
+  const delta = lastFrame ? Math.min(0.064, Math.max(0, (time - lastFrame) / 1000)) : 0
+  lastFrame = time
+  if (!reduced) elapsed += delta
+  const openTarget = props.opened ? 1 : 0
+  openAmount = reduced ? openTarget : openAmount + (openTarget - openAmount) * (1 - Math.exp(-delta * 7))
+  excitedAmount = reduced ? 0 : excitedAmount + (excitedTarget - excitedAmount) * (1 - Math.exp(-delta * 12))
+  renderer.draw(props.camera, reduced ? 0 : elapsed, { open: openAmount, excited: excitedAmount })
   if (!motion?.matches) requestDraw()
 }
 function updateVisibility() {
   if (frame) cancelAnimationFrame(frame)
   frame = 0
+  lastFrame = 0
   requestDraw()
 }
 function startRenderer() {
@@ -45,7 +59,11 @@ function startRenderer() {
     const hex = style.getPropertyValue(token).trim().replace('#', '')
     return [0, 2, 4].map(offset => Number.parseInt(hex.slice(offset, offset + 2), 16) / 255) as [number, number, number]
   }
-  const palette: HologramPalette = { light: read('--bs-color-secondary-pale-sky'), blue: read('--bs-color-secondary-sky-steel'), metal: read('--bs-color-brand-navy-surface') }
+  const palette: HologramPalette = {
+    navy: read('--bs-color-brand-building-navy'), surface: read('--bs-color-brand-navy-surface'),
+    gold: read('--bs-color-brand-premium-gold'), steel: read('--bs-color-secondary-sky-steel'),
+    light: read('--bs-color-secondary-pale-sky'), pearl: read('--bs-color-brand-pearl-white'),
+  }
   renderer = createHologramRenderer(canvas, palette)
   unavailable.value = !renderer
   requestDraw()
@@ -61,7 +79,13 @@ watch(() => [props.camera.yaw, props.camera.pitch, props.camera.zoom, props.came
   if (typeof window !== 'undefined') requestDraw()
 })
 watch(() => props.resetVersion, () => {
-  started = 0
+  elapsed = 0; lastFrame = 0
+  openAmount = props.opened ? 1 : 0
+  excitedTarget = 0; excitedAmount = 0
+  if (typeof window !== 'undefined') requestDraw()
+})
+watch(() => props.opened, () => {
+  excitedTarget = 0
   if (typeof window !== 'undefined') requestDraw()
 })
 onMounted(() => {

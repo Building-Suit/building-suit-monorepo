@@ -1,0 +1,30 @@
+{
+  "id": "hq-shield-orb-20261104",
+  "task": "HQ-SHIELD-ORB-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/organisms/BsHologramScene.vue",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ux/src/composables/useSpatialViewport.ts",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership.md",
+    "docs/shared/zero-native-ui-convergence-report.md",
+    "docs/work-packages/company-hq",
+    "README.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Maintain the internal reference-header 3D workspace with a simple token-based navy shield orb, subtle beat and hover/touch-hold vibration. All Brain entry points share shield scatter, glass/brain/pulsing-nerve reveal, interruptible camera focus and a nonmodal read-only side panel; closing restores the prior camera and reset restores the closed/default state. Preserve original design in Git. Keep the private read-only Google Drive source under its fixed authorized root, verified descendants, bounded reads, source versions and visible/online polling, without filesystem fallback. Fix development Unix-socket request attestation at the actual loopback listener and bounded scan performance. Founder-requested restart/retry verified a complete 330-note index and one note read; visual, gesture, freshness and broad acceptance remain deferred. New HQ Supabase metadata is verified but Auth/schema/GitHub integration remains unconfigured or unverified. No operational product activation, public release, hosted database/provider mutation, deployment, app Brain writes, staff/model execution or spending. No tests/build/lint/typecheck/boundary/release checks or redesign browser/gesture review ran under founder direction; the explicit restart/retry allowed only bounded connection diagnosis. Existing accepted fragments remain historical."
+}

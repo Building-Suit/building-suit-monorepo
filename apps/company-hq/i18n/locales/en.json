@@ -14,10 +14,10 @@
     "zoomOutLabel": "Zoom out",
     "zoomInLabel": "Zoom in",
     "fitViewLabel": "Reset view: center, 100% zoom and default camera",
-    "hologramLabel": "Floating holographic orb above its base",
+    "hologramLabel": "Shielded Company Brain orb above its base",
     "sceneUnavailableLabel": "3D rendering is unavailable in this browser. Enable hardware acceleration to show the hologram.",
-    "mouseControlsLabel": "Drag to rotate. Shift-drag or right-drag to move. Scroll to zoom.",
-    "touchControlsLabel": "Drag to rotate. Use two fingers to move and pinch to zoom.",
+    "mouseControlsLabel": "Hover over the orb to see it pulse. Click to open. Drag to rotate. Shift-drag or right-drag to move. Scroll to zoom.",
+    "touchControlsLabel": "Hold the orb to see it pulse. Tap to open. Drag to rotate. Use two fingers to move and pinch to zoom.",
     "keyboardControlsLabel": "Arrow keys rotate. Shift + arrows move. Home resets.",
     "zoomLabel": "Zoom",
     "companyBrain": {
