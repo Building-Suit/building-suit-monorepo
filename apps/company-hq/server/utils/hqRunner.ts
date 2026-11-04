@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto'
 import type { HqStore } from './hqStore'
 import { HqProblem } from './hqDomain'
+import { requireSettledProviderJournal } from './hqResponsesProtocol'
 import { workforce, stages, readTools, brainContextKeys } from './hqWorkforce'
 import type { AgentId, BrainKey, BrainFile, ReadTool, StageEvidence, Stage } from './hqWorkforce'
-import { approvedTask, checkpoint, claim, dailySlot, deliverReport, digest, leasedRun, prepareReport, reconstructBrain, renewLease, reserveEvidence, requireWorkflow } from './hqWorkflow'
+import { approvedTask, checkpoint, claim, dailySlot, deliverReport, digest, leasedRun, prepareReport, reconstructBrain, renewLease, reserveEvidence, requireWorkflow, workflowAssignment } from './hqWorkflow'
 import type { Lease } from './hqWorkflow'
 
 export interface RunnerReadiness {
@@ -154,7 +155,21 @@ export class HqRunner {
   }
   async run(taskId: string, options: { daily?: boolean; signal?: AbortSignal } = {}) {
     this.ready()
-    const lease = this.mutate(doc => claim(doc, taskId, randomUUID(), this.now(), options.daily === true, this.limits.leaseMs))
+    const lease = this.mutate(doc => {
+      const task = doc.tasks.find(candidate => candidate.id === taskId)
+      if (task && ['completed', 'cancelled'].includes(task.status)) return null
+      const runs = Object.values(doc.workflowRuns || {}).filter(run => run.taskId === taskId)
+      // Recheck under the same writer lock as claim; an earlier dispatcher read can be stale.
+      if (runs.some(run => run.status === 'running' && run.leaseUntil > this.now())) return null
+      requireSettledProviderJournal(doc)
+      if (task?.sourceMessage) {
+        approvedTask(doc, taskId)
+        requireWorkflow(options.daily !== true && task.workflow?.daily === false, 'DISPATCH_MANUAL_TASK_REQUIRED')
+        requireWorkflow(task.status !== 'blocked' || runs.some(run => stages.every(({ stage }) => run.checkpoints[stage])), 'DISPATCH_BLOCKED_REQUIRES_REVIEW')
+        for (const run of runs) for (const attempt of run.attempts) requireWorkflow(run.checkpoints[attempt.stage]?.contextId === attempt.contextId, 'DISPATCH_ATTEMPT_RECONCILIATION_REQUIRED')
+      }
+      return claim(doc, taskId, randomUUID(), this.now(), options.daily === true, this.limits.leaseMs)
+    })
     if (!lease) return { status: 'already_claimed_or_finished' as const }
     const parent = options.signal || new AbortController().signal
     try {
@@ -167,7 +182,7 @@ export class HqRunner {
           const brain = await this.freshBrain(lease, signal)
           const contextId = randomUUID(), startedAt = new Date(this.now()).toISOString()
           const artifacts = stages.flatMap(s => run.checkpoints[s.stage] ? [{ stage: s.stage, output: run.checkpoints[s.stage]!.output, sources: run.checkpoints[s.stage]!.sources, digest: digest(run.checkpoints[s.stage]!.output) }] : [])
-          const input = JSON.stringify({ brief: task.brief, acceptance: task.acceptance, allowedActions: task.allowedActions, artifacts })
+          const input = workflowAssignment(task, artifacts, stage)
           const calls: StageEvidence['toolCalls'] = [], sourceRefs = new Set(Object.values(brain).map(f => f.id))
           for (const artifact of artifacts) for (const ref of artifact.sources) sourceRefs.add(ref)
           let attempts = 0, open = true, inFlight = 0, toolDenied = false
@@ -188,7 +203,10 @@ export class HqRunner {
           }
           await this.gate(lease, signal)
           requireWorkflow(run.attempts.filter(a => a.stage === stage).length < 2 && run.attempts.length < 8, 'RETRY_LIMIT')
-          const brainEvidence = this.mutate(doc => reserveEvidence(doc, lease, Object.values(brain), input, this.now()), signal)
+          const brainEvidence = this.mutate(doc => {
+            requireSettledProviderJournal(doc)
+            return reserveEvidence(doc, lease, Object.values(brain), input, this.now())
+          }, signal)
           const reservation = await this.deadline(signal, this.limits.adapterMs, 'RESERVATION_TIMEOUT', child => this.executor!.reserve(child))
           requireWorkflow(typeof reservation.id === 'string' && reservation.id.length > 0 && reservation.id.length <= 200 && reservation.zeroIncrementalCost, 'ALLOWANCE_RESERVATION_REQUIRED')
           this.live(lease, signal)

@@ -44,12 +44,16 @@ export interface AgentOfficeMessage {
   authorLabel: string
   createdLabel: string
   statusLabel: string
+  canPlanWork?: boolean
+  taskId?: string
+  replyTo?: string
 }
 export interface AgentOfficeTaskDraft {
   title: string
   brief: string
   acceptance: string
   allowedActions: string
+  sourceMessageId?: string
 }
 export interface AgentOfficeTask {
   id: string
@@ -65,6 +69,9 @@ export interface AgentOfficeTask {
   budgetLabel: string
   deliverable?: string
   reviewEvidence?: string
+  sourceMessageId?: string
+  canAuthorizeWorkflow?: boolean
+  workflowAuthorized?: boolean
   /** Affordances only. Every mutation must also be authorized by the server. */
   milestones?: { id: string; title: string; acceptance: string; status: string }[]
   canApprove: boolean
@@ -72,6 +79,14 @@ export interface AgentOfficeTask {
 }
 export interface AgentOfficeNote { id: string; title: string; text: string }
 export interface AgentOfficeActivity { id: string; title: string; detail: string; createdLabel: string }
+
+export interface AgentOfficeWorkflowDraft { id: string; brainFiles: Record<string, string> }
+/** Translated labels for explicit message planning and a separately approved read-only scope. */
+export interface AgentOfficeWorkCopy {
+  planFromMessage: string; linkedTask: string; originalMessage: string; privateContextNotice: string
+  authorizeBrainWork: string; workflowTitle: string; workflowIntro: string; workflowScope: string
+  workflowUnavailable: string; fileReferenceHint: string; authorizeWorkflow: string; workflowAuthorized: string
+}
 
 export interface LivingOfficePageCopy {
   title: string; intro: string; createDepartment: string; departmentName: string; purpose: string; createOffice: string

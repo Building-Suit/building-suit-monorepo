@@ -2,8 +2,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { lstatSync, realpathSync } from 'node:fs'
 import { isAbsolute, resolve } from 'node:path'
 import { HqStore } from './hqStore'
-import { HqRunner, disabledRunner } from './hqRunner'
-import { DisabledResponsesExecutor } from './hqResponsesProtocol'
+import { HqCeoDispatcher } from './hqCeoDispatch'
 import { requireWorkflow } from './hqWorkflow'
 
 /** Manual bootstrap only. No env reads, cron, startup hooks, credentials or network.
@@ -21,11 +20,13 @@ export function openDisabledHqHost(path: string) {
     const doc = JSON.parse(rows[0]!.document)
     requireWorkflow(Array.isArray(doc.tasks) && Array.isArray(doc.messages) && Array.isArray(doc.events) && doc.receipts && typeof doc.receipts === 'object', 'HQ_DATABASE_IDENTITY')
   } finally { probe.close() }
-  const store = new HqStore(path), runner = new HqRunner(store, disabledRunner, new DisabledResponsesExecutor())
+  const dispatcher = new HqCeoDispatcher(new HqStore(path))
   let closed = false
   return {
     status: Object.freeze({ enabled: false, sqlitePath: realpathSync(path), blockers: ['HOST_SCOPE_AND_DURABILITY_UNVERIFIED', 'NO_ENFORCEABLE_FREE_ALLOWANCE', 'MODEL_AUTH_AND_DATA_SCOPE_UNVERIFIED', 'LIVE_DRIVE_AUTH_UNVERIFIED'] }),
-    async tick(signal?: AbortSignal) { requireWorkflow(!closed, 'HOST_CLOSED'); return runner.tick(signal) },
-    close() { if (!closed) { closed = true; store.close() } },
+    async tick(signal?: AbortSignal) { requireWorkflow(!closed, 'HOST_CLOSED'); signal?.throwIfAborted(); requireWorkflow(false, 'RUNNER_NOT_VERIFIED') },
+    async dispatchTask(taskId: string, signal?: AbortSignal) { requireWorkflow(!closed, 'HOST_CLOSED'); return dispatcher.dispatchTask(taskId, signal) },
+    async dispatchNext(signal?: AbortSignal) { requireWorkflow(!closed, 'HOST_CLOSED'); return dispatcher.dispatchNext(signal) },
+    close() { closed = true; return dispatcher.close() },
   }
 }

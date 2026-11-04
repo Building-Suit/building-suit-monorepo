@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { workforce, readTools, brainContextKeys, stages } from './hqWorkforce'
 import type { WorkflowApproval, WorkflowRun, BrainSnapshot, ProviderOperation } from './hqWorkforce'
 export type HqRole = 'ceo' | 'hr'
@@ -23,6 +24,7 @@ export interface HqTask {
   updatedAt: string
   milestones?: HqMilestone[]
   workflow?: WorkflowApproval
+  sourceMessage?: { id: string; text: string; digest: string }
 }
 export interface HqMessage {
   id: string
@@ -33,6 +35,8 @@ export interface HqMessage {
   text: string
   status: 'queued' | 'answered' | 'delivered'
   createdAt: string
+  replyTo?: string
+  taskId?: string
 }
 export interface HqEvent { id: string; agent: HqRole; type: string; title: string; detail: string; createdAt: string; taskId?: string }
 export interface HqResult { ok: true; id: string; status: string }
@@ -57,6 +61,20 @@ const inputError = (message: string) => problem(422, 'HQ_INVALID_INPUT', message
 const denied = (message: string) => problem(403, 'HQ_ACCESS_DENIED', message)
 const conflict = (message: string) => problem(409, 'HQ_CONFLICT', message)
 const missing = (message: string) => problem(404, 'HQ_NOT_FOUND', message)
+const founderMessageDigest = (message: HqMessage) => createHash('sha256').update(JSON.stringify([message.id, message.agent, message.role, message.channel, message.recipient, message.text, message.createdAt])).digest('hex')
+/** The original conversation stays CEO-only; task linkage never grants HR inbox access. */
+export function linkedSourceMessage(doc: HqDocument, task: HqTask): HqMessage | undefined {
+  const source = task.sourceMessage
+  if (!source) return undefined
+  const matches = doc.messages.filter(message => message.id === source.id)
+  const original = matches[0]
+  if (matches.length !== 1 || !original || original.agent !== 'ceo' || original.role !== 'founder' || original.channel !== 'founder_ceo' || original.recipient !== 'ceo' || original.status !== 'queued'
+    || task.owner !== 'ceo' || task.budget !== 0 || source.text !== original.text || source.digest !== founderMessageDigest(original)
+    || doc.tasks.filter(candidate => candidate.sourceMessage?.id === source.id).length !== 1) {
+    return problem(409, 'SOURCE_MESSAGE_CHANGED', 'The original founder message or its task linkage changed; execution is blocked.')
+  }
+  return original
+}
 const object = (input: unknown): Record<string, unknown> => {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return inputError('A JSON object is required.')
   return input as Record<string, unknown>
@@ -110,7 +128,10 @@ export function initialDocument(): HqDocument {
 export function projectState(doc: HqDocument, actor: HqActor, storageMode: Exclude<HqStorageMode, 'unconfigured'>) {
   const isHr = actor.role === 'hr'
   const visibleTasks = doc.tasks.filter(t => !isHr || t.owner === 'hr')
-  const tasks = visibleTasks.slice(0, 150).map(task => ({ ...task, milestones: (task.milestones || []).map(milestone => ({ ...milestone, status: 'planned' as const })) }))
+  const tasks = visibleTasks.slice(0, 150).map(task => {
+    const { sourceMessage, ...sharedTask } = task
+    return { ...sharedTask, ...(!isHr && sourceMessage ? { sourceMessage } : {}), milestones: (task.milestones || []).map(milestone => ({ ...milestone, status: 'planned' as const })) }
+  })
   const isFounder = actor.role === 'founder'
   const runs = Object.values(doc.workflowRuns || {})
   const liveRuns = runs.filter(run => run.status === 'running' && run.leaseUntil > Date.now() && visibleTasks.some(task => task.id === run.taskId && task.status === 'running' && task.approvedAt))
@@ -126,8 +147,9 @@ export function projectState(doc: HqDocument, actor: HqActor, storageMode: Exclu
     return { id: worker.agentId, name: worker.name, role: worker.role, departmentId: worker.legacyRole, reportsTo: worker.agentId === 'AG-CEO-001' ? 'founder' : worker.agentId === 'AG-HR-001' ? 'AG-CEO-001' : 'AG-HR-001', status, runtime: 'not_activated' as const, ...(running || blocked || queued || task ? { taskId: running?.taskId || blocked?.taskId || queued?.id || task!.id } : {}) }
   }) : []
   const brainEvents = isFounder ? Object.values(doc.workflowRuns || {}).flatMap(run => Object.values(run.checkpoints).filter(evidence => evidence.brain.length > 0).map(evidence => ({ id: run.key + ':' + evidence.stage, direction: 'inbound' as const, taskId: run.taskId, agentId: evidence.agentId, createdAt: evidence.completedAt, fileCount: evidence.brain.length }))).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 80) : []
+  const messageTasks = new Map(doc.tasks.filter(task => task.sourceMessage).map(task => [task.sourceMessage!.id, task.id]))
   const messages = doc.messages.filter(m => m.channel === 'founder_ceo' && !isHr).slice(-180)
-    .map(({ channel: _channel, recipient: _recipient, ...message }) => message)
+    .map(({ channel: _channel, recipient: _recipient, ...message }) => ({ ...message, ...(message.role === 'founder' && messageTasks.has(message.id) ? { taskId: messageTasks.get(message.id)! } : {}) }))
   const events = doc.events.filter(e => !isHr || e.agent === 'hr' || (e.type === 'delegation' && visibleTasks.some(t => t.id === e.taskId))).slice(0, 80)
   return {
     ok: true as const, storageMode,
@@ -164,12 +186,13 @@ export function parseFounderAction(body: unknown, actor: HqActor): HqCommand {
       if (input.agent !== undefined && input.agent !== 'ceo') return denied('Founder conversations go only to the CEO.')
       return { name: 'send_message', key, payload: { text: field(input.text, 'Message', 6000) } }
     case 'create_task':
-      only(input, [...common, 'owner', 'budget', 'title', 'brief', 'acceptance', 'allowedActions'])
+      only(input, [...common, 'owner', 'budget', 'title', 'brief', 'acceptance', 'allowedActions', 'sourceMessageId'])
       if (input.owner !== undefined && input.owner !== 'ceo') return denied('New assignments begin with the CEO.')
       if (input.budget !== undefined && input.budget !== 0) return inputError('Only zero-budget tasks are supported.')
       return { name: 'create_task', key, payload: {
         title: field(input.title, 'Title', 180), brief: field(input.brief, 'Outcome', 5000),
         acceptance: field(input.acceptance, 'Definition of done', 3000), allowedActions: field(input.allowedActions, 'Allowed actions', 3000),
+        ...(input.sourceMessageId === undefined ? {} : { sourceMessageId: identifier(input.sourceMessageId, 'Original message', 120) }),
       } }
     case 'authorize_workflow': {
       only(input, [...common, 'id', 'allowedTools', 'publicInputs', 'brainFiles', 'daily', 'timezoneConfirmed'])
@@ -269,16 +292,26 @@ export function executeLocal(doc: HqDocument, actor: HqActor, command: HqCommand
     if (reply && payload.replyTo) {
       const original = next.messages.find(m => m.id === payload.replyTo && m.channel === 'founder_ceo' && m.role === 'founder')
       if (!original) return missing('The founder message was not found.')
+      if (next.tasks.some(task => task.sourceMessage?.id === original.id && !['completed', 'cancelled', 'failed'].includes(task.status))) return denied('The linked assignment must deliver its reply through the bounded runner.')
       original.status = 'answered'
     }
     const id = uid('msg'), status = reply ? 'delivered' : 'queued'
-    next.messages.push({ id, agent: 'ceo', role: reply ? 'ceo' : 'founder', recipient: reply ? 'founder' : 'ceo', channel: 'founder_ceo', text: payload.text!, status, createdAt: now })
+    next.messages.push({ id, agent: 'ceo', role: reply ? 'ceo' : 'founder', recipient: reply ? 'founder' : 'ceo', channel: 'founder_ceo', text: payload.text!, status, createdAt: now, ...(reply && payload.replyTo ? { replyTo: payload.replyTo } : {}) })
     addEvent('ceo', reply ? 'reply' : 'message', reply ? 'CEO replied' : 'Message saved', reply ? 'An authorized CEO reply was recorded.' : 'Your message is queued for the CEO.')
     return save(id, status)
   }
   if (name === 'create_task' || name === 'hq_propose_task') {
+    let sourceMessage: HqTask['sourceMessage']
+    if (payload.sourceMessageId) {
+      if (actor.role !== 'founder' || name !== 'create_task') return denied('Only the founder can link a conversation to a proposed assignment.')
+      if (next.tasks.some(task => task.sourceMessage?.id === payload.sourceMessageId)) return conflict('This founder message already has an assignment; open that task instead.')
+      const matches = next.messages.filter(message => message.id === payload.sourceMessageId)
+      const original = matches[0]
+      if (matches.length !== 1 || !original || original.agent !== 'ceo' || original.role !== 'founder' || original.channel !== 'founder_ceo' || original.recipient !== 'ceo' || original.status !== 'queued') return conflict('Choose an unanswered founder message addressed to the CEO.')
+      sourceMessage = { id: original.id, text: original.text, digest: founderMessageDigest(original) }
+    }
     const id = uid('task')
-    next.tasks.unshift({ id, title: payload.title!, brief: payload.brief!, owner: 'ceo', status: 'proposed', acceptance: payload.acceptance!, allowedActions: payload.allowedActions!, budget: 0, deliverable: null, reviewEvidence: null, approvedAt: null, approvalSource: null, createdAt: now, updatedAt: now })
+    next.tasks.unshift({ id, title: payload.title!, brief: payload.brief!, owner: 'ceo', status: 'proposed', acceptance: payload.acceptance!, allowedActions: payload.allowedActions!, budget: 0, deliverable: null, reviewEvidence: null, approvedAt: null, approvalSource: null, createdAt: now, updatedAt: now, ...(sourceMessage ? { sourceMessage } : {}) })
     addEvent('ceo', 'plan', 'Plan ready for approval', payload.title!, id)
     return save(id, 'proposed')
   }
@@ -297,6 +330,7 @@ export function executeLocal(doc: HqDocument, actor: HqActor, command: HqCommand
   }
   if (name === 'approve_task') {
     if (task.status !== 'proposed') return conflict('Only a proposed plan can be approved.')
+    linkedSourceMessage(next, task)
     task.status = 'queued'
     task.approvedAt = now
     task.approvalSource = 'Founder approved in Company HQ'
@@ -306,7 +340,10 @@ export function executeLocal(doc: HqDocument, actor: HqActor, command: HqCommand
   }
   if (name === 'authorize_workflow') {
     if (!task.approvedAt || task.status !== 'queued' || task.workflow) return conflict('Authorize the workflow once on an approved queued task; cancel and propose a new task to change scope.')
-    task.workflow = { ...JSON.parse(payload.workflow!), approvedAt: now }
+    linkedSourceMessage(next, task)
+    const workflow = JSON.parse(payload.workflow!) as WorkflowApproval
+    if (task.sourceMessage && (workflow.daily !== false || workflow.allowedTools.length !== 0 || workflow.publicInputs.length !== 0)) return denied('Message-linked work permits only one non-daily workflow with the exact read-only Brain scope and no public tools.')
+    task.workflow = { ...workflow, approvedAt: now }
     task.updatedAt = now
     addEvent('ceo', 'workflow-approval', 'Four-role workflow authorized', 'Explicit read-only tools and Brain file scope recorded; execution still requires verified runtime and allowance.', task.id)
     return save(task.id, task.status)
@@ -319,7 +356,7 @@ export function executeLocal(doc: HqDocument, actor: HqActor, command: HqCommand
     addEvent(task.owner, 'cancel', 'Task cancelled', task.title, task.id)
     return save(task.id, task.status)
   }
-  if (task.workflow) return denied('Workflow-managed assignments require the bounded runner; founder cancellation remains available.')
+  if (task.workflow || task.sourceMessage) return denied('Workflow-managed assignments require the bounded runner; founder cancellation remains available.')
   if (!task.approvedAt) return denied('Founder approval is required before work begins.')
   if (name === 'hq_delegate_task') {
     if (task.owner !== 'ceo' || task.status !== 'queued') return conflict('Only a queued CEO assignment can be delegated.')

@@ -82,8 +82,8 @@ test('unknown Responses outcomes survive restart and quarantine further dispatch
  assert.equal((await h.runner.run(f.id)).status,'blocked');assert.equal(h.requests.length,1)
  const saved=f.s.read();assert.equal(Object.values(saved.providerOperations)[0].state,'ambiguous')
  assert.ok(!JSON.stringify(saved).includes('private transport details'));f.s.close();f.s=new HqStore(path)
- const restarted=harness(f);restarted.executor.reserve=async()=>({id:'synthetic-reservation-after-restart',zeroIncrementalCost:true})
- assert.equal((await restarted.runner.run(f.id)).code,'RESPONSES_UNCERTAIN_OUTCOME');assert.equal(restarted.requests.length,0)
+ const restarted=harness(f);let reservations=0;restarted.executor.reserve=async()=>{reservations++;return {id:'synthetic-reservation-after-restart',zeroIncrementalCost:true}}
+ await assert.rejects(()=>restarted.runner.run(f.id),/RESPONSES_UNCERTAIN_OUTCOME/);assert.equal(restarted.requests.length,0);assert.equal(reservations,0)
  assert.deepEqual(f.s.read().providerOperations,saved.providerOperations);assert.equal(Object.values(f.s.read().providerOperations)[0].accounting,'unreconciled')
  f.s.close();rmSync(dir,{recursive:true,force:true})
 })
@@ -214,7 +214,7 @@ test('crashed dispatch journal survives without treating an unknown request as a
  const f=fixture(),h=harness(f,async()=>{throw Error('Synthetic disconnect')})
  assert.equal((await h.runner.run(f.id)).status,'blocked')
  mutate(f.s,doc=>{Object.values(doc.providerOperations)[0].state='dispatched'})
- assert.equal((await h.runner.run(f.id)).code,'RESPONSES_UNCERTAIN_OUTCOME')
+ await assert.rejects(()=>h.runner.run(f.id),/RESPONSES_UNCERTAIN_OUTCOME/)
  assert.equal(h.requests.length,1);assert.equal(Object.values(f.s.read().providerOperations)[0].accounting,'unreconciled');f.s.close()
 })
 function controlledBody() {

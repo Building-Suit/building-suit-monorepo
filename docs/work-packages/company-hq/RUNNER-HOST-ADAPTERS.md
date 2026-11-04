@@ -1,5 +1,7 @@
 # Disabled host protocol adapters
 
+Current local follow-up: [founder-to-CEO work path](CEO-WORK-PATH.md) adds bounded manual dispatch and correlated inbox delivery, with global checkpoint reconciliation checks before another reservation/dispatch. Host activation and the production executor remain closed. This document records the original protocol preparation; newer validation belongs to that follow-up.
+
 This local follow-up to reviewed head `0aa29288f037d234fc74f3d4f830e6d3a85c3161` stays on `codex/company-hq/ceo-hr-runner`, whose draft PR #529 targets parent #528. No new changes are published until independent review. The original office, founder approval, role routing, cancellation, strict SQLite transactions, $0 policy and disabled readiness gates remain in force.
 
 ## Implemented route and hard blocker

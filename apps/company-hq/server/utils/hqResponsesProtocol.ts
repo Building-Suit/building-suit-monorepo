@@ -2,9 +2,9 @@ import type { HqStore } from './hqStore'
 import { HqProblem } from './hqDomain'
 import type { HqDocument } from './hqDomain'
 import type { ExecutorAdapter, ModelInput } from './hqRunner'
-import type { BrainKey, ProviderOperation } from './hqWorkforce'
+import type { BrainKey, ProviderOperation, WorkflowRun } from './hqWorkforce'
 import { brainContextKeys, stages } from './hqWorkforce'
-import { approvedTask, digest, leasedRun, reconstructBrain, requireWorkflow } from './hqWorkflow'
+import { approvedTask, digest, leasedRun, reconstructBrain, requireWorkflow, workflowAssignment } from './hqWorkflow'
 import { protocolDeadline, protocolText } from './hqProtocolHttp'
 import type { ProtocolTransport } from './hqProtocolHttp'
 
@@ -19,6 +19,29 @@ export class DisabledResponsesExecutor implements ExecutorAdapter {
 const reviewSchema = { type: ['object', 'null'], additionalProperties: false, properties: { accepted: { type: 'boolean' }, artifactDigest: { type: 'string' }, evidence: { type: 'string' } }, required: ['accepted', 'artifactDigest', 'evidence'] }
 const schema = { type: 'object', additionalProperties: false, properties: { output: { type: 'string' }, sources: { type: 'array', items: { type: 'string' } }, review: reviewSchema }, required: ['output', 'sources', 'review'] }
 const exactKeys = (value: unknown, keys: string[]) => value !== null && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).sort().join('|') === [...keys].sort().join('|')
+
+/** A new context cannot turn a lost completed result into permission to dispatch again. */
+export function requireSettledProviderJournal(doc: HqDocument) {
+  const operations = Object.values(doc.providerOperations || {})
+  for (const operation of operations) requireWorkflow(!['dispatched', 'ambiguous'].includes(operation.state), 'RESPONSES_UNCERTAIN_OUTCOME')
+  const completed = operations.filter(operation => operation.state === 'completed')
+  if (!completed.length) return
+  // Index once: retained audit history must not cause a quadratic scan on each claim.
+  const attempts = new Map<string, { run: WorkflowRun; attempt: WorkflowRun['attempts'][number] }[]>()
+  for (const run of Object.values(doc.workflowRuns || {})) for (const attempt of run.attempts) {
+    const key = JSON.stringify([attempt.contextId, attempt.reservationId])
+    const matches = attempts.get(key) || []
+    matches.push({ run, attempt }); attempts.set(key, matches)
+  }
+  for (const operation of completed) {
+    const matches = attempts.get(JSON.stringify([operation.contextId, operation.reservationId])) || []
+    requireWorkflow(matches.length === 1, 'RESPONSES_CHECKPOINT_RECONCILIATION_REQUIRED')
+    const { run, attempt } = matches[0]!, saved = run.checkpoints[attempt.stage]
+    requireWorkflow(saved && saved.contextId === operation.contextId, 'RESPONSES_CHECKPOINT_RECONCILIATION_REQUIRED')
+    const result = { identity: { agentId: saved.agentId, contextId: saved.contextId, principalId: saved.principalId, isolated: true }, output: saved.output, sources: saved.sources, ...(saved.review ? { review: saved.review } : {}) }
+    requireWorkflow(operation.resultDigest === digest(result), 'RESPONSES_CHECKPOINT_RECONCILIATION_REQUIRED')
+  }
+}
 
 /** Credential-free protocol harness, NOT an ExecutorAdapter or production allowance authority.
  * Only synthetic transports are exercised. No default fetch, SDK retries, tools or continuation.
@@ -39,7 +62,7 @@ export class ResponsesProtocol {
     const task = approvedTask(doc, run.taskId)
     requireWorkflow(stages.some(s => s.stage === input.stage && s.agentId === input.agentId) && attempt.stage === input.stage && input.acceptance === task.acceptance, 'RESPONSES_ROLE_SCOPE')
     const artifacts = stages.flatMap(s => run.checkpoints[s.stage] ? [{ stage: s.stage, output: run.checkpoints[s.stage]!.output, sources: run.checkpoints[s.stage]!.sources, digest: digest(run.checkpoints[s.stage]!.output) }] : [])
-    requireWorkflow(digest(input.artifacts) === digest(artifacts) && input.assignment === JSON.stringify({ brief: task.brief, acceptance: task.acceptance, allowedActions: task.allowedActions, artifacts }), 'RESPONSES_ARTIFACT_SCOPE')
+    requireWorkflow(digest(input.artifacts) === digest(artifacts) && input.assignment === workflowAssignment(task, artifacts, input.stage), 'RESPONSES_ARTIFACT_SCOPE')
     const files = reconstructBrain(doc, { brain: attempt.brain })
     const file = (key: BrainKey) => files.find(f => f.id === task.workflow!.brainFiles[key])
     requireWorkflow(input.profile === file(input.agentId)?.text && input.playbook === file('playbook')?.text && digest(input.context) === digest(brainContextKeys.map(file)) && digest(input.publicInputs) === digest(task.workflow!.publicInputs), 'RESPONSES_BRAIN_SCOPE')
@@ -58,7 +81,7 @@ export class ResponsesProtocol {
       this.authorized(doc, input, reservationId)
       doc.providerOperations ||= {}
       requireWorkflow(!doc.providerOperations[key], 'RESPONSES_REPLAY_REQUIRES_RECONCILIATION')
-      requireWorkflow(!Object.values(doc.providerOperations).some(op => op.state === 'dispatched' || op.state === 'ambiguous'), 'RESPONSES_UNCERTAIN_OUTCOME')
+      requireSettledProviderJournal(doc)
       doc.providerOperations[key] = { contextId: input.contextId, reservationId, requestDigest, state: 'dispatched', accounting: 'unreconciled', at: new Date().toISOString() }
       return { document: doc, result: undefined }
     })
@@ -88,7 +111,7 @@ export class ResponsesProtocol {
           requireWorkflow(exactKeys(payload.review, ['accepted', 'artifactDigest', 'evidence']) && typeof payload.review.accepted === 'boolean' && typeof payload.review.evidence === 'string' && payload.review.evidence.trim() && payload.review.evidence.length <= 12_000 && payload.review.artifactDigest === input.artifacts.find(a => a.stage === 'research')?.digest, 'RESPONSES_REVIEW_SCHEMA')
         } else requireWorkflow(payload.review === null, 'RESPONSES_UNEXPECTED_REVIEW')
         check(); this.authorized(this.store.read(), input, reservationId)
-        return { identity: { agentId: input.agentId, contextId: input.contextId, principalId: this.principalId, isolated: true }, output: payload.output, sources: payload.sources as string[], ...(payload.review ? { review: payload.review } : {}) }
+        return { identity: { agentId: input.agentId, contextId: input.contextId, principalId: this.principalId, isolated: true }, output: payload.output, sources: payload.sources as string[], ...(payload.review ? { review: { accepted: payload.review.accepted, artifactDigest: payload.review.artifactDigest, evidence: payload.review.evidence } } : {}) }
       })
       this.finish(key, { ...observed, state: 'completed', resultDigest: digest(result) })
       return result

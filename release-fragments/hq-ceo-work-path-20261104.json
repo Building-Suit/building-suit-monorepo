@@ -1,0 +1,9 @@
+{
+  "id": "hq-ceo-work-path-20261104",
+  "task": "HQ-CEO-WORK-PATH-20261104",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq", "packages/ui", "docs/work-packages/company-hq"],
+  "reason": "Connect internal HQ founder messages to explicitly approved read-only assignments and correlated durable replies using the existing four-role SQLite runner. Preserve CEO-only source conversations, exact Brain scope and closed production executor; add bounded manual host dispatch and lost-result reconciliation guards. Shared presentation is consumed only by HQ and its inert catalogue. No public Suit release, runtime activation, hosted mutation, credential provisioning or deployment."
+}
