@@ -19,6 +19,8 @@ export class HqStore {
     this.db.prepare('insert or ignore into hq_workspace(id,document) values(1,?)').run(JSON.stringify(initialDocument()))
   }
   read(): HqDocument { return JSON.parse((this.db.prepare('select document from hq_workspace where id=1').get() as { document: string }).document) }
+  /** Server-only invalidation counter; never returns workspace or Brain content. */
+  revision(): number { return (this.db.prepare('select revision from hq_workspace where id=1').get() as { revision: number }).revision }
   execute(actor: HqActor, command: HqCommand) {
     return this.transaction(doc => {
       const { document, result } = executeLocal(doc, actor, command)

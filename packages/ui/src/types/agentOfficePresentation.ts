@@ -1,5 +1,5 @@
 export type AgentOfficeView = 'office' | 'tasks' | 'brain'
-export type AgentOfficeRoomKind = 'executive' | 'department' | 'unassigned'
+export type AgentOfficeRoomKind = 'executive' | 'department'
 export type AgentOfficeTone = 'neutral' | 'success' | 'info' | 'warning' | 'danger'
 
 /** Product-owned translated copy. This template contains no company policy text. */
@@ -66,8 +66,15 @@ export interface AgentOfficeTask {
   deliverable?: string
   reviewEvidence?: string
   /** Affordances only. Every mutation must also be authorized by the server. */
+  milestones?: { id: string; title: string; acceptance: string; status: string }[]
   canApprove: boolean
   canCancel: boolean
 }
 export interface AgentOfficeNote { id: string; title: string; text: string }
 export interface AgentOfficeActivity { id: string; title: string; detail: string; createdLabel: string }
+
+export interface LivingOfficePageCopy {
+  title: string; intro: string; createDepartment: string; departmentName: string; purpose: string; createOffice: string
+  milestoneTitle: string; milestoneAcceptance: string; addMilestone: string; milestones: string; planned: string; milestoneHint: string
+  configured: string; execution: string; noWrites: string; departmentCreated: string
+}

@@ -1,9 +1,11 @@
-import { workforce, readTools, brainContextKeys } from './hqWorkforce'
+import { workforce, readTools, brainContextKeys, stages } from './hqWorkforce'
 import type { WorkflowApproval, WorkflowRun, BrainSnapshot, ProviderOperation } from './hqWorkforce'
 export type HqRole = 'ceo' | 'hr'
 export type HqActor = { id: string; role: 'founder' | HqRole }
 export type HqTaskStatus = 'proposed' | 'queued' | 'running' | 'review' | 'completed' | 'blocked' | 'failed' | 'cancelled'
 export type HqStorageMode = 'unconfigured' | 'sqlite' | 'supabase'
+export interface HqDepartment { id: string; name: string; description: string; createdAt: string }
+export interface HqMilestone { id: string; title: string; acceptance: string; createdAt: string }
 export interface HqTask {
   id: string
   title: string
@@ -19,6 +21,7 @@ export interface HqTask {
   approvalSource: string | null
   createdAt: string
   updatedAt: string
+  milestones?: HqMilestone[]
   workflow?: WorkflowApproval
 }
 export interface HqMessage {
@@ -34,6 +37,7 @@ export interface HqMessage {
 export interface HqEvent { id: string; agent: HqRole; type: string; title: string; detail: string; createdAt: string; taskId?: string }
 export interface HqResult { ok: true; id: string; status: string }
 export interface HqDocument {
+  departments?: HqDepartment[]
   tasks: HqTask[]
   messages: HqMessage[]
   events: HqEvent[]
@@ -43,7 +47,7 @@ export interface HqDocument {
   providerOperations?: Record<string, ProviderOperation>
   receipts: Record<string, { payload: string; result: HqResult }>
 }
-export type HqCommandName = 'send_message' | 'create_task' | 'approve_task' | 'authorize_workflow' | 'cancel_task' | 'hq_reply' | 'hq_report' | 'hq_delegate_task' | 'hq_update_task' | 'hq_propose_task'
+export type HqCommandName = 'create_department' | 'add_milestone' | 'send_message' | 'create_task' | 'approve_task' | 'authorize_workflow' | 'cancel_task' | 'hq_reply' | 'hq_report' | 'hq_delegate_task' | 'hq_update_task' | 'hq_propose_task'
 export interface HqCommand { name: HqCommandName; key: string; payload: Record<string, string> }
 export class HqProblem extends Error {
   constructor(public status: number, public code: string, message: string) { super(message) }
@@ -79,6 +83,15 @@ export const roster = [
   { id: 'ceo', agentId: 'AG-CEO-001', name: 'Steve', role: 'Executive Office', onDemand: true, description: 'Plans with the founder, delegates approved work and reviews evidence.', skills: ['Planning', 'Delegation', 'Review'] },
   { id: 'hr', agentId: 'AG-HR-001', name: 'Maya', role: 'HR & Agent Development', onDemand: true, description: 'Researches staffing and skills within work delegated by the CEO.', skills: ['Recruitment', 'Skill assessment', 'Workforce planning'] },
 ] as const
+const defaultDepartments: HqDepartment[] = [
+  { id: 'hr', name: 'HR & Agent Development', description: 'Recruitment, independent evaluation and workforce development, led by Maya.', createdAt: '2026-11-03' },
+]
+const departmentName = (value: unknown) => {
+  const name = field(value, 'Department name', 80).normalize('NFKC').replace(/\s+/gu, ' ')
+  if (/\bunassigned\b/iu.test(name) || /[\p{Cc}\p{Cf}]/u.test(name)) return inputError('Use a meaningful department name, not an unassigned placeholder.')
+  return name
+}
+const directory = (doc: HqDocument) => doc.departments || defaultDepartments
 const notes = [
   { title: 'Founder authority', text: 'The founder approves execution and remains the final authority. Company conversations go through the CEO.' },
   { title: 'Current workforce', text: 'Steve is CEO; Maya leads HR. Noah researches and Iris evaluates independently. Expanded workflow qualification is pending; no scheduled worker is active.' },
@@ -88,6 +101,7 @@ const notes = [
 export function initialDocument(): HqDocument {
   const date = '2026-11-03'
   return {
+    departments: structuredClone(defaultDepartments),
     tasks: [{ id: 'HR-001', title: 'Company HQ staffing assessment', brief: 'Assess the smallest team and skills needed for Company HQ.', owner: 'hr', status: 'completed', acceptance: 'Bounded research and independent artifact review.', allowedActions: 'Review scoped company records; research public sources; prepare a staffing report.', budget: 0, deliverable: 'Recommended a temporary HQ builder and separate reviewer; no new employee was hired.', reviewEvidence: 'Independent review accepted criteria 1–5. Full execution-history audit was not available.', approvedAt: date, approvalSource: 'Founder approved the supervised first HR assignment.', createdAt: date, updatedAt: date }],
     messages: [], events: [{ id: 'historic-hr-001-reviewed', agent: 'hr', type: 'review', title: 'First HR assignment reviewed', detail: 'The actual staffing report received independent review. No new employee was hired.', createdAt: date, taskId: 'HR-001' }],
     receipts: {}, lastAgentSeen: null,
@@ -96,12 +110,30 @@ export function initialDocument(): HqDocument {
 export function projectState(doc: HqDocument, actor: HqActor, storageMode: Exclude<HqStorageMode, 'unconfigured'>) {
   const isHr = actor.role === 'hr'
   const visibleTasks = doc.tasks.filter(t => !isHr || t.owner === 'hr')
-  const tasks = visibleTasks.slice(0, 150)
+  const tasks = visibleTasks.slice(0, 150).map(task => ({ ...task, milestones: (task.milestones || []).map(milestone => ({ ...milestone, status: 'planned' as const })) }))
+  const isFounder = actor.role === 'founder'
+  const runs = Object.values(doc.workflowRuns || {})
+  const liveRuns = runs.filter(run => run.status === 'running' && run.leaseUntil > Date.now() && visibleTasks.some(task => task.id === run.taskId && task.status === 'running' && task.approvedAt))
+  const employees = isFounder ? workforce.map(worker => {
+    const running = liveRuns.find(run => stages.find(stage => !run.checkpoints[stage.stage])?.agentId === worker.agentId)
+    const blocked = runs.find(run => run.status === 'blocked' && stages.find(stage => !run.checkpoints[stage.stage])?.agentId === worker.agentId && visibleTasks.some(task => task.id === run.taskId && task.status === 'blocked' && task.approvedAt))
+    const queued = visibleTasks.find(task => task.workflow && task.status === 'queued' && task.approvedAt && (stages.find(stage => !runs.find(run => run.taskId === task.id)?.checkpoints[stage.stage])?.agentId === worker.agentId))
+    // Legacy bridge work belongs only to Steve/Maya. Noah/Iris work needs its own runner evidence.
+    const ownsLegacy = worker.agentId === 'AG-CEO-001' || worker.agentId === 'AG-HR-001'
+    const candidates = ownsLegacy ? visibleTasks.filter(task => !task.workflow && task.owner === worker.legacyRole && task.approvedAt) : []
+    const task = candidates.find(task => task.status === 'running') || candidates.find(task => task.status === 'review') || candidates.find(task => task.status === 'blocked') || candidates.find(task => task.status === 'queued')
+    const status = running ? 'working' as const : task?.status === 'running' ? 'working' as const : task?.status === 'review' ? 'reviewing' as const : blocked || task?.status === 'blocked' ? 'blocked' as const : queued || task?.status === 'queued' ? 'queued' as const : 'idle' as const
+    return { id: worker.agentId, name: worker.name, role: worker.role, departmentId: worker.legacyRole, reportsTo: worker.agentId === 'AG-CEO-001' ? 'founder' : worker.agentId === 'AG-HR-001' ? 'AG-CEO-001' : 'AG-HR-001', status, runtime: 'not_activated' as const, ...(running || blocked || queued || task ? { taskId: running?.taskId || blocked?.taskId || queued?.id || task!.id } : {}) }
+  }) : []
+  const brainEvents = isFounder ? Object.values(doc.workflowRuns || {}).flatMap(run => Object.values(run.checkpoints).filter(evidence => evidence.brain.length > 0).map(evidence => ({ id: run.key + ':' + evidence.stage, direction: 'inbound' as const, taskId: run.taskId, agentId: evidence.agentId, createdAt: evidence.completedAt, fileCount: evidence.brain.length }))).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 80) : []
   const messages = doc.messages.filter(m => m.channel === 'founder_ceo' && !isHr).slice(-180)
     .map(({ channel: _channel, recipient: _recipient, ...message }) => message)
   const events = doc.events.filter(e => !isHr || e.agent === 'hr' || (e.type === 'delegation' && visibleTasks.some(t => t.id === e.taskId))).slice(0, 80)
   return {
     ok: true as const, storageMode,
+    departments: isFounder ? structuredClone(directory(doc)) : [],
+    employees,
+    runtime: { enabled: false as const, model: 'configuration_required' as const, brain: 'read_adapter_disabled' as const, scheduler: 'disabled' as const, blockers: ['NO_ENFORCEABLE_FREE_ALLOWANCE', 'MODEL_AUTH_AND_DATA_SCOPE_UNVERIFIED', 'LIVE_DRIVE_AUTH_UNVERIFIED', 'HOST_SCOPE_AND_DURABILITY_UNVERIFIED'] },
     agents: roster.map(agent => ({
       ...agent, status: visibleTasks.some(t => t.owner === agent.id && t.status === 'running' && (!t.workflow || Object.values(doc.workflowRuns || {}).some(r => r.taskId === t.id && r.status === 'running' && r.leaseUntil > Date.now()))) ? 'working' as const
         : visibleTasks.some(t => t.owner === agent.id && t.status === 'review') ? 'reviewing' as const : 'idle' as const,
@@ -110,7 +142,7 @@ export function projectState(doc: HqDocument, actor: HqActor, storageMode: Exclu
     workflowRuns: Object.values(doc.workflowRuns || {}).filter(run => visibleTasks.some(t => t.id === run.taskId)).map(run => ({ key: run.key, taskId: run.taskId, status: run.status, stages: Object.keys(run.checkpoints), delivery: run.outbox?.status || 'not_prepared', failures: run.failures })),
     tasks, messages, events,
     ...(actor.role !== 'founder' ? { internalMessages: doc.messages.filter(m => m.channel === 'internal').slice(-120) } : {}),
-    brain: { name: 'Company Brain', source: 'Founder’s maintained Drive Brain', connection: 'assistant_bridge' as const, updatedAt: '2026-11-03', notes },
+    brain: { name: 'Company Brain', source: 'Founder’s maintained Drive Brain', connection: 'assistant_bridge' as const, updatedAt: '2026-11-03', lastReadAt: brainEvents[0]?.createdAt || null, notes, events: brainEvents, writeConnection: 'not_configured' as const },
     connection: { executor: 'on_demand' as const, connected: !!doc.lastAgentSeen && Date.now() - Date.parse(doc.lastAgentSeen) < 120_000, lastAgentSeen: doc.lastAgentSeen },
     cost: { paidCallsEnabled: false as const, limit: 0 as const },
   }
@@ -121,6 +153,12 @@ export function parseFounderAction(body: unknown, actor: HqActor): HqCommand {
   const key = identifier(input.idempotencyKey, 'Request key', 100)
   const common = ['action', 'idempotencyKey']
   switch (input.action) {
+    case 'create_department':
+      only(input, [...common, 'name', 'description'])
+      return { name: 'create_department', key, payload: { name: departmentName(input.name), description: field(input.description, 'Department purpose', 1000) } }
+    case 'add_milestone':
+      only(input, [...common, 'id', 'title', 'acceptance'])
+      return { name: 'add_milestone', key, payload: { id: identifier(input.id, 'Task', 120), title: field(input.title, 'Milestone title', 180), acceptance: field(input.acceptance, 'Milestone acceptance', 3000) } }
     case 'send_message':
       only(input, [...common, 'text', 'agent'])
       if (input.agent !== undefined && input.agent !== 'ceo') return denied('Founder conversations go only to the CEO.')
@@ -196,7 +234,7 @@ export function parseAgentAction(name: unknown, body: unknown, actor: HqActor): 
 }
 export function executeLocal(doc: HqDocument, actor: HqActor, command: HqCommand, now = new Date().toISOString()): { document: HqDocument; result: HqResult } {
   const { name, key, payload } = command
-  const founderCommand = ['send_message', 'create_task', 'approve_task', 'authorize_workflow', 'cancel_task'].includes(name)
+  const founderCommand = ['create_department', 'add_milestone', 'send_message', 'create_task', 'approve_task', 'authorize_workflow', 'cancel_task'].includes(name)
   if (founderCommand !== (actor.role === 'founder')) return denied('This command is not allowed for this identity.')
   if ((name === 'hq_reply' || name === 'hq_delegate_task' || name === 'hq_propose_task') && actor.role !== 'ceo') return denied('CEO authorization is required.')
   if (name === 'hq_report' && actor.role !== 'hr') return denied('HR authorization is required.')
@@ -215,6 +253,16 @@ export function executeLocal(doc: HqDocument, actor: HqActor, command: HqCommand
     next.receipts[receiptKey] = { payload: fingerprint, result }
     if (!founderCommand) next.lastAgentSeen = now
     return { document: next, result }
+  }
+  if (name === 'create_department') {
+    const name = departmentName(payload.name)
+    const departments = directory(next)
+    if (departments.length >= 24) return conflict('HQ supports at most 24 departments.')
+    if (departments.some(department => department.name.normalize('NFKC').toLocaleLowerCase('en-US') === name.toLocaleLowerCase('en-US'))) return conflict('A department with this name already exists.')
+    const department = { id: uid('dept'), name, description: field(payload.description, 'Department purpose', 1000), createdAt: now }
+    next.departments = [...departments, department]
+    addEvent('ceo', 'department-created', 'Department created', department.name)
+    return save(department.id, 'created')
   }
   if (name === 'send_message' || name === 'hq_reply') {
     const reply = name === 'hq_reply'
@@ -236,6 +284,17 @@ export function executeLocal(doc: HqDocument, actor: HqActor, command: HqCommand
   }
   const task = next.tasks.find(t => t.id === payload.id)
   if (!task) return missing('Task was not found.')
+  if (name === 'add_milestone') {
+    if (task.status !== 'proposed' || task.approvedAt) return conflict('Milestones must be defined before founder approval.')
+    if ((task.milestones?.length || 0) >= 20) return conflict('A task supports at most 20 milestones.')
+    const title = field(payload.title, 'Milestone title', 180)
+    if (task.milestones?.some(milestone => milestone.title.toLocaleLowerCase('en-US') === title.toLocaleLowerCase('en-US'))) return conflict('This milestone already exists.')
+    const milestone = { id: uid('milestone'), title, acceptance: field(payload.acceptance, 'Milestone acceptance', 3000), createdAt: now }
+    task.milestones = [...(task.milestones || []), milestone]
+    task.updatedAt = now
+    addEvent('ceo', 'milestone-planned', 'Milestone planned', title, task.id)
+    return save(milestone.id, 'planned')
+  }
   if (name === 'approve_task') {
     if (task.status !== 'proposed') return conflict('Only a proposed plan can be approved.')
     task.status = 'queued'

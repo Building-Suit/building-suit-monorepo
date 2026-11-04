@@ -1,3 +1,7 @@
+# Current directive — 4 November 2026
+
+The founder now requests interactive 3D, with offices only for established or explicitly created departments and a named character for each configured employee. This supersedes the historical static-image acceptance target below. See [living HQ plan](LIVING-HQ-PLAN.md). Existing historical records, approval, review and $0 gates remain in force.
+
 # Company HQ handoff
 
 On 3 November 2026 the founder retired the Cloud Rule and asked to keep work simple. Company work and CEO/HR coordination may run from any authorized local or cloud checkout; cloud verification is no longer a prerequisite. This filename is retained for continuity. Earlier cloud-only requirements and runtime verification records are dated history, not active policy.

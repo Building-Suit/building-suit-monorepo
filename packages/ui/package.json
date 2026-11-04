@@ -438,7 +438,10 @@
     "./templates/BsAgentOfficePage": "./src/templates/BsAgentOfficePage.vue",
     "./templates/BsWorkspaceAccessPage": "./src/templates/BsWorkspaceAccessPage.vue",
     "./atoms/BsOfficeIcon": "./src/atoms/BsOfficeIcon.vue",
-    "./types/agentOfficePresentation": "./src/types/agentOfficePresentation.ts"
+    "./types/agentOfficePresentation": "./src/types/agentOfficePresentation.ts",
+    "./types/livingOffice": "./src/types/livingOffice.ts",
+    "./organisms/BsLivingOfficeScene": "./src/organisms/BsLivingOfficeScene.vue",
+    "./utils/livingOfficeScene": "./src/utils/livingOfficeScene.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",
@@ -451,9 +454,13 @@
     "@fontsource/ibm-plex-sans-arabic": "5.3.0",
     "@hugeicons/core-free-icons": "4.2.1",
     "@hugeicons/vue": "1.0.6",
-    "primevue": "4.5.5"
+    "primevue": "4.5.5",
+    "three": "0.187.0"
   },
   "peerDependencies": {
     "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@types/three": "0.187.0"
   }
 }

@@ -130,3 +130,34 @@ test('disposing the composable invalidates a pending authenticated response', as
   assert.equal(hq.authenticated.value, false)
   assert.deepEqual(hq.messages.value, [])
 })
+
+
+test('ambiguous command keeps its idempotency key across an unrelated successful action', async t => {
+  const { hq, transport } = fixture(t)
+  await hq.load()
+  const commands=[];let first=true
+  transport(async(url, options) => {
+    if(url === '/api/hq/state') return signedIn()
+    commands.push(options.body)
+    if(first){first=false;throw Error('Synthetic response lost after save')}
+    return {ok:true}
+  })
+  await hq.sendMessage('Retry this exact message')
+  await hq.createTask({title:'Different action',brief:'Read only',acceptance:'Evidence',allowedActions:'No spending'})
+  await hq.sendMessage('Retry this exact message')
+  assert.equal(commands.length,3)
+  assert.equal(commands[0].idempotencyKey,commands[2].idempotencyKey)
+  assert.notEqual(commands[0].idempotencyKey,commands[1].idempotencyKey)
+})
+
+test('unrelated chat success preserves a milestone draft; matching milestone success clears it', async t => {
+  const { hq, transport } = fixture(t)
+  await hq.load()
+  const draft={title:'Unsaved milestone',acceptance:'Independent evidence'}
+  hq.milestoneDraft.value={...draft}
+  transport(async url => url === '/api/hq/state' ? signedIn() : {ok:true})
+  await hq.sendMessage('Unrelated conversation')
+  assert.deepEqual(hq.milestoneDraft.value,draft)
+  await hq.addMilestone({id:'task_synthetic',...draft})
+  assert.deepEqual(hq.milestoneDraft.value,{title:'',acceptance:''})
+})
