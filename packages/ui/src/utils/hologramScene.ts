@@ -1,10 +1,10 @@
 import { SPATIAL_VIEWPORT_GROUND_Y, SPATIAL_VIEWPORT_VERTICAL_FOV, spatialViewportFrame } from '@building-suit/ux'
 import type { SpatialViewportCamera } from '@building-suit/ux'
 import type { HqDepartmentOffice } from '../types/hqLayoutPresentation'
-import { DEPARTMENT_OFFICE_DEPTH, DEPARTMENT_OFFICE_WIDTH, departmentOfficeFloorRadius, layoutDepartmentOffices } from './departmentOfficeLayout'
-import type { DepartmentRoadPoint, OfficePlacement } from './departmentOfficeLayout'
-import { createHologramEffects } from './hologramEffects'
-import type { HologramEffects } from './hologramEffects'
+import { DEPARTMENT_OFFICE_DEPTH, DEPARTMENT_OFFICE_WIDTH, departmentOfficeFloorRadius, layoutDepartmentOffices } from './departmentOfficeLayout.ts'
+import type { DepartmentRoadPoint, OfficePlacement } from './departmentOfficeLayout.ts'
+import { createHologramEffects } from './hologramEffects.ts'
+import type { HologramEffects } from './hologramEffects.ts'
 
 type Vector = [number, number, number]
 type Matrix = Float32Array

@@ -1,8 +1,8 @@
 import { computed, onMounted, onScopeDispose, reactive, readonly, ref, shallowRef } from 'vue'
-import type { SpatialViewportCamera } from '../spatialViewportGeometry'
-import { spatialViewportFrame, SPATIAL_VIEWPORT_DEFAULT_CAMERA, SPATIAL_VIEWPORT_MIN_ZOOM, SPATIAL_VIEWPORT_MAX_ZOOM, SPATIAL_VIEWPORT_MIN_PITCH } from '../spatialViewportGeometry'
-export { SPATIAL_VIEWPORT_DEFAULT_CAMERA, SPATIAL_VIEWPORT_MIN_ZOOM, SPATIAL_VIEWPORT_MAX_ZOOM, SPATIAL_VIEWPORT_GROUND_Y, SPATIAL_VIEWPORT_MIN_PITCH, SPATIAL_VIEWPORT_TARGET_Y, SPATIAL_VIEWPORT_MIN_TARGET_Y } from '../spatialViewportGeometry'
-export type { SpatialViewportCamera } from '../spatialViewportGeometry'
+import type { SpatialViewportCamera } from '../spatialViewportGeometry.ts'
+import { spatialViewportFrame, SPATIAL_VIEWPORT_DEFAULT_CAMERA, SPATIAL_VIEWPORT_MIN_ZOOM, SPATIAL_VIEWPORT_MAX_ZOOM, SPATIAL_VIEWPORT_MIN_PITCH } from '../spatialViewportGeometry.ts'
+export { SPATIAL_VIEWPORT_DEFAULT_CAMERA, SPATIAL_VIEWPORT_MIN_ZOOM, SPATIAL_VIEWPORT_MAX_ZOOM, SPATIAL_VIEWPORT_GROUND_Y, SPATIAL_VIEWPORT_MIN_PITCH, SPATIAL_VIEWPORT_TARGET_Y, SPATIAL_VIEWPORT_MIN_TARGET_Y } from '../spatialViewportGeometry.ts'
+export type { SpatialViewportCamera } from '../spatialViewportGeometry.ts'
 
 interface SpatialPointer {
   x: number

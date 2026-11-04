@@ -4,8 +4,8 @@ import { SPATIAL_VIEWPORT_MAX_ZOOM, spatialViewportFrame, spatialViewportGroundF
 import type { SpatialViewportCamera } from '@building-suit/ux'
 import type { HqBrainPresentation, HqCompanyPlansPresentation, HqDepartmentOffice, HqFounderAccessPresentation, HqLayoutContent, HqUserPresentation } from '../types/hqLayoutPresentation'
 import { hologramFloorRadius } from '../utils/hologramScene'
-import { layoutDepartmentOffices } from '../utils/departmentOfficeLayout'
-import type { OfficePlacement } from '../utils/departmentOfficeLayout'
+import { layoutDepartmentOffices } from '../utils/departmentOfficeLayout.ts'
+import type { OfficePlacement } from '../utils/departmentOfficeLayout.ts'
 
 const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; departments?: readonly HqDepartmentOffice[] }>()
 const emit = defineEmits<{ refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected'] }>()

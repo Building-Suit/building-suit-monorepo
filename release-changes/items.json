@@ -5219,7 +5219,7 @@
   },
   {
     "id": "company-hq-internal-office",
-    "task": "HQ-NEON-REFLECTIONS-20261104",
+    "task": "HQ-SPATIAL-IMPORT-RESOLUTION-20261104",
     "suits": [
       "automation-suit",
       "doctor-suit",
@@ -5276,7 +5276,7 @@
       "docs/work-packages/company-hq/HQ-NEON-REFLECTIONS-20261104.md",
       "packages/ui/src/utils/hologramEffects.ts"
     ],
-    "reason": "HQ-NEON-REFLECTIONS-20261104 source implements mixed Coal/Building Navy/Premium Gold, mirrored-geometry floor reflections with Fresnel/roughness and GPU scene-copy/bright-pass/blur/bloom composition. Metallic environment/specular detail, neon cores and localized Gold spill use canonical palette bindings. Bounded targets allocate on resize and release on disable/disposal; native pixel/DPR limits, reduced-motion static state and 30/60 scheduling remain. Camera/overview, office/Auth/data behavior are preserved. This is WebGL raster rendering, with no hardware RTX/ray-tracing or measured visual/performance acceptance claimed. Latest bounded camera/overview correction: left drag pans and middle drag rotates around the preserved panned world target; right is inactive and touch unchanged. Default 100% uses a farther radius/aspect-aware overview; the larger circular minimap shows the whole finite floor and all approved office/CEO markers, with actual canvas-aspect viewport rectangle and separate floor-frustum footprint. EN/AR controls match this mapping. No additional office/Auth/database/plan work, Brain/provider action or testing is part of this correction. Maintain the internal cloud Brain/3D workspace and add founder login plus complete reviewed company-plan approval. A reserved CEO desk/board opens the shared plan panel; authenticated exact-revision/idempotent decisions atomically publish all approved department records. Confirmed snapshots create empty offices/roads on separated concentric rings, growing the finite floor/overview with a 2.4-second construction effect and reduced-motion static completion. Hiring/skill entries are documentary approved requests, not workforce execution. Founder email is explicitly ceo@building-suit.com; user-entered registration requires email confirmation, server-only HttpOnly cookies and trusted one-time Auth UID membership checked against fresh Auth/session evidence. No metadata/client status grants authority. The HQ import seeds HR only, not the complete current company roster; newer approved Brain organization/acquisition records are not automatically synchronized. HR uses historical 2026-11-03 approval, preserving date precision and null original reviews/Auth approver. The service-only publisher remains a foundation without a live CEO/HR execution bridge. Preserve private bounded verified-root Google Drive knowledge reads with no filesystem fallback, shield/camera/overlay behavior, canonical tokens and bilingual presentation. Staging schema applied successfully at version 20261104194233 on dpruoncalmwicrqhqelu; historical migration stays unapplied, production untouched and GitHub founder-reported unconnected, with dashboard state unverified and migration-history review required; Automatic branching OFF remains policy only. Earlier cloud reads retain their historical scope. No new signup/email/login, Auth/approval/UI/runtime acceptance, tests/build/lint/typecheck/boundary/release checks or tester/reviewer agents ran. No operational product activation, public release, deployment, app Brain writes, new staff/model execution or spending.",
+    "reason": "Correct the reported HQ module-resolution failure with explicit .ts camera-helper import/re-export paths and adjacent hologram effect/layout paths; runtime acceptance remains unrun. HQ-NEON-REFLECTIONS-20261104 source implements mixed Coal/Building Navy/Premium Gold, mirrored-geometry floor reflections with Fresnel/roughness and GPU scene-copy/bright-pass/blur/bloom composition. Metallic environment/specular detail, neon cores and localized Gold spill use canonical palette bindings. Bounded targets allocate on resize and release on disable/disposal; native pixel/DPR limits, reduced-motion static state and 30/60 scheduling remain. Camera/overview, office/Auth/data behavior are preserved. This is WebGL raster rendering, with no hardware RTX/ray-tracing or measured visual/performance acceptance claimed. Latest bounded camera/overview correction: left drag pans and middle drag rotates around the preserved panned world target; right is inactive and touch unchanged. Default 100% uses a farther radius/aspect-aware overview; the larger circular minimap shows the whole finite floor and all approved office/CEO markers, with actual canvas-aspect viewport rectangle and separate floor-frustum footprint. EN/AR controls match this mapping. No additional office/Auth/database/plan work, Brain/provider action or testing is part of this correction. Maintain the internal cloud Brain/3D workspace and add founder login plus complete reviewed company-plan approval. A reserved CEO desk/board opens the shared plan panel; authenticated exact-revision/idempotent decisions atomically publish all approved department records. Confirmed snapshots create empty offices/roads on separated concentric rings, growing the finite floor/overview with a 2.4-second construction effect and reduced-motion static completion. Hiring/skill entries are documentary approved requests, not workforce execution. Founder email is explicitly ceo@building-suit.com; user-entered registration requires email confirmation, server-only HttpOnly cookies and trusted one-time Auth UID membership checked against fresh Auth/session evidence. No metadata/client status grants authority. The HQ import seeds HR only, not the complete current company roster; newer approved Brain organization/acquisition records are not automatically synchronized. HR uses historical 2026-11-03 approval, preserving date precision and null original reviews/Auth approver. The service-only publisher remains a foundation without a live CEO/HR execution bridge. Preserve private bounded verified-root Google Drive knowledge reads with no filesystem fallback, shield/camera/overlay behavior, canonical tokens and bilingual presentation. Staging schema applied successfully at version 20261104194233 on dpruoncalmwicrqhqelu; historical migration stays unapplied, production untouched and GitHub founder-reported unconnected, with dashboard state unverified and migration-history review required; Automatic branching OFF remains policy only. Earlier cloud reads retain their historical scope. No new signup/email/login, Auth/approval/UI/runtime acceptance, tests/build/lint/typecheck/boundary/release checks or tester/reviewer agents ran. No operational product activation, public release, deployment, app Brain writes, new staff/model execution or spending.",
     "sources": [
       "hq-office-monorepo-20261103",
       "hq-static-layout-reset-20261104",
@@ -5292,7 +5292,8 @@
       "hq-overlay-polish-20261104",
       "hq-company-plans-20261104",
       "hq-camera-overview-20261104",
-      "hq-neon-reflections-20261104"
+      "hq-neon-reflections-20261104",
+      "hq-spatial-import-resolution-20261104"
     ],
     "evidence": [
       {
@@ -5414,6 +5415,10 @@
       {
         "path": "packages/ui/src/organisms/BsHologramScene.vue",
         "contains": "navy: read('--bs-color-brand-building-navy')"
+      },
+      {
+        "path": "packages/ux/src/composables/useSpatialViewport.ts",
+        "contains": "from '../spatialViewportGeometry.ts'"
       }
     ]
   }
