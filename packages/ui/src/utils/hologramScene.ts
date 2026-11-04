@@ -3,6 +3,8 @@ import type { SpatialViewportCamera } from '@building-suit/ux'
 import type { HqDepartmentOffice } from '../types/hqLayoutPresentation'
 import { DEPARTMENT_OFFICE_DEPTH, DEPARTMENT_OFFICE_WIDTH, departmentOfficeFloorRadius, layoutDepartmentOffices } from './departmentOfficeLayout'
 import type { DepartmentRoadPoint, OfficePlacement } from './departmentOfficeLayout'
+import { createHologramEffects } from './hologramEffects'
+import type { HologramEffects } from './hologramEffects'
 
 type Vector = [number, number, number]
 type Matrix = Float32Array
@@ -25,7 +27,7 @@ interface OfficeRenderEntry {
   completedHeight: number
 }
 
-export interface HologramPalette { coal: Vector; charcoal: Vector; graphite: Vector; gold: Vector; steelGray: Vector; silver: Vector; pearl: Vector }
+export interface HologramPalette { coal: Vector; charcoal: Vector; graphite: Vector; navy: Vector; navyDeep: Vector; gold: Vector; steelGray: Vector; silver: Vector; pearl: Vector }
 export interface HologramInteraction { open: number; excited: number; opened?: boolean }
 export interface HologramLayout { officeLayerCount?: number; departments?: readonly HqDepartmentOffice[]; reducedMotion?: boolean }
 export interface HologramOfficeAnchor { x: number; y: number; visible: boolean }
@@ -44,13 +46,17 @@ attribute vec3 aNormal;
 uniform mat4 uProjection;
 uniform mat4 uView;
 uniform mat4 uModel;
+uniform float uMirrored;
+uniform float uGroundY;
 varying vec3 vWorld;
 varying vec3 vNormal;
 void main() {
   vec4 world = uModel * vec4(aPosition, 1.0);
   vWorld = world.xyz;
   vNormal = mat3(uModel) * aNormal;
-  gl_Position = uProjection * uView * world;
+  vec4 projected = world;
+  projected.y = mix(world.y, 2.0 * uGroundY - world.y, uMirrored);
+  gl_Position = uProjection * uView * projected;
 }`
 
 const fragmentShader = `
@@ -65,44 +71,77 @@ uniform float uOpacity;
 uniform float uTime;
 uniform float uMaterial;
 uniform vec3 uAccent;
+uniform vec3 uNavy;
+uniform vec3 uNavyDeep;
+uniform vec3 uSilver;
+uniform vec2 uResolution;
+uniform sampler2D uReflectionMap;
+uniform float uReflectionEnabled;
 uniform float uSweepY;
 uniform float uConstruction;
 varying vec3 vWorld;
 varying vec3 vNormal;
 void main() {
+  vec3 view = normalize(uEye - vWorld);
   if (uMaterial > 5.5 && uMaterial < 6.5) {
-    float contact = 1.0 - smoothstep(1.45, 2.45, length(vWorld.xz));
-    float distanceShade = clamp(length(vWorld.xz - uEye.xz) / 120.0, 0.0, 1.0);
-    gl_FragColor = vec4(uColor * (0.86 - contact * 0.13 + distanceShade * 0.07), 1.0);
+    float radius = length(vWorld.xz);
+    float contactShadow = 1.0 - 0.66 * exp(-radius * radius / 2.1);
+    float finish = 0.985 + 0.015 * sin(vWorld.x * 41.1 + sin(vWorld.z * 31.3));
+    vec3 floorColor = mix(uColor, uNavyDeep, 0.18) * finish * contactShadow;
+    floorColor += uNavy * 0.13 * (0.5 + 0.5 * max(view.y, 0.0));
+    // Local emitter spill is independent of reflection availability.
+    float lightPool = 0.12 * exp(-radius * 0.62);
+    floorColor += uAccent * lightPool;
+    if (uReflectionEnabled > 0.5) {
+      vec2 uv = gl_FragCoord.xy / uResolution;
+      vec2 blur = vec2(2.5) / uResolution;
+      vec4 reflection = texture2D(uReflectionMap, uv) * 0.5;
+      reflection += texture2D(uReflectionMap, uv + vec2(blur.x, 0.0)) * 0.125;
+      reflection += texture2D(uReflectionMap, uv - vec2(blur.x, 0.0)) * 0.125;
+      reflection += texture2D(uReflectionMap, uv + vec2(0.0, blur.y)) * 0.125;
+      reflection += texture2D(uReflectionMap, uv - vec2(0.0, blur.y)) * 0.125;
+      float fresnel = 0.24 + 0.48 * pow(1.0 - clamp(view.y, 0.0, 1.0), 3.0);
+      floorColor = floorColor * (1.0 - fresnel * clamp(reflection.a, 0.0, 1.0)) + reflection.rgb * fresnel;
+    }
+    gl_FragColor = vec4(floorColor, 1.0);
     return;
   }
   vec3 normal = normalize(vNormal);
-  vec3 view = normalize(uEye - vWorld);
   float facing = abs(dot(normal, view));
-  float rim = pow(1.0 - facing, 2.8);
-  float diffuse = max(dot(normal, normalize(vec3(-1.5, 3.0, 2.0))), 0.0);
-  float specular = pow(max(dot(reflect(-normalize(vec3(-1.5, 3.0, 2.0)), normal), view), 0.0), 42.0);
-  vec3 color = uColor * (0.65 + 0.55 * diffuse) + vec3(specular * 0.15 + rim * 0.025);
+  float rim = pow(1.0 - facing, 3.0);
+  vec3 keyLight = normalize(vec3(-1.5, 3.0, 2.0));
+  float diffuse = max(dot(normal, keyLight), 0.0);
+  float clearcoat = pow(max(dot(reflect(-keyLight, normal), view), 0.0), 84.0);
+  vec3 reflected = reflect(-view, normal);
+  float softbox = pow(max(dot(reflected, normalize(vec3(-1.0, 1.7, 1.2))), 0.0), 28.0);
+  float warmStrip = pow(max(dot(reflected, normalize(vec3(1.0, 0.75, -1.2))), 0.0), 42.0);
+  vec3 environment = mix(uNavyDeep, uNavy, 0.5 + 0.5 * reflected.y);
+  environment += uSilver * softbox * 0.8 + uAccent * warmStrip * 0.24;
+  float metallic = uMaterial > 7.5 ? 0.82 : 0.12;
+  vec3 color = uColor * (0.44 + 0.64 * diffuse) * (1.0 - metallic * 0.42);
+  color += environment * (0.20 + rim * 0.72) * metallic;
+  color += uSilver * clearcoat * (0.30 + metallic * 0.62);
   float alpha = uOpacity;
   if (uMaterial > 0.5 && uMaterial < 1.5) {
-    color = uColor * 0.85 + vec3(specular * 0.18);
-    alpha *= 0.06 + rim * 0.4;
+    color = mix(uColor, uNavy, 0.25) * 0.85 + uSilver * clearcoat * 0.38;
+    alpha *= 0.035 + rim * 0.36;
   } else if (uMaterial > 1.5 && uMaterial < 2.5) {
-    color = uColor;
+    // Hot cores survive the native antialias resolve; bloom adds their halo.
+    color = uColor * 1.60 + vec3(0.045);
   } else if (uMaterial > 2.5 && uMaterial < 3.5) {
     float impulse = pow(max(0.0, sin(uTime * 2.6 - vWorld.y * 8.0 - abs(vWorld.x) * 7.0)), 5.0);
-    color = uColor * (0.8 + impulse * 0.35);
-    alpha *= 0.5 + impulse * 0.5;
+    color = uColor * (1.1 + impulse * 0.72) + vec3(impulse * 0.08);
+    alpha *= 0.60 + impulse * 0.40;
   } else if (uMaterial > 3.5 && uMaterial < 4.5) {
-    color = uColor * (0.55 + diffuse * 0.4) + rim * uColor * 0.12;
+    color = uColor * (0.55 + diffuse * 0.4) + rim * uNavy * 0.26;
   } else if (uMaterial > 4.5 && uMaterial < 5.5) {
     float orbit = atan(vWorld.z, vWorld.x);
     float ribbon = pow(0.5 + 0.5 * sin(orbit * 3.0 - uTime * 0.9), 5.0);
-    color = uColor;
-    alpha *= 0.28 + ribbon * 0.72;
-  } else if (uMaterial > 6.5) {
+    color = uColor * 1.50 + vec3(0.035);
+    alpha *= 0.52 + ribbon * 0.48;
+  } else if (uMaterial > 6.5 && uMaterial < 7.5) {
     float sweep = 1.0 - smoothstep(0.015, 0.065, abs(vWorld.y - uSweepY));
-    color = mix(color, uAccent, sweep * uConstruction * 0.72);
+    color = mix(color, uAccent * 1.65, sweep * uConstruction * 0.82);
   }
   gl_FragColor = vec4(color, alpha);
 }`
@@ -352,7 +391,7 @@ function shieldFractures(): ShieldFracture[] {
           const unit = normalize(edgeStart.map((value, axis) => value * (1 - amount) + edgeEnd[axis]! * amount) as Vector)
           return [unit[0] * 0.834 - center[0], unit[1] * 0.834 - center[1], unit[2] * 0.834 - center[2]] as Vector
         })
-        seams.push(tube(seamPath, 0.004))
+        seams.push(tube(seamPath, 0.006))
       }
     }
     return {
@@ -414,6 +453,8 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
   if (!gl) return null
   const shaders: WebGLShader[] = [], buffers: WebGLBuffer[] = []
   let program: WebGLProgram | null = null
+  let effects: HologramEffects | null = null
+  let reflectionFallback: WebGLTexture | null = null
   try {
     function compile(kind: number, source: string) {
       const shader = gl!.createShader(kind)
@@ -430,7 +471,18 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error('Hologram renderer unavailable')
     gl.useProgram(program)
     const position = gl.getAttribLocation(program, 'aPosition'), normal = gl.getAttribLocation(program, 'aNormal')
-    const uniforms = Object.fromEntries(['uProjection', 'uView', 'uModel', 'uEye', 'uColor', 'uOpacity', 'uTime', 'uMaterial', 'uAccent', 'uSweepY', 'uConstruction'].map(name => [name, gl.getUniformLocation(program!, name)]))
+    const uniforms = Object.fromEntries(['uProjection', 'uView', 'uModel', 'uEye', 'uColor', 'uOpacity', 'uTime', 'uMaterial', 'uAccent', 'uSweepY', 'uConstruction', 'uNavy', 'uNavyDeep', 'uSilver', 'uMirrored', 'uGroundY', 'uResolution', 'uReflectionMap', 'uReflectionEnabled'].map(name => [name, gl.getUniformLocation(program!, name)]))
+    reflectionFallback = gl.createTexture()
+    if (!reflectionFallback) throw new Error('Hologram surface unavailable')
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, reflectionFallback)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4))
+    gl.activeTexture(gl.TEXTURE0)
+    effects = createHologramEffects(gl)
+    gl.useProgram(program)
     const mesh = (data: Geometry): Mesh => {
       const vertices: number[] = [], directions: number[] = [], indices: number[] = []
       const unique = new Map<string, number>()
@@ -490,6 +542,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     const outerRingModel = model(0, -0.48), innerRingModel = model(0, -0.30), emitterRingModel = model(0, -0.145)
     let lastCamera: number[] = [], lastWidth = 0, lastHeight = 0, lastFloorRadius = -1
     let viewProjection: Matrix | null = null
+    let sceneProjection: Matrix | null = null, sceneView: Matrix | null = null
     let officeLayout = layoutDepartmentOffices(EMPTY_DEPARTMENTS)
     let previousDepartments: readonly HqDepartmentOffice[] | null = null, departmentSignature = ''
     let officeEntries = new Map<string, OfficeRenderEntry>()
@@ -549,14 +602,38 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       const ndcX = clipX / clipW, ndcY = clipY / clipW, ndcZ = clipZ / clipW
       return { x: (ndcX + 1) * lastWidth / 2, y: (1 - ndcY) * lastHeight / 2, visible: Math.abs(ndcX) < 0.98 && Math.abs(ndcY) < 0.96 && Math.abs(ndcZ) <= 1 }
     }
-    gl.enable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+    function configureScenePass(mirrored: boolean, width: number, height: number, reflection: WebGLTexture | null = null) {
+      if (!gl || !program || !sceneProjection || !sceneView || !orbProjection) return
+      gl.useProgram(program)
+      gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true)
+      gl.enable(gl.BLEND); gl.blendEquation(gl.FUNC_ADD)
+      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+      gl.disable(gl.SCISSOR_TEST); gl.colorMask(true, true, true, true)
+      gl.frontFace(mirrored ? gl.CW : gl.CCW)
+      gl.uniformMatrix4fv(uniforms.uProjection!, false, sceneProjection)
+      gl.uniformMatrix4fv(uniforms.uView!, false, sceneView)
+      const eye = orbProjection.eye
+      gl.uniform3f(uniforms.uEye!, eye[0], mirrored ? SPATIAL_VIEWPORT_GROUND_Y * 2 - eye[1] : eye[1], eye[2])
+      gl.uniform1f(uniforms.uMirrored!, mirrored ? 1 : 0)
+      gl.uniform1f(uniforms.uGroundY!, SPATIAL_VIEWPORT_GROUND_Y)
+      gl.uniform3fv(uniforms.uAccent!, palette.gold)
+      gl.uniform3fv(uniforms.uNavy!, palette.navy); gl.uniform3fv(uniforms.uNavyDeep!, palette.navyDeep)
+      gl.uniform3fv(uniforms.uSilver!, palette.silver)
+      gl.uniform2f(uniforms.uResolution!, width, height)
+      gl.uniform1i(uniforms.uReflectionMap!, 1)
+      gl.uniform1f(uniforms.uReflectionEnabled!, reflection && !mirrored ? 1 : 0)
+      // A complete fallback prevents sampler feedback while the reflection
+      // texture itself is attached for writing, even for non-floor materials.
+      gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, reflection ?? reflectionFallback)
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, null)
+    }
     function drawMesh(shape: Mesh, color: Vector, material: number, opacity = 1, transform = staticModel, singleSided = false, count = shape.count) {
       if (!gl || count <= 0) return
       gl.bindBuffer(gl.ARRAY_BUFFER, shape.position); gl.vertexAttribPointer(position, 3, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(position)
       gl.bindBuffer(gl.ARRAY_BUFFER, shape.normal); gl.vertexAttribPointer(normal, 3, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(normal)
       gl.uniformMatrix4fv(uniforms.uModel!, false, transform)
       gl.uniform3fv(uniforms.uColor!, color); gl.uniform1f(uniforms.uMaterial!, material); gl.uniform1f(uniforms.uOpacity!, opacity)
-      gl.depthMask((opacity >= 1 && (material === 0 || material === 6 || material === 7)) || (material === 4 && opacity > 0.5))
+      gl.depthMask((opacity >= 1 && (material === 0 || material === 6 || material === 7 || material === 8)) || (material === 4 && opacity > 0.5))
       if (singleSided) { gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK) }
       else gl.disable(gl.CULL_FACE)
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, shape.indices)
@@ -577,10 +654,10 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       gl!.uniform1f(uniforms.uConstruction!, complete ? 0 : 1 - constructionStage(age, 1.7, OFFICE_BUILD_SECONDS))
       gl!.uniform1f(uniforms.uSweepY!, SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT + OFFICE_WALL_HEIGHT * constructionStage(age, 0.65, 2.2))
       entry.wallModel[5] = Math.max(0.001, wallRise)
-      if (wallRise > 0) drawMesh(geometry.officeBack, palette.charcoal, material, 1, entry.wallModel)
+      if (wallRise > 0) drawMesh(geometry.officeBack, palette.navyDeep, material, 1, entry.wallModel)
       const sideRise = constructionStage(age, 0.85, 1.65)
       entry.wallModel[5] = Math.max(0.001, sideRise)
-      if (sideRise > 0) drawMesh(geometry.officeSides, palette.graphite, material, 1, entry.wallModel)
+      if (sideRise > 0) drawMesh(geometry.officeSides, palette.charcoal, material, 1, entry.wallModel)
       const portalRise = constructionStage(age, 1.05, 1.85)
       entry.wallModel[5] = Math.max(0.001, portalRise)
       if (portalRise > 0) drawMesh(geometry.officePortal, executive ? palette.gold : palette.steelGray, material, 1, entry.wallModel)
@@ -588,7 +665,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         entry.wallModel[5] = 1
         drawMesh(geometry.executiveDesk, palette.graphite, 0, 1, entry.wallModel)
         drawMesh(geometry.executiveBoard, palette.gold, 0, 1, entry.wallModel)
-        drawMesh(geometry.executiveBoardInset, palette.coal, 0, 1, entry.wallModel)
+        drawMesh(geometry.executiveBoardInset, palette.navyDeep, 8, 1, entry.wallModel)
         drawMesh(geometry.executivePlanLines, palette.silver, 2, 0.80, entry.wallModel)
       }
     }
@@ -647,11 +724,13 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           canvas.width = renderWidth; canvas.height = renderHeight
           gl.viewport(0, 0, renderWidth, renderHeight)
         }
+        gl.useProgram(program)
         gl.depthMask(true); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
         if (layoutChanged || width !== lastWidth || height !== lastHeight || camera.yaw !== lastCamera[0] || camera.pitch !== lastCamera[1]
           || camera.zoom !== lastCamera[2] || camera.panX !== lastCamera[3] || camera.panY !== lastCamera[4]) {
           const frame = spatialViewportFrame(camera, width, height, floorRadius)
           const projection = perspective(frame.aspect, frame.far, frame.near), view = lookAt(frame.eye, frame.target)
+          sceneProjection = projection; sceneView = view
           gl.uniformMatrix4fv(uniforms.uProjection!, false, projection)
           gl.uniformMatrix4fv(uniforms.uView!, false, view); gl.uniform3fv(uniforms.uEye!, frame.eye)
           viewProjection = matrixProduct(projection, view)
@@ -670,43 +749,66 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           orbProjection.center[0] = shakeX; orbProjection.center[1] = orbHeight + shakeY
           orbProjection.radius = (0.84 - reveal * 0.14) * beat
         }
-        drawMesh(geometry.ground, palette.coal, 6, 1, groundModel, true)
-        drawMesh(geometry.groundEdge, palette.graphite, 0, 1, groundModel, true)
-        drawOffice(executiveEntry, OFFICE_BUILD_SECONDS, true)
-        for (const [id, entry] of officeEntries) drawOffice(entry, constructionClock - (firstSeen.get(id) ?? constructionClock))
-        drawMesh(geometry.base, palette.charcoal, 0)
-        drawMesh(geometry.bevel, palette.graphite, 0)
-        drawMesh(geometry.deck, palette.charcoal, 0)
-        drawMesh(geometry.inset, palette.graphite, 0)
-        drawMesh(geometry.emitter, palette.coal, 0)
-        drawMesh(geometry.outerRing, palette.steelGray, 5, 0.58, outerRingModel)
-        drawMesh(geometry.innerRing, palette.silver, 2, 0.46, innerRingModel)
-        drawMesh(geometry.emitterRing, palette.gold, 2, 0.60, emitterRingModel)
+        // Pose once so the native scene and its planar reflection share the
+        // exact shield motion, build progress and neural/aura animation.
         for (const plate of plates) {
           const vibration = Math.sin(time * 33 + plate.phase) * excited * 0.014
           const drift = Math.sin(time * 0.65 + plate.phase) * reveal * 0.006
-          const transform = model(
+          model(
             plate.center[0] * beat + plate.travel[0] * reveal + plate.direction[0] * vibration + shakeX,
             orbHeight + plate.center[1] * beat + plate.travel[1] * reveal + drift + shakeY,
             plate.center[2] * beat + plate.travel[2] * reveal + plate.direction[2] * vibration,
             plate.rotation[0] * reveal + vibration, plate.rotation[1] * reveal + vibration, plate.rotation[2] * reveal, beat, plate.transform,
           )
-          drawMesh(plate.body, plate.phase > Math.PI ? palette.graphite : palette.charcoal, 0, 1, transform)
-          drawMesh(plate.seam, palette.gold, 2, 0.38 + excited * 0.30, transform)
         }
         model(shakeX, orbHeight + shakeY, 0, 0, 0, 0, beat, brainModel)
-        if (reveal > 0.001) {
-          drawMesh(geometry.lobes, palette.silver, 4, reveal * 0.88, brainModel, true)
-          drawMesh(geometry.stem, palette.steelGray, 4, reveal * 0.85, brainModel)
-          drawMesh(geometry.folds, palette.steelGray, 2, reveal * 0.78, brainModel)
-          drawMesh(geometry.nerves, palette.gold, 3, reveal * 0.94, brainModel)
-        }
-        drawMesh(geometry.shell, palette.pearl, 1, 0.50, brainModel, true)
-        drawMesh(geometry.auraShell, palette.silver, 1, 0.18, brainModel, true)
         model(shakeX, orbHeight + shakeY, 0, 0.52, 0, time * 0.13, 1, auraFirst)
         model(shakeX, orbHeight + shakeY, 0, 1.13, 0.22, -time * 0.09, 1, auraSecond)
-        drawMesh(geometry.auraRing, palette.gold, 5, 0.34, auraFirst)
-        drawMesh(geometry.auraRing, palette.gold, 5, 0.20, auraSecond)
+        const drawSceneObjects = () => {
+          drawOffice(executiveEntry, OFFICE_BUILD_SECONDS, true)
+          for (const [id, entry] of officeEntries) drawOffice(entry, constructionClock - (firstSeen.get(id) ?? constructionClock))
+          drawMesh(geometry.base, palette.navyDeep, 8)
+          drawMesh(geometry.bevel, palette.steelGray, 8)
+          drawMesh(geometry.deck, palette.coal, 8)
+          drawMesh(geometry.inset, palette.navy, 8)
+          drawMesh(geometry.emitter, palette.charcoal, 8)
+          drawMesh(geometry.outerRing, palette.silver, 2, 0.94, outerRingModel)
+          drawMesh(geometry.innerRing, palette.silver, 2, 0.86, innerRingModel)
+          drawMesh(geometry.emitterRing, palette.gold, 2, 1, emitterRingModel)
+          for (const plate of plates) {
+            const coating = plate.phase < 1.7 ? palette.navyDeep : plate.phase < 3.5 ? palette.navy : palette.charcoal
+            drawMesh(plate.body, coating, 8, 1, plate.transform)
+            drawMesh(plate.seam, palette.gold, 2, 0.94 + excited * 0.06, plate.transform)
+          }
+          if (reveal > 0.001) {
+            drawMesh(geometry.lobes, palette.silver, 4, reveal * 0.88, brainModel, true)
+            drawMesh(geometry.stem, palette.steelGray, 4, reveal * 0.85, brainModel)
+            drawMesh(geometry.folds, palette.steelGray, 2, reveal * 0.78, brainModel)
+            drawMesh(geometry.nerves, palette.gold, 3, reveal * 0.94, brainModel)
+          }
+          drawMesh(geometry.shell, palette.pearl, 1, 0.50, brainModel, true)
+          drawMesh(geometry.auraShell, palette.navy, 1, 0.38, brainModel, true)
+          drawMesh(geometry.auraRing, palette.gold, 5, 0.74, auraFirst)
+          drawMesh(geometry.auraRing, palette.silver, 5, 0.46, auraSecond)
+        }
+        const effectsReady = effects?.resize(renderWidth, renderHeight) ?? false
+        // Mirrored geometry is rendered once beneath the same finite plane;
+        // the floor samples that image projectively with roughness and Fresnel.
+        if (effectsReady && effects?.beginReflection()) {
+          configureScenePass(true, renderWidth, renderHeight)
+          gl.uniform1f(uniforms.uTime!, time)
+          drawSceneObjects()
+          effects.endReflection()
+        }
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, renderWidth, renderHeight)
+        configureScenePass(false, renderWidth, renderHeight, effectsReady ? effects?.reflectionTexture() ?? null : null)
+        gl.uniform1f(uniforms.uTime!, time)
+        gl.depthMask(true); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+        drawMesh(geometry.ground, palette.coal, 6, 1, groundModel, true)
+        drawMesh(geometry.groundEdge, palette.navyDeep, 8, 1, groundModel, true)
+        drawSceneObjects()
+        if (effectsReady) effects?.compositeBloom()
+
       },
       hitTestOrb(clientX, clientY) {
         const ray = rayAt(clientX, clientY)
@@ -744,6 +846,9 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         orbProjection = null
         viewProjection = null
         officeEntries.clear(); firstSeen.clear()
+        effects?.dispose(); effects = null
+        if (reflectionFallback) gl.deleteTexture(reflectionFallback)
+        reflectionFallback = null
         for (const buffer of buffers) gl.deleteBuffer(buffer)
         for (const shader of shaders) gl.deleteShader(shader)
         gl.deleteProgram(program)
@@ -751,6 +856,8 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     }
   }
   catch {
+    effects?.dispose()
+    if (reflectionFallback) gl.deleteTexture(reflectionFallback)
     for (const buffer of buffers) gl.deleteBuffer(buffer)
     for (const shader of shaders) gl.deleteShader(shader)
     if (program) gl.deleteProgram(program)

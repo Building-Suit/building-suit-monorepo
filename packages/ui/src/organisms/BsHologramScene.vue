@@ -127,6 +127,7 @@ function startRenderer() {
   }
   const palette: HologramPalette = {
     coal: read('--bs-color-neutral-ink'), charcoal: read('--bs-color-neutral-charcoal'),
+    navy: read('--bs-color-brand-building-navy'), navyDeep: read('--bs-color-brand-deep-structure-navy'),
     graphite: read('--bs-color-neutral-graphite'), steelGray: read('--bs-color-neutral-steel-gray'),
     silver: read('--bs-color-brand-soft-silver'), pearl: read('--bs-color-brand-pearl-white'),
     gold: read('--bs-color-brand-premium-gold'),
@@ -215,7 +216,7 @@ onBeforeUnmount(() => {
 .bs-hologram-scene { position: absolute; inset: 0; }
 .bs-hologram-scene__canvas { display: block; width: 100%; height: 100%; }
 .bs-hologram-scene__labels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.bs-hologram-scene__office-label { position: absolute; inset: 0 auto auto 0; width: max-content; max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 6px 10px; border: 1px solid var(--bs-color-neutral-graphite); border-radius: 8px; background: var(--bs-color-neutral-charcoal); color: var(--bs-color-brand-soft-silver); font: inherit; font-size: 12px; line-height: 1.4; }
+.bs-hologram-scene__office-label { position: absolute; inset: 0 auto auto 0; width: max-content; max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 6px 10px; border: 1px solid color-mix(in srgb, var(--bs-color-brand-soft-silver) 22%, var(--bs-color-brand-building-navy)); border-radius: 8px; background: linear-gradient(135deg, var(--bs-color-brand-deep-structure-navy), var(--bs-color-neutral-charcoal)); color: var(--bs-color-brand-soft-silver); box-shadow: inset 0 1px color-mix(in srgb, var(--bs-color-brand-soft-silver) 7%, transparent), 0 3px 12px color-mix(in srgb, var(--bs-color-neutral-ink) 30%, transparent); font: inherit; font-size: 12px; line-height: 1.4; }
 .bs-hologram-scene__office-label[hidden] { display: none; }
 .bs-hologram-scene__executive-label { pointer-events: auto; border-color: var(--bs-color-brand-premium-gold); cursor: pointer; }
 .bs-hologram-scene__executive-label:focus-visible { outline: 2px solid var(--bs-color-brand-premium-gold); outline-offset: 3px; }
