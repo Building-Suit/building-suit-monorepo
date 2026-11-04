@@ -19,9 +19,9 @@ const content = computed<HqLayoutContent>(() => ({
   fitViewLabel: c('Reset view: center, 100% zoom and default camera', 'إعادة العرض: توسيط وتكبير ١٠٠٪ وزاوية الكاميرا الافتراضية'),
   hologramLabel: c('Shielded Company Brain orb above its base', 'كرة معرفة الشركة المحمية بدرع فوق قاعدتها'),
   sceneUnavailableLabel: c('3D rendering is unavailable in this browser. Enable hardware acceleration to show the hologram.', 'العرض ثلاثي الأبعاد غير متاح في هذا المتصفح. فعّل تسريع الأجهزة لعرض الهولوغرام.'),
-  mouseControlsLabel: c('Hover to pulse. Click to open. Drag to rotate. Shift-drag or right-drag to move. Scroll to zoom.', 'اسحب للتدوير. اضغط Shift مع السحب أو اسحب بزر الفأرة الأيمن للتحريك. مرّر للتكبير.'),
-  touchControlsLabel: c('Hold to pulse. Tap to open. Drag to rotate. Use two fingers to move and pinch to zoom.', 'اسحب للتدوير. استخدم إصبعين للتحريك والتكبير بالقرص.'),
-  keyboardControlsLabel: c('Arrow keys rotate. Shift + arrows move. Home resets.', 'الأسهم للتدوير. Shift مع الأسهم للتحريك. Home لإعادة العرض.'),
+  mouseControlsLabel: c("Left or middle drag rotates. Shift-drag moves. Scroll zooms with Brain closed. Right click is inactive.", "اسحب بالزر الأيسر أو الأوسط للتدوير. اضغط Shift مع السحب للتحريك. مرّر للتكبير عندما تكون لوحة المعرفة مغلقة. الزر الأيمن غير نشط."),
+  touchControlsLabel: c("Drag to rotate. Two fingers move; pinch zooms with Brain closed. Hold the closed orb to pulse; tap to open.", "اسحب للتدوير. استخدم إصبعين للتحريك والقرص للتكبير عندما تكون لوحة المعرفة مغلقة. المس الكرة المغلقة مطولًا لنبضها، واضغط لفتحها."),
+  keyboardControlsLabel: c("Arrows rotate. Shift + arrows move. +/− zooms with Brain closed. Home resets.", "الأسهم للتدوير. Shift مع الأسهم للتحريك. + و− للتكبير عندما تكون لوحة المعرفة مغلقة. Home لإعادة العرض."),
   zoomLabel: c('Zoom', 'التكبير'),
   companyBrain: {
     title: c("Company Brain", "معرفة الشركة"),
@@ -51,7 +51,7 @@ const content = computed<HqLayoutContent>(() => ({
 </script>
 
 <template>
-  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Irregular shield pieces, a broad base and a moving aura surround the 3D Brain. Closed-state hover or hold feedback opens into the shared reveal and camera focus. The read-only panel overlays the workspace, sliding from the left in English or right in Arabic. This catalogue has no cloud connection.', 'قطع درع غير منتظمة وقاعدة واسعة وهالة متحركة تحيط بالدماغ ثلاثي الأبعاد. يتفاعل الدرع المغلق مع التمرير أو اللمس المطول، ثم ينفتح مع تقريب الكاميرا. تظهر لوحة القراءة فوق مساحة العمل من اليسار بالإنجليزية ومن اليمين بالعربية. لا يحتوي المثال على اتصال سحابي.')">
+  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Smooth irregular shield pieces, a larger base and a moving aura sit above the HQ ground plane. The camera stays above the floor; left/middle drag rotate, right click is inactive, and manual zoom locks while Brain is open. Closed-state hover or hold feedback opens into the shared reveal and camera focus. The read-only panel overlays the workspace, sliding from the left in English or right in Arabic. This catalogue has no cloud connection.', 'قطع درع ناعمة غير منتظمة وقاعدة أكبر وهالة متحركة فوق أرضية HQ. تبقى الكاميرا فوق الأرضية؛ السحب بالأيسر أو الأوسط للتدوير، والأيمن غير نشط، ويُقفل التكبير عند فتح المعرفة. يتفاعل الدرع المغلق مع التمرير أو اللمس المطول، ثم ينفتح مع تقريب الكاميرا. تظهر لوحة القراءة فوق مساحة العمل من اليسار بالإنجليزية ومن اليمين بالعربية. لا يحتوي المثال على اتصال سحابي.')">
     <BsHqLayoutPage :content="content" />
   </BsContentSection>
 </template>

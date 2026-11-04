@@ -7,9 +7,10 @@ import type { HqBrainPresentation, HqLayoutContent } from '../types/hqLayoutPres
 const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation }>()
 const emit = defineEmits<{ refreshBrain: []; selectBrainNote: [id: string] }>()
 const sceneRef = shallowRef<{ activateAt: (x: number, y: number) => boolean; setExcitedAt: (x: number, y: number, active: boolean) => boolean } | null>(null)
-const feedback = (x: number, y: number, active: boolean) => { sceneRef.value?.setExcitedAt(x, y, active) }
-const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onPointerLeave, onWheel, onKeydown, zoomBy, reset, transitionTo } = useSpatialViewport((x, y) => sceneRef.value?.activateAt(x, y), { onHover: feedback, onHold: feedback })
 const brainVisible = ref(false)
+const brainPanelPresent = ref(false)
+const feedback = (x: number, y: number, active: boolean) => { sceneRef.value?.setExcitedAt(x, y, active) }
+const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onPointerLeave, onWheel, onKeydown, zoomBy, reset, transitionTo } = useSpatialViewport((x, y) => sceneRef.value?.activateAt(x, y), { onHover: feedback, onHold: feedback }, { zoomLocked: () => brainVisible.value || brainPanelPresent.value })
 const panelTitleRef = shallowRef<HTMLElement | null>(null)
 const ui = useUiCopy()
 let returnFocus: HTMLElement | null = null
@@ -33,6 +34,7 @@ async function openBrain() {
   if (brainVisible.value) return
   returnFocus = typeof document !== 'undefined' && document.activeElement instanceof HTMLElement ? document.activeElement : null
   previousCamera = { ...camera }
+  brainPanelPresent.value = true
   brainVisible.value = true
   transitionTo({ yaw: 0.35, pitch: 0.2, zoom: 1.7, panX: 0, panY: 0.57 })
   await nextTick()
@@ -50,9 +52,9 @@ function closeBrain(restoreCamera = true) {
 function resetScene() { closeBrain(false); reset() }
 function onWorkspaceKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape' && brainVisible.value) { event.preventDefault(); closeBrain(); return }
-  // Notes retain native scrolling/navigation; non-editing zoom shortcuts work
-  // after focus moves into the nonmodal panel as well as on the canvas.
-  if (event.target instanceof Element && event.target.closest('.bs-hq-layout__brain-panel') && !['+', '=', '-', '_'].includes(event.key)) return
+  // Notes retain native scrolling/navigation; manual camera zoom is locked
+  // centrally while this panel is open, including shortcuts on the canvas.
+  if (event.target instanceof Element && event.target.closest('.bs-hq-layout__brain-panel')) return
   onKeydown(event)
 }
 watch(resetVersion, () => closeBrain(false))
@@ -92,7 +94,7 @@ const viewMarker = computed(() => ({
     </header>
 
     <main class="bs-hq-layout__workspace-area" :class="{ 'bs-hq-layout__workspace-area--brain': brainVisible }" @keydown="onWorkspaceKeydown">
-    <section ref="viewportRef" class="bs-hq-layout__canvas" :class="{ 'bs-hq-layout__canvas--interacting': isInteracting }" :aria-label="content.canvasLabel" :aria-describedby="hintId" tabindex="0" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerleave="onPointerLeave" @pointerup="onPointerEnd" @pointercancel="onPointerEnd" @lostpointercapture="onPointerEnd" @wheel="onWheel" @contextmenu.prevent>
+    <section ref="viewportRef" class="bs-hq-layout__canvas" :class="{ 'bs-hq-layout__canvas--interacting': isInteracting }" :aria-label="content.canvasLabel" :aria-describedby="hintId" tabindex="0" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerleave="onPointerLeave" @pointerup="onPointerEnd" @pointercancel="onPointerEnd" @lostpointercapture="onPointerEnd" @wheel="onWheel" @auxclick.prevent @contextmenu.prevent>
       <BsHologramScene ref="sceneRef" :camera="camera" :opened="brainVisible" :reset-version="resetVersion" :label="content.hologramLabel" :unavailable-label="content.sceneUnavailableLabel" @activate="openBrain" />
       <div class="bs-hq-layout__brain-entry" data-spatial-controls>
         <BsButton variant="text" class="bs-hq-layout__brain-button" :aria-controls="brainPanelId" :aria-expanded="brainVisible" :aria-label="brainCopy.openLabel" @click="openBrain"><BsIcon name="orb" :size="22" /><span><strong>{{ brainCopy.title }}</strong><small :data-status="brainStatus">{{ brainStatusLabel }}</small></span></BsButton>
@@ -116,7 +118,7 @@ const viewMarker = computed(() => ({
         </aside>
       </div>
     </section>
-    <Transition name="bs-hq-brain-slide">
+    <Transition name="bs-hq-brain-slide" @after-leave="brainPanelPresent = false">
     <aside v-if="brainVisible" :id="brainPanelId" v-memo="[brain, brainCopy, search, noteLimit]" class="bs-hq-layout__brain-panel" :aria-labelledby="brainTitleId" @wheel.stop @keydown.esc.stop.prevent="closeBrain()">
       <header class="bs-hq-layout__brain-heading">
         <h2 :id="brainTitleId" ref="panelTitleRef" tabindex="-1">{{ brainCopy.title }}</h2>

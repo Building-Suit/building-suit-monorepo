@@ -31,14 +31,22 @@ interface SpatialViewportFeedback {
   onHold?: (clientX: number, clientY: number, active: boolean) => void
 }
 
+interface SpatialViewportPolicy {
+  zoomLocked?: () => boolean
+}
+
 export const SPATIAL_VIEWPORT_DEFAULT_CAMERA: Readonly<SpatialViewportCamera> = Object.freeze({ yaw: 0.55, pitch: 0.5, zoom: 1, panX: 0, panY: 0 })
 export const SPATIAL_VIEWPORT_MIN_ZOOM = 0.35
 export const SPATIAL_VIEWPORT_MAX_ZOOM = 3.5
-const maximumPitch = Math.PI / 2 - 0.08
+export const SPATIAL_VIEWPORT_GROUND_Y = -0.69
+export const SPATIAL_VIEWPORT_MIN_PITCH = 0.08
+export const SPATIAL_VIEWPORT_TARGET_Y = 0.42
+export const SPATIAL_VIEWPORT_MIN_TARGET_Y = SPATIAL_VIEWPORT_GROUND_Y + 0.10
+const maximumPitch = Math.PI / 2 - SPATIAL_VIEWPORT_MIN_PITCH
 const interactiveSelector = 'button, a, input, textarea, select, [role="button"], [contenteditable="true"], [data-spatial-controls]'
 
 /** Request-scoped orbit, pan and zoom mechanics for a shared spatial viewport. */
-export function useSpatialViewport(onActivate?: (clientX: number, clientY: number) => void, feedback: SpatialViewportFeedback = {}) {
+export function useSpatialViewport(onActivate?: (clientX: number, clientY: number) => void, feedback: SpatialViewportFeedback = {}, policy: SpatialViewportPolicy = {}) {
   const viewportRef = shallowRef<HTMLElement | null>(null)
   const camera = reactive<SpatialViewportCamera>({ ...SPATIAL_VIEWPORT_DEFAULT_CAMERA })
   const pointerCount = ref(0)
@@ -47,6 +55,14 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
   let touchGesture: TouchGesture | null = null
   let cameraFrame = 0
   let holdTimer: ReturnType<typeof setTimeout> | undefined
+
+  function constrainCamera(state: SpatialViewportCamera) {
+    state.pitch = Math.max(SPATIAL_VIEWPORT_MIN_PITCH, Math.min(maximumPitch, state.pitch))
+    state.zoom = Math.max(SPATIAL_VIEWPORT_MIN_ZOOM, Math.min(SPATIAL_VIEWPORT_MAX_ZOOM, state.zoom))
+    // Panning can lower the orbit target too; pitch alone cannot protect the
+    // floor. Keep the target above it for gestures and every tween frame.
+    state.panY = Math.max((SPATIAL_VIEWPORT_MIN_TARGET_Y - SPATIAL_VIEWPORT_TARGET_Y) / Math.cos(state.pitch), state.panY)
+  }
 
   function stopCameraTransition() {
     if (cameraFrame) cancelAnimationFrame(cameraFrame)
@@ -64,8 +80,9 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
   function transitionTo(target: Readonly<SpatialViewportCamera>, duration = 650) {
     stopCameraTransition()
     endInteraction()
-    const next = { ...target, zoom: Math.max(SPATIAL_VIEWPORT_MIN_ZOOM, Math.min(SPATIAL_VIEWPORT_MAX_ZOOM, target.zoom)), pitch: Math.max(-maximumPitch, Math.min(maximumPitch, target.pitch)) }
+    const next = { ...target }
     if (!Object.values(next).every(Number.isFinite)) return
+    constrainCamera(next)
     if (typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches || duration <= 0) {
       Object.assign(camera, next)
       return
@@ -78,6 +95,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
       const progress = Math.min(1, (time - started) / duration)
       const eased = 1 - (1 - progress) ** 3
       for (const key of ['yaw', 'pitch', 'zoom', 'panX', 'panY'] as const) camera[key] = from[key] + (next[key] - from[key]) * eased
+      constrainCamera(camera)
       cameraFrame = progress < 1 ? requestAnimationFrame(animate) : 0
     }
     cameraFrame = requestAnimationFrame(animate)
@@ -88,14 +106,17 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
   }
 
   function zoomBy(factor: number) {
+    if (policy.zoomLocked?.()) return
     stopCameraTransition()
     if (!Number.isFinite(factor) || factor <= 0) return
     camera.zoom = Math.max(SPATIAL_VIEWPORT_MIN_ZOOM, Math.min(SPATIAL_VIEWPORT_MAX_ZOOM, camera.zoom * factor))
+    constrainCamera(camera)
   }
 
   function orbit(x: number, y: number) {
     camera.yaw = ((camera.yaw - x * 0.007) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)
-    camera.pitch = Math.max(-maximumPitch, Math.min(maximumPitch, camera.pitch + y * 0.007))
+    camera.pitch += y * 0.007
+    constrainCamera(camera)
   }
 
   function pan(x: number, y: number) {
@@ -106,6 +127,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
     const scale = 7 * fit / height / camera.zoom
     camera.panX -= x * scale
     camera.panY += y * scale
+    constrainCamera(camera)
   }
 
   function currentTouchGesture(): TouchGesture | null {
@@ -145,7 +167,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
   }
 
   function onPointerDown(event: PointerEvent) {
-    if (ignoresTarget(event.target) || (event.pointerType !== 'touch' && ![0, 1, 2].includes(event.button))) return
+    if (ignoresTarget(event.target) || (event.pointerType !== 'touch' && ![0, 1].includes(event.button))) return
     const element = viewportRef.value
     if (!element) return
     stopCameraTransition()
@@ -157,9 +179,9 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
       y: event.clientY,
       startX: event.clientX,
       startY: event.clientY,
-      activationEligible: event.isPrimary && event.button === 0 && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey,
+      activationEligible: event.isPrimary && [0, 1].includes(event.button) && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey,
       touch: event.pointerType === 'touch',
-      pan: event.shiftKey || event.button === 1 || event.button === 2,
+      pan: event.shiftKey,
       capture: element,
     })
     if (pointers.size > 1) for (const pointer of pointers.values()) pointer.activationEligible = false
@@ -184,7 +206,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
       return
     }
     event.preventDefault()
-    if (!pointer.touch && event.buttons === 0) { onPointerEnd(event); return }
+    if (!pointer.touch && (event.buttons & 5) === 0) { onPointerEnd(event); return }
     const x = event.clientX - pointer.x
     const y = event.clientY - pointer.y
     if (Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) >= 6 || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) {
@@ -209,7 +231,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
     const pointer = pointers.get(event.pointerId)
     if (!pointer) return
     clearFeedback()
-    const activate = event.type === 'pointerup' && pointer.activationEligible && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey && Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) < 6
+    const activate = event.type === 'pointerup' && [0, 1].includes(event.button) && pointer.activationEligible && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey && Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) < 6
     pointers.delete(event.pointerId)
     pointerCount.value = pointers.size
     touchGesture = currentTouchGesture()
@@ -223,6 +245,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
     if (typeof Element !== 'undefined' && event.target instanceof Element
       && event.target.closest('input, textarea, select, [contenteditable="true"], [data-spatial-scroll]')) return
     event.preventDefault()
+    if (policy.zoomLocked?.()) return
     clearFeedback()
     for (const pointer of pointers.values()) pointer.activationEligible = false
     const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? (viewportRef.value?.clientHeight ?? 600) : 1
@@ -232,6 +255,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
 
   function onKeydown(event: KeyboardEvent) {
     if (ignoresTarget(event.target) || event.ctrlKey || event.metaKey || event.altKey) return
+    if (policy.zoomLocked?.() && ['+', '=', '-', '_'].includes(event.key)) { event.preventDefault(); return }
     stopCameraTransition()
     switch (event.key) {
       case 'ArrowLeft': event.shiftKey ? pan(-28, 0) : orbit(-12, 0); break
@@ -268,8 +292,8 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
     resetVersion: readonly(resetVersion),
     isInteracting: computed(() => pointerCount.value > 0),
     zoomPercent: computed(() => Math.round(camera.zoom * 100)),
-    canZoomIn: computed(() => camera.zoom < SPATIAL_VIEWPORT_MAX_ZOOM),
-    canZoomOut: computed(() => camera.zoom > SPATIAL_VIEWPORT_MIN_ZOOM),
+    canZoomIn: computed(() => !policy.zoomLocked?.() && camera.zoom < SPATIAL_VIEWPORT_MAX_ZOOM),
+    canZoomOut: computed(() => !policy.zoomLocked?.() && camera.zoom > SPATIAL_VIEWPORT_MIN_ZOOM),
     onPointerDown,
     onPointerMove,
     onPointerEnd,
