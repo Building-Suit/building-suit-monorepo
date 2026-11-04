@@ -1,12 +1,15 @@
 import type { HqDepartmentOffice } from '../types/hqLayoutPresentation'
 
-export const DEPARTMENT_OFFICE_WIDTH = 2.7
-export const DEPARTMENT_OFFICE_DEPTH = 2.3
-const FIRST_RING_RADIUS = 6.2
-const RING_SPACING = 6
+export const DEPARTMENT_OFFICE_WIDTH = 6.2
+export const DEPARTMENT_OFFICE_DEPTH = 5.2
+export const OFFICE_WALKWAY_WIDTH = 0.95
+const FIRST_RING_RADIUS = 8.5
+const RING_SPACING = 10.2
 const FOOTPRINT_RADIUS = Math.hypot(DEPARTMENT_OFFICE_WIDTH, DEPARTMENT_OFFICE_DEPTH) / 2
-const MINIMUM_CENTER_DISTANCE = FOOTPRINT_RADIUS * 2 + 0.9
-const ROAD_CORRIDOR_OFFSET = 3
+// Circumcircle spacing protects complete room footprints, including rotated
+// corners. The remaining gap fits the broad path with 0.325 on either side.
+const MINIMUM_CENTER_DISTANCE = FOOTPRINT_RADIUS * 2 + OFFICE_WALKWAY_WIDTH + 0.65
+const ROAD_START_RADIUS = 2.1
 const FULL_TURN = Math.PI * 2
 
 export interface DepartmentRoadPoint { x: number; z: number }
@@ -33,9 +36,13 @@ export interface DepartmentOfficeLayout {
 /** Shared finite-floor sizing; invalid manual counts mean zero, with a 64-layer bound. */
 export function departmentOfficeFloorRadius(value?: number): number {
   const layers = typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.min(64, Math.floor(value))) : 0
-  return 4.8 + layers * RING_SPACING
+  return layers === 0 ? 4.8 : ringRadius(layers) + FOOTPRINT_RADIUS + 0.8
 }
 function ringRadius(ring: number): number { return FIRST_RING_RADIUS + (ring - 1) * RING_SPACING }
+function corridorRadius(innerRing: number): number {
+  if (innerRing === 0) return (ROAD_START_RADIUS + FIRST_RING_RADIUS - FOOTPRINT_RADIUS) / 2
+  return (ringRadius(innerRing) + ringRadius(innerRing + 1)) / 2
+}
 function ringPhase(ring: number): number { return -Math.PI / 2 + (ring % 2 ? 0 : 0.19) }
 function ringCapacity(ring: number): number {
   return Math.max(1, Math.floor(Math.PI / Math.asin(MINIMUM_CENTER_DISTANCE / (ringRadius(ring) * 2))))
@@ -48,24 +55,27 @@ function nearestGap(ring: number, target: number): number {
 function arc(path: DepartmentRoadPoint[], radius: number, start: number, end: number): void {
   const delta = Math.atan2(Math.sin(end - start), Math.cos(end - start))
   if (Math.abs(delta) < 0.00001) return
-  const steps = Math.max(1, Math.ceil(Math.abs(delta) / 0.12))
+  // Bound chord inset as the HQ grows so a sampled arc remains within its
+  // empty corridor, rather than cutting closer to an inner room corner.
+  const step = Math.min(0.08, 2 * Math.acos(Math.max(-1, 1 - 0.08 / radius)))
+  const steps = Math.max(1, Math.ceil(Math.abs(delta) / step))
   for (let index = 1; index <= steps; index++) path.push(point(radius, start + delta * index / steps))
 }
 function roadToOffice(ring: number, targetAngle: number): readonly DepartmentRoadPoint[] {
   let angle = ring === 1 ? targetAngle : nearestGap(1, targetAngle)
-  let corridor = ringRadius(1) - ROAD_CORRIDOR_OFFSET
-  const path = [point(1.70, angle), point(corridor, angle)]
+  let corridor = corridorRadius(0)
+  const path = [point(ROAD_START_RADIUS, angle), point(corridor, angle)]
   // Cross each occupied inner ring at a gap midpoint, then turn within the
   // empty band between rooms. Roads can share corridors, never room footprints.
   for (let inner = 1; inner < ring; inner++) {
     const exitAngle = nearestGap(inner, targetAngle)
     arc(path, corridor, angle, exitAngle)
     angle = exitAngle
-    corridor = ringRadius(inner + 1) - ROAD_CORRIDOR_OFFSET
+    corridor = corridorRadius(inner)
     path.push(point(corridor, angle))
   }
   arc(path, corridor, angle, targetAngle)
-  path.push(point(ringRadius(ring) - DEPARTMENT_OFFICE_DEPTH / 2 + 0.03, targetAngle))
+  path.push(point(ringRadius(ring) - DEPARTMENT_OFFICE_DEPTH / 2 + 0.06, targetAngle))
   return path
 }
 

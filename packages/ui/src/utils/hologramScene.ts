@@ -1,10 +1,11 @@
 import { SPATIAL_VIEWPORT_GROUND_Y, SPATIAL_VIEWPORT_VERTICAL_FOV, spatialViewportFrame } from '@building-suit/ux'
 import type { SpatialViewportCamera } from '@building-suit/ux'
 import type { HqDepartmentOffice } from '../types/hqLayoutPresentation'
-import { DEPARTMENT_OFFICE_DEPTH, DEPARTMENT_OFFICE_WIDTH, departmentOfficeFloorRadius, layoutDepartmentOffices } from './departmentOfficeLayout.ts'
+import { DEPARTMENT_OFFICE_DEPTH, DEPARTMENT_OFFICE_WIDTH, OFFICE_WALKWAY_WIDTH, departmentOfficeFloorRadius, layoutDepartmentOffices } from './departmentOfficeLayout.ts'
 import type { DepartmentRoadPoint, OfficePlacement } from './departmentOfficeLayout.ts'
 import { createHologramEffects } from './hologramEffects.ts'
 import type { HologramEffects } from './hologramEffects.ts'
+import { createOfficeArchitecture, officeExecutiveHitRegions } from './officeArchitecture.ts'
 
 type Vector = [number, number, number]
 type Matrix = Float32Array
@@ -12,7 +13,7 @@ const SCENE_FAR = 150
 const BASE_RADIUS_SCALE = 1.12
 const OFFICE_BUILD_SECONDS = 2.4
 const OFFICE_FOUNDATION_HEIGHT = 0.14
-const OFFICE_WALL_HEIGHT = 1.15
+const OFFICE_WALL_HEIGHT = 1.9
 const EMPTY_DEPARTMENTS: readonly HqDepartmentOffice[] = []
 interface Geometry { positions: number[]; normals: number[] }
 interface Mesh { position: WebGLBuffer; normal: WebGLBuffer; indices: WebGLBuffer; count: number }
@@ -21,6 +22,7 @@ interface OfficeRenderEntry {
   placement: OfficePlacement & { id: string }
   roadKey: string
   road: Mesh
+  roadDeck: Mesh
   trace: Mesh
   foundationModel: Matrix
   wallModel: Matrix
@@ -219,7 +221,7 @@ function groundEdge(): Geometry {
     return [Math.cos(angle), SPATIAL_VIEWPORT_GROUND_Y - v * 0.10, Math.sin(angle)]
   }, u => [Math.cos(u * Math.PI * 2), 0, Math.sin(u * Math.PI * 2)])
 }
-/** Finite HQ radius: 4.8 units plus one six-unit band per clamped office layer. */
+/** Finite HQ radius fits the outermost office ring and its rounded platforms. */
 export function hologramFloorRadius(layers?: number): number {
   return departmentOfficeFloorRadius(layers)
 }
@@ -232,26 +234,30 @@ function merge(...parts: Geometry[]): Geometry {
   }
   return geometry
 }
-function box(width: number, height: number, depth: number, x = 0, y = 0, z = 0): Geometry {
-  const geometry: Geometry = { positions: [], normals: [] }
-  const left = x - width / 2, right = x + width / 2, front = z - depth / 2, back = z + depth / 2, top = y + height
-  const faces: { normal: Vector; corners: Vector[] }[] = [
-    { normal: [0, 0, 1], corners: [[left, y, back], [right, y, back], [right, top, back], [left, top, back]] },
-    { normal: [0, 0, -1], corners: [[right, y, front], [left, y, front], [left, top, front], [right, top, front]] },
-    { normal: [1, 0, 0], corners: [[right, y, back], [right, y, front], [right, top, front], [right, top, back]] },
-    { normal: [-1, 0, 0], corners: [[left, y, front], [left, y, back], [left, top, back], [left, top, front]] },
-    { normal: [0, 1, 0], corners: [[left, top, front], [left, top, back], [right, top, back], [right, top, front]] },
-    { normal: [0, -1, 0], corners: [[left, y, back], [left, y, front], [right, y, front], [right, y, back]] },
-  ]
-  for (const face of faces) for (const index of [0, 1, 2, 0, 2, 3]) {
-    geometry.positions.push(...face.corners[index]!); geometry.normals.push(...face.normal)
+function roadGeometry(points: readonly DepartmentRoadPoint[], width: number, height: number, lateralOffset = 0): Geometry {
+  // Fillet sharp corridor turns before tessellation; broad paths keep a
+  // continuous, rounded shoulder instead of meeting at a spiked joint.
+  const rounded: DepartmentRoadPoint[] = points.length ? [points[0]!] : []
+  for (let index = 1; index < points.length - 1; index++) {
+    const before = points[index - 1]!, corner = points[index]!, after = points[index + 1]!
+    const incoming = Math.hypot(corner.x - before.x, corner.z - before.z)
+    const outgoing = Math.hypot(after.x - corner.x, after.z - corner.z)
+    if (incoming < 0.00001 || outgoing < 0.00001) continue
+    const alignment = ((corner.x - before.x) * (after.x - corner.x) + (corner.z - before.z) * (after.z - corner.z)) / (incoming * outgoing)
+    if (alignment > 0.98) { rounded.push(corner); continue }
+    const cut = Math.min(0.42, incoming * 0.3, outgoing * 0.3)
+    const start = { x: corner.x + (before.x - corner.x) * cut / incoming, z: corner.z + (before.z - corner.z) * cut / incoming }
+    const end = { x: corner.x + (after.x - corner.x) * cut / outgoing, z: corner.z + (after.z - corner.z) * cut / outgoing }
+    rounded.push(start)
+    for (let step = 1; step <= 6; step++) {
+      const t = step / 6, rest = 1 - t
+      rounded.push({ x: rest * rest * start.x + 2 * rest * t * corner.x + t * t * end.x, z: rest * rest * start.z + 2 * rest * t * corner.z + t * t * end.z })
+    }
   }
-  return geometry
-}
-function roadGeometry(points: readonly DepartmentRoadPoint[], width: number, height: number): Geometry {
+  if (points.length > 1) rounded.push(points[points.length - 1]!)
   const sampled: DepartmentRoadPoint[] = []
-  for (let index = 0; index < points.length - 1; index++) {
-    const start = points[index]!, end = points[index + 1]!, distance = Math.hypot(end.x - start.x, end.z - start.z)
+  for (let index = 0; index < rounded.length - 1; index++) {
+    const start = rounded[index]!, end = rounded[index + 1]!, distance = Math.hypot(end.x - start.x, end.z - start.z)
     if (distance < 0.00001) continue
     const steps = Math.max(1, Math.ceil(distance / 0.22))
     if (!sampled.length) sampled.push(start)
@@ -261,12 +267,20 @@ function roadGeometry(points: readonly DepartmentRoadPoint[], width: number, hei
   const sides = sampled.map((_point, index): Vector => {
     const before = sampled[Math.max(0, index - 1)]!, after = sampled[Math.min(sampled.length - 1, index + 1)]!
     const tangent = normalize([after.x - before.x, 0, after.z - before.z])
-    return [-tangent[2] * width / 2, 0, tangent[0] * width / 2]
+    return [-tangent[2], 0, tangent[0]]
   })
   function vertex(index: number, side: number) {
     const point = sampled[index]!, offset = sides[index]!
-    geometry.positions.push(point.x + offset[0] * side, height, point.z + offset[2] * side)
-    geometry.normals.push(0, 1, 0)
+    const distance = lateralOffset + width / 2 * side
+    const end = sampled[sampled.length - 1]!
+    // The final approach ramps gently to the finished office floor. Future
+    // characters need no abrupt foundation step at the open entrance.
+    const remaining = Math.hypot(end.x - point.x, end.z - point.z)
+    const ramp = Math.max(0, Math.min(1, (0.85 - remaining) / 0.85))
+    geometry.positions.push(point.x + offset[0] * distance, height + ramp * 0.10, point.z + offset[2] * distance)
+    const before = sampled[Math.max(0, index - 1)]!, after = sampled[Math.min(sampled.length - 1, index + 1)]!
+    const tangent = normalize([after.x - before.x, 0, after.z - before.z])
+    geometry.normals.push(...normalize([-tangent[0] * (ramp > 0 ? 0.10 / 0.85 : 0), 1, -tangent[2] * (ramp > 0 ? 0.10 / 0.85 : 0)]))
   }
   for (let index = 0; index < sampled.length - 1; index++) {
     vertex(index, -1); vertex(index, 1); vertex(index + 1, -1)
@@ -508,9 +522,31 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       return { position: buffer(vertices, gl.ARRAY_BUFFER), normal: buffer(directions, gl.ARRAY_BUFFER), indices: buffer(indices, gl.ELEMENT_ARRAY_BUFFER, true), count: indices.length }
     }
     const plates = shieldFractures().map(plate => ({ ...plate, body: mesh(plate.body), seam: mesh(plate.seam), transform: identity() }))
+    const officeArchitecture = createOfficeArchitecture(DEPARTMENT_OFFICE_WIDTH, DEPARTMENT_OFFICE_DEPTH)
+    const furnitureMeshes = (furniture: typeof officeArchitecture.executive) => ({
+      body: mesh(furniture.body), top: mesh(furniture.top), metal: mesh(furniture.metal),
+      screen: mesh(furniture.screen), light: mesh(furniture.light), details: mesh(furniture.details),
+    })
+    const officeMeshes = {
+      foundation: mesh(officeArchitecture.foundation), rim: mesh(officeArchitecture.rim),
+      walls: mesh(officeArchitecture.walls), wallTrim: mesh(officeArchitecture.wallTrim),
+      floorInset: mesh(officeArchitecture.floorInset),
+      executive: furnitureMeshes(officeArchitecture.executive), department: furnitureMeshes(officeArchitecture.department),
+      furnishings: {
+        body: mesh(officeArchitecture.furnishings.body), metal: mesh(officeArchitecture.furnishings.metal),
+        leaves: mesh(officeArchitecture.furnishings.leaves), light: mesh(officeArchitecture.furnishings.light),
+      },
+    }
+    const executiveHitRegions = officeExecutiveHitRegions(DEPARTMENT_OFFICE_WIDTH, DEPARTMENT_OFFICE_DEPTH)
+    const officeFloorColor = palette.graphite.map((value, index) => value * 0.65 + palette.steelGray[index]! * 0.35) as Vector
+    const officeTopColor = palette.graphite.map((value, index) => value * 0.80 + palette.silver[index]! * 0.20) as Vector
+    const officeFoliageColor = palette.navy.map((value, index) => value * 0.55 + palette.gold[index]! * 0.20 + palette.steelGray[index]! * 0.25) as Vector
     const geometry = {
       ground: mesh(groundDisc()),
       groundEdge: mesh(groundEdge()),
+      groundLight: mesh(torus(1, 0.0012, 256, 6)),
+      hub: mesh(cylinder(2.16, 2.16, SPATIAL_VIEWPORT_GROUND_Y + 0.004, SPATIAL_VIEWPORT_GROUND_Y + 0.044)),
+      hubRing: mesh(torus(2.14, 0.012, 192, 8)),
       base: mesh(cylinder(1.53 * BASE_RADIUS_SCALE, 1.53 * BASE_RADIUS_SCALE, -0.65, -0.47)),
       bevel: mesh(cylinder(1.53 * BASE_RADIUS_SCALE, 1.39 * BASE_RADIUS_SCALE, -0.47, -0.39)),
       deck: mesh(cylinder(1.32 * BASE_RADIUS_SCALE, 1.32 * BASE_RADIUS_SCALE, -0.39, -0.31)),
@@ -526,19 +562,12 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       folds: mesh(brainFolds()),
       nerves: mesh(brainNerves()),
       stem: mesh(tube(curve([[0, -0.23, 0.04], [0, -0.31, 0.08], [0.015, -0.38, 0.10], [0, -0.43, 0.08]]), 0.025, 8)),
-      officeFoundation: mesh(box(DEPARTMENT_OFFICE_WIDTH, OFFICE_FOUNDATION_HEIGHT, DEPARTMENT_OFFICE_DEPTH)),
-      officeBack: mesh(box(DEPARTMENT_OFFICE_WIDTH, OFFICE_WALL_HEIGHT, 0.10, 0, 0, DEPARTMENT_OFFICE_DEPTH / 2 - 0.05)),
-      officeSides: mesh(merge(...[-1, 1].map(side => box(0.10, OFFICE_WALL_HEIGHT, DEPARTMENT_OFFICE_DEPTH, side * (DEPARTMENT_OFFICE_WIDTH / 2 - 0.05))))),
-      officePortal: mesh(merge(box(0.08, 1.03, 0.08, -0.55, 0, -DEPARTMENT_OFFICE_DEPTH / 2 + 0.04), box(0.08, 1.03, 0.08, 0.55, 0, -DEPARTMENT_OFFICE_DEPTH / 2 + 0.04), box(1.18, 0.08, 0.08, 0, 1.03, -DEPARTMENT_OFFICE_DEPTH / 2 + 0.04))),
-      executiveDesk: mesh(merge(box(1.05, 0.06, 0.56, 0, 0.55, -0.18), ...[-1, 1].flatMap(side => [-1, 1].map(end => box(0.06, 0.55, 0.06, side * 0.43, 0, -0.18 + end * 0.20))))),
-      executiveBoard: mesh(box(1.28, 0.63, 0.07, 0, 0.40, 1.005)),
-      executiveBoardInset: mesh(box(1.14, 0.49, 0.026, 0, 0.47, 0.958)),
-      executivePlanLines: mesh(merge(box(0.78, 0.018, 0.01, -0.08, 0.82, 0.938), box(0.57, 0.015, 0.01, -0.18, 0.70, 0.938), box(0.64, 0.015, 0.01, -0.14, 0.58, 0.938))),
     }
     const maximumRenderDimension = Math.min(4096, gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) as number)
     let disposed = false
     let orbProjection: OrbProjection | null = null
     const staticModel = identity(), brainModel = identity(), auraFirst = identity(), auraSecond = identity(), groundModel = identity()
+    const groundLightModel = model(0, SPATIAL_VIEWPORT_GROUND_Y + 0.014), hubRingModel = model(0, SPATIAL_VIEWPORT_GROUND_Y + 0.047)
     const outerRingModel = model(0, -0.48), innerRingModel = model(0, -0.30), emitterRingModel = model(0, -0.145)
     let lastCamera: number[] = [], lastWidth = 0, lastHeight = 0, lastFloorRadius = -1
     let viewProjection: Matrix | null = null
@@ -551,8 +580,9 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
     function makeEntry(placement: OfficePlacement & { id: string }): OfficeRenderEntry {
       return {
         placement, roadKey: JSON.stringify(placement.roadPoints),
-        road: mesh(roadGeometry(placement.roadPoints, 0.30, SPATIAL_VIEWPORT_GROUND_Y + 0.008)),
-        trace: mesh(roadGeometry(placement.roadPoints, 0.026, SPATIAL_VIEWPORT_GROUND_Y + 0.012)),
+        road: mesh(roadGeometry(placement.roadPoints, OFFICE_WALKWAY_WIDTH + 0.08, SPATIAL_VIEWPORT_GROUND_Y + 0.024)),
+        roadDeck: mesh(roadGeometry(placement.roadPoints, OFFICE_WALKWAY_WIDTH, SPATIAL_VIEWPORT_GROUND_Y + 0.040)),
+        trace: mesh(merge(...[-1, 1].map(side => roadGeometry(placement.roadPoints, 0.018, SPATIAL_VIEWPORT_GROUND_Y + 0.046, side * (OFFICE_WALKWAY_WIDTH / 2 - 0.022))))),
         foundationModel: model(placement.x, SPATIAL_VIEWPORT_GROUND_Y, placement.z, 0, 0, placement.yaw),
         wallModel: model(placement.x, SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT, placement.z, 0, 0, placement.yaw),
         completedHeight: 0,
@@ -578,13 +608,13 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           for (const placement of officeLayout.offices) {
             let entry = officeEntries.get(placement.id)
             if (entry && entry.roadKey !== JSON.stringify(placement.roadPoints)) {
-              releaseMesh(entry.road); releaseMesh(entry.trace); entry = undefined
+              releaseMesh(entry.road); releaseMesh(entry.roadDeck); releaseMesh(entry.trace); entry = undefined
             }
             if (!entry) entry = makeEntry(placement)
             nextEntries.set(placement.id, entry)
             if (!firstSeen.has(placement.id)) firstSeen.set(placement.id, constructionClock)
           }
-          for (const [id, entry] of officeEntries) if (!nextEntries.has(id)) { releaseMesh(entry.road); releaseMesh(entry.trace) }
+          for (const [id, entry] of officeEntries) if (!nextEntries.has(id)) { releaseMesh(entry.road); releaseMesh(entry.roadDeck); releaseMesh(entry.trace) }
           officeEntries = nextEntries
         }
       }
@@ -643,30 +673,41 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       const complete = age >= OFFICE_BUILD_SECONDS
       const roadProgress = constructionStage(age, 0, 0.5)
       const roadCount = Math.floor(entry.road.count * roadProgress / 6) * 6
-      drawMesh(entry.road, palette.graphite, 0, 1, staticModel, false, roadCount)
-      if (!complete) drawMesh(entry.trace, palette.gold, 2, 0.60 * (1 - constructionStage(age, 1.6, OFFICE_BUILD_SECONDS)), staticModel, false, Math.floor(entry.trace.count * roadProgress / 6) * 6)
+      drawMesh(entry.road, palette.steelGray, 8, 1, staticModel, false, roadCount)
+      drawMesh(entry.roadDeck, palette.graphite, 0, 1, staticModel, false, Math.floor(entry.roadDeck.count * roadProgress / 6) * 6)
+      drawMesh(entry.trace, palette.gold, 2, 0.9, staticModel, false, Math.floor(entry.trace.count * roadProgress / 6) * 6)
       const foundation = constructionStage(age, 0.25, 0.85)
       entry.foundationModel[5] = Math.max(0.001, foundation)
-      if (foundation > 0) drawMesh(geometry.officeFoundation, executive ? palette.graphite : palette.charcoal, 0, 1, entry.foundationModel)
+      if (foundation > 0) drawMesh(officeMeshes.foundation, palette.steelGray, 8, 1, entry.foundationModel)
       const wallRise = constructionStage(age, 0.65, 1.45)
       entry.completedHeight = wallRise
       const material = complete ? 0 : 7
       gl!.uniform1f(uniforms.uConstruction!, complete ? 0 : 1 - constructionStage(age, 1.7, OFFICE_BUILD_SECONDS))
       gl!.uniform1f(uniforms.uSweepY!, SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT + OFFICE_WALL_HEIGHT * constructionStage(age, 0.65, 2.2))
       entry.wallModel[5] = Math.max(0.001, wallRise)
-      if (wallRise > 0) drawMesh(geometry.officeBack, palette.navyDeep, material, 1, entry.wallModel)
-      const sideRise = constructionStage(age, 0.85, 1.65)
-      entry.wallModel[5] = Math.max(0.001, sideRise)
-      if (sideRise > 0) drawMesh(geometry.officeSides, palette.charcoal, material, 1, entry.wallModel)
-      const portalRise = constructionStage(age, 1.05, 1.85)
-      entry.wallModel[5] = Math.max(0.001, portalRise)
-      if (portalRise > 0) drawMesh(geometry.officePortal, executive ? palette.gold : palette.steelGray, material, 1, entry.wallModel)
-      if (executive) {
-        entry.wallModel[5] = 1
-        drawMesh(geometry.executiveDesk, palette.graphite, 0, 1, entry.wallModel)
-        drawMesh(geometry.executiveBoard, palette.gold, 0, 1, entry.wallModel)
-        drawMesh(geometry.executiveBoardInset, palette.navyDeep, 8, 1, entry.wallModel)
-        drawMesh(geometry.executivePlanLines, palette.silver, 2, 0.80, entry.wallModel)
+      if (wallRise > 0) {
+        drawMesh(officeMeshes.walls, palette.charcoal, material, 1, entry.wallModel)
+        drawMesh(officeMeshes.wallTrim, palette.gold, 2, 0.92, entry.wallModel)
+      }
+      entry.wallModel[5] = Math.max(0.001, foundation)
+      if (foundation > 0) {
+        drawMesh(officeMeshes.floorInset, officeFloorColor, 0, 1, entry.wallModel)
+        drawMesh(officeMeshes.rim, palette.gold, 2, 0.9, entry.wallModel)
+      }
+      const furnishingRise = constructionStage(age, 1.15, 2.20)
+      entry.wallModel[5] = Math.max(0.001, furnishingRise)
+      if (furnishingRise > 0) {
+        const furniture = executive ? officeMeshes.executive : officeMeshes.department
+        drawMesh(furniture.body, palette.charcoal, material, 1, entry.wallModel)
+        drawMesh(furniture.top, officeTopColor, 8, 1, entry.wallModel)
+        drawMesh(furniture.metal, palette.steelGray, 8, 1, entry.wallModel)
+        drawMesh(furniture.screen, palette.navy, 8, 1, entry.wallModel)
+        drawMesh(furniture.details, palette.silver, 8, 1, entry.wallModel)
+        drawMesh(officeMeshes.furnishings.body, palette.charcoal, material, 1, entry.wallModel)
+        drawMesh(officeMeshes.furnishings.metal, palette.steelGray, 8, 1, entry.wallModel)
+        drawMesh(officeMeshes.furnishings.leaves, officeFoliageColor, 0, 1, entry.wallModel)
+        drawMesh(furniture.light, palette.gold, 2, 0.9, entry.wallModel)
+        drawMesh(officeMeshes.furnishings.light, palette.gold, 2, 0.75, entry.wallModel)
       }
     }
     function rayAt(clientX: number, clientY: number): { origin: Vector; direction: Vector } | null {
@@ -707,6 +748,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           // Scale only X/Z: the finite disk remains anchored at the origin and
           // keeps its shared ground height regardless of camera pan or size.
           groundModel[0] = floorRadius; groundModel[10] = floorRadius
+          groundLightModel[0] = floorRadius - 0.04; groundLightModel[10] = floorRadius - 0.04
           lastFloorRadius = floorRadius
         }
         const open = Math.max(0, Math.min(1, interaction.open))
@@ -765,6 +807,9 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         model(shakeX, orbHeight + shakeY, 0, 0.52, 0, time * 0.13, 1, auraFirst)
         model(shakeX, orbHeight + shakeY, 0, 1.13, 0.22, -time * 0.09, 1, auraSecond)
         const drawSceneObjects = () => {
+          drawMesh(geometry.groundLight, palette.gold, 2, 0.9, groundLightModel)
+          drawMesh(geometry.hub, palette.navyDeep, 8)
+          drawMesh(geometry.hubRing, palette.gold, 2, 0.94, hubRingModel)
           drawOffice(executiveEntry, OFFICE_BUILD_SECONDS, true)
           for (const [id, entry] of officeEntries) drawOffice(entry, constructionClock - (firstSeen.get(id) ?? constructionClock))
           drawMesh(geometry.base, palette.navyDeep, 8)
@@ -826,14 +871,15 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         const x = ray.origin[0] - placement.x, z = ray.origin[2] - placement.z
         const origin: Vector = [cosine * x - sine * z, ray.origin[1] - SPATIAL_VIEWPORT_GROUND_Y - OFFICE_FOUNDATION_HEIGHT, sine * x + cosine * z]
         const direction: Vector = [cosine * ray.direction[0] - sine * ray.direction[2], ray.direction[1], sine * ray.direction[0] + cosine * ray.direction[2]]
-        const board = rayBox(origin, direction, [-0.64, 0.40, 0.93], [0.64, 1.03, 1.04])
-        const desk = rayBox(origin, direction, [-0.525, 0.55, -0.46], [0.525, 0.61, 0.10])
+        const board = rayBox(origin, direction, executiveHitRegions.board.min, executiveHitRegions.board.max)
+        const desk = rayBox(origin, direction, executiveHitRegions.desk.min, executiveHitRegions.desk.max)
         const target = Math.min(board, desk)
         if (!Number.isFinite(target)) return false
-        const backWall = rayBox(origin, direction, [-1.35, 0, 1.05], [1.35, OFFICE_WALL_HEIGHT, 1.15])
-        const leftWall = rayBox(origin, direction, [-1.35, 0, -1.15], [-1.25, OFFICE_WALL_HEIGHT, 1.15])
-        const rightWall = rayBox(origin, direction, [1.25, 0, -1.15], [1.35, OFFICE_WALL_HEIGHT, 1.15])
-        return target < Math.min(backWall, leftWall, rightWall)
+        const halfWidth = DEPARTMENT_OFFICE_WIDTH / 2, halfDepth = DEPARTMENT_OFFICE_DEPTH / 2
+        const returnDepth = Math.min(1.35, DEPARTMENT_OFFICE_DEPTH * 0.31)
+        const backWall = rayBox(origin, direction, [-halfWidth + 0.12, 0, halfDepth - 0.235], [halfWidth - 0.12, OFFICE_WALL_HEIGHT, halfDepth - 0.085])
+        const leftWall = rayBox(origin, direction, [-halfWidth + 0.085, 0, halfDepth - 0.085 - returnDepth], [-halfWidth + 0.235, OFFICE_WALL_HEIGHT, halfDepth - 0.085])
+        return target < Math.min(backWall, leftWall)
       },
       projectOfficeAnchor(id) {
         const entry = officeEntries.get(id)

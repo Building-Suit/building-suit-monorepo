@@ -1,0 +1,33 @@
+{
+  "id": "hq-office-reference-20261104",
+  "task": "HQ-OFFICE-REFERENCE-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "packages/ui/src/utils/officeArchitecture.ts",
+    "packages/ui/src/utils/departmentOfficeLayout.ts",
+    "packages/ui/src/utils/hologramScene.ts",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/package.json",
+    "apps/company-hq/AGENTS.md",
+    "apps/company-hq/README.md",
+    "README.md",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "docs/work-packages/company-hq/HQ-OFFICE-REFERENCE-20261104.md",
+    "docs/work-packages/company-hq/CLOUD-HANDOFF.md",
+    "docs/shared/ui-ownership.md",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/zero-native-ui-convergence-report.md",
+    "release-changes/items.json"
+  ],
+  "reason": "Refine current HQ office/road presentation from the founder reference: 6.2x5.2 rounded/bevelled open cutaway rooms, large existing CEO desk/chair/monitor/plan board with matching picking, four monitored department workstations, reserved1.45-unit center aisle, ~0.9 outer-chair clearance/~1.05 front cross-aisle and perimeter furnishings and no characters/employee assignments. Broaden roads to0.95 with rounded turns/metal shoulders/Gold edges and gentle approach; first ring radius8.5 has five slots including CEO, ring spacing10.2 and footprint-aware finite-floor bounds. Reuse shared material batches, raster reflections/bloom and 2.4s construction with furniture staging. Same approved records/camera/Auth/API/Brain; no new department or workforce execution. Source-only; rendered/performance and all tests/build/lint/typecheck/boundary/release/browser/API/runtime/reviewer acceptance remain unrun unless separately authorized. No provider/Brain/database changes, deployment, public activation or spending."
+}

@@ -316,7 +316,7 @@ const screenRectangle = computed(() => mapPolygon(spatialViewportScreenRectangle
 .bs-hq-layout__minimap-scene { display: block; width: 100%; height: 100%; }
 .bs-hq-layout__map-floor { fill: color-mix(in srgb, var(--bs-color-neutral-charcoal) 75%, var(--bs-color-brand-building-navy)); stroke: color-mix(in srgb, var(--bs-soft-silver) 20%, transparent); stroke-width: .6px; vector-effect: non-scaling-stroke; }
 .bs-hq-layout__map-footprint { fill: color-mix(in srgb, var(--bs-soft-silver) 9%, transparent); stroke: color-mix(in srgb, var(--bs-soft-silver) 20%, transparent); stroke-width: .6px; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }
-.bs-hq-layout__map-road { fill: none; stroke: color-mix(in srgb, var(--bs-soft-silver) 36%, transparent); stroke-width: .8px; vector-effect: non-scaling-stroke; }
+.bs-hq-layout__map-road { fill: none; stroke: color-mix(in srgb, var(--bs-premium-gold) 65%, var(--bs-soft-silver)); stroke-width: 1px; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .bs-hq-layout__zoom-value { position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); padding: 1px 4px; border-radius: 4px; background: var(--bs-color-neutral-ink); color: var(--bs-soft-silver); font-size: 9px; line-height: 1.3; font-variant-numeric: tabular-nums; }
 .bs-hq-layout__office-marker { fill: var(--bs-color-brand-building-navy); stroke: var(--bs-soft-silver); stroke-width: 1px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .bs-hq-layout__office-marker--executive { fill: var(--bs-premium-gold); stroke: var(--bs-premium-gold); }
