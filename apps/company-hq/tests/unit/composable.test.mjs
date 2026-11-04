@@ -18,7 +18,7 @@ const deferred = () => {
   return { promise, resolve }
 }
 
-function fixture(t) {
+function fixture(t, options) {
   let fetch = async () => signedIn()
   let confirmation = async () => true
   const globals = {
@@ -33,7 +33,7 @@ function fixture(t) {
   const previous = new Map(Object.keys(globals).map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]))
   for (const [key, value] of Object.entries(globals)) Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
   const scope = effectScope()
-  const hq = scope.run(useCompanyHq)
+  const hq = scope.run(() => useCompanyHq(options))
   t.after(() => {
     scope.stop()
     for (const [key, descriptor] of previous) {
@@ -244,4 +244,29 @@ test('authenticated readback reconciles an exact committed scope after its POST 
   await hq.load(true)
   assert.equal(hq.workflowOpen.value,false);assert.deepEqual(hq.workflowDraft.value,{id:'',brainFiles:{}})
   assert.equal(hq.taskError.value,null);assert.equal(commands.length,1)
+})
+
+test('3D visual review uses only authenticated department and employee records, with no demo fallback', async t => {
+  const { hq, transport } = fixture(t, { visualReview: true })
+  assert.deepEqual(hq.rooms.value, []); assert.deepEqual(hq.employees.value, [])
+  const response = signedIn()
+  response.state.departments = []; response.state.employees = []
+  transport(async () => structuredClone(response))
+  await hq.load()
+  assert.deepEqual(hq.rooms.value, []); assert.deepEqual(hq.employees.value, [])
+  response.state.departments = [{ id: 'hr', name: 'HR & Agent Development', description: 'Existing local record' }]
+  response.state.employees = [{ id: 'AG-CEO-001', name: 'Steve', role: 'CEO', departmentId: 'ceo', reportsTo: 'founder', status: 'idle' }]
+  await hq.load()
+  assert.deepEqual(hq.rooms.value.map(room => room.id), ['ceo', 'hr'])
+  assert.equal(hq.rooms.value[0].label, 'CEO')
+  response.state.departments.push({ id: 'local-created', name: 'Local created department', description: 'Persisted local fixture' })
+  await hq.load()
+  assert.deepEqual(hq.rooms.value.map(room => room.id), ['ceo', 'hr', 'local-created'])
+  assert.equal(hq.rooms.value[2].label, 'Local created department')
+  transport(async () => { throw new Error('Synthetic read failure') })
+  await hq.load(true)
+  assert.deepEqual(hq.rooms.value, []); assert.deepEqual(hq.employees.value, [])
+  transport(async () => signedOut())
+  await hq.load(true)
+  assert.deepEqual(hq.rooms.value, []); assert.deepEqual(hq.employees.value, [])
 })

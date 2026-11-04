@@ -1,5 +1,7 @@
 # Company HQ
 
+The founder’s latest 4 November visual review requires actual 3D meshes and materials only: no screenshot compositor, raster environment, sprite or image-backed scene. Use the second screenshot solely as a visual reference. Keep review navigation and clicks inactive, derive offices from authenticated records, and preserve prior backend work without expanding or activating it. See `docs/work-packages/company-hq/LOCAL-3D-REVIEW.md` for isolated local updating and review.
+
 Read root repository rules and `docs/work-packages/company-hq/CLOUD-HANDOFF.md`. The founder retired the Cloud Rule on 3 November 2026: work may run from any authorized local or cloud checkout without cloud verification as a prerequisite. The current founder decision keeps HQ in this monorepo with its own complete shared office layout. App templates must remain single registered Bs page roots, with no app-local presentation/CSS/components. Use canonical shared packages and the root lockfile.
 
 The configured workforce is Steve (AG-CEO-001), Maya (AG-HR-001), Noah (AG-HR-002) and Iris (AG-HR-003); preserve historical ceo/hr task ownership and existing historical records. Expanded workflow qualification remains pending; founder communicates only with CEO. No task execution before founder approval, no spending, no simulated replies/progress. Read the live Company Brain through an authorized connection. Historical standalone/design/Worker files and earlier cloud verification are dated evidence, not current instructions.

@@ -1,0 +1,9 @@
+{
+  "id": "hq-geometry-review-20261104",
+  "task": "HQ-GEOMETRY-REVIEW-20261104",
+  "suits": ["automation-suit", "doctor-suit", "inventory-suit", "ledger-suit", "shop-suit", "super-admin-suit"],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": ["apps/company-hq", "packages/ui", "docs/work-packages/company-hq", "release-changes/items.json"],
+  "reason": "Provide the founder's geometry-only HQ appearance review with detailed local 3D rooms, employees and Brain, authenticated department-driven visibility and an inert reference interface. Preserve prior runner and interaction implementation without activating it. No raster environment, external model assets, provider execution, hosted mutation, deployment or registered Suit activation. Add safe isolated local update and review instructions."
+}

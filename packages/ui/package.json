@@ -441,6 +441,7 @@
     "./types/agentOfficePresentation": "./src/types/agentOfficePresentation.ts",
     "./types/livingOffice": "./src/types/livingOffice.ts",
     "./organisms/BsLivingOfficeScene": "./src/organisms/BsLivingOfficeScene.vue",
+    "./organisms/BsReferenceOfficeScene": "./src/organisms/BsReferenceOfficeScene.vue",
     "./utils/livingOfficeScene": "./src/utils/livingOfficeScene.ts"
   },
   "dependencies": {

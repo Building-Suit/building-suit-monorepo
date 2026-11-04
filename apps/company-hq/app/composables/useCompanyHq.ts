@@ -1,7 +1,7 @@
 import type { LivingOfficeEmployee, LivingOfficeSceneCopy } from '@building-suit/ui/types/livingOffice'
 import type { AgentOfficeCopy, AgentOfficeTaskDraft, AgentOfficeRoom, LivingOfficePageCopy, AgentOfficeWorkCopy, AgentOfficeWorkflowDraft } from '@building-suit/ui/types/agentOfficePresentation'
 import type { HqState } from '#shared/types/hq'
-export function useCompanyHq() {
+export function useCompanyHq(options: { visualReview?: boolean } = {}) {
   const { t, tm, locale, setLocale } = useI18n()
   const state = ref<HqState | null>(null)
   const loading = ref(true), pending = ref(false), authenticated = ref(false)
@@ -39,16 +39,20 @@ export function useCompanyHq() {
     title: translate('Interactive 3D office', 'مكتب ثلاثي الأبعاد تفاعلي'), hint: translate('Drag to orbit · scroll to zoom · select a person or room. Motion illustrates saved state, not live model execution.', 'اسحب للدوران وكبّر بالتمرير واختر شخصاً أو غرفة. الحركة توضح الحالة المسجلة ولا تثبت تنفيذ النموذج.'), fallback: translate('3D rendering unavailable. Use the accessible directory below.', 'العرض ثلاثي الأبعاد غير متاح. استخدم دليل الفريق أدناه.'), loading: translate('Building your office…', 'جار بناء المكتب…'),
     zoomIn: t('hq.copy.zoomIn'), zoomOut: t('hq.copy.zoomOut'), reset: t('hq.copy.resetView'), rotateLeft: translate('Rotate left', 'تدوير لليسار'), rotateRight: translate('Rotate right', 'تدوير لليمين'), motion: translate('Illustrative motion', 'حركة توضيحية'), pauseMotion: translate('Pause motion', 'إيقاف الحركة'), resumeMotion: translate('Resume motion', 'استئناف الحركة'), directory: t('hq.copy.roomList'), brain: t('hq.copy.brainLabel'), empty: translate('No employees in this office', 'لا يوجد موظفون في هذا المكتب'), departments: translate('Offices', 'المكاتب'), employees: translate('People', 'الأشخاص'),
   }))
-  const rooms = computed<AgentOfficeRoom[]>(() => [
-    { id: 'ceo', label: translate('Executive Office', 'المكتب التنفيذي'), kind: 'executive', active: true, x: 0, y: 0, statusLabel: '', description: t('hq.ceoDescription'), skills: [], reportingLabel: 'Tareq' },
-    ...(state.value?.departments || [{ id: 'hr', name: 'HR & Agent Development', description: t('hq.hrDescription') }]).map(d => ({ id: d.id, label: d.id === 'hr' ? t('hq.hr') : d.name, kind: 'department' as const, active: true, x: 0, y: 0, statusLabel: '', description: d.description, skills: [], reportingLabel: 'Steve' })),
-  ])
-  const employees = computed<LivingOfficeEmployee[]>(() => (state.value?.employees || [
+  const rooms = computed<AgentOfficeRoom[]>(() => {
+    if (options.visualReview && (!authenticated.value || !state.value || error.value)) return []
+    const departments = state.value?.departments || (options.visualReview ? [] : [{ id: 'hr', name: 'HR & Agent Development', description: t('hq.hrDescription') }])
+    const executive: AgentOfficeRoom[] = !options.visualReview || state.value?.employees?.some(employee => employee.id === 'AG-CEO-001')
+      ? [{ id: 'ceo', label: options.visualReview ? translate('CEO', 'الرئيس التنفيذي') : translate('Executive Office', 'المكتب التنفيذي'), kind: 'executive', active: true, x: 0, y: 0, statusLabel: '', description: t('hq.ceoDescription'), skills: [], reportingLabel: 'Tareq' }]
+      : []
+    return [...executive, ...departments.map(d => ({ id: d.id, label: options.visualReview ? d.name : d.id === 'hr' ? t('hq.hr') : d.name, kind: 'department' as const, active: true, x: 0, y: 0, statusLabel: '', description: d.description, skills: [], reportingLabel: 'Steve' }))]
+  })
+  const employees = computed<LivingOfficeEmployee[]>(() => (options.visualReview && (!authenticated.value || !state.value || error.value) ? [] : state.value?.employees || (options.visualReview ? [] : [
     { id: 'AG-CEO-001', name: 'Steve', role: 'CEO', departmentId: 'ceo', reportsTo: 'Tareq', status: 'idle' as const },
     { id: 'AG-HR-001', name: 'Maya', role: 'HR Lead', departmentId: 'hr', reportsTo: 'Steve', status: 'idle' as const },
     { id: 'AG-HR-002', name: 'Noah', role: 'Recruiter', departmentId: 'hr', reportsTo: 'Maya', status: 'idle' as const },
     { id: 'AG-HR-003', name: 'Iris', role: 'Evaluator', departmentId: 'hr', reportsTo: 'Maya', status: 'idle' as const },
-  ]).map(e => ({ ...e, statusLabel: e.status === 'queued' || e.status === 'blocked' ? t('hq.statuses.' + e.status) : t('hq.' + e.status), reportsTo: ({ founder: 'Tareq', 'AG-CEO-001': 'Steve', 'AG-HR-001': 'Maya' } as Record<string,string>)[e.reportsTo] || e.reportsTo })))
+  ])).map(e => ({ ...e, statusLabel: e.status === 'queued' || e.status === 'blocked' ? t('hq.statuses.' + e.status) : t('hq.' + e.status), reportsTo: ({ founder: 'Tareq', 'AG-CEO-001': 'Steve', 'AG-HR-001': 'Maya' } as Record<string,string>)[e.reportsTo] || e.reportsTo })))
   const brainSnapshotReady = computed(() => authenticated.value && state.value !== null)
   const brainActivity = computed(() => (state.value?.brain.events || []).map(e => ({ id: e.id, direction: e.direction, employeeId: e.agentId, label: translate('Recorded Brain read', 'قراءة مسجلة للمعرفة') + ' · ' + e.fileCount })))
   const runtimeNotice = computed(() => translate('Live execution unavailable: model authorization, a verified $0 allowance, live Brain access and durable hosting are not configured. Messages can be saved; replies require an authorized CEO.', 'التنفيذ المباشر غير متاح: لم يتم إعداد تفويض النموذج أو حصة مجانية موثقة أو الوصول المباشر للمعرفة أو الاستضافة الدائمة. يمكن حفظ الرسائل؛ والردود تتطلب مديراً تنفيذياً معتمداً.'))

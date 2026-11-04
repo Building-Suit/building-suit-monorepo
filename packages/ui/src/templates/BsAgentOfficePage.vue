@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, useId, watch } from 'vue'
 import BsLivingOfficeScene from '../organisms/BsLivingOfficeScene.vue'
+import BsReferenceOfficeScene from '../organisms/BsReferenceOfficeScene.vue'
 import type { LivingOfficeEmployee, LivingOfficeBrainActivity, LivingOfficeSceneCopy } from '../types/livingOffice'
 import type { AgentOfficeActivity, AgentOfficeContent, AgentOfficeMessage, AgentOfficeNote, AgentOfficeRoom, AgentOfficeTask, AgentOfficeTaskDraft, AgentOfficeView, LivingOfficePageCopy, AgentOfficeWorkCopy, AgentOfficeWorkflowDraft } from '../types/agentOfficePresentation'
 
 const props = withDefaults(defineProps<{
+  visualReview?: boolean
   sceneCopy?: LivingOfficeSceneCopy
   employees?: LivingOfficeEmployee[]
   brainActivity?: LivingOfficeBrainActivity[]
@@ -31,7 +33,7 @@ const props = withDefaults(defineProps<{
   error?: string | null
   messageError?: string | null
   taskError?: string | null
-}>(), { sceneCopy: undefined, livingCopy: undefined, workCopy: undefined, workflowFields: () => [], sourceMessageText: '', employees: () => [], brainActivity: () => [], brainSnapshotReady: true, runtimeNotice: '', activity: () => [], connectionAvailable: false, loading: false, readOnly: false, pending: false, error: null, messageError: null, taskError: null })
+}>(), { visualReview: false, sceneCopy: undefined, livingCopy: undefined, workCopy: undefined, workflowFields: () => [], sourceMessageText: '', employees: () => [], brainActivity: () => [], brainSnapshotReady: true, runtimeNotice: '', activity: () => [], connectionAvailable: false, loading: false, readOnly: false, pending: false, error: null, messageError: null, taskError: null })
 
 const emit = defineEmits<{
   'create-department': [draft: { name: string; description: string }]
@@ -141,7 +143,8 @@ watch(() => props.pending, (pending, previous) => {
 </script>
 
 <template>
-  <div class="bs-office" :aria-busy="loading || undefined">
+  <BsReferenceOfficeScene v-if="visualReview" :rooms="rooms" :employees="employees" :loading="loading" :error="error" />
+  <div v-else class="bs-office" :aria-busy="loading || undefined">
     <a class="bs-office__skip" :href="'#' + ids + '-workspace'">{{ copy.workspace }}</a>
     <header class="bs-office__header">
       <div class="bs-office__brand">
