@@ -34,6 +34,7 @@ export interface HqBrainContent {
   freshnessLabel: string
   refreshLabel: string
   searchLabel: string
+  showMoreLabel: string
   emptyLabel: string
   selectLabel: string
   noteErrorLabel: string

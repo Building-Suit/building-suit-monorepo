@@ -15,6 +15,7 @@ const ui = useUiCopy()
 let returnFocus: HTMLElement | null = null
 let previousCamera: SpatialViewportCamera | null = null
 const search = ref<string | number>('')
+const noteLimit = ref(40)
 const brainCopy = computed(() => props.content.companyBrain)
 const brainStatus = computed(() => props.brain?.status ?? 'unavailable')
 const brainStatusLabel = computed(() => {
@@ -26,6 +27,8 @@ const visibleNotes = computed(() => {
   const query = String(search.value).trim().toLocaleLowerCase()
   return (props.brain?.notes ?? []).filter(note => !query || `${note.title} ${note.path}`.toLocaleLowerCase().includes(query))
 })
+const renderedNotes = computed(() => visibleNotes.value.slice(0, noteLimit.value))
+watch(search, () => { noteLimit.value = 40 })
 async function openBrain() {
   if (brainVisible.value) return
   returnFocus = typeof document !== 'undefined' && document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -47,6 +50,9 @@ function closeBrain(restoreCamera = true) {
 function resetScene() { closeBrain(false); reset() }
 function onWorkspaceKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape' && brainVisible.value) { event.preventDefault(); closeBrain(); return }
+  // Notes retain native scrolling/navigation; non-editing zoom shortcuts work
+  // after focus moves into the nonmodal panel as well as on the canvas.
+  if (event.target instanceof Element && event.target.closest('.bs-hq-layout__brain-panel') && !['+', '=', '-', '_'].includes(event.key)) return
   onKeydown(event)
 }
 watch(resetVersion, () => closeBrain(false))
@@ -85,8 +91,8 @@ const viewMarker = computed(() => ({
       </div>
     </header>
 
-    <main class="bs-hq-layout__workspace-area" :class="{ 'bs-hq-layout__workspace-area--brain': brainVisible }">
-    <section ref="viewportRef" class="bs-hq-layout__canvas" :class="{ 'bs-hq-layout__canvas--interacting': isInteracting }" :aria-label="content.canvasLabel" :aria-describedby="hintId" tabindex="0" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerleave="onPointerLeave" @pointerup="onPointerEnd" @pointercancel="onPointerEnd" @lostpointercapture="onPointerEnd" @wheel.prevent="onWheel" @keydown="onWorkspaceKeydown" @contextmenu.prevent>
+    <main class="bs-hq-layout__workspace-area" :class="{ 'bs-hq-layout__workspace-area--brain': brainVisible }" @keydown="onWorkspaceKeydown">
+    <section ref="viewportRef" class="bs-hq-layout__canvas" :class="{ 'bs-hq-layout__canvas--interacting': isInteracting }" :aria-label="content.canvasLabel" :aria-describedby="hintId" tabindex="0" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerleave="onPointerLeave" @pointerup="onPointerEnd" @pointercancel="onPointerEnd" @lostpointercapture="onPointerEnd" @wheel="onWheel" @contextmenu.prevent>
       <BsHologramScene ref="sceneRef" :camera="camera" :opened="brainVisible" :reset-version="resetVersion" :label="content.hologramLabel" :unavailable-label="content.sceneUnavailableLabel" @activate="openBrain" />
       <div class="bs-hq-layout__brain-entry" data-spatial-controls>
         <BsButton variant="text" class="bs-hq-layout__brain-button" :aria-controls="brainPanelId" :aria-expanded="brainVisible" :aria-label="brainCopy.openLabel" @click="openBrain"><BsIcon name="orb" :size="22" /><span><strong>{{ brainCopy.title }}</strong><small :data-status="brainStatus">{{ brainStatusLabel }}</small></span></BsButton>
@@ -110,7 +116,8 @@ const viewMarker = computed(() => ({
         </aside>
       </div>
     </section>
-    <aside v-if="brainVisible" :id="brainPanelId" class="bs-hq-layout__brain-panel" :aria-labelledby="brainTitleId" @keydown.esc.stop.prevent="closeBrain()">
+    <Transition name="bs-hq-brain-slide">
+    <aside v-if="brainVisible" :id="brainPanelId" v-memo="[brain, brainCopy, search, noteLimit]" class="bs-hq-layout__brain-panel" :aria-labelledby="brainTitleId" @wheel.stop @keydown.esc.stop.prevent="closeBrain()">
       <header class="bs-hq-layout__brain-heading">
         <h2 :id="brainTitleId" ref="panelTitleRef" tabindex="-1">{{ brainCopy.title }}</h2>
         <BsButton variant="icon" :aria-label="ui('close')" @click="closeBrain()"><BsIcon name="close" :size="20" /></BsButton>
@@ -126,7 +133,8 @@ const viewMarker = computed(() => ({
           <nav class="bs-hq-brain__directory" :aria-label="brainCopy.searchLabel">
             <BsInput v-model="search" type="search" :aria-label="brainCopy.searchLabel" :placeholder="brainCopy.searchLabel" />
             <p v-if="!visibleNotes.length" role="status">{{ brainCopy.emptyLabel }}</p>
-            <ul v-else><li v-for="note in visibleNotes" :key="note.id"><BsButton variant="text" :aria-pressed="brain?.selectedId === note.id" @click="emit('selectBrainNote', note.id)"><strong>{{ note.title }}</strong><small dir="auto">{{ note.path }}</small></BsButton></li></ul>
+            <ul v-else><li v-for="note in renderedNotes" :key="note.id"><BsButton variant="text" :aria-pressed="brain?.selectedId === note.id" @click="emit('selectBrainNote', note.id)"><strong>{{ note.title }}</strong><small dir="auto">{{ note.path }}</small></BsButton></li></ul>
+            <BsButton v-if="renderedNotes.length < visibleNotes.length" variant="text" @click="noteLimit += 40">{{ brainCopy.showMoreLabel }}</BsButton>
           </nav>
           <article class="bs-hq-brain__note" :aria-busy="brain?.noteStatus === 'loading'" aria-live="polite">
             <p v-if="brain?.noteStatus === 'loading'">{{ brainCopy.loadingLabel }}</p>
@@ -140,6 +148,7 @@ const viewMarker = computed(() => ({
         </div>
       </section>
     </aside>
+    </Transition>
     </main>
   </div>
 </template>
@@ -201,15 +210,16 @@ const viewMarker = computed(() => ({
   font-weight: 650;
 }
 .bs-hq-layout__actions { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
-.bs-hq-layout__workspace-area { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-height: 0; gap: var(--bs-space-2); }
-.bs-hq-layout__workspace-area--brain { grid-template-columns: minmax(0, 1fr) clamp(360px, 32vw, 480px); }
-.bs-hq-layout__brain-panel { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: auto; padding: var(--bs-space-5); border: 1px solid var(--bs-steel-border); border-radius: var(--bs-radius-card); color: var(--bs-pearl-white); background: var(--bs-color-neutral-charcoal); user-select: text; animation: hq-brain-enter 200ms ease-out; }
+.bs-hq-layout__workspace-area { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-height: 0; overflow: hidden; }
+.bs-hq-layout__brain-panel { --bs-brain-panel-offset: calc(-100% - var(--bs-space-3)); position: absolute; z-index: 3; inset-block: var(--bs-space-3); inset-inline-start: var(--bs-space-3); width: min(420px, calc(100% - var(--bs-space-6))); display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; padding: var(--bs-space-5); border: 1px solid var(--bs-steel-border); border-radius: var(--bs-radius-modal); color: var(--bs-pearl-white); background: var(--bs-color-neutral-charcoal); box-shadow: var(--bs-shadow-elevation3-dark); user-select: text; }
+:global([dir="rtl"]) .bs-hq-layout__brain-panel { --bs-brain-panel-offset: calc(100% + var(--bs-space-3)); }
+.bs-hq-brain-slide-enter-active, .bs-hq-brain-slide-leave-active { transition: transform 280ms cubic-bezier(.22, 1, .36, 1), opacity 200ms ease; will-change: transform; }
+.bs-hq-brain-slide-enter-from, .bs-hq-brain-slide-leave-to { transform: translateX(var(--bs-brain-panel-offset)); opacity: 0; }
 .bs-hq-layout__brain-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--bs-space-3); margin-bottom: var(--bs-space-5); }
 .bs-hq-layout__brain-heading h2 { margin: 0; font-size: 19px; font-weight: 650; }
 .bs-hq-layout__brain-heading h2:focus { outline: none; }
 .bs-hq-layout__brain-heading button { flex: none; color: var(--bs-cloud-gray); }
 .bs-hq-layout__brain-panel button:focus-visible, .bs-hq-layout__brain-panel input:focus-visible { outline: 2px solid var(--bs-highlight-gold); outline-offset: 2px; }
-@keyframes hq-brain-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .bs-hq-layout__status {
   display: inline-flex;
   align-items: center;
@@ -292,15 +302,14 @@ const viewMarker = computed(() => ({
 .bs-hq-brain__note p { margin: var(--bs-space-2) 0; overflow-wrap: anywhere; }
 .bs-hq-brain__note pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 13px; line-height: 1.8; unicode-bidi: plaintext; }
 @media (max-width: 840px) {
-  .bs-hq-layout__workspace-area--brain { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(180px, 1fr) minmax(0, 48%); }
-  .bs-hq-layout__brain-panel { padding: var(--bs-space-4); }
+  .bs-hq-layout__brain-panel { inset-block-end: 84px; padding: var(--bs-space-4); }
   .bs-hq-layout__workspace-area--brain .bs-hq-layout__workspace-info { display: none; }
   .bs-hq-layout__workspace-area--brain .bs-hq-layout__view { width: 140px; padding-top: 26px; }
   .bs-hq-layout__workspace-area--brain .bs-hq-layout__minimap { display: none; }
   .bs-hq-layout__workspace-area--brain .bs-hq-layout__footer { padding: 10px; justify-content: flex-end; }
   .bs-hq-brain__directory ul { max-height: 23dvh; }
 }
-@media (prefers-reduced-motion: reduce) { .bs-hq-layout__brain-panel { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bs-hq-brain-slide-enter-active, .bs-hq-brain-slide-leave-active { transition: none; } }
 .bs-hq-layout__footer { position: absolute; inset: auto 0 0; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 20px; pointer-events: none; }
 .bs-hq-layout__workspace-info { display: grid; min-width: 0; justify-items: start; gap: 10px; }
 .bs-hq-layout__gesture-hint { max-width: 450px; margin: 0; color: var(--bs-cloud-gray); opacity: 0.7; font-size: 11px; line-height: 1.6; }
@@ -334,6 +343,7 @@ const viewMarker = computed(() => ({
 .bs-hq-layout .bs-hq-layout__zoom button:disabled { opacity: 0.4; }
 :global([dir="rtl"]) .bs-hq-layout { font-family: var(--bs-font-arabic); }
 :global([dir="rtl"]) .bs-hq-layout__brand h1 { letter-spacing: normal; }
+:global([dir="rtl"]) .bs-hq-layout__workspace-area--brain .bs-hq-layout__footer { flex-direction: row-reverse; }
 @media (max-width: 1279px) {
   .bs-hq-layout__header { padding-inline: 14px 6px; gap: 16px; }
   .bs-hq-layout__brand { gap: 12px; }

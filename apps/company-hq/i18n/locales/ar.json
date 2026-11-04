@@ -41,7 +41,8 @@
       "setupRequiredLabel": "يلزم إعداد قارئ Google Drive",
       "authorizationRequiredLabel": "يلزم منح الوصول إلى Google Drive",
       "setupInstructionsLabel": "أعدّ قارئ Google Drive الخاص على خادم HQ وامنحه صلاحية عارض لمجلد معرفة الشركة.",
-      "versionLabel": "الإصدار"
+      "versionLabel": "الإصدار",
+      "showMoreLabel": "عرض المزيد من الملاحظات"
     }
   }
 }

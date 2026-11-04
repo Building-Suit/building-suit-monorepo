@@ -20,13 +20,16 @@ export function useCompanyBrain() {
   let disposed = false
   let failures = 0
   const headers = { 'X-HQ-Brain': '1' }
-  const formatDate = (value: string) => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'medium' }).format(new Date(value))
+  const dateFormatter = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'medium' }))
+  const formatDate = (value: string) => dateFormatter.value.format(new Date(value))
   const summary = (value: BrainNoteSummary) => ({ id: value.id, title: value.title, path: value.path, modifiedLabel: formatDate(value.modifiedAt), version: value.version.split(':', 1)[0] || value.version })
+  // Status and selection changes do not need to format the entire directory.
+  const notes = computed(() => index.value?.notes.map(summary) ?? [])
   const brain = computed<HqBrainPresentation>(() => ({
     status: status.value,
     reason: reason.value,
     refreshing: refreshing.value,
-    notes: index.value?.notes.map(summary) ?? [],
+    notes: notes.value,
     observedLabel: lastSuccessfulCheck.value ? formatDate(lastSuccessfulCheck.value) : '',
     partial: index.value?.partial ?? false,
     selectedId: selectedId.value,

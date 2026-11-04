@@ -41,7 +41,8 @@
       "setupRequiredLabel": "Google Drive reader setup required",
       "authorizationRequiredLabel": "Google Drive access required",
       "setupInstructionsLabel": "Configure the private Google Drive reader on the HQ server and give it Viewer access to the Company Brain folder.",
-      "versionLabel": "Version"
+      "versionLabel": "Version",
+      "showMoreLabel": "Show more notes"
     }
   }
 }

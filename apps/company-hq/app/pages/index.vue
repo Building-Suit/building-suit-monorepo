@@ -36,6 +36,7 @@ const content = computed<HqLayoutContent>(() => ({
     freshnessLabel: t('hq.companyBrain.freshnessLabel'),
     refreshLabel: t('hq.companyBrain.refreshLabel'),
     searchLabel: t('hq.companyBrain.searchLabel'),
+    showMoreLabel: t('hq.companyBrain.showMoreLabel'),
     emptyLabel: t('hq.companyBrain.emptyLabel'),
     selectLabel: t('hq.companyBrain.selectLabel'),
     noteErrorLabel: t('hq.companyBrain.noteErrorLabel'),

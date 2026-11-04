@@ -218,7 +218,10 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
   }
 
   function onWheel(event: WheelEvent) {
-    if (ignoresTarget(event.target)) return
+    // Overview/buttons remain part of the zoom surface. Editable controls and
+    // explicitly scrollable content retain their native wheel behavior.
+    if (typeof Element !== 'undefined' && event.target instanceof Element
+      && event.target.closest('input, textarea, select, [contenteditable="true"], [data-spatial-scroll]')) return
     event.preventDefault()
     clearFeedback()
     for (const pointer of pointers.values()) pointer.activationEligible = false

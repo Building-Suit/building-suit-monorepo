@@ -3474,7 +3474,7 @@
       "status": "implemented-unverified",
       "domainAdapter": "apps/company-hq/app/app.vue",
       "dependencies": [],
-      "verification": "4 November 2026 shield orb/reveal and read-only side panel: source implemented, original preserved in Git. Founder-requested restart/retry verified a complete 330-note Google Drive index and one note read; later browser state request timed out. No rendered/gesture/freshness/boundary acceptance is claimed; tests/build/lint/typecheck/release checks and tester/reviewer agents remain deferred. See company-hq/HQ-SHIELD-ORB-20261104.md."
+      "verification": "4 November 2026 irregular shield/aura and read-only locale-aware sliding overlay: revised source implemented, original preserved in Git; render/DOM costs are bounded but performance is unmeasured. Founder-requested restart/retry verified a complete 330-note Google Drive index and one note read; later browser state request timed out. No rendered/gesture/freshness/boundary acceptance is claimed; tests/build/lint/typecheck/release checks and tester/reviewer agents remain deferred. See company-hq/HQ-SHIELD-ORB-20261104.md."
     },
     {
       "source": "apps/company-hq/app/pages/index.vue",
@@ -3491,7 +3491,7 @@
       "dependencies": [
         "@building-suit/ui/types/hqLayoutPresentation"
       ],
-      "verification": "4 November 2026 shield orb/reveal and read-only side panel: source implemented, original preserved in Git. Founder-requested restart/retry verified a complete 330-note Google Drive index and one note read; later browser state request timed out. No rendered/gesture/freshness/boundary acceptance is claimed; tests/build/lint/typecheck/release checks and tester/reviewer agents remain deferred. See company-hq/HQ-SHIELD-ORB-20261104.md.",
+      "verification": "4 November 2026 irregular shield/aura and read-only locale-aware sliding overlay: revised source implemented, original preserved in Git; render/DOM costs are bounded but performance is unmeasured. Founder-requested restart/retry verified a complete 330-note Google Drive index and one note read; later browser state request timed out. No rendered/gesture/freshness/boundary acceptance is claimed; tests/build/lint/typecheck/release checks and tester/reviewer agents remain deferred. See company-hq/HQ-SHIELD-ORB-20261104.md.",
       "purpose": "hq-spatial-workspace"
     }
   ],

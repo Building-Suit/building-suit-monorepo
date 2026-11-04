@@ -34,6 +34,7 @@ const content = computed<HqLayoutContent>(() => ({
     freshnessLabel: c("Checks Google Drive every 15 seconds while this page is visible and connected. Failed connections retry less often.", "يُفحص Google Drive كل ١٥ ثانية ما دامت الصفحة ظاهرة ومتصلة. تقل وتيرة المحاولة عند تعذر الاتصال."),
     refreshLabel: c("Refresh", "تحديث"),
     searchLabel: c("Find a note by name or folder", "ابحث عن ملاحظة بالاسم أو المجلد"),
+    showMoreLabel: c("Show more notes", "عرض المزيد من الملاحظات"),
     emptyLabel: c("No matching notes.", "لا توجد ملاحظات مطابقة."),
     selectLabel: c("Select a note to read it.", "اختر ملاحظة لقراءتها."),
     noteErrorLabel: c("This note could not be read. Refresh and try again.", "تعذرت قراءة هذه الملاحظة. حدّث وحاول مجددًا."),
@@ -50,7 +51,7 @@ const content = computed<HqLayoutContent>(() => ({
 </script>
 
 <template>
-  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Shielded 3D orb with hover or hold feedback, a brain reveal and camera focus. Every Brain entry opens the same read-only side panel. This catalogue has no cloud credentials or connection.', 'كرة محمية بدرع مع تفاعل بالتمرير أو اللمس المطول وكشف الدماغ وتقريب الكاميرا. تفتح جميع مداخل المعرفة اللوحة الجانبية نفسها للقراءة فقط. لا يحتوي هذا المثال على بيانات اعتماد أو اتصال سحابي.')">
+  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Irregular shield pieces, a broad base and a moving aura surround the 3D Brain. Closed-state hover or hold feedback opens into the shared reveal and camera focus. The read-only panel overlays the workspace, sliding from the left in English or right in Arabic. This catalogue has no cloud connection.', 'قطع درع غير منتظمة وقاعدة واسعة وهالة متحركة تحيط بالدماغ ثلاثي الأبعاد. يتفاعل الدرع المغلق مع التمرير أو اللمس المطول، ثم ينفتح مع تقريب الكاميرا. تظهر لوحة القراءة فوق مساحة العمل من اليسار بالإنجليزية ومن اليمين بالعربية. لا يحتوي المثال على اتصال سحابي.')">
     <BsHqLayoutPage :content="content" />
   </BsContentSection>
 </template>

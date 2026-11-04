@@ -5265,14 +5265,15 @@
       "packages/ui/src/utils/hologramScene.ts",
       "packages/ux/src/composables/useSpatialViewport.ts"
     ],
-    "reason": "Maintain the internal reference-header 3D workspace with a simple token-based navy shield orb, subtle beat and hover/touch-hold vibration. All Brain entry points share shield scatter, glass/brain/pulsing-nerve reveal, interruptible camera focus and a nonmodal read-only side panel; closing restores the prior camera and reset restores the closed/default state. Preserve original design in Git. Keep the private read-only Google Drive source under its fixed authorized root, verified descendants, bounded reads, source versions and visible/online polling, without filesystem fallback. Fix development Unix-socket request attestation at the actual loopback listener and bounded scan performance. Founder-requested restart/retry verified a complete 330-note index and one note read; visual, gesture, freshness and broad acceptance remain deferred. New HQ Supabase metadata is verified but Auth/schema/GitHub integration remains unconfigured or unverified. No operational product activation, public release, hosted database/provider mutation, deployment, app Brain writes, staff/model execution or spending.",
+    "reason": "Maintain the internal reference-header 3D workspace with varied seeded spherical shield fragments, a restored broad base and moving aura, subtle beat and closed-only hover/touch-hold vibration. All Brain entry points share shield scatter, glass/brain/pulsing-nerve reveal and camera focus. The nonmodal read-only panel slides over the unchanged workspace from the left for LTR or right for RTL, with zoom controls/shortcuts retained; closing restores the prior camera and reset restores closed/default state. Indexed/lower-resolution meshes, bounded backing pixels, cached matrices and idle paint limits reduce source rendering costs. Memoized panel content, incremental 40-note mounting and cached date formatting avoid rebuilding the entire directory during camera/status changes. Preserve the original design in Git. Keep private bounded verified-root Google Drive reads and visible/online polling, without filesystem fallback. Earlier founder-requested restart/retry verified a complete 330-note index and one note read; latest visual, gesture, performance and freshness acceptance remain deferred, with no new runtime checks or performance measurements. No operational product activation, public release, hosted database/provider mutation, deployment, app Brain writes, staff/model execution or spending.",
     "sources": [
       "hq-office-monorepo-20261103",
       "hq-static-layout-reset-20261104",
       "hq-spatial-orb-20261104",
       "hq-brain-connection-20261104",
       "hq-cloud-brain-20261104",
-      "hq-shield-orb-20261104"
+      "hq-shield-orb-20261104",
+      "hq-orb-refinement-20261104"
     ],
     "evidence": [
       {
@@ -5289,15 +5290,19 @@
       },
       {
         "path": "packages/ui/src/utils/hologramScene.ts",
-        "contains": "function shieldPlate(angle: number)"
+        "contains": "function shieldFractures(): ShieldFracture[]"
       },
       {
         "path": "packages/ui/src/templates/BsHqLayoutPage.vue",
-        "contains": "class=\"bs-hq-layout__brain-panel\""
+        "contains": "name=\"bs-hq-brain-slide\""
       },
       {
         "path": "packages/ux/src/composables/useSpatialViewport.ts",
         "contains": "function transitionTo(target: Readonly<SpatialViewportCamera>"
+      },
+      {
+        "path": "apps/company-hq/app/composables/useCompanyBrain.ts",
+        "contains": "const dateFormatter = computed(() => new Intl.DateTimeFormat"
       }
     ]
   }

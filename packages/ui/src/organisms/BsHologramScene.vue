@@ -13,6 +13,7 @@ let resizeObserver: ResizeObserver | null = null
 let intersectionObserver: IntersectionObserver | null = null
 let motion: MediaQueryList | null = null
 let frame = 0, visible = true, elapsed = 0, lastFrame = 0, disposed = false
+let lastPaint = 0, needsDraw = true
 let openAmount = props.opened ? 1 : 0, excitedAmount = 0, excitedTarget = 0
 
 function activateAt(clientX: number, clientY: number) {
@@ -22,32 +23,45 @@ function activateAt(clientX: number, clientY: number) {
 }
 function setExcitedAt(clientX: number, clientY: number, active: boolean) {
   const hit = active && !disposed && !unavailable.value && visible && Boolean(renderer?.hitTestOrb(clientX, clientY))
-  excitedTarget = hit ? 1 : 0
-  if (typeof window !== 'undefined') requestDraw()
+  const nextTarget = hit && !props.opened && openAmount < 0.001 ? 1 : 0
+  if (nextTarget !== excitedTarget) {
+    excitedTarget = nextTarget
+    if (props.opened || openAmount > 0.001) excitedAmount = 0
+    if (typeof window !== 'undefined') requestDraw()
+  }
   return hit
 }
 defineExpose({ activateAt, setExcitedAt })
 
-function requestDraw() {
+function requestDraw(force = true) {
+  if (force) needsDraw = true
   if (!disposed && !frame && visible && !document.hidden && renderer) frame = requestAnimationFrame(draw)
 }
 function draw(time: number) {
   frame = 0
   if (!renderer || !visible || document.hidden) return
   const reduced = motion?.matches ?? false
+  const openTarget = props.opened ? 1 : 0
+  const transitioning = Math.abs(openTarget - openAmount) > 0.001
+  const minimumFrame = transitioning || excitedTarget ? 1000 / 60 : 1000 / 30
+  if (!reduced && !needsDraw && lastPaint && time - lastPaint + 0.5 < minimumFrame) {
+    requestDraw(false)
+    return
+  }
+  needsDraw = false; lastPaint = time
   const delta = lastFrame ? Math.min(0.064, Math.max(0, (time - lastFrame) / 1000)) : 0
   lastFrame = time
   if (!reduced) elapsed += delta
-  const openTarget = props.opened ? 1 : 0
   openAmount = reduced ? openTarget : openAmount + (openTarget - openAmount) * (1 - Math.exp(-delta * 7))
-  excitedAmount = reduced ? 0 : excitedAmount + (excitedTarget - excitedAmount) * (1 - Math.exp(-delta * 12))
-  renderer.draw(props.camera, reduced ? 0 : elapsed, { open: openAmount, excited: excitedAmount })
-  if (!motion?.matches) requestDraw()
+  if (props.opened || openAmount > 0.001) { excitedTarget = 0; excitedAmount = 0 }
+  else excitedAmount = reduced ? 0 : excitedAmount + (excitedTarget - excitedAmount) * (1 - Math.exp(-delta * 12))
+  renderer.draw(props.camera, reduced ? 0 : elapsed, { open: openAmount, excited: excitedAmount, opened: props.opened })
+  if (!motion?.matches) requestDraw(false)
 }
 function updateVisibility() {
   if (frame) cancelAnimationFrame(frame)
   frame = 0
-  lastFrame = 0
+  lastFrame = 0; lastPaint = 0
   requestDraw()
 }
 function startRenderer() {
@@ -79,22 +93,22 @@ watch(() => [props.camera.yaw, props.camera.pitch, props.camera.zoom, props.came
   if (typeof window !== 'undefined') requestDraw()
 })
 watch(() => props.resetVersion, () => {
-  elapsed = 0; lastFrame = 0
+  elapsed = 0; lastFrame = 0; lastPaint = 0
   openAmount = props.opened ? 1 : 0
   excitedTarget = 0; excitedAmount = 0
   if (typeof window !== 'undefined') requestDraw()
 })
 watch(() => props.opened, () => {
-  excitedTarget = 0
+  excitedTarget = 0; excitedAmount = 0
   if (typeof window !== 'undefined') requestDraw()
-})
+}, { flush: 'sync' })
 onMounted(() => {
   motion = matchMedia('(prefers-reduced-motion: reduce)')
   motion.addEventListener('change', updateVisibility)
   document.addEventListener('visibilitychange', updateVisibility)
   const canvas = canvasRef.value
   if (!canvas) return
-  resizeObserver = new ResizeObserver(requestDraw)
+  resizeObserver = new ResizeObserver(() => requestDraw())
   resizeObserver.observe(canvas)
   intersectionObserver = new IntersectionObserver(entries => {
     visible = entries.some(entry => entry.isIntersecting)
