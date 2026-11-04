@@ -9,7 +9,7 @@ interface Geometry { positions: number[]; normals: number[] }
 interface Mesh { position: WebGLBuffer; normal: WebGLBuffer; indices: WebGLBuffer; count: number }
 interface OrbProjection { eye: Vector; right: Vector; up: Vector; forward: Vector; center: Vector; radius: number; aspect: number }
 
-export interface HologramPalette { navy: Vector; surface: Vector; gold: Vector; steel: Vector; light: Vector; pearl: Vector }
+export interface HologramPalette { coal: Vector; charcoal: Vector; graphite: Vector; gold: Vector; steelGray: Vector; silver: Vector; pearl: Vector }
 export interface HologramInteraction { open: number; excited: number; opened?: boolean }
 export interface HologramRenderer {
   draw: (camera: Readonly<SpatialViewportCamera>, seconds: number, interaction?: Readonly<HologramInteraction>) => void
@@ -449,15 +449,15 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
           orbProjection.center[0] = shakeX; orbProjection.center[1] = orbHeight + shakeY
           orbProjection.radius = (0.84 - reveal * 0.14) * beat
         }
-        drawMesh(geometry.ground, palette.surface, 6, 1, groundModel, true)
-        drawMesh(geometry.base, palette.navy, 0)
-        drawMesh(geometry.bevel, palette.surface, 0)
-        drawMesh(geometry.deck, palette.navy, 0)
-        drawMesh(geometry.inset, palette.surface, 0)
-        drawMesh(geometry.emitter, palette.navy, 0)
-        drawMesh(geometry.outerRing, palette.steel, 5, 0.72, outerRingModel)
-        drawMesh(geometry.innerRing, palette.light, 2, 0.65, innerRingModel)
-        drawMesh(geometry.emitterRing, palette.gold, 2, 0.45, emitterRingModel)
+        drawMesh(geometry.ground, palette.coal, 6, 1, groundModel, true)
+        drawMesh(geometry.base, palette.charcoal, 0)
+        drawMesh(geometry.bevel, palette.graphite, 0)
+        drawMesh(geometry.deck, palette.charcoal, 0)
+        drawMesh(geometry.inset, palette.graphite, 0)
+        drawMesh(geometry.emitter, palette.coal, 0)
+        drawMesh(geometry.outerRing, palette.steelGray, 5, 0.58, outerRingModel)
+        drawMesh(geometry.innerRing, palette.silver, 2, 0.46, innerRingModel)
+        drawMesh(geometry.emitterRing, palette.gold, 2, 0.60, emitterRingModel)
         for (const plate of plates) {
           const vibration = Math.sin(time * 33 + plate.phase) * excited * 0.014
           const drift = Math.sin(time * 0.65 + plate.phase) * reveal * 0.006
@@ -467,22 +467,22 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
             plate.center[2] * beat + plate.travel[2] * reveal + plate.direction[2] * vibration,
             plate.rotation[0] * reveal + vibration, plate.rotation[1] * reveal + vibration, plate.rotation[2] * reveal, beat, plate.transform,
           )
-          drawMesh(plate.body, plate.phase > Math.PI ? palette.surface : palette.navy, 0, 1, transform)
+          drawMesh(plate.body, plate.phase > Math.PI ? palette.graphite : palette.charcoal, 0, 1, transform)
           drawMesh(plate.seam, palette.gold, 2, 0.38 + excited * 0.30, transform)
         }
         model(shakeX, orbHeight + shakeY, 0, 0, 0, 0, beat, brainModel)
         if (reveal > 0.001) {
-          drawMesh(geometry.lobes, palette.light, 4, reveal * 0.88, brainModel, true)
-          drawMesh(geometry.stem, palette.steel, 4, reveal * 0.85, brainModel)
-          drawMesh(geometry.folds, palette.steel, 2, reveal * 0.78, brainModel)
+          drawMesh(geometry.lobes, palette.silver, 4, reveal * 0.88, brainModel, true)
+          drawMesh(geometry.stem, palette.steelGray, 4, reveal * 0.85, brainModel)
+          drawMesh(geometry.folds, palette.steelGray, 2, reveal * 0.78, brainModel)
           drawMesh(geometry.nerves, palette.gold, 3, reveal * 0.94, brainModel)
         }
         drawMesh(geometry.shell, palette.pearl, 1, 0.50, brainModel, true)
-        drawMesh(geometry.auraShell, palette.steel, 1, 0.22, brainModel, true)
+        drawMesh(geometry.auraShell, palette.silver, 1, 0.18, brainModel, true)
         model(shakeX, orbHeight + shakeY, 0, 0.52, 0, time * 0.13, 1, auraFirst)
         model(shakeX, orbHeight + shakeY, 0, 1.13, 0.22, -time * 0.09, 1, auraSecond)
-        drawMesh(geometry.auraRing, palette.light, 5, 0.38, auraFirst)
-        drawMesh(geometry.auraRing, palette.steel, 5, 0.28, auraSecond)
+        drawMesh(geometry.auraRing, palette.gold, 5, 0.34, auraFirst)
+        drawMesh(geometry.auraRing, palette.gold, 5, 0.20, auraSecond)
       },
       hitTestOrb(clientX, clientY) {
         if (disposed || !orbProjection || gl.isContextLost()) return false

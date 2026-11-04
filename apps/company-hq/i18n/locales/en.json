@@ -16,7 +16,7 @@
     "fitViewLabel": "Reset view: center, 100% zoom and default camera",
     "hologramLabel": "Shielded Company Brain orb above its base",
     "sceneUnavailableLabel": "3D rendering is unavailable in this browser. Enable hardware acceleration to show the hologram.",
-    "mouseControlsLabel": "Left or middle drag rotates. Shift-drag moves. Scroll zooms with Brain closed. Right click is inactive.",
+    "mouseControlsLabel": "Left drag rotates. Middle drag moves across the map. Scroll zooms with Brain closed. Right click is inactive.",
     "touchControlsLabel": "Drag to rotate. Two fingers move; pinch zooms with Brain closed. Hold the closed orb to pulse; tap to open.",
     "keyboardControlsLabel": "Arrows rotate. Shift + arrows move. +/− zooms with Brain closed. Home resets.",
     "zoomLabel": "Zoom",

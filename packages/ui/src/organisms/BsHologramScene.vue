@@ -74,9 +74,10 @@ function startRenderer() {
     return [0, 2, 4].map(offset => Number.parseInt(hex.slice(offset, offset + 2), 16) / 255) as [number, number, number]
   }
   const palette: HologramPalette = {
-    navy: read('--bs-color-brand-building-navy'), surface: read('--bs-color-brand-navy-surface'),
-    gold: read('--bs-color-brand-premium-gold'), steel: read('--bs-color-secondary-sky-steel'),
-    light: read('--bs-color-secondary-pale-sky'), pearl: read('--bs-color-brand-pearl-white'),
+    coal: read('--bs-color-neutral-ink'), charcoal: read('--bs-color-neutral-charcoal'),
+    graphite: read('--bs-color-neutral-graphite'), steelGray: read('--bs-color-neutral-steel-gray'),
+    silver: read('--bs-color-brand-soft-silver'), pearl: read('--bs-color-brand-pearl-white'),
+    gold: read('--bs-color-brand-premium-gold'),
   }
   renderer = createHologramRenderer(canvas, palette)
   unavailable.value = !renderer
@@ -139,5 +140,5 @@ onBeforeUnmount(() => {
 <style scoped>
 .bs-hologram-scene { position: absolute; inset: 0; }
 .bs-hologram-scene__canvas { display: block; width: 100%; height: 100%; }
-.bs-hologram-scene__unavailable { position: absolute; inset: 50% 24px auto; margin: 0; text-align: center; color: var(--bs-cloud-gray); font-size: 14px; }
+.bs-hologram-scene__unavailable { position: absolute; inset: 50% 24px auto; margin: 0; text-align: center; color: var(--bs-color-brand-soft-silver); font-size: 14px; }
 </style>

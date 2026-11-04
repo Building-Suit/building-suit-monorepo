@@ -1,6 +1,6 @@
 # Building Suit HQ workspace
 
-HQ retains the reference header and interactive 3D workspace. Varied, seeded curved shield pieces hold a gently beating orb above a slightly wider base with a moving aura and an opaque world-space HQ floor. Hover or a stationary touch hold adds visual vibration only while the orb is closed. Clicking/tapping the orb, Brain navigation or Company Brain button scatters the shield, reveals a glass sphere with brain lobes and pulsing nerves, focuses the camera and opens the same read-only Brain side panel. The panel overlays the existing workspace and slides from the left in English/LTR or the right in Arabic/RTL. Opening it never resizes the workspace layout. Narrow layouts retain an uncovered zoom-control strip. No modal is used. The current phase replaces the earlier local mirror reader: there is no filesystem/Insync source or fallback. Offices and roads remain postponed; characters, active agents, authentication, tasks, LLM calls and Brain writes are absent. Tasks, Talk to CEO and profile controls stay disabled.
+HQ retains the reference header and interactive 3D workspace, using canonical Ink, Charcoal and Graphite surfaces with Soft Silver details and restrained Premium Gold accents across the orb, base, overview and controls. Varied, seeded curved shield pieces hold a gently beating orb above a slightly wider base with a moving aura and an opaque world-space HQ floor. Hover or a stationary touch hold adds visual vibration only while the orb is closed. Clicking/tapping the orb, Brain navigation or Company Brain button scatters the shield, reveals a glass sphere with brain lobes and pulsing nerves, focuses the camera and opens the same read-only Brain side panel. The panel overlays the existing workspace and slides from the left in English/LTR or the right in Arabic/RTL. Opening it never resizes the workspace layout. Narrow layouts retain an uncovered zoom-control strip. No modal is used. The current phase replaces the earlier local mirror reader: there is no filesystem/Insync source or fallback. Offices and roads remain postponed; characters, active agents, authentication, tasks, LLM calls and Brain writes are absent. Tasks, Talk to CEO and profile controls stay disabled.
 
 Run from the primary monorepo checkout, as requested by the founder:
 
@@ -30,12 +30,12 @@ The route supplies translated `HqLayoutContent`/`HqBrainContent` and typed `HqBr
 
 | Input | Action |
 | --- | --- |
-| Left or middle drag / one-finger drag | Rotate |
-| Shift + left/middle drag / two-finger drag | Pan |
+| Left drag / one-finger drag | Rotate |
+| Middle drag / Shift + left drag / two-finger drag | Pan across the map |
 | Right click or right drag | Inactive; no context menu or camera action |
 | Wheel / pinch / overview − and + | Zoom only while the Brain sidebar is closed |
 | Hover / stationary touch hold | Closed orb/shield vibration only; a hold does not open on release |
-| Orb click/tap / header Brain / Company Brain | Open shield, reveal brain, focus camera and open side panel |
+| Left orb click/tap / header Brain / Company Brain | Open shield, reveal brain, focus camera and open side panel |
 | Close / Escape / Workspace | Close shield/panel and restore previous camera |
 | Third overview button | Close shield/panel, center, 100% zoom, default camera angle |
 | Focused workspace arrows / Shift + arrows | Rotate / pan |

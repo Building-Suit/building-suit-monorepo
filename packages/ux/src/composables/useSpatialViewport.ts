@@ -179,9 +179,9 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
       y: event.clientY,
       startX: event.clientX,
       startY: event.clientY,
-      activationEligible: event.isPrimary && [0, 1].includes(event.button) && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey,
+      activationEligible: event.isPrimary && event.button === 0 && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey,
       touch: event.pointerType === 'touch',
-      pan: event.shiftKey,
+      pan: (event.pointerType !== 'touch' && event.button === 1) || event.shiftKey,
       capture: element,
     })
     if (pointers.size > 1) for (const pointer of pointers.values()) pointer.activationEligible = false
@@ -231,7 +231,7 @@ export function useSpatialViewport(onActivate?: (clientX: number, clientY: numbe
     const pointer = pointers.get(event.pointerId)
     if (!pointer) return
     clearFeedback()
-    const activate = event.type === 'pointerup' && [0, 1].includes(event.button) && pointer.activationEligible && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey && Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) < 6
+    const activate = event.type === 'pointerup' && event.button === 0 && pointer.activationEligible && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey && Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY) < 6
     pointers.delete(event.pointerId)
     pointerCount.value = pointers.size
     touchGesture = currentTouchGesture()
