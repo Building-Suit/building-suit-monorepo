@@ -1,5 +1,7 @@
 # HQ development and deployment
 
+Historical record from 3 November 2026. The [4 November static restart](STATIC-RESTART-20261104.md) supersedes the backend setup and office acceptance below. Use the [current app README](../../../apps/company-hq/README.md) for the layout preview; these retained commands are not current setup instructions.
+
 From the monorepo root, use the pinned pnpm 10.33.0:
 
 ```sh

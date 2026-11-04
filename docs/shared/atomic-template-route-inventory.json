@@ -112,8 +112,7 @@
     "BsSupplyPlanningPage": "packages/ui/src/templates/BsSupplyPlanningPage.vue",
     "BsWeighingSetupPage": "packages/ui/src/templates/BsWeighingSetupPage.vue",
     "BsCommodityPricingPage": "packages/ui/src/templates/BsCommodityPricingPage.vue",
-    "BsAgentOfficePage": "packages/ui/src/templates/BsAgentOfficePage.vue",
-    "BsWorkspaceAccessPage": "packages/ui/src/templates/BsWorkspaceAccessPage.vue"
+    "BsHqLayoutPage": "packages/ui/src/templates/BsHqLayoutPage.vue"
   },
   "originalInventory": {
     "suitVueFiles": 86,
@@ -121,9 +120,9 @@
     "routes": 74
   },
   "currentInventory": {
-    "suitVueFiles": 175,
+    "suitVueFiles": 174,
     "localComponents": 0,
-    "routes": 151,
+    "routes": 150,
     "layouts": 16,
     "roots": 8
   },
@@ -3472,42 +3471,26 @@
         "BsAppRoot"
       ],
       "destination": "packages/ui/src/templates/BsAppRoot.vue",
-      "status": "implemented-source-unverified",
+      "status": "implemented-local",
       "domainAdapter": "apps/company-hq/app/app.vue",
       "dependencies": [],
-      "verification": "HQ migration registration; browser, screenshot and full acceptance verification pending."
+      "verification": "4 November 2026: HQ/catalogue typechecks and builds; eight production browser scenarios; strict ownership/workspace checks. See company-hq/STATIC-RESTART-20261104.md."
     },
     {
       "source": "apps/company-hq/app/pages/index.vue",
       "kind": "route",
       "currentSharedTemplates": [
-        "packages/ui/src/templates/BsAgentOfficePage.vue"
+        "packages/ui/src/templates/BsHqLayoutPage.vue"
       ],
       "renderedBsComponents": [
-        "BsAgentOfficePage"
+        "BsHqLayoutPage"
       ],
-      "destination": "packages/ui/src/templates/BsAgentOfficePage.vue",
-      "status": "implemented-source-unverified",
+      "destination": "packages/ui/src/templates/BsHqLayoutPage.vue",
+      "status": "implemented-local",
       "domainAdapter": "apps/company-hq/app/pages/index.vue",
       "dependencies": [],
-      "verification": "HQ migration registration; browser, screenshot and full acceptance verification pending.",
-      "purpose": "agent-office"
-    },
-    {
-      "source": "apps/company-hq/app/pages/auth/login.vue",
-      "kind": "route",
-      "currentSharedTemplates": [
-        "packages/ui/src/templates/BsWorkspaceAccessPage.vue"
-      ],
-      "renderedBsComponents": [
-        "BsWorkspaceAccessPage"
-      ],
-      "destination": "packages/ui/src/templates/BsWorkspaceAccessPage.vue",
-      "status": "implemented-source-unverified",
-      "domainAdapter": "apps/company-hq/app/pages/auth/login.vue",
-      "dependencies": [],
-      "verification": "HQ migration registration; browser, screenshot and full acceptance verification pending.",
-      "purpose": "private-workspace-access"
+      "verification": "4 November 2026: HQ/catalogue typechecks and builds; eight production browser scenarios; strict ownership/workspace checks. See company-hq/STATIC-RESTART-20261104.md.",
+      "purpose": "hq-static-layout"
     }
   ],
   "verifiedSharedHeads": [
@@ -3668,7 +3651,6 @@
     "BsSupplyPlanningPage",
     "BsWeighingSetupPage",
     "BsCommodityPricingPage",
-    "BsAgentOfficePage",
-    "BsWorkspaceAccessPage"
+    "BsHqLayoutPage"
   ]
 }

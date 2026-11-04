@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { HugeiconsIcon } from '@hugeicons/vue'
 import {
+  Chatting01Icon,
+  CubeIcon,
+  MinusSignIcon,
+  ArrowExpandDiagonal01Icon,
   Calendar03Icon,
   Call02Icon,
   ShoppingBasket01Icon,
@@ -40,6 +44,10 @@ import {
 } from '@hugeicons/core-free-icons'
 
 const bsIcons = {
+  chat: Chatting01Icon,
+  cube: CubeIcon,
+  minus: MinusSignIcon,
+  maximize: ArrowExpandDiagonal01Icon,
   sun: Sun03Icon,
   moon: Moon02Icon,
   monitor: ComputerIcon,

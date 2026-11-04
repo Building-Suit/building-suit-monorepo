@@ -2,6 +2,8 @@
 
 Historical report, superseded by the atomic-template migration. The workflow-scope compatibility component has been removed; Suit routes/layouts now use typed full shared templates. Current acceptance evidence is recorded in [atomic-template acceptance](atomic-template-unification-acceptance.md); the checkpoint retains historical implementation progress.
 
+Current HQ scope note, 4 November 2026: the static restart has one app root (`BsAppRoot`) and one route (`BsHqLayoutPage`), with no app-local Vue components or presentation styles. Its removed office/access routes and templates are not part of the current inventory. The [canonical registry](atomic-template-route-inventory.json) records this replacement. HQ/catalogue typechecks and builds, eight production browser scenarios and strict ownership/workspace checks passed locally; see [the current verification record](../work-packages/company-hq/STATIC-RESTART-20261104.md). The historical counts and checks below retain their original scope.
+
 Repair attempt 3: **strict source gate passes; independent browser/final acceptance remains pending**. Changes are uncommitted in the existing task worktree. No branch/worktree creation, commit, push, merge, deployment, provider or hosted database operation occurred.
 
 ## Recorded failure and repair

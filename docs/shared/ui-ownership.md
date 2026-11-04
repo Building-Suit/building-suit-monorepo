@@ -20,6 +20,8 @@ The [ownership manifest](ui-ownership-manifest.json) records shared workflow fam
 
 Update the canonical route-template inventory, exports, affected consumers and catalogue in the same change. The registry records source, destination, purpose, product adapter, imports and actual verification. Generated/new routes start unverified and require their own product/browser acceptance.
 
+HQ's 4 November 2026 static restart follows the same contract: its sole route consumes `BsHqLayoutPage` with typed translated `HqLayoutContent`. The shared template owns the complete header, empty canvas and disabled controls. The removed office/access templates and viewport controller provide no active exception or requirement; the HQ catalogue demonstrates the current layout.
+
 ## Future Suit generation
 
 `pnpm new:platform <slug> "Product name" --dry-run` previews the maintained starter without creating an app. The generator emits `BsAppRoot`, `BsWorkspaceShell` and a `BsStarterWorkflowPage` route adapter demonstrating translated props and semantic event handlers. It creates no local Vue component layer or presentation CSS. Generated apps declare Nuxt/Vue runtime dependencies and the shared Nuxt layer; presentation vendors, modules, styles and fonts remain owned by that layer.

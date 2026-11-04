@@ -923,17 +923,15 @@
       "notes": "Shared source-quote and product-rule approval presentation. Product owns permissions, exact source/currency/validity validation and authoritative financial pricing."
     },
     {
-      "family": "agent-office",
+      "family": "hq-static-layout",
       "owner": "packages/ui",
       "interactionOwner": "packages/ux",
       "components": [
-        "BsAgentOfficePage",
-        "BsWorkspaceAccessPage",
-        "BsOfficeIcon"
+        "BsHqLayoutPage"
       ],
-      "adapterBoundary": "HQ supplies typed room, task, message, policy-summary and activity projections plus semantic commands. Shared UI owns the complete office/access layouts and shared UX owns viewport/dialog/confirmation behavior. HQ server owns founder identity, fixed CEO/HR roles, approval, zero budgets, durable state and review evidence.",
-      "task": "HQ-OFFICE-MONOREPO-20261103",
-      "migrationStatus": "implemented-source: local/browser/screenshot acceptance pending; hosted operation remains unverified"
+      "adapterBoundary": "HQ supplies typed translated HqLayoutContent only. Shared UI owns the complete header, empty canvas, workspace label and empty minimap with disabled controls. The static layout has no office, agents, authenticated records, server commands, network connection or viewport interactions.",
+      "task": "HQ-STATIC-LAYOUT-20261104",
+      "migrationStatus": "implemented-local: HQ/catalogue typechecks and builds, eight production browser scenarios, strict ownership/workspace checks passed; static layout only"
     }
   ]
 }

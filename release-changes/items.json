@@ -5219,7 +5219,7 @@
   },
   {
     "id": "company-hq-internal-office",
-    "task": "HQ-OFFICE-MONOREPO-20261103",
+    "task": "HQ-STATIC-LAYOUT-20261104",
     "suits": [
       "automation-suit",
       "doctor-suit",
@@ -5232,7 +5232,7 @@
     "disposition": "internal",
     "paths": [
       "apps/company-hq",
-      "apps/building-suit-docs/app/components/AgentOfficeCatalogue.vue",
+      "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
       "apps/building-suit-docs/app/pages/components.vue",
       "docs/architecture/environments.json",
       "docs/shared/atomic-template-route-inventory.json",
@@ -5256,11 +5256,16 @@
       "tooling/git/tests/dev-worktrees.test.mjs",
       "README.md",
       "release-changes/items.json",
-      "tooling/new-platform/generate.mjs"
+      "tooling/new-platform/generate.mjs",
+      "apps/building-suit-docs/app/components/AgentOfficeCatalogue.vue",
+      "packages/ui/src/templates/BsHqLayoutPage.vue",
+      "packages/ui/src/types/hqLayoutPresentation.ts",
+      "packages/ui/src/atoms/BsIcon.vue"
     ],
-    "reason": "Restore the founder-approved HQ office as an internal monorepo application with complete shared templates, typed projections, viewport interactions and strict ownership checks. Preserve the checkpoint’s portable generator path fix and existing Suit behavior; no operational product activation, public release, hosted migration, deployment or model execution is established.",
+    "reason": "Restart the internal HQ preview with the reference header arrangement and an empty shared canvas, disabled controls and no office/agent artwork or application functionality. Remove the prior HQ APIs, authentication, persistence, role projections and viewport interaction; retain historical migrations and evidence. No operational product activation, public release, hosted operation, deployment or model execution is introduced.",
     "sources": [
-      "hq-office-monorepo-20261103"
+      "hq-office-monorepo-20261103",
+      "hq-static-layout-reset-20261104"
     ]
   }
 ]

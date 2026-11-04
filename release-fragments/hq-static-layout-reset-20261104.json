@@ -1,0 +1,38 @@
+{
+  "id": "hq-static-layout-reset-20261104",
+  "task": "HQ-STATIC-LAYOUT-20261104",
+  "suits": [
+    "automation-suit",
+    "doctor-suit",
+    "inventory-suit",
+    "ledger-suit",
+    "shop-suit",
+    "super-admin-suit"
+  ],
+  "classification": "internal",
+  "disposition": "internal",
+  "paths": [
+    "apps/company-hq",
+    "apps/building-suit-docs/app/components/HqLayoutCatalogue.vue",
+    "apps/building-suit-docs/app/pages/components.vue",
+    "docs/shared/atomic-template-route-inventory.json",
+    "docs/shared/ui-ownership-manifest.json",
+    "docs/shared/ui-ownership.md",
+    "docs/shared/zero-native-ui-convergence-report.md",
+    "docs/work-packages/company-hq",
+    "packages/ui/package.json",
+    "packages/ui/src/templates/BsAgentOfficePage.vue",
+    "packages/ui/src/templates/BsWorkspaceAccessPage.vue",
+    "packages/ui/src/types/agentOfficePresentation.ts",
+    "packages/ui/src/atoms/BsOfficeIcon.vue",
+    "packages/ux/src/index.ts",
+    "packages/ux/src/useOfficeViewport.ts",
+    "README.md",
+    "release-changes/items.json",
+    "apps/building-suit-docs/app/components/AgentOfficeCatalogue.vue",
+    "packages/ui/src/templates/BsHqLayoutPage.vue",
+    "packages/ui/src/types/hqLayoutPresentation.ts",
+    "packages/ui/src/atoms/BsIcon.vue"
+  ],
+  "reason": "Restart the internal HQ preview with the reference header arrangement and an empty shared canvas, disabled controls and no office/agent artwork or application functionality. Remove the prior HQ APIs, authentication, persistence, role projections and viewport interaction; retain historical migrations and evidence. No operational product activation, public release, hosted operation, deployment or model execution is introduced."
+}

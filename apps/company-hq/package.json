@@ -11,9 +11,8 @@
     "prepare": "nuxt prepare",
     "typecheck": "nuxt typecheck",
     "lint": "eslint .",
-    "test": "node --test tests/unit/*.test.mjs",
-    "test:e2e": "playwright test",
-    "password:hash": "node scripts/hash-password.mjs"
+    "test": "playwright test",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@building-suit/nuxt-layer": "workspace:*",
