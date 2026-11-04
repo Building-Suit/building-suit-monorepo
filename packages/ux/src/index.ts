@@ -161,6 +161,8 @@ export { tabNavigationTarget } from './tabNavigation.ts'
 export { permissionSelection } from './permissionSelection.ts'
 
 export { useWorkspaceNavigation } from './composables/useWorkspaceNavigation.ts'
+export { useSpatialViewport, SPATIAL_VIEWPORT_DEFAULT_CAMERA, SPATIAL_VIEWPORT_MIN_ZOOM, SPATIAL_VIEWPORT_MAX_ZOOM } from './composables/useSpatialViewport.ts'
+export type { SpatialViewportCamera } from './composables/useSpatialViewport.ts'
 
 export { usePolling } from './composables/usePolling.ts'
 

@@ -923,15 +923,16 @@
       "notes": "Shared source-quote and product-rule approval presentation. Product owns permissions, exact source/currency/validity validation and authoritative financial pricing."
     },
     {
-      "family": "hq-static-layout",
+      "family": "hq-spatial-workspace",
       "owner": "packages/ui",
       "interactionOwner": "packages/ux",
       "components": [
-        "BsHqLayoutPage"
+        "BsHqLayoutPage",
+        "BsHologramScene"
       ],
-      "adapterBoundary": "HQ supplies typed translated HqLayoutContent only. Shared UI owns the complete header, empty canvas, workspace label and empty minimap with disabled controls. The static layout has no office, agents, authenticated records, server commands, network connection or viewport interactions.",
-      "task": "HQ-STATIC-LAYOUT-20261104",
-      "migrationStatus": "implemented-local: HQ/catalogue typechecks and builds, eight production browser scenarios, strict ownership/workspace checks passed; static layout only"
+      "adapterBoundary": "HQ supplies typed translated HqLayoutContent only. Shared UI owns the complete header, workspace, floating 3D orb/base, overview icon and camera controls. Shared UX owns local orbit, pan, zoom and reset state through SpatialViewportCamera. Header business controls remain disabled. There are no offices, agents, authenticated records, server commands, network connection or persistence.",
+      "task": "HQ-ORB-20261104",
+      "migrationStatus": "implemented-unverified: source implementation only; founder deferred autonomous testing to future tester agents. Earlier eight-browser/static-layout checks do not verify this scene; see company-hq/HQ-ORB-20261104.md."
     }
   ]
 }

@@ -9,10 +9,16 @@
     "statusLabel": "No agents connected",
     "talkToCeoLabel": "Talk to CEO",
     "profileLabel": "Profile",
-    "canvasLabel": "Empty HQ workspace",
+    "canvasLabel": "Interactive 3D workspace",
     "minimapLabel": "Workspace overview",
     "zoomOutLabel": "Zoom out",
     "zoomInLabel": "Zoom in",
-    "fitViewLabel": "Fit view"
+    "fitViewLabel": "Reset view: center, 100% zoom and default camera",
+    "hologramLabel": "Floating holographic orb above its base",
+    "sceneUnavailableLabel": "3D rendering is unavailable in this browser. Enable hardware acceleration to show the hologram.",
+    "mouseControlsLabel": "Drag to rotate. Shift-drag or right-drag to move. Scroll to zoom.",
+    "touchControlsLabel": "Drag to rotate. Use two fingers to move and pinch to zoom.",
+    "keyboardControlsLabel": "Arrow keys rotate. Shift + arrows move. Home resets.",
+    "zoomLabel": "Zoom"
   }
 }

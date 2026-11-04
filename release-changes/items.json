@@ -5219,7 +5219,7 @@
   },
   {
     "id": "company-hq-internal-office",
-    "task": "HQ-STATIC-LAYOUT-20261104",
+    "task": "HQ-ORB-20261104",
     "suits": [
       "automation-suit",
       "doctor-suit",
@@ -5260,12 +5260,16 @@
       "apps/building-suit-docs/app/components/AgentOfficeCatalogue.vue",
       "packages/ui/src/templates/BsHqLayoutPage.vue",
       "packages/ui/src/types/hqLayoutPresentation.ts",
-      "packages/ui/src/atoms/BsIcon.vue"
+      "packages/ui/src/atoms/BsIcon.vue",
+      "packages/ui/src/organisms/BsHologramScene.vue",
+      "packages/ui/src/utils/hologramScene.ts",
+      "packages/ux/src/composables/useSpatialViewport.ts"
     ],
-    "reason": "Restart the internal HQ preview with the reference header arrangement and an empty shared canvas, disabled controls and no office/agent artwork or application functionality. Remove the prior HQ APIs, authentication, persistence, role projections and viewport interaction; retain historical migrations and evidence. No operational product activation, public release, hosted operation, deployment or model execution is introduced.",
+    "reason": "Restart the internal HQ preview with the reference header arrangement, remove the prior offices/agents/APIs/authentication/persistence and add the founder-authorized central floating 3D holographic orb and base. Shared local camera controls support mouse/touch orbit, pan, zoom and reset to center, 100% zoom and the default angle; the bottom-right overview includes an orb icon. Header business controls remain disabled, historical migrations and evidence are retained, and current acceptance is pending because the founder deferred autonomous testing. No operational product activation, public release, hosted operation, deployment or model execution is introduced.",
     "sources": [
       "hq-office-monorepo-20261103",
-      "hq-static-layout-reset-20261104"
+      "hq-static-layout-reset-20261104",
+      "hq-spatial-orb-20261104"
     ]
   }
 ]

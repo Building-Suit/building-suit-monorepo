@@ -3471,10 +3471,10 @@
         "BsAppRoot"
       ],
       "destination": "packages/ui/src/templates/BsAppRoot.vue",
-      "status": "implemented-local",
+      "status": "implemented-unverified",
       "domainAdapter": "apps/company-hq/app/app.vue",
       "dependencies": [],
-      "verification": "4 November 2026: HQ/catalogue typechecks and builds; eight production browser scenarios; strict ownership/workspace checks. See company-hq/STATIC-RESTART-20261104.md."
+      "verification": "4 November 2026 orb workspace: source implementation only; founder deferred tests/builds/lint/typechecks/browser verification to future tester agents. Earlier static-layout results do not verify this scope. See company-hq/HQ-ORB-20261104.md."
     },
     {
       "source": "apps/company-hq/app/pages/index.vue",
@@ -3486,11 +3486,11 @@
         "BsHqLayoutPage"
       ],
       "destination": "packages/ui/src/templates/BsHqLayoutPage.vue",
-      "status": "implemented-local",
+      "status": "implemented-unverified",
       "domainAdapter": "apps/company-hq/app/pages/index.vue",
       "dependencies": [],
-      "verification": "4 November 2026: HQ/catalogue typechecks and builds; eight production browser scenarios; strict ownership/workspace checks. See company-hq/STATIC-RESTART-20261104.md.",
-      "purpose": "hq-static-layout"
+      "verification": "4 November 2026 orb workspace: source implementation only; founder deferred tests/builds/lint/typechecks/browser verification to future tester agents. Earlier static-layout results do not verify this scope. See company-hq/HQ-ORB-20261104.md.",
+      "purpose": "hq-spatial-workspace"
     }
   ],
   "verifiedSharedHeads": [

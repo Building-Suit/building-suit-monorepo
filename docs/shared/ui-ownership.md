@@ -20,7 +20,7 @@ The [ownership manifest](ui-ownership-manifest.json) records shared workflow fam
 
 Update the canonical route-template inventory, exports, affected consumers and catalogue in the same change. The registry records source, destination, purpose, product adapter, imports and actual verification. Generated/new routes start unverified and require their own product/browser acceptance.
 
-HQ's 4 November 2026 static restart follows the same contract: its sole route consumes `BsHqLayoutPage` with typed translated `HqLayoutContent`. The shared template owns the complete header, empty canvas and disabled controls. The removed office/access templates and viewport controller provide no active exception or requirement; the HQ catalogue demonstrates the current layout.
+HQ's 4 November 2026 workspace follows the same contract: its sole route consumes `BsHqLayoutPage` with typed translated `HqLayoutContent`. The shared template owns the complete header, workspace, bottom-right overview and camera controls; the `BsHologramScene` organism and shared UI renderer own the floating orb and base. Shared UX's `useSpatialViewport` owns rotation, pan, zoom and reset through `SpatialViewportCamera`. Header business controls remain disabled. The removed office/access templates and old viewport controller provide no active exception or requirement; the HQ catalogue demonstrates the current workspace. The founder has deferred all autonomous testing to future tester agents, so [current orb acceptance](../work-packages/company-hq/HQ-ORB-20261104.md) is pending; earlier static-layout checks are historical.
 
 ## Future Suit generation
 

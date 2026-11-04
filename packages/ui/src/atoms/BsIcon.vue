@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { HugeiconsIcon } from '@hugeicons/vue'
 import {
+  Orbit01Icon,
   Chatting01Icon,
   CubeIcon,
   MinusSignIcon,
@@ -44,6 +45,7 @@ import {
 } from '@hugeicons/core-free-icons'
 
 const bsIcons = {
+  orb: Orbit01Icon,
   chat: Chatting01Icon,
   cube: CubeIcon,
   minus: MinusSignIcon,

@@ -18,6 +18,12 @@ const content = computed<HqLayoutContent>(() => ({
   zoomOutLabel: t('hq.zoomOutLabel'),
   zoomInLabel: t('hq.zoomInLabel'),
   fitViewLabel: t('hq.fitViewLabel'),
+  hologramLabel: t('hq.hologramLabel'),
+  sceneUnavailableLabel: t('hq.sceneUnavailableLabel'),
+  mouseControlsLabel: t('hq.mouseControlsLabel'),
+  touchControlsLabel: t('hq.touchControlsLabel'),
+  keyboardControlsLabel: t('hq.keyboardControlsLabel'),
+  zoomLabel: t('hq.zoomLabel'),
 }))
 useHead({ title: 'Building Suit HQ', htmlAttrs: { dir: () => locale.value === 'ar' ? 'rtl' : 'ltr', lang: () => locale.value } })
 </script>

@@ -1,4 +1,4 @@
-/** Static HQ chrome only. No runtime, account or agent state. */
+/** HQ presentation copy. No account, agent or backend state. */
 export interface HqLayoutContent {
   brandName: string
   brandSuffix: string
@@ -14,4 +14,10 @@ export interface HqLayoutContent {
   zoomOutLabel: string
   zoomInLabel: string
   fitViewLabel: string
+  hologramLabel: string
+  sceneUnavailableLabel: string
+  mouseControlsLabel: string
+  touchControlsLabel: string
+  keyboardControlsLabel: string
+  zoomLabel: string
 }

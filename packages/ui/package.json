@@ -436,7 +436,9 @@
     "./templates/BsCommodityPricingPage.vue": "./src/templates/BsCommodityPricingPage.vue",
     "./types/commodityPricingPresentation": "./src/types/commodityPricingPresentation.ts",
     "./templates/BsHqLayoutPage": "./src/templates/BsHqLayoutPage.vue",
-    "./types/hqLayoutPresentation": "./src/types/hqLayoutPresentation.ts"
+    "./types/hqLayoutPresentation": "./src/types/hqLayoutPresentation.ts",
+    "./organisms/BsHologramScene": "./src/organisms/BsHologramScene.vue",
+    "./utils/hologramScene": "./src/utils/hologramScene.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",
