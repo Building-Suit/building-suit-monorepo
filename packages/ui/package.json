@@ -438,7 +438,9 @@
     "./templates/BsHqLayoutPage": "./src/templates/BsHqLayoutPage.vue",
     "./types/hqLayoutPresentation": "./src/types/hqLayoutPresentation.ts",
     "./organisms/BsHologramScene": "./src/organisms/BsHologramScene.vue",
-    "./utils/hologramScene": "./src/utils/hologramScene.ts"
+    "./utils/hologramScene": "./src/utils/hologramScene.ts",
+    "./utils/departmentOfficeLayout": "./src/utils/departmentOfficeLayout.ts",
+    "./organisms/BsHqCompanyPlans": "./src/organisms/BsHqCompanyPlans.vue"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",

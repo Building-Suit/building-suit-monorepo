@@ -18,6 +18,7 @@
     "@building-suit/nuxt-layer": "workspace:*",
     "@building-suit/ui": "workspace:*",
     "@building-suit/ux": "workspace:*",
+    "@building-suit/auth": "workspace:*",
     "@building-suit/brand": "workspace:*",
     "nuxt": "4.6.2",
     "vue": "3.5.44",

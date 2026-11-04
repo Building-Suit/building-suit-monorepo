@@ -21,10 +21,45 @@ const content = computed<HqLayoutContent>(() => ({
   fitViewLabel: c('Reset view: center, 100% zoom and default camera', 'إعادة العرض: توسيط وتكبير ١٠٠٪ وزاوية الكاميرا الافتراضية'),
   hologramLabel: c('Shielded Company Brain orb above its base', 'كرة معرفة الشركة المحمية بدرع فوق قاعدتها'),
   sceneUnavailableLabel: c('3D rendering is unavailable in this browser. Enable hardware acceleration to show the hologram.', 'العرض ثلاثي الأبعاد غير متاح في هذا المتصفح. فعّل تسريع الأجهزة لعرض الهولوغرام.'),
-  mouseControlsLabel: c("Left drag rotates. Middle drag moves across the map. Scroll zooms with Brain closed. Right click is inactive.", "اسحب بالزر الأيسر للتدوير وبالزر الأوسط للتحريك عبر الخريطة. مرّر للتكبير عندما تكون لوحة المعرفة مغلقة. الزر الأيمن غير نشط."),
-  touchControlsLabel: c("Drag to rotate. Two fingers move; pinch zooms with Brain closed. Hold the closed orb to pulse; tap to open.", "اسحب للتدوير. استخدم إصبعين للتحريك والقرص للتكبير عندما تكون لوحة المعرفة مغلقة. المس الكرة المغلقة مطولًا لنبضها، واضغط لفتحها."),
-  keyboardControlsLabel: c("Arrows rotate. Shift + arrows move. +/− zooms with Brain closed. Home resets.", "الأسهم للتدوير. Shift مع الأسهم للتحريك. + و− للتكبير عندما تكون لوحة المعرفة مغلقة. Home لإعادة العرض."),
+  mouseControlsLabel: c("Left drag rotates. Middle drag moves across the map. Scroll zooms with side panels closed. Right click is inactive.", "اسحب بالزر الأيسر للتدوير وبالزر الأوسط للتحريك عبر الخريطة. مرّر للتكبير عندما تكون لوحة المعرفة مغلقة. الزر الأيمن غير نشط."),
+  touchControlsLabel: c("Drag to rotate. Two fingers move; pinch zooms with side panels closed. Hold the closed orb to pulse; tap to open.", "اسحب للتدوير. استخدم إصبعين للتحريك والقرص للتكبير عندما تكون لوحة المعرفة مغلقة. المس الكرة المغلقة مطولًا لنبضها، واضغط لفتحها."),
+  keyboardControlsLabel: c("Arrows rotate. Shift + arrows move. +/− zooms with side panels closed. Home resets.", "الأسهم للتدوير. Shift مع الأسهم للتحريك. + و− للتكبير عندما تكون لوحة المعرفة مغلقة. Home لإعادة العرض."),
   zoomLabel: c('Zoom', 'التكبير'),
+  companyPlans: {
+    title: c('Company plans', 'خطط الشركة'),
+    executiveLabel: c('CEO workspace', 'مساحة المدير التنفيذي'),
+    loginTitle: c('Founder login', 'دخول المؤسس'),
+    loginDescription: c('Use the founder email approved for HQ. Create your login, confirm your email, then sign in.', 'استخدم بريد المؤسس المعتمد للمقر. أنشئ حساب الدخول، ثم أكّد بريدك الإلكتروني وسجّل الدخول.'),
+    emailLabel: c('Email', 'البريد الإلكتروني'),
+    passwordLabel: c('Password', 'كلمة المرور'),
+    signInLabel: c('Sign in', 'تسجيل الدخول'),
+    registerLabel: c('Create founder login', 'إنشاء حساب المؤسس'),
+    signOutLabel: c('Sign out', 'تسجيل الخروج'),
+    confirmationRequired: c('Confirm your email, then return to HQ and sign in.', 'أكّد بريدك الإلكتروني، ثم عد إلى المقر وسجّل الدخول.'),
+    invalidCredentials: c('Check your email and password and try again.', 'تحقّق من البريد الإلكتروني وكلمة المرور وحاول مجددًا.'),
+    denied: c('This account cannot approve company plans.', 'هذا الحساب لا يملك صلاحية اعتماد خطط الشركة.'),
+    unavailable: c('Company plans are unavailable. Refresh or try again shortly.', 'خطط الشركة غير متاحة. حدّث الصفحة أو حاول بعد قليل.'),
+    signOutFailed: c('We could not confirm sign-out. Try again.', 'تعذّر تأكيد تسجيل الخروج. حاول مجددًا.'),
+    loading: c('Loading company plans…', 'جارٍ تحميل خطط الشركة…'),
+    empty: c('No proposals yet.', 'لا توجد خطط للشركة بعد.'),
+    refreshLabel: c('Refresh plans', 'تحديث الخطط'),
+    departmentsLabel: c('Departments', 'الأقسام'),
+    hiringLabel: c('Hiring requests', 'طلبات التوظيف'),
+    skillsLabel: c('Skill requests', 'طلبات المهارات'),
+    hrReviewLabel: c('HR recommendation', 'توصية الموارد البشرية'),
+    ceoReviewLabel: c('CEO review', 'مراجعة المدير التنفيذي'),
+    readyLabel: c('Ready for your decision', 'جاهزة لقرارك'),
+    approvedLabel: c('Approved', 'معتمدة'),
+    rejectedLabel: c('Rejected', 'مرفوضة'),
+    approveLabel: c('Approve plan', 'اعتماد الخطة'),
+    rejectLabel: c('Reject plan', 'رفض الخطة'),
+    approveConfirmation: c('Approve this plan? New department offices will be created, and the listed staffing and skill requests will be approved. Execution happens separately.', 'هل تعتمد هذه الخطة؟ ستُنشأ مكاتب الأقسام الجديدة، وتُعتمد طلبات التوظيف والمهارات المذكورة. يُنفّذ كل طلب لاحقًا بصورة منفصلة.'),
+    rejectConfirmation: c('Reject this plan? Its proposed departments and requests will not be approved.', 'هل ترفض هذه الخطة؟ لن تُعتمد الأقسام والطلبات المقترحة فيها.'),
+    cancelLabel: c('Cancel', 'إلغاء'),
+    conflict: c('This plan changed. Refresh it before deciding.', 'تغيّرت هذه الخطة. حدّثها قبل اتخاذ القرار.'),
+    decisionFailed: c('We could not confirm your decision. Refresh the plan or retry the same decision.', 'تعذّر تأكيد قرارك. حدّث الخطة أو أعد محاولة القرار نفسه.'),
+    legacyLabel: c('Historical setup plan', 'اعتماد سابق لقسم'),
+  },
   companyBrain: {
     title: c("Company Brain", "معرفة الشركة"),
     openLabel: c("Open Company Brain", "فتح معرفة الشركة"),
@@ -53,7 +88,7 @@ const content = computed<HqLayoutContent>(() => ({
 </script>
 
 <template>
-  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('A full-height workspace has a floating logo, four-tab navigation, compact top-right status/account card, standalone circular map and separate button strip. Closed-orb hover shows a pointer alongside the shake cue; the duplicate bottom-left Brain button is removed. A finite circular floor expands from an office-layer count; this example has zero layers. Smooth irregular shield pieces, a larger base and a moving aura sit above it. Canonical coal, charcoal and graphite surfaces use restrained Premium Gold accents. The camera stays above the floor; left drag rotates, middle drag pans, right click is inactive, and manual zoom locks while Brain is open. Closed-state hover or hold feedback opens into the shared reveal and camera focus. The read-only panel overlays the workspace, sliding from the left in English or right in Arabic. This catalogue has no cloud connection.', 'مساحة عمل بارتفاع كامل مع شعار عائم وأربعة تبويبات وبطاقة حالة وحساب مدمجة أعلى اليمين وخريطة دائرية مستقلة وشريط أزرار منفصل. يظهر مؤشر النقر مع اهتزاز الكرة المغلقة، وأُزيل زر المعرفة المكرر أسفل اليسار. تتسع الأرضية الدائرية المحدودة بحسب عدد طبقات المكاتب؛ هذا المثال بلا طبقات. تعلوها قطع درع ناعمة غير منتظمة وقاعدة أكبر وهالة متحركة. تستخدم الأسطح ألوان الفحم والرمادي الداكن المعتمدة مع لمسات الذهب الفاخر. تبقى الكاميرا فوق الأرضية؛ السحب بالأيسر للتدوير وبالأوسط للتحريك، والأيمن غير نشط، ويُقفل التكبير عند فتح المعرفة. يتفاعل الدرع المغلق مع التمرير أو اللمس المطول، ثم ينفتح مع تقريب الكاميرا. تظهر لوحة القراءة فوق مساحة العمل من اليسار بالإنجليزية ومن اليمين بالعربية. لا يحتوي المثال على اتصال سحابي.')">
+  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('A full-height 3D workspace combines the interactive Brain orb, a reserved CEO workspace, floating navigation and a circular overview. Clicking the CEO board opens company plans; approved department data supplies empty offices. Founder login and plan decisions use shared presentation, while the app owns authentication and authorization. This catalogue has no cloud, Auth or approval connection.', 'تجمع مساحة العمل ثلاثية الأبعاد بارتفاع كامل بين كرة المعرفة التفاعلية ومساحة محجوزة للمدير التنفيذي والتنقل العائم والخريطة الدائرية. يفتح النقر على لوحة المدير التنفيذي خطط الشركة، وتُعرض المكاتب الفارغة بحسب بيانات الأقسام المعتمدة. تستخدم واجهة دخول المؤسس وقرارات الخطط مكونات العرض المشتركة، بينما يدير التطبيق المصادقة والصلاحيات. لا يتصل هذا المثال بخدمة سحابية أو مصادقة أو اعتماد.')">
     <BsHqLayoutPage :content="content" />
   </BsContentSection>
 </template>

@@ -22,6 +22,7 @@ export interface HqLayoutContent {
   touchControlsLabel: string
   keyboardControlsLabel: string
   zoomLabel: string
+  companyPlans: HqCompanyPlansCopy
   companyBrain: HqBrainContent
 }
 
@@ -75,4 +76,82 @@ export interface HqUserPresentation {
   displayName: string
   detailLabel?: string
   avatarUrl?: string
+}
+
+/** Read-only projection of an explicitly approved department, never a proposal. */
+export interface HqDepartmentOffice {
+  id: string
+  name: string
+  nameAr?: string
+  approvedAt: string
+}
+
+export interface HqFounderAccessPresentation {
+  status: 'loading' | 'anonymous' | 'founder' | 'denied' | 'error'
+  user?: HqUserPresentation
+  pending: boolean
+  message?: string
+}
+export interface HqPlanDepartment {
+  id: string
+  key: string
+  name: string
+  nameAr?: string
+}
+export interface HqCompanyPlanPresentation {
+  id: string
+  title: string
+  summary: string
+  body: string
+  status: 'ready' | 'approved' | 'rejected'
+  revision: number
+  departments: readonly HqPlanDepartment[]
+  hiring: readonly { id: string; departmentId?: string; role: string; reason: string }[]
+  skills: readonly { id: string; employeeId: string; skill: string; reason: string }[]
+  hrReview: { reference: string; summary: string } | null
+  ceoReview: { reference: string; summary: string } | null
+  createdAt: string
+  approvedAt?: string
+  legacy: boolean
+}
+export interface HqCompanyPlansPresentation {
+  status: 'loading' | 'ready' | 'unavailable'
+  pending: boolean
+  plans: readonly HqCompanyPlanPresentation[]
+  message?: string
+}
+export interface HqCompanyPlansCopy {
+  title: string
+  executiveLabel: string
+  loginTitle: string
+  loginDescription: string
+  emailLabel: string
+  passwordLabel: string
+  signInLabel: string
+  registerLabel: string
+  signOutLabel: string
+  confirmationRequired: string
+  invalidCredentials: string
+  denied: string
+  unavailable: string
+  signOutFailed: string
+  loading: string
+  empty: string
+  refreshLabel: string
+  departmentsLabel: string
+  hiringLabel: string
+  skillsLabel: string
+  hrReviewLabel: string
+  ceoReviewLabel: string
+  readyLabel: string
+  approvedLabel: string
+  rejectedLabel: string
+  approveLabel: string
+  rejectLabel: string
+  cancelLabel: string
+  approveConfirmation: string
+  rejectConfirmation: string
+  conflict: string
+  decisionFailed: string
+  legacyLabel: string
 }

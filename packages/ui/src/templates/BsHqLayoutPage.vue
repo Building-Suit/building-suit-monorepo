@@ -1,18 +1,26 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, shallowRef, useId, watch } from 'vue'
-import { SPATIAL_VIEWPORT_DEFAULT_CAMERA, useSpatialViewport } from '@building-suit/ux'
+import { SPATIAL_VIEWPORT_DEFAULT_CAMERA, useOverlayState, useSpatialViewport } from '@building-suit/ux'
 import type { SpatialViewportCamera } from '@building-suit/ux'
-import type { HqBrainPresentation, HqLayoutContent, HqUserPresentation } from '../types/hqLayoutPresentation'
+import type { HqBrainPresentation, HqCompanyPlansPresentation, HqDepartmentOffice, HqFounderAccessPresentation, HqLayoutContent, HqUserPresentation } from '../types/hqLayoutPresentation'
 import { hologramFloorRadius } from '../utils/hologramScene'
+import { layoutDepartmentOffices } from '../utils/departmentOfficeLayout'
 
-const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number }>()
-const emit = defineEmits<{ refreshBrain: []; selectBrainNote: [id: string] }>()
+const props = defineProps<{ content: HqLayoutContent; brain?: HqBrainPresentation; user?: HqUserPresentation; officeLayerCount?: number; access?: HqFounderAccessPresentation; companyPlans?: HqCompanyPlansPresentation; departments?: readonly HqDepartmentOffice[] }>()
+const emit = defineEmits<{ refreshBrain: []; selectBrainNote: [id: string]; login: [email: string, password: string]; register: [email: string, password: string]; logout: []; refreshPlans: []; decidePlan: [id: string, revision: number, decision: 'approved' | 'rejected'] }>()
 const sceneRef = shallowRef<{ activateAt: (x: number, y: number) => boolean; setExcitedAt: (x: number, y: number, active: boolean) => boolean } | null>(null)
 const brainVisible = ref(false)
 const brainPanelPresent = ref(false)
+const { open: plansVisible, show: showPlans, close: hidePlans } = useOverlayState()
+const plansPanelPresent = ref(false)
+const plansTitleRef = shallowRef<HTMLElement | null>(null)
+let plansReturnFocus: HTMLElement | null = null
+const founderAccess = computed<HqFounderAccessPresentation>(() => props.access ?? { status: 'anonymous', pending: false })
+const plansWorkspace = computed<HqCompanyPlansPresentation>(() => props.companyPlans ?? { status: 'unavailable', pending: false, plans: [] })
+const displayedUser = computed(() => founderAccess.value.user ?? props.user)
 const orbHovered = ref(false)
 const feedback = (x: number, y: number, active: boolean) => { sceneRef.value?.setExcitedAt(x, y, active) }
-const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onPointerLeave, onWheel, onKeydown, zoomBy, reset, transitionTo } = useSpatialViewport((x, y) => sceneRef.value?.activateAt(x, y), { onHover: feedback, onHold: feedback }, { zoomLocked: () => brainVisible.value || brainPanelPresent.value })
+const { viewportRef, camera, resetVersion, isInteracting, zoomPercent, canZoomIn, canZoomOut, onPointerDown, onPointerMove, onPointerEnd, onPointerLeave, onWheel, onKeydown, zoomBy, reset, transitionTo } = useSpatialViewport((x, y) => sceneRef.value?.activateAt(x, y), { onHover: feedback, onHold: feedback }, { zoomLocked: () => brainVisible.value || brainPanelPresent.value || plansVisible.value || plansPanelPresent.value })
 const panelTitleRef = shallowRef<HTMLElement | null>(null)
 const ui = useUiCopy()
 let returnFocus: HTMLElement | null = null
@@ -34,6 +42,7 @@ const renderedNotes = computed(() => visibleNotes.value.slice(0, noteLimit.value
 watch(search, () => { noteLimit.value = 40 })
 async function openBrain() {
   if (brainVisible.value) return
+  closePlans()
   returnFocus = typeof document !== 'undefined' && document.activeElement instanceof HTMLElement ? document.activeElement : null
   previousCamera = { ...camera }
   brainPanelPresent.value = true
@@ -51,43 +60,66 @@ function closeBrain(restoreCamera = true) {
   else viewportRef.value?.focus({ preventScroll: true })
   returnFocus = null
 }
-function resetScene() { closeBrain(false); reset() }
+async function openPlans() {
+  if (plansVisible.value) return
+  closeBrain()
+  plansReturnFocus = typeof document !== 'undefined' && document.activeElement instanceof HTMLElement ? document.activeElement : null
+  plansPanelPresent.value = true
+  showPlans()
+  await nextTick()
+  if (plansVisible.value) plansTitleRef.value?.focus({ preventScroll: true })
+}
+function closePlans() {
+  if (!plansVisible.value) return
+  hidePlans()
+  if (plansReturnFocus?.isConnected) plansReturnFocus.focus({ preventScroll: true })
+  else viewportRef.value?.focus({ preventScroll: true })
+  plansReturnFocus = null
+}
+function showWorkspace() { closeBrain(); closePlans() }
+function resetScene() { closeBrain(false); closePlans(); reset() }
 function onWorkspaceKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && plansVisible.value) { event.preventDefault(); closePlans(); return }
   if (event.key === 'Escape' && brainVisible.value) { event.preventDefault(); closeBrain(); return }
   // Notes retain native scrolling/navigation; manual camera zoom is locked
   // centrally while this panel is open, including shortcuts on the canvas.
   if (event.target instanceof Element && event.target.closest('.bs-hq-layout__brain-panel')) return
   onKeydown(event)
 }
-watch(resetVersion, () => closeBrain(false))
-const userInitials = computed(() => props.user?.displayName.trim().split(/\s+/).slice(0, 2).map(part => Array.from(part)[0] ?? '').join('') ?? '')
-const floorRadius = computed(() => hologramFloorRadius(props.officeLayerCount))
+watch(resetVersion, () => { closeBrain(false); closePlans() })
+const userInitials = computed(() => displayedUser.value?.displayName.trim().split(/\s+/).slice(0, 2).map(part => Array.from(part)[0] ?? '').join('') ?? '')
+const officeLayout = computed(() => layoutDepartmentOffices(props.departments ?? []))
+const floorRadius = computed(() => Math.max(officeLayout.value.floorRadius, hologramFloorRadius(props.officeLayerCount)))
 const mapScale = computed(() => 45 / floorRadius.value)
 const hintId = useId()
 const brainPanelId = useId()
 const brainTitleId = useId()
-const orbMarker = computed(() => ({
-  left: `${Math.max(9, Math.min(91, 50 - camera.panX * mapScale.value))}%`,
-  top: `${Math.max(12, Math.min(88, 50 + camera.panY * mapScale.value))}%`,
-}))
-const viewMarker = computed(() => ({
-  width: `${Math.min(94, 62 * hologramFloorRadius() / floorRadius.value / camera.zoom)}%`,
-  height: `${Math.min(90, 62 * hologramFloorRadius() / floorRadius.value / camera.zoom)}%`,
-  transform: `translate(-50%, -50%) rotate(${(camera.yaw - SPATIAL_VIEWPORT_DEFAULT_CAMERA.yaw) * 180 / Math.PI}deg)`,
-}))
+const plansPanelId = useId()
+const plansTitleId = useId()
+const mapPoint = (point: { x: number; z: number }) => ({ left: `${50 + point.x * mapScale.value}%`, top: `${50 + point.z * mapScale.value}%` })
+const viewMarker = computed(() => {
+  const x = Math.cos(camera.yaw) * camera.panX - Math.sin(camera.yaw) * Math.sin(camera.pitch) * camera.panY
+  const z = -Math.sin(camera.yaw) * camera.panX - Math.cos(camera.yaw) * Math.sin(camera.pitch) * camera.panY
+  return {
+    ...mapPoint({ x, z }),
+    width: `${Math.min(94, 62 * hologramFloorRadius() / floorRadius.value / camera.zoom)}%`,
+    height: `${Math.min(90, 62 * hologramFloorRadius() / floorRadius.value / camera.zoom)}%`,
+    transform: `translate(-50%, -50%) rotate(${(camera.yaw - SPATIAL_VIEWPORT_DEFAULT_CAMERA.yaw) * 180 / Math.PI}deg)`,
+  }
+})
 </script>
 
 <template>
   <div class="bs-hq-layout">
-    <main class="bs-hq-layout__workspace-area" :class="{ 'bs-hq-layout__workspace-area--brain': brainVisible }" @keydown="onWorkspaceKeydown">
+    <main class="bs-hq-layout__workspace-area" :class="{ 'bs-hq-layout__workspace-area--brain': brainVisible || plansVisible }" @keydown="onWorkspaceKeydown">
     <section ref="viewportRef" class="bs-hq-layout__canvas" :class="{ 'bs-hq-layout__canvas--interacting': isInteracting, 'bs-hq-layout__canvas--orb-hovered': orbHovered }" :aria-label="content.canvasLabel" :aria-describedby="hintId" tabindex="0" @pointerdown="onPointerDown" @pointermove="onPointerMove" @pointerleave="onPointerLeave" @pointerup="onPointerEnd" @pointercancel="onPointerEnd" @lostpointercapture="onPointerEnd" @wheel="onWheel" @auxclick.prevent @contextmenu.prevent>
-      <BsHologramScene ref="sceneRef" :camera="camera" :office-layer-count="officeLayerCount" :opened="brainVisible" :reset-version="resetVersion" :label="content.hologramLabel" :unavailable-label="content.sceneUnavailableLabel" @activate="openBrain" @hover-change="orbHovered = $event" />
+      <BsHologramScene ref="sceneRef" :camera="camera" :departments="departments" :executive-label="content.companyPlans.executiveLabel" :office-layer-count="officeLayerCount" :opened="brainVisible" :reset-version="resetVersion" :label="content.hologramLabel" :unavailable-label="content.sceneUnavailableLabel" @activate="openBrain" @open-plans="openPlans" @hover-change="orbHovered = $event" />
       <div class="bs-hq-layout__brand" data-spatial-controls>
         <img :src="content.logoSrc" alt="" width="32" height="44">
         <h1>{{ content.brandName }} <span>{{ content.brandSuffix }}</span></h1>
       </div>
       <nav class="bs-hq-layout__navigation" :aria-label="content.workspaceLabel" data-spatial-controls>
-        <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': !brainVisible }" :aria-current="!brainVisible ? 'page' : undefined" @click="closeBrain()">{{ content.workspaceLabel }}</BsButton>
+        <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': !brainVisible && !plansVisible }" :aria-current="!brainVisible && !plansVisible ? 'page' : undefined" @click="showWorkspace">{{ content.workspaceLabel }}</BsButton>
         <BsButton variant="tab" class="bs-hq-layout__tab" disabled>{{ content.tasksLabel }}</BsButton>
         <BsButton variant="tab" class="bs-hq-layout__tab" disabled>{{ content.calendarLabel }}</BsButton>
         <BsButton variant="tab" class="bs-hq-layout__tab" :class="{ 'bs-hq-layout__tab--selected': brainVisible }" :aria-label="brainCopy.openLabel" :aria-controls="brainPanelId" :aria-expanded="brainVisible" @click="openBrain">{{ content.brainLabel }}</BsButton>
@@ -95,11 +127,12 @@ const viewMarker = computed(() => ({
       <aside class="bs-hq-layout__session" data-spatial-controls>
         <span class="bs-hq-layout__status"><span aria-hidden="true" />{{ content.statusLabel }}</span>
         <BsButton variant="accent" class="bs-hq-layout__ceo" disabled><BsIcon name="chat" :size="17" />{{ content.talkToCeoLabel }}</BsButton>
-        <div v-if="user" class="bs-hq-layout__account" :aria-label="content.profileLabel">
-          <span class="bs-hq-layout__avatar"><img v-if="user.avatarUrl" :src="user.avatarUrl" alt="" width="30" height="30"><span v-else>{{ userInitials }}</span></span>
-          <span class="bs-hq-layout__identity"><strong>{{ user.displayName }}</strong><small v-if="user.detailLabel">{{ user.detailLabel }}</small></span>
-        </div>
-        <BsButton v-else variant="text" class="bs-hq-layout__login" disabled><BsIcon name="user" :size="18" />{{ content.loginLabel }}</BsButton>
+        <BsButton v-if="displayedUser" variant="text" class="bs-hq-layout__account" :aria-label="content.companyPlans.executiveLabel" :aria-controls="plansPanelId" :aria-expanded="plansVisible" @click="openPlans">
+          <span class="bs-hq-layout__avatar"><img v-if="displayedUser.avatarUrl" :src="displayedUser.avatarUrl" alt="" width="30" height="30"><span v-else>{{ userInitials }}</span></span>
+          <span class="bs-hq-layout__identity"><strong>{{ displayedUser.displayName }}</strong><small v-if="displayedUser.detailLabel">{{ displayedUser.detailLabel }}</small></span>
+        </BsButton>
+        <BsButton v-else variant="text" class="bs-hq-layout__login" :disabled="founderAccess.pending" :aria-controls="plansPanelId" :aria-expanded="plansVisible" @click="openPlans"><BsIcon name="user" :size="18" />{{ content.loginLabel }}</BsButton>
+        <BsButton v-if="founderAccess.status === 'founder'" variant="text" class="bs-hq-layout__login" :disabled="founderAccess.pending" @click="emit('logout')">{{ content.companyPlans.signOutLabel }}</BsButton>
       </aside>
       <div class="bs-hq-layout__footer" dir="ltr">
         <div class="bs-hq-layout__workspace-info" dir="auto">
@@ -108,7 +141,9 @@ const viewMarker = computed(() => ({
         <aside class="bs-hq-layout__view" :aria-label="content.minimapLabel" data-spatial-controls>
           <div class="bs-hq-layout__minimap" role="img" :aria-label="`${content.minimapLabel}, ${content.zoomLabel}: ${zoomPercent}%`">
             <span class="bs-hq-layout__minimap-view" :style="viewMarker" aria-hidden="true" />
-            <span class="bs-hq-layout__orb-marker" :style="orbMarker" aria-hidden="true"><BsIcon name="orb" :size="18" /></span>
+            <span class="bs-hq-layout__orb-marker" style="left: 50%; top: 50%" aria-hidden="true"><BsIcon name="orb" :size="18" /></span>
+            <span class="bs-hq-layout__office-marker bs-hq-layout__office-marker--executive" :style="mapPoint(officeLayout.executive)" :title="content.companyPlans.executiveLabel" aria-hidden="true" />
+            <span v-for="office in officeLayout.offices" :key="office.id" class="bs-hq-layout__office-marker" :style="mapPoint(office)" :title="office.name" aria-hidden="true" />
             <span class="bs-hq-layout__zoom-value" :aria-label="content.zoomLabel">{{ zoomPercent }}%</span>
           </div>
           <div class="bs-hq-layout__zoom">
@@ -151,6 +186,15 @@ const viewMarker = computed(() => ({
         </div>
       </section>
     </aside>
+    </Transition>
+    <Transition name="bs-hq-brain-slide" @after-leave="plansPanelPresent = false">
+      <aside v-if="plansVisible" :id="plansPanelId" class="bs-hq-layout__brain-panel bs-hq-layout__plans-panel" :aria-labelledby="plansTitleId" @wheel.stop @keydown.esc.stop.prevent="closePlans">
+        <header class="bs-hq-layout__brain-heading">
+          <h2 :id="plansTitleId" ref="plansTitleRef" tabindex="-1">{{ content.companyPlans.title }}</h2>
+          <BsButton variant="icon" :aria-label="ui('close')" @click="closePlans"><BsIcon name="close" :size="20" /></BsButton>
+        </header>
+        <BsHqCompanyPlans :copy="content.companyPlans" :access="founderAccess" :workspace="plansWorkspace" :departments="departments" @login="(email, password) => emit('login', email, password)" @register="(email, password) => emit('register', email, password)" @logout="emit('logout')" @refresh="emit('refreshPlans')" @decision="(id, revision, decision) => emit('decidePlan', id, revision, decision)" />
+      </aside>
     </Transition>
     </main>
   </div>
@@ -240,6 +284,9 @@ const viewMarker = computed(() => ({
 .bs-hq-layout__view { display: flex; flex: none; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; cursor: default; }
 .bs-hq-layout__minimap { position: relative; width: 104px; height: 104px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 20%, transparent); border-radius: 50%; background: var(--bs-color-neutral-ink); box-shadow: 0 4px 14px color-mix(in srgb, var(--bs-color-neutral-ink) 25%, transparent); pointer-events: auto; }
 .bs-hq-layout__zoom-value { position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); padding: 1px 4px; border-radius: 4px; background: var(--bs-color-neutral-ink); color: var(--bs-soft-silver); font-size: 9px; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.bs-hq-layout__office-marker { position: absolute; width: 7px; height: 7px; transform: translate(-50%, -50%); border: 1px solid var(--bs-soft-silver); border-radius: 2px; background: var(--bs-color-neutral-graphite); }
+.bs-hq-layout__office-marker--executive { border-color: var(--bs-premium-gold); background: var(--bs-premium-gold); }
+.bs-hq-layout__plans-panel { width: min(520px, calc(100% - var(--bs-space-6))); }
 .bs-hq-layout__minimap-view { position: absolute; top: 50%; left: 50%; border: 1px solid color-mix(in srgb, var(--bs-soft-silver) 30%, transparent); background: color-mix(in srgb, var(--bs-soft-silver) 5%, transparent); border-radius: 3px; }
 .bs-hq-layout__orb-marker { position: absolute; display: grid; place-items: center; width: 26px; height: 26px; transform: translate(-50%, -50%); border: 1px solid color-mix(in srgb, var(--bs-premium-gold) 50%, transparent); border-radius: 50%; color: var(--bs-premium-gold); background: var(--bs-color-neutral-graphite); box-shadow: 0 0 14px color-mix(in srgb, var(--bs-premium-gold) 12%, transparent); }
 .bs-hq-layout__zoom { display: grid; grid-template-columns: repeat(3, 36px); gap: 2px; padding: 4px; border: 1px solid var(--bs-color-gray-800); border-radius: 14px; background: var(--bs-color-neutral-charcoal); pointer-events: auto; }

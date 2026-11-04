@@ -1,0 +1,102 @@
+import type { HqDepartmentOffice } from '../types/hqLayoutPresentation'
+
+export const DEPARTMENT_OFFICE_WIDTH = 2.7
+export const DEPARTMENT_OFFICE_DEPTH = 2.3
+const FIRST_RING_RADIUS = 6.2
+const RING_SPACING = 6
+const FOOTPRINT_RADIUS = Math.hypot(DEPARTMENT_OFFICE_WIDTH, DEPARTMENT_OFFICE_DEPTH) / 2
+const MINIMUM_CENTER_DISTANCE = FOOTPRINT_RADIUS * 2 + 0.9
+const ROAD_CORRIDOR_OFFSET = 3
+const FULL_TURN = Math.PI * 2
+
+export interface DepartmentRoadPoint { x: number; z: number }
+export interface OfficePlacement {
+  x: number
+  z: number
+  yaw: number
+  width: number
+  depth: number
+  /** One-based concentric office ring. */
+  ring: number
+  roadPoints: readonly DepartmentRoadPoint[]
+}
+export interface DepartmentOfficePlacement extends HqDepartmentOffice, OfficePlacement {}
+/** Existing executive role; this reserved presentation space is never a department. */
+export interface ExecutiveWorkspacePlacement extends OfficePlacement { id: 'executive-workspace' }
+export interface DepartmentOfficeLayout {
+  executive: ExecutiveWorkspacePlacement
+  offices: readonly DepartmentOfficePlacement[]
+  layerCount: number
+  floorRadius: number
+}
+
+/** Shared finite-floor sizing; invalid manual counts mean zero, with a 64-layer bound. */
+export function departmentOfficeFloorRadius(value?: number): number {
+  const layers = typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.min(64, Math.floor(value))) : 0
+  return 4.8 + layers * RING_SPACING
+}
+function ringRadius(ring: number): number { return FIRST_RING_RADIUS + (ring - 1) * RING_SPACING }
+function ringPhase(ring: number): number { return -Math.PI / 2 + (ring % 2 ? 0 : 0.19) }
+function ringCapacity(ring: number): number {
+  return Math.max(1, Math.floor(Math.PI / Math.asin(MINIMUM_CENTER_DISTANCE / (ringRadius(ring) * 2))))
+}
+function point(radius: number, angle: number): DepartmentRoadPoint { return { x: Math.cos(angle) * radius, z: Math.sin(angle) * radius } }
+function nearestGap(ring: number, target: number): number {
+  const step = FULL_TURN / ringCapacity(ring), phase = ringPhase(ring)
+  return phase + (Math.round((target - phase) / step - 0.5) + 0.5) * step
+}
+function arc(path: DepartmentRoadPoint[], radius: number, start: number, end: number): void {
+  const delta = Math.atan2(Math.sin(end - start), Math.cos(end - start))
+  if (Math.abs(delta) < 0.00001) return
+  const steps = Math.max(1, Math.ceil(Math.abs(delta) / 0.12))
+  for (let index = 1; index <= steps; index++) path.push(point(radius, start + delta * index / steps))
+}
+function roadToOffice(ring: number, targetAngle: number): readonly DepartmentRoadPoint[] {
+  let angle = ring === 1 ? targetAngle : nearestGap(1, targetAngle)
+  let corridor = ringRadius(1) - ROAD_CORRIDOR_OFFSET
+  const path = [point(1.70, angle), point(corridor, angle)]
+  // Cross each occupied inner ring at a gap midpoint, then turn within the
+  // empty band between rooms. Roads can share corridors, never room footprints.
+  for (let inner = 1; inner < ring; inner++) {
+    const exitAngle = nearestGap(inner, targetAngle)
+    arc(path, corridor, angle, exitAngle)
+    angle = exitAngle
+    corridor = ringRadius(inner + 1) - ROAD_CORRIDOR_OFFSET
+    path.push(point(corridor, angle))
+  }
+  arc(path, corridor, angle, targetAngle)
+  path.push(point(ringRadius(ring) - DEPARTMENT_OFFICE_DEPTH / 2 + 0.03, targetAngle))
+  return path
+}
+
+/** Pure presentation layout; departments come from approved whole-company plans. */
+export function layoutDepartmentOffices(departments: readonly HqDepartmentOffice[]): DepartmentOfficeLayout {
+  const oldestFirst = [...departments].sort((left, right) => {
+    const leftTime = Date.parse(left.approvedAt), rightTime = Date.parse(right.approvedAt)
+    const timeDifference = (Number.isFinite(leftTime) ? leftTime : Number.MAX_SAFE_INTEGER) - (Number.isFinite(rightTime) ? rightTime : Number.MAX_SAFE_INTEGER)
+    return timeDifference || (left.id < right.id ? -1 : left.id > right.id ? 1 : 0)
+  })
+  const executiveAngle = ringPhase(1)
+  const executive: ExecutiveWorkspacePlacement = {
+    id: 'executive-workspace', ...point(ringRadius(1), executiveAngle), yaw: Math.PI / 2 - executiveAngle,
+    width: DEPARTMENT_OFFICE_WIDTH, depth: DEPARTMENT_OFFICE_DEPTH, ring: 1,
+    roadPoints: roadToOffice(1, executiveAngle),
+  }
+  const offices: DepartmentOfficePlacement[] = []
+  // Slot zero belongs to the existing CEO workspace, including before any plan
+  // is approved. It consumes space without creating a department/roster record.
+  let ring = 1, slot = 1, capacity = ringCapacity(ring)
+  for (const department of oldestFirst) {
+    if (slot >= capacity) { ring += 1; slot = 0; capacity = ringCapacity(ring) }
+    const angle = ringPhase(ring) + slot * FULL_TURN / capacity, radius = ringRadius(ring)
+    offices.push({
+      ...department, ...point(radius, angle), yaw: Math.PI / 2 - angle,
+      width: DEPARTMENT_OFFICE_WIDTH, depth: DEPARTMENT_OFFICE_DEPTH, ring,
+      roadPoints: roadToOffice(ring, angle),
+    })
+    slot += 1
+  }
+  const layerCount = ring
+  const outerFootprint = ringRadius(layerCount) + FOOTPRINT_RADIUS + 0.8
+  return { executive, offices, layerCount, floorRadius: Math.max(departmentOfficeFloorRadius(layerCount), outerFootprint) }
+}

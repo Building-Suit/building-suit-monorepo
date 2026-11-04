@@ -1,9 +1,67 @@
 <script setup lang="ts">
-import type { HqLayoutContent } from '@building-suit/ui/types/hqLayoutPresentation'
+import type { HqCompanyPlansCopy, HqCompanyPlansPresentation, HqDepartmentOffice, HqLayoutContent } from '@building-suit/ui/types/hqLayoutPresentation'
 
 definePageMeta({ layout: false })
 const { t, locale } = useI18n()
 const { brain, refresh, selectNote } = useCompanyBrain()
+const companyPlansCopy = computed<HqCompanyPlansCopy>(() => ({
+  title: t('hq.companyPlans.title'),
+  executiveLabel: t('hq.companyPlans.executiveLabel'),
+  loginTitle: t('hq.companyPlans.loginTitle'),
+  loginDescription: t('hq.companyPlans.loginDescription'),
+  emailLabel: t('hq.companyPlans.emailLabel'),
+  passwordLabel: t('hq.companyPlans.passwordLabel'),
+  signInLabel: t('hq.companyPlans.signInLabel'),
+  registerLabel: t('hq.companyPlans.registerLabel'),
+  signOutLabel: t('hq.companyPlans.signOutLabel'),
+  confirmationRequired: t('hq.companyPlans.confirmationRequired'),
+  invalidCredentials: t('hq.companyPlans.invalidCredentials'),
+  denied: t('hq.companyPlans.denied'),
+  unavailable: t('hq.companyPlans.unavailable'),
+  signOutFailed: t('hq.companyPlans.signOutFailed'),
+  loading: t('hq.companyPlans.loading'),
+  empty: t('hq.companyPlans.empty'),
+  refreshLabel: t('hq.companyPlans.refreshLabel'),
+  departmentsLabel: t('hq.companyPlans.departmentsLabel'),
+  hiringLabel: t('hq.companyPlans.hiringLabel'),
+  skillsLabel: t('hq.companyPlans.skillsLabel'),
+  hrReviewLabel: t('hq.companyPlans.hrReviewLabel'),
+  ceoReviewLabel: t('hq.companyPlans.ceoReviewLabel'),
+  readyLabel: t('hq.companyPlans.readyLabel'),
+  approvedLabel: t('hq.companyPlans.approvedLabel'),
+  rejectedLabel: t('hq.companyPlans.rejectedLabel'),
+  approveLabel: t('hq.companyPlans.approveLabel'),
+  rejectLabel: t('hq.companyPlans.rejectLabel'),
+  approveConfirmation: t('hq.companyPlans.approveConfirmation'),
+  rejectConfirmation: t('hq.companyPlans.rejectConfirmation'),
+  cancelLabel: t('hq.companyPlans.cancelLabel'),
+  conflict: t('hq.companyPlans.conflict'),
+  decisionFailed: t('hq.companyPlans.decisionFailed'),
+  legacyLabel: t('hq.companyPlans.legacyLabel'),
+}))
+const { access, signIn, register, signOut } = useHqFounderAccess(() => ({
+  invalidCredentials: companyPlansCopy.value.invalidCredentials,
+  denied: companyPlansCopy.value.denied,
+  unavailable: companyPlansCopy.value.unavailable,
+  signOutFailed: companyPlansCopy.value.signOutFailed,
+  confirmationRequired: companyPlansCopy.value.confirmationRequired,
+}))
+const { workspace, departments, refresh: refreshPlans, decide: decidePlan } = useHqCompanyPlans(() => access.value.status, () => ({
+  unavailable: companyPlansCopy.value.unavailable,
+  conflict: companyPlansCopy.value.conflict,
+  decisionFailed: companyPlansCopy.value.decisionFailed,
+}))
+const localizedDepartments = computed<readonly HqDepartmentOffice[]>(() => departments.value.map(department => ({
+  ...department,
+  name: locale.value === 'ar' ? department.nameAr ?? department.name : department.name,
+})))
+const companyPlans = computed<HqCompanyPlansPresentation>(() => ({
+  ...workspace.value,
+  plans: workspace.value.plans.map(plan => ({
+    ...plan,
+    departments: plan.departments.map(department => ({ ...department, name: locale.value === 'ar' ? department.nameAr ?? department.name : department.name })),
+  })),
+}))
 const content = computed<HqLayoutContent>(() => ({
   brandName: 'Building Suit',
   brandSuffix: 'HQ',
@@ -27,6 +85,7 @@ const content = computed<HqLayoutContent>(() => ({
   touchControlsLabel: t('hq.touchControlsLabel'),
   keyboardControlsLabel: t('hq.keyboardControlsLabel'),
   zoomLabel: t('hq.zoomLabel'),
+  companyPlans: companyPlansCopy.value,
   companyBrain: {
     title: t('hq.companyBrain.title'),
     openLabel: t('hq.companyBrain.openLabel'),
@@ -54,4 +113,4 @@ const content = computed<HqLayoutContent>(() => ({
 }))
 useHead({ title: 'Building Suit HQ', htmlAttrs: { dir: () => locale.value === 'ar' ? 'rtl' : 'ltr', lang: () => locale.value } })
 </script>
-<template><BsHqLayoutPage :content="content" :brain="brain" @refresh-brain="refresh" @select-brain-note="selectNote" /></template>
+<template><BsHqLayoutPage :content="content" :brain="brain" :access="access" :company-plans="companyPlans" :departments="localizedDepartments" @refresh-brain="refresh" @select-brain-note="selectNote" @login="signIn" @register="register" @logout="signOut" @refresh-plans="refreshPlans" @decide-plan="decidePlan" /></template>

@@ -229,6 +229,9 @@ importers:
 
   apps/company-hq:
     dependencies:
+      '@building-suit/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@building-suit/brand':
         specifier: workspace:*
         version: link:../../packages/brand
