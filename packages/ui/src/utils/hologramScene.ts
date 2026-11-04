@@ -30,7 +30,11 @@ void main() {
 }`
 
 const fragmentShader = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
 uniform vec3 uEye;
 uniform vec3 uColor;
 uniform float uOpacity;
@@ -350,6 +354,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       nerves: mesh(brainNerves()),
       stem: mesh(tube(curve([[0, -0.23, 0.04], [0, -0.31, 0.08], [0.015, -0.38, 0.10], [0, -0.43, 0.08]]), 0.025, 5)),
     }
+    const maximumRenderDimension = Math.min(4096, gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) as number)
     let disposed = false
     let orbProjection: OrbProjection | null = null
     const staticModel = identity(), brainModel = identity(), auraFirst = identity(), auraSecond = identity()
@@ -377,8 +382,11 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         // Explicit opened state suppresses excitement immediately, before the
         // opening transition advances; closing fragments stay quiet as well.
         const excited = interaction.opened || open > 0.001 ? 0 : Math.max(0, Math.min(1, interaction.excited))
-        const pixelBudget = interaction.opened || open > 0.001 ? 850_000 : 1_100_000
-        const ratio = Math.min(window.devicePixelRatio || 1, 1.25, Math.sqrt(pixelBudget / (width * height)), 2048 / Math.max(width, height))
+        // Use native screen density in both states: opening must not switch
+        // the orb to a visibly softer backing buffer. Keep a generous bound
+        // for very large displays while honoring the actual GPU limit.
+        const pixelBudget = 8_000_000
+        const ratio = Math.min(window.devicePixelRatio || 1, 3, Math.sqrt(pixelBudget / (width * height)), maximumRenderDimension / Math.max(width, height))
         const renderWidth = Math.max(1, Math.floor(width * ratio)), renderHeight = Math.max(1, Math.floor(height * ratio))
         if (canvas.width !== renderWidth || canvas.height !== renderHeight) {
           canvas.width = renderWidth; canvas.height = renderHeight
