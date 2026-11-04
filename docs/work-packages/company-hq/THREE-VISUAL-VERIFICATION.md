@@ -13,3 +13,5 @@ Independent code and pixel review found no blocking defect within this visual sl
 Internal screenshots, browser evidence and logs were retained locally without image upload. Full repository CI, legacy interactive HQ browser flows, other Suit builds, real GPU performance and all live infrastructure/model/delivery checks were not rerun for this appearance-only change. The inherited Android API29 failure noted for parent run `41721252657` is separate from these checks; no all-repository CI success is claimed.
 
 Use [LOCAL-3D-REVIEW.md](./LOCAL-3D-REVIEW.md) for safe source updates and the loopback-only launcher. It uses disposable synthetic SQLite data and no CEO worker. Do not copy any abandoned image-compositor asset into this checkout.
+
+Publication follow-up: GitHub run `41763218847` found the new utility missing from the shared package's explicit exports. The follow-up adds that package entry; scene source and rendered behavior are unchanged. The workspace check is rerun against that correction. The earlier failed run is not an all-green CI result.

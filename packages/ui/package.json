@@ -442,7 +442,8 @@
     "./types/livingOffice": "./src/types/livingOffice.ts",
     "./organisms/BsLivingOfficeScene": "./src/organisms/BsLivingOfficeScene.vue",
     "./organisms/BsReferenceOfficeScene": "./src/organisms/BsReferenceOfficeScene.vue",
-    "./utils/livingOfficeScene": "./src/utils/livingOfficeScene.ts"
+    "./utils/livingOfficeScene": "./src/utils/livingOfficeScene.ts",
+    "./utils/referenceOfficeScene": "./src/utils/referenceOfficeScene.ts"
   },
   "dependencies": {
     "@building-suit/brand": "workspace:*",
