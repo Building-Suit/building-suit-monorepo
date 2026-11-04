@@ -1,0 +1,13 @@
+# HQ workplace selection — 5 November 2026
+
+Whole-office/label clicks and a shared `BsSelect` Workplaces picker select the existing CEO or an approved department. The picker shows the selected name with an X; mobile keeps four navigation tabs above a full-width picker. No department, employee, assignment or new API/Auth/Brain mutation is created.
+
+Shared `useSpatialWorkspaceSelection` owns `selectedId`, `select`, `clear` and `refit`. Target IDs are `brain` or `workplace:<source-id>`. One reversible focus session captures the camera before the first selection. Switching Brain/rooms retains that baseline without an intermediate return. X, panel close, Escape and Workspace clear/restore it. Reset/Home clears without restoration, then applies the centered 100%/default view. Missing selected departments and Auth scope changes clear/restore. Viewport/floor changes refit the current target.
+
+The camera fits the complete selected room through its open front and pans to its target. Wider screens offset it beside the logical-start overlay (left in LTR, right in RTL); narrow views retain centered focus. The nonmodal overlay does not resize the scene. CEO content reuses existing company plans/founder access under the office heading. Department details are read-only four-workstation capacity and reserved future connection/space, without imaginary agents. Brain and workplace panels are mutually exclusive; manual zoom remains locked through any panel's leave transition, while pan/rotation controls remain available.
+
+Scene picking uses nearest-depth rounded whole-office volumes at current construction height, with depth-resolved orb occlusion. Roads are inactive; only the closed orb shakes. Accessible labels use aria-pressed and the minimap highlights the selected workplace. Desk/board geometry bounds remain helper output, not the active picking mechanism.
+
+Shared UI owns picking/picker/overlay presentation; shared UX owns selection and camera return. Product routes supply translated neutral copy/data. Existing approved-record sources, office geometry, Auth and company-plan commands remain unchanged. No model/agent runtime or data synchronization is implied.
+
+Source implementation is unverified. Tests, builds, lint, typechecks, boundary/release checks, browser/API/runtime checks and tester/reviewer agents remain unrun/prohibited for this task. The earlier narrow module-recovery smoke evidence does not validate workplace selection. No provider, Brain or database work is performed. Primary checkout and PR #528 remain the work context; accepted historical fragments and task records are preserved.

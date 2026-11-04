@@ -22,8 +22,22 @@ export interface HqLayoutContent {
   touchControlsLabel: string
   keyboardControlsLabel: string
   zoomLabel: string
+  workplaces: HqWorkplacesCopy
   companyPlans: HqCompanyPlansCopy
   companyBrain: HqBrainContent
+}
+
+/** Workplace presentation and visual capacity, without employee-assignment claims. */
+export interface HqWorkplacesCopy {
+  label: string
+  clearSelectionLabel: string
+  executiveDescription: string
+  departmentDescription: string
+  workstationsLabel: string
+  workstationsValue: string
+  agentsSpaceLabel: string
+  workspaceReadyLabel: string
+  plansLabel: string
 }
 
 export interface HqBrainContent {

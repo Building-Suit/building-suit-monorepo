@@ -5,7 +5,7 @@ import { DEPARTMENT_OFFICE_DEPTH, DEPARTMENT_OFFICE_WIDTH, OFFICE_WALKWAY_WIDTH,
 import type { DepartmentRoadPoint, OfficePlacement } from './departmentOfficeLayout.ts'
 import { createHologramEffects } from './hologramEffects.ts'
 import type { HologramEffects } from './hologramEffects.ts'
-import { createOfficeArchitecture, officeExecutiveHitRegions } from './officeArchitecture.ts'
+import { createOfficeArchitecture } from './officeArchitecture.ts'
 
 type Vector = [number, number, number]
 type Matrix = Float32Array
@@ -18,6 +18,8 @@ const EMPTY_DEPARTMENTS: readonly HqDepartmentOffice[] = []
 interface Geometry { positions: number[]; normals: number[] }
 interface Mesh { position: WebGLBuffer; normal: WebGLBuffer; indices: WebGLBuffer; count: number }
 interface OrbProjection { eye: Vector; right: Vector; up: Vector; forward: Vector; center: Vector; radius: number; aspect: number }
+interface SceneRay { origin: Vector; direction: Vector }
+interface WorkplaceFootprintPlane { x: number; z: number; offset: number }
 interface OfficeRenderEntry {
   placement: OfficePlacement & { id: string }
   roadKey: string
@@ -27,6 +29,7 @@ interface OfficeRenderEntry {
   foundationModel: Matrix
   wallModel: Matrix
   completedHeight: number
+  footprintPlanes: readonly WorkplaceFootprintPlane[]
 }
 
 export interface HologramPalette { coal: Vector; charcoal: Vector; graphite: Vector; navy: Vector; navyDeep: Vector; gold: Vector; steelGray: Vector; silver: Vector; pearl: Vector }
@@ -36,10 +39,26 @@ export interface HologramOfficeAnchor { x: number; y: number; visible: boolean }
 export interface HologramRenderer {
   draw: (camera: Readonly<SpatialViewportCamera>, seconds: number, interaction?: Readonly<HologramInteraction>, layout?: Readonly<HologramLayout>) => void
   hitTestOrb: (clientX: number, clientY: number) => boolean
-  hitTestExecutive: (clientX: number, clientY: number) => boolean
+  hitTestWorkplace: (clientX: number, clientY: number) => string | null
   projectOfficeAnchor: (id: string) => HologramOfficeAnchor | null
   projectExecutiveAnchor: () => HologramOfficeAnchor | null
   dispose: () => void
+}
+
+function workplaceFootprintPlanes(width: number, depth: number): readonly WorkplaceFootprintPlane[] {
+  const radius = Math.min(0.22, width / 2, depth / 2), halfWidth = width / 2, halfDepth = depth / 2
+  const corners = [[halfWidth - radius, halfDepth - radius], [-halfWidth + radius, halfDepth - radius], [-halfWidth + radius, -halfDepth + radius], [halfWidth - radius, -halfDepth + radius]] as const
+  const points: [number, number][] = []
+  // Match the platform's five segments per rounded corner. Cache the convex
+  // half-planes per placement instead of rebuilding polygons on pointer moves.
+  for (let corner = 0; corner < 4; corner++) for (let step = 0; step <= 5; step++) {
+    const angle = (corner + step / 5) * Math.PI / 2, center = corners[corner]!
+    points.push([center[0] + Math.cos(angle) * radius, center[1] + Math.sin(angle) * radius])
+  }
+  return points.map((point, index) => {
+    const next = points[(index + 1) % points.length]!, x = next[1] - point[1], z = point[0] - next[0]
+    return { x, z, offset: x * point[0] + z * point[1] }
+  })
 }
 
 const vertexShader = `
@@ -537,7 +556,6 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         leaves: mesh(officeArchitecture.furnishings.leaves), light: mesh(officeArchitecture.furnishings.light),
       },
     }
-    const executiveHitRegions = officeExecutiveHitRegions(DEPARTMENT_OFFICE_WIDTH, DEPARTMENT_OFFICE_DEPTH)
     const officeFloorColor = palette.graphite.map((value, index) => value * 0.65 + palette.steelGray[index]! * 0.35) as Vector
     const officeTopColor = palette.graphite.map((value, index) => value * 0.80 + palette.silver[index]! * 0.20) as Vector
     const officeFoliageColor = palette.navy.map((value, index) => value * 0.55 + palette.gold[index]! * 0.20 + palette.steelGray[index]! * 0.25) as Vector
@@ -586,6 +604,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         foundationModel: model(placement.x, SPATIAL_VIEWPORT_GROUND_Y, placement.z, 0, 0, placement.yaw),
         wallModel: model(placement.x, SPATIAL_VIEWPORT_GROUND_Y + OFFICE_FOUNDATION_HEIGHT, placement.z, 0, 0, placement.yaw),
         completedHeight: 0,
+        footprintPlanes: workplaceFootprintPlanes(placement.width, placement.depth),
       }
     }
     const executiveEntry = makeEntry(officeLayout.executive)
@@ -710,7 +729,7 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
         drawMesh(officeMeshes.furnishings.light, palette.gold, 2, 0.75, entry.wallModel)
       }
     }
-    function rayAt(clientX: number, clientY: number): { origin: Vector; direction: Vector } | null {
+    function rayAt(clientX: number, clientY: number): SceneRay | null {
       if (disposed || !orbProjection || gl!.isContextLost()) return null
       const bounds = canvas.getBoundingClientRect()
       if (!bounds.width || !bounds.height || clientX < bounds.left || clientX > bounds.right || clientY < bounds.top || clientY > bounds.bottom) return null
@@ -719,18 +738,69 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
       const { eye, right, up, forward } = orbProjection
       return { origin: eye, direction: normalize([forward[0] + right[0] * horizontal + up[0] * vertical, forward[1] + right[1] * horizontal + up[1] * vertical, forward[2] + right[2] * horizontal + up[2] * vertical]) }
     }
-    function rayBox(origin: Vector, direction: Vector, minimum: Vector, maximum: Vector): number {
+    function rayBox(origin: Vector, direction: Vector, minimum: Vector, maximum: Vector): [number, number] | null {
       let near = 0.05, far = Infinity
       for (let axis = 0; axis < 3; axis++) {
         if (Math.abs(direction[axis]!) < 0.000001) {
-          if (origin[axis]! < minimum[axis]! || origin[axis]! > maximum[axis]!) return Infinity
+          if (origin[axis]! < minimum[axis]! || origin[axis]! > maximum[axis]!) return null
           continue
         }
         const first = (minimum[axis]! - origin[axis]!) / direction[axis]!, second = (maximum[axis]! - origin[axis]!) / direction[axis]!
         near = Math.max(near, Math.min(first, second)); far = Math.min(far, Math.max(first, second))
+        if (near > far) return null
+      }
+      return [near, far]
+    }
+    function orbIntersection(ray: SceneRay): number {
+      if (!orbProjection) return Infinity
+      const { center, radius } = orbProjection
+      const origin: Vector = [ray.origin[0] - center[0], ray.origin[1] - center[1], ray.origin[2] - center[2]]
+      const projection = dot(origin, ray.direction), discriminant = projection * projection - dot(origin, origin) + radius * radius
+      if (discriminant < 0) return Infinity
+      const root = Math.sqrt(discriminant), near = -projection - root, far = -projection + root
+      return near >= 0.05 ? near : far >= 0.05 ? far : Infinity
+    }
+    function workplaceIntersection(entry: OfficeRenderEntry, ray: SceneRay, executive = false): number {
+      const age = executive ? OFFICE_BUILD_SECONDS : constructionClock - (firstSeen.get(entry.placement.id) ?? constructionClock)
+      const foundation = constructionStage(age, 0.25, 0.85)
+      if (foundation <= 0) return Infinity
+      const placement = entry.placement, cosine = Math.cos(placement.yaw), sine = Math.sin(placement.yaw)
+      const x = ray.origin[0] - placement.x, z = ray.origin[2] - placement.z
+      const origin: Vector = [cosine * x - sine * z, ray.origin[1] - SPATIAL_VIEWPORT_GROUND_Y, sine * x + cosine * z]
+      const direction: Vector = [cosine * ray.direction[0] - sine * ray.direction[2], ray.direction[1], sine * ray.direction[0] + cosine * ray.direction[2]]
+      const height = entry.completedHeight > 0 ? OFFICE_FOUNDATION_HEIGHT + OFFICE_WALL_HEIGHT * entry.completedHeight : OFFICE_FOUNDATION_HEIGHT * foundation
+      const interval = rayBox(origin, direction, [-placement.width / 2, 0, -placement.depth / 2], [placement.width / 2, height, placement.depth / 2])
+      if (!interval) return Infinity
+      let [near, far] = interval
+      for (const plane of entry.footprintPlanes) {
+        const denominator = plane.x * direction[0] + plane.z * direction[2]
+        const remaining = plane.offset - plane.x * origin[0] - plane.z * origin[2]
+        if (Math.abs(denominator) < 0.000001) {
+          if (remaining < 0) return Infinity
+          continue
+        }
+        const distance = remaining / denominator
+        if (denominator > 0) far = Math.min(far, distance)
+        else near = Math.max(near, distance)
         if (near > far) return Infinity
       }
       return near
+    }
+    function pickSceneAt(clientX: number, clientY: number): { orb: boolean; workplaceId: string | null } {
+      const ray = rayAt(clientX, clientY)
+      if (!ray) return { orb: false, workplaceId: null }
+      let workplaceDistance = workplaceIntersection(executiveEntry, ray, true)
+      let workplaceId: string | null = Number.isFinite(workplaceDistance) ? executiveEntry.placement.id : null
+      for (const entry of officeEntries.values()) {
+        const distance = workplaceIntersection(entry, ray)
+        if (distance < workplaceDistance) { workplaceDistance = distance; workplaceId = entry.placement.id }
+      }
+      const orbDistance = orbIntersection(ray)
+      // Use the same nearest-depth decision for both public pick methods. A
+      // foreground workplace blocks an orb/office behind it; an orb blocks the
+      // office behind its visible sphere. Roads are never candidates.
+      if (Number.isFinite(orbDistance) && orbDistance <= workplaceDistance) return { orb: true, workplaceId: null }
+      return { orb: false, workplaceId }
     }
     return {
       draw(camera, seconds, interaction: Readonly<HologramInteraction> = { open: 0, excited: 0 }, layout: Readonly<HologramLayout> = {}) {
@@ -856,30 +926,10 @@ export function createHologramRenderer(canvas: HTMLCanvasElement, palette: Holog
 
       },
       hitTestOrb(clientX, clientY) {
-        const ray = rayAt(clientX, clientY)
-        if (!ray || !orbProjection) return false
-        const { center } = orbProjection
-        const origin: Vector = [ray.origin[0] - center[0], ray.origin[1] - center[1], ray.origin[2] - center[2]]
-        const projection = dot(origin, ray.direction)
-        const discriminant = projection * projection - dot(origin, origin) + orbProjection.radius * orbProjection.radius
-        return discriminant >= 0 && -projection + Math.sqrt(discriminant) > 0.05
+        return pickSceneAt(clientX, clientY).orb
       },
-      hitTestExecutive(clientX, clientY) {
-        const ray = rayAt(clientX, clientY)
-        if (!ray) return false
-        const placement = executiveEntry.placement, cosine = Math.cos(placement.yaw), sine = Math.sin(placement.yaw)
-        const x = ray.origin[0] - placement.x, z = ray.origin[2] - placement.z
-        const origin: Vector = [cosine * x - sine * z, ray.origin[1] - SPATIAL_VIEWPORT_GROUND_Y - OFFICE_FOUNDATION_HEIGHT, sine * x + cosine * z]
-        const direction: Vector = [cosine * ray.direction[0] - sine * ray.direction[2], ray.direction[1], sine * ray.direction[0] + cosine * ray.direction[2]]
-        const board = rayBox(origin, direction, executiveHitRegions.board.min, executiveHitRegions.board.max)
-        const desk = rayBox(origin, direction, executiveHitRegions.desk.min, executiveHitRegions.desk.max)
-        const target = Math.min(board, desk)
-        if (!Number.isFinite(target)) return false
-        const halfWidth = DEPARTMENT_OFFICE_WIDTH / 2, halfDepth = DEPARTMENT_OFFICE_DEPTH / 2
-        const returnDepth = Math.min(1.35, DEPARTMENT_OFFICE_DEPTH * 0.31)
-        const backWall = rayBox(origin, direction, [-halfWidth + 0.12, 0, halfDepth - 0.235], [halfWidth - 0.12, OFFICE_WALL_HEIGHT, halfDepth - 0.085])
-        const leftWall = rayBox(origin, direction, [-halfWidth + 0.085, 0, halfDepth - 0.085 - returnDepth], [-halfWidth + 0.235, OFFICE_WALL_HEIGHT, halfDepth - 0.085])
-        return target < Math.min(backWall, leftWall)
+      hitTestWorkplace(clientX, clientY) {
+        return pickSceneAt(clientX, clientY).workplaceId
       },
       projectOfficeAnchor(id) {
         const entry = officeEntries.get(id)

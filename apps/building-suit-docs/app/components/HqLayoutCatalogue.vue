@@ -25,6 +25,17 @@ const content = computed<HqLayoutContent>(() => ({
   touchControlsLabel: c("Drag to rotate. Two fingers move; pinch zooms with side panels closed. Hold the closed orb to pulse; tap to open.", "اسحب للتدوير. استخدم إصبعين للتحريك والقرص للتكبير عندما تكون لوحة المعرفة مغلقة. المس الكرة المغلقة مطولًا لنبضها، واضغط لفتحها."),
   keyboardControlsLabel: c("Arrows rotate. Shift + arrows move. +/− zooms with side panels closed. Home resets.", "الأسهم للتدوير. Shift مع الأسهم للتحريك. + و− للتكبير عندما تكون لوحة المعرفة مغلقة. Home لإعادة العرض."),
   zoomLabel: c('Zoom', 'التكبير'),
+  workplaces: {
+    label: c('Workplaces', 'أماكن العمل'),
+    clearSelectionLabel: c('Leave selected workplace', 'مغادرة مكان العمل المحدد'),
+    executiveDescription: c('Executive workspace and company plans.', 'مساحة المدير التنفيذي وخطط الشركة.'),
+    departmentDescription: c('Department workspace', 'مساحة عمل القسم'),
+    workstationsLabel: c('Workstations', 'محطات العمل'),
+    workstationsValue: c('4', '٤'),
+    agentsSpaceLabel: c('Space reserved for agents', 'مساحة مخصصة للوكلاء'),
+    workspaceReadyLabel: c('Workplace details will appear here as the team is connected.', 'ستظهر تفاصيل مكان العمل هنا عند ربط الفريق.'),
+    plansLabel: c('Company plans', 'خطط الشركة'),
+  },
   companyPlans: {
     title: c('Company plans', 'خطط الشركة'),
     executiveLabel: c('CEO workspace', 'مساحة المدير التنفيذي'),
@@ -88,7 +99,7 @@ const content = computed<HqLayoutContent>(() => ({
 </script>
 
 <template>
-  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('A full-height Coal/Building Navy/Premium Gold 3D workspace combines an interactive Brain orb, WebGL floor reflections and bloom, a reserved CEO workspace, floating navigation and a circular overview. Clicking the CEO board opens company plans; the same approved department data supplies rounded open rooms with four visual workstations and a clear center aisle. The CEO keeps a larger executive desk. Founder login and plan decisions use shared presentation, while the app owns authentication and authorization. This catalogue has no cloud, Auth or approval connection.', 'تجمع مساحة العمل ثلاثية الأبعاد بارتفاع كامل بين ألوان الفحم والكحلي المعتمد والذهبي الفاخر، وكرة المعرفة التفاعلية، وانعكاسات أرضية وتوهج WebGL، ومساحة محجوزة للمدير التنفيذي، وتنقل عائم وخريطة دائرية. يفتح النقر على لوحة المدير التنفيذي خطط الشركة، وتُعرض غرف مفتوحة بحواف مستديرة وأربع محطات عمل مرئية وممر أوسط خالٍ بحسب بيانات الأقسام المعتمدة نفسها. يحتفظ المدير التنفيذي بمكتب تنفيذي أكبر. تستخدم واجهة دخول المؤسس وقرارات الخطط مكونات العرض المشتركة، بينما يدير التطبيق المصادقة والصلاحيات. لا يتصل هذا المثال بخدمة سحابية أو مصادقة أو اعتماد.')">
+  <BsContentSection :title="c('HQ workspace', 'مساحة عمل HQ')" :description="c('Select a whole office, its label or the shared Workplaces picker to focus the room and open its side panel without resizing the 3D workspace. The CEO reuses company plans/login; department details show four visual workstations and future space without imaginary agents. Selected labels and overview markers stay synchronized; clearing selection restores the earlier camera. This catalogue has no cloud, Auth or approval connection.', 'اختر المكتب كاملًا أو اسمه أو قائمة أماكن العمل المشتركة لتركيز الكاميرا عليه وفتح لوحته الجانبية دون تغيير حجم المساحة ثلاثية الأبعاد. يعرض مكتب المدير التنفيذي الخطط وتسجيل الدخول، وتعرض تفاصيل القسم أربع محطات عمل مرئية ومساحة مستقبلية دون اختلاق وكلاء. يتزامن تحديد الأسماء مع علامات الخريطة، وتعيد مغادرة التحديد الكاميرا السابقة. لا يتصل هذا المثال بخدمة سحابية أو مصادقة أو اعتماد.')">
     <BsHqLayoutPage :content="content" />
   </BsContentSection>
 </template>

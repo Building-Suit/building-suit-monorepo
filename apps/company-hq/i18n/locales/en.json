@@ -22,6 +22,17 @@
     "touchControlsLabel": "Drag to rotate. Two fingers move; pinch zooms with side panels closed. Hold the closed orb to pulse; tap to open.",
     "keyboardControlsLabel": "Arrows rotate. Shift + arrows move. +/− zooms with side panels closed. Home resets.",
     "zoomLabel": "Zoom",
+    "workplaces": {
+      "label": "Workplaces",
+      "clearSelectionLabel": "Leave selected workplace",
+      "executiveDescription": "Executive workspace and company plans.",
+      "departmentDescription": "Department workspace",
+      "workstationsLabel": "Workstations",
+      "workstationsValue": "4",
+      "agentsSpaceLabel": "Space reserved for agents",
+      "workspaceReadyLabel": "Workplace details will appear here as the team is connected.",
+      "plansLabel": "Company plans"
+    },
     "companyPlans": {
       "title": "Company plans",
       "executiveLabel": "CEO workspace",

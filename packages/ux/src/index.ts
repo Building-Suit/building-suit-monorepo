@@ -277,3 +277,5 @@ export { normalizeDecimalText } from './utils/decimalText.js'
 
 export { spatialViewportFrame, spatialViewportScreenRectangle, spatialViewportGroundFootprint, SPATIAL_VIEWPORT_VERTICAL_FOV } from './spatialViewportGeometry.ts'
 export type { SpatialViewportFrame, SpatialViewportPoint, SpatialViewportVector } from './spatialViewportGeometry.ts'
+export { useSpatialWorkspaceSelection } from './composables/useSpatialWorkspaceSelection.ts'
+export type { SpatialWorkspaceTarget, SpatialWorkspaceSelectionPolicy } from './composables/useSpatialWorkspaceSelection.ts'

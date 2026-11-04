@@ -22,6 +22,17 @@
     "touchControlsLabel": "اسحب للتدوير. استخدم إصبعين للتحريك والقرص للتكبير عندما تكون اللوحات الجانبية مغلقة. المس الكرة المغلقة مطولًا لنبضها، واضغط لفتحها.",
     "keyboardControlsLabel": "الأسهم للتدوير. Shift مع الأسهم للتحريك. + و− للتكبير عندما تكون اللوحات الجانبية مغلقة. Home لإعادة العرض.",
     "zoomLabel": "التكبير",
+    "workplaces": {
+      "label": "أماكن العمل",
+      "clearSelectionLabel": "مغادرة مكان العمل المحدد",
+      "executiveDescription": "مساحة المدير التنفيذي وخطط الشركة.",
+      "departmentDescription": "مساحة عمل القسم",
+      "workstationsLabel": "محطات العمل",
+      "workstationsValue": "٤",
+      "agentsSpaceLabel": "مساحة مخصصة للوكلاء",
+      "workspaceReadyLabel": "ستظهر تفاصيل مكان العمل هنا عند ربط الفريق.",
+      "plansLabel": "خطط الشركة"
+    },
     "companyPlans": {
       "title": "خطط الشركة",
       "executiveLabel": "مساحة المدير التنفيذي",

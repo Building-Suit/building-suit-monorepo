@@ -5,8 +5,8 @@ import type { HqDepartmentOffice } from '../types/hqLayoutPresentation'
 import { createHologramRenderer } from '../utils/hologramScene'
 import type { HologramLayout, HologramPalette, HologramRenderer } from '../utils/hologramScene'
 
-const props = withDefaults(defineProps<{ camera: Readonly<SpatialViewportCamera>; resetVersion: number; label: string; unavailableLabel: string; opened?: boolean; officeLayerCount?: number; departments?: readonly HqDepartmentOffice[]; executiveLabel?: string }>(), { opened: false, officeLayerCount: 0, departments: () => [], executiveLabel: '' })
-const emit = defineEmits<{ activate: []; openPlans: []; hoverChange: [active: boolean] }>()
+const props = withDefaults(defineProps<{ camera: Readonly<SpatialViewportCamera>; resetVersion: number; label: string; unavailableLabel: string; opened?: boolean; officeLayerCount?: number; departments?: readonly HqDepartmentOffice[]; executiveLabel?: string; selectedWorkplaceId?: string | null }>(), { opened: false, officeLayerCount: 0, departments: () => [], executiveLabel: '', selectedWorkplaceId: null })
+const emit = defineEmits<{ activate: []; selectWorkplace: [id: string]; hoverChange: [active: boolean] }>()
 const canvasRef = shallowRef<HTMLCanvasElement | null>(null)
 const unavailable = ref(false)
 let renderer: HologramRenderer | null = null
@@ -36,21 +36,27 @@ function clearHoverAndShake() {
 function activateAt(clientX: number, clientY: number) {
   if (disposed || unavailable.value || !visible || !renderer) return false
   if (renderer.hitTestOrb(clientX, clientY)) { emit('activate'); return true }
-  if (renderer.hitTestExecutive(clientX, clientY)) { emit('openPlans'); return true }
+  const workplace = renderer.hitTestWorkplace(clientX, clientY)
+  if (workplace) { emit('selectWorkplace', workplace); return true }
   return false
+}
+function selectWorkplace(id: string) {
+  if (disposed || unavailable.value || !visible) return
+  if (id !== 'executive-workspace' && !props.departments.some(department => department.id === id)) return
+  emit('selectWorkplace', id)
 }
 function setExcitedAt(clientX: number, clientY: number, active: boolean) {
   const eligible = active && !disposed && !unavailable.value && visible && typeof document !== 'undefined' && !document.hidden
   const orbHit = eligible && Boolean(renderer?.hitTestOrb(clientX, clientY))
-  const executiveHit = eligible && !orbHit && Boolean(renderer?.hitTestExecutive(clientX, clientY))
+  const workplaceHit = eligible && !orbHit && Boolean(renderer?.hitTestWorkplace(clientX, clientY))
   const nextTarget = orbHit && !props.opened && openAmount < 0.001 ? 1 : 0
-  publishHover(nextTarget === 1 || executiveHit)
+  publishHover(nextTarget === 1 || workplaceHit)
   if (nextTarget !== excitedTarget) {
     excitedTarget = nextTarget
     if (props.opened || openAmount > 0.001) excitedAmount = 0
     if (typeof window !== 'undefined') requestDraw()
   }
-  return orbHit || executiveHit
+  return orbHit || workplaceHit
 }
 defineExpose({ activateAt, setExcitedAt })
 
@@ -164,6 +170,7 @@ watch(() => props.officeLayerCount, count => {
   if (typeof window !== 'undefined') requestDraw()
 }, { flush: 'sync' })
 watch(() => props.departments, departments => {
+  clearHoverAndShake()
   sceneLayout.departments = departments
   noteNewDepartments()
   if (typeof window !== 'undefined') requestDraw()
@@ -205,8 +212,8 @@ onBeforeUnmount(() => {
   <div class="bs-hologram-scene">
     <canvas ref="canvasRef" :aria-label="label" role="img" class="bs-hologram-scene__canvas" @webglcontextlost="onContextLost" @webglcontextrestored="startRenderer" />
     <div class="bs-hologram-scene__labels">
-      <span v-for="department in departments" :key="department.id" :ref="element => setOfficeLabel(department.id, element)" class="bs-hologram-scene__office-label" hidden>{{ department.name }}</span>
-      <button v-if="executiveLabel" ref="executiveLabelRef" type="button" class="bs-hologram-scene__office-label bs-hologram-scene__executive-label" hidden @pointerdown.stop @pointerup.stop @click.stop="emit('openPlans')">{{ executiveLabel }}</button>
+      <button v-for="department in departments" :key="department.id" :ref="element => setOfficeLabel(department.id, element)" type="button" class="bs-hologram-scene__office-label" :aria-label="department.name" :aria-pressed="selectedWorkplaceId === department.id" hidden @pointerdown.stop @pointerup.stop @click.stop="selectWorkplace(department.id)">{{ department.name }}</button>
+      <button v-if="executiveLabel" ref="executiveLabelRef" type="button" class="bs-hologram-scene__office-label bs-hologram-scene__executive-label" :aria-label="executiveLabel" :aria-pressed="selectedWorkplaceId === 'executive-workspace'" hidden @pointerdown.stop @pointerup.stop @click.stop="selectWorkplace('executive-workspace')">{{ executiveLabel }}</button>
     </div>
     <p v-if="unavailable" class="bs-hologram-scene__unavailable" role="status">{{ unavailableLabel }}</p>
   </div>
@@ -218,7 +225,10 @@ onBeforeUnmount(() => {
 .bs-hologram-scene__labels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .bs-hologram-scene__office-label { position: absolute; inset: 0 auto auto 0; width: max-content; max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 6px 10px; border: 1px solid color-mix(in srgb, var(--bs-color-brand-soft-silver) 22%, var(--bs-color-brand-building-navy)); border-radius: 8px; background: linear-gradient(135deg, var(--bs-color-brand-deep-structure-navy), var(--bs-color-neutral-charcoal)); color: var(--bs-color-brand-soft-silver); box-shadow: inset 0 1px color-mix(in srgb, var(--bs-color-brand-soft-silver) 7%, transparent), 0 3px 12px color-mix(in srgb, var(--bs-color-neutral-ink) 30%, transparent); font: inherit; font-size: 12px; line-height: 1.4; }
 .bs-hologram-scene__office-label[hidden] { display: none; }
-.bs-hologram-scene__executive-label { pointer-events: auto; border-color: var(--bs-color-brand-premium-gold); cursor: pointer; }
-.bs-hologram-scene__executive-label:focus-visible { outline: 2px solid var(--bs-color-brand-premium-gold); outline-offset: 3px; }
+.bs-hologram-scene__office-label { pointer-events: auto; cursor: pointer; text-align: start; }
+.bs-hologram-scene__executive-label { border-color: var(--bs-color-brand-premium-gold); }
+.bs-hologram-scene__office-label[aria-pressed='true'] { border-color: var(--bs-color-brand-premium-gold); background: var(--bs-color-neutral-graphite); }
+.bs-hologram-scene__office-label:focus-visible { outline: 2px solid var(--bs-color-brand-premium-gold); outline-offset: 3px; }
+@media (pointer: coarse) { .bs-hologram-scene__office-label { min-height: 44px; } }
 .bs-hologram-scene__unavailable { position: absolute; inset: 50% 24px auto; margin: 0; text-align: center; color: var(--bs-color-brand-soft-silver); font-size: 14px; }
 </style>

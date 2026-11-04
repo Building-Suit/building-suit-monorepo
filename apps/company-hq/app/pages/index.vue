@@ -85,6 +85,17 @@ const content = computed<HqLayoutContent>(() => ({
   touchControlsLabel: t('hq.touchControlsLabel'),
   keyboardControlsLabel: t('hq.keyboardControlsLabel'),
   zoomLabel: t('hq.zoomLabel'),
+  workplaces: {
+    label: t('hq.workplaces.label'),
+    clearSelectionLabel: t('hq.workplaces.clearSelectionLabel'),
+    executiveDescription: t('hq.workplaces.executiveDescription'),
+    departmentDescription: t('hq.workplaces.departmentDescription'),
+    workstationsLabel: t('hq.workplaces.workstationsLabel'),
+    workstationsValue: t('hq.workplaces.workstationsValue'),
+    agentsSpaceLabel: t('hq.workplaces.agentsSpaceLabel'),
+    workspaceReadyLabel: t('hq.workplaces.workspaceReadyLabel'),
+    plansLabel: t('hq.workplaces.plansLabel'),
+  },
   companyPlans: companyPlansCopy.value,
   companyBrain: {
     title: t('hq.companyBrain.title'),
